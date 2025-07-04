@@ -9,19 +9,14 @@
   "license": "MIT",
   "scripts": {
     "build": "tsc",
+    "check": "biome check",
     "clean": "git clean -xdf .cache .turbo dist node_modules",
     "dev": "tsc",
-    "format": "prettier --check . --ignore-path ../../.gitignore",
-    "lint": "eslint",
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },
   "devDependencies": {
-    "@acme/eslint-config": "workspace:*",
-    "@acme/prettier-config": "workspace:*",
-    "@acme/tsconfig": "workspace:*",
-    "eslint": "catalog:",
-    "prettier": "catalog:",
-    "typescript": "catalog:"
-  },
-  "prettier": "@acme/prettier-config"
+    "@biomejs/biome": "^2.0.6",
+    "@total-typescript/tsconfig": "^1.0.4",
+    "typescript": "^5.8.3"
+  }
 }

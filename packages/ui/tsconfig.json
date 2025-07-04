@@ -1,10 +1,9 @@
 {
-  "extends": "@acme/tsconfig/internal-package.json",
-  "compilerOptions": {
-    "lib": ["ES2022", "dom", "dom.iterable"],
-    "jsx": "preserve",
-    "rootDir": "."
-  },
-  "include": ["src"],
-  "exclude": ["node_modules"]
+	"extends": "@total-typescript/tsconfig/bundler/dom/library-monorepo",
+	"compilerOptions": {
+		"jsx": "react-jsx",
+		"noEmit": true
+	},
+	"include": ["src"],
+	"exclude": ["node_modules"]
 }

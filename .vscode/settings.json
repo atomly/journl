@@ -1,7 +1,39 @@
 {
-  "eslint.workingDirectories": [
+  "[javascript]": {
+    "editor.defaultFormatter": "biomejs.biome"
+  },
+  "[json]": {
+    "editor.defaultFormatter": "biomejs.biome",
+    "editor.formatOnSave": false
+  },
+  "[shellscript]": {
+    "editor.defaultFormatter": "foxundermoon.shell-format"
+  },
+  "[typescript]": {
+    "editor.defaultFormatter": "biomejs.biome"
+  },
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "biomejs.biome"
+  },
+  "editor.codeActionsOnSave": {
+    "quickfix.biome": "explicit",
+    "source.fixAll.biome": "explicit"
+  },
+  "editor.defaultFormatter": "biomejs.biome",
+  "editor.formatOnSave": true,
+  "editor.tabSize": 2,
+  "gitlens.remotes": [
     {
-      "mode": "auto"
+      "domain": "www.github.com",
+      "type": "GitHub"
     }
-  ]
+  ],
+  "liveshare.connectionMode": "relay",
+  "liveshare.launcherClient": "visualStudioCode",
+  "markdownlint.config": {
+    "MD033": false // allow inline HTML
+  },
+  "yaml.schemas": {
+    "https://json.schemastore.org/github-issue-config.json": ".github/ISSUE_TEMPLATE/config.yml"
+  }
 }

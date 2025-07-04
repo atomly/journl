@@ -1,15 +1,14 @@
 {
-  "extends": "@acme/tsconfig/base.json",
-  "compilerOptions": {
-    "lib": ["ES2022", "dom", "dom.iterable"],
-    "jsx": "preserve",
-    "baseUrl": ".",
-    "paths": {
-      "~/*": ["./src/*"]
-    },
-    "plugins": [{ "name": "next" }],
-    "module": "esnext"
-  },
-  "include": [".", ".next/types/**/*.ts"],
-  "exclude": ["node_modules"]
+	"extends": "@total-typescript/tsconfig/bundler/dom/app",
+	"compilerOptions": {
+		"lib": ["ES2022", "dom", "dom.iterable"],
+		"jsx": "preserve",
+		"baseUrl": ".",
+		"paths": {
+			"~/*": ["./src/*"]
+		},
+		"plugins": [{ "name": "next" }]
+	},
+	"include": [".", ".next/types/**/*.ts"],
+	"exclude": ["node_modules"]
 }

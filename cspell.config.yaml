@@ -1,0 +1,40 @@
+$schema: ./node_modules/@cspell/cspell-types/cspell.schema.json
+version: "0.2"
+language: en-US
+flagWords:
+  - hte
+ignorePaths:
+  - .git
+  - .gitignore
+  - .private
+  - .vscodeignore
+  - "*.lock"
+  - "*.log"
+  - "*.vsix"
+  - "*.tsv"
+  - "*.svg"
+  - "**/__snapshots__/**"
+  - /samples
+  - CHANGELOG.md
+  - cspell.json
+  - cspell*.{json,yaml}
+  - .cspell*.{json,yaml}
+  - dist
+  - package-lock.json
+ignoreWords: []
+dictionaryDefinitions:
+  - name: cspell-words
+    addWords: true
+    scope:
+      - workspace
+    path: ./cspell-words.txt
+dictionaries:
+  - cspell-words
+languageSettings:
+  - languageId: "*"
+    allowCompoundWords: false
+useGitignore: true
+words:
+  - journl
+  - sonner
+  - topo

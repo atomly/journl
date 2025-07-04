@@ -6,6 +6,7 @@ import { createTRPCOptionsProxy } from "@trpc/tanstack-react-query";
 import { headers } from "next/headers";
 import { cache } from "react";
 
+import { auth } from "~/auth/server";
 import { createQueryClient } from "./query-client";
 
 /**
@@ -16,7 +17,10 @@ const createContext = cache(async () => {
 	const heads = new Headers(await headers());
 	heads.set("x-trpc-source", "rsc");
 
-	return createTRPCContext();
+	return createTRPCContext({
+		auth,
+		headers: heads,
+	});
 });
 
 const getQueryClient = cache(createQueryClient);
@@ -35,7 +39,6 @@ export function HydrateClient(props: { children: React.ReactNode }) {
 		</HydrationBoundary>
 	);
 }
-
 // biome-ignore lint/suspicious/noExplicitAny: <any is good here>
 export function prefetch<T extends ReturnType<TRPCQueryOptions<any>>>(
 	queryOptions: T,

@@ -6,7 +6,10 @@
  * tl;dr - this is where all the tRPC server stuff is created and plugged in.
  * The pieces you will need to use are documented accordingly near the end
  */
-import { initTRPC } from "@trpc/server";
+
+import type { Auth } from "@acme/auth";
+import { db } from "@acme/db/client";
+import { initTRPC, TRPCError } from "@trpc/server";
 import superjson from "superjson";
 import { ZodError, z } from "zod/v4";
 
@@ -23,8 +26,19 @@ import { ZodError, z } from "zod/v4";
  * @see https://trpc.io/docs/server/context
  */
 
-export const createTRPCContext = () => {
-	return Promise.resolve({});
+export const createTRPCContext = async (opts: {
+	headers: Headers;
+	auth: Auth;
+}) => {
+	const authApi = opts.auth.api;
+	const session = await authApi.getSession({
+		headers: opts.headers,
+	});
+	return {
+		authApi,
+		db,
+		session,
+	};
 };
 /**
  * 2. INITIALIZATION
@@ -77,7 +91,7 @@ const timingMiddleware = t.middleware(async ({ next, path }) => {
 	const result = await next();
 
 	const end = Date.now();
-	console.log(`[TRPC] ${path} took ${end - start}ms to execute`);
+	console.debug(`[TRPC] ${path} took ${end - start}ms to execute`);
 
 	return result;
 });
@@ -101,8 +115,14 @@ export const publicProcedure = t.procedure.use(timingMiddleware);
  */
 export const protectedProcedure = t.procedure
 	.use(timingMiddleware)
-	.use(({ next }) => {
+	.use(({ ctx, next }) => {
+		if (!ctx.session?.user) {
+			throw new TRPCError({ code: "UNAUTHORIZED" });
+		}
 		return next({
-			ctx: {},
+			ctx: {
+				// infers the `session` as non-nullable
+				session: { ...ctx.session, user: ctx.session.user },
+			},
 		});
 	});

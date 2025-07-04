@@ -7,7 +7,7 @@ import { headers } from "next/headers";
 import { cache } from "react";
 
 import { auth } from "~/auth/server";
-import { createQueryClient } from "./query-client.js";
+import { createQueryClient } from "./query-client";
 
 /**
  * This wraps the `createTRPCContext` helper and provides the required context for the tRPC API when

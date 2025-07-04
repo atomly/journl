@@ -22,4 +22,4 @@ export const CreatePostSchema = createInsertSchema(Post, {
 	updatedAt: true,
 });
 
-export * from "./auth-schema.js";
+export * from "./auth-schema";

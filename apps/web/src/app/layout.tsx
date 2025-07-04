@@ -4,11 +4,11 @@ import { cn } from "@acme/ui/lib/utils";
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 
-import { TRPCReactProvider } from "~/trpc/react.js";
+import { TRPCReactProvider } from "~/trpc/react";
 
 import "~/app/globals.css";
 
-import { env } from "~/env.js";
+import { env } from "~/env";
 
 export const metadata: Metadata = {
 	description: "Simple monorepo for web apps",

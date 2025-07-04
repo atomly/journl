@@ -1,34 +1,23 @@
 import { Button } from "@acme/ui/components/button";
-import { headers } from "next/headers.js";
-import { redirect } from "next/navigation.js";
+import { headers } from "next/headers";
+import { redirect } from "next/navigation";
 
-import { auth, getSession } from "~/auth/server.js";
+import { auth, getSession } from "~/auth/server";
 
 export async function AuthShowcase() {
 	const session = await getSession();
 
 	if (!session) {
 		return (
-			<form>
-				<Button
-					size="lg"
-					formAction={async () => {
-						"use server";
-						const res = await auth.api.signInSocial({
-							body: {
-								callbackURL: "/",
-								provider: "discord",
-							},
-						});
-						if (!res.url) {
-							throw new Error("No URL returned from signInSocial");
-						}
-						redirect(res.url);
-					}}
-				>
-					Sign in with Discord
-				</Button>
-			</form>
+			<div className="flex flex-col items-center justify-center gap-4">
+				<p className="text-center text-lg text-muted-foreground">
+					Authentication is ready! Add your preferred social login providers to
+					get started.
+				</p>
+				<p className="text-center text-sm text-muted-foreground">
+					Configure social providers in the auth setup to enable login.
+				</p>
+			</div>
 		);
 	}
 

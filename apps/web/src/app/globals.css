@@ -1,4 +1,8 @@
 @import "tailwindcss";
+@import "@acme/ui/globals.css";
+
+@source "../../**/*.{js,ts,jsx,tsx}";
+@source "../../../../packages/ui/src/**/*.{js,ts,jsx,tsx}";
 
 :root {
 	--radius: 0.65rem;

@@ -1,7 +1,7 @@
 "use client";
 
 import { standardSchemaResolver } from "@hookform/resolvers/standard-schema";
-import { Slot } from "radix-ui";
+import { Slot } from "@radix-ui/react-slot";
 import * as React from "react";
 import type {
 	ControllerProps,
@@ -15,9 +15,9 @@ import {
 	useFormContext,
 } from "react-hook-form";
 import type { ZodType } from "zod/v4";
-import { cn } from "~/lib/utils.js";
+import { cn } from "../lib/utils";
 
-import { Label } from "./label.js";
+import { Label } from "./label";
 
 export { FormProvider as Form, useFieldArray } from "react-hook-form";
 
@@ -111,14 +111,12 @@ export function FormLabel({
 	);
 }
 
-export function FormControl({
-	...props
-}: React.ComponentProps<typeof Slot.Slot>) {
+export function FormControl({ ...props }: React.ComponentProps<typeof Slot>) {
 	const { error, formItemId, formDescriptionId, formMessageId } =
 		useFormField();
 
 	return (
-		<Slot.Slot
+		<Slot
 			id={formItemId}
 			aria-describedby={
 				!error

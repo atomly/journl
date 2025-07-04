@@ -1,8 +1,8 @@
 import { appRouter, createTRPCContext } from "@acme/api";
 import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
-import type { NextRequest } from "next/server.js";
+import type { NextRequest } from "next/server";
 
-import { auth } from "~/auth/server.js";
+import { auth } from "~/auth/server";
 
 /**
  * Configure basic CORS headers
@@ -31,7 +31,7 @@ const handler = async (req: NextRequest) => {
 				headers: req.headers,
 			}),
 		endpoint: "/api/trpc",
-		onError({ error, path }: { error: Error; path: string }) {
+		onError({ error, path }) {
 			console.error(`>>> tRPC Error on '${path}'`, error);
 		},
 		req,

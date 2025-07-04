@@ -23,6 +23,9 @@ importers:
       '@acme/auth':
         specifier: workspace:*
         version: link:../../packages/auth
+      '@acme/db':
+        specifier: workspace:*
+        version: link:../../packages/db
       '@acme/ui':
         specifier: workspace:*
         version: link:../../packages/ui
@@ -63,6 +66,9 @@ importers:
       '@biomejs/biome':
         specifier: ^2.0.6
         version: 2.0.6
+      '@tailwindcss/postcss':
+        specifier: ^4.0.8
+        version: 4.1.11
       '@types/node':
         specifier: ^22.15.29
         version: 22.15.29

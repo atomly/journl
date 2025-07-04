@@ -1,12 +1,26 @@
 {
-	"extends": "@acme/tsconfig/dom.tsconfig.json",
-	"compilerOptions": {
-		"baseUrl": ".",
-		"paths": {
-			"~/*": ["./src/*"]
-		},
-		"plugins": [{ "name": "next" }]
-	},
-	"include": [".", ".next/types/**/*.ts"],
-	"exclude": ["node_modules", ".next"]
+  "extends": "@acme/tsconfig/dom.tsconfig.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "~/*": [
+        "./src/*"
+      ]
+    },
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "incremental": true,
+    "jsx": "preserve"
+  },
+  "include": [
+    ".",
+    ".next/types/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    ".next"
+  ]
 }

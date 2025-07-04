@@ -19,9 +19,8 @@ import {
 	useQueryClient,
 	useSuspenseQuery,
 } from "@tanstack/react-query";
-import type { TRPC_ERROR_CODE_KEY } from "@trpc/server";
 
-import { useTRPC } from "~/trpc/react.js";
+import { useTRPC } from "~/trpc/react";
 
 export function CreatePostForm() {
 	const trpc = useTRPC();
@@ -36,7 +35,7 @@ export function CreatePostForm() {
 	const queryClient = useQueryClient();
 	const createPost = useMutation(
 		trpc.post.create.mutationOptions({
-			onError: (err: { data?: { code?: TRPC_ERROR_CODE_KEY } }) => {
+			onError: (err) => {
 				toast.error(
 					err.data?.code === "UNAUTHORIZED"
 						? "You must be logged in to post"
@@ -54,8 +53,8 @@ export function CreatePostForm() {
 		<Form {...form}>
 			<form
 				className="flex w-full max-w-2xl flex-col gap-4"
-				onSubmit={form.handleSubmit(() => {
-					createPost.mutate();
+				onSubmit={form.handleSubmit((data) => {
+					createPost.mutate(data);
 				})}
 			>
 				<FormField
@@ -82,7 +81,7 @@ export function CreatePostForm() {
 						</FormItem>
 					)}
 				/>
-				<Button>Create</Button>
+				<Button className="">Create</Button>
 			</form>
 		</Form>
 	);
@@ -90,18 +89,25 @@ export function CreatePostForm() {
 
 export function PostList() {
 	const trpc = useTRPC();
-	useSuspenseQuery(trpc.post.all.queryOptions());
+	const { data: posts } = useSuspenseQuery(trpc.post.all.queryOptions());
+
+	if (!posts || posts.length === 0) {
+		return (
+			<div className="flex w-full flex-col gap-4">
+				<div className="text-center text-muted-foreground">
+					{posts?.length === 0
+						? "No posts yet. Create your first post above!"
+						: "Loading posts..."}
+				</div>
+			</div>
+		);
+	}
 
 	return (
 		<div className="flex w-full flex-col gap-4">
-			<PostCard
-				post={{
-					content: "Test",
-					createdAt: new Date(),
-					id: "1",
-					title: "Test",
-				}}
-			/>
+			{posts.map((post) => (
+				<PostCard key={post.id} post={post} />
+			))}
 		</div>
 	);
 }
@@ -113,7 +119,7 @@ export function PostCard(props: {
 	const queryClient = useQueryClient();
 	const deletePost = useMutation(
 		trpc.post.delete.mutationOptions({
-			onError: (err: { data?: { code?: TRPC_ERROR_CODE_KEY } }) => {
+			onError: (err) => {
 				toast.error(
 					err.data?.code === "UNAUTHORIZED"
 						? "You must be logged in to delete a post"

@@ -2,8 +2,8 @@
 	"extends": "@total-typescript/tsconfig/bundler/dom/library-monorepo",
 	"compilerOptions": {
 		"target": "esnext",
-		"module": "NodeNext",
-		"moduleResolution": "NodeNext",
+		"module": "ESNext",
+		"moduleResolution": "bundler",
 		"jsx": "react-jsx"
 	}
 }

@@ -1,5 +1,4 @@
 import { db } from "@acme/db/client";
-import { expo } from "@better-auth/expo";
 import type { BetterAuthOptions } from "better-auth";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
@@ -26,7 +25,6 @@ export function initAuth(options: {
 				currentURL: options.baseUrl,
 				productionURL: options.productionUrl,
 			}),
-			expo(),
 		],
 		secret: options.secret,
 		socialProviders: {
@@ -36,7 +34,6 @@ export function initAuth(options: {
 				redirectURI: `${options.productionUrl}/api/auth/callback/discord`,
 			},
 		},
-		trustedOrigins: ["expo://"],
 	} satisfies BetterAuthOptions;
 
 	return betterAuth(config);

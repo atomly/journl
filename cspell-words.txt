@@ -1,3 +1,5 @@
 biomejs
+envinfo
+rmolinamir
 shadcn
 turbopack

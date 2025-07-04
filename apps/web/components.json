@@ -4,8 +4,8 @@
 		"components": "~/components",
 		"hooks": "~/hooks",
 		"lib": "~/lib",
-		"ui": "~/components",
-		"utils": "~/lib/utils"
+		"ui": "@acme/ui/components",
+		"utils": "@acme/ui/lib/utils"
 	},
 	"iconLibrary": "lucide",
 	"rsc": true,
@@ -13,7 +13,7 @@
 	"tailwind": {
 		"baseColor": "zinc",
 		"config": "",
-		"css": "src/styles/globals.css",
+		"css": "../../packages/ui/src/styles/globals.css",
 		"cssVariables": true
 	},
 	"tsx": true

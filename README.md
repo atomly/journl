@@ -1,3 +1,3 @@
-# Journl
+# Acme
 
 > TODO: Documentation.

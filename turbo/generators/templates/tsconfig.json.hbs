@@ -1,6 +1,10 @@
 {
-  "extends": "@total-typescript/tsconfig/tsc/dom/library-monorepo",
-  "compilerOptions": {},
-  "include": ["*.ts", "src"],
+	"extends": "@acme/tsconfig/nodejs.tsconfig.json",
+  "compilerOptions": {
+    "paths": {
+      "~/*": ["./src/*"]
+    }
+  },
+  "include": ["src"],
   "exclude": ["node_modules"]
 }

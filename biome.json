@@ -71,7 +71,7 @@
 					}
 				}
 			},
-			"includes": ["**/package.json", "**/tsconfig.json"]
+			"includes": ["**/package.json", "**/*tsconfig.json"]
 		}
 	],
 	"vcs": {

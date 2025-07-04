@@ -1,7 +1,7 @@
 {
   "name": "@acme/{{ name }}",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.0.0",
   "type": "module",
   "exports": {
     ".": "./src/index.ts"
@@ -15,8 +15,8 @@
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },
   "devDependencies": {
+    "@acme/tsconfig": "workspace:*",
     "@biomejs/biome": "^2.0.6",
-    "@total-typescript/tsconfig": "^1.0.4",
     "typescript": "^5.8.3"
   }
 }

@@ -1,0 +1,16 @@
+{
+  "name": "@acme/tsconfig",
+  "private": true,
+  "version": "0.0.0",
+	"type": "module",
+  "files": [
+    "*.json"
+  ],
+  "scripts": {
+    "check": "biome check"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.0.6",
+    "@total-typescript/tsconfig": "^1.0.4"
+  }
+}

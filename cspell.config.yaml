@@ -35,6 +35,5 @@ languageSettings:
     allowCompoundWords: false
 useGitignore: true
 words:
-  - journl
   - sonner
   - topo

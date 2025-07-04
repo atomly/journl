@@ -1,7 +1,10 @@
 {
-	"extends": "@total-typescript/tsconfig/bundler/no-dom/library-monorepo",
+	"extends": "@acme/tsconfig/nodejs.tsconfig.json",
 	"compilerOptions": {
-		"noEmit": true
+		"noEmit": true,
+		"paths": {
+			"~/*": ["./src/*"]
+		}
 	},
 	"include": ["src"],
 	"exclude": ["node_modules"]

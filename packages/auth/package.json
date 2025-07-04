@@ -1,13 +1,12 @@
 {
 	"name": "@acme/auth",
-	"version": "0.1.0",
+	"version": "0.0.0",
 	"private": true,
 	"type": "module",
 	"exports": {
 		".": "./src/index.ts",
 		"./env": "./src/env.ts"
 	},
-	"license": "MIT",
 	"scripts": {
 		"check": "biome check",
 		"clean": "git clean -xdf .cache .turbo dist node_modules",
@@ -24,7 +23,7 @@
 		"zod": "^3.25.71"
 	},
 	"devDependencies": {
-		"@types/react": "^19.1.8",
-		"typescript": "^5.8.3"
+		"@acme/tsconfig": "workspace:*",
+		"@types/react": "^19.1.8"
 	}
 }

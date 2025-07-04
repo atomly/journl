@@ -1,6 +1,6 @@
 {
 	"name": "@acme/api",
-	"version": "0.1.0",
+	"version": "0.0.0",
 	"private": true,
 	"type": "module",
 	"exports": {
@@ -9,7 +9,6 @@
 			"default": "./src/index.ts"
 		}
 	},
-	"license": "MIT",
 	"scripts": {
 		"build": "tsc",
 		"check": "biome check",
@@ -23,8 +22,7 @@
 		"zod": "^3.25.71"
 	},
 	"devDependencies": {
-		"@biomejs/biome": "^2.0.6",
-		"@total-typescript/tsconfig": "^1.0.4",
-		"typescript": "^5.8.3"
+		"@acme/tsconfig": "workspace:*",
+		"@biomejs/biome": "^2.0.6"
 	}
 }

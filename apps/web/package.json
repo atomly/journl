@@ -1,0 +1,40 @@
+{
+	"name": "@acme/web",
+	"version": "0.0.0",
+	"private": true,
+	"type": "module",
+	"scripts": {
+		"build": "pnpm with-env next build",
+		"check": "biome check",
+		"clean": "git clean -xdf .cache .next .turbo node_modules",
+		"dev": "pnpm with-env next dev --turbopack",
+		"start": "pnpm with-env next start",
+		"typecheck": "tsc --noEmit",
+		"with-env": "dotenv -e ../../.env --"
+	},
+	"dependencies": {
+		"@acme/api": "workspace:*",
+		"@acme/auth": "workspace:*",
+		"@acme/ui": "workspace:*",
+		"@t3-oss/env-nextjs": "^0.13.6",
+		"@tanstack/react-query": "^5.80.7",
+		"@trpc/client": "^11.4.0",
+		"@trpc/server": "^11.4.0",
+		"@trpc/tanstack-react-query": "^11.4.0",
+		"next": "^15.3.3",
+		"react": "19.1.0",
+		"react-dom": "19.1.0",
+		"superjson": "2.2.2",
+		"zod": "^3.25.71"
+	},
+	"devDependencies": {
+		"@acme/tsconfig": "workspace:*",
+		"@biomejs/biome": "^2.0.6",
+		"@types/node": "^22.15.29",
+		"@types/react": "^19.1.8",
+		"@types/react-dom": "^19.1.6",
+		"dotenv-cli": "^8.0.0",
+		"jiti": "^2.4.2",
+		"tailwindcss": "^4.1.11"
+	}
+}

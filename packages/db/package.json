@@ -1,6 +1,6 @@
 {
 	"name": "@acme/db",
-	"version": "0.1.0",
+	"version": "0.0.0",
 	"private": true,
 	"type": "module",
 	"exports": {
@@ -17,7 +17,6 @@
 			"default": "./src/schema.ts"
 		}
 	},
-	"license": "MIT",
 	"scripts": {
 		"build": "tsc",
 		"check": "biome check",
@@ -35,6 +34,7 @@
 		"zod": "^3.25.71"
 	},
 	"devDependencies": {
+		"@acme/tsconfig": "workspace:*",
 		"dotenv-cli": "^8.0.0",
 		"drizzle-kit": "^0.31.1",
 		"typescript": "^5.8.3"

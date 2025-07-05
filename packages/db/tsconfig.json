@@ -1,7 +1,6 @@
 {
 	"extends": "@acme/tsconfig/nodejs.tsconfig.json",
 	"compilerOptions": {
-		"noEmit": true,
 		"paths": {
 			"~/*": ["./src/*"]
 		}

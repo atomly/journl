@@ -10,7 +10,7 @@
 	"scripts": {
 		"check": "biome check",
 		"clean": "git clean -xdf .cache .turbo dist node_modules",
-		"generate": "dotenv -e ../../.env -- pnpx @better-auth/cli generate --output ../db/src/auth-schema.ts",
+		"generate": "dotenv -e ../../.env -- pnpx @better-auth/cli generate --output ../db/src/auth-schema.ts --config ../../apps/web/src/auth/server.ts",
 		"typecheck": "tsc --noEmit"
 	},
 	"dependencies": {

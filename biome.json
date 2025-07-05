@@ -49,7 +49,7 @@
 				"noConsole": {
 					"level": "warn",
 					"options": {
-						"allow": ["log", "debug", "info", "warn", "error"]
+						"allow": ["debug", "info", "warn", "error"]
 					}
 				}
 			}

@@ -5,6 +5,8 @@ export function authEnv() {
 	return createEnv({
 		experimental__runtimeEnv: {},
 		server: {
+			AUTH_DISCORD_ID: z.string().min(1),
+			AUTH_DISCORD_SECRET: z.string().min(1),
 			AUTH_SECRET:
 				process.env.NODE_ENV === "production"
 					? z.string().min(1)

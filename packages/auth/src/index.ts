@@ -8,6 +8,8 @@ export function initAuth(options: {
 	baseUrl: string;
 	productionUrl: string;
 	secret: string | undefined;
+	discordClientId: string;
+	discordClientSecret: string;
 }) {
 	const config = {
 		baseURL: options.baseUrl,
@@ -26,6 +28,11 @@ export function initAuth(options: {
 		secret: options.secret,
 		socialProviders: {
 			// Social providers can be added here when needed
+			discord: {
+				clientId: options.discordClientId,
+				clientSecret: options.discordClientSecret,
+				redirectURI: `${options.productionUrl}/api/auth/callback/discord`,
+			},
 		},
 	} satisfies BetterAuthOptions;
 

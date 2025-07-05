@@ -12,7 +12,7 @@
   "scripts": {
     "auth:generate": "pnpm -F @acme/auth generate",
     "build": "turbo run build",
-    "check:fix": "turbo run check --continue -- --write",
+    "check:fix": "turbo run check --continue -- --write --unsafe",
     "check": "turbo run check --continue",
     "clean": "turbo run clean && git clean -xdf .turbo node_modules",
     "db:push": "turbo -F @acme/db push",

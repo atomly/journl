@@ -9,15 +9,9 @@ export async function AuthShowcase() {
 
 	if (!session) {
 		return (
-			<div className="flex flex-col items-center justify-center gap-4">
-				<p className="text-center text-lg text-muted-foreground">
-					Authentication is ready! Add your preferred social login providers to
-					get started.
-				</p>
-				<p className="text-center text-sm text-muted-foreground">
-					Configure social providers in the auth setup to enable login.
-				</p>
-			</div>
+			<p className="text-center text-muted-foreground text-sm">
+				Configure social providers in the auth setup to enable login.
+			</p>
 		);
 	}
 

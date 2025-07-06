@@ -38,7 +38,7 @@ export async function AuthControls() {
 						"use server";
 						const res = await auth.api.signInSocial({
 							body: {
-								callbackURL: "/",
+								callbackURL: "/home",
 								provider: "discord",
 							},
 						});

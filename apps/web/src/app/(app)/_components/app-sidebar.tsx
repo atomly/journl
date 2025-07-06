@@ -88,10 +88,10 @@ export function AppSidebar({ variant = "sidebar" }: AppSidebarProps) {
 							<Collapsible asChild defaultOpen={pathname.startsWith("/pages")}>
 								<SidebarMenuItem>
 									<CollapsibleTrigger asChild>
-										<SidebarMenuButton tooltip="Pages">
+										<SidebarMenuButton tooltip="Pages" className="group">
 											<FileText />
 											<span>Pages</span>
-											<ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+											<ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]:rotate-90" />
 										</SidebarMenuButton>
 									</CollapsibleTrigger>
 									<CollapsibleContent>

@@ -1,8 +1,11 @@
 import { Button } from "@acme/ui/components/button";
 import { Card, CardContent } from "@acme/ui/components/card";
 import { FileText, Plus, Search } from "lucide-react";
+import { authGuard } from "~/auth/server";
 
-export default function Home() {
+export default async function Home() {
+	const _session = await authGuard();
+
 	return (
 		<div className="min-h-screen bg-background p-6 text-foreground">
 			<div className="mx-auto max-w-4xl">
@@ -25,7 +28,6 @@ export default function Home() {
 						<FileText className="h-6 w-6" />
 						<span className="text-base">Journal Entry</span>
 					</Button>
-
 					<Button
 						variant="outline"
 						className="flex h-20 flex-col items-center justify-center gap-2 hover:bg-accent hover:text-accent-foreground"

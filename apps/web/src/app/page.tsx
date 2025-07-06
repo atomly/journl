@@ -1,15 +1,9 @@
-import { redirect } from "next/navigation";
-import { getSession } from "~/auth/server";
+import { unauthenticatedGuard } from "~/auth/server";
 import { HydrateClient } from "~/trpc/server";
 import { AuthShowcase } from "./_components/auth-showcase";
 
 export default async function HomePage() {
-	const session = await getSession();
-
-	// If user is authenticated, redirect to home
-	if (session) {
-		redirect("/home");
-	}
+	const _session = await unauthenticatedGuard();
 
 	return (
 		<HydrateClient>

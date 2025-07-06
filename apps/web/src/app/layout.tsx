@@ -19,15 +19,15 @@ export const metadata: Metadata = {
 	),
 	openGraph: {
 		description: "Simple monorepo for web apps",
-		siteName: "ACME",
-		title: "ACME",
+		siteName: "Journl",
+		title: "Journl",
 		url: "https://acme.app",
 	},
-	title: "ACME",
+	title: "Journl",
 	twitter: {
 		card: "summary_large_image",
-		creator: "@acme",
-		site: "@acme",
+		creator: "@journl",
+		site: "@journl",
 	},
 };
 

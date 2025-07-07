@@ -1,5 +1,6 @@
 {
 	"name": "@acme/tsconfig",
+	"description": "Shared TypeScript configurations for different environments (Node.js, DOM, React, Next.js)",
 	"private": true,
 	"version": "0.0.0",
 	"type": "module",
@@ -10,7 +11,6 @@
 		"check": "biome check"
 	},
 	"devDependencies": {
-		"@biomejs/biome": "^2.0.6",
-		"@total-typescript/tsconfig": "^1.0.4"
+		"@biomejs/biome": "^2.0.6"
 	}
 }

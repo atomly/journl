@@ -1,11 +1,8 @@
-import { Button } from "@acme/ui/components/button";
-import { Card, CardContent } from "@acme/ui/components/card";
 import { FileText, Plus, Search } from "lucide-react";
-import { authGuard } from "~/auth/server";
+import { Button } from "~/components/ui/button";
+import { Card, CardContent } from "~/components/ui/card";
 
-export default async function Home() {
-	const _session = await authGuard();
-
+export default function Home() {
 	return (
 		<div className="min-h-screen bg-background p-6 text-foreground">
 			<div className="mx-auto max-w-4xl">

@@ -1,10 +1,7 @@
-import { unauthenticatedGuard } from "~/auth/server";
 import { HydrateClient } from "~/trpc/server";
-import { AuthShowcase } from "./_components/auth-showcase";
+import { Auth } from "./_components/auth";
 
-export default async function HomePage() {
-	const _session = await unauthenticatedGuard();
-
+export default function RootPage() {
 	return (
 		<HydrateClient>
 			<main className="flex h-screen w-full items-center justify-center px-8 py-16">
@@ -15,7 +12,7 @@ export default async function HomePage() {
 							Your personal journal and pages
 						</p>
 					</div>
-					<AuthShowcase />
+					<Auth />
 				</div>
 			</main>
 		</HydrateClient>

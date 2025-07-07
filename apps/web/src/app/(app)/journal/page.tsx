@@ -1,8 +1,9 @@
-import { authGuard } from "~/auth/server";
-import Editor from "~/components/editor";
+import { JournalTextArea } from "./_components/journal-text-area";
 
-export default async function JournalPage() {
-	const _session = await authGuard();
-
-	return <Editor />;
+export default function JournalPage() {
+	return (
+		<div className="flex h-full w-full flex-col px-4 py-6">
+			<JournalTextArea />
+		</div>
+	);
 }

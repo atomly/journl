@@ -2,7 +2,6 @@ import "server-only";
 
 import { initAuth } from "@acme/auth";
 import { headers } from "next/headers";
-import { redirect } from "next/navigation";
 import { cache } from "react";
 import { env } from "~/env";
 
@@ -24,19 +23,4 @@ export const auth = initAuth({
 export const getSession = cache(async () =>
 	auth.api.getSession({ headers: await headers() }),
 );
-
-export const authGuard = async () => {
-	const session = await getSession();
-	if (!session) {
-		redirect("/");
-	}
-	return session;
-};
-
-export const unauthenticatedGuard = async () => {
-	const session = await getSession();
-	if (session) {
-		redirect("/home");
-	}
-	return session;
-};
+export type Session = NonNullable<Awaited<ReturnType<typeof getSession>>>;

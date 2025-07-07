@@ -1,7 +1,6 @@
 import { HydrateClient } from "~/trpc/server";
-import { CreatePostForm, PostList } from "../_components/posts";
 
-export default function JournalPage() {
+export default function AppPage() {
 	return (
 		<HydrateClient>
 			<div className="container mx-auto px-4 py-6">
@@ -12,8 +11,6 @@ export default function JournalPage() {
 							Welcome to your personal journal space.
 						</p>
 					</div>
-					<CreatePostForm />
-					<PostList />
 				</div>
 			</div>
 		</HydrateClient>

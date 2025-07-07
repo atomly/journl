@@ -1,6 +1,7 @@
 biomejs
 envinfo
-Journl
+nodenext
+poppinss
 rmolinamir
 shadcn
 subrouters

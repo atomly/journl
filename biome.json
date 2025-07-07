@@ -10,7 +10,13 @@
 	},
 	"files": {
 		"ignoreUnknown": false,
-		"includes": ["**/*", "!**/dist"]
+		"includes": [
+			"**/*",
+			"!**/dist",
+			"!**/node_modules",
+			"!**/.next",
+			"!**/.turbo"
+		]
 	},
 	"formatter": {
 		"enabled": true,
@@ -49,7 +55,12 @@
 				"noConsole": {
 					"level": "warn",
 					"options": {
-						"allow": ["debug", "info", "warn", "error"]
+						"allow": [
+							"debug",
+							"info",
+							"warn",
+							"error"
+						]
 					}
 				}
 			}
@@ -57,7 +68,10 @@
 	},
 	"overrides": [
 		{
-			"includes": ["**/env.ts", "**/drizzle.config.ts"],
+			"includes": [
+				"**/env.ts",
+				"**/drizzle.config.ts"
+			],
 			"linter": {
 				"rules": {
 					"style": {
@@ -74,7 +88,11 @@
 					}
 				}
 			},
-			"includes": ["**/package.json", "**/*tsconfig.json"]
+			"includes": [
+				"**/package.json",
+				"**/tsconfig*.json",
+				"**/*schema.ts"
+			]
 		}
 	],
 	"vcs": {

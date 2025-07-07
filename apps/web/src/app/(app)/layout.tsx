@@ -1,20 +1,23 @@
-import { SidebarInset, SidebarProvider } from "@acme/ui/components/sidebar";
-import { AppSidebar } from "./_components/app-sidebar";
-import { AuthControls, Navbar } from "./_components/navbar";
+import { SidebarInset, SidebarProvider } from "~/components/ui/sidebar";
 
-export default async function ClientLayout({
-	children,
-}: {
+type AppLayoutProps = {
 	children: React.ReactNode;
-}) {
+	// Parallel Routes
+	sidebar: React.ReactNode;
+	navbar: React.ReactNode;
+};
+
+export default function AppLayout({
+	children,
+	sidebar,
+	navbar,
+}: AppLayoutProps) {
 	return (
 		<SidebarProvider className="flex min-h-screen flex-col">
-			<Navbar>
-				<AuthControls />
-			</Navbar>
 			<div className="flex flex-1">
-				<AppSidebar variant="with-navbar" />
+				{sidebar}
 				<SidebarInset>
+					{navbar}
 					<main className="flex-1 overflow-auto">{children}</main>
 				</SidebarInset>
 			</div>

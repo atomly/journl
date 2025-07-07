@@ -22,8 +22,8 @@
     "dev:next": "turbo watch dev -F @acme/nextjs...",
     "dev": "turbo watch dev --continue",
     "postinstall": "pnpm dependencies",
-    "typecheck": "turbo run typecheck",
-    "ui-add": "turbo run ui-add"
+    "shadcn": "turbo run shadcn",
+    "typecheck": "turbo run typecheck"
   },
   "devDependencies": {
     "@turbo/gen": "^2.5.4",

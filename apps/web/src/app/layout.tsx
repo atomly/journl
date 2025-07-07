@@ -1,8 +1,8 @@
-import { ThemeProvider, ThemeToggle } from "@acme/ui/components/theme";
-import { Toaster } from "@acme/ui/components/toast";
-import { cn } from "@acme/ui/lib/utils";
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { ThemeProvider } from "~/components/ui/theme";
+import { Toaster } from "~/components/ui/toast";
+import { cn } from "~/lib/utils";
 
 import { TRPCReactProvider } from "~/trpc/react";
 
@@ -47,7 +47,11 @@ const geistMono = Geist_Mono({
 	variable: "--font-geist-mono",
 });
 
-export default function RootLayout(props: { children: React.ReactNode }) {
+export default function RootLayout({
+	children,
+}: {
+	children: React.ReactNode;
+}) {
 	return (
 		<html lang="en" suppressHydrationWarning>
 			<body
@@ -58,10 +62,7 @@ export default function RootLayout(props: { children: React.ReactNode }) {
 				)}
 			>
 				<ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-					<TRPCReactProvider>{props.children}</TRPCReactProvider>
-					<div className="absolute right-4 bottom-4">
-						<ThemeToggle />
-					</div>
+					<TRPCReactProvider>{children}</TRPCReactProvider>
 					<Toaster />
 				</ThemeProvider>
 			</body>

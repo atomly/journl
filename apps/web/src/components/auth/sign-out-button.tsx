@@ -14,7 +14,6 @@ export function SignOutButton({ ...props }: SignOutButtonProps) {
 		<form>
 			<Button
 				{...props}
-				size="lg"
 				formAction={async () => {
 					"use server";
 					await auth.api.signOut({

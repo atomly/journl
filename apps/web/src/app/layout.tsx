@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import { ThemeProvider, ThemeToggle } from "~/components/ui/theme";
+import { ThemeProvider } from "~/components/ui/theme";
 import { Toaster } from "~/components/ui/toast";
 import { cn } from "~/lib/utils";
 
@@ -19,15 +19,15 @@ export const metadata: Metadata = {
 	),
 	openGraph: {
 		description: "Simple monorepo for web apps",
-		siteName: "ACME",
-		title: "ACME",
+		siteName: "Journl",
+		title: "Journl",
 		url: "https://acme.app",
 	},
-	title: "ACME",
+	title: "Journl",
 	twitter: {
 		card: "summary_large_image",
-		creator: "@acme",
-		site: "@acme",
+		creator: "@journl",
+		site: "@journl",
 	},
 };
 
@@ -47,7 +47,11 @@ const geistMono = Geist_Mono({
 	variable: "--font-geist-mono",
 });
 
-export default function RootLayout(props: { children: React.ReactNode }) {
+export default function RootLayout({
+	children,
+}: {
+	children: React.ReactNode;
+}) {
 	return (
 		<html lang="en" suppressHydrationWarning>
 			<body
@@ -58,10 +62,7 @@ export default function RootLayout(props: { children: React.ReactNode }) {
 				)}
 			>
 				<ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-					<TRPCReactProvider>{props.children}</TRPCReactProvider>
-					<div className="absolute right-4 bottom-4">
-						<ThemeToggle />
-					</div>
+					<TRPCReactProvider>{children}</TRPCReactProvider>
 					<Toaster />
 				</ThemeProvider>
 			</body>

@@ -16,9 +16,9 @@ export function ThemeToggle() {
 	const { setTheme } = useTheme();
 
 	return (
-		<DropdownMenu>
+		<DropdownMenu modal={false}>
 			<DropdownMenuTrigger asChild>
-				<Button variant="outline" size="icon">
+				<Button variant="outline" size="icon" type="button">
 					<SunIcon className="dark:-rotate-90 size-5 rotate-0 scale-100 transition-all dark:scale-0" />
 					<MoonIcon className="absolute size-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
 					<span className="sr-only">Toggle theme</span>

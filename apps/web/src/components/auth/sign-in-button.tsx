@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { auth } from "~/auth/server";
-import { Button } from "~/components/button";
+import { Button } from "~/components/ui/button";
 
 export async function SignInButton() {
 	return (

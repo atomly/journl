@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { auth, getSession } from "~/auth/server";
 import { Button } from "~/components/ui/button";
 
-export async function AuthShowcase() {
+export async function Auth() {
 	const session = await getSession();
 
 	if (!session) {

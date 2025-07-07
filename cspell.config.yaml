@@ -35,5 +35,7 @@ languageSettings:
     allowCompoundWords: false
 useGitignore: true
 words:
+  - CLIENTVAR
+  - Journl
   - sonner
   - topo

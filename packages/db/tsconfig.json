@@ -1,9 +1,9 @@
 {
-	"extends": "@acme/tsconfig/nodejs.tsconfig.json",
+	"extends": "@acme/tsconfig/tsconfig.nodejs.json",
 	"compilerOptions": {
-		"paths": {
-			"~/*": ["./src/*"]
-		}
+		"noEmit": false,
+		"outDir": "./dist",
+		"rootDir": "./src"
 	},
 	"include": ["src"],
 	"exclude": ["node_modules"]

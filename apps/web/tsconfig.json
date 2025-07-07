@@ -1,19 +1,18 @@
 {
-	"extends": "@acme/tsconfig/dom.tsconfig.json",
+	"extends": "@acme/tsconfig/tsconfig.nextjs.json",
 	"compilerOptions": {
 		"baseUrl": ".",
 		"paths": {
-			"~/*": ["./src/*"],
-			"~ui/*": ["../../packages/ui/src/*"]
+			"~/*": ["./src/*"]
 		},
-		"plugins": [
-			{
-				"name": "next"
-			}
-		],
-		"incremental": true,
-		"jsx": "preserve"
+		"incremental": true
 	},
-	"include": [".", ".next/types/**/*.ts"],
-	"exclude": ["node_modules", ".next"]
+	"include": [
+		"**/*.ts",
+		"**/*.tsx",
+		"next-env.d.ts",
+		"next.config.js",
+		".next/types/**/*.ts"
+	],
+	"exclude": ["node_modules"]
 }

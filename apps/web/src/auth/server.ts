@@ -24,3 +24,4 @@ export const auth = initAuth({
 export const getSession = cache(async () =>
 	auth.api.getSession({ headers: await headers() }),
 );
+export type Session = NonNullable<Awaited<ReturnType<typeof getSession>>>;

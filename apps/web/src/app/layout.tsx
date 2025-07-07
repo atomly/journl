@@ -1,8 +1,8 @@
-import { ThemeProvider, ThemeToggle } from "@acme/ui/components/theme";
-import { Toaster } from "@acme/ui/components/toast";
-import { cn } from "@acme/ui/lib/utils";
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { ThemeProvider, ThemeToggle } from "~/components/ui/theme";
+import { Toaster } from "~/components/ui/toast";
+import { cn } from "~/lib/utils";
 
 import { TRPCReactProvider } from "~/trpc/react";
 

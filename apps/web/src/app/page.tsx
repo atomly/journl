@@ -1,7 +1,6 @@
 import Image from "next/image";
 import { HydrateClient } from "~/trpc/server";
-import { AuthShowcase } from "./_components/auth-showcase";
-import { CreatePostForm, PostList } from "./_components/posts";
+import { AuthShowcase } from "./_auth/auth-showcase";
 
 export default function HomePage() {
 	return (
@@ -16,8 +15,6 @@ export default function HomePage() {
 						height={288}
 					/>
 					<AuthShowcase />
-					<CreatePostForm />
-					<PostList />
 				</div>
 			</main>
 		</HydrateClient>

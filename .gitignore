@@ -39,6 +39,7 @@ yarn-error.log*
 # typescript
 dist/
 .cache
+tsconfig.tsbuildinfo
 
 # turbo
 .turbo

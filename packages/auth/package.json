@@ -8,10 +8,12 @@
 		"./env": "./src/env.ts"
 	},
 	"scripts": {
+		"build": "tsc",
 		"check": "biome check",
 		"clean": "git clean -xdf .cache .turbo dist node_modules",
+		"dev": "pnpm build --watch",
 		"generate": "dotenv -e ../../.env -- pnpx @better-auth/cli generate --output ../db/src/auth-schema.ts --config ../../apps/web/src/auth/server.ts",
-		"typecheck": "tsc --noEmit"
+		"typecheck": "tsc --noEmit --emitDeclarationOnly false"
 	},
 	"dependencies": {
 		"@acme/db": "workspace:*",

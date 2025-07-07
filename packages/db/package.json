@@ -6,22 +6,22 @@
 	"exports": {
 		".": {
 			"types": "./src/index.ts",
-			"default": "./src/index.ts"
+			"default": "./dist/index.js"
 		},
 		"./client": {
 			"types": "./src/client.ts",
-			"default": "./src/client.ts"
+			"default": "./dist/client.js"
 		},
 		"./schema": {
 			"types": "./src/schema.ts",
-			"default": "./src/schema.ts"
+			"default": "./dist/schema.js"
 		}
 	},
 	"scripts": {
 		"build": "tsc",
 		"check": "biome check",
 		"clean": "git clean -xdf .cache .turbo dist node_modules",
-		"dev": "tsc",
+		"dev": "pnpm build --watch",
 		"push": "pnpm with-env drizzle-kit push",
 		"studio": "pnpm with-env drizzle-kit studio",
 		"typecheck": "tsc --noEmit --emitDeclarationOnly false",

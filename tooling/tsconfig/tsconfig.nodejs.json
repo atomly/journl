@@ -1,0 +1,10 @@
+{
+	"$schema": "https://json.schemastore.org/tsconfig",
+	// Extends base configuration with Node.js-specific settings
+	"extends": "./tsconfig.base.json",
+	"compilerOptions": {
+		/* Node.js Environment: Configuration for server-side JavaScript */
+		"lib": ["es2022"], // Include ES2022 features but exclude DOM APIs
+		"types": ["node"] // Include Node.js type definitions for built-in modules
+	}
+}

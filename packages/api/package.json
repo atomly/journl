@@ -6,14 +6,14 @@
 	"exports": {
 		".": {
 			"types": "./src/index.ts",
-			"default": "./src/index.ts"
+			"default": "./dist/index.js"
 		}
 	},
 	"scripts": {
 		"build": "tsc",
 		"check": "biome check",
 		"clean": "git clean -xdf .cache .turbo dist node_modules",
-		"dev": "tsc",
+		"dev": "pnpm build --watch",
 		"typecheck": "tsc --noEmit --emitDeclarationOnly false"
 	},
 	"dependencies": {
@@ -25,6 +25,7 @@
 	},
 	"devDependencies": {
 		"@acme/tsconfig": "workspace:*",
-		"@biomejs/biome": "^2.0.6"
+		"@biomejs/biome": "^2.0.6",
+		"typescript": "^5.8.3"
 	}
 }

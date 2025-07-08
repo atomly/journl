@@ -1,17 +1,57 @@
 "use client";
 
+import { useMutation } from "@tanstack/react-query";
 import { useState } from "react";
+import { useDebouncedCallback } from "use-debounce";
+import { FullHeightTextarea } from "~/components/ui/full-height-textarea";
+import { cn } from "~/lib/cn";
+import { useTRPC } from "~/trpc/react";
 
-export function JournalTextArea() {
-	const [content, setContent] = useState("");
+type JournalEntryOptions = Omit<
+	React.ComponentProps<"textarea">,
+	"value" | "onChange"
+> & {
+	entryDate: Date;
+	className?: string;
+	initialContent?: string;
+	debounceTime?: number;
+};
+
+export function JournalTextArea({
+	initialContent,
+	className,
+	debounceTime = 400,
+	entryDate,
+	...rest
+}: JournalEntryOptions) {
+	const trpc = useTRPC();
+	const { mutate } = useMutation(trpc.journal.write.mutationOptions({}));
+	const debouncedMutate = useDebouncedCallback(mutate, debounceTime);
+
+	const [content, setContent] = useState(initialContent);
+
+	function handleChange(e: React.ChangeEvent<HTMLTextAreaElement>) {
+		setContent(e.target.value);
+		debouncedMutate({
+			content: e.target.value,
+			date: entryDate,
+		});
+	}
 
 	return (
-		<textarea
+		<FullHeightTextarea
 			value={content}
-			onChange={(e) => setContent(e.target.value)}
-			placeholder="Start writing your journal entry..."
-			className="h-full w-full resize-none border-none bg-transparent text-base leading-relaxed outline-none placeholder:text-muted-foreground"
-			style={{ minHeight: "calc(100vh - 200px)" }}
+			onChange={handleChange}
+			className={cn(
+				"!bg-transparent !ring-0 resize-none border-none p-0 leading-relaxed outline-none placeholder:text-muted-foreground/80",
+				className,
+			)}
+			onInput={(e) => {
+				const target = e.target as HTMLTextAreaElement;
+				target.style.height = "0px";
+				target.style.height = `${target.scrollHeight}px`;
+			}}
+			{...rest}
 		/>
 	);
 }

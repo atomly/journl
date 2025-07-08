@@ -11,9 +11,12 @@ export const Page = pgTable("page", (t) => ({
 		.references(() => user.id, { onDelete: "cascade" }),
 	title: t.text().notNull(),
 	content: t.text().notNull(),
-	createdAt: t.timestamp().defaultNow().notNull(),
+	createdAt: t
+		.timestamp({ mode: "string", withTimezone: true })
+		.defaultNow()
+		.notNull(),
 	updatedAt: t
-		.timestamp({ mode: "date", withTimezone: true })
+		.timestamp({ mode: "string", withTimezone: true })
 		.defaultNow()
 		.notNull()
 		.$onUpdateFn(() => sql`now()`),

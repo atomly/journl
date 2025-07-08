@@ -1,6 +1,7 @@
 biomejs
 envinfo
 nodenext
+overscan
 poppinss
 rmolinamir
 shadcn

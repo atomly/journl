@@ -10,5 +10,5 @@ export default {
 	casing: "snake_case",
 	dbCredentials: { url: nonPoolingUrl },
 	dialect: "postgresql",
-	schema: "./src/schema.ts",
+	schema: "./dist/schema.js",
 } satisfies Config;

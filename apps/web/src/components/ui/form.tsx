@@ -15,7 +15,7 @@ import {
 	useFormContext,
 } from "react-hook-form";
 import type { ZodType } from "zod/v4";
-import { cn } from "~/lib/utils";
+import { cn } from "~/lib/cn";
 import { Label } from "./label";
 
 export { FormProvider as Form, useFieldArray } from "react-hook-form";

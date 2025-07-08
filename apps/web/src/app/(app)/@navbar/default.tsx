@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import { SignOutButton } from "~/components/auth/sign-out-button";
 import { ThemeToggle } from "~/components/ui/theme";
-import { SidebarToggle } from "./sidebar-toggle";
+import { SidebarToggle } from "./_components/sidebar-toggle";
 
 export default function JournalNavbar() {
 	const today = new Date();

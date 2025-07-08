@@ -1,5 +1,5 @@
 import { HydrateClient } from "~/trpc/server";
-import { Auth } from "./_components/auth";
+import { AuthCard } from "./_components/auth-card";
 
 export default function RootPage() {
 	return (
@@ -12,7 +12,7 @@ export default function RootPage() {
 							Your personal journal and pages
 						</p>
 					</div>
-					<Auth />
+					<AuthCard />
 				</div>
 			</main>
 		</HydrateClient>

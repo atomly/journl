@@ -3,7 +3,7 @@
 import { useMutation } from "@tanstack/react-query";
 import { useState } from "react";
 import { useDebouncedCallback } from "use-debounce";
-import { AutosizeTextarea } from "~/components/ui/autosizeable-textarea";
+import { FullHeightTextarea } from "~/components/ui/full-height-textarea";
 import { cn } from "~/lib/cn";
 import { useTRPC } from "~/trpc/react";
 
@@ -39,11 +39,11 @@ export function JournalTextArea({
 	}
 
 	return (
-		<AutosizeTextarea
+		<FullHeightTextarea
 			value={content}
 			onChange={handleChange}
 			className={cn(
-				"resize-none border-none bg-transparent text-base leading-relaxed outline-none placeholder:text-muted-foreground",
+				"!bg-transparent !ring-0 resize-none border-none p-0 leading-relaxed outline-none placeholder:text-muted-foreground/80",
 				className,
 			)}
 			onInput={(e) => {

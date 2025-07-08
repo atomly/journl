@@ -15,7 +15,7 @@ export default async function JournalPage() {
 	);
 
 	return (
-		<div className="overflow-hidden">
+		<div className="h-full w-full">
 			<JournalVirtualList initialRange={initialRange} />
 		</div>
 	);

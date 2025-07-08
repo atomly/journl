@@ -4,8 +4,7 @@ type JournalLoaderProps = Omit<React.ComponentProps<"div">, "children"> & {
 	hasNextPage: boolean;
 };
 
-export function JournalLoader({
-	className,
+export function JournalEntryLoader({
 	hasNextPage,
 	...rest
 }: JournalLoaderProps) {

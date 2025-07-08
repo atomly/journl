@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useRef } from "react";
 import { cn } from "~/lib/cn";
+import { Textarea } from "./textarea";
 
-export function AutosizeTextarea({
+export function FullHeightTextarea({
 	className,
 	ref,
+	onChange,
 	...props
 }: React.ComponentProps<"textarea">) {
 	const textareaRef = useRef<HTMLTextAreaElement | null>(null);
@@ -39,18 +41,15 @@ export function AutosizeTextarea({
 		return () => resizeObserver.disconnect();
 	}, [calculateHeight]);
 
-	const handleInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+	function handleChange(e: React.ChangeEvent<HTMLTextAreaElement>) {
 		calculateHeight();
-		if (props.onChange) {
-			props.onChange(e);
-		}
-	};
+		onChange?.(e);
+	}
 
 	return (
-		<textarea
+		<Textarea
 			className={cn(
-				"flex min-h-[60px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-base shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm",
-				"text-xs transition-all duration-100 md:text-sm",
+				"flex min-h-[60px] w-full transition-all duration-100",
 				className,
 				"overflow-y-hidden",
 			)}
@@ -63,7 +62,7 @@ export function AutosizeTextarea({
 					ref.current = element;
 				}
 			}}
-			onChange={handleInput}
+			onChange={handleChange}
 			{...props}
 		/>
 	);

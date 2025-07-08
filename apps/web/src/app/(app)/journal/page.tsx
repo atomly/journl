@@ -1,9 +1,22 @@
-import { JournalTextArea } from "./_components/journal-text-area";
+import { prefetch, trpc } from "~/trpc/server";
+import { JournalVirtualList } from "./_components/journal-virtual-list";
 
-export default function JournalPage() {
+export default async function JournalPage() {
+	const initialRange: React.ComponentProps<
+		typeof JournalVirtualList
+	>["initialRange"] = {
+		limit: 7,
+	};
+
+	prefetch(
+		trpc.journal.getBetween.queryOptions({
+			limit: 7,
+		}),
+	);
+
 	return (
-		<div className="flex h-full w-full flex-col px-4 py-6">
-			<JournalTextArea />
+		<div className="overflow-hidden">
+			<JournalVirtualList initialRange={initialRange} />
 		</div>
 	);
 }

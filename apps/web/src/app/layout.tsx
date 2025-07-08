@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { ThemeProvider } from "~/components/ui/theme";
 import { Toaster } from "~/components/ui/toast";
-import { cn } from "~/lib/utils";
+import { cn } from "~/lib/cn";
 
 import { TRPCReactProvider } from "~/trpc/react";
 

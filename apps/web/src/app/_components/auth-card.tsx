@@ -1,9 +1,10 @@
 import { headers } from "next/headers";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth, getSession } from "~/auth/server";
 import { Button } from "~/components/ui/button";
 
-export async function Auth() {
+export async function AuthCard() {
 	const session = await getSession();
 
 	if (!session) {
@@ -34,23 +35,32 @@ export async function Auth() {
 	return (
 		<div className="flex flex-col items-center justify-center gap-4">
 			<p className="text-center text-2xl">
-				<span>Logged in as {session.user.name}</span>
+				<span>Welcome, {session.user.name}</span>
 			</p>
 
-			<form>
-				<Button
-					size="lg"
-					formAction={async () => {
-						"use server";
-						await auth.api.signOut({
-							headers: await headers(),
-						});
-						redirect("/");
-					}}
-				>
-					Sign out
+			<div className="grid grid-cols-2 gap-x-4">
+				<Button asChild className="shrink-0" size="lg">
+					<Link href="/home">
+						<span>Home</span>
+					</Link>
 				</Button>
-			</form>
+				<form>
+					<Button
+						className="shrink-0"
+						size="lg"
+						variant="outline"
+						formAction={async () => {
+							"use server";
+							await auth.api.signOut({
+								headers: await headers(),
+							});
+							redirect("/");
+						}}
+					>
+						Sign out
+					</Button>
+				</form>
+			</div>
 		</div>
 	);
 }

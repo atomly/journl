@@ -1,16 +1,16 @@
 import { boolean, pgTable, text, timestamp } from "drizzle-orm/pg-core";
 
 export const user = pgTable("user", {
-	createdAt: timestamp("created_at")
-		.$defaultFn(() => /* @__PURE__ */ new Date())
-		.notNull(),
+	id: text("id").primaryKey(),
 	email: text("email").notNull().unique(),
 	emailVerified: boolean("email_verified")
 		.$defaultFn(() => false)
 		.notNull(),
-	id: text("id").primaryKey(),
-	image: text("image"),
 	name: text("name").notNull(),
+	image: text("image"),
+	createdAt: timestamp("created_at")
+		.$defaultFn(() => /* @__PURE__ */ new Date())
+		.notNull(),
 	updatedAt: timestamp("updated_at")
 		.$defaultFn(() => /* @__PURE__ */ new Date())
 		.notNull(),

@@ -1,7 +1,7 @@
 import type { AppRouter } from "@acme/api";
 import { appRouter, createTRPCContext } from "@acme/api";
 import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
-import type { TRPCQueryOptions } from "@trpc/tanstack-react-query";
+import type { ResolverDef, TRPCQueryOptions } from "@trpc/tanstack-react-query";
 import { createTRPCOptionsProxy } from "@trpc/tanstack-react-query";
 import { headers } from "next/headers";
 import { cache } from "react";
@@ -25,6 +25,8 @@ const createContext = cache(async () => {
 
 const getQueryClient = cache(createQueryClient);
 
+export const api = appRouter.createCaller(createContext);
+
 export const trpc = createTRPCOptionsProxy<AppRouter>({
 	ctx: createContext,
 	queryClient: getQueryClient,
@@ -39,8 +41,8 @@ export function HydrateClient(props: { children: React.ReactNode }) {
 		</HydrationBoundary>
 	);
 }
-// biome-ignore lint/suspicious/noExplicitAny: <any is good here>
-export function prefetch<T extends ReturnType<TRPCQueryOptions<any>>>(
+
+export function prefetch<T extends ReturnType<TRPCQueryOptions<ResolverDef>>>(
 	queryOptions: T,
 ) {
 	const queryClient = getQueryClient();

@@ -1,7 +1,8 @@
+import { withAuth } from "~/auth/utils";
 import { prefetch, trpc } from "~/trpc/server";
 import { JournalVirtualList } from "./_components/journal-virtual-list";
 
-export default async function JournalPage() {
+export default withAuth(async function JournalPage() {
 	const initialRange: React.ComponentProps<
 		typeof JournalVirtualList
 	>["initialRange"] = {
@@ -19,4 +20,4 @@ export default async function JournalPage() {
 			<JournalVirtualList initialRange={initialRange} />
 		</div>
 	);
-}
+});

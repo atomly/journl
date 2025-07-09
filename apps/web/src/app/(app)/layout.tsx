@@ -1,3 +1,4 @@
+import { withAuth } from "~/auth/utils";
 import { SidebarInset, SidebarProvider } from "~/components/ui/sidebar";
 
 type AppLayoutProps = {
@@ -7,11 +8,7 @@ type AppLayoutProps = {
 	navbar: React.ReactNode;
 };
 
-export default function AppLayout({
-	children,
-	sidebar,
-	navbar,
-}: AppLayoutProps) {
+function AppLayout({ children, sidebar, navbar }: AppLayoutProps) {
 	return (
 		<SidebarProvider className="flex min-h-screen flex-col">
 			<div className="flex flex-1">
@@ -24,3 +21,5 @@ export default function AppLayout({
 		</SidebarProvider>
 	);
 }
+
+export default withAuth(AppLayout);

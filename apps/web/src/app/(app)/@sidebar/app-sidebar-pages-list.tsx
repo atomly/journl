@@ -24,7 +24,7 @@ export function AppSidebarPagesList() {
 	const { data: pages = [] } = useQuery(trpc.pages.all.queryOptions());
 
 	const [state, formAction, isPending] = useActionState(
-		async (prevState: any, formData: FormData) => {
+		async (_prevState: any, _formData: FormData) => {
 			try {
 				const newPage = await createPageAction();
 				return { page: newPage, success: true };

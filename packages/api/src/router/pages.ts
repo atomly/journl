@@ -63,6 +63,7 @@ export const pagesRouter = {
 			try {
 				const pageData = {
 					...input,
+					content: input.content ?? "",
 					userId: ctx.session.user.id,
 				};
 
@@ -145,6 +146,69 @@ export const pagesRouter = {
 					code: "INTERNAL_SERVER_ERROR",
 					message: "Failed to update page",
 				});
+			}
+		}),
+	updateContent: protectedProcedure
+		.input(
+			z.object({
+				content: z.string().min(0).max(50000),
+				id: z.string().uuid(),
+			}),
+		)
+		.mutation(async ({ ctx, input }) => {
+			try {
+				const result = await ctx.db
+					.update(Page)
+					.set(input)
+					.where(
+						and(eq(Page.id, input.id), eq(Page.userId, ctx.session.user.id)),
+					)
+					.returning();
+
+				if (result.length === 0) {
+					throw new TRPCError({
+						code: "NOT_FOUND",
+						message: "Page not found",
+					});
+				}
+
+				return result[0];
+			} catch (error) {
+				if (error instanceof TRPCError) {
+					throw error;
+				}
+			}
+		}),
+
+	updateTitle: protectedProcedure
+		.input(
+			z.object({
+				id: z.string().uuid(),
+				title: z.string().min(1).max(255),
+			}),
+		)
+		.mutation(async ({ ctx, input }) => {
+			try {
+				const result = await ctx.db
+					.update(Page)
+					.set(input)
+					.where(
+						and(eq(Page.id, input.id), eq(Page.userId, ctx.session.user.id)),
+					)
+					.returning();
+
+				if (result.length === 0) {
+					throw new TRPCError({
+						code: "NOT_FOUND",
+						message: "Page not found",
+					});
+				}
+
+				return result[0];
+			} catch (error) {
+				if (error instanceof TRPCError) {
+					throw error;
+				}
 			}
 		}),
 } satisfies TRPCRouterRecord;

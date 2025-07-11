@@ -37,7 +37,7 @@ export const handler =
 		schema: T,
 		handler: (
 			payload: z.infer<ReturnType<typeof createPayloadSchema<T>>>,
-		) => Promise<void>,
+		) => Promise<NextResponse>,
 	) =>
 	async (request: NextRequest) => {
 		try {
@@ -65,9 +65,7 @@ export const handler =
 			// Parse the payload
 			const payload = createPayloadSchema(schema).parse(JSON.parse(text));
 
-			await handler(payload);
-
-			return NextResponse.json({ success: true });
+			return await handler(payload);
 		} catch (error) {
 			console.error("Error processing webhook:", error);
 			return NextResponse.json(

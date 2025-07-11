@@ -1,7 +1,8 @@
+import { withoutAuth } from "~/auth/utils";
 import { HydrateClient } from "~/trpc/server";
 import { AuthCard } from "./_components/auth-card";
 
-export default function RootPage() {
+export default withoutAuth(function RootPage() {
 	return (
 		<HydrateClient>
 			<main className="flex h-screen w-full items-center justify-center px-8 py-16">
@@ -17,4 +18,4 @@ export default function RootPage() {
 			</main>
 		</HydrateClient>
 	);
-}
+});

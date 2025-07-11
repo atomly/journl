@@ -1,3 +1,5 @@
+"use client";
+
 import { useCallback, useEffect, useRef } from "react";
 import { cn } from "~/components/utils/cn";
 import { Textarea } from "./textarea";

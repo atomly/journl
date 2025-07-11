@@ -3,19 +3,13 @@
 import { BookOpen, ChevronRight, FileText, Home, Search } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import {
-	Collapsible,
-	CollapsibleContent,
-	CollapsibleTrigger,
-} from "~/components/ui/collapsible";
+import { Collapsible, CollapsibleTrigger } from "~/components/ui/collapsible";
 import {
 	SidebarMenu,
 	SidebarMenuButton,
 	SidebarMenuItem,
-	SidebarMenuSub,
-	SidebarMenuSubButton,
-	SidebarMenuSubItem,
 } from "~/components/ui/sidebar";
+import { AppSidebarPagesList } from "./app-sidebar-pages-list";
 
 const links = [
 	{
@@ -32,26 +26,6 @@ const links = [
 		icon: Search,
 		title: "Search",
 		url: "/search",
-	},
-];
-
-// TODO: Replace this with actual data from the API
-const userPages = [
-	{
-		title: "Getting Started",
-		url: "/pages/getting-started",
-	},
-	{
-		title: "Project Notes",
-		url: "/pages/project-notes",
-	},
-	{
-		title: "Meeting Minutes",
-		url: "/pages/meeting-minutes",
-	},
-	{
-		title: "Ideas",
-		url: "/pages/ideas",
 	},
 ];
 
@@ -85,22 +59,7 @@ export function AppSidebarLinks() {
 							<ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]:rotate-90" />
 						</SidebarMenuButton>
 					</CollapsibleTrigger>
-					<CollapsibleContent>
-						<SidebarMenuSub>
-							{userPages.map((page) => (
-								<SidebarMenuSubItem key={page.title}>
-									<SidebarMenuSubButton
-										asChild
-										isActive={pathname === page.url}
-									>
-										<Link href={page.url}>
-											<span>{page.title}</span>
-										</Link>
-									</SidebarMenuSubButton>
-								</SidebarMenuSubItem>
-							))}
-						</SidebarMenuSub>
-					</CollapsibleContent>
+					<AppSidebarPagesList />
 				</SidebarMenuItem>
 			</Collapsible>
 		</SidebarMenu>

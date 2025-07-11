@@ -2,6 +2,7 @@ import { db } from "@acme/db/client";
 import { JournalEmbedding, zJournalEntry } from "@acme/db/schema";
 import { openai } from "@ai-sdk/openai";
 import { embed } from "ai";
+import { NextResponse } from "next/server";
 import { handler } from "../_lib/webhook-handler";
 
 /**
@@ -9,6 +10,13 @@ import { handler } from "../_lib/webhook-handler";
  */
 export const POST = handler(zJournalEntry, async (payload) => {
 	if (payload.type === "INSERT" || payload.type === "UPDATE") {
+		if (!payload.record.content) {
+			return NextResponse.json(
+				{ error: "No content", success: false },
+				{ status: 400 },
+			);
+		}
+
 		const { embedding } = await embed({
 			maxRetries: 5,
 			model: openai.embedding("text-embedding-3-small"),
@@ -34,8 +42,10 @@ export const POST = handler(zJournalEntry, async (payload) => {
 		console.debug(
 			"Embedding stored for journal entry",
 			payload.record.id,
-			"date",
+			"of date",
 			payload.record.date,
 		);
 	}
+
+	return NextResponse.json({ success: true });
 });

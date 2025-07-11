@@ -23,10 +23,9 @@ export const Page = pgTable("page", (t) => ({
 }));
 
 export type Page = typeof Page.$inferSelect;
-
 export const zInsertPage = createInsertSchema(Page, {
 	title: z.string().min(1).max(255),
-	content: z.string().min(1).max(50000),
+	content: z.string().min(0).max(50000),
 }).omit({
 	created_at: true,
 	id: true,

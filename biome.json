@@ -36,7 +36,10 @@
 				"noUnusedVariables": "error"
 			},
 			"nursery": {
-				"useSortedClasses": "on"
+				"useSortedClasses": {
+					"fix": "safe",
+					"level": "info"
+				}
 			},
 			"recommended": true,
 			"style": {
@@ -55,12 +58,7 @@
 				"noConsole": {
 					"level": "warn",
 					"options": {
-						"allow": [
-							"debug",
-							"info",
-							"warn",
-							"error"
-						]
+						"allow": ["debug", "info", "warn", "error"]
 					}
 				}
 			}
@@ -68,10 +66,7 @@
 	},
 	"overrides": [
 		{
-			"includes": [
-				"**/env.ts",
-				"**/drizzle.config.ts"
-			],
+			"includes": ["**/env.ts", "**/drizzle.config.ts"],
 			"linter": {
 				"rules": {
 					"style": {
@@ -88,11 +83,7 @@
 					}
 				}
 			},
-			"includes": [
-				"**/package.json",
-				"**/tsconfig*.json",
-				"**/*schema.ts"
-			]
+			"includes": ["**/package.json", "**/tsconfig*.json", "**/*schema.ts"]
 		}
 	],
 	"vcs": {

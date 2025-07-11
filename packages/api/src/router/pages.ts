@@ -1,5 +1,5 @@
 import { and, desc, eq } from "@acme/db";
-import { InsertPage, Page, UpdatePage } from "@acme/db/schema";
+import { Page, zInsertPage, zUpdatePage } from "@acme/db/schema";
 import type { TRPCRouterRecord } from "@trpc/server";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod/v4";
@@ -12,8 +12,8 @@ export const pagesRouter = {
 			return await ctx.db
 				.select()
 				.from(Page)
-				.where(eq(Page.userId, ctx.session.user.id))
-				.orderBy(desc(Page.updatedAt));
+				.where(eq(Page.user_id, ctx.session.user.id))
+				.orderBy(desc(Page.updated_at));
 		} catch (error) {
 			console.error("Database error in pages.all:", error);
 			throw new TRPCError({
@@ -32,7 +32,7 @@ export const pagesRouter = {
 					.select()
 					.from(Page)
 					.where(
-						and(eq(Page.id, input.id), eq(Page.userId, ctx.session.user.id)),
+						and(eq(Page.id, input.id), eq(Page.user_id, ctx.session.user.id)),
 					)
 					.limit(1);
 
@@ -58,7 +58,7 @@ export const pagesRouter = {
 
 	// Create a new page
 	create: protectedProcedure
-		.input(InsertPage)
+		.input(zInsertPage)
 		.mutation(async ({ ctx, input }) => {
 			try {
 				const pageData = {
@@ -86,7 +86,7 @@ export const pagesRouter = {
 				const result = await ctx.db
 					.delete(Page)
 					.where(
-						and(eq(Page.id, input.id), eq(Page.userId, ctx.session.user.id)),
+						and(eq(Page.id, input.id), eq(Page.user_id, ctx.session.user.id)),
 					)
 					.returning();
 
@@ -114,7 +114,7 @@ export const pagesRouter = {
 	update: protectedProcedure
 		.input(
 			z.object({
-				data: UpdatePage,
+				data: zUpdatePage,
 				id: z.string().uuid(),
 			}),
 		)
@@ -124,7 +124,7 @@ export const pagesRouter = {
 					.update(Page)
 					.set(input.data)
 					.where(
-						and(eq(Page.id, input.id), eq(Page.userId, ctx.session.user.id)),
+						and(eq(Page.id, input.id), eq(Page.user_id, ctx.session.user.id)),
 					)
 					.returning();
 

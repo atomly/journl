@@ -36,6 +36,9 @@ languageSettings:
 useGitignore: true
 words:
   - CLIENTVAR
+  - HMAC
   - Journl
   - sonner
+  - supabase
   - topo
+  - ZROK

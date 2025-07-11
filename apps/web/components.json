@@ -4,8 +4,8 @@
 		"components": "~/components",
 		"hooks": "~/hooks",
 		"lib": "~/lib",
-		"ui": "~/components",
-		"utils": "~/lib/utils"
+		"ui": "~/components/ui",
+		"utils": "~/components/utils"
 	},
 	"iconLibrary": "lucide",
 	"rsc": true,

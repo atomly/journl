@@ -1,21 +1,22 @@
 import { sql } from "drizzle-orm";
 import { pgTable, text, unique } from "drizzle-orm/pg-core";
+import { createSelectSchema } from "drizzle-zod";
 import { user } from "../auth/user.schema.js";
 
 export const JournalEntry = pgTable(
 	"journal_entry",
 	(t) => ({
 		id: t.uuid().notNull().primaryKey().defaultRandom(),
-		userId: text("user_id")
+		user_id: text()
 			.notNull()
 			.references(() => user.id, { onDelete: "cascade" }),
 		content: t.text().notNull(),
 		date: t.date({ mode: "string" }).notNull(),
-		createdAt: t
+		created_at: t
 			.timestamp({ mode: "string", withTimezone: true })
 			.defaultNow()
 			.notNull(),
-		updatedAt: t
+		updated_at: t
 			.timestamp({ mode: "string", withTimezone: true })
 			.defaultNow()
 			.notNull()
@@ -23,8 +24,10 @@ export const JournalEntry = pgTable(
 	}),
 	(table) => [
 		// Enforce uniqueness: one journal entry per user per day
-		unique("unique_journal_entry_user_date").on(table.userId, table.date),
+		unique("unique_journal_entry_user_date").on(table.user_id, table.date),
 	],
 );
 
 export type JournalEntry = typeof JournalEntry.$inferSelect;
+
+export const zJournalEntry = createSelectSchema(JournalEntry);

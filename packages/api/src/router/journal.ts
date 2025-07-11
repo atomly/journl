@@ -1,7 +1,9 @@
-import { and, between, eq } from "@acme/db";
-import { JournalEntry } from "@acme/db/schema";
+import { and, between, cosineDistance, desc, eq, gt, sql } from "@acme/db";
+import { JournalEmbedding, JournalEntry } from "@acme/db/schema";
+import { openai } from "@ai-sdk/openai";
 import type { TRPCRouterRecord } from "@trpc/server";
 import { TRPCError } from "@trpc/server";
+import { embed } from "ai";
 import { z } from "zod/v4";
 import { protectedProcedure } from "../trpc.js";
 
@@ -19,7 +21,7 @@ export const journalRouter = {
 					.where(
 						and(
 							eq(JournalEntry.id, input.id),
-							eq(JournalEntry.userId, ctx.session.user.id),
+							eq(JournalEntry.user_id, ctx.session.user.id),
 						),
 					)
 					.returning();
@@ -48,7 +50,7 @@ export const journalRouter = {
 		.input(
 			z.object({
 				cursor: z.number().default(0),
-				limit: z.number().default(7),
+				limit: z.number().min(1).max(30).default(7),
 			}),
 		)
 		.query(async ({ ctx, input }) => {
@@ -64,7 +66,7 @@ export const journalRouter = {
 					.from(JournalEntry)
 					.where(
 						and(
-							eq(JournalEntry.userId, ctx.session.user.id),
+							eq(JournalEntry.user_id, ctx.session.user.id),
 							between(JournalEntry.date, to.toISOString(), from.toISOString()),
 						),
 					)
@@ -130,7 +132,7 @@ export const journalRouter = {
 					.where(
 						and(
 							eq(JournalEntry.id, input.id),
-							eq(JournalEntry.userId, ctx.session.user.id),
+							eq(JournalEntry.user_id, ctx.session.user.id),
 						),
 					)
 					.limit(1);
@@ -155,6 +157,54 @@ export const journalRouter = {
 			}
 		}),
 
+	similarEntries: protectedProcedure
+		.input(
+			z.object({
+				limit: z.number().min(1).max(20).default(5),
+				query: z.string().max(10000),
+				threshold: z.number().min(0).max(1).default(0.7),
+			}),
+		)
+		.query(async ({ ctx, input }) => {
+			try {
+				const { embedding } = await embed({
+					model: openai.embedding("text-embedding-3-small"),
+					value: input.query,
+				});
+
+				const similarity = sql<number>`1 - (${cosineDistance(JournalEmbedding.embedding, embedding)})`;
+
+				const results = await ctx.db
+					.select({
+						content: JournalEntry.content,
+						date: JournalEntry.date,
+						id: JournalEntry.id,
+						similarity,
+					})
+					.from(JournalEmbedding)
+					.where(
+						and(
+							eq(JournalEntry.user_id, ctx.session.user.id),
+							gt(similarity, 0.3),
+						),
+					)
+					.innerJoin(
+						JournalEntry,
+						eq(JournalEmbedding.journal_entry_id, JournalEntry.id),
+					)
+					.orderBy(desc(similarity))
+					.limit(input.limit);
+
+				return results;
+			} catch (error) {
+				console.error("Database error in journal.similarEntries:", error);
+				throw new TRPCError({
+					code: "INTERNAL_SERVER_ERROR",
+					message: "Failed to fetch similar journal entries",
+				});
+			}
+		}),
+
 	write: protectedProcedure
 		.input(
 			z.object({
@@ -169,13 +219,13 @@ export const journalRouter = {
 					.values({
 						content: input.content,
 						date: input.date.toISOString(),
-						userId: ctx.session.user.id,
+						user_id: ctx.session.user.id,
 					})
 					.onConflictDoUpdate({
 						set: {
 							content: input.content,
 						},
-						target: [JournalEntry.userId, JournalEntry.date],
+						target: [JournalEntry.user_id, JournalEntry.date],
 					})
 					.returning();
 

@@ -4,7 +4,7 @@ import { useMutation } from "@tanstack/react-query";
 import { useState } from "react";
 import { useDebouncedCallback } from "use-debounce";
 import { FullHeightTextarea } from "~/components/ui/full-height-textarea";
-import { cn } from "~/lib/cn";
+import { cn } from "~/components/utils/cn";
 import { useTRPC } from "~/trpc/react";
 
 type JournalEntryOptions = Omit<

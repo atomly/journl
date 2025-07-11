@@ -5,8 +5,8 @@ import {
 	SidebarGroupContent,
 	SidebarSeparator,
 } from "~/components/ui/sidebar";
-import { AppSidebarHeader } from "./app-sidebar-header";
-import { AppSidebarLinks } from "./app-sidebar-links";
+import { AppSidebarHeader } from "./_components/app-sidebar-header";
+import { AppSidebarLinks } from "./_components/app-sidebar-links";
 
 export default function AppSidebar() {
 	return (

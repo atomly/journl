@@ -1,5 +1,9 @@
+AUTHTOKEN
 biomejs
 envinfo
+hnsw
+LOCALTUNNEL
+NGROK
 nodenext
 overscan
 poppinss

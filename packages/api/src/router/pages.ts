@@ -1,5 +1,5 @@
 import { and, desc, eq } from "@acme/db";
-import { Page } from "@acme/db/schema";
+import { Page, zInsertPage, zUpdatePage } from "@acme/db/schema";
 import type { TRPCRouterRecord } from "@trpc/server";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod/v4";
@@ -12,8 +12,8 @@ export const pagesRouter = {
 			return await ctx.db
 				.select()
 				.from(Page)
-				.where(eq(Page.userId, ctx.session.user.id))
-				.orderBy(desc(Page.updatedAt));
+				.where(eq(Page.user_id, ctx.session.user.id))
+				.orderBy(desc(Page.updated_at));
 		} catch (error) {
 			console.error("Database error in pages.all:", error);
 			throw new TRPCError({
@@ -25,14 +25,14 @@ export const pagesRouter = {
 
 	// Get a single page by ID
 	byId: protectedProcedure
-		.input(z.object({ id: z.string().uuid() }))
+		.input(z.object({ id: z.uuid() }))
 		.query(async ({ ctx, input }) => {
 			try {
 				const page = await ctx.db
 					.select()
 					.from(Page)
 					.where(
-						and(eq(Page.id, input.id), eq(Page.userId, ctx.session.user.id)),
+						and(eq(Page.id, input.id), eq(Page.user_id, ctx.session.user.id)),
 					)
 					.limit(1);
 
@@ -58,12 +58,7 @@ export const pagesRouter = {
 
 	// Create a new page
 	create: protectedProcedure
-		.input(
-			z.object({
-				content: z.string().min(0).max(50000).optional(),
-				title: z.string().min(1).max(255),
-			}),
-		)
+		.input(zInsertPage)
 		.mutation(async ({ ctx, input }) => {
 			try {
 				const pageData = {
@@ -92,7 +87,7 @@ export const pagesRouter = {
 				const result = await ctx.db
 					.delete(Page)
 					.where(
-						and(eq(Page.id, input.id), eq(Page.userId, ctx.session.user.id)),
+						and(eq(Page.id, input.id), eq(Page.user_id, ctx.session.user.id)),
 					)
 					.returning();
 
@@ -120,8 +115,8 @@ export const pagesRouter = {
 	update: protectedProcedure
 		.input(
 			z.object({
-				content: z.string().min(0).max(50000).optional(),
-				id: z.string().uuid(),
+				data: zUpdatePage,
+				id: z.uuid(),
 				title: z.string().min(1).max(255).optional(),
 			}),
 		)
@@ -146,7 +141,7 @@ export const pagesRouter = {
 				const result = await ctx.db
 					.update(Page)
 					.set(fieldsToUpdate)
-					.where(and(eq(Page.id, id), eq(Page.userId, ctx.session.user.id)))
+					.where(and(eq(Page.id, id), eq(Page.user_id, ctx.session.user.id)))
 					.returning();
 
 				if (result.length === 0) {
@@ -182,7 +177,7 @@ export const pagesRouter = {
 					.update(Page)
 					.set({ content: input.content })
 					.where(
-						and(eq(Page.id, input.id), eq(Page.userId, ctx.session.user.id)),
+						and(eq(Page.id, input.id), eq(Page.user_id, ctx.session.user.id)),
 					)
 					.returning();
 
@@ -219,7 +214,7 @@ export const pagesRouter = {
 					.update(Page)
 					.set({ title: input.title })
 					.where(
-						and(eq(Page.id, input.id), eq(Page.userId, ctx.session.user.id)),
+						and(eq(Page.id, input.id), eq(Page.user_id, ctx.session.user.id)),
 					)
 					.returning();
 

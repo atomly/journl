@@ -1,6 +1,6 @@
 "use client";
 
-import { BookOpen, ChevronRight, FileText, Home } from "lucide-react";
+import { BookOpen, ChevronRight, FileText, Home, Search } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Collapsible, CollapsibleTrigger } from "~/components/ui/collapsible";
@@ -21,6 +21,11 @@ const links = [
 		icon: BookOpen,
 		title: "Journal",
 		url: "/journal",
+	},
+	{
+		icon: Search,
+		title: "Search",
+		url: "/search",
 	},
 ];
 

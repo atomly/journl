@@ -4,7 +4,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { useDebouncedCallback } from "use-debounce";
 import { FullHeightTextarea } from "~/components/ui/full-height-textarea";
-import { cn } from "~/lib/cn";
+import { cn } from "~/components/utils";
 import { useTRPC } from "~/trpc/react";
 
 type PageTextAreaProps = Omit<
@@ -40,7 +40,7 @@ export function PageTextArea({
 						return {
 							...old,
 							content: data.content,
-							updatedAt: data.updatedAt,
+							updated_at: data.updated_at,
 						};
 					},
 				);

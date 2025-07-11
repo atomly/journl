@@ -14,7 +14,7 @@ export async function createPageAction() {
 	const newPage = await api.pages.create({
 		content: "",
 		title: "New Page",
-		userId: session.user.id,
+		user_id: session.user.id,
 	});
 
 	if (!newPage) {
@@ -24,5 +24,6 @@ export async function createPageAction() {
 	// Invalidate the layout cache to refresh any server-side cached data
 	revalidatePath("/(app)", "layout");
 
+	// TODO: Redirect from the server action, not here.
 	return newPage;
 }

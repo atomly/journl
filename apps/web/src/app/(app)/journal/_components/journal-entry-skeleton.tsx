@@ -1,5 +1,5 @@
 import { Skeleton } from "~/components/ui/skeleton";
-import { cn } from "~/lib/cn";
+import { cn } from "~/components/utils/cn";
 
 type JournalEntrySkeletonProps = Omit<
 	React.ComponentProps<"div">,

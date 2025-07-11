@@ -24,7 +24,9 @@ export const env = createEnv({
 	 * This way you can ensure the app isn't built with invalid env vars.
 	 */
 	server: {
-		POSTGRES_URL: z.string().url(),
+		OPENAI_API_KEY: z.string(),
+		POSTGRES_URL: z.url(),
+		SUPABASE_SECRET: z.string(),
 	},
 	shared: {
 		NODE_ENV: z

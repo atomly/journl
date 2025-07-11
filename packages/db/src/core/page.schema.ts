@@ -1,19 +1,21 @@
 import { sql } from "drizzle-orm";
 import { pgTable, text } from "drizzle-orm/pg-core";
+import { createInsertSchema, createSelectSchema } from "drizzle-zod";
+import { z } from "zod/v4";
 import { user } from "../auth/user.schema.js";
 
 export const Page = pgTable("page", (t) => ({
 	id: t.uuid().notNull().primaryKey().defaultRandom(),
-	userId: text("user_id")
+	user_id: text()
 		.notNull()
 		.references(() => user.id, { onDelete: "cascade" }),
 	title: t.text().notNull(),
-	content: t.text().notNull().default(""),
-	createdAt: t
+	content: t.text().notNull(),
+	created_at: t
 		.timestamp({ mode: "string", withTimezone: true })
 		.defaultNow()
 		.notNull(),
-	updatedAt: t
+	updated_at: t
 		.timestamp({ mode: "string", withTimezone: true })
 		.defaultNow()
 		.notNull()
@@ -21,3 +23,23 @@ export const Page = pgTable("page", (t) => ({
 }));
 
 export type Page = typeof Page.$inferSelect;
+export const zInsertPage = createInsertSchema(Page, {
+	title: z.string().min(1).max(255),
+	content: z.string().min(0).max(50000),
+}).omit({
+	created_at: true,
+	id: true,
+	updated_at: true,
+});
+
+export const zUpdatePage = createInsertSchema(Page, {
+	title: z.string().min(1).max(255),
+	content: z.string().min(1).max(50000),
+}).omit({
+	created_at: true,
+	id: true,
+	updated_at: true,
+	user_id: true,
+});
+
+export const zPage = createSelectSchema(Page);

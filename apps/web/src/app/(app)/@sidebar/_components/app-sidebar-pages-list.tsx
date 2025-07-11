@@ -14,7 +14,7 @@ import {
 	SidebarMenuSubItem,
 } from "~/components/ui/sidebar";
 import { useTRPC } from "~/trpc/react";
-import { createPageAction } from "../pages/create-page.action";
+import { createPageAction } from "../../pages/create-page.action";
 
 export function AppSidebarPagesList() {
 	const pathname = usePathname();
@@ -24,7 +24,7 @@ export function AppSidebarPagesList() {
 	const { data: pages = [] } = useQuery(trpc.pages.all.queryOptions());
 
 	const [state, formAction, isPending] = useActionState(
-		async (_prevState: any, _formData: FormData) => {
+		async (_prevState: unknown, _formData: FormData) => {
 			try {
 				const newPage = await createPageAction();
 				return { page: newPage, success: true };

@@ -1,32 +1,32 @@
 {
-  "name": "acme",
-  "version": "0.0.0",
-  "private": true,
-  "type": "module",
-  "license": "MIT",
-  "engines": {
-    "node": ">=22.14.0",
-    "pnpm": ">=9.6.0"
-  },
-  "packageManager": "pnpm@10.12.4",
-  "scripts": {
-    "auth:generate": "pnpm -F @acme/auth generate",
-    "build": "turbo run build",
-    "check:fix": "turbo run check --continue -- --write --unsafe",
-    "check": "turbo run check --continue",
-    "clean": "turbo run clean && git clean -xdf .turbo node_modules",
-    "db:push": "turbo -F @acme/db push",
-    "db:studio": "turbo -F @acme/db studio",
-    "dependencies:fix": "pnpm dlx sherif@latest --fix",
-    "dependencies": "pnpm dlx sherif@latest",
-    "dev:next": "turbo watch dev -F @acme/nextjs...",
-    "dev": "turbo watch dev --continue",
-    "postinstall": "pnpm dependencies",
-    "shadcn": "turbo run shadcn",
-    "typecheck": "turbo run typecheck"
-  },
-  "devDependencies": {
-    "@turbo/gen": "^2.5.4",
-    "turbo": "^2.5.4"
-  }
+	"name": "acme",
+	"version": "0.0.0",
+	"private": true,
+	"type": "module",
+	"license": "MIT",
+	"engines": {
+		"node": ">=22.14.0",
+		"pnpm": ">=9.6.0"
+	},
+	"packageManager": "pnpm@10.12.4",
+	"scripts": {
+		"auth:generate": "pnpm -F @acme/auth generate",
+		"build": "turbo run build",
+		"check:fix": "turbo run check --continue -- --write --unsafe",
+		"check": "turbo run check --continue",
+		"clean": "turbo run clean && git clean -xdf .turbo node_modules",
+		"db:push": "turbo -F @acme/db push",
+		"db:studio": "turbo -F @acme/db studio",
+		"dependencies:fix": "pnpm dlx sherif@latest --fix",
+		"dependencies": "pnpm dlx sherif@latest",
+		"dev:next": "turbo watch dev -F @acme/nextjs...",
+		"dev": "turbo watch dev --continue",
+		"postinstall": "pnpm dependencies",
+		"shadcn": "turbo run shadcn",
+		"typecheck": "turbo run typecheck"
+	},
+	"devDependencies": {
+		"@turbo/gen": "^2.5.4",
+		"turbo": "^2.5.4"
+	}
 }

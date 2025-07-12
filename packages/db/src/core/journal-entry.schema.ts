@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, unique } from "drizzle-orm/pg-core";
+import { jsonb, pgTable, text, unique } from "drizzle-orm/pg-core";
 import { createSelectSchema } from "drizzle-zod";
 import { user } from "../auth/user.schema.js";
 
@@ -10,7 +10,8 @@ export const JournalEntry = pgTable(
 		user_id: text()
 			.notNull()
 			.references(() => user.id, { onDelete: "cascade" }),
-		content: t.text().notNull(),
+		// Content array stores ordered list of child block IDs
+		content: jsonb().notNull().default([]),
 		date: t.date({ mode: "string" }).notNull(),
 		created_at: t
 			.timestamp({ mode: "string", withTimezone: true })

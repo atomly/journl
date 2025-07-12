@@ -65,7 +65,7 @@ export function DeletePageButton({ page, className }: DeletePageButtonProps) {
 				router.push("/home");
 			}
 
-			// More aggressive cache cleanup
+			// Remove the deleted page from the pages.all cache
 			queryClient.setQueryData(
 				trpc.pages.all.queryKey(),
 				(oldPages: Page[] | undefined) => {
@@ -74,21 +74,15 @@ export function DeletePageButton({ page, className }: DeletePageButtonProps) {
 				},
 			);
 
-			// Remove all queries related to this page
+			// Remove the specific page from cache
 			queryClient.removeQueries({
 				queryKey: trpc.pages.byId.queryKey({ id: deletedPageId }),
 			});
 
-			// Also cancel any in-flight queries for this page
+			// Cancel any in-flight queries for this page
 			queryClient.cancelQueries({
 				queryKey: trpc.pages.byId.queryKey({ id: deletedPageId }),
 			});
-
-			// Set the cache to return undefined for this page to prevent further requests
-			queryClient.setQueryData(
-				trpc.pages.byId.queryKey({ id: deletedPageId }),
-				() => undefined,
-			);
 
 			// Close the dialog after successful deletion
 			setIsDeleteDialogOpen(false);

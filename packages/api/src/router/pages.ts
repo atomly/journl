@@ -64,7 +64,7 @@ export const pagesRouter = {
 				const pageData = {
 					...input,
 					content: input.content ?? "",
-					userId: ctx.session.user.id,
+					user_id: ctx.session.user.id,
 				};
 
 				const result = await ctx.db.insert(Page).values(pageData).returning();

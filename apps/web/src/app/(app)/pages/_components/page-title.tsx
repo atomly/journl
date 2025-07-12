@@ -37,7 +37,7 @@ export function PageTitle({
 					if (!old) return old;
 					return {
 						...old,
-						title: variables.title,
+						title: variables.title ?? "",
 						updatedAt: new Date().toISOString(),
 					};
 				},
@@ -52,7 +52,7 @@ export function PageTitle({
 						page.id === id
 							? {
 									...page,
-									title: variables.title,
+									title: variables.title ?? "",
 									updatedAt: new Date().toISOString(),
 								}
 							: page,

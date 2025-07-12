@@ -24,6 +24,5 @@ export async function createPageAction() {
 	// Invalidate the layout cache to refresh any server-side cached data
 	revalidatePath("/(app)", "layout");
 
-	// TODO: Redirect from the server action, not here.
 	return newPage;
 }

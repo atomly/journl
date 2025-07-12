@@ -9,8 +9,10 @@ await jiti.import("./src/env");
 const config = {
 	/** We already do linting and typechecking as separate tasks in CI */
 	eslint: { ignoreDuringBuilds: true },
+	// /** These packages won't be bundled in the server build */
+	// serverExternalPackages: ["@acme/ai"],
 	/** Enables hot reloading for local packages without a build step */
-	transpilePackages: ["@acme/api", "@acme/auth", "@acme/db"],
+	transpilePackages: ["@acme/ai", "@acme/api", "@acme/auth", "@acme/db"],
 	typescript: { ignoreBuildErrors: true },
 };
 

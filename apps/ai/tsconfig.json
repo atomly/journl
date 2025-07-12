@@ -1,11 +1,10 @@
 {
-	"extends": "@acme/tsconfig/tsconfig.nodejs.json",
+	"extends": "@acme/tsconfig/tsconfig.mastra.json",
 	"compilerOptions": {
 		"baseUrl": ".",
 		"paths": {
 			"~/*": ["./src/*"]
-		},
-		"incremental": true
+		}
 	},
 	"include": ["**/*.ts"],
 	"exclude": ["node_modules", ".mastra"]

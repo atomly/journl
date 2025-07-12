@@ -37,6 +37,7 @@ useGitignore: true
 words:
   - autohide
   - CLIENTVAR
+  - evals
   - HMAC
   - Journl
   - libsql

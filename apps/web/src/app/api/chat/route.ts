@@ -1,23 +1,15 @@
-import { openai } from "@ai-sdk/openai";
-import { frontendTools } from "@assistant-ui/react-ai-sdk";
-import { streamText } from "ai";
+import { mastra } from "@acme/ai"; // Adjust the import path if necessary
 
-export const runtime = "edge";
+// Allow streaming responses up to 30 seconds
 export const maxDuration = 30;
 
 export async function POST(req: Request) {
-	const { messages, system, tools } = await req.json();
-
-	const result = streamText({
-		messages,
-		model: openai("gpt-4o"),
-		system,
-		toolCallStreaming: true,
-		tools: {
-			...frontendTools(tools),
-			// add backend tools here
-		},
-	});
-
+	// Extract the messages from the request body
+	const { messages } = await req.json();
+	// Get the chefAgent instance from Mastra
+	const agent = mastra.getAgent("weatherAgent");
+	// Stream the response using the agent
+	const result = await agent.stream(messages);
+	// Return the result as a data stream response
 	return result.toDataStreamResponse();
 }

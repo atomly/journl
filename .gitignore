@@ -43,3 +43,6 @@ tsconfig.tsbuildinfo
 
 # turbo
 .turbo
+
+# mastra
+.mastra

@@ -3,6 +3,7 @@ biomejs
 envinfo
 hnsw
 LOCALTUNNEL
+mastra
 NGROK
 nodenext
 overscan

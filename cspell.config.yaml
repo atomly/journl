@@ -39,6 +39,7 @@ words:
   - CLIENTVAR
   - evals
   - HMAC
+  - journaling
   - Journl
   - libsql
   - sonner

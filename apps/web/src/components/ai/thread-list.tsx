@@ -4,8 +4,8 @@ import {
 } from "@assistant-ui/react";
 import { ArchiveIcon, PlusIcon } from "lucide-react";
 
-import { Button } from "~/components/ai/button";
 import { TooltipIconButton } from "~/components/ai/tooltip-icon-button";
+import { Button } from "~/components/ui/button";
 
 export function ThreadList() {
 	return (

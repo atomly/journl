@@ -15,55 +15,6 @@ importers:
         specifier: ^2.5.4
         version: 2.5.4
 
-  apps/ai:
-    dependencies:
-      '@ai-sdk/openai':
-        specifier: ^1.3.23
-        version: 1.3.23(zod@3.25.76)
-      '@mastra/core':
-        specifier: ^0.10.12
-        version: 0.10.12(arktype@2.1.20)(openapi-types@12.1.3)(react@19.1.0)(valibot@1.0.0-beta.15(typescript@5.8.3))(zod@3.25.76)
-      '@mastra/libsql':
-        specifier: ^0.11.0
-        version: 0.11.0(@mastra/core@0.10.12(arktype@2.1.20)(openapi-types@12.1.3)(react@19.1.0)(valibot@1.0.0-beta.15(typescript@5.8.3))(zod@3.25.76))(bufferutil@4.0.9)
-      '@mastra/loggers':
-        specifier: ^0.10.3
-        version: 0.10.3(@mastra/core@0.10.12(arktype@2.1.20)(openapi-types@12.1.3)(react@19.1.0)(valibot@1.0.0-beta.15(typescript@5.8.3))(zod@3.25.76))
-      '@mastra/memory':
-        specifier: ^0.11.2
-        version: 0.11.2(@mastra/core@0.10.12(arktype@2.1.20)(openapi-types@12.1.3)(react@19.1.0)(valibot@1.0.0-beta.15(typescript@5.8.3))(zod@3.25.76))(react@19.1.0)
-      '@t3-oss/env-nextjs':
-        specifier: ^0.13.6
-        version: 0.13.6(arktype@2.1.20)(typescript@5.8.3)(valibot@1.0.0-beta.15(typescript@5.8.3))(zod@3.25.76)
-      ai:
-        specifier: ^4.3.17
-        version: 4.3.17(react@19.1.0)(zod@3.25.76)
-      zod:
-        specifier: ^3.25.71
-        version: 3.25.76
-    devDependencies:
-      '@acme/api':
-        specifier: workspace:*
-        version: link:../../packages/api
-      '@acme/auth':
-        specifier: workspace:*
-        version: link:../../packages/auth
-      '@acme/db':
-        specifier: workspace:*
-        version: link:../../packages/db
-      '@acme/tsconfig':
-        specifier: workspace:*
-        version: link:../../tooling/tsconfig
-      '@biomejs/biome':
-        specifier: ^2.0.6
-        version: 2.0.6
-      dotenv-cli:
-        specifier: ^8.0.0
-        version: 8.0.0
-      mastra:
-        specifier: ^0.10.12
-        version: 0.10.12(@mastra/core@0.10.12(arktype@2.1.20)(openapi-types@12.1.3)(react@19.1.0)(valibot@1.0.0-beta.15(typescript@5.8.3))(zod@3.25.76))(@opentelemetry/api@1.9.0)(react@19.1.0)(typescript@5.8.3)
-
   apps/localtunnel:
     devDependencies:
       '@acme/db':
@@ -123,6 +74,18 @@ importers:
       '@hookform/resolvers':
         specifier: ^5.0.1
         version: 5.1.1(react-hook-form@7.60.0(react@19.1.0))
+      '@mastra/core':
+        specifier: ^0.10.12
+        version: 0.10.12(arktype@2.1.20)(openapi-types@12.1.3)(react@19.1.0)(valibot@1.0.0-beta.15(typescript@5.8.3))(zod@3.25.71)
+      '@mastra/libsql':
+        specifier: ^0.11.0
+        version: 0.11.0(@mastra/core@0.10.12(arktype@2.1.20)(openapi-types@12.1.3)(react@19.1.0)(valibot@1.0.0-beta.15(typescript@5.8.3))(zod@3.25.71))(bufferutil@4.0.9)
+      '@mastra/loggers':
+        specifier: ^0.10.3
+        version: 0.10.3(@mastra/core@0.10.12(arktype@2.1.20)(openapi-types@12.1.3)(react@19.1.0)(valibot@1.0.0-beta.15(typescript@5.8.3))(zod@3.25.71))
+      '@mastra/memory':
+        specifier: ^0.11.2
+        version: 0.11.2(@mastra/core@0.10.12(arktype@2.1.20)(openapi-types@12.1.3)(react@19.1.0)(valibot@1.0.0-beta.15(typescript@5.8.3))(zod@3.25.71))(react@19.1.0)
       '@ngrok/ngrok':
         specifier: ^1.5.1
         version: 1.5.1
@@ -176,7 +139,7 @@ importers:
         version: 0.475.0(react@19.1.0)
       next:
         specifier: ^15.3.3
-        version: 15.3.3(@opentelemetry/api@1.9.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+        version: 15.3.3(@babel/core@7.28.0)(@opentelemetry/api@1.9.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       next-themes:
         specifier: ^0.4.6
         version: 0.4.6(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
@@ -217,9 +180,6 @@ importers:
         specifier: ^3.25.71
         version: 3.25.71
     devDependencies:
-      '@acme/ai':
-        specifier: workspace:*
-        version: link:../ai
       '@acme/api':
         specifier: workspace:*
         version: link:../../packages/api
@@ -253,6 +213,9 @@ importers:
       jiti:
         specifier: ^2.4.2
         version: 2.4.2
+      mastra:
+        specifier: ^0.10.12
+        version: 0.10.12(@mastra/core@0.10.12(arktype@2.1.20)(openapi-types@12.1.3)(react@19.1.0)(valibot@1.0.0-beta.15(typescript@5.8.3))(zod@3.25.71))(@opentelemetry/api@1.9.0)(react@19.1.0)(typescript@5.8.3)
       tailwindcss:
         specifier: ^4.1.11
         version: 4.1.11
@@ -304,7 +267,7 @@ importers:
         version: 1.2.9
       next:
         specifier: ^15.3.3
-        version: 15.3.3(@opentelemetry/api@1.9.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+        version: 15.3.3(@babel/core@7.28.0)(@opentelemetry/api@1.9.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       react:
         specifier: 19.1.0
         version: 19.1.0
@@ -6891,12 +6854,6 @@ snapshots:
       '@ai-sdk/provider-utils': 2.2.8(zod@3.25.71)
       zod: 3.25.71
 
-  '@ai-sdk/openai@1.3.23(zod@3.25.76)':
-    dependencies:
-      '@ai-sdk/provider': 1.1.3
-      '@ai-sdk/provider-utils': 2.2.8(zod@3.25.76)
-      zod: 3.25.76
-
   '@ai-sdk/provider-utils@2.2.8(zod@3.25.71)':
     dependencies:
       '@ai-sdk/provider': 1.1.3
@@ -8048,12 +8005,12 @@ snapshots:
     dependencies:
       '@lukeed/csprng': 1.1.0
 
-  '@mastra/core@0.10.12(arktype@2.1.20)(openapi-types@12.1.3)(react@19.1.0)(valibot@1.0.0-beta.15(typescript@5.8.3))(zod@3.25.76)':
+  '@mastra/core@0.10.12(arktype@2.1.20)(openapi-types@12.1.3)(react@19.1.0)(valibot@1.0.0-beta.15(typescript@5.8.3))(zod@3.25.71)':
     dependencies:
       '@ai-sdk/provider': 1.1.3
-      '@ai-sdk/provider-utils': 2.2.8(zod@3.25.76)
-      '@ai-sdk/ui-utils': 1.2.11(zod@3.25.76)
-      '@mastra/schema-compat': 0.10.4(ai@4.3.17(react@19.1.0)(zod@3.25.76))(zod@3.25.76)
+      '@ai-sdk/provider-utils': 2.2.8(zod@3.25.71)
+      '@ai-sdk/ui-utils': 1.2.11(zod@3.25.71)
+      '@mastra/schema-compat': 0.10.4(ai@4.3.17(react@19.1.0)(zod@3.25.71))(zod@3.25.71)
       '@opentelemetry/api': 1.9.0
       '@opentelemetry/auto-instrumentations-node': 0.59.0(@opentelemetry/api@1.9.0)(@opentelemetry/core@2.0.1(@opentelemetry/api@1.9.0))
       '@opentelemetry/core': 2.0.1(@opentelemetry/api@1.9.0)
@@ -8068,12 +8025,12 @@ snapshots:
       '@opentelemetry/sdk-trace-node': 2.0.1(@opentelemetry/api@1.9.0)
       '@opentelemetry/semantic-conventions': 1.36.0
       '@sindresorhus/slugify': 2.2.1
-      ai: 4.3.17(react@19.1.0)(zod@3.25.76)
+      ai: 4.3.17(react@19.1.0)(zod@3.25.71)
       cohere-ai: 7.17.1
       date-fns: 3.6.0
       dotenv: 16.6.1
       hono: 4.8.4
-      hono-openapi: 0.4.8(arktype@2.1.20)(hono@4.8.4)(openapi-types@12.1.3)(valibot@1.0.0-beta.15(typescript@5.8.3))(zod@3.25.76)
+      hono-openapi: 0.4.8(arktype@2.1.20)(hono@4.8.4)(openapi-types@12.1.3)(valibot@1.0.0-beta.15(typescript@5.8.3))(zod@3.25.71)
       json-schema: 0.4.0
       json-schema-to-zod: 2.6.1
       pino: 9.7.0
@@ -8081,8 +8038,8 @@ snapshots:
       radash: 12.1.1
       sift: 17.1.3
       xstate: 5.20.1
-      zod: 3.25.76
-      zod-to-json-schema: 3.24.6(zod@3.25.76)
+      zod: 3.25.71
+      zod-to-json-schema: 3.24.6(zod@3.25.71)
     transitivePeerDependencies:
       - '@hono/arktype-validator'
       - '@hono/effect-validator'
@@ -8101,12 +8058,12 @@ snapshots:
       - valibot
       - zod-openapi
 
-  '@mastra/deployer@0.10.12(@mastra/core@0.10.12(arktype@2.1.20)(openapi-types@12.1.3)(react@19.1.0)(valibot@1.0.0-beta.15(typescript@5.8.3))(zod@3.25.76))(typescript@5.8.3)':
+  '@mastra/deployer@0.10.12(@mastra/core@0.10.12(arktype@2.1.20)(openapi-types@12.1.3)(react@19.1.0)(valibot@1.0.0-beta.15(typescript@5.8.3))(zod@3.25.71))(typescript@5.8.3)':
     dependencies:
       '@babel/core': 7.28.0
       '@babel/helper-module-imports': 7.27.1
-      '@mastra/core': 0.10.12(arktype@2.1.20)(openapi-types@12.1.3)(react@19.1.0)(valibot@1.0.0-beta.15(typescript@5.8.3))(zod@3.25.76)
-      '@mastra/server': 0.10.12(@mastra/core@0.10.12(arktype@2.1.20)(openapi-types@12.1.3)(react@19.1.0)(valibot@1.0.0-beta.15(typescript@5.8.3))(zod@3.25.76))(zod@3.25.76)
+      '@mastra/core': 0.10.12(arktype@2.1.20)(openapi-types@12.1.3)(react@19.1.0)(valibot@1.0.0-beta.15(typescript@5.8.3))(zod@3.25.71)
+      '@mastra/server': 0.10.12(@mastra/core@0.10.12(arktype@2.1.20)(openapi-types@12.1.3)(react@19.1.0)(valibot@1.0.0-beta.15(typescript@5.8.3))(zod@3.25.71))(zod@3.25.76)
       '@neon-rs/load': 0.1.82
       '@rollup/plugin-alias': 5.1.1(rollup@4.45.0)
       '@rollup/plugin-commonjs': 28.0.6(rollup@4.45.0)
@@ -8132,24 +8089,24 @@ snapshots:
       - supports-color
       - typescript
 
-  '@mastra/libsql@0.11.0(@mastra/core@0.10.12(arktype@2.1.20)(openapi-types@12.1.3)(react@19.1.0)(valibot@1.0.0-beta.15(typescript@5.8.3))(zod@3.25.76))(bufferutil@4.0.9)':
+  '@mastra/libsql@0.11.0(@mastra/core@0.10.12(arktype@2.1.20)(openapi-types@12.1.3)(react@19.1.0)(valibot@1.0.0-beta.15(typescript@5.8.3))(zod@3.25.71))(bufferutil@4.0.9)':
     dependencies:
       '@libsql/client': 0.15.9(bufferutil@4.0.9)
-      '@mastra/core': 0.10.12(arktype@2.1.20)(openapi-types@12.1.3)(react@19.1.0)(valibot@1.0.0-beta.15(typescript@5.8.3))(zod@3.25.76)
+      '@mastra/core': 0.10.12(arktype@2.1.20)(openapi-types@12.1.3)(react@19.1.0)(valibot@1.0.0-beta.15(typescript@5.8.3))(zod@3.25.71)
     transitivePeerDependencies:
       - bufferutil
       - utf-8-validate
 
-  '@mastra/loggers@0.10.3(@mastra/core@0.10.12(arktype@2.1.20)(openapi-types@12.1.3)(react@19.1.0)(valibot@1.0.0-beta.15(typescript@5.8.3))(zod@3.25.76))':
+  '@mastra/loggers@0.10.3(@mastra/core@0.10.12(arktype@2.1.20)(openapi-types@12.1.3)(react@19.1.0)(valibot@1.0.0-beta.15(typescript@5.8.3))(zod@3.25.71))':
     dependencies:
-      '@mastra/core': 0.10.12(arktype@2.1.20)(openapi-types@12.1.3)(react@19.1.0)(valibot@1.0.0-beta.15(typescript@5.8.3))(zod@3.25.76)
+      '@mastra/core': 0.10.12(arktype@2.1.20)(openapi-types@12.1.3)(react@19.1.0)(valibot@1.0.0-beta.15(typescript@5.8.3))(zod@3.25.71)
       pino: 9.7.0
       pino-pretty: 13.0.0
 
-  '@mastra/mcp@0.10.6(@mastra/core@0.10.12(arktype@2.1.20)(openapi-types@12.1.3)(react@19.1.0)(valibot@1.0.0-beta.15(typescript@5.8.3))(zod@3.25.76))(zod@3.25.76)':
+  '@mastra/mcp@0.10.6(@mastra/core@0.10.12(arktype@2.1.20)(openapi-types@12.1.3)(react@19.1.0)(valibot@1.0.0-beta.15(typescript@5.8.3))(zod@3.25.71))(zod@3.25.76)':
     dependencies:
       '@apidevtools/json-schema-ref-parser': 14.1.0
-      '@mastra/core': 0.10.12(arktype@2.1.20)(openapi-types@12.1.3)(react@19.1.0)(valibot@1.0.0-beta.15(typescript@5.8.3))(zod@3.25.76)
+      '@mastra/core': 0.10.12(arktype@2.1.20)(openapi-types@12.1.3)(react@19.1.0)(valibot@1.0.0-beta.15(typescript@5.8.3))(zod@3.25.71)
       '@modelcontextprotocol/sdk': 1.15.1
       date-fns: 4.1.0
       exit-hook: 4.0.0
@@ -8160,9 +8117,9 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@mastra/memory@0.11.2(@mastra/core@0.10.12(arktype@2.1.20)(openapi-types@12.1.3)(react@19.1.0)(valibot@1.0.0-beta.15(typescript@5.8.3))(zod@3.25.76))(react@19.1.0)':
+  '@mastra/memory@0.11.2(@mastra/core@0.10.12(arktype@2.1.20)(openapi-types@12.1.3)(react@19.1.0)(valibot@1.0.0-beta.15(typescript@5.8.3))(zod@3.25.71))(react@19.1.0)':
     dependencies:
-      '@mastra/core': 0.10.12(arktype@2.1.20)(openapi-types@12.1.3)(react@19.1.0)(valibot@1.0.0-beta.15(typescript@5.8.3))(zod@3.25.76)
+      '@mastra/core': 0.10.12(arktype@2.1.20)(openapi-types@12.1.3)(react@19.1.0)(valibot@1.0.0-beta.15(typescript@5.8.3))(zod@3.25.71)
       '@upstash/redis': 1.35.1
       ai: 4.3.17(react@19.1.0)(zod@3.25.76)
       js-tiktoken: 1.0.20
@@ -8177,17 +8134,17 @@ snapshots:
       - pg-native
       - react
 
-  '@mastra/schema-compat@0.10.4(ai@4.3.17(react@19.1.0)(zod@3.25.76))(zod@3.25.76)':
+  '@mastra/schema-compat@0.10.4(ai@4.3.17(react@19.1.0)(zod@3.25.71))(zod@3.25.71)':
     dependencies:
-      ai: 4.3.17(react@19.1.0)(zod@3.25.76)
+      ai: 4.3.17(react@19.1.0)(zod@3.25.71)
       json-schema: 0.4.0
-      zod: 3.25.76
+      zod: 3.25.71
       zod-from-json-schema: 0.0.5
-      zod-to-json-schema: 3.24.6(zod@3.25.76)
+      zod-to-json-schema: 3.24.6(zod@3.25.71)
 
-  '@mastra/server@0.10.12(@mastra/core@0.10.12(arktype@2.1.20)(openapi-types@12.1.3)(react@19.1.0)(valibot@1.0.0-beta.15(typescript@5.8.3))(zod@3.25.76))(zod@3.25.76)':
+  '@mastra/server@0.10.12(@mastra/core@0.10.12(arktype@2.1.20)(openapi-types@12.1.3)(react@19.1.0)(valibot@1.0.0-beta.15(typescript@5.8.3))(zod@3.25.71))(zod@3.25.76)':
     dependencies:
-      '@mastra/core': 0.10.12(arktype@2.1.20)(openapi-types@12.1.3)(react@19.1.0)(valibot@1.0.0-beta.15(typescript@5.8.3))(zod@3.25.76)
+      '@mastra/core': 0.10.12(arktype@2.1.20)(openapi-types@12.1.3)(react@19.1.0)(valibot@1.0.0-beta.15(typescript@5.8.3))(zod@3.25.71)
       zod: 3.25.76
 
   '@modelcontextprotocol/sdk@1.15.1':
@@ -10939,13 +10896,6 @@ snapshots:
       valibot: 1.0.0-beta.15(typescript@5.8.3)
       zod: 3.25.71
 
-  '@t3-oss/env-core@0.13.6(arktype@2.1.20)(typescript@5.8.3)(valibot@1.0.0-beta.15(typescript@5.8.3))(zod@3.25.76)':
-    optionalDependencies:
-      arktype: 2.1.20
-      typescript: 5.8.3
-      valibot: 1.0.0-beta.15(typescript@5.8.3)
-      zod: 3.25.76
-
   '@t3-oss/env-nextjs@0.13.6(arktype@2.1.20)(typescript@5.8.3)(valibot@1.0.0-beta.15(typescript@5.8.3))(zod@3.25.71)':
     dependencies:
       '@t3-oss/env-core': 0.13.6(arktype@2.1.20)(typescript@5.8.3)(valibot@1.0.0-beta.15(typescript@5.8.3))(zod@3.25.71)
@@ -10954,15 +10904,6 @@ snapshots:
       typescript: 5.8.3
       valibot: 1.0.0-beta.15(typescript@5.8.3)
       zod: 3.25.71
-
-  '@t3-oss/env-nextjs@0.13.6(arktype@2.1.20)(typescript@5.8.3)(valibot@1.0.0-beta.15(typescript@5.8.3))(zod@3.25.76)':
-    dependencies:
-      '@t3-oss/env-core': 0.13.6(arktype@2.1.20)(typescript@5.8.3)(valibot@1.0.0-beta.15(typescript@5.8.3))(zod@3.25.76)
-    optionalDependencies:
-      arktype: 2.1.20
-      typescript: 5.8.3
-      valibot: 1.0.0-beta.15(typescript@5.8.3)
-      zod: 3.25.76
 
   '@tailwindcss/node@4.1.11':
     dependencies:
@@ -11197,7 +11138,7 @@ snapshots:
 
   '@types/mysql@2.15.27':
     dependencies:
-      '@types/node': 24.0.13
+      '@types/node': 22.15.29
 
   '@types/node@22.15.29':
     dependencies:
@@ -11223,7 +11164,7 @@ snapshots:
 
   '@types/pg@8.15.4':
     dependencies:
-      '@types/node': 24.0.13
+      '@types/node': 22.15.29
       pg-protocol: 1.10.3
       pg-types: 2.2.0
 
@@ -12392,7 +12333,7 @@ snapshots:
 
   help-me@5.0.0: {}
 
-  hono-openapi@0.4.8(arktype@2.1.20)(hono@4.8.4)(openapi-types@12.1.3)(valibot@1.0.0-beta.15(typescript@5.8.3))(zod@3.25.76):
+  hono-openapi@0.4.8(arktype@2.1.20)(hono@4.8.4)(openapi-types@12.1.3)(valibot@1.0.0-beta.15(typescript@5.8.3))(zod@3.25.71):
     dependencies:
       json-schema-walker: 2.0.0
       openapi-types: 12.1.3
@@ -12400,7 +12341,7 @@ snapshots:
       arktype: 2.1.20
       hono: 4.8.4
       valibot: 1.0.0-beta.15(typescript@5.8.3)
-      zod: 3.25.76
+      zod: 3.25.71
 
   hono@4.8.4: {}
 
@@ -12766,14 +12707,14 @@ snapshots:
 
   markdown-table@3.0.4: {}
 
-  mastra@0.10.12(@mastra/core@0.10.12(arktype@2.1.20)(openapi-types@12.1.3)(react@19.1.0)(valibot@1.0.0-beta.15(typescript@5.8.3))(zod@3.25.76))(@opentelemetry/api@1.9.0)(react@19.1.0)(typescript@5.8.3):
+  mastra@0.10.12(@mastra/core@0.10.12(arktype@2.1.20)(openapi-types@12.1.3)(react@19.1.0)(valibot@1.0.0-beta.15(typescript@5.8.3))(zod@3.25.71))(@opentelemetry/api@1.9.0)(react@19.1.0)(typescript@5.8.3):
     dependencies:
       '@clack/prompts': 0.11.0
       '@lukeed/uuid': 2.0.1
-      '@mastra/core': 0.10.12(arktype@2.1.20)(openapi-types@12.1.3)(react@19.1.0)(valibot@1.0.0-beta.15(typescript@5.8.3))(zod@3.25.76)
-      '@mastra/deployer': 0.10.12(@mastra/core@0.10.12(arktype@2.1.20)(openapi-types@12.1.3)(react@19.1.0)(valibot@1.0.0-beta.15(typescript@5.8.3))(zod@3.25.76))(typescript@5.8.3)
-      '@mastra/loggers': 0.10.3(@mastra/core@0.10.12(arktype@2.1.20)(openapi-types@12.1.3)(react@19.1.0)(valibot@1.0.0-beta.15(typescript@5.8.3))(zod@3.25.76))
-      '@mastra/mcp': 0.10.6(@mastra/core@0.10.12(arktype@2.1.20)(openapi-types@12.1.3)(react@19.1.0)(valibot@1.0.0-beta.15(typescript@5.8.3))(zod@3.25.76))(zod@3.25.76)
+      '@mastra/core': 0.10.12(arktype@2.1.20)(openapi-types@12.1.3)(react@19.1.0)(valibot@1.0.0-beta.15(typescript@5.8.3))(zod@3.25.71)
+      '@mastra/deployer': 0.10.12(@mastra/core@0.10.12(arktype@2.1.20)(openapi-types@12.1.3)(react@19.1.0)(valibot@1.0.0-beta.15(typescript@5.8.3))(zod@3.25.71))(typescript@5.8.3)
+      '@mastra/loggers': 0.10.3(@mastra/core@0.10.12(arktype@2.1.20)(openapi-types@12.1.3)(react@19.1.0)(valibot@1.0.0-beta.15(typescript@5.8.3))(zod@3.25.71))
+      '@mastra/mcp': 0.10.6(@mastra/core@0.10.12(arktype@2.1.20)(openapi-types@12.1.3)(react@19.1.0)(valibot@1.0.0-beta.15(typescript@5.8.3))(zod@3.25.71))(zod@3.25.76)
       '@opentelemetry/auto-instrumentations-node': 0.60.1(@opentelemetry/api@1.9.0)(@opentelemetry/core@2.0.1(@opentelemetry/api@1.9.0))
       '@opentelemetry/core': 2.0.1(@opentelemetry/api@1.9.0)
       '@opentelemetry/exporter-trace-otlp-grpc': 0.202.0(@opentelemetry/api@1.9.0)
@@ -13239,7 +13180,7 @@ snapshots:
       react: 19.1.0
       react-dom: 19.1.0(react@19.1.0)
 
-  next@15.3.3(@opentelemetry/api@1.9.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0):
+  next@15.3.3(@babel/core@7.28.0)(@opentelemetry/api@1.9.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0):
     dependencies:
       '@next/env': 15.3.3
       '@swc/counter': 0.1.3
@@ -13249,7 +13190,7 @@ snapshots:
       postcss: 8.4.31
       react: 19.1.0
       react-dom: 19.1.0(react@19.1.0)
-      styled-jsx: 5.1.6(react@19.1.0)
+      styled-jsx: 5.1.6(@babel/core@7.28.0)(react@19.1.0)
     optionalDependencies:
       '@next/swc-darwin-arm64': 15.3.3
       '@next/swc-darwin-x64': 15.3.3
@@ -14231,10 +14172,12 @@ snapshots:
     dependencies:
       inline-style-parser: 0.2.4
 
-  styled-jsx@5.1.6(react@19.1.0):
+  styled-jsx@5.1.6(@babel/core@7.28.0)(react@19.1.0):
     dependencies:
       client-only: 0.0.1
       react: 19.1.0
+    optionalDependencies:
+      '@babel/core': 7.28.0
 
   superjson@2.2.2:
     dependencies:

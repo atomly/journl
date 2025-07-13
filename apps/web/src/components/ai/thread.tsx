@@ -16,9 +16,9 @@ import {
 	RefreshCwIcon,
 	SendHorizontalIcon,
 } from "lucide-react";
-import { Button } from "~/components/ai/button";
 import { MarkdownText } from "~/components/ai/markdown-text";
 import { TooltipIconButton } from "~/components/ai/tooltip-icon-button";
+import { Button } from "~/components/ui/button";
 import { cn } from "~/components/utils";
 
 export function Thread() {

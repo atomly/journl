@@ -16,20 +16,19 @@ export default function SearchPage() {
 
 	const trpc = useTRPC();
 	const { data, isLoading, error, refetch } = useQuery({
-		...trpc.journal.similarEntries.queryOptions({
+		...trpc.journal.getRelevantEntries.queryOptions({
 			limit: 10,
-			query: searchQuery,
-			threshold: 0.3,
+			query,
+			threshold: 0.1,
 		}),
 		enabled: false,
 	});
 
 	const handleSubmit = (e: React.FormEvent) => {
 		e.preventDefault();
-		if (query.trim()) {
-			setSearchQuery(query.trim());
-			refetch();
-		}
+		const input = query.trim();
+		if (input) setSearchQuery(input);
+		refetch();
 	};
 
 	return (

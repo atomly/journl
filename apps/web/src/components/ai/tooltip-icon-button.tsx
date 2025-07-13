@@ -1,12 +1,12 @@
 "use client";
 
 import type { ComponentProps } from "react";
-import { Button } from "~/components/ai/button";
 import {
 	Tooltip,
 	TooltipContent,
 	TooltipTrigger,
 } from "~/components/ai/tooltip";
+import { Button } from "~/components/ui/button";
 import { cn } from "~/components/utils";
 
 export type TooltipIconButtonProps = ComponentProps<typeof Button> & {

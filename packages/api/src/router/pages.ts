@@ -63,7 +63,7 @@ export const pagesRouter = {
 			try {
 				const pageData = {
 					...input,
-					content: input.content ?? "",
+					content: input.content ?? [],
 					user_id: ctx.session.user.id,
 				};
 
@@ -167,7 +167,7 @@ export const pagesRouter = {
 	updateContent: protectedProcedure
 		.input(
 			z.object({
-				content: z.string().min(0).max(50000),
+				content: z.array(z.string().uuid()),
 				id: z.string().uuid(),
 			}),
 		)

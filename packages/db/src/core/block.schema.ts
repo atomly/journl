@@ -22,7 +22,7 @@ export const Block = pgTable(
 		created_at: t.timestamp().notNull().defaultNow(),
 		updated_at: t.timestamp().notNull().defaultNow(),
 		created_by: t
-			.uuid()
+			.text()
 			.notNull()
 			.references(() => user.id, { onDelete: "cascade" }),
 	}),

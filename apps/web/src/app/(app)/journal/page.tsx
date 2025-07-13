@@ -10,7 +10,7 @@ export default withAuth(async function JournalPage() {
 	};
 
 	prefetch(
-		trpc.journal.getBetween.queryOptions({
+		trpc.journal.getTimeline.queryOptions({
 			limit: 7,
 		}),
 	);

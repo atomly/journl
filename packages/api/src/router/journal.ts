@@ -49,8 +49,124 @@ export const journalRouter = {
 	getBetween: protectedProcedure
 		.input(
 			z.object({
-				cursor: z.number().default(0),
-				limit: z.number().min(1).max(30).default(7),
+				from: z
+					.string()
+					.describe("The start date of the search in ISO 8601 format"),
+				to: z
+					.string()
+					.describe("The end date of the search in ISO 8601 format"),
+			}),
+		)
+		.query(async ({ ctx, input }) => {
+			const entries = await ctx.db
+				.select()
+				.from(JournalEntry)
+				.where(
+					and(
+						eq(JournalEntry.user_id, ctx.session.user.id),
+						between(JournalEntry.date, input.from, input.to),
+					),
+				);
+
+			return entries;
+		}),
+
+	getById: protectedProcedure
+		.input(z.object({ id: z.uuid() }))
+		.query(async ({ ctx, input }) => {
+			try {
+				const entry = await ctx.db
+					.select()
+					.from(JournalEntry)
+					.where(
+						and(
+							eq(JournalEntry.id, input.id),
+							eq(JournalEntry.user_id, ctx.session.user.id),
+						),
+					)
+					.limit(1);
+
+				if (entry.length === 0) {
+					throw new TRPCError({
+						code: "NOT_FOUND",
+						message: "Journal entry not found",
+					});
+				}
+
+				return entry[0];
+			} catch (error) {
+				if (error instanceof TRPCError) {
+					throw error;
+				}
+				console.error("Database error in journal.byId:", error);
+				throw new TRPCError({
+					code: "INTERNAL_SERVER_ERROR",
+					message: "Failed to fetch journal entry",
+				});
+			}
+		}),
+
+	getRelevantEntries: protectedProcedure
+		.input(
+			z.object({
+				limit: z.number().min(1).max(20).default(5),
+				query: z.string().max(10000),
+				threshold: z.number().min(0).max(1).default(0.3),
+			}),
+		)
+		.query(async ({ ctx, input }) => {
+			try {
+				const { embedding } = await embed({
+					model: openai.embedding("text-embedding-3-small"),
+					value: input.query,
+				});
+
+				const similarity = sql<number>`1 - (${cosineDistance(JournalEmbedding.embedding, embedding)})`;
+
+				const results = await ctx.db
+					.select({
+						content: JournalEntry.content,
+						date: JournalEntry.date,
+						id: JournalEntry.id,
+						similarity,
+					})
+					.from(JournalEmbedding)
+					.where(
+						and(
+							eq(JournalEntry.user_id, ctx.session.user.id),
+							gt(similarity, input.threshold),
+						),
+					)
+					.innerJoin(
+						JournalEntry,
+						eq(JournalEmbedding.journal_entry_id, JournalEntry.id),
+					)
+					.orderBy(desc(similarity))
+					.limit(input.limit);
+
+				return results;
+			} catch (error) {
+				console.error("Database error in journal.getRelevantEntries:", error);
+				throw new TRPCError({
+					code: "INTERNAL_SERVER_ERROR",
+					message: "Failed to fetch similar journal entries",
+				});
+			}
+		}),
+
+	getTimeline: protectedProcedure
+		.input(
+			z.object({
+				cursor: z
+					.number()
+					.default(0)
+					.describe("The cursor to start the search from, 0 is today"),
+				limit: z
+					.number()
+					.min(1)
+					.max(30)
+					.default(7)
+					.describe("The number of days to search for, 7 is a week"),
 			}),
 		)
 		.query(async ({ ctx, input }) => {
@@ -118,89 +234,6 @@ export const journalRouter = {
 				throw new TRPCError({
 					code: "INTERNAL_SERVER_ERROR",
 					message: "Failed to fetch journal entries",
-				});
-			}
-		}),
-
-	getById: protectedProcedure
-		.input(z.object({ id: z.uuid() }))
-		.query(async ({ ctx, input }) => {
-			try {
-				const entry = await ctx.db
-					.select()
-					.from(JournalEntry)
-					.where(
-						and(
-							eq(JournalEntry.id, input.id),
-							eq(JournalEntry.user_id, ctx.session.user.id),
-						),
-					)
-					.limit(1);
-
-				if (entry.length === 0) {
-					throw new TRPCError({
-						code: "NOT_FOUND",
-						message: "Journal entry not found",
-					});
-				}
-
-				return entry[0];
-			} catch (error) {
-				if (error instanceof TRPCError) {
-					throw error;
-				}
-				console.error("Database error in journal.byId:", error);
-				throw new TRPCError({
-					code: "INTERNAL_SERVER_ERROR",
-					message: "Failed to fetch journal entry",
-				});
-			}
-		}),
-
-	similarEntries: protectedProcedure
-		.input(
-			z.object({
-				limit: z.number().min(1).max(20).default(5),
-				query: z.string().max(10000),
-				threshold: z.number().min(0).max(1).default(0.7),
-			}),
-		)
-		.query(async ({ ctx, input }) => {
-			try {
-				const { embedding } = await embed({
-					model: openai.embedding("text-embedding-3-small"),
-					value: input.query,
-				});
-
-				const similarity = sql<number>`1 - (${cosineDistance(JournalEmbedding.embedding, embedding)})`;
-
-				const results = await ctx.db
-					.select({
-						content: JournalEntry.content,
-						date: JournalEntry.date,
-						id: JournalEntry.id,
-						similarity,
-					})
-					.from(JournalEmbedding)
-					.where(
-						and(
-							eq(JournalEntry.user_id, ctx.session.user.id),
-							gt(similarity, 0.3),
-						),
-					)
-					.innerJoin(
-						JournalEntry,
-						eq(JournalEmbedding.journal_entry_id, JournalEntry.id),
-					)
-					.orderBy(desc(similarity))
-					.limit(input.limit);
-
-				return results;
-			} catch (error) {
-				console.error("Database error in journal.similarEntries:", error);
-				throw new TRPCError({
-					code: "INTERNAL_SERVER_ERROR",
-					message: "Failed to fetch similar journal entries",
 				});
 			}
 		}),

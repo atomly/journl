@@ -4,9 +4,8 @@
 	"private": true,
 	"type": "module",
 	"scripts": {
-		"build": "pnpm with-env next build",
 		"check": "biome check",
-		"clean": "git clean -xdf .cache .next .turbo node_modules",
+		"clean": "git clean -xdf .cache .next .turbo node_modules tsconfig.tsbuildinfo",
 		"dev": "pnpm with-env concurrently \"pnpm watch\" \"pnpm tunnel\"",
 		"tunnel": "pnpm with-env sh -c 'pnpm lt --port $LOCALTUNNEL_PORT --subdomain $LOCALTUNNEL_SUBDOMAIN'",
 		"typecheck": "tsc --noEmit",

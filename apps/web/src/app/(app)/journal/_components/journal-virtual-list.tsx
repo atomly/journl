@@ -18,7 +18,7 @@ type JournalEntryOptions = {
 export function JournalVirtualList({ initialRange }: JournalEntryOptions) {
 	const trpc = useTRPC();
 	const { status, data, error, fetchNextPage, hasNextPage } = useInfiniteQuery({
-		...trpc.journal.getBetween.infiniteQueryOptions(initialRange),
+		...trpc.journal.getTimeline.infiniteQueryOptions(initialRange),
 		getNextPageParam: ({ nextPage }) => nextPage,
 		initialPageParam: Date.now(),
 	});

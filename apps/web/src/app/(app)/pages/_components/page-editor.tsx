@@ -4,8 +4,8 @@ import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { useTRPC } from "~/trpc/react";
+import { PageBlocks } from "./page-blocks";
 import { PageSkeleton } from "./page-skeleton";
-import { PageTextArea } from "./page-text-area";
 import { PageTitle } from "./page-title";
 
 type PageEditorProps = {
@@ -37,15 +37,20 @@ export function PageEditor({ id }: PageEditorProps) {
 	if (!page || error) {
 		return <PageSkeleton />;
 	}
-
+	const content = page.content as string[];
 	return (
-		<div className="flex flex-col gap-4 p-4">
+		<div className="flex h-full flex-col gap-4 p-4">
 			<PageTitle id={id} initialTitle={page.title ?? ""} />
-			<PageTextArea
-				placeholder="Start writing your page..."
-				id={id}
-				initialContent={page.content ?? ""}
-			/>
+			<div className="min-h-0 flex-1">
+				<PageBlocks
+					initialRange={{
+						cursor: content[0] ?? undefined,
+						limit: 50,
+					}}
+					parentId={id}
+					parentType="page"
+				/>
+			</div>
 		</div>
 	);
 }

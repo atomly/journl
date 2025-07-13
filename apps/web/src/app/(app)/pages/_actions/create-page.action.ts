@@ -12,7 +12,7 @@ export async function createPageAction() {
 	}
 
 	const newPage = await api.pages.create({
-		content: "",
+		content: [],
 		title: "New Page",
 		user_id: session.user.id,
 	});

@@ -39,11 +39,11 @@ export function DeletePageButton({ page, className }: DeletePageButtonProps) {
 		) => {
 			try {
 				const pageId = formData.get("pageId") as string;
-				const deletedPage = await deletePageAction(pageId);
-				if (!deletedPage) {
+				const result = await deletePageAction(pageId);
+				if (!result?.deletedPage) {
 					throw new Error("Failed to delete page");
 				}
-				return { pageId: deletedPage.id, success: true };
+				return { pageId: result.deletedPage.id, success: true };
 			} catch (error) {
 				return {
 					error:

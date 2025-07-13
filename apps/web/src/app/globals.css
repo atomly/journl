@@ -1,6 +1,10 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
+/* BlockNote styles */
+@import "@blocknote/core/fonts/inter.css";
+@import "@blocknote/mantine/style.css";
+
 @source "../../**/*.{js,ts,jsx,tsx}";
 
 @custom-variant dark (&:is(.dark *));

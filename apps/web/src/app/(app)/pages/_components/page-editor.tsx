@@ -1,10 +1,8 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { BlockEditor } from "~/components/editor/block-editor";
 import { useTRPC } from "~/trpc/react";
-import { PageBlocks } from "./page-blocks";
 import { PageSkeleton } from "./page-skeleton";
 import { PageTitle } from "./page-title";
 
@@ -14,42 +12,28 @@ type PageEditorProps = {
 
 export function PageEditor({ id }: PageEditorProps) {
 	const trpc = useTRPC();
-	const router = useRouter();
-	const {
-		data: page,
-		isPending,
-		error,
-	} = useQuery(trpc.pages.byId.queryOptions({ id }));
 
-	// Handle page not found error by redirecting to home
-	useEffect(() => {
-		if (error?.message === "Page not found") {
-			router.push("/home");
-		}
-	}, [error, router]);
+	const { data: page, isLoading } = useQuery(
+		trpc.pages.byId.queryOptions({ id }),
+	);
 
-	if (isPending) {
+	if (isLoading) {
 		return <PageSkeleton />;
 	}
 
-	// If page doesn't exist (deleted or never existed), don't render anything
-	// The useEffect above will handle the redirect
-	if (!page || error) {
-		return <PageSkeleton />;
+	if (!page) {
+		return (
+			<div className="flex h-full items-center justify-center">
+				<p className="text-muted-foreground">Page not found</p>
+			</div>
+		);
 	}
-	const content = page.content as string[];
+
 	return (
 		<div className="flex h-full flex-col gap-4 p-4">
 			<PageTitle id={id} initialTitle={page.title ?? ""} />
 			<div className="min-h-0 flex-1">
-				<PageBlocks
-					initialRange={{
-						cursor: content[0] ?? undefined,
-						limit: 50,
-					}}
-					parentId={id}
-					parentType="page"
-				/>
+				<BlockEditor parentId={id} parentType="page" />
 			</div>
 		</div>
 	);

@@ -2,7 +2,7 @@
 
 import type { Block } from "@acme/db/schema";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Skeleton } from "~/components/ui/skeleton";
 import { useTRPC } from "~/trpc/react";
 import { BlockNoteEditor } from "./blocknote-editor";
@@ -28,14 +28,7 @@ function BlockEditorSkeleton() {
 
 export function BlockEditor({ parentId, parentType }: BlockEditorProps) {
 	const trpc = useTRPC();
-	const [isFullyLoaded, setIsFullyLoaded] = useState(false);
 	const [allBlocks, setAllBlocks] = useState<Block[]>([]);
-	const isFullyLoadedRef = useRef(false);
-
-	// Update ref when state changes
-	useEffect(() => {
-		isFullyLoadedRef.current = isFullyLoaded;
-	}, [isFullyLoaded]);
 
 	// Get parent data (for pages)
 	const { data: parentData, isLoading: isParentLoading } = useQuery({
@@ -47,7 +40,6 @@ export function BlockEditor({ parentId, parentType }: BlockEditorProps) {
 	const {
 		data: infiniteData,
 		fetchNextPage,
-		hasNextPage,
 		isFetchingNextPage,
 		isLoading: isBlocksLoading,
 	} = useInfiniteQuery({
@@ -69,34 +61,12 @@ export function BlockEditor({ parentId, parentType }: BlockEditorProps) {
 		return infiniteData.pages.flatMap((page) => page.blocks);
 	}, [infiniteData?.pages]);
 
-	// Custom logic to determine if we have more pages to load
-	const hasMorePagesToLoad = useMemo(() => {
-		if (parentType === "block") {
-			// For blocks, rely on server's hasMore field
-			return hasNextPage;
-		}
-
-		// Don't determine hasMorePagesToLoad until we have parent data and some blocks loaded
-		if (
-			!parentData?.children ||
-			!infiniteData?.pages ||
-			infiniteData.pages.length === 0
-		) {
-			return undefined; // Return undefined to indicate we don't know yet
-		}
-
-		const childrenArray = parentData.children as string[];
-		const lastLoadedBlockId = combinedBlocks[combinedBlocks.length - 1]?.id;
-		const lastChildId = childrenArray[childrenArray.length - 1];
-
-		return lastLoadedBlockId !== lastChildId;
-	}, [
-		parentType,
-		parentData?.children,
-		combinedBlocks,
-		hasNextPage,
-		infiniteData?.pages,
-	]);
+	// Check if we have more pages to load based on the last page's hasMore
+	const hasMoreToLoad = useMemo(() => {
+		if (!infiniteData?.pages || infiniteData.pages.length === 0) return false;
+		const lastPage = infiniteData.pages[infiniteData.pages.length - 1];
+		return lastPage?.hasMore ?? false;
+	}, [infiniteData?.pages]);
 
 	// Get blocks in the correct order based on parent's children array
 	const orderedBlocks = useMemo(() => {
@@ -127,18 +97,12 @@ export function BlockEditor({ parentId, parentType }: BlockEditorProps) {
 
 	// Background loading effect
 	useEffect(() => {
-		if (
-			hasMorePagesToLoad === true &&
-			!isFetchingNextPage &&
-			!isFullyLoadedRef.current
-		) {
+		if (hasMoreToLoad && !isFetchingNextPage) {
 			fetchNextPage();
-		} else if (hasMorePagesToLoad === false && !isFullyLoadedRef.current) {
-			setIsFullyLoaded(true);
+		} else if (!hasMoreToLoad) {
 			setAllBlocks(orderedBlocks);
 		}
-		// If hasMorePagesToLoad is undefined, we wait - don't mark as fully loaded yet
-	}, [hasMorePagesToLoad, isFetchingNextPage, fetchNextPage, orderedBlocks]);
+	}, [hasMoreToLoad, isFetchingNextPage, fetchNextPage, orderedBlocks]);
 
 	// Update allBlocks when orderedBlocks changes
 	useEffect(() => {
@@ -157,7 +121,7 @@ export function BlockEditor({ parentId, parentType }: BlockEditorProps) {
 				blocks={allBlocks}
 				parentId={parentId}
 				parentType={parentType}
-				isFullyLoaded={isFullyLoaded}
+				isFullyLoaded={!hasMoreToLoad}
 			/>
 		</div>
 	);

@@ -98,6 +98,15 @@ export function BlockNoteEditor({
 		}),
 	);
 
+	// Update page children order
+	const { mutate: updatePageChildren } = useMutation(
+		trpc.pages.updateChildren.mutationOptions({
+			onError: (error) => console.error("Update page children failed:", error),
+			onSuccess: (data) =>
+				console.log("Update page children successful:", data),
+		}),
+	);
+
 	// TODO: Re-enable page sync once API is fixed
 	// Sync page children order after bulk operations
 	// const { mutate: syncPageBlocks } = useMutation(
@@ -211,12 +220,22 @@ export function BlockNoteEditor({
 		{ leading: false, trailing: true },
 	);
 
+	// Debounced page children update
+	const debouncedUpdatePageChildren = useDebouncedCallback(
+		(blockIds: string[]) => {
+			if (parentType === "page") {
+				updatePageChildren({ children: blockIds, id: parentId });
+			}
+		},
+		500, // 500ms debounce
+		{ leading: false, trailing: true },
+	);
+
 	// Handle individual block changes from editor
 	const handleBlockChange = useCallback(
 		(change: any) => {
 			// Skip if we're updating programmatically
 			if (isUpdatingProgrammaticallyRef.current) {
-				console.log("Skipping block change during programmatic update");
 				return;
 			}
 
@@ -246,20 +265,19 @@ export function BlockNoteEditor({
 	const handleEditorChange = useCallback(
 		(e: { document: any[] }) => {
 			// Skip if we're updating programmatically
-			if (isUpdatingProgrammaticallyRef.current) {
-				console.log("Skipping editor change during programmatic update");
+			if (!isFullyLoaded) {
 				return;
 			}
 
-			// TODO: Temporarily disable page sync to avoid conflicts with bulk operations
-			// Page sync will be re-enabled once we fix the syncPageBlocks API to handle existing blocks
-			console.log(
-				"Page sync disabled to prevent conflicts with bulk operations",
-			);
+			// Extract block IDs from the current document order
+			const blockIds = e.document.map((block) => block.id);
+
+			// Update page children order if this is a page
+			debouncedUpdatePageChildren(blockIds);
 
 			// Call parent callback if provided
 			if (onBlocksChange) {
-				const convertedBlocks = e.document.map((block: any) => ({
+				const blocksData = e.document.map((block) => ({
 					children: block.children || [],
 					content: block.content,
 					created_at: new Date(),
@@ -270,20 +288,21 @@ export function BlockNoteEditor({
 					props: block.props,
 					type: block.type,
 					updated_at: new Date(),
-				}));
-				onBlocksChange(convertedBlocks);
+				})) as Block[];
+				onBlocksChange(blocksData);
 			}
 		},
-		[onBlocksChange, parentId, parentType],
+		[
+			isFullyLoaded,
+			debouncedUpdatePageChildren,
+			onBlocksChange,
+			parentId,
+			parentType,
+		],
 	);
 
 	// Update editor content when blocks change
 	useEffect(() => {
-		console.log("useEffect triggered:", {
-			blocksLength: blocks.length,
-			isFullyLoaded,
-		});
-
 		if (blocks.length > 0) {
 			const blockNoteBlocks = blocks.map((block) => ({
 				children: block.children,
@@ -303,19 +322,11 @@ export function BlockNoteEditor({
 				!currentBlockIds.every((id, index) => id === newBlockIds[index]);
 
 			if (hasChanged) {
-				console.log("Updating editor with new blocks:", {
-					currentCount: currentBlocks.length,
-					currentIds: currentBlockIds,
-					newCount: blockNoteBlocks.length,
-					newIds: newBlockIds,
-				});
-
 				// Set flag to prevent onChange handlers from firing during programmatic update
 				isUpdatingProgrammaticallyRef.current = true;
 
 				// Update the editor content
 				editor.replaceBlocks(editor.document, blockNoteBlocks as any);
-				console.log("Successfully updated editor with new blocks");
 
 				// Reset flag after a short delay to allow the update to complete
 				setTimeout(() => {
@@ -323,17 +334,21 @@ export function BlockNoteEditor({
 				}, 100);
 			}
 		}
-	}, [blocks, editor, isFullyLoaded]);
+	}, [blocks, editor]);
 
 	// Set up editor onChange listener for individual block changes
 	editor.onChange((_, { getChanges }) => {
 		// Skip if we're updating programmatically
-		if (isUpdatingProgrammaticallyRef.current) {
-			console.log("Skipping editor.onChange during programmatic update");
-			return;
-		}
 
 		const changes = getChanges();
+		if (
+			!isFullyLoaded &&
+			changes.find(
+				(change) => change.type === "insert" || change.type === "delete",
+			)
+		) {
+			return;
+		}
 
 		// Process individual block changes for batching
 		changes.forEach(handleBlockChange);

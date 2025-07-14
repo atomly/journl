@@ -382,8 +382,6 @@ export const blocksRouter = {
 			}),
 		)
 		.query(async ({ ctx, input }) => {
-			console.log("🔍 loadPageChunk called with:", input);
-
 			// First, get the parent's content array to determine order
 			let parentContent: string[] = [];
 
@@ -394,11 +392,6 @@ export const blocksRouter = {
 					.where(eq(Page.id, input.parentId))
 					.limit(1);
 				parentContent = (page?.children as string[]) || [];
-				console.log("📄 Page children found:", {
-					children: parentContent,
-					childrenCount: parentContent.length,
-					pageId: input.parentId,
-				});
 			}
 			// else if (input.parentType === "journal_entry") {
 			// 	const [journalEntry] = await ctx.db
@@ -419,7 +412,6 @@ export const blocksRouter = {
 
 			// If no content array or empty, return empty result
 			if (parentContent.length === 0) {
-				console.log("⚠️ No parent content found - returning empty result");
 				return {
 					blocks: [],
 					hasMore: false,
@@ -459,14 +451,6 @@ export const blocksRouter = {
 			const sortedBlocks = chunkBlockIds
 				.map((blockId) => blockMap.get(blockId))
 				.filter((block) => block !== undefined);
-
-			console.log("✅ Returning page chunk:", {
-				blocksCount: sortedBlocks.length,
-				hasMore,
-				nextCursor,
-				startIndex,
-				totalParentContent: parentContent.length,
-			});
 
 			return {
 				blocks: sortedBlocks,

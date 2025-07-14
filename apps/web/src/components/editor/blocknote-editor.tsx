@@ -30,37 +30,6 @@ type BlockChange = {
 	timestamp: number;
 };
 
-// Determine final operation for a block based on change history
-function collapseBlockChanges(
-	changes: BlockChange[],
-): { operation: "create" | "update" | "delete"; data: any } | null {
-	if (changes.length === 0) return null;
-
-	const hasInsert = changes.some((c) => c.type === "insert");
-	const hasDelete = changes.some((c) => c.type === "delete");
-	const lastChange = changes[changes.length - 1];
-
-	if (!lastChange) return null;
-
-	// If insert then delete → do nothing
-	if (hasInsert && hasDelete) {
-		return null;
-	}
-
-	// If insert (with or without updates) → create with final state
-	if (hasInsert) {
-		return { data: lastChange.data, operation: "create" };
-	}
-
-	// If delete → delete
-	if (hasDelete) {
-		return { data: lastChange.data, operation: "delete" };
-	}
-
-	// If only updates → update with final state
-	return { data: lastChange.data, operation: "update" };
-}
-
 export function BlockNoteEditor({
 	blocks,
 	parentId,
@@ -71,61 +40,21 @@ export function BlockNoteEditor({
 	const trpc = useTRPC();
 	const { theme, systemTheme } = useTheme();
 
-	// Track all changes per block ID to determine final operation
+	// Track all changes per block ID and current page children order
 	const blockChangesRef = useRef<Map<string, BlockChange[]>>(new Map());
+	const currentPageChildrenRef = useRef<string[]>([]);
 	const hasUnsavedChangesRef = useRef(false);
 	const isUpdatingProgrammaticallyRef = useRef(false);
 
-	// Bulk mutations
-	const { mutate: bulkCreateBlocks } = useMutation(
-		trpc.blocks.bulkCreate.mutationOptions({
-			onError: (error) => console.error("Bulk create failed:", error),
-			onSuccess: (data) => console.log("Bulk create successful:", data),
-		}),
-	);
-
-	const { mutate: bulkUpdateBlocks } = useMutation(
-		trpc.blocks.bulkUpdate.mutationOptions({
-			onError: (error) => console.error("Bulk update failed:", error),
-			onSuccess: (data) => console.log("Bulk update successful:", data),
-		}),
-	);
-
-	const { mutate: bulkDeleteBlocks } = useMutation(
-		trpc.blocks.bulkDelete.mutationOptions({
-			onError: (error) => console.error("Bulk delete failed:", error),
-			onSuccess: (data) => console.log("Bulk delete successful:", data),
-		}),
-	);
-
-	// Update page children order
-	const { mutate: updatePageChildren } = useMutation(
-		trpc.pages.updateChildren.mutationOptions({
-			onError: (error) => console.error("Update page children failed:", error),
+	// New combined mutation for processing editor changes
+	const { mutate: processEditorChanges } = useMutation(
+		trpc.blocks.processEditorChanges.mutationOptions({
+			onError: (error) =>
+				console.error("Process editor changes failed:", error),
 			onSuccess: (data) =>
-				console.log("Update page children successful:", data),
+				console.log("Process editor changes successful:", data),
 		}),
 	);
-
-	// TODO: Re-enable page sync once API is fixed
-	// Sync page children order after bulk operations
-	// const { mutate: syncPageBlocks } = useMutation(
-	// 	trpc.blocks.syncPageBlocks.mutationOptions({
-	// 		onError: (error) => console.error("Page sync failed:", error),
-	// 		onSuccess: (data) => {
-	// 			console.log("Page sync successful:", data);
-	// 		},
-	// 	}),
-	// );
-
-	// TODO: Re-enable page sync once API is fixed
-	// const debouncedPageSync = useDebouncedCallback(
-	// 	(blocks: any[], pageId: string) => {
-	// 		syncPageBlocks({ blocks, pageId });
-	// 	},
-	// 	500, // 500ms debounce
-	// 	{ leading: false, trailing: true },
-	// );
 
 	// Convert blocks to BlockNote format
 	const initialBlocks = useMemo(() => {
@@ -148,148 +77,83 @@ export function BlockNoteEditor({
 		initialContent: initialBlocks as any,
 	});
 
-	// Process batched changes
-	const processBatchedChanges = useCallback(() => {
+	// Process all batched changes - both blocks and page children
+	const processAllChanges = useCallback(() => {
 		const changes = blockChangesRef.current;
-		if (changes.size === 0) return;
+		const pageChildren = currentPageChildrenRef.current;
 
-		const toCreate: any[] = [];
-		const toUpdate: any[] = [];
-		const toDelete: string[] = [];
+		if (changes.size === 0 && pageChildren.length === 0) return;
 
-		// Get current block IDs to determine if blocks exist
-		const existingBlockIds = new Set(blocks.map((block) => block.id));
-
-		// Process each block's changes
-		for (const [blockId, blockChanges] of changes.entries()) {
-			const result = collapseBlockChanges(blockChanges);
-			if (!result) continue;
-
-			switch (result.operation) {
-				case "create":
-					toCreate.push({
-						content: result.data.content || [],
-						id: blockId,
-						parentId,
-						parentType,
-						props: result.data.props || {},
-						type: result.data.type,
-					});
-					break;
-				case "update":
-					// If block doesn't exist in our current blocks, treat as create
-					if (!existingBlockIds.has(blockId)) {
-						toCreate.push({
-							content: result.data.content || [],
-							id: blockId,
-							parentId,
-							parentType,
-							props: result.data.props || {},
-							type: result.data.type,
-						});
-					} else {
-						toUpdate.push({
-							content: result.data.content,
-							id: blockId,
-							props: result.data.props,
-							type: result.data.type,
-						});
-					}
-					break;
-				case "delete":
-					toDelete.push(blockId);
-					break;
+		// Convert block changes to the format expected by the API
+		const blockChanges: any[] = [];
+		for (const [_, blockChangeList] of changes.entries()) {
+			for (const change of blockChangeList) {
+				blockChanges.push({
+					blockId: change.blockId,
+					data: change.data,
+					type: change.type,
+				});
 			}
 		}
 
-		// Execute bulk operations
-		const promises = [];
-		if (toCreate.length > 0) {
-			promises.push(bulkCreateBlocks({ blocks: toCreate }));
-		}
-		if (toUpdate.length > 0) {
-			promises.push(bulkUpdateBlocks({ blocks: toUpdate }));
-		}
-		if (toDelete.length > 0) {
-			promises.push(bulkDeleteBlocks({ blockIds: toDelete }));
-		}
-
-		// Note: Page children ordering is handled separately via BlockNoteView onChange
-		// when the document is fully loaded and user makes changes that affect ordering
+		// Call the combined API
+		processEditorChanges({
+			blockChanges,
+			pageChildren, // Only relevant for pages
+			pageId: parentType === "page" ? parentId : "",
+			parentId,
+			parentType,
+		});
 
 		// Clear processed changes
 		blockChangesRef.current.clear();
 		hasUnsavedChangesRef.current = false;
-	}, [
-		bulkCreateBlocks,
-		bulkUpdateBlocks,
-		bulkDeleteBlocks,
-		parentId,
-		parentType,
-		blocks,
-	]);
+	}, [processEditorChanges, parentId, parentType]);
 
-	// Debounced batch processing
-	const debouncedProcessChanges = useDebouncedCallback(
-		processBatchedChanges,
+	// Debounced processing of all changes
+	const debouncedProcessAllChanges = useDebouncedCallback(
+		processAllChanges,
 		1000, // 1 second debounce
 		{ leading: false, trailing: true },
 	);
 
-	// Debounced page children update
-	const debouncedUpdatePageChildren = useDebouncedCallback(
-		(blockIds: string[]) => {
-			if (parentType === "page") {
-				updatePageChildren({ children: blockIds, id: parentId });
-			}
-		},
-		500, // 500ms debounce
-		{ leading: false, trailing: true },
-	);
+	// Handle individual block changes from editor.onChange
+	const handleBlockChange = useCallback((change: any) => {
+		// Skip if we're updating programmatically
+		if (isUpdatingProgrammaticallyRef.current) {
+			return;
+		}
 
-	// Handle individual block changes from editor
-	const handleBlockChange = useCallback(
-		(change: any) => {
-			// Skip if we're updating programmatically
-			if (isUpdatingProgrammaticallyRef.current) {
-				return;
-			}
+		const { block, type } = change;
 
-			const { block, type } = change;
+		// Track the change
+		const blockId = block.id;
+		const existingChanges = blockChangesRef.current.get(blockId) || [];
 
-			// Track the change
-			const blockId = block.id;
-			const existingChanges = blockChangesRef.current.get(blockId) || [];
+		const newChange: BlockChange = {
+			blockId,
+			data: { ...block },
+			timestamp: Date.now(),
+			type: type as BlockChangeType,
+		};
 
-			const newChange: BlockChange = {
-				blockId,
-				data: { ...block },
-				timestamp: Date.now(),
-				type: type as BlockChangeType,
-			};
+		blockChangesRef.current.set(blockId, [...existingChanges, newChange]);
+		hasUnsavedChangesRef.current = true;
 
-			blockChangesRef.current.set(blockId, [...existingChanges, newChange]);
-			hasUnsavedChangesRef.current = true;
+		// Don't trigger processing here - wait for handleEditorChange
+	}, []);
 
-			// Trigger debounced processing
-			debouncedProcessChanges();
-		},
-		[debouncedProcessChanges],
-	);
-
-	// Handle editor changes - primarily for parent callback and ordering
+	// Handle editor changes - captures both block changes and page children order
 	const handleEditorChange = useCallback(
 		(e: { document: any[] }) => {
-			// Skip if we're updating programmatically
-			if (!isFullyLoaded) {
+			// Skip if we're updating programmatically or not fully loaded
+			if (isUpdatingProgrammaticallyRef.current || !isFullyLoaded) {
 				return;
 			}
 
 			// Extract block IDs from the current document order
 			const blockIds = e.document.map((block) => block.id);
-
-			// Update page children order if this is a page
-			debouncedUpdatePageChildren(blockIds);
+			currentPageChildrenRef.current = blockIds;
 
 			// Call parent callback if provided
 			if (onBlocksChange) {
@@ -307,13 +171,16 @@ export function BlockNoteEditor({
 				})) as Block[];
 				onBlocksChange(blocksData);
 			}
+
+			// Process all changes (blocks + page children) together
+			debouncedProcessAllChanges();
 		},
 		[
 			isFullyLoaded,
-			debouncedUpdatePageChildren,
 			onBlocksChange,
 			parentId,
 			parentType,
+			debouncedProcessAllChanges,
 		],
 	);
 
@@ -369,7 +236,11 @@ export function BlockNoteEditor({
 			return;
 		}
 
-		handleBlockChange(changes[changes.length - 1]);
+		// Store the block change but don't process it yet
+		const lastChange = changes[changes.length - 1];
+		if (lastChange) {
+			handleBlockChange(lastChange);
+		}
 	});
 
 	return (

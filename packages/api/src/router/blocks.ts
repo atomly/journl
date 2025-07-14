@@ -619,6 +619,225 @@ export const blocksRouter = {
 			});
 		}),
 
+	// Process editor changes - handles both block changes and page children updates in a single transaction
+	processEditorChanges: protectedProcedure
+		.input(
+			z.object({
+				blockChanges: z.array(
+					z.object({
+						blockId: z.string().uuid(),
+						data: z.any(),
+						type: z.enum(["insert", "update", "delete"]),
+					}),
+				),
+				pageChildren: z.array(z.string().uuid()),
+				pageId: z.string().uuid(),
+				parentId: z.string().uuid(),
+				parentType: z.enum(["page", "journal_entry", "block"]),
+			}),
+		)
+		.mutation(async ({ ctx, input }) => {
+			return await ctx.db.transaction(async (tx) => {
+				// 1. Process block changes using the same logic as bulk operations
+				const toCreate: any[] = [];
+				const toUpdate: any[] = [];
+				const toDelete: string[] = [];
+
+				// Get existing block IDs to determine if blocks exist
+				const existingBlockIds = new Set();
+				if (input.parentType === "page") {
+					const [page] = await tx
+						.select({ children: Page.children })
+						.from(Page)
+						.where(eq(Page.id, input.parentId))
+						.limit(1);
+					const pageChildren = (page?.children as string[]) || [];
+					const existingBlocks = await tx
+						.select({ id: Block.id })
+						.from(Block)
+						.where(inArray(Block.id, pageChildren));
+					existingBlocks.forEach((block) => existingBlockIds.add(block.id));
+				}
+
+				// Collapse changes per block ID to determine final operation
+				const blockChangeMap = new Map<string, any[]>();
+				for (const change of input.blockChanges) {
+					const existing = blockChangeMap.get(change.blockId) || [];
+					blockChangeMap.set(change.blockId, [...existing, change]);
+				}
+
+				// Process each block's changes
+				for (const [blockId, changes] of blockChangeMap.entries()) {
+					const hasInsert = changes.some((c) => c.type === "insert");
+					const hasDelete = changes.some((c) => c.type === "delete");
+					const lastChange = changes[changes.length - 1];
+
+					if (!lastChange) continue;
+
+					// If insert then delete → do nothing
+					if (hasInsert && hasDelete) {
+						continue;
+					}
+
+					// If insert (with or without updates) → create with final state
+					if (hasInsert) {
+						toCreate.push({
+							content: lastChange.data.content || [],
+							id: blockId,
+							parentId: input.parentId,
+							parentType: input.parentType,
+							props: lastChange.data.props || {},
+							type: lastChange.data.type,
+						});
+					}
+					// If delete → delete
+					else if (hasDelete) {
+						toDelete.push(blockId);
+					}
+					// If only updates → update with final state
+					else {
+						// If block doesn't exist in our current blocks, treat as create
+						if (!existingBlockIds.has(blockId)) {
+							toCreate.push({
+								content: lastChange.data.content || [],
+								id: blockId,
+								parentId: input.parentId,
+								parentType: input.parentType,
+								props: lastChange.data.props || {},
+								type: lastChange.data.type,
+							});
+						} else {
+							toUpdate.push({
+								content: lastChange.data.content,
+								id: blockId,
+								props: lastChange.data.props,
+								type: lastChange.data.type,
+							});
+						}
+					}
+				}
+
+				// 2. Execute block operations
+				const results = {
+					created: 0,
+					deleted: 0,
+					updated: 0,
+				};
+
+				// Create new blocks
+				if (toCreate.length > 0) {
+					const blocksToInsert = toCreate.map((block) => {
+						const propsSchema = blockPropsSchemas[block.type as BlockType];
+						const validatedProps = propsSchema.parse(block.props);
+
+						return {
+							children: [],
+							content: block.content || null,
+							created_by: ctx.session.user.id,
+							id: block.id,
+							parent_id: block.parentId,
+							parent_type: block.parentType,
+							props: validatedProps,
+							type: block.type,
+						};
+					});
+
+					await tx.insert(Block).values(blocksToInsert);
+					results.created = blocksToInsert.length;
+				}
+
+				// Update existing blocks
+				if (toUpdate.length > 0) {
+					for (const blockData of toUpdate) {
+						const updateData: Partial<Block> = { updated_at: new Date() };
+
+						if (blockData.props !== undefined) {
+							// Get current block type to validate props if type not provided
+							let blockType: BlockType | undefined =
+								blockData.type as BlockType;
+							if (!blockType) {
+								const [currentBlock] = await tx
+									.select({ type: Block.type })
+									.from(Block)
+									.where(eq(Block.id, blockData.id))
+									.limit(1);
+								blockType = currentBlock?.type as BlockType;
+							}
+
+							if (blockType) {
+								const propsSchema = blockPropsSchemas[blockType];
+								updateData.props = propsSchema.parse(blockData.props);
+							}
+						}
+
+						if (blockData.content !== undefined) {
+							updateData.content = blockData.content;
+						}
+
+						if (blockData.type !== undefined) {
+							updateData.type = blockData.type;
+						}
+
+						await tx
+							.update(Block)
+							.set(updateData)
+							.where(eq(Block.id, blockData.id));
+					}
+					results.updated = toUpdate.length;
+				}
+
+				// Delete blocks
+				if (toDelete.length > 0) {
+					// Collect all child IDs recursively for each block
+					const collectChildIds = async (
+						blockId: string,
+					): Promise<string[]> => {
+						const [block] = await tx
+							.select({ children: Block.children })
+							.from(Block)
+							.where(eq(Block.id, blockId))
+							.limit(1);
+
+						if (!block) return [];
+
+						const childIds = (block.children as string[]) || [];
+						const allChildIds = [...childIds];
+
+						for (const childId of childIds) {
+							const grandChildIds = await collectChildIds(childId);
+							allChildIds.push(...grandChildIds);
+						}
+
+						return allChildIds;
+					};
+
+					let allBlockIdsToDelete: string[] = [];
+					for (const blockId of toDelete) {
+						allBlockIdsToDelete.push(blockId);
+						const childIds = await collectChildIds(blockId);
+						allBlockIdsToDelete.push(...childIds);
+					}
+
+					// Remove duplicates
+					allBlockIdsToDelete = [...new Set(allBlockIdsToDelete)];
+
+					// Delete all blocks
+					await tx.delete(Block).where(inArray(Block.id, allBlockIdsToDelete));
+					results.deleted = allBlockIdsToDelete.length;
+				}
+
+				// 3. Update page children order (only if parentType is page)
+				if (input.parentType === "page") {
+					await tx
+						.update(Page)
+						.set({ children: input.pageChildren })
+						.where(eq(Page.id, input.pageId));
+				}
+
+				return results;
+			});
+		}),
+
 	// Sync entire page blocks from editor (replaces existing blocks)
 	syncPageBlocks: protectedProcedure
 		.input(

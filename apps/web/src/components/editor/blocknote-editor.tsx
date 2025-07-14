@@ -157,6 +157,9 @@ export function BlockNoteEditor({
 		const toUpdate: any[] = [];
 		const toDelete: string[] = [];
 
+		// Get current block IDs to determine if blocks exist
+		const existingBlockIds = new Set(blocks.map((block) => block.id));
+
 		// Process each block's changes
 		for (const [blockId, blockChanges] of changes.entries()) {
 			const result = collapseBlockChanges(blockChanges);
@@ -174,12 +177,24 @@ export function BlockNoteEditor({
 					});
 					break;
 				case "update":
-					toUpdate.push({
-						content: result.data.content,
-						id: blockId,
-						props: result.data.props,
-						type: result.data.type,
-					});
+					// If block doesn't exist in our current blocks, treat as create
+					if (!existingBlockIds.has(blockId)) {
+						toCreate.push({
+							content: result.data.content || [],
+							id: blockId,
+							parentId,
+							parentType,
+							props: result.data.props || {},
+							type: result.data.type,
+						});
+					} else {
+						toUpdate.push({
+							content: result.data.content,
+							id: blockId,
+							props: result.data.props,
+							type: result.data.type,
+						});
+					}
 					break;
 				case "delete":
 					toDelete.push(blockId);
@@ -211,6 +226,7 @@ export function BlockNoteEditor({
 		bulkDeleteBlocks,
 		parentId,
 		parentType,
+		blocks,
 	]);
 
 	// Debounced batch processing
@@ -339,6 +355,9 @@ export function BlockNoteEditor({
 	// Set up editor onChange listener for individual block changes
 	editor.onChange((_, { getChanges }) => {
 		// Skip if we're updating programmatically
+		if (isUpdatingProgrammaticallyRef.current) {
+			return;
+		}
 
 		const changes = getChanges();
 		if (
@@ -350,8 +369,7 @@ export function BlockNoteEditor({
 			return;
 		}
 
-		// Process individual block changes for batching
-		changes.forEach(handleBlockChange);
+		handleBlockChange(changes[changes.length - 1]);
 	});
 
 	return (

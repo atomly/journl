@@ -11,6 +11,160 @@ import { z } from "zod/v4";
 import { protectedProcedure } from "../trpc.js";
 
 export const blocksRouter = {
+	// Bulk operations for efficient batch processing
+	bulkCreate: protectedProcedure
+		.input(
+			z.object({
+				blocks: z.array(
+					z.object({
+						content: z.array(z.any()).optional(),
+						id: z.string().uuid(),
+						parentId: z.string().uuid(),
+						parentType: z.enum(["page", "journal_entry", "block"]),
+						props: z.record(z.string(), z.any()).default({}),
+						type: blockTypeSchema,
+					}),
+				),
+			}),
+		)
+		.mutation(async ({ ctx, input }) => {
+			return await ctx.db.transaction(async (tx) => {
+				const createdBlocks = [];
+
+				for (const blockData of input.blocks) {
+					// Validate props based on block type
+					const propsSchema = blockPropsSchemas[blockData.type as BlockType];
+					const validatedProps = propsSchema.parse(blockData.props);
+
+					const [newBlock] = await tx
+						.insert(Block)
+						.values({
+							children: [],
+							content: blockData.content || null,
+							created_by: ctx.session.user.id,
+							id: blockData.id,
+							parent_id: blockData.parentId,
+							parent_type: blockData.parentType,
+							props: validatedProps,
+							type: blockData.type,
+						})
+						.returning();
+
+					if (newBlock) {
+						createdBlocks.push(newBlock);
+					}
+				}
+
+				return { blocks: createdBlocks, created: createdBlocks.length };
+			});
+		}),
+
+	bulkDelete: protectedProcedure
+		.input(
+			z.object({
+				blockIds: z.array(z.string().uuid()),
+			}),
+		)
+		.mutation(async ({ ctx, input }) => {
+			return await ctx.db.transaction(async (tx) => {
+				// Collect all child IDs recursively for each block
+				const collectChildIds = async (blockId: string): Promise<string[]> => {
+					const [block] = await tx
+						.select({ children: Block.children })
+						.from(Block)
+						.where(eq(Block.id, blockId))
+						.limit(1);
+
+					if (!block) return [];
+
+					const childIds = (block.children as string[]) || [];
+					const allChildIds = [...childIds];
+
+					for (const childId of childIds) {
+						const grandChildIds = await collectChildIds(childId);
+						allChildIds.push(...grandChildIds);
+					}
+
+					return allChildIds;
+				};
+
+				let allBlockIdsToDelete: string[] = [];
+				for (const blockId of input.blockIds) {
+					allBlockIdsToDelete.push(blockId);
+					const childIds = await collectChildIds(blockId);
+					allBlockIdsToDelete.push(...childIds);
+				}
+
+				// Remove duplicates
+				allBlockIdsToDelete = [...new Set(allBlockIdsToDelete)];
+
+				// Delete all blocks
+				await tx.delete(Block).where(inArray(Block.id, allBlockIdsToDelete));
+
+				return { deleted: allBlockIdsToDelete.length };
+			});
+		}),
+
+	bulkUpdate: protectedProcedure
+		.input(
+			z.object({
+				blocks: z.array(
+					z.object({
+						content: z.array(z.any()).optional(),
+						id: z.string().uuid(),
+						props: z.record(z.string(), z.any()).optional(),
+						type: blockTypeSchema.optional(),
+					}),
+				),
+			}),
+		)
+		.mutation(async ({ ctx, input }) => {
+			return await ctx.db.transaction(async (tx) => {
+				const updatedBlocks = [];
+
+				for (const blockData of input.blocks) {
+					const updateData: Partial<Block> = { updated_at: new Date() };
+
+					if (blockData.props !== undefined) {
+						// Get current block type to validate props if type not provided
+						let blockType: BlockType | undefined = blockData.type as BlockType;
+						if (!blockType) {
+							const [currentBlock] = await tx
+								.select({ type: Block.type })
+								.from(Block)
+								.where(eq(Block.id, blockData.id))
+								.limit(1);
+							blockType = currentBlock?.type as BlockType;
+						}
+
+						if (blockType) {
+							const propsSchema = blockPropsSchemas[blockType];
+							updateData.props = propsSchema.parse(blockData.props);
+						}
+					}
+
+					if (blockData.content !== undefined) {
+						updateData.content = blockData.content;
+					}
+
+					if (blockData.type !== undefined) {
+						updateData.type = blockData.type;
+					}
+
+					const [updatedBlock] = await tx
+						.update(Block)
+						.set(updateData)
+						.where(eq(Block.id, blockData.id))
+						.returning();
+
+					if (updatedBlock) {
+						updatedBlocks.push(updatedBlock);
+					}
+				}
+
+				return { blocks: updatedBlocks, updated: updatedBlocks.length };
+			});
+		}),
 	// Create block and update parent's content array (Notion-style transaction)
 	create: protectedProcedure
 		.input(
@@ -228,6 +382,8 @@ export const blocksRouter = {
 			}),
 		)
 		.query(async ({ ctx, input }) => {
+			console.log("🔍 loadPageChunk called with:", input);
+
 			// First, get the parent's content array to determine order
 			let parentContent: string[] = [];
 
@@ -238,6 +394,11 @@ export const blocksRouter = {
 					.where(eq(Page.id, input.parentId))
 					.limit(1);
 				parentContent = (page?.children as string[]) || [];
+				console.log("📄 Page children found:", {
+					children: parentContent,
+					childrenCount: parentContent.length,
+					pageId: input.parentId,
+				});
 			}
 			// else if (input.parentType === "journal_entry") {
 			// 	const [journalEntry] = await ctx.db
@@ -258,6 +419,7 @@ export const blocksRouter = {
 
 			// If no content array or empty, return empty result
 			if (parentContent.length === 0) {
+				console.log("⚠️ No parent content found - returning empty result");
 				return {
 					blocks: [],
 					hasMore: false,
@@ -270,7 +432,8 @@ export const blocksRouter = {
 			if (input.cursor) {
 				const cursorIndex = parentContent.indexOf(input.cursor);
 				if (cursorIndex !== -1) {
-					startIndex = cursorIndex;
+					// Start AFTER the cursor (not including it)
+					startIndex = cursorIndex + 1;
 				}
 			}
 
@@ -296,6 +459,14 @@ export const blocksRouter = {
 			const sortedBlocks = chunkBlockIds
 				.map((blockId) => blockMap.get(blockId))
 				.filter((block) => block !== undefined);
+
+			console.log("✅ Returning page chunk:", {
+				blocksCount: sortedBlocks.length,
+				hasMore,
+				nextCursor,
+				startIndex,
+				totalParentContent: parentContent.length,
+			});
 
 			return {
 				blocks: sortedBlocks,

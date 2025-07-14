@@ -1,8 +1,8 @@
 "use client";
 
 import type { Block } from "@acme/db/schema";
-import { useQuery } from "@tanstack/react-query";
-import { useMemo } from "react";
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Skeleton } from "~/components/ui/skeleton";
 import { useTRPC } from "~/trpc/react";
 import { BlockNoteEditor } from "./blocknote-editor";
@@ -28,64 +28,124 @@ function BlockEditorSkeleton() {
 
 export function BlockEditor({ parentId, parentType }: BlockEditorProps) {
 	const trpc = useTRPC();
+	const [isFullyLoaded, setIsFullyLoaded] = useState(false);
+	const [allBlocks, setAllBlocks] = useState<Block[]>([]);
+	const isFullyLoadedRef = useRef(false);
 
-	// Load all blocks for this parent at once
-	// Since we're using a single editor, we don't need pagination
+	// Update ref when state changes
+	useEffect(() => {
+		isFullyLoadedRef.current = isFullyLoaded;
+	}, [isFullyLoaded]);
+
+	// Get parent data (for pages)
 	const { data: parentData, isLoading: isParentLoading } = useQuery({
 		...trpc.pages.byId.queryOptions({ id: parentId }),
 		enabled: parentType === "page",
 	});
 
-	const { data: blocksData, isLoading: isBlocksLoading } = useQuery({
-		...trpc.blocks.loadPageChunkRecursive.queryOptions({
-			limit: 50, // High limit to load all blocks at once
-			maxDepth: 5,
+	// Progressive loading with infinite query
+	const {
+		data: infiniteData,
+		fetchNextPage,
+		hasNextPage,
+		isFetchingNextPage,
+		isLoading: isBlocksLoading,
+	} = useInfiniteQuery({
+		...trpc.blocks.loadPageChunk.infiniteQueryOptions({
+			limit: 10,
 			parentId,
 			parentType,
 		}),
 		enabled: !!parentData || parentType === "block",
+		getNextPageParam: (lastPage) => {
+			return lastPage.hasMore ? lastPage.nextCursor : undefined;
+		},
+		staleTime: 1000 * 60 * 5, // 5 minutes
 	});
+
+	// Combine all loaded blocks
+	const combinedBlocks = useMemo(() => {
+		if (!infiniteData?.pages) return [];
+		return infiniteData.pages.flatMap((page) => page.blocks);
+	}, [infiniteData?.pages]);
+
+	// Custom logic to determine if we have more pages to load
+	const hasMorePagesToLoad = useMemo(() => {
+		if (parentType === "block") {
+			// For blocks, rely on server's hasMore field
+			return hasNextPage;
+		}
+
+		// Don't determine hasMorePagesToLoad until we have parent data and some blocks loaded
+		if (
+			!parentData?.children ||
+			!infiniteData?.pages ||
+			infiniteData.pages.length === 0
+		) {
+			return undefined; // Return undefined to indicate we don't know yet
+		}
+
+		const childrenArray = parentData.children as string[];
+		const lastLoadedBlockId = combinedBlocks[combinedBlocks.length - 1]?.id;
+		const lastChildId = childrenArray[childrenArray.length - 1];
+
+		return lastLoadedBlockId !== lastChildId;
+	}, [
+		parentType,
+		parentData?.children,
+		combinedBlocks,
+		hasNextPage,
+		infiniteData?.pages,
+	]);
 
 	// Get blocks in the correct order based on parent's children array
 	const orderedBlocks = useMemo(() => {
-		if (!blocksData?.blocks) return [];
+		if (combinedBlocks.length === 0) return [];
 
 		// Get the order from parent's children array
 		let childrenOrder: string[] = [];
 		if (parentType === "page" && parentData?.children) {
 			childrenOrder = parentData.children as string[];
-		} else if (parentType === "block" && blocksData.blocks.length > 0) {
+		} else if (parentType === "block" && combinedBlocks.length > 0) {
 			// For block parents, the order is determined by the API response
-			return blocksData.blocks;
+			return combinedBlocks;
 		}
 
 		// If no children order, return blocks as-is
 		if (childrenOrder.length === 0) {
-			return blocksData.blocks;
+			return combinedBlocks;
 		}
 
 		// Create a map for quick lookup
-		const blockMap = new Map(
-			blocksData.blocks.map((block) => [block.id, block]),
-		);
+		const blockMap = new Map(combinedBlocks.map((block) => [block.id, block]));
 
 		// Return blocks in the order specified by children array
-		const orderedResult = childrenOrder
-			.map((blockId) => {
-				const block = blockMap.get(blockId);
-				if (!block) {
-					console.warn("Block not found in blockMap:", blockId);
-				}
-				return block;
-			})
+		return childrenOrder
+			.map((blockId) => blockMap.get(blockId))
 			.filter((block): block is Block => block !== undefined);
+	}, [combinedBlocks, parentData?.children, parentType]);
 
-		return orderedResult;
-	}, [blocksData?.blocks, parentData?.children, parentType]);
+	// Background loading effect
+	useEffect(() => {
+		if (
+			hasMorePagesToLoad === true &&
+			!isFetchingNextPage &&
+			!isFullyLoadedRef.current
+		) {
+			fetchNextPage();
+		} else if (hasMorePagesToLoad === false && !isFullyLoadedRef.current) {
+			setIsFullyLoaded(true);
+			setAllBlocks(orderedBlocks);
+		}
+		// If hasMorePagesToLoad is undefined, we wait - don't mark as fully loaded yet
+	}, [hasMorePagesToLoad, isFetchingNextPage, fetchNextPage, orderedBlocks]);
 
-	console.log("orderedBlocks", orderedBlocks);
+	// Update allBlocks when orderedBlocks changes
+	useEffect(() => {
+		setAllBlocks(orderedBlocks);
+	}, [orderedBlocks]);
 
-	// Show skeleton while loading
+	// Show skeleton while loading initial data
 	const isLoading = isParentLoading || isBlocksLoading;
 	if (isLoading) {
 		return <BlockEditorSkeleton />;
@@ -94,9 +154,10 @@ export function BlockEditor({ parentId, parentType }: BlockEditorProps) {
 	return (
 		<div className="h-full">
 			<BlockNoteEditor
-				blocks={orderedBlocks}
+				blocks={allBlocks}
 				parentId={parentId}
 				parentType={parentType}
+				isFullyLoaded={isFullyLoaded}
 			/>
 		</div>
 	);

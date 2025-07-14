@@ -13,7 +13,7 @@ export default async function Page({
 	prefetch(
 		trpc.blocks.loadPageChunk.queryOptions({
 			cursor: undefined, // Start from the beginning
-			limit: 50, // Load first 50 blocks
+			limit: 10, // Load first 10 blocks
 			parentId: id,
 			parentType: "page",
 		}),

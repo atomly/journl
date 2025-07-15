@@ -44,7 +44,7 @@ export function BlockEditor({ parentId, parentType }: BlockEditorProps) {
 		isLoading: isBlocksLoading,
 	} = useInfiniteQuery({
 		...trpc.blocks.loadPageChunk.infiniteQueryOptions({
-			limit: 10,
+			limit: 5,
 			parentId,
 			parentType,
 		}),
@@ -98,7 +98,9 @@ export function BlockEditor({ parentId, parentType }: BlockEditorProps) {
 	// Background loading effect
 	useEffect(() => {
 		if (hasMoreToLoad && !isFetchingNextPage) {
-			fetchNextPage();
+			setTimeout(() => {
+				fetchNextPage();
+			}, 3000);
 		} else if (!hasMoreToLoad) {
 			setAllBlocks(orderedBlocks);
 		}

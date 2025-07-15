@@ -40,11 +40,16 @@ export function BlockNoteEditor({
 	const trpc = useTRPC();
 	const { theme, systemTheme } = useTheme();
 
-	// Track all changes per block ID and current page children order
+	// Track all changes per block ID and current parent children order
 	const blockChangesRef = useRef<Map<string, BlockChange[]>>(new Map());
-	const currentPageChildrenRef = useRef<string[]>([]);
+	const currentParentChildrenRef = useRef<string[]>([]);
 	const hasUnsavedChangesRef = useRef(false);
-	const isUpdatingProgrammaticallyRef = useRef(false);
+	// Track which blocks already exist in the database
+	const existingBlockIdsRef = useRef<Set<string>>(new Set());
+	// Track previous blocks to detect new additions
+	const prevBlocksRef = useRef<Block[]>([]);
+	// Track if there were changes made during loading
+	const changesWhileLoadingRef = useRef(false);
 
 	// New combined mutation for processing editor changes
 	const { mutate: processEditorChanges } = useMutation(
@@ -62,6 +67,10 @@ export function BlockNoteEditor({
 			return undefined;
 		}
 
+		// Track existing block IDs
+		const blockIds = blocks.map((block) => block.id);
+		existingBlockIdsRef.current = new Set(blockIds);
+
 		return blocks.map((block) => ({
 			children: block.children,
 			content: block.content,
@@ -75,23 +84,95 @@ export function BlockNoteEditor({
 	const editor = useCreateBlockNote({
 		animations: false,
 		initialContent: initialBlocks as any,
+		trailingBlock: false, // Disable automatic trailing block
 	});
 
-	// Process all batched changes - both blocks and page children
+	// Sync changes made during loading using processEditorChanges
+	const syncChangesAfterLoading = useCallback(() => {
+		// Only sync if there were actually changes made during loading
+		if (!changesWhileLoadingRef.current) {
+			return;
+		}
+
+		console.log("zzz Syncing changes made during loading");
+
+		// Get current editor state
+		const currentBlocks = editor.document.map((block) => block.id);
+		currentParentChildrenRef.current = currentBlocks;
+
+		// Create block changes for all blocks in the editor
+		// We'll treat all blocks as updates since both insert and update now use upsert logic
+		const blockChanges = editor.document.map((block) => ({
+			blockId: block.id,
+			data: {
+				...block,
+				children: Array.isArray(block.children)
+					? block.children.map((child: any) => child.id || child)
+					: [],
+			},
+			type: "update" as const,
+		}));
+
+		// Use processEditorChanges for consistency
+		processEditorChanges({
+			blockChanges,
+			parentChildren: currentBlocks,
+			parentId,
+			parentType,
+			updateChildren: true,
+		});
+
+		// Reset the flag and clear changes
+		changesWhileLoadingRef.current = false;
+		blockChangesRef.current.clear();
+		hasUnsavedChangesRef.current = false;
+	}, [editor, parentId, parentType, processEditorChanges]);
+
+	// Process all batched changes - both blocks and parent children
 	const processAllChanges = useCallback(() => {
 		const changes = blockChangesRef.current;
-		const pageChildren = currentPageChildrenRef.current;
+		const parentChildren = currentParentChildrenRef.current;
 
-		if (changes.size === 0 && pageChildren.length === 0) return;
+		if (changes.size === 0 && parentChildren.length === 0) return;
 
 		// Convert block changes to the format expected by the API
+		// For each block, determine the final operation based on all changes
 		const blockChanges: any[] = [];
-		for (const [_, blockChangeList] of changes.entries()) {
-			for (const change of blockChangeList) {
+		for (const [blockId, blockChangeList] of changes.entries()) {
+			// Determine the final operation for this block
+			const hasInsert = blockChangeList.some((c) => c.type === "insert");
+			const hasDelete = blockChangeList.some((c) => c.type === "delete");
+			const lastChange = blockChangeList[blockChangeList.length - 1];
+
+			if (!lastChange) continue;
+
+			// If insert then delete → do nothing (don't send any change)
+			if (hasInsert && hasDelete) {
+				continue;
+			}
+
+			// If delete → send delete with the last change data
+			if (hasDelete) {
 				blockChanges.push({
-					blockId: change.blockId,
-					data: change.data,
-					type: change.type,
+					blockId,
+					data: lastChange.data,
+					type: "delete",
+				});
+			}
+			// If insert (with or without updates) → send insert with final state
+			else if (hasInsert) {
+				blockChanges.push({
+					blockId,
+					data: lastChange.data,
+					type: "insert",
+				});
+			}
+			// If only updates → send update with final state
+			else {
+				blockChanges.push({
+					blockId,
+					data: lastChange.data,
+					type: "update",
 				});
 			}
 		}
@@ -99,10 +180,10 @@ export function BlockNoteEditor({
 		// Call the combined API
 		processEditorChanges({
 			blockChanges,
-			pageChildren, // Only relevant for pages
-			pageId: parentType === "page" ? parentId : "",
+			parentChildren,
 			parentId,
 			parentType,
+			updateChildren: true,
 		});
 
 		// Clear processed changes
@@ -118,70 +199,70 @@ export function BlockNoteEditor({
 	);
 
 	// Handle individual block changes from editor.onChange
-	const handleBlockChange = useCallback((change: any) => {
-		// Skip if we're updating programmatically
-		if (isUpdatingProgrammaticallyRef.current) {
-			return;
-		}
+	const handleBlockChange = useCallback(
+		(changes: any[]) => {
+			// If not fully loaded, track that changes were made but don't process them yet
+			if (!isFullyLoaded) {
+				changesWhileLoadingRef.current = true;
+				return;
+			}
 
-		const { block, type } = change;
+			// Process each change in the array
+			for (const change of changes) {
+				const { block, type } = change;
+				const blockId = block.id;
 
-		// Track the change
-		const blockId = block.id;
-		const existingChanges = blockChangesRef.current.get(blockId) || [];
+				// Determine the actual change type based on whether block exists
+				let actualType = type as BlockChangeType;
+				if (type === "insert" && existingBlockIdsRef.current.has(blockId)) {
+					// Block already exists in database, treat as update
+					actualType = "update";
+				} else if (type === "insert") {
+					// Truly new block, add to existing set
+					existingBlockIdsRef.current.add(blockId);
+				} else if (type === "delete") {
+					// Block deleted, remove from existing set
+					existingBlockIdsRef.current.delete(blockId);
+				}
 
-		const newChange: BlockChange = {
-			blockId,
-			data: { ...block },
-			timestamp: Date.now(),
-			type: type as BlockChangeType,
-		};
+				// Track the change
+				const existingChanges = blockChangesRef.current.get(blockId) || [];
 
-		blockChangesRef.current.set(blockId, [...existingChanges, newChange]);
-		hasUnsavedChangesRef.current = true;
+				const newChange: BlockChange = {
+					blockId,
+					data: { ...block },
+					timestamp: Date.now(),
+					type: actualType,
+				};
 
-		// Don't trigger processing here - wait for handleEditorChange
-	}, []);
+				blockChangesRef.current.set(blockId, [...existingChanges, newChange]);
+				hasUnsavedChangesRef.current = true;
+			}
+		},
+		[isFullyLoaded],
+	);
 
 	// Handle editor changes - captures both block changes and page children order
 	const handleEditorChange = useCallback(
 		(e: { document: any[] }) => {
-			// Skip if we're updating programmatically or not fully loaded
-			if (isUpdatingProgrammaticallyRef.current || !isFullyLoaded) {
+			// If not fully loaded, skip processing - we'll sync everything at the end
+			if (!isFullyLoaded) {
+				return;
+			}
+
+			// Skip if no changes to process
+			if (blockChangesRef.current.size === 0) {
 				return;
 			}
 
 			// Extract block IDs from the current document order
 			const blockIds = e.document.map((block) => block.id);
-			currentPageChildrenRef.current = blockIds;
-
-			// Call parent callback if provided
-			if (onBlocksChange) {
-				const blocksData = e.document.map((block) => ({
-					children: block.children || [],
-					content: block.content,
-					created_at: new Date(),
-					created_by: "",
-					id: block.id,
-					parent_id: parentId,
-					parent_type: parentType,
-					props: block.props,
-					type: block.type,
-					updated_at: new Date(),
-				})) as Block[];
-				onBlocksChange(blocksData);
-			}
+			currentParentChildrenRef.current = blockIds;
 
 			// Process all changes (blocks + page children) together
 			debouncedProcessAllChanges();
 		},
-		[
-			isFullyLoaded,
-			onBlocksChange,
-			parentId,
-			parentType,
-			debouncedProcessAllChanges,
-		],
+		[isFullyLoaded, debouncedProcessAllChanges],
 	);
 
 	// Update editor content when blocks change
@@ -195,36 +276,55 @@ export function BlockNoteEditor({
 				type: block.type,
 			}));
 
-			// Check if blocks have actually changed by comparing IDs
-			const currentBlocks = editor.document;
-			const currentBlockIds = currentBlocks.map((block) => block.id);
-			const newBlockIds = blockNoteBlocks.map((block) => block.id);
+			// Get previous block IDs
+			const prevBlockIds = new Set(
+				prevBlocksRef.current.map((block) => block.id),
+			);
 
-			const hasChanged =
-				currentBlockIds.length !== newBlockIds.length ||
-				!currentBlockIds.every((id, index) => id === newBlockIds[index]);
+			// Find new blocks that weren't in previous blocks
+			const newBlocks = blockNoteBlocks.filter(
+				(block) => !prevBlockIds.has(block.id),
+			);
 
-			if (hasChanged) {
-				// Set flag to prevent onChange handlers from firing during programmatic update
-				isUpdatingProgrammaticallyRef.current = true;
-
-				// Update the editor content
+			// If this is the first load or we have new blocks, update the editor
+			if (prevBlocksRef.current.length === 0) {
+				// First load - replace the entire document
 				editor.replaceBlocks(editor.document, blockNoteBlocks as any);
+				existingBlockIdsRef.current = new Set(blockNoteBlocks.map((b) => b.id));
+			} else if (newBlocks.length > 0) {
+				// Add only new blocks to the end
+				const lastBlock = editor.document[editor.document.length - 1];
+				if (lastBlock) {
+					// Insert after the last block since we disabled trailing block
+					editor.insertBlocks(newBlocks as any, lastBlock.id, "after");
+				} else {
+					// If document is empty, replace with new blocks
+					editor.replaceBlocks(editor.document, newBlocks as any);
+				}
 
-				// Reset flag after a short delay to allow the update to complete
-				setTimeout(() => {
-					isUpdatingProgrammaticallyRef.current = false;
-				}, 100);
+				// Update existing blocks set
+				newBlocks.forEach((block) => existingBlockIdsRef.current.add(block.id));
 			}
+
+			// Update previous blocks reference
+			prevBlocksRef.current = blocks;
 		}
 	}, [blocks, editor]);
+
+	// Sync changes made during loading when fully loaded
+	useEffect(() => {
+		if (isFullyLoaded && blocks.length > 0) {
+			// Only sync if there were changes made during loading
+			syncChangesAfterLoading();
+		}
+	}, [isFullyLoaded, blocks.length, syncChangesAfterLoading]);
 
 	// Set up editor onChange listener for individual block changes
 	editor.onChange((_, { getChanges }) => {
 		// Skip if we're updating programmatically
-		if (isUpdatingProgrammaticallyRef.current) {
-			return;
-		}
+		// if (isUpdatingProgrammaticallyRef.current) {
+		// 	return;
+		// }
 
 		const changes = getChanges();
 		if (
@@ -236,20 +336,11 @@ export function BlockNoteEditor({
 			return;
 		}
 
-		// Store the block change but don't process it yet
-		const lastChange = changes[changes.length - 1];
-		if (lastChange) {
-			handleBlockChange(lastChange);
-		}
+		handleBlockChange(changes);
 	});
 
 	return (
 		<div className="blocknote-editor">
-			{!isFullyLoaded && (
-				<div className="mb-2 text-muted-foreground text-sm">
-					Loading blocks...
-				</div>
-			)}
 			<BlockNoteView
 				editor={editor}
 				onChange={handleEditorChange}
@@ -259,6 +350,11 @@ export function BlockNoteEditor({
 						: (theme as "light" | "dark")
 				}
 			/>
+			{!isFullyLoaded && (
+				<div className="mb-2 text-muted-foreground text-sm">
+					Loading blocks...
+				</div>
+			)}
 		</div>
 	);
 }

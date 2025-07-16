@@ -1,6 +1,8 @@
 "use client";
 
 import type { Block } from "@acme/db/schema";
+// Import BlockNote types
+import type { Block as BlockNoteBlock } from "@blocknote/core";
 import { BlockNoteView } from "@blocknote/mantine";
 import { useCreateBlockNote } from "@blocknote/react";
 import { useMutation } from "@tanstack/react-query";
@@ -9,16 +11,11 @@ import { useCallback, useEffect, useMemo, useRef } from "react";
 import { useDebouncedCallback } from "use-debounce";
 import { useTRPC } from "~/trpc/react";
 
-// Import BlockNote styles
-import "@blocknote/core/fonts/inter.css";
-import "@blocknote/mantine/style.css";
-
 type BlockNoteEditorProps = {
 	blocks: Block[];
 	parentId: string;
 	parentType: "page" | "block";
 	isFullyLoaded: boolean;
-	onBlocksChange?: (blocks: Block[]) => void;
 };
 
 // Track block changes for batching
@@ -26,8 +23,11 @@ type BlockChangeType = "insert" | "update" | "delete";
 type BlockChange = {
 	type: BlockChangeType;
 	blockId: string;
-	data: any;
+	data: BlockNoteBlock;
 	timestamp: number;
+	// Optional parent info for when blocks move between parents
+	newParentId?: string;
+	newParentType?: "page" | "journal_entry" | "block";
 };
 
 export function BlockNoteEditor({
@@ -35,7 +35,6 @@ export function BlockNoteEditor({
 	parentId,
 	parentType,
 	isFullyLoaded,
-	onBlocksChange,
 }: BlockNoteEditorProps) {
 	const trpc = useTRPC();
 	const { theme, systemTheme } = useTheme();
@@ -50,6 +49,8 @@ export function BlockNoteEditor({
 	const prevBlocksRef = useRef<Block[]>([]);
 	// Track if there were changes made during loading
 	const changesWhileLoadingRef = useRef(false);
+	// Track previous document structure to detect nesting changes
+	const prevDocumentRef = useRef<BlockNoteBlock[]>([]);
 
 	// New combined mutation for processing editor changes
 	const { mutate: processEditorChanges } = useMutation(
@@ -77,13 +78,13 @@ export function BlockNoteEditor({
 			id: block.id,
 			props: block.props,
 			type: block.type,
-		}));
+		})) as BlockNoteBlock[];
 	}, [blocks]);
 
 	// Create BlockNote editor
 	const editor = useCreateBlockNote({
 		animations: false,
-		initialContent: initialBlocks as any,
+		initialContent: initialBlocks,
 		trailingBlock: false, // Disable automatic trailing block
 	});
 
@@ -94,15 +95,50 @@ export function BlockNoteEditor({
 			return;
 		}
 
-		console.log("zzz Syncing changes made during loading");
+		// Get current editor state - flatten all blocks like in handleEditorChange
+		const flattenAllBlockIds = (blocks: BlockNoteBlock[]): string[] => {
+			const allIds: string[] = [];
+			for (const block of blocks) {
+				allIds.push(block.id);
+				if (
+					block.children &&
+					Array.isArray(block.children) &&
+					block.children.length > 0
+				) {
+					const childBlocks = block.children.filter(
+						(child: any) => typeof child === "object" && child.id,
+					) as BlockNoteBlock[];
+					allIds.push(...flattenAllBlockIds(childBlocks));
+				}
+			}
+			return allIds;
+		};
 
-		// Get current editor state
-		const currentBlocks = editor.document.map((block) => block.id);
+		const currentBlocks = flattenAllBlockIds(editor.document);
 		currentParentChildrenRef.current = currentBlocks;
 
-		// Create block changes for all blocks in the editor
+		// Create block changes for all blocks in the editor (flattened)
 		// We'll treat all blocks as updates since both insert and update now use upsert logic
-		const blockChanges = editor.document.map((block) => ({
+		const flattenDocument = (blocks: BlockNoteBlock[]): BlockNoteBlock[] => {
+			const flattened: BlockNoteBlock[] = [];
+			for (const block of blocks) {
+				flattened.push(block);
+				if (
+					block.children &&
+					Array.isArray(block.children) &&
+					block.children.length > 0
+				) {
+					const childBlocks = block.children.filter(
+						(child: any) => typeof child === "object" && child.id,
+					) as BlockNoteBlock[];
+					flattened.push(...flattenDocument(childBlocks));
+				}
+			}
+			return flattened;
+		};
+
+		const allBlocks = flattenDocument(editor.document);
+		const blockChanges = allBlocks.map((block) => ({
 			blockId: block.id,
 			data: {
 				...block,
@@ -156,6 +192,8 @@ export function BlockNoteEditor({
 				blockChanges.push({
 					blockId,
 					data: lastChange.data,
+					newParentId: lastChange.newParentId,
+					newParentType: lastChange.newParentType,
 					type: "delete",
 				});
 			}
@@ -164,6 +202,8 @@ export function BlockNoteEditor({
 				blockChanges.push({
 					blockId,
 					data: lastChange.data,
+					newParentId: lastChange.newParentId,
+					newParentType: lastChange.newParentType,
 					type: "insert",
 				});
 			}
@@ -172,6 +212,8 @@ export function BlockNoteEditor({
 				blockChanges.push({
 					blockId,
 					data: lastChange.data,
+					newParentId: lastChange.newParentId,
+					newParentType: lastChange.newParentType,
 					type: "update",
 				});
 			}
@@ -200,7 +242,7 @@ export function BlockNoteEditor({
 
 	// Handle individual block changes from editor.onChange
 	const handleBlockChange = useCallback(
-		(changes: any[]) => {
+		(changes: Array<{ type: BlockChangeType; block: BlockNoteBlock }>) => {
 			// If not fully loaded, track that changes were made but don't process them yet
 			if (!isFullyLoaded) {
 				changesWhileLoadingRef.current = true;
@@ -242,72 +284,178 @@ export function BlockNoteEditor({
 		[isFullyLoaded],
 	);
 
+	// Helper function to flatten BlockNote document and track parent-child relationships
+	const flattenDocument = useCallback(
+		(
+			blocks: BlockNoteBlock[],
+			blockParentId?: string,
+			blockParentType?: string,
+		) => {
+			const currentParentId = blockParentId || parentId;
+			const currentParentType = blockParentType || parentType;
+			const flattened: Array<{
+				block: BlockNoteBlock;
+				parentId: string;
+				parentType: string;
+			}> = [];
+
+			for (const block of blocks) {
+				// Add current block
+				flattened.push({
+					block,
+					parentId: currentParentId,
+					parentType: currentParentType,
+				});
+
+				// Recursively add children
+				if (
+					block.children &&
+					Array.isArray(block.children) &&
+					block.children.length > 0
+				) {
+					const childBlocks = block.children.filter(
+						(child: any) => typeof child === "object" && child.id,
+					) as BlockNoteBlock[];
+
+					if (childBlocks.length > 0) {
+						flattened.push(...flattenDocument(childBlocks, block.id, "block"));
+					}
+				}
+			}
+
+			return flattened;
+		},
+		[parentId, parentType],
+	);
+
 	// Handle editor changes - captures both block changes and page children order
 	const handleEditorChange = useCallback(
-		(e: { document: any[] }) => {
+		(e: { document: BlockNoteBlock[] }) => {
 			// If not fully loaded, skip processing - we'll sync everything at the end
 			if (!isFullyLoaded) {
 				return;
 			}
 
-			// Skip if no changes to process
-			if (blockChangesRef.current.size === 0) {
-				return;
+			// Extract ALL block IDs from the document (flattened order)
+			const flattenAllBlockIds = (blocks: BlockNoteBlock[]): string[] => {
+				const allIds: string[] = [];
+				for (const block of blocks) {
+					allIds.push(block.id);
+					if (
+						block.children &&
+						Array.isArray(block.children) &&
+						block.children.length > 0
+					) {
+						const childBlocks = block.children.filter(
+							(child: any) => typeof child === "object" && child.id,
+						) as BlockNoteBlock[];
+						allIds.push(...flattenAllBlockIds(childBlocks));
+					}
+				}
+				return allIds;
+			};
+
+			const allBlockIds = flattenAllBlockIds(e.document);
+			currentParentChildrenRef.current = allBlockIds;
+
+			// Flatten current and previous document structures to detect nesting changes
+			const currentFlattened = flattenDocument(e.document);
+			const prevFlattened = flattenDocument(prevDocumentRef.current);
+
+			// Create maps for easier comparison
+			const currentBlockParents = new Map(
+				currentFlattened.map(({ block, parentId, parentType }) => [
+					block.id,
+					{ block, parentId, parentType },
+				]),
+			);
+
+			const prevBlockParents = new Map(
+				prevFlattened.map(({ block, parentId, parentType }) => [
+					block.id,
+					{ block, parentId, parentType },
+				]),
+			);
+
+			// Detect blocks that have changed parents (nesting changes)
+			let hasNestingChanges = false;
+			for (const [blockId, current] of currentBlockParents) {
+				const previous = prevBlockParents.get(blockId);
+
+				// Check if block moved to a different parent or has structural changes
+				if (
+					previous &&
+					(previous.parentId !== current.parentId ||
+						previous.parentType !== current.parentType ||
+						JSON.stringify(previous.block.children) !==
+							JSON.stringify(current.block.children))
+				) {
+					hasNestingChanges = true;
+
+					// Create update change for this block with new parent info
+					const newChange: BlockChange = {
+						blockId,
+						data: {
+							...current.block,
+							children: Array.isArray(current.block.children)
+								? current.block.children.map((child: any) => child.id || child)
+								: [],
+						},
+						newParentId: current.parentId,
+						newParentType: current.parentType as
+							| "page"
+							| "journal_entry"
+							| "block",
+						timestamp: Date.now(),
+						type: "update",
+					};
+
+					const existingChanges = blockChangesRef.current.get(blockId) || [];
+					blockChangesRef.current.set(blockId, [...existingChanges, newChange]);
+				}
 			}
 
-			// Extract block IDs from the current document order
-			const blockIds = e.document.map((block) => block.id);
-			currentParentChildrenRef.current = blockIds;
+			// Update previous document reference
+			prevDocumentRef.current = e.document;
 
-			// Process all changes (blocks + page children) together
-			debouncedProcessAllChanges();
+			// Process changes if there are any pending changes or nesting changes
+			if (blockChangesRef.current.size > 0 || hasNestingChanges) {
+				hasUnsavedChangesRef.current = true;
+				// Process all changes (blocks + page children) together
+				debouncedProcessAllChanges();
+			}
 		},
-		[isFullyLoaded, debouncedProcessAllChanges],
+		[isFullyLoaded, debouncedProcessAllChanges, flattenDocument],
 	);
 
 	// Update editor content when blocks change
 	useEffect(() => {
 		if (blocks.length > 0) {
+			// Always reconstruct the entire document structure when blocks change
+			// This ensures proper hierarchy is maintained when new chunks load
+
+			// The blocks passed here are already nested correctly by the parent component
+			// Convert them to BlockNote format
 			const blockNoteBlocks = blocks.map((block) => ({
 				children: block.children,
 				content: block.content,
 				id: block.id,
 				props: block.props,
 				type: block.type,
-			}));
+			})) as BlockNoteBlock[];
 
-			// Get previous block IDs
-			const prevBlockIds = new Set(
-				prevBlocksRef.current.map((block) => block.id),
-			);
+			// Always replace the entire document to maintain correct hierarchy
+			// This is necessary because BlockNote needs the complete nested structure
+			editor.replaceBlocks(editor.document, blockNoteBlocks);
 
-			// Find new blocks that weren't in previous blocks
-			const newBlocks = blockNoteBlocks.filter(
-				(block) => !prevBlockIds.has(block.id),
-			);
-
-			// If this is the first load or we have new blocks, update the editor
-			if (prevBlocksRef.current.length === 0) {
-				// First load - replace the entire document
-				editor.replaceBlocks(editor.document, blockNoteBlocks as any);
-				existingBlockIdsRef.current = new Set(blockNoteBlocks.map((b) => b.id));
-			} else if (newBlocks.length > 0) {
-				// Add only new blocks to the end
-				const lastBlock = editor.document[editor.document.length - 1];
-				if (lastBlock) {
-					// Insert after the last block since we disabled trailing block
-					editor.insertBlocks(newBlocks as any, lastBlock.id, "after");
-				} else {
-					// If document is empty, replace with new blocks
-					editor.replaceBlocks(editor.document, newBlocks as any);
-				}
-
-				// Update existing blocks set
-				newBlocks.forEach((block) => existingBlockIdsRef.current.add(block.id));
-			}
-
-			// Update previous blocks reference
+			// Update tracking references
+			existingBlockIdsRef.current = new Set(blockNoteBlocks.map((b) => b.id));
 			prevBlocksRef.current = blocks;
+
+			// Initialize previous document reference to avoid false positives on first render
+			if (prevDocumentRef.current.length === 0) {
+				prevDocumentRef.current = blockNoteBlocks;
+			}
 		}
 	}, [blocks, editor]);
 

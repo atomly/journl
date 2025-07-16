@@ -1,6 +1,5 @@
 "use client";
 
-import type { Block } from "@acme/db/schema";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import { Skeleton } from "~/components/ui/skeleton";
@@ -28,7 +27,7 @@ function BlockEditorSkeleton() {
 
 export function BlockEditor({ parentId, parentType }: BlockEditorProps) {
 	const trpc = useTRPC();
-	const [allBlocks, setAllBlocks] = useState<Block[]>([]);
+	const [allBlocks, setAllBlocks] = useState<any[]>([]);
 
 	// Get parent data (for pages)
 	const { data: parentData, isLoading: isParentLoading } = useQuery({
@@ -68,48 +67,76 @@ export function BlockEditor({ parentId, parentType }: BlockEditorProps) {
 		return lastPage?.hasMore ?? false;
 	}, [infiniteData?.pages]);
 
-	// Get blocks in the correct order based on parent's children array
-	const orderedBlocks = useMemo(() => {
+	// Reconstruct nested structure from flat blocks using their children arrays
+	const nestedBlocks = useMemo(() => {
 		if (combinedBlocks.length === 0) return [];
 
-		// Get the order from parent's children array
-		let childrenOrder: string[] = [];
-		if (parentType === "page" && parentData?.children) {
-			childrenOrder = parentData.children as string[];
-		} else if (parentType === "block" && combinedBlocks.length > 0) {
-			// For block parents, the order is determined by the API response
-			return combinedBlocks;
+		// Create a map of all blocks by ID for quick lookup
+		const blockMap = new Map(
+			combinedBlocks.map((block) => [
+				block.id,
+				{ ...block, children: [] as any[] },
+			]),
+		);
+
+		// Build the nested structure
+		const rootBlocks: any[] = [];
+
+		// First, identify which blocks are referenced as children by other blocks
+		const childBlockIds = new Set<string>();
+		for (const block of combinedBlocks) {
+			if (Array.isArray(block.children)) {
+				for (const childId of block.children) {
+					if (typeof childId === "string") {
+						childBlockIds.add(childId);
+					}
+				}
+			}
 		}
 
-		// If no children order, return blocks as-is
-		if (childrenOrder.length === 0) {
-			return combinedBlocks;
+		// Process each block to build parent-child relationships
+		for (const block of combinedBlocks) {
+			const blockWithChildren = blockMap.get(block.id);
+			if (!blockWithChildren) continue;
+
+			// If this block has children, find them and nest them (only if child blocks are available)
+			if (Array.isArray(block.children) && block.children.length > 0) {
+				const childrenIds = block.children.filter(
+					(id) => typeof id === "string" && id.length > 0,
+				);
+
+				for (const childId of childrenIds) {
+					const childBlock = blockMap.get(childId);
+					if (childBlock) {
+						blockWithChildren.children.push(childBlock);
+					} else {
+						// Child block not found for parent
+					}
+				}
+			}
+
+			// If this block is not a child of any other block, it's a root block
+			if (!childBlockIds.has(block.id)) {
+				rootBlocks.push(blockWithChildren);
+			}
 		}
 
-		// Create a map for quick lookup
-		const blockMap = new Map(combinedBlocks.map((block) => [block.id, block]));
+		return rootBlocks;
+	}, [combinedBlocks]);
 
-		// Return blocks in the order specified by children array
-		return childrenOrder
-			.map((blockId) => blockMap.get(blockId))
-			.filter((block): block is Block => block !== undefined);
-	}, [combinedBlocks, parentData?.children, parentType]);
-
-	// Background loading effect
+	// Background loading effect - load next chunks faster
 	useEffect(() => {
 		if (hasMoreToLoad && !isFetchingNextPage) {
 			setTimeout(() => {
 				fetchNextPage();
-			}, 3000);
-		} else if (!hasMoreToLoad) {
-			setAllBlocks(orderedBlocks);
+			}, 100); // Reduced from 3000ms to 100ms for faster loading
 		}
-	}, [hasMoreToLoad, isFetchingNextPage, fetchNextPage, orderedBlocks]);
+	}, [hasMoreToLoad, isFetchingNextPage, fetchNextPage]);
 
-	// Update allBlocks when orderedBlocks changes
+	// Update allBlocks when nestedBlocks changes (always keep in sync)
 	useEffect(() => {
-		setAllBlocks(orderedBlocks);
-	}, [orderedBlocks]);
+		setAllBlocks(nestedBlocks);
+	}, [nestedBlocks]);
 
 	// Show skeleton while loading initial data
 	const isLoading = isParentLoading || isBlocksLoading;

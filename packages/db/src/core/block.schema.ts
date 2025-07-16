@@ -67,6 +67,12 @@ export type BlockParentType = z.infer<typeof blockParentTypeSchema>;
 // Rich text content schema - supports BlockNote's InlineContent format
 // Content is stored as InlineContent[] or null for void blocks
 
+// Define InlineContent type based on BlockNote structure
+export type InlineContent =
+	| { type: "text"; text: string; styles?: Record<string, any> }
+	| { type: "link"; href: string; content: InlineContent[] }
+	| any; // Allow other BlockNote inline content types
+
 // BlockNote-compatible block props schemas
 export const blockPropsSchemas = {
 	paragraph: z.object({
@@ -166,7 +172,7 @@ export const createBlockInput = <T extends BlockType>(
 		parentId: string;
 		parentType: "page" | "journal_entry" | "block";
 		props: BlockPropsForType<T>;
-		content?: any[]; // InlineContent[]
+		content?: InlineContent[];
 		insertIndex?: number;
 	},
 ) => ({
@@ -182,7 +188,7 @@ export const updateBlockInput = <T extends BlockType>(
 	blockId: string,
 	input: {
 		props?: Partial<BlockPropsForType<T>>;
-		content?: any[]; // InlineContent[]
+		content?: InlineContent[];
 		type?: T;
 	},
 ) => ({
@@ -196,7 +202,7 @@ export const updateBlockInput = <T extends BlockType>(
 export const createParagraphBlock = (input: {
 	parentId: string;
 	parentType: "page" | "journal_entry" | "block";
-	content?: any[];
+	content?: InlineContent[];
 	props?: BlockPropsForType<"paragraph">;
 	insertIndex?: number;
 }) =>
@@ -208,7 +214,7 @@ export const createParagraphBlock = (input: {
 export const createHeadingBlock = (input: {
 	parentId: string;
 	parentType: "page" | "journal_entry" | "block";
-	content?: any[];
+	content?: InlineContent[];
 	level?: 1 | 2 | 3 | 4 | 5 | 6;
 	props?: Partial<BlockPropsForType<"heading">>;
 	insertIndex?: number;
@@ -221,7 +227,7 @@ export const createHeadingBlock = (input: {
 export const createCheckListItemBlock = (input: {
 	parentId: string;
 	parentType: "page" | "journal_entry" | "block";
-	content?: any[];
+	content?: InlineContent[];
 	checked?: boolean;
 	props?: Partial<BlockPropsForType<"checkListItem">>;
 	insertIndex?: number;
@@ -234,7 +240,7 @@ export const createCheckListItemBlock = (input: {
 export const createQuoteBlock = (input: {
 	parentId: string;
 	parentType: "page" | "journal_entry" | "block";
-	content?: any[];
+	content?: InlineContent[];
 	props?: BlockPropsForType<"quote">;
 	insertIndex?: number;
 }) =>
@@ -257,7 +263,7 @@ export const createDividerBlock = (input: {
 export const createCalloutBlock = (input: {
 	parentId: string;
 	parentType: "page" | "journal_entry" | "block";
-	content?: any[];
+	content?: InlineContent[];
 	props?: BlockPropsForType<"callout">;
 	insertIndex?: number;
 }) =>
@@ -269,7 +275,7 @@ export const createCalloutBlock = (input: {
 export const createToggleListItemBlock = (input: {
 	parentId: string;
 	parentType: "page" | "journal_entry" | "block";
-	content?: any[];
+	content?: InlineContent[];
 	props?: BlockPropsForType<"toggleListItem">;
 	insertIndex?: number;
 }) =>
@@ -280,13 +286,16 @@ export const createToggleListItemBlock = (input: {
 
 export const updateParagraphBlock = (
 	blockId: string,
-	input: { content?: any[]; props?: Partial<BlockPropsForType<"paragraph">> },
+	input: {
+		content?: InlineContent[];
+		props?: Partial<BlockPropsForType<"paragraph">>;
+	},
 ) => updateBlockInput(blockId, input);
 
 export const updateCheckListItemBlock = (
 	blockId: string,
 	input: {
-		content?: any[];
+		content?: InlineContent[];
 		props?: Partial<BlockPropsForType<"checkListItem">>;
 	},
 ) => updateBlockInput(blockId, input);
@@ -294,7 +303,7 @@ export const updateCheckListItemBlock = (
 export const updateQuoteBlock = (
 	blockId: string,
 	input: {
-		content?: any[];
+		content?: InlineContent[];
 		props?: Partial<BlockPropsForType<"quote">>;
 	},
 ) => updateBlockInput(blockId, input);
@@ -309,7 +318,7 @@ export const updateDividerBlock = (
 export const updateCalloutBlock = (
 	blockId: string,
 	input: {
-		content?: any[];
+		content?: InlineContent[];
 		props?: Partial<BlockPropsForType<"callout">>;
 	},
 ) => updateBlockInput(blockId, input);
@@ -317,7 +326,7 @@ export const updateCalloutBlock = (
 export const updateToggleListItemBlock = (
 	blockId: string,
 	input: {
-		content?: any[];
+		content?: InlineContent[];
 		props?: Partial<BlockPropsForType<"toggleListItem">>;
 	},
 ) => updateBlockInput(blockId, input);

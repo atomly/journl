@@ -129,7 +129,7 @@ export function BlockEditor({ parentId, parentType }: BlockEditorProps) {
 		if (hasMoreToLoad && !isFetchingNextPage) {
 			setTimeout(() => {
 				fetchNextPage();
-			}, 100); // Reduced from 3000ms to 100ms for faster loading
+			}, 1000); // Reduced from 3000ms to 100ms for faster loading
 		}
 	}, [hasMoreToLoad, isFetchingNextPage, fetchNextPage]);
 

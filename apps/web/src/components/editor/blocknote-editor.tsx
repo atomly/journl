@@ -47,10 +47,12 @@ export function BlockNoteEditor({
 	const existingBlockIdsRef = useRef<Set<string>>(new Set());
 	// Track previous blocks to detect new additions
 	const prevBlocksRef = useRef<Block[]>([]);
-	// Track if there were changes made during loading
+	// Track changes made during loading
 	const changesWhileLoadingRef = useRef(false);
 	// Track previous document structure to detect nesting changes
 	const prevDocumentRef = useRef<BlockNoteBlock[]>([]);
+	// Track the last processed blocks to find differences (nested structure)
+	const lastProcessedBlocksRef = useRef<Block[]>([]);
 
 	// New combined mutation for processing editor changes
 	const { mutate: processEditorChanges } = useMutation(
@@ -80,6 +82,29 @@ export function BlockNoteEditor({
 			type: block.type,
 		})) as BlockNoteBlock[];
 	}, [blocks]);
+
+	// Helper function to flatten nested blocks for comparison
+	const flattenBlocks = useCallback((blocks: Block[]): Block[] => {
+		const flattened: Block[] = [];
+
+		const addBlockAndChildren = (block: Block) => {
+			flattened.push(block);
+			// If block has nested children (objects), recursively add them
+			if (Array.isArray(block.children)) {
+				for (const child of block.children) {
+					if (typeof child === "object" && child.id) {
+						addBlockAndChildren(child);
+					}
+				}
+			}
+		};
+
+		for (const block of blocks) {
+			addBlockAndChildren(block);
+		}
+
+		return flattened;
+	}, []);
 
 	// Create BlockNote editor
 	const editor = useCreateBlockNote({
@@ -378,7 +403,7 @@ export function BlockNoteEditor({
 			);
 
 			// Detect blocks that have changed parents (nesting changes)
-			let hasNestingChanges = false;
+
 			for (const [blockId, current] of currentBlockParents) {
 				const previous = prevBlockParents.get(blockId);
 
@@ -390,8 +415,6 @@ export function BlockNoteEditor({
 						JSON.stringify(previous.block.children) !==
 							JSON.stringify(current.block.children))
 				) {
-					hasNestingChanges = true;
-
 					// Create update change for this block with new parent info
 					const newChange: BlockChange = {
 						blockId,
@@ -418,12 +441,7 @@ export function BlockNoteEditor({
 			// Update previous document reference
 			prevDocumentRef.current = e.document;
 
-			// Process changes if there are any pending changes or nesting changes
-			if (blockChangesRef.current.size > 0 || hasNestingChanges) {
-				hasUnsavedChangesRef.current = true;
-				// Process all changes (blocks + page children) together
-				debouncedProcessAllChanges();
-			}
+			debouncedProcessAllChanges();
 		},
 		[isFullyLoaded, debouncedProcessAllChanges, flattenDocument],
 	);
@@ -431,33 +449,75 @@ export function BlockNoteEditor({
 	// Update editor content when blocks change
 	useEffect(() => {
 		if (blocks.length > 0) {
-			// Always reconstruct the entire document structure when blocks change
-			// This ensures proper hierarchy is maintained when new chunks load
+			// Compare the previous nested blocks with current nested blocks
+			const previousBlocks = lastProcessedBlocksRef.current;
 
-			// The blocks passed here are already nested correctly by the parent component
-			// Convert them to BlockNote format
-			const blockNoteBlocks = blocks.map((block) => ({
-				children: block.children,
-				content: block.content,
-				id: block.id,
-				props: block.props,
-				type: block.type,
-			})) as BlockNoteBlock[];
+			// Find new root-level blocks that need to be inserted
+			const previousIds = new Set(previousBlocks.map((b) => b.id));
+			const newRootBlocks = blocks.filter(
+				(block) => !previousIds.has(block.id),
+			);
 
-			// Always replace the entire document to maintain correct hierarchy
-			// This is necessary because BlockNote needs the complete nested structure
-			editor.replaceBlocks(editor.document, blockNoteBlocks);
+			if (newRootBlocks.length > 0) {
+				// Convert new blocks to BlockNote format (preserving nested structure)
+				const newBlockNoteBlocks = newRootBlocks.map((block) => ({
+					children: block.children,
+					content: block.content,
+					id: block.id,
+					props: block.props,
+					type: block.type,
+				})) as BlockNoteBlock[];
 
-			// Update tracking references
-			existingBlockIdsRef.current = new Set(blockNoteBlocks.map((b) => b.id));
+				// If this is the first load (no previous blocks), replace the entire document
+				if (previousBlocks.length === 0) {
+					const allBlockNoteBlocks = blocks.map((block) => ({
+						children: block.children,
+						content: block.content,
+						id: block.id,
+						props: block.props,
+						type: block.type,
+					})) as BlockNoteBlock[];
+
+					editor.replaceBlocks(editor.document, allBlockNoteBlocks);
+				} else {
+					// Insert new blocks at the end of the document
+					// Find the last block in the current document to use as reference
+					const currentDoc = editor.document;
+					if (currentDoc.length > 0) {
+						const lastBlock = currentDoc[currentDoc.length - 1];
+						if (lastBlock) {
+							editor.insertBlocks(newBlockNoteBlocks, lastBlock.id, "after");
+						}
+					} else {
+						// If document is empty, just insert the blocks as the document
+						editor.replaceBlocks(editor.document, newBlockNoteBlocks);
+					}
+				}
+
+				// Update tracking references with flattened structure for existing block IDs
+				const currentFlattened = flattenBlocks(blocks);
+				existingBlockIdsRef.current = new Set(
+					currentFlattened.map((b) => b.id),
+				);
+			}
+
+			// Update the reference to current blocks for next comparison (keep nested structure)
+			lastProcessedBlocksRef.current = blocks;
 			prevBlocksRef.current = blocks;
 
 			// Initialize previous document reference to avoid false positives on first render
 			if (prevDocumentRef.current.length === 0) {
+				const blockNoteBlocks = blocks.map((block) => ({
+					children: block.children,
+					content: block.content,
+					id: block.id,
+					props: block.props,
+					type: block.type,
+				})) as BlockNoteBlock[];
 				prevDocumentRef.current = blockNoteBlocks;
 			}
 		}
-	}, [blocks, editor]);
+	}, [blocks, editor, flattenBlocks]);
 
 	// Sync changes made during loading when fully loaded
 	useEffect(() => {

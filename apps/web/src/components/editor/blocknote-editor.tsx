@@ -1,7 +1,6 @@
 "use client";
 
-import type { Block } from "@acme/db/schema";
-// Import BlockNote types
+import type { BlockWithChildren } from "@acme/db/schema";
 import type { Block as BlockNoteBlock } from "@blocknote/core";
 import { BlockNoteView } from "@blocknote/mantine";
 import { useCreateBlockNote } from "@blocknote/react";
@@ -12,7 +11,7 @@ import { useDebouncedCallback } from "use-debounce";
 import { useTRPC } from "~/trpc/react";
 
 type BlockNoteEditorProps = {
-	blocks: Block[];
+	blocks: BlockWithChildren[];
 	parentId: string;
 	parentType: "page" | "block";
 	isFullyLoaded: boolean;
@@ -46,13 +45,13 @@ export function BlockNoteEditor({
 	// Track which blocks already exist in the database
 	const existingBlockIdsRef = useRef<Set<string>>(new Set());
 	// Track previous blocks to detect new additions
-	const prevBlocksRef = useRef<Block[]>([]);
+	const prevBlocksRef = useRef<BlockWithChildren[]>([]);
 	// Track changes made during loading
 	const changesWhileLoadingRef = useRef(false);
 	// Track previous document structure to detect nesting changes
 	const prevDocumentRef = useRef<BlockNoteBlock[]>([]);
 	// Track the last processed blocks to find differences (nested structure)
-	const lastProcessedBlocksRef = useRef<Block[]>([]);
+	const lastProcessedBlocksRef = useRef<BlockWithChildren[]>([]);
 
 	// New combined mutation for processing editor changes
 	const { mutate: processEditorChanges } = useMutation(
@@ -84,27 +83,28 @@ export function BlockNoteEditor({
 	}, [blocks]);
 
 	// Helper function to flatten nested blocks for comparison
-	const flattenBlocks = useCallback((blocks: Block[]): Block[] => {
-		const flattened: Block[] = [];
+	const flattenBlocks = useCallback(
+		(blocks: BlockWithChildren[]): BlockWithChildren[] => {
+			const flattened: BlockWithChildren[] = [];
 
-		const addBlockAndChildren = (block: Block) => {
-			flattened.push(block);
-			// If block has nested children (objects), recursively add them
-			if (Array.isArray(block.children)) {
-				for (const child of block.children) {
-					if (typeof child === "object" && child.id) {
-						addBlockAndChildren(child);
+			const addBlockAndChildren = (block: BlockWithChildren) => {
+				flattened.push(block);
+				// If block has nested children (objects), recursively add them
+				if (Array.isArray(block.children)) {
+					for (const child of block.children) {
+						addBlockAndChildren(child as BlockWithChildren);
 					}
 				}
+			};
+
+			for (const block of blocks) {
+				addBlockAndChildren(block);
 			}
-		};
 
-		for (const block of blocks) {
-			addBlockAndChildren(block);
-		}
-
-		return flattened;
-	}, []);
+			return flattened;
+		},
+		[],
+	);
 
 	// Create BlockNote editor
 	const editor = useCreateBlockNote({

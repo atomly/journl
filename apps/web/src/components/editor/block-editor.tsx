@@ -1,8 +1,9 @@
 "use client";
 
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo } from "react";
 import { Skeleton } from "~/components/ui/skeleton";
+import { useNestedBlocks } from "~/hooks/block-hooks";
 import { useTRPC } from "~/trpc/react";
 import { BlockNoteEditor } from "./blocknote-editor";
 
@@ -25,9 +26,8 @@ function BlockEditorSkeleton() {
 	);
 }
 
-export function BlockEditor({ parentId, parentType }: BlockEditorProps) {
+export function LazyBlockEditor({ parentId, parentType }: BlockEditorProps) {
 	const trpc = useTRPC();
-	const [allBlocks, setAllBlocks] = useState<any[]>([]);
 
 	// Get parent data (for pages)
 	const { data: parentData, isLoading: isParentLoading } = useQuery({
@@ -67,62 +67,8 @@ export function BlockEditor({ parentId, parentType }: BlockEditorProps) {
 		return lastPage?.hasMore ?? false;
 	}, [infiniteData?.pages]);
 
-	// Reconstruct nested structure from flat blocks using their children arrays
-	const nestedBlocks = useMemo(() => {
-		if (combinedBlocks.length === 0) return [];
-
-		// Create a map of all blocks by ID for quick lookup
-		const blockMap = new Map(
-			combinedBlocks.map((block) => [
-				block.id,
-				{ ...block, children: [] as any[] },
-			]),
-		);
-
-		// Build the nested structure
-		const rootBlocks: any[] = [];
-
-		// First, identify which blocks are referenced as children by other blocks
-		const childBlockIds = new Set<string>();
-		for (const block of combinedBlocks) {
-			if (Array.isArray(block.children)) {
-				for (const childId of block.children) {
-					if (typeof childId === "string") {
-						childBlockIds.add(childId);
-					}
-				}
-			}
-		}
-
-		// Process each block to build parent-child relationships
-		for (const block of combinedBlocks) {
-			const blockWithChildren = blockMap.get(block.id);
-			if (!blockWithChildren) continue;
-
-			// If this block has children, find them and nest them (only if child blocks are available)
-			if (Array.isArray(block.children) && block.children.length > 0) {
-				const childrenIds = block.children.filter(
-					(id) => typeof id === "string" && id.length > 0,
-				);
-
-				for (const childId of childrenIds) {
-					const childBlock = blockMap.get(childId);
-					if (childBlock) {
-						blockWithChildren.children.push(childBlock);
-					} else {
-						// Child block not found for parent
-					}
-				}
-			}
-
-			// If this block is not a child of any other block, it's a root block
-			if (!childBlockIds.has(block.id)) {
-				rootBlocks.push(blockWithChildren);
-			}
-		}
-
-		return rootBlocks;
-	}, [combinedBlocks]);
+	// Use the hook to get nested blocks with proper typing
+	const nestedBlocks = useNestedBlocks(combinedBlocks);
 
 	// Background loading effect - load next chunks faster
 	useEffect(() => {
@@ -133,11 +79,6 @@ export function BlockEditor({ parentId, parentType }: BlockEditorProps) {
 		}
 	}, [hasMoreToLoad, isFetchingNextPage, fetchNextPage]);
 
-	// Update allBlocks when nestedBlocks changes (always keep in sync)
-	useEffect(() => {
-		setAllBlocks(nestedBlocks);
-	}, [nestedBlocks]);
-
 	// Show skeleton while loading initial data
 	const isLoading = isParentLoading || isBlocksLoading;
 	if (isLoading) {
@@ -147,7 +88,7 @@ export function BlockEditor({ parentId, parentType }: BlockEditorProps) {
 	return (
 		<div className="h-full">
 			<BlockNoteEditor
-				blocks={allBlocks}
+				blocks={nestedBlocks}
 				parentId={parentId}
 				parentType={parentType}
 				isFullyLoaded={!hasMoreToLoad}

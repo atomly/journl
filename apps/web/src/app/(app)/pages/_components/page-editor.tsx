@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { BlockEditor } from "~/components/editor/block-editor";
+import { LazyBlockEditor } from "~/components/editor/block-editor";
 import { useTRPC } from "~/trpc/react";
 import { PageSkeleton } from "./page-skeleton";
 import { PageTitle } from "./page-title";
@@ -33,7 +33,7 @@ export function PageEditor({ id }: PageEditorProps) {
 		<div className="flex h-full flex-col gap-4 p-4">
 			<PageTitle id={id} initialTitle={page.title ?? ""} />
 			<div className="min-h-0 flex-1">
-				<BlockEditor parentId={id} parentType="page" />
+				<LazyBlockEditor parentId={id} parentType="page" />
 			</div>
 		</div>
 	);

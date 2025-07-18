@@ -46,8 +46,7 @@ export function BlockNoteEditor({
 	const existingBlockIdsRef = useRef<Set<string>>(new Set());
 	// Track previous blocks to detect new additions
 	const prevBlocksRef = useRef<BlockWithChildren[]>([]);
-	// Track changes made during loading
-	const changesWhileLoadingRef = useRef(false);
+
 	// Track previous document structure to detect nesting changes
 	const prevDocumentRef = useRef<BlockNoteBlock[]>([]);
 	// Track the last processed blocks to find differences (nested structure)
@@ -112,82 +111,6 @@ export function BlockNoteEditor({
 		initialContent: initialBlocks,
 		trailingBlock: false, // Disable automatic trailing block
 	});
-
-	// Sync changes made during loading using processEditorChanges
-	const syncChangesAfterLoading = useCallback(() => {
-		// Only sync if there were actually changes made during loading
-		if (!changesWhileLoadingRef.current) {
-			return;
-		}
-
-		// Get current editor state - flatten all blocks like in handleEditorChange
-		const flattenAllBlockIds = (blocks: BlockNoteBlock[]): string[] => {
-			const allIds: string[] = [];
-			for (const block of blocks) {
-				allIds.push(block.id);
-				if (
-					block.children &&
-					Array.isArray(block.children) &&
-					block.children.length > 0
-				) {
-					const childBlocks = block.children.filter(
-						(child: any) => typeof child === "object" && child.id,
-					) as BlockNoteBlock[];
-					allIds.push(...flattenAllBlockIds(childBlocks));
-				}
-			}
-			return allIds;
-		};
-
-		const currentBlocks = flattenAllBlockIds(editor.document);
-		currentParentChildrenRef.current = currentBlocks;
-
-		// Create block changes for all blocks in the editor (flattened)
-		// We'll treat all blocks as updates since both insert and update now use upsert logic
-		const flattenDocument = (blocks: BlockNoteBlock[]): BlockNoteBlock[] => {
-			const flattened: BlockNoteBlock[] = [];
-			for (const block of blocks) {
-				flattened.push(block);
-				if (
-					block.children &&
-					Array.isArray(block.children) &&
-					block.children.length > 0
-				) {
-					const childBlocks = block.children.filter(
-						(child: any) => typeof child === "object" && child.id,
-					) as BlockNoteBlock[];
-					flattened.push(...flattenDocument(childBlocks));
-				}
-			}
-			return flattened;
-		};
-
-		const allBlocks = flattenDocument(editor.document);
-		const blockChanges = allBlocks.map((block) => ({
-			blockId: block.id,
-			data: {
-				...block,
-				children: Array.isArray(block.children)
-					? block.children.map((child: any) => child.id || child)
-					: [],
-			},
-			type: "update" as const,
-		}));
-
-		// Use processEditorChanges for consistency
-		processEditorChanges({
-			blockChanges,
-			parentChildren: currentBlocks,
-			parentId,
-			parentType,
-			updateChildren: true,
-		});
-
-		// Reset the flag and clear changes
-		changesWhileLoadingRef.current = false;
-		blockChangesRef.current.clear();
-		hasUnsavedChangesRef.current = false;
-	}, [editor, parentId, parentType, processEditorChanges]);
 
 	// Process all batched changes - both blocks and parent children
 	const processAllChanges = useCallback(() => {
@@ -268,9 +191,8 @@ export function BlockNoteEditor({
 	// Handle individual block changes from editor.onChange
 	const handleBlockChange = useCallback(
 		(changes: Array<{ type: BlockChangeType; block: BlockNoteBlock }>) => {
-			// If not fully loaded, track that changes were made but don't process them yet
+			// Skip all changes while loading
 			if (!isFullyLoaded) {
-				changesWhileLoadingRef.current = true;
 				return;
 			}
 
@@ -356,7 +278,7 @@ export function BlockNoteEditor({
 	// Handle editor changes - captures both block changes and page children order
 	const handleEditorChange = useCallback(
 		(e: { document: BlockNoteBlock[] }) => {
-			// If not fully loaded, skip processing - we'll sync everything at the end
+			// Skip all processing while loading
 			if (!isFullyLoaded) {
 				return;
 			}
@@ -446,104 +368,40 @@ export function BlockNoteEditor({
 		[isFullyLoaded, debouncedProcessAllChanges, flattenDocument],
 	);
 
-	// Update editor content when blocks change
+	// Update editor content when blocks change - simple replacement approach
 	useEffect(() => {
 		if (blocks.length > 0) {
-			// Compare the previous nested blocks with current nested blocks
-			const previousBlocks = lastProcessedBlocksRef.current;
+			// Convert all blocks to BlockNote format (preserving nested structure)
+			const allBlockNoteBlocks = blocks.map((block) => ({
+				children: block.children,
+				content: block.content,
+				id: block.id,
+				props: block.props,
+				type: block.type,
+			})) as BlockNoteBlock[];
 
-			// Find new root-level blocks that need to be inserted
-			const previousIds = new Set(previousBlocks.map((b) => b.id));
-			const newRootBlocks = blocks.filter(
-				(block) => !previousIds.has(block.id),
-			);
+			// Always replace the entire document to ensure correct nesting
+			editor.replaceBlocks(editor.document, allBlockNoteBlocks);
 
-			if (newRootBlocks.length > 0) {
-				// Convert new blocks to BlockNote format (preserving nested structure)
-				const newBlockNoteBlocks = newRootBlocks.map((block) => ({
-					children: block.children,
-					content: block.content,
-					id: block.id,
-					props: block.props,
-					type: block.type,
-				})) as BlockNoteBlock[];
-
-				// If this is the first load (no previous blocks), replace the entire document
-				if (previousBlocks.length === 0) {
-					const allBlockNoteBlocks = blocks.map((block) => ({
-						children: block.children,
-						content: block.content,
-						id: block.id,
-						props: block.props,
-						type: block.type,
-					})) as BlockNoteBlock[];
-
-					editor.replaceBlocks(editor.document, allBlockNoteBlocks);
-				} else {
-					// Insert new blocks at the end of the document
-					// Find the last block in the current document to use as reference
-					const currentDoc = editor.document;
-					if (currentDoc.length > 0) {
-						const lastBlock = currentDoc[currentDoc.length - 1];
-						if (lastBlock) {
-							editor.insertBlocks(newBlockNoteBlocks, lastBlock.id, "after");
-						}
-					} else {
-						// If document is empty, just insert the blocks as the document
-						editor.replaceBlocks(editor.document, newBlockNoteBlocks);
-					}
-				}
-
-				// Update tracking references with flattened structure for existing block IDs
-				const currentFlattened = flattenBlocks(blocks);
-				existingBlockIdsRef.current = new Set(
-					currentFlattened.map((b) => b.id),
-				);
-			}
-
-			// Update the reference to current blocks for next comparison (keep nested structure)
+			// Update tracking references
+			const currentFlattened = flattenBlocks(blocks);
+			existingBlockIdsRef.current = new Set(currentFlattened.map((b) => b.id));
 			lastProcessedBlocksRef.current = blocks;
 			prevBlocksRef.current = blocks;
 
-			// Initialize previous document reference to avoid false positives on first render
-			if (prevDocumentRef.current.length === 0) {
-				const blockNoteBlocks = blocks.map((block) => ({
-					children: block.children,
-					content: block.content,
-					id: block.id,
-					props: block.props,
-					type: block.type,
-				})) as BlockNoteBlock[];
-				prevDocumentRef.current = blockNoteBlocks;
-			}
+			// Update previous document reference
+			prevDocumentRef.current = allBlockNoteBlocks;
 		}
 	}, [blocks, editor, flattenBlocks]);
 
-	// Sync changes made during loading when fully loaded
-	useEffect(() => {
-		if (isFullyLoaded && blocks.length > 0) {
-			// Only sync if there were changes made during loading
-			syncChangesAfterLoading();
-		}
-	}, [isFullyLoaded, blocks.length, syncChangesAfterLoading]);
-
 	// Set up editor onChange listener for individual block changes
 	editor.onChange((_, { getChanges }) => {
-		// Skip if we're updating programmatically
-		// if (isUpdatingProgrammaticallyRef.current) {
-		// 	return;
-		// }
-
-		const changes = getChanges();
-		if (
-			!isFullyLoaded &&
-			changes.find(
-				(change) => change.type === "insert" || change.type === "delete",
-			)
-		) {
+		// Skip all changes while loading
+		if (!isFullyLoaded) {
 			return;
 		}
 
+		const changes = getChanges();
 		handleBlockChange(changes);
 	});
 
@@ -552,6 +410,7 @@ export function BlockNoteEditor({
 			<BlockNoteView
 				editor={editor}
 				onChange={handleEditorChange}
+				editable={isFullyLoaded}
 				theme={
 					theme === "system"
 						? (systemTheme as "light" | "dark")

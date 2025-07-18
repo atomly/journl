@@ -8,58 +8,174 @@ import {
 import { z } from "zod/v4";
 import { protectedProcedure } from "../trpc.js";
 
-// Define schemas for block data validation
+// ===== SCHEMAS =====
 const blockDataSchema = z.object({
-	children: z.any(), // Accept any children format from BlockNote
-	content: z.any(), // Accept any content format from BlockNote
+	children: z.any(),
+	content: z.any(),
 	id: z.string().uuid(),
 	props: z.record(z.string(), z.any()),
 	type: z.string(),
 });
 
+const parentTypeEnum = z.enum(["page", "journal_entry", "block"]);
+const blockChangeTypeEnum = z.enum(["insert", "update", "delete"]);
+
+// ===== HELPER FUNCTIONS =====
+
+/**
+ * Fetches the children array from a parent entity (page, journal_entry, or block)
+ */
+async function getParentChildren(
+	db: any,
+	parentId: string,
+	parentType: "page" | "journal_entry" | "block",
+): Promise<string[]> {
+	switch (parentType) {
+		case "page": {
+			const [page] = await db
+				.select({ children: Page.children })
+				.from(Page)
+				.where(eq(Page.id, parentId))
+				.limit(1);
+			return (page?.children as string[]) || [];
+		}
+		case "block": {
+			const [block] = await db
+				.select({ children: Block.children })
+				.from(Block)
+				.where(eq(Block.id, parentId))
+				.limit(1);
+			return (block?.children as string[]) || [];
+		}
+		case "journal_entry":
+			// TODO: Implement when journal_entry table is available
+			return [];
+		default:
+			return [];
+	}
+}
+
+/**
+ * Updates the children array of a parent entity
+ */
+async function updateParentChildren(
+	tx: any,
+	parentId: string,
+	parentType: "page" | "journal_entry" | "block",
+	children: string[],
+): Promise<void> {
+	switch (parentType) {
+		case "page":
+			await tx.update(Page).set({ children }).where(eq(Page.id, parentId));
+			break;
+		case "block":
+			await tx.update(Block).set({ children }).where(eq(Block.id, parentId));
+			break;
+		case "journal_entry":
+			// TODO: Implement when journal_entry table is available
+			break;
+	}
+}
+
+/**
+ * Recursively collects all child block IDs for deletion
+ */
+async function collectChildBlockIds(
+	tx: any,
+	blockId: string,
+	collected = new Set<string>(),
+): Promise<string[]> {
+	// Prevent infinite recursion
+	if (collected.has(blockId)) {
+		return [];
+	}
+	collected.add(blockId);
+
+	// Get block's children
+	const [block] = await tx
+		.select({ children: Block.children })
+		.from(Block)
+		.where(eq(Block.id, blockId))
+		.limit(1);
+
+	if (!block) return [];
+
+	const childIds = (block.children as string[]) || [];
+	const allChildIds = [...childIds];
+
+	// Recursively collect grandchildren
+	for (const childId of childIds) {
+		if (!collected.has(childId)) {
+			const grandChildIds = await collectChildBlockIds(tx, childId, collected);
+			allChildIds.push(...grandChildIds);
+		}
+	}
+
+	return allChildIds;
+}
+
+/**
+ * Processes block data for upsert operations
+ */
+function processBlockData(
+	data: any,
+	userId: string,
+	defaultParentId: string,
+	defaultParentType: string,
+	newParentId?: string,
+	newParentType?: string,
+) {
+	const propsSchema = blockPropsSchemas[data.type as BlockType];
+	const validatedProps = propsSchema.parse(data.props || {});
+
+	// Handle content: null if empty, otherwise keep the array
+	const content =
+		data.content && Array.isArray(data.content) && data.content.length > 0
+			? data.content
+			: null;
+
+	// Handle children: always an array
+	const children = Array.isArray(data.children) ? data.children : [];
+
+	// Use new parent info if provided, otherwise use defaults
+	const parentId = newParentId || defaultParentId;
+	const parentType = newParentType || defaultParentType;
+
+	return {
+		children,
+		content,
+		created_by: userId,
+		id: data.id,
+		parent_id: parentId,
+		parent_type: parentType,
+		props: validatedProps,
+		type: data.type,
+	};
+}
+
+// ===== ROUTER =====
 export const blocksRouter = {
-	// Notion-style loadPageChunk - loads blocks in chunks with pagination
-	// Simple approach: chunk the flat children array, let client reconstruct hierarchy
+	/**
+	 * Loads blocks in chunks with pagination (Notion-style)
+	 */
 	loadPageChunk: protectedProcedure
 		.input(
 			z.object({
 				cursor: z.string().uuid().optional(),
 				limit: z.number().min(1).max(100).default(50),
 				parentId: z.string().uuid(),
-				parentType: z.enum(["page", "journal_entry", "block"]),
+				parentType: parentTypeEnum,
 			}),
 		)
 		.query(async ({ ctx, input }) => {
-			// First, get the parent's children array to determine order
-			let parentContent: string[] = [];
+			// Get parent's children array
+			const parentChildren = await getParentChildren(
+				ctx.db,
+				input.parentId,
+				input.parentType,
+			);
 
-			if (input.parentType === "page") {
-				const [page] = await ctx.db
-					.select({ children: Page.children })
-					.from(Page)
-					.where(eq(Page.id, input.parentId))
-					.limit(1);
-				parentContent = (page?.children as string[]) || [];
-			}
-			// else if (input.parentType === "journal_entry") {
-			// 	const [journalEntry] = await ctx.db
-			// 		.select({ content: JournalEntry.content })
-			// 		.from(JournalEntry)
-			// 		.where(eq(JournalEntry.id, input.parentId))
-			// 		.limit(1);
-			// 	parentContent = (journalEntry?.content as string[]) || [];
-			// }
-			else if (input.parentType === "block") {
-				const [parentBlock] = await ctx.db
-					.select({ children: Block.children })
-					.from(Block)
-					.where(eq(Block.id, input.parentId))
-					.limit(1);
-				parentContent = (parentBlock?.children as string[]) || [];
-			}
-
-			// If no content array or empty, return empty result
-			if (parentContent.length === 0) {
+			if (parentChildren.length === 0) {
 				return {
 					blocks: [],
 					hasMore: false,
@@ -67,50 +183,44 @@ export const blocksRouter = {
 				};
 			}
 
-			// Find starting position
+			// Calculate pagination
 			let startIndex = 0;
 			if (input.cursor) {
-				const cursorIndex = parentContent.indexOf(input.cursor);
+				const cursorIndex = parentChildren.indexOf(input.cursor);
 				if (cursorIndex !== -1) {
-					// Start AFTER the cursor (not including it)
-					startIndex = cursorIndex + 1;
+					startIndex = cursorIndex + 1; // Start after cursor
 				}
 			}
 
-			// Get available blocks from the starting position
-			const availableBlockIds = parentContent.slice(startIndex);
-
-			// Simple chunking: take blocks from flat children array in order
+			const availableBlockIds = parentChildren.slice(startIndex);
 			const selectedBlockIds = availableBlockIds.slice(0, input.limit);
 			const hasMore = availableBlockIds.length > input.limit;
-
-			// Next cursor is the last block in current chunk
 			const nextCursor =
 				hasMore && selectedBlockIds.length > 0
 					? selectedBlockIds[selectedBlockIds.length - 1]
 					: null;
 
-			// Get all blocks by their IDs
-			const allBlocks = await ctx.db
+			// Fetch blocks and maintain order
+			const blocks = await ctx.db
 				.select()
 				.from(Block)
 				.where(inArray(Block.id, selectedBlockIds));
 
-			// Create a map to maintain the order from selectedBlockIds
-			const blockMap = new Map(allBlocks.map((block) => [block.id, block]));
-
-			// Return blocks in the order they appear in selectedBlockIds (which follows page.children order)
+			const blockMap = new Map(blocks.map((block) => [block.id, block]));
 			const orderedBlocks = selectedBlockIds
 				.map((id) => blockMap.get(id))
-				.filter((block) => block !== undefined);
+				.filter(Boolean);
 
 			return {
-				blocks: orderedBlocks, // Return flat blocks in correct order, let client handle nesting
+				blocks: orderedBlocks,
 				hasMore,
 				nextCursor,
 			};
 		}),
-	// Process editor changes - handles both block changes and parent children updates in a single transaction
+
+	/**
+	 * Processes all editor changes in a single transaction
+	 */
 	processEditorChanges: protectedProcedure
 		.input(
 			z.object({
@@ -118,131 +228,70 @@ export const blocksRouter = {
 					z.object({
 						blockId: z.string().uuid(),
 						data: blockDataSchema,
-						// Optional parent info for when blocks move between parents
 						newParentId: z.string().uuid().optional(),
-						newParentType: z
-							.enum(["page", "journal_entry", "block"])
-							.optional(),
-						type: z.enum(["insert", "update", "delete"]),
+						newParentType: parentTypeEnum.optional(),
+						type: blockChangeTypeEnum,
 					}),
 				),
 				parentChildren: z.array(z.string().uuid()),
 				parentId: z.string().uuid(),
-				parentType: z.enum(["page", "journal_entry", "block"]),
+				parentType: parentTypeEnum,
 				updateChildren: z.boolean().optional(),
 			}),
 		)
 		.mutation(async ({ ctx, input }) => {
 			return await ctx.db.transaction(async (tx) => {
-				const results = {
-					created: 0,
-					deleted: 0,
-					updated: 0,
-				};
+				const results = { created: 0, deleted: 0, updated: 0 };
 
-				// 1. Update parent children order based on parentType
+				// Update parent children order if requested
 				if (input.updateChildren) {
-					if (input.parentType === "page") {
-						await tx
-							.update(Page)
-							.set({ children: input.parentChildren })
-							.where(eq(Page.id, input.parentId));
-					} else if (input.parentType === "block") {
-						await tx
-							.update(Block)
-							.set({ children: input.parentChildren })
-							.where(eq(Block.id, input.parentId));
-					}
+					await updateParentChildren(
+						tx,
+						input.parentId,
+						input.parentType,
+						input.parentChildren,
+					);
 				}
 
-				// 2. Process block changes
+				// Process each block change
 				for (const change of input.blockChanges) {
 					const { blockId, data, type, newParentId, newParentType } = change;
 
-					if (type === "insert" || type === "update") {
-						// Upsert block (insert or update if exists) - works for both insert and update
-						const propsSchema = blockPropsSchemas[data.type as BlockType];
-						const validatedProps = propsSchema.parse(data.props || {});
+					switch (type) {
+						case "insert":
+						case "update": {
+							const blockData = processBlockData(
+								data,
+								ctx.session.user.id,
+								input.parentId,
+								input.parentType,
+								newParentId,
+								newParentType,
+							);
 
-						// Handle content: for BlockNote, content can be undefined, null, or an array
-						let content = null;
-						if (
-							data.content &&
-							Array.isArray(data.content) &&
-							data.content.length > 0
-						) {
-							content = data.content;
+							await tx
+								.insert(Block)
+								.values(blockData)
+								.onConflictDoUpdate({
+									set: {
+										...blockData,
+										updated_at: new Date(),
+									},
+									target: Block.id,
+								});
+
+							results[type === "insert" ? "created" : "updated"]++;
+							break;
 						}
 
-						// Handle children: ensure it's always an array
-						const children = Array.isArray(data.children) ? data.children : [];
+						case "delete": {
+							const childIds = await collectChildBlockIds(tx, blockId);
+							const allBlockIds = Array.from(new Set([blockId, ...childIds]));
 
-						// Use new parent info if provided, otherwise use default parent
-						const blockParentId = newParentId || input.parentId;
-						const blockParentType = newParentType || input.parentType;
-
-						await tx
-							.insert(Block)
-							.values({
-								children,
-								content,
-								created_by: ctx.session.user.id,
-								id: blockId,
-								parent_id: blockParentId,
-								parent_type: blockParentType,
-								props: validatedProps,
-								type: data.type,
-							})
-							.onConflictDoUpdate({
-								set: {
-									children,
-									content,
-									parent_id: blockParentId,
-									parent_type: blockParentType,
-									props: validatedProps,
-									type: data.type,
-									updated_at: new Date(),
-								},
-								target: Block.id,
-							});
-
-						// Count appropriately for tracking
-						if (type === "insert") {
-							results.created++;
-						} else {
-							results.updated++;
+							await tx.delete(Block).where(inArray(Block.id, allBlockIds));
+							results.deleted += allBlockIds.length;
+							break;
 						}
-					} else if (type === "delete") {
-						// Delete block and all its children recursively
-						const collectChildIds = async (
-							blockId: string,
-						): Promise<string[]> => {
-							const [block] = await tx
-								.select({ children: Block.children })
-								.from(Block)
-								.where(eq(Block.id, blockId))
-								.limit(1);
-
-							if (!block) return [];
-
-							const childIds = (block.children as string[]) || [];
-							const allChildIds = [...childIds];
-
-							for (const childId of childIds) {
-								const grandChildIds = await collectChildIds(childId);
-								allChildIds.push(...grandChildIds);
-							}
-
-							return allChildIds;
-						};
-
-						const childIds = await collectChildIds(blockId);
-						const allBlockIdsToDelete = [blockId, ...childIds];
-
-						await tx
-							.delete(Block)
-							.where(inArray(Block.id, allBlockIdsToDelete));
-						results.deleted += allBlockIdsToDelete.length;
 					}
 				}
 

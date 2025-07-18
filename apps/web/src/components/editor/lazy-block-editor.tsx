@@ -3,9 +3,9 @@
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo } from "react";
 import { Skeleton } from "~/components/ui/skeleton";
-import { useNestedBlocks } from "~/hooks/block-hooks";
 import { useTRPC } from "~/trpc/react";
 import { BlockEditor } from "./block-editor";
+import { useNestedBlocks } from "./hooks/use-nested-blocks";
 
 type BlockEditorProps = {
 	parentId: string;
@@ -43,7 +43,7 @@ export function LazyBlockEditor({ parentId, parentType }: BlockEditorProps) {
 		isLoading: isBlocksLoading,
 	} = useInfiniteQuery({
 		...trpc.blocks.loadPageChunk.infiniteQueryOptions({
-			limit: 100,
+			limit: 40,
 			parentId,
 			parentType,
 		}),
@@ -57,7 +57,11 @@ export function LazyBlockEditor({ parentId, parentType }: BlockEditorProps) {
 	// Combine all loaded blocks
 	const combinedBlocks = useMemo(() => {
 		if (!infiniteData?.pages) return [];
-		return infiniteData.pages.flatMap((page) => page.blocks);
+		return infiniteData.pages
+			.flatMap((page) => page.blocks)
+			.filter(
+				(block): block is NonNullable<typeof block> => block !== undefined,
+			);
 	}, [infiniteData?.pages]);
 
 	// Check if we have more pages to load based on the last page's hasMore

@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { LazyBlockEditor } from "~/components/editor/block-editor";
+import { LazyBlockEditor } from "~/components/editor/lazy-block-editor";
 import { useTRPC } from "~/trpc/react";
 import { PageSkeleton } from "./page-skeleton";
 import { PageTitle } from "./page-title";

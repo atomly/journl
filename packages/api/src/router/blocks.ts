@@ -23,7 +23,7 @@ const blockChangeTypeEnum = z.enum(["insert", "update", "delete"]);
 // ===== HELPER FUNCTIONS =====
 
 /**
- * Fetches the children array from a parent entity (page, journal_entry, or block)
+ * Gets the children array from a parent entity (page, journal_entry, or block)
  */
 async function getParentChildren(
 	db: any,
@@ -85,13 +85,11 @@ async function collectChildBlockIds(
 	blockId: string,
 	collected = new Set<string>(),
 ): Promise<string[]> {
-	// Prevent infinite recursion
 	if (collected.has(blockId)) {
 		return [];
 	}
 	collected.add(blockId);
 
-	// Get block's children
 	const [block] = await tx
 		.select({ children: Block.children })
 		.from(Block)
@@ -103,7 +101,6 @@ async function collectChildBlockIds(
 	const childIds = (block.children as string[]) || [];
 	const allChildIds = [...childIds];
 
-	// Recursively collect grandchildren
 	for (const childId of childIds) {
 		if (!collected.has(childId)) {
 			const grandChildIds = await collectChildBlockIds(tx, childId, collected);
@@ -115,7 +112,7 @@ async function collectChildBlockIds(
 }
 
 /**
- * Processes block data for upsert operations
+ * Processes and validates block data for database operations
  */
 function processBlockData(
 	data: any,
@@ -223,7 +220,8 @@ export const blocksRouter = {
 		}),
 
 	/**
-	 * Processes all editor changes in a single transaction
+	 * Processes editor changes in a single atomic transaction.
+	 * Handles block insertions, updates, deletions, and parent-child relationships.
 	 */
 	processEditorChanges: protectedProcedure
 		.input(
@@ -247,56 +245,86 @@ export const blocksRouter = {
 			return await ctx.db.transaction(async (tx) => {
 				const results = { created: 0, deleted: 0, updated: 0 };
 
-				// Update parent children order if requested
+				// Step 1: Collect all blocks to delete (including nested children)
+				const allBlockIdsToDelete = new Set<string>();
+				const deleteRequests = input.blockChanges.filter(
+					(change) => change.type === "delete",
+				);
+
+				for (const change of deleteRequests) {
+					allBlockIdsToDelete.add(change.blockId);
+					const childIds = await collectChildBlockIds(tx, change.blockId);
+					childIds.forEach((id) => allBlockIdsToDelete.add(id));
+				}
+
+				// Step 2: Update parent children arrays
 				if (input.updateChildren) {
+					const filteredParentChildren = input.parentChildren.filter(
+						(childId) => !allBlockIdsToDelete.has(childId),
+					);
+
 					await updateParentChildren(
 						tx,
 						input.parentId,
 						input.parentType,
-						input.parentChildren,
+						filteredParentChildren,
 					);
 				}
 
-				// Process each block change
-				for (const change of input.blockChanges) {
-					const { blockId, data, type, newParentId, newParentType } = change;
+				// Update block parents that contain deleted children
+				const potentialParentBlocks = await tx
+					.select({ children: Block.children, id: Block.id })
+					.from(Block)
+					.where(eq(Block.parent_id, input.parentId));
 
-					switch (type) {
-						case "insert":
-						case "update": {
-							const blockData = processBlockData(
-								data,
-								ctx.session.user.id,
-								input.parentId,
-								input.parentType,
-								newParentId,
-								newParentType,
-							);
+				for (const parentBlock of potentialParentBlocks) {
+					const currentChildren = (parentBlock.children as string[]) || [];
+					const updatedChildren = currentChildren.filter(
+						(childId) => !allBlockIdsToDelete.has(childId),
+					);
 
-							await tx
-								.insert(Block)
-								.values(blockData)
-								.onConflictDoUpdate({
-									set: {
-										...blockData,
-										updated_at: new Date(),
-									},
-									target: Block.id,
-								});
-
-							results[type === "insert" ? "created" : "updated"]++;
-							break;
-						}
-
-						case "delete": {
-							const childIds = await collectChildBlockIds(tx, blockId);
-							const allBlockIds = Array.from(new Set([blockId, ...childIds]));
-
-							await tx.delete(Block).where(inArray(Block.id, allBlockIds));
-							results.deleted += allBlockIds.length;
-							break;
-						}
+					if (updatedChildren.length !== currentChildren.length) {
+						await tx
+							.update(Block)
+							.set({ children: updatedChildren })
+							.where(eq(Block.id, parentBlock.id));
 					}
+				}
+
+				// Step 3: Process insert/update operations
+				for (const change of input.blockChanges) {
+					if (change.type === "insert" || change.type === "update") {
+						const { data, type, newParentId, newParentType } = change;
+
+						const blockData = processBlockData(
+							data,
+							ctx.session.user.id,
+							input.parentId,
+							input.parentType,
+							newParentId,
+							newParentType,
+						);
+
+						await tx
+							.insert(Block)
+							.values(blockData)
+							.onConflictDoUpdate({
+								set: {
+									...blockData,
+									updated_at: new Date(),
+								},
+								target: Block.id,
+							});
+
+						results[type === "insert" ? "created" : "updated"]++;
+					}
+				}
+
+				// Step 4: Delete all collected blocks
+				if (allBlockIdsToDelete.size > 0) {
+					const blockIdsArray = Array.from(allBlockIdsToDelete);
+					await tx.delete(Block).where(inArray(Block.id, blockIdsArray));
+					results.deleted = blockIdsArray.length;
 				}
 
 				return results;

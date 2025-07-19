@@ -8,19 +8,14 @@ import type {
 } from "../types";
 import { flattenBlocks } from "../utils/block-transforms";
 
-export function useBlockChanges(
-	blocks: BlockWithChildren[],
-	parentId: string,
-	parentType: "page" | "block",
-) {
+export function useBlockChanges(blocks: BlockWithChildren[]) {
 	// Track all changes per block ID and current parent children order
 	const blockChangesRef = useRef<Map<string, BlockChange[]>>(new Map());
 	const currentParentChildrenRef = useRef<string[]>([]);
 	const hasUnsavedChangesRef = useRef(false);
-	// Track which blocks already exist in the database
 	const existingBlockIdsRef = useRef<Set<string>>(new Set());
 
-	// Initialize existing block IDs
+	// Initialize existing block IDs from the loaded blocks
 	const initializeExistingBlocks = useCallback(() => {
 		const currentFlattened = flattenBlocks(blocks);
 		existingBlockIdsRef.current = new Set(currentFlattened.map((b) => b.id));
@@ -32,11 +27,9 @@ export function useBlockChanges(
 		blockChangesRef.current.set(change.blockId, [...existingChanges, change]);
 		hasUnsavedChangesRef.current = true;
 
-		// Update existing blocks tracking
+		// Track newly inserted blocks
 		if (change.type === "insert") {
 			existingBlockIdsRef.current.add(change.blockId);
-		} else if (change.type === "delete") {
-			existingBlockIdsRef.current.delete(change.blockId);
 		}
 	}, []);
 
@@ -47,12 +40,11 @@ export function useBlockChanges(
 				const { block, type } = change;
 				const blockId = block.id;
 
-				// Determine the actual change type based on whether block exists
-				let actualType = type as BlockChangeType;
-				if (type === "insert" && existingBlockIdsRef.current.has(blockId)) {
-					// Block already exists in database, treat as update
-					actualType = "update";
-				}
+				// Convert insert to update if block already exists
+				const actualType =
+					type === "insert" && existingBlockIdsRef.current.has(blockId)
+						? "update"
+						: type;
 
 				const newChange: BlockChange = {
 					blockId,
@@ -72,73 +64,48 @@ export function useBlockChanges(
 		currentParentChildrenRef.current = childrenIds;
 	}, []);
 
-	// Process all batched changes
+	// Process all batched changes and convert to API format
 	const processAllChanges = useCallback((): {
 		blockChanges: ProcessedBlockChange[];
 		parentChildren: string[];
 	} => {
 		const changes = blockChangesRef.current;
 		const parentChildren = currentParentChildrenRef.current;
-
-		// Get current block IDs from the original blocks prop for validation
-		const originalBlockIds = new Set(flattenBlocks(blocks).map((b) => b.id));
-
-		// Convert block changes to the format expected by the API
 		const blockChanges: ProcessedBlockChange[] = [];
 
 		for (const [blockId, blockChangeList] of changes.entries()) {
-			// Determine the final operation for this block
 			const hasInsert = blockChangeList.some((c) => c.type === "insert");
 			const hasDelete = blockChangeList.some((c) => c.type === "delete");
 			const lastChange = blockChangeList[blockChangeList.length - 1];
 
 			if (!lastChange) continue;
 
-			// If insert then delete → do nothing (don't send any change)
+			// Skip blocks that were inserted then deleted in the same batch
 			if (hasInsert && hasDelete) {
 				continue;
 			}
 
-			// If delete → validate block exists before sending delete
+			// Determine final operation type
+			let finalType: BlockChangeType;
 			if (hasDelete) {
-				// Only send delete if the block exists in our original data
-				if (
-					originalBlockIds.has(blockId) ||
-					existingBlockIdsRef.current.has(blockId)
-				) {
-					blockChanges.push({
-						blockId,
-						data: lastChange.data,
-						newParentId: lastChange.newParentId,
-						newParentType: lastChange.newParentType,
-						type: "delete",
-					});
-				}
+				finalType = "delete";
+			} else if (hasInsert) {
+				finalType = "insert";
+			} else {
+				finalType = "update";
 			}
-			// If insert (with or without updates) → send insert with final state
-			else if (hasInsert) {
-				blockChanges.push({
-					blockId,
-					data: lastChange.data,
-					newParentId: lastChange.newParentId,
-					newParentType: lastChange.newParentType,
-					type: "insert",
-				});
-			}
-			// If only updates → send update with final state
-			else {
-				blockChanges.push({
-					blockId,
-					data: lastChange.data,
-					newParentId: lastChange.newParentId,
-					newParentType: lastChange.newParentType,
-					type: "update",
-				});
-			}
+
+			blockChanges.push({
+				blockId,
+				data: lastChange.data,
+				newParentId: lastChange.newParentId,
+				newParentType: lastChange.newParentType,
+				type: finalType,
+			});
 		}
 
 		return { blockChanges, parentChildren };
-	}, [blocks]);
+	}, []);
 
 	// Clear processed changes
 	const clearChanges = useCallback(() => {

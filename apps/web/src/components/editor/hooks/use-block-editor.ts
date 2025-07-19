@@ -17,15 +17,8 @@ import {
 import { useBlockChanges } from "./use-block-changes";
 
 /**
- * Custom hook to manage the block editor's state and interactions.
- *
- * This hook is responsible for:
- * 1. Setting up references to track the previous document structure and processed blocks.
- * 2. Utilizing the `useBlockChanges` hook to manage block changes, including adding, clearing, and processing changes.
- * 3. Configuring a mutation to process editor changes via the API, with error and success handling.
- * 4. Converting the initial blocks into the BlockNote format for the editor.
- * 5. Creating the BlockNote editor instance with specific configurations.
- * 6. Defining a callback to process and send all changes to the API.
+ * Hook to manage BlockNote editor with database synchronization.
+ * Handles block changes, deletions, and parent-child relationships.
  */
 export function useBlockEditor(
 	blocks: BlockWithChildren[],
@@ -34,13 +27,9 @@ export function useBlockEditor(
 	isFullyLoaded: boolean,
 ) {
 	const trpc = useTRPC();
-
-	// Track previous document structure to detect nesting changes
 	const prevDocumentRef = useRef<BlockNoteBlock[]>([]);
-	const lastProcessedBlocksRef = useRef<BlockWithChildren[]>([]);
-	const prevBlocksRef = useRef<BlockWithChildren[]>([]);
 
-	// Use the block changes hook
+	// Block changes management
 	const {
 		addBlockChange,
 		clearChanges,
@@ -48,7 +37,7 @@ export function useBlockEditor(
 		initializeExistingBlocks,
 		processAllChanges,
 		updateParentChildren,
-	} = useBlockChanges(blocks, parentId, parentType);
+	} = useBlockChanges(blocks);
 
 	// API mutation for processing editor changes
 	const { mutate: processEditorChanges } = useMutation(
@@ -72,16 +61,15 @@ export function useBlockEditor(
 	const editor = useCreateBlockNote({
 		animations: false,
 		initialContent: initialBlocks,
-		trailingBlock: false, // Disable automatic trailing block
+		trailingBlock: false,
 	});
 
-	// Process and send all changes to the API
+	// Send all changes to API
 	const sendChangesToAPI = useCallback(() => {
 		const { blockChanges, parentChildren } = processAllChanges();
 
 		if (blockChanges.length === 0 && parentChildren.length === 0) return;
 
-		// Call the combined API
 		processEditorChanges({
 			blockChanges,
 			parentChildren,
@@ -90,7 +78,6 @@ export function useBlockEditor(
 			updateChildren: true,
 		});
 
-		// Clear processed changes
 		clearChanges();
 	}, [
 		processAllChanges,
@@ -100,12 +87,11 @@ export function useBlockEditor(
 		clearChanges,
 	]);
 
-	// Debounced processing of all changes
-	const debouncedSendChanges = useDebouncedCallback(
-		sendChangesToAPI,
-		1000, // 1 second debounce
-		{ leading: false, trailing: true },
-	);
+	// Debounced API calls
+	const debouncedSendChanges = useDebouncedCallback(sendChangesToAPI, 500, {
+		leading: false,
+		trailing: true,
+	});
 
 	// Handle editor changes - captures both block changes and page children order
 	const handleEditorChange = useCallback(
@@ -118,6 +104,56 @@ export function useBlockEditor(
 			// Extract ALL block IDs from the document (flattened order)
 			const allBlockIds = extractAllBlockIds(e.document);
 			updateParentChildren(allBlockIds);
+
+			// DETECT DELETIONS: Compare current document with previous to find missing blocks
+			const previousAllBlockIds = extractAllBlockIds(prevDocumentRef.current);
+			const currentAllBlockIds = new Set(allBlockIds);
+
+			// Find blocks that were in previous document but not in current (these are deletions)
+			const deletedBlockIds = previousAllBlockIds.filter(
+				(blockId) => !currentAllBlockIds.has(blockId),
+			);
+
+			// Add delete operations for missing blocks
+			for (const deletedBlockId of deletedBlockIds) {
+				// Find the deleted block data from the previous document
+				const findBlockInDocument = (
+					doc: BlockNoteBlock[],
+					targetId: string,
+				): BlockNoteBlock | null => {
+					for (const block of doc) {
+						if (block.id === targetId) {
+							return block;
+						}
+						if (block.children && block.children.length > 0) {
+							const found = findBlockInDocument(
+								block.children as BlockNoteBlock[],
+								targetId,
+							);
+							if (found) return found;
+						}
+					}
+					return null;
+				};
+
+				const deletedBlock = findBlockInDocument(
+					prevDocumentRef.current,
+					deletedBlockId,
+				);
+				if (deletedBlock) {
+					const deleteChange: BlockChange = {
+						blockId: deletedBlockId,
+						data: {
+							...deletedBlock,
+							children: deletedBlock.children || [],
+						},
+						timestamp: Date.now(),
+						type: "delete",
+					};
+
+					addBlockChange(deleteChange);
+				}
+			}
 
 			// Flatten current and previous document structures to detect nesting changes
 			const currentFlattened = flattenDocument(
@@ -179,10 +215,6 @@ export function useBlockEditor(
 
 			// Update tracking references
 			initializeExistingBlocks();
-			lastProcessedBlocksRef.current = blocks;
-			prevBlocksRef.current = blocks;
-
-			// Update previous document reference
 			prevDocumentRef.current = allBlockNoteBlocks;
 		}
 	}, [blocks, editor, initializeExistingBlocks]);

@@ -89,9 +89,6 @@ export function LazyBlockEditor({ parentId, parentType }: BlockEditorProps) {
 		return <BlockEditorSkeleton />;
 	}
 
-	console.log("combinedBlocks (flat from API):", combinedBlocks);
-	console.log("nestedBlocks (after useNestedBlocks):", nestedBlocks);
-
 	return (
 		<div className="h-full">
 			<BlockEditor

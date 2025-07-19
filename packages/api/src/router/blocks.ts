@@ -135,7 +135,11 @@ function processBlockData(
 			: null;
 
 	// Handle children: always an array
-	const children = Array.isArray(data.children) ? data.children : [];
+	const children = Array.isArray(data.children)
+		? data.children
+				.map((child: any) => (typeof child === "string" ? child : child.id))
+				.filter(Boolean)
+		: [];
 
 	// Use new parent info if provided, otherwise use defaults
 	const parentId = newParentId || defaultParentId;

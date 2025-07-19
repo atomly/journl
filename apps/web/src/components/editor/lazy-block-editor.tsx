@@ -43,7 +43,7 @@ export function LazyBlockEditor({ parentId, parentType }: BlockEditorProps) {
 		isLoading: isBlocksLoading,
 	} = useInfiniteQuery({
 		...trpc.blocks.loadPageChunk.infiniteQueryOptions({
-			limit: 40,
+			limit: 50,
 			parentId,
 			parentType,
 		}),
@@ -88,6 +88,9 @@ export function LazyBlockEditor({ parentId, parentType }: BlockEditorProps) {
 	if (isLoading) {
 		return <BlockEditorSkeleton />;
 	}
+
+	console.log("combinedBlocks (flat from API):", combinedBlocks);
+	console.log("nestedBlocks (after useNestedBlocks):", nestedBlocks);
 
 	return (
 		<div className="h-full">

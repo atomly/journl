@@ -20,14 +20,14 @@ function AppLayout({
 	return (
 		// The outer SidebarProvider controls the Chat sidebar,
 		// while the inner SidebarProvider controls the Journal sidebar.
-		<SidebarProvider className="flex min-h-screen flex-col">
+		<SidebarProvider className="flex min-h-screen-safe flex-col">
 			<div className="flex flex-1">
-				<SidebarProvider>
+				<SidebarProvider defaultOpen={false}>
 					{appSidebar}
-					<SidebarInset>
+					<SidebarInset className="flex max-h-svh flex-col">
 						{header}
-						<div className="flex-1 overflow-auto">{children}</div>
-						{chatDrawer}
+						<div className="min-w-54 flex-1 overflow-auto">{children}</div>
+						<div className="mt-auto">{chatDrawer}</div>
 					</SidebarInset>
 				</SidebarProvider>
 				{chatSidebar}

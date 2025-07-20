@@ -22,11 +22,6 @@ export function JournalFeedSkeleton({ ...rest }: JournalFeedSkeletonProps) {
 					<JournalEntrySkeleton hasContent={false} />
 				</div>
 			</div>
-
-			{/* Floating button */}
-			<div className="fixed bottom-6 left-6">
-				<div className="h-12 w-12 animate-pulse rounded-full bg-muted" />
-			</div>
 		</div>
 	);
 }

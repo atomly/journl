@@ -2,7 +2,7 @@
 
 import { useIsMobile } from "~/hooks/use-mobile";
 
-export function CurrentDate() {
+export function CurrentDateTitle() {
 	const today = new Date();
 	const isMobile = useIsMobile();
 
@@ -13,5 +13,5 @@ export function CurrentDate() {
 		year: "numeric",
 	});
 
-	return formattedDate;
+	return <div className="truncate text-sm">{formattedDate}</div>;
 }

@@ -3,7 +3,9 @@ biomejs
 blocknote
 envinfo
 hnsw
+Hoverable
 LOCALTUNNEL
+mastra
 NGROK
 nodenext
 overscan
@@ -12,3 +14,4 @@ rmolinamir
 shadcn
 subrouters
 turbopack
+vaul

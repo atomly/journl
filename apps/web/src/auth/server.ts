@@ -2,6 +2,7 @@ import "server-only";
 
 import { initAuth } from "@acme/auth";
 import { headers } from "next/headers";
+import { redirect } from "next/navigation";
 import { cache } from "react";
 import { env } from "~/env";
 
@@ -24,3 +25,12 @@ export const getSession = cache(async () =>
 	auth.api.getSession({ headers: await headers() }),
 );
 export type Session = NonNullable<Awaited<ReturnType<typeof getSession>>>;
+
+export const getUser = cache(async () => {
+	const session = await getSession();
+	if (!session?.user) {
+		return redirect("/");
+	}
+	return session.user;
+});
+export type User = Awaited<ReturnType<typeof getUser>>;

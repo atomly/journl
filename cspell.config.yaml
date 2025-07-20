@@ -35,10 +35,15 @@ languageSettings:
     allowCompoundWords: false
 useGitignore: true
 words:
+  - autohide
   - CLIENTVAR
+  - evals
   - HMAC
+  - journaling
   - Journl
+  - libsql
   - sonner
   - supabase
   - topo
+  - weathercode
   - ZROK

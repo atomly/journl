@@ -9,16 +9,22 @@ import { JournalEntry } from "./journal-entry";
 import { JournalEntryLoader } from "./journal-entry-loader";
 import { JournalFeedSkeleton } from "./journal-skeleton";
 
-type JournalEntryOptions = {
+type JournalVirtualListProps = {
 	initialRange: {
 		limit: number;
 	};
-};
+} & Omit<
+	React.ComponentProps<typeof Virtuoso>,
+	"data" | "endReached" | "increaseViewportBy" | "itemContent" | "components"
+>;
 
-export function JournalVirtualList({ initialRange }: JournalEntryOptions) {
+export function JournalVirtualList({
+	initialRange,
+	...rest
+}: JournalVirtualListProps) {
 	const trpc = useTRPC();
 	const { status, data, error, fetchNextPage, hasNextPage } = useInfiniteQuery({
-		...trpc.journal.getBetween.infiniteQueryOptions(initialRange),
+		...trpc.journal.getTimeline.infiniteQueryOptions(initialRange),
 		getNextPageParam: ({ nextPage }) => nextPage,
 		initialPageParam: Date.now(),
 	});
@@ -67,7 +73,6 @@ export function JournalVirtualList({ initialRange }: JournalEntryOptions) {
 
 	return (
 		<Virtuoso
-			className="h-full"
 			data={entries}
 			endReached={() => debouncedFetchNextPage()}
 			increaseViewportBy={200}
@@ -85,6 +90,7 @@ export function JournalVirtualList({ initialRange }: JournalEntryOptions) {
 					/>
 				),
 			}}
+			{...rest}
 		/>
 	);
 }

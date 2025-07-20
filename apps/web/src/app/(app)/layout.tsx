@@ -4,19 +4,33 @@ import { SidebarInset, SidebarProvider } from "~/components/ui/sidebar";
 type AppLayoutProps = {
 	children: React.ReactNode;
 	// Parallel Routes
-	sidebar: React.ReactNode;
-	navbar: React.ReactNode;
+	appSidebar: React.ReactNode;
+	chatDrawer: React.ReactNode;
+	chatSidebar: React.ReactNode;
+	header: React.ReactNode;
 };
 
-function AppLayout({ children, sidebar, navbar }: AppLayoutProps) {
+function AppLayout({
+	children,
+	appSidebar,
+	chatDrawer,
+	chatSidebar,
+	header,
+}: AppLayoutProps) {
 	return (
+		// The outer SidebarProvider controls the Chat sidebar,
+		// while the inner SidebarProvider controls the Journal sidebar.
 		<SidebarProvider className="flex min-h-screen flex-col">
 			<div className="flex flex-1">
-				{sidebar}
-				<SidebarInset>
-					{navbar}
-					<main className="flex-1 overflow-auto">{children}</main>
-				</SidebarInset>
+				<SidebarProvider>
+					{appSidebar}
+					<SidebarInset>
+						{header}
+						<div className="flex-1 overflow-auto">{children}</div>
+						{chatDrawer}
+					</SidebarInset>
+				</SidebarProvider>
+				{chatSidebar}
 			</div>
 		</SidebarProvider>
 	);

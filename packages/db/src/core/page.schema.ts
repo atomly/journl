@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { jsonb, pgTable, text } from "drizzle-orm/pg-core";
+import { pgTable, text } from "drizzle-orm/pg-core";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 import { user } from "../auth/user.schema.js";
@@ -11,7 +11,7 @@ export const Page = pgTable("page", (t) => ({
 		.references(() => user.id, { onDelete: "cascade" }),
 	title: t.text().notNull(),
 	// Children array stores ordered list of child block IDs
-	children: jsonb().notNull().default([]),
+	children: t.uuid().array().notNull().default([]),
 	created_at: t
 		.timestamp({ mode: "string", withTimezone: true })
 		.defaultNow()

@@ -43,11 +43,10 @@ export function LazyBlockEditor({ parentId, parentType }: BlockEditorProps) {
 		isLoading: isBlocksLoading,
 	} = useInfiniteQuery({
 		...trpc.blocks.loadPageChunk.infiniteQueryOptions({
-			limit: 50,
-			parentId,
-			parentType,
+			limit: 100,
+			parentChildren: parentData?.children ?? [],
 		}),
-		enabled: !!parentData || parentType === "block",
+		enabled: !!parentData,
 		getNextPageParam: (lastPage) => {
 			return lastPage.hasMore ? lastPage.nextCursor : undefined;
 		},
@@ -79,7 +78,7 @@ export function LazyBlockEditor({ parentId, parentType }: BlockEditorProps) {
 		if (hasMoreToLoad && !isFetchingNextPage) {
 			setTimeout(() => {
 				fetchNextPage();
-			}, 100);
+			}, 2000);
 		}
 	}, [hasMoreToLoad, isFetchingNextPage, fetchNextPage]);
 

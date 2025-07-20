@@ -15,7 +15,7 @@ export const Block = pgTable(
 		content: t.jsonb(), // Can be null for void blocks like divider
 
 		// Children array stores ordered list of child block IDs
-		children: t.jsonb().notNull().default([]),
+		children: t.uuid().array().notNull().default([]),
 
 		// Parent relationships
 		// Note: parent_id references different tables based on parent_type
@@ -63,8 +63,8 @@ export type Block = typeof Block.$inferSelect;
 export type NewBlock = typeof Block.$inferInsert;
 export type BlockType = z.infer<typeof blockTypeSchema>;
 export type BlockParentType = z.infer<typeof blockParentTypeSchema>;
-export type BlockWithChildren = Block & {
-	children: Block[];
+export type BlockWithChildren = Omit<Block, "children"> & {
+	children: BlockWithChildren[];
 };
 
 // Rich text content schema - supports BlockNote's InlineContent format

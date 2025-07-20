@@ -23,39 +23,6 @@ const blockChangeTypeEnum = z.enum(["insert", "update", "delete"]);
 // ===== HELPER FUNCTIONS =====
 
 /**
- * Gets the children array from a parent entity (page, journal_entry, or block)
- */
-async function getParentChildren(
-	db: any,
-	parentId: string,
-	parentType: "page" | "journal_entry" | "block",
-): Promise<string[]> {
-	switch (parentType) {
-		case "page": {
-			const [page] = await db
-				.select({ children: Page.children })
-				.from(Page)
-				.where(eq(Page.id, parentId))
-				.limit(1);
-			return (page?.children as string[]) || [];
-		}
-		case "block": {
-			const [block] = await db
-				.select({ children: Block.children })
-				.from(Block)
-				.where(eq(Block.id, parentId))
-				.limit(1);
-			return (block?.children as string[]) || [];
-		}
-		case "journal_entry":
-			// TODO: Implement when journal_entry table is available
-			return [];
-		default:
-			return [];
-	}
-}
-
-/**
  * Updates the children array of a parent entity
  */
 async function updateParentChildren(
@@ -164,19 +131,11 @@ export const blocksRouter = {
 			z.object({
 				cursor: z.string().uuid().optional(),
 				limit: z.number().min(1).max(100).default(50),
-				parentId: z.string().uuid(),
-				parentType: parentTypeEnum,
+				parentChildren: z.array(z.string().uuid()),
 			}),
 		)
 		.query(async ({ ctx, input }) => {
-			// Get parent's children array
-			const parentChildren = await getParentChildren(
-				ctx.db,
-				input.parentId,
-				input.parentType,
-			);
-
-			if (parentChildren.length === 0) {
+			if (input.parentChildren.length === 0) {
 				return {
 					blocks: [],
 					hasMore: false,
@@ -187,13 +146,13 @@ export const blocksRouter = {
 			// Calculate pagination
 			let startIndex = 0;
 			if (input.cursor) {
-				const cursorIndex = parentChildren.indexOf(input.cursor);
+				const cursorIndex = input.parentChildren.indexOf(input.cursor);
 				if (cursorIndex !== -1) {
 					startIndex = cursorIndex + 1; // Start after cursor
 				}
 			}
 
-			const availableBlockIds = parentChildren.slice(startIndex);
+			const availableBlockIds = input.parentChildren.slice(startIndex);
 			const selectedBlockIds = availableBlockIds.slice(0, input.limit);
 			const hasMore = availableBlockIds.length > input.limit;
 			const nextCursor =

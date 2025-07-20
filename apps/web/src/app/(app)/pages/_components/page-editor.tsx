@@ -24,7 +24,7 @@ export function PageEditor({ id }: PageEditorProps) {
 	// Handle page not found error by redirecting to home
 	useEffect(() => {
 		if (error?.message === "Page not found") {
-			router.push("/home");
+			router.push("/journal");
 		}
 	}, [error, router]);
 

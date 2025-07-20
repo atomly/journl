@@ -2,7 +2,6 @@
 @import "tw-animate-css";
 @import "@assistant-ui/styles/index.css";
 @import "@assistant-ui/styles/markdown.css";
-/* import "@assistant-ui/styles/modal.css";  // for future reference, only if you use the modal component */
 
 @source "../../**/*.{js,ts,jsx,tsx}";
 

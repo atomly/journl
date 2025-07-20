@@ -18,7 +18,7 @@ export function JournalEntry({ entry, ...rest }: JournalEntryOptions) {
 		<div {...rest}>
 			<div className="mb-3">
 				<h2 className="font-semibold text-2xl text-muted-foreground">
-					{formatDate(date)}
+					{isToday ? "Today" : formatDate(date)}
 				</h2>
 			</div>
 			<div className="flex items-start gap-2">

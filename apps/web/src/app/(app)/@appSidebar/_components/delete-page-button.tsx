@@ -62,7 +62,7 @@ export function DeletePageButton({ page, className }: DeletePageButtonProps) {
 
 			// Navigate away first if we're on the deleted page
 			if (pathname.includes(deletedPageId)) {
-				router.push("/home");
+				router.push("/journal");
 			}
 
 			// More aggressive cache cleanup

@@ -2,6 +2,7 @@ AUTHTOKEN
 biomejs
 envinfo
 hnsw
+Hoverable
 LOCALTUNNEL
 mastra
 NGROK
@@ -12,3 +13,4 @@ rmolinamir
 shadcn
 subrouters
 turbopack
+vaul

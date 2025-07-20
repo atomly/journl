@@ -2,22 +2,15 @@ import { withAuth } from "~/auth/utils";
 import { prefetch, trpc } from "~/trpc/server";
 import { JournalVirtualList } from "./_components/journal-virtual-list";
 
+const initialRange: React.ComponentProps<
+	typeof JournalVirtualList
+>["initialRange"] = {
+	limit: 7, // 7 days
+};
+
 export default withAuth(async function JournalPage() {
-	const initialRange: React.ComponentProps<
-		typeof JournalVirtualList
-	>["initialRange"] = {
-		limit: 7,
-	};
-
-	prefetch(
-		trpc.journal.getTimeline.queryOptions({
-			limit: 7,
-		}),
-	);
-
+	prefetch(trpc.journal.getTimeline.queryOptions(initialRange));
 	return (
-		<div className="h-full w-full">
-			<JournalVirtualList initialRange={initialRange} />
-		</div>
+		<JournalVirtualList initialRange={initialRange} className="h-full w-full" />
 	);
 });

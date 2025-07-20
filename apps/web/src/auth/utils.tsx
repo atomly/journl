@@ -44,7 +44,7 @@ export function withoutAuth<P extends object>(
 	Component: React.ComponentType<P>,
 	options: AuthHocOptions = {},
 ) {
-	const { redirectTo = "/home" } = options;
+	const { redirectTo = "/journal" } = options;
 
 	return async function UnauthenticatedComponent(props: P) {
 		const session = await getSession();

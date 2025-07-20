@@ -1,8 +1,9 @@
 @import "tailwindcss";
 @import "tw-animate-css";
-@import "./styles/blocknote.css";
 @import "@assistant-ui/styles/index.css";
 @import "@assistant-ui/styles/markdown.css";
+
+@import "./styles/blocknote.css";
 
 @source "../../**/*.{js,ts,jsx,tsx}";
 

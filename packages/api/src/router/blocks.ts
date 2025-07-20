@@ -92,11 +92,8 @@ function processBlockData(
 	const propsSchema = blockPropsSchemas[data.type as BlockType];
 	const validatedProps = propsSchema.parse(data.props || {});
 
-	// Handle content: null if empty, otherwise keep the array
-	const content =
-		data.content && Array.isArray(data.content) && data.content.length > 0
-			? data.content
-			: null;
+	// Handle content: store whatever BlockNote sends us
+	const content = data.content;
 
 	// Handle children: always an array
 	const children = Array.isArray(data.children)

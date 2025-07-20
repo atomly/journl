@@ -61,7 +61,6 @@ export function useBlockEditor(
 	const editor = useCreateBlockNote({
 		animations: false,
 		initialContent: initialBlocks,
-		trailingBlock: false,
 	});
 
 	// Send all changes to API

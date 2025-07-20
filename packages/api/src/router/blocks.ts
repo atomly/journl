@@ -1,8 +1,10 @@
 import { eq, inArray } from "@acme/db";
+import type { DbTransaction } from "@acme/db/client";
 import {
 	Block,
 	type BlockType,
 	blockPropsSchemas,
+	blockTypeSchema,
 	Page,
 } from "@acme/db/schema";
 import { z } from "zod/v4";
@@ -10,11 +12,11 @@ import { protectedProcedure } from "../trpc.js";
 
 // ===== SCHEMAS =====
 const blockDataSchema = z.object({
-	children: z.any(),
-	content: z.any(),
+	children: z.unknown(),
+	content: z.unknown(),
 	id: z.string().uuid(),
-	props: z.record(z.string(), z.any()),
-	type: z.string(),
+	props: z.record(z.string(), z.unknown()),
+	type: blockTypeSchema,
 });
 
 const parentTypeEnum = z.enum(["page", "journal_entry", "block"]);
@@ -26,7 +28,7 @@ const blockChangeTypeEnum = z.enum(["insert", "update", "delete"]);
  * Updates the children array of a parent entity
  */
 async function updateParentChildren(
-	tx: any,
+	tx: DbTransaction,
 	parentId: string,
 	parentType: "page" | "journal_entry" | "block",
 	children: string[],
@@ -48,7 +50,7 @@ async function updateParentChildren(
  * Recursively collects all child block IDs for deletion
  */
 async function collectChildBlockIds(
-	tx: any,
+	tx: DbTransaction,
 	blockId: string,
 	collected = new Set<string>(),
 ): Promise<string[]> {
@@ -82,14 +84,20 @@ async function collectChildBlockIds(
  * Processes and validates block data for database operations
  */
 function processBlockData(
-	data: any,
+	data: {
+		type: BlockType;
+		id: string;
+		props?: Record<string, unknown>;
+		content?: unknown;
+		children?: unknown;
+	},
 	userId: string,
 	defaultParentId: string,
 	defaultParentType: string,
 	newParentId?: string,
 	newParentType?: string,
 ) {
-	const propsSchema = blockPropsSchemas[data.type as BlockType];
+	const propsSchema = blockPropsSchemas[data.type];
 	const validatedProps = propsSchema.parse(data.props || {});
 
 	// Handle content: store whatever BlockNote sends us
@@ -98,7 +106,7 @@ function processBlockData(
 	// Handle children: always an array
 	const children = Array.isArray(data.children)
 		? data.children
-				.map((child: any) => (typeof child === "string" ? child : child.id))
+				.map((child) => (typeof child === "string" ? child : child.id))
 				.filter(Boolean)
 		: [];
 

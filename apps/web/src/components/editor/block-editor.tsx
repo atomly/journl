@@ -21,17 +21,15 @@ export function BlockEditor({
 		isFullyLoaded,
 	);
 
+	const resolvedTheme = theme === "system" ? systemTheme : theme;
+
 	return (
-		<div className="blocknote-editor">
+		<div className="blocknote-editor" data-color-scheme={resolvedTheme}>
 			<BlockNoteView
 				editor={editor}
 				onChange={handleEditorChange}
 				editable={isFullyLoaded}
-				theme={
-					theme === "system"
-						? (systemTheme as "light" | "dark")
-						: (theme as "light" | "dark")
-				}
+				theme={resolvedTheme as "light" | "dark"}
 			/>
 			{!isFullyLoaded && (
 				<div className="mb-2 text-muted-foreground text-sm">

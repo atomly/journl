@@ -8,6 +8,8 @@ import { ThreadRuntime } from "~/components/ai/thread-runtime";
 import { ThreadWelcome } from "~/components/ai/thread-welcome";
 import { Sidebar, SidebarContent } from "~/components/ui/sidebar";
 
+const DEFAULT_WIDTH = "20rem";
+
 export default function ChatSidebar() {
 	return (
 		<Sidebar
@@ -15,7 +17,7 @@ export default function ChatSidebar() {
 			collapsible="none"
 			variant="floating"
 			className="sticky top-0 hidden h-svh lg:flex"
-			defaultWidth="24rem"
+			defaultWidth={DEFAULT_WIDTH}
 		>
 			<SidebarContent>
 				<ThreadRuntime api="/api/chat" initialMessages={[]}>

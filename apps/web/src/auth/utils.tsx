@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { getSession, type Session } from "~/auth/server";
+import { getSession } from "~/auth/server";
 
 /**
  * Configuration options for authentication HoCs
@@ -44,7 +44,7 @@ export function withoutAuth<P extends object>(
 	Component: React.ComponentType<P>,
 	options: AuthHocOptions = {},
 ) {
-	const { redirectTo = "/home" } = options;
+	const { redirectTo = "/journal" } = options;
 
 	return async function UnauthenticatedComponent(props: P) {
 		const session = await getSession();
@@ -54,30 +54,5 @@ export function withoutAuth<P extends object>(
 		}
 
 		return <Component {...props} />;
-	};
-}
-
-/**
- * Higher-Order Component that provides session data to the wrapped component.
- * Redirects to the specified path (default: "/") if the user is not authenticated.
- *
- * @param Component - The component to wrap (must accept a `session` prop)
- * @param options - Configuration options
- * @returns A wrapped component that receives session data
- */
-export function withSession<P extends object>(
-	Component: React.ComponentType<P & { session: Session }>,
-	options: AuthHocOptions = {},
-) {
-	const { redirectTo = "/" } = options;
-
-	return async function SessionComponent(props: P) {
-		const session = await getSession();
-
-		if (!session) {
-			redirect(redirectTo);
-		}
-
-		return <Component {...props} session={session} />;
 	};
 }

@@ -1,5 +1,8 @@
+import { ThemeProvider } from "next-themes";
 import { withAuth } from "~/auth/utils";
 import { SidebarInset, SidebarProvider } from "~/components/ui/sidebar";
+import { Toaster } from "~/components/ui/toast";
+import { TRPCReactProvider } from "~/trpc/react";
 
 type AppLayoutProps = {
 	children: React.ReactNode;
@@ -18,21 +21,24 @@ function AppLayout({
 	header,
 }: AppLayoutProps) {
 	return (
-		// The outer SidebarProvider controls the Chat sidebar,
-		// while the inner SidebarProvider controls the Journal sidebar.
-		<SidebarProvider className="flex min-h-screen-safe flex-col">
-			<div className="flex flex-1">
-				<SidebarProvider defaultOpen={false}>
-					{appSidebar}
-					<SidebarInset className="flex max-h-svh flex-col">
-						{header}
-						<div className="min-w-54 flex-1 overflow-auto">{children}</div>
-						<div className="mt-auto">{chatDrawer}</div>
-					</SidebarInset>
+		<ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+			<TRPCReactProvider>
+				<SidebarProvider className="flex min-h-screen-safe flex-col">
+					<div className="flex flex-1">
+						<SidebarProvider defaultOpen={false}>
+							{appSidebar}
+							<SidebarInset className="flex max-h-svh flex-col">
+								{header}
+								<div className="min-w-54 flex-1 overflow-auto">{children}</div>
+								<div className="mt-auto">{chatDrawer}</div>
+							</SidebarInset>
+						</SidebarProvider>
+						{chatSidebar}
+					</div>
 				</SidebarProvider>
-				{chatSidebar}
-			</div>
-		</SidebarProvider>
+			</TRPCReactProvider>
+			<Toaster />
+		</ThemeProvider>
 	);
 }
 

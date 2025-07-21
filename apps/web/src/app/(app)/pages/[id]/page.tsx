@@ -9,9 +9,6 @@ export default async function Page({
 }) {
 	const { id } = await params;
 
-	// Prefetch the page data first
-	prefetch(trpc.pages.byId.queryOptions({ id }));
-
 	// Get page data to access children for block prefetching
 	const pageData = await api.pages.byId({ id });
 
@@ -23,7 +20,7 @@ export default async function Page({
 	if (pageData?.children && pageData.children.length > 0) {
 		prefetch(
 			trpc.blocks.loadPageChunk.queryOptions({
-				limit: 10, // Load first 10 blocks
+				limit: 100,
 				parentChildren: pageData.children,
 			}),
 		);

@@ -1,5 +1,6 @@
 import { withAuth } from "~/auth/utils";
 import { SidebarInset, SidebarProvider } from "~/components/ui/sidebar";
+import { HydrateClient } from "~/trpc/server";
 
 type AppLayoutProps = {
 	children: React.ReactNode;
@@ -18,21 +19,23 @@ function AppLayout({
 	header,
 }: AppLayoutProps) {
 	return (
-		// The outer SidebarProvider controls the Chat sidebar,
-		// while the inner SidebarProvider controls the Journal sidebar.
-		<SidebarProvider className="flex min-h-screen flex-col">
-			<div className="flex flex-1">
-				<SidebarProvider>
-					{appSidebar}
-					<SidebarInset>
-						{header}
-						<div className="flex-1 overflow-auto">{children}</div>
-						{chatDrawer}
-					</SidebarInset>
-				</SidebarProvider>
-				{chatSidebar}
-			</div>
-		</SidebarProvider>
+		<HydrateClient>
+			{/* The outer SidebarProvider controls the Chat sidebar,
+			    while the inner SidebarProvider controls the Journal sidebar. */}
+			<SidebarProvider className="flex min-h-screen flex-col">
+				<div className="flex flex-1">
+					<SidebarProvider>
+						{appSidebar}
+						<SidebarInset>
+							{header}
+							<div className="flex-1 overflow-auto">{children}</div>
+							{chatDrawer}
+						</SidebarInset>
+					</SidebarProvider>
+					{chatSidebar}
+				</div>
+			</SidebarProvider>
+		</HydrateClient>
 	);
 }
 

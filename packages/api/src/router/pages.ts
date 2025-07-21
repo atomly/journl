@@ -36,14 +36,7 @@ export const pagesRouter = {
 					)
 					.limit(1);
 
-				if (page.length === 0) {
-					throw new TRPCError({
-						code: "NOT_FOUND",
-						message: "Page not found",
-					});
-				}
-
-				return page[0];
+				return page[0] ?? null;
 			} catch (error) {
 				if (error instanceof TRPCError) {
 					throw error;
@@ -58,7 +51,7 @@ export const pagesRouter = {
 
 	// Create a new page
 	create: protectedProcedure
-		.input(zInsertPage)
+		.input(zInsertPage.omit({ user_id: true }))
 		.mutation(async ({ ctx, input }) => {
 			try {
 				const pageData = {
@@ -68,6 +61,13 @@ export const pagesRouter = {
 				};
 
 				const result = await ctx.db.insert(Page).values(pageData).returning();
+
+				if (!result[0]) {
+					throw new TRPCError({
+						code: "INTERNAL_SERVER_ERROR",
+						message: "Failed to create page",
+					});
+				}
 
 				return result[0];
 			} catch (error) {
@@ -148,6 +148,13 @@ export const pagesRouter = {
 							and(eq(Page.id, input.id), eq(Page.user_id, ctx.session.user.id)),
 						)
 						.returning();
+
+					if (!result[0]) {
+						throw new TRPCError({
+							code: "NOT_FOUND",
+							message: "Page not found or already deleted",
+						});
+					}
 
 					return {
 						deletedBlocksCount: allChildBlockIds.length,

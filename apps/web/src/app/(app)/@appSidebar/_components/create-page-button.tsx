@@ -1,17 +1,16 @@
 "use client";
 
 import type { Page } from "@acme/db/schema";
-import { useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useActionState, useEffect, useTransition } from "react";
+import { useTransition } from "react";
 import { Button } from "~/components/ui/button";
 import {
 	SidebarMenuSubButton,
 	SidebarMenuSubItem,
 } from "~/components/ui/sidebar";
 import { useTRPC } from "~/trpc/react";
-import { createPageAction } from "../../pages/_actions/create-page.action";
 
 export function CreatePageButton() {
 	const router = useRouter();
@@ -19,53 +18,39 @@ export function CreatePageButton() {
 	const queryClient = useQueryClient();
 	const [isPending, startTransition] = useTransition();
 
-	const [newPageState, newPageFormAction, isCreating] = useActionState(
-		async () => {
-			try {
-				const newPage = await createPageAction();
-				return { page: newPage, success: true };
-			} catch (error) {
-				return {
-					error:
-						error instanceof Error ? error.message : "Failed to create page",
-					success: false,
-				};
-			}
-		},
-		null,
+	const { mutate: createPage, isPending: isCreating } = useMutation(
+		trpc.pages.create.mutationOptions({}),
 	);
-
-	// Handle successful page creation
-	useEffect(() => {
-		if (newPageState?.success && newPageState.page) {
-			// Add the new page to the existing cache instead of invalidating
-			queryClient.setQueryData(
-				trpc.pages.all.queryKey(),
-				(oldPages: Page[] | undefined) => {
-					if (!oldPages) return [newPageState.page];
-					// Add the new page at the beginning (most recent first)
-					return [newPageState.page, ...oldPages];
-				},
-			);
-
-			// Pre-populate the pages.byId cache for the new page to prevent race conditions
-			queryClient.setQueryData(
-				trpc.pages.byId.queryKey({ id: newPageState.page.id }),
-				newPageState.page,
-			);
-
-			// Navigate to the new page
-			router.push(`/pages/${newPageState.page.id}`);
-		}
-	}, [newPageState, queryClient, trpc.pages.all, trpc.pages.byId, router]);
 
 	const handleCreatePage = () => {
 		startTransition(() => {
-			newPageFormAction();
+			createPage(
+				{
+					children: [],
+					title: "New Page",
+				},
+				{
+					onError: (error) => {
+						console.error("Failed to create page:", error);
+					},
+					onSuccess: (newPage) => {
+						// Optimistically update the pages list
+						queryClient.setQueryData(
+							trpc.pages.all.queryOptions().queryKey,
+							(oldPages: Page[] | undefined) => {
+								if (!oldPages) return [newPage];
+								return [newPage, ...oldPages];
+							},
+						);
+
+						// Navigate to the new page immediately
+						router.push(`/pages/${newPage.id}`);
+					},
+				},
+			);
 		});
 	};
 
-	// Use transition pending state and action state for loading
 	const showLoading = isPending || isCreating;
 
 	return (

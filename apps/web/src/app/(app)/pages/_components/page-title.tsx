@@ -87,7 +87,7 @@ export function PageTitle({
 	return (
 		<Input
 			className={cn(
-				"!bg-transparent !ring-0 !text-3xl resize-none border-none p-0 font-bold leading-relaxed outline-none placeholder:text-muted-foreground/80",
+				"!bg-transparent !ring-0 !text-4xl resize-none border-none px-14 font-bold leading-relaxed outline-none placeholder:text-muted-foreground/80",
 				className,
 			)}
 			value={title}

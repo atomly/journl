@@ -10,7 +10,8 @@ export const JournalEntry = pgTable(
 		user_id: text()
 			.notNull()
 			.references(() => user.id, { onDelete: "cascade" }),
-		content: t.text().notNull(),
+		// Content stores the journal entry text content
+		content: text().notNull(),
 		date: t.date({ mode: "string" }).notNull(),
 		created_at: t
 			.timestamp({ mode: "string", withTimezone: true })

@@ -3,6 +3,8 @@
 @import "@assistant-ui/styles/index.css";
 @import "@assistant-ui/styles/markdown.css";
 
+@import "./styles/blocknote.css";
+
 @source "../../**/*.{js,ts,jsx,tsx}";
 
 @custom-variant dark (&:is(.dark *));

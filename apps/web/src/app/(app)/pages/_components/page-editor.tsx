@@ -1,11 +1,9 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { LazyBlockEditor } from "~/components/editor/lazy-block-editor";
 import { useTRPC } from "~/trpc/react";
 import { PageSkeleton } from "./page-skeleton";
-import { PageTextArea } from "./page-text-area";
 import { PageTitle } from "./page-title";
 
 type PageEditorProps = {
@@ -14,38 +12,29 @@ type PageEditorProps = {
 
 export function PageEditor({ id }: PageEditorProps) {
 	const trpc = useTRPC();
-	const router = useRouter();
-	const {
-		data: page,
-		isPending,
-		error,
-	} = useQuery(trpc.pages.byId.queryOptions({ id }));
 
-	// Handle page not found error by redirecting to home
-	useEffect(() => {
-		if (error?.message === "Page not found") {
-			router.push("/journal");
-		}
-	}, [error, router]);
+	const { data: page, isLoading } = useQuery(
+		trpc.pages.byId.queryOptions({ id }),
+	);
 
-	if (isPending) {
+	if (isLoading) {
 		return <PageSkeleton />;
 	}
 
-	// If page doesn't exist (deleted or never existed), don't render anything
-	// The useEffect above will handle the redirect
-	if (!page || error) {
-		return <PageSkeleton />;
+	if (!page) {
+		return (
+			<div className="flex h-full items-center justify-center">
+				<p className="text-muted-foreground">Page not found</p>
+			</div>
+		);
 	}
 
 	return (
-		<div className="flex flex-col gap-4 p-4">
+		<div className="flex h-full flex-col gap-4 p-4">
 			<PageTitle id={id} initialTitle={page.title ?? ""} />
-			<PageTextArea
-				placeholder="Start writing your page..."
-				id={id}
-				initialContent={page.content ?? ""}
-			/>
+			<div className="min-h-0 flex-1">
+				<LazyBlockEditor parentId={id} parentType="page" />
+			</div>
 		</div>
 	);
 }

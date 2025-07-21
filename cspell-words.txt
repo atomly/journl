@@ -1,5 +1,6 @@
 AUTHTOKEN
 biomejs
+blocknote
 envinfo
 hnsw
 Hoverable

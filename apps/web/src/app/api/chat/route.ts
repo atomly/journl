@@ -15,19 +15,6 @@ export async function POST(req: Request) {
 
 		const result = await journalAgent.stream(messages);
 
-		// // Temporary workaround to handle errors until assistant-ui fixes the error handling client-side.
-		// for await (const chunk of result.fullStream) {
-		// 	if (chunk.type === "error") {
-		// 		console.error("[api.chat.route] chunk.error 👀", chunk.error);
-		// 		return new Response(
-		// 			"An error occurred while processing your request.",
-		// 			{
-		// 				status: 500,
-		// 			},
-		// 		);
-		// 	}
-		// }
-
 		return result.toDataStreamResponse({
 			getErrorMessage(error) {
 				return `An error occurred while processing your request. ${error instanceof Error ? error.message : JSON.stringify(error)}`;

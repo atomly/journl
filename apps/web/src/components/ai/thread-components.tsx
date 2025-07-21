@@ -23,12 +23,6 @@ import { TooltipIconButton } from "~/components/ai/tooltip-icon-button";
 import { Button } from "~/components/ui/button";
 import { cn } from "~/components/utils";
 
-// TODOs:
-// 1. When the message is being streamed, add minimum height
-// 2. The input needs more padding at the top and bottom
-// 3. The input needs to always be visible in the bottom, even if the user scrolls up. The scroll area is the thread, the input is sticky.
-// 4. When there are messages not in the viewport, there should be an arrow indicator pointing down right above the input.
-
 type ThreadScrollToBottomProps = Partial<
 	ComponentProps<typeof TooltipIconButton>
 >;
@@ -53,40 +47,6 @@ export function ThreadScrollToBottom({
 				<ArrowDownIcon className="size-6" />
 			</TooltipIconButton>
 		</ThreadPrimitive.ScrollToBottom>
-	);
-}
-
-export function ThreadWelcome() {
-	return (
-		<ThreadPrimitive.Empty>
-			<div className="flex w-full max-w-[var(--thread-max-width)] flex-grow flex-col">
-				<div className="flex w-full flex-grow flex-col items-center justify-center">
-					<p className="mt-4 font-medium">How can I help you today?</p>
-				</div>
-				<div className="mt-3 flex w-full flex-col items-stretch justify-center gap-3">
-					<ThreadPrimitive.Suggestion
-						className="flex max-w-sm grow basis-0 flex-col items-center justify-center rounded-lg border p-3 transition-colors ease-in hover:bg-muted/80"
-						prompt="Summarize everything I've done this past week"
-						method="replace"
-						autoSend
-					>
-						<span className="line-clamp-2 text-ellipsis font-semibold text-sm">
-							Summarize everything I've done this past week
-						</span>
-					</ThreadPrimitive.Suggestion>
-					<ThreadPrimitive.Suggestion
-						className="flex max-w-sm grow basis-0 flex-col items-center justify-center rounded-lg border p-3 transition-colors ease-in hover:bg-muted/80"
-						prompt="What patterns do you notice in my recent journal entries?"
-						method="replace"
-						autoSend
-					>
-						<span className="line-clamp-2 text-ellipsis font-semibold text-sm">
-							What patterns do you notice in my recent journal entries?
-						</span>
-					</ThreadPrimitive.Suggestion>
-				</div>
-			</div>
-		</ThreadPrimitive.Empty>
 	);
 }
 

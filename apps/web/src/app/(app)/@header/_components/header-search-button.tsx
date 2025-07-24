@@ -5,7 +5,7 @@ import { Button } from "~/components/ui/button";
 import { cn } from "~/components/utils/cn";
 import { useIsMobile } from "~/hooks/use-mobile";
 
-export function SearchNotesButton({
+export function HeaderSearchButton({
 	className,
 	...props
 }: React.ComponentProps<"button">) {

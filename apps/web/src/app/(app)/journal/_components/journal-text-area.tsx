@@ -20,7 +20,7 @@ type JournalEntryOptions = Omit<
 export function JournalTextArea({
 	initialContent,
 	className,
-	debounceTime = 400,
+	debounceTime = 150,
 	entryDate,
 	...rest
 }: JournalEntryOptions) {

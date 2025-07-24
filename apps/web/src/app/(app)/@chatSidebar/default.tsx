@@ -14,7 +14,7 @@ export default function ChatSidebar() {
 	return (
 		<Sidebar
 			side="right"
-			collapsible="none"
+			collapsible="offcanvas"
 			variant="floating"
 			className="sticky top-0 hidden h-svh lg:flex"
 			defaultWidth={DEFAULT_WIDTH}

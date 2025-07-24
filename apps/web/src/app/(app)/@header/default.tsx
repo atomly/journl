@@ -1,6 +1,7 @@
+import { HeaderThemeToggle } from "~/app/(app)/@header/_components/header-theme-toggle";
 import { SidebarTrigger } from "~/components/ui/sidebar";
-import { CurrentDateTitle } from "./_components/current-date-title";
-import { SearchNotesButton } from "./_components/search-notes-button";
+import { HeaderCurrentDate } from "./_components/header-current-date";
+import { HeaderSearchButton } from "./_components/header-search-button";
 
 export default function JournalHeader() {
 	return (
@@ -9,9 +10,10 @@ export default function JournalHeader() {
 				<SidebarTrigger />
 				<div className="flex w-full items-center justify-between gap-x-2">
 					<div className="min-w-0 flex-1">
-						<CurrentDateTitle />
+						<HeaderCurrentDate />
 					</div>
-					<SearchNotesButton />
+					<HeaderSearchButton />
+					<HeaderThemeToggle />
 				</div>
 			</div>
 		</header>

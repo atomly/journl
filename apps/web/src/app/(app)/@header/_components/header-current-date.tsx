@@ -2,7 +2,7 @@
 
 import { useIsMobile } from "~/hooks/use-mobile";
 
-export function CurrentDateTitle() {
+export function HeaderCurrentDate() {
 	const today = new Date();
 	const isMobile = useIsMobile();
 

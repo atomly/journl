@@ -3,6 +3,7 @@ import { withAuth } from "~/auth/utils";
 import { SidebarInset, SidebarProvider } from "~/components/ui/sidebar";
 import { Toaster } from "~/components/ui/toast";
 import { TRPCReactProvider } from "~/trpc/react";
+import ChatSidebarTrigger from "./@chatSidebar/_components/chat-sidebar-trigger";
 
 type AppLayoutProps = {
 	children: React.ReactNode;
@@ -34,6 +35,7 @@ function AppLayout({
 							</SidebarInset>
 						</SidebarProvider>
 						{chatSidebar}
+						<ChatSidebarTrigger />
 					</div>
 				</SidebarProvider>
 			</TRPCReactProvider>

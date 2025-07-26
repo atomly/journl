@@ -7,3 +7,4 @@ export * from "./core/block-embedding.schema.js";
 export * from "./core/journal-embedding.schema.js";
 export * from "./core/journal-entry.schema.js";
 export * from "./core/page.schema.js";
+export * from "./core/page-embedding.schema.js";

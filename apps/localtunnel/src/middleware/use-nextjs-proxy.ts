@@ -35,6 +35,10 @@ export function useNextjsProxy(app: express.Application) {
 					webhookEndpoint = `${env.NEXT_JS_URL}/api/webhooks/block`;
 					break;
 				}
+				case "page": {
+					webhookEndpoint = `${env.NEXT_JS_URL}/api/webhooks/page`;
+					break;
+				}
 				default:
 					break;
 			}

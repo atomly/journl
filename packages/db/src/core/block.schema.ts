@@ -1,4 +1,6 @@
+import { sql } from "drizzle-orm";
 import { index, pgTable } from "drizzle-orm/pg-core";
+import { createSelectSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 import { user } from "../auth/user.schema.js";
 
@@ -15,7 +17,7 @@ export const Block = pgTable(
 		content: t.jsonb(), // Can be null for void blocks like divider
 
 		// Children array stores ordered list of child block IDs
-		children: t.uuid().array().notNull().default([]),
+		children: t.text().array().notNull().default([]),
 
 		// Parent relationships
 		// Note: parent_id references different tables based on parent_type
@@ -24,8 +26,15 @@ export const Block = pgTable(
 		parent_id: t.uuid().notNull(),
 
 		// Metadata
-		created_at: t.timestamp().notNull().defaultNow(),
-		updated_at: t.timestamp().notNull().defaultNow(),
+		created_at: t
+			.timestamp({ mode: "string", withTimezone: true })
+			.defaultNow()
+			.notNull(),
+		updated_at: t
+			.timestamp({ mode: "string", withTimezone: true })
+			.defaultNow()
+			.notNull()
+			.$onUpdateFn(() => sql`now()`),
 		created_by: t
 			.text()
 			.notNull()
@@ -333,3 +342,5 @@ export const updateToggleListItemBlock = (
 		props?: Partial<BlockPropsForType<"toggleListItem">>;
 	},
 ) => updateBlockInput(blockId, input);
+
+export const zBlock = createSelectSchema(Block);

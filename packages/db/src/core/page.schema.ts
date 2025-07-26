@@ -11,7 +11,7 @@ export const Page = pgTable("page", (t) => ({
 		.references(() => user.id, { onDelete: "cascade" }),
 	title: t.text().notNull(),
 	// Children array stores ordered list of child block IDs
-	children: t.uuid().array().notNull().default([]),
+	children: t.text().array().notNull().default([]),
 	created_at: t
 		.timestamp({ mode: "string", withTimezone: true })
 		.defaultNow()

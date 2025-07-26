@@ -30,7 +30,7 @@ function createPayloadSchema<T extends z.ZodTypeAny>(recordSchema: T) {
 }
 
 /**
- * Handles Supabase webhook payloads for journal entries
+ * Handles Supabase webhook payloads for journal entries and blocks
  */
 export const handler =
 	<T extends z.ZodTypeAny>(

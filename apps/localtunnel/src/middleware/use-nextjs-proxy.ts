@@ -22,21 +22,31 @@ import { signPayload } from "../lib/sign-payload.ts";
 export function useNextjsProxy(app: express.Application) {
 	app.use(async (req, res) => {
 		try {
+			const { table } = req.body;
 			const payload = JSON.stringify(req.body);
 			const signature = signPayload(payload, env.SUPABASE_SECRET);
-
+			let webhookEndpoint = `${env.NEXT_JS_URL}/api/webhooks/journal-entries`;
+			switch (table) {
+				case "journal_entry": {
+					webhookEndpoint = `${env.NEXT_JS_URL}/api/webhooks/journal-entries`;
+					break;
+				}
+				case "block": {
+					webhookEndpoint = `${env.NEXT_JS_URL}/api/webhooks/block`;
+					break;
+				}
+				default:
+					break;
+			}
 			// Forward the request to Next.js server
-			const response = await fetch(
-				`${env.NEXT_JS_URL}/api/webhooks/journal-entries`,
-				{
-					body: payload,
-					headers: {
-						"Content-Type": "application/json",
-						"x-supabase-signature": signature,
-					},
-					method: req.method,
+			const response = await fetch(webhookEndpoint, {
+				body: payload,
+				headers: {
+					"Content-Type": "application/json",
+					"x-supabase-signature": signature,
 				},
-			);
+				method: req.method,
+			});
 
 			// Forward the response back to the client
 			const responseBody = await response.text();
@@ -47,7 +57,7 @@ export function useNextjsProxy(app: express.Application) {
 				res.setHeader(key, value);
 			});
 
-			res.send(responseBody);
+			return res.send(responseBody);
 		} catch (error) {
 			console.error("Error proxying webhook:", error);
 			res.status(500).json({ error: "Failed to proxy webhook" });

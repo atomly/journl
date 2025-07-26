@@ -29,13 +29,19 @@ function BlockEditorSkeleton() {
 export function LazyBlockEditor({ parentId, parentType }: BlockEditorProps) {
 	const trpc = useTRPC();
 
-	// Get parent data (for pages)
+	// Get parent data (for pages) - refetch once when navigating
 	const { data: parentData, isLoading: isParentLoading } = useQuery({
 		...trpc.pages.byId.queryOptions({ id: parentId }),
 		enabled: parentType === "page",
+		// Refetch once when navigating to a page (not continuously)
+		refetchOnMount: true,
+		// Refetch when window regains focus to catch external changes
+		refetchOnWindowFocus: true, // 1 second
+		// Short stale time to ensure relatively fresh data but prevent infinite loops
+		staleTime: 1000,
 	});
 
-	// Progressive loading with infinite query
+	// Progressive loading with infinite query - refetch once when navigating
 	const {
 		data: infiniteData,
 		fetchNextPage,
@@ -50,7 +56,10 @@ export function LazyBlockEditor({ parentId, parentType }: BlockEditorProps) {
 		getNextPageParam: (lastPage) => {
 			return lastPage.hasMore ? lastPage.nextCursor : undefined;
 		},
-		staleTime: 1000 * 60 * 5, // 5 minutes
+		// Refetch once when navigating to a page (not continuously)
+		refetchOnMount: true,
+		// Short stale time to ensure relatively fresh data but prevent infinite loops
+		staleTime: 1000, // 1 second
 	});
 
 	// Combine all loaded blocks
@@ -82,7 +91,7 @@ export function LazyBlockEditor({ parentId, parentType }: BlockEditorProps) {
 		}
 	}, [hasMoreToLoad, isFetchingNextPage, fetchNextPage]);
 
-	// Show skeleton while loading initial data
+	// Show skeleton while loading initial data OR when refetching
 	const isLoading = isParentLoading || isBlocksLoading;
 	if (isLoading) {
 		return <BlockEditorSkeleton />;

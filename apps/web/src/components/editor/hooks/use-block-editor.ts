@@ -3,6 +3,7 @@ import type { Block as BlockNoteBlock } from "@blocknote/core";
 import { useCreateBlockNote } from "@blocknote/react";
 import { useMutation } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useRef } from "react";
+import { toast } from "sonner";
 import { useDebouncedCallback } from "use-debounce";
 import { useTRPC } from "~/trpc/react";
 import type { BlockChange } from "../types";
@@ -49,6 +50,15 @@ export function useBlockEditor(
 		}),
 	);
 
+	// API mutation for updating embed timestamp (triggers embedding generation)
+	const { mutate: updateEmbedTimestamp } = useMutation(
+		trpc.pages.updateEmbedTimestamp.mutationOptions({
+			onError: (error) =>
+				console.error("Update embed timestamp failed:", error),
+			onSuccess: () => toast.success("Embed timestamp updated successfully"),
+		}),
+	);
+
 	// Convert blocks to BlockNote format
 	const initialBlocks = useMemo(() => {
 		if (blocks.length === 0) {
@@ -92,9 +102,46 @@ export function useBlockEditor(
 		trailing: true,
 	});
 
+	// Track if we have pending embedding updates
+	const hasPendingEmbeddingUpdate = useRef(false);
+	// Track if embedding update has already been forced during cleanup
+	const hasEmbeddingBeenForced = useRef(false);
+
+	// Force embedding update (used for cleanup)
+	const forceEmbeddingUpdate = useCallback(() => {
+		console.log("zzz forceEmbeddingUpdate", parentType, parentId);
+		if (
+			parentType === "page" &&
+			hasPendingEmbeddingUpdate.current &&
+			!hasEmbeddingBeenForced.current
+		) {
+			updateEmbedTimestamp({ id: parentId });
+			hasPendingEmbeddingUpdate.current = false; // Clear pending flag after forcing
+			hasEmbeddingBeenForced.current = true; // Mark as forced to prevent multiple calls
+		}
+	}, [parentType, parentId, updateEmbedTimestamp]);
+
+	// Separate debounced call for embedding updates (longer delay)
+	const debouncedUpdateEmbedding = useDebouncedCallback(
+		() => {
+			// Only update embedding timestamp for pages (not individual blocks)
+			if (parentType === "page") {
+				updateEmbedTimestamp({ id: parentId });
+				hasPendingEmbeddingUpdate.current = false; // Clear pending flag after update
+				hasEmbeddingBeenForced.current = false; // Reset forced flag for future cleanup calls
+			}
+		},
+		30000, // 30 seconds
+		{
+			leading: false,
+			trailing: true,
+		},
+	);
+
 	// Handle editor changes - captures both block changes and page children order
 	const handleEditorChange = useCallback(
 		(e: { document: BlockNoteBlock[] }) => {
+			console.log("zzz handleEditorChange", e.document);
 			// Skip all processing while loading
 			if (!isFullyLoaded) {
 				return;
@@ -192,6 +239,11 @@ export function useBlockEditor(
 			prevDocumentRef.current = e.document;
 
 			debouncedSendChanges();
+
+			// Only trigger embedding update if user has actually made changes (detected via keydown)
+			if (parentType === "page" && hasPendingEmbeddingUpdate.current) {
+				debouncedUpdateEmbedding();
+			}
 		},
 		[
 			isFullyLoaded,
@@ -200,6 +252,7 @@ export function useBlockEditor(
 			updateParentChildren,
 			addBlockChange,
 			debouncedSendChanges,
+			debouncedUpdateEmbedding,
 		],
 	);
 
@@ -233,8 +286,101 @@ export function useBlockEditor(
 		return unsubscribe;
 	}, [editor, isFullyLoaded, handleBlockChanges]);
 
+	// Set up event listeners to detect actual user input
+	useEffect(() => {
+		const markAsChanged = () => {
+			if (parentType === "page" && isFullyLoaded) {
+				hasPendingEmbeddingUpdate.current = true;
+			}
+		};
+
+		const handleKeyDown = (event: KeyboardEvent) => {
+			// Only set pending flag for actual content changes, not navigation keys
+			const isContentKey =
+				![
+					"Tab",
+					"Shift",
+					"Control",
+					"Alt",
+					"Meta",
+					"CapsLock",
+					"Escape",
+					"F1",
+					"F2",
+					"F3",
+					"F4",
+					"F5",
+					"F6",
+					"F7",
+					"F8",
+					"F9",
+					"F10",
+					"F11",
+					"F12",
+				].includes(event.key) &&
+				!event.key.startsWith("Arrow") &&
+				!event.ctrlKey &&
+				!event.metaKey; // Ignore shortcuts like Ctrl+C, Cmd+V, etc.
+
+			if (isContentKey) {
+				markAsChanged();
+			}
+		};
+
+		const handlePaste = () => markAsChanged();
+		const handleCut = () => markAsChanged();
+
+		// Add event listeners to the editor's DOM element
+		const editorElement = editor.domElement;
+		if (editorElement) {
+			editorElement.addEventListener("keydown", handleKeyDown);
+			editorElement.addEventListener("paste", handlePaste);
+			editorElement.addEventListener("cut", handleCut);
+
+			return () => {
+				editorElement.removeEventListener("keydown", handleKeyDown);
+				editorElement.removeEventListener("paste", handlePaste);
+				editorElement.removeEventListener("cut", handleCut);
+			};
+		}
+	}, [editor, parentType, isFullyLoaded]);
+
+	// Handle page unload events to force embedding updates
+	useEffect(() => {
+		const handleBeforeUnload = () => {
+			// Only force embedding updates if there are pending changes
+			if (hasPendingEmbeddingUpdate.current) {
+				forceEmbeddingUpdate();
+			}
+		};
+
+		const handleVisibilityChange = () => {
+			// Only force embedding update when page becomes hidden if there are pending changes
+			if (document.hidden && hasPendingEmbeddingUpdate.current) {
+				forceEmbeddingUpdate();
+			}
+		};
+
+		// Add event listeners
+		window.addEventListener("beforeunload", handleBeforeUnload);
+		document.addEventListener("visibilitychange", handleVisibilityChange);
+
+		// Cleanup function to force embedding update and remove listeners
+		return () => {
+			if (hasPendingEmbeddingUpdate.current) {
+				forceEmbeddingUpdate();
+				window.removeEventListener("beforeunload", handleBeforeUnload);
+				document.removeEventListener(
+					"visibilitychange",
+					handleVisibilityChange,
+				);
+			}
+		};
+	}, [forceEmbeddingUpdate]);
+
 	return {
 		editor,
-		handleEditorChange,
+		forceEmbeddingUpdate,
+		handleEditorChange, // Expose for manual triggering if needed
 	};
 }

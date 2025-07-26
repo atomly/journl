@@ -27,7 +27,7 @@ export function BlockEditor({
 		<div className="blocknote-editor" data-color-scheme={resolvedTheme}>
 			<BlockNoteView
 				editor={editor}
-				onChange={handleEditorChange}
+				onChange={isFullyLoaded ? handleEditorChange : undefined}
 				editable={isFullyLoaded}
 				theme={resolvedTheme as "light" | "dark"}
 			/>

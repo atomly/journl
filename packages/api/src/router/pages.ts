@@ -226,18 +226,14 @@ export const pagesRouter = {
 			}
 		}),
 
-	updateChildren: protectedProcedure
-		.input(
-			z.object({
-				children: z.array(z.string().uuid()),
-				id: z.string().uuid(),
-			}),
-		)
+	// Update embed timestamp to trigger embedding generation
+	updateEmbedTimestamp: protectedProcedure
+		.input(z.object({ id: z.string().uuid() }))
 		.mutation(async ({ ctx, input }) => {
 			try {
 				const result = await ctx.db
 					.update(Page)
-					.set({ children: input.children })
+					.set({ embed_updated_at: new Date().toISOString() })
 					.where(
 						and(eq(Page.id, input.id), eq(Page.user_id, ctx.session.user.id)),
 					)
@@ -255,10 +251,10 @@ export const pagesRouter = {
 				if (error instanceof TRPCError) {
 					throw error;
 				}
-				console.error("Database error in pages.updateChildren:", error);
+				console.error("Database error in pages.updateEmbedTimestamp:", error);
 				throw new TRPCError({
 					code: "INTERNAL_SERVER_ERROR",
-					message: "Failed to update page children",
+					message: "Failed to update page embed timestamp",
 				});
 			}
 		}),

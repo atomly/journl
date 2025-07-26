@@ -11,19 +11,13 @@ import { handler } from "../_lib/webhook-handler";
 const CHUNK_SIZE = 1500;
 const CHUNK_OVERLAP = 300;
 
-/**
- * Metadata structure stored in JSONB for each chunk
- */
 interface ChunkMetadata {
-	block_ids: string[]; // Array of block IDs that contributed to this chunk
-	chunk_size: number; // Actual size of this chunk in characters
-	chunk_overlap: number; // Overlap size used for chunking
-	total_blocks_in_page: number; // Total number of blocks in the page
+	block_ids: string[];
+	chunk_size: number;
+	chunk_overlap: number;
+	total_blocks_in_page: number;
 }
 
-/**
- * Represents a block with its text content and position metadata
- */
 interface BlockWithText {
 	id: string;
 	text: string;
@@ -31,9 +25,6 @@ interface BlockWithText {
 	endPosition: number;
 }
 
-/**
- * Represents a text chunk with metadata about contributing blocks
- */
 interface TextChunkWithMetadata {
 	text: string;
 	blockIds: string[];

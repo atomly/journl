@@ -13,10 +13,15 @@ type PageEditorProps = {
 export function PageEditor({ id }: PageEditorProps) {
 	const trpc = useTRPC();
 
-	const { data: page, isLoading } = useQuery(
-		trpc.pages.byId.queryOptions({ id }),
-	);
+	const { data: page, isLoading } = useQuery({
+		...trpc.pages.byId.queryOptions({ id }),
+		// Refetch once when navigating to a page (not continuously)
+		refetchOnMount: true,
+		refetchOnWindowFocus: true,
+		staleTime: 1000,
+	});
 
+	// Show loading indicator when initially loading OR when refetching
 	if (isLoading) {
 		return <PageSkeleton />;
 	}

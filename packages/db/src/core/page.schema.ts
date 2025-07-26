@@ -21,6 +21,11 @@ export const Page = pgTable("page", (t) => ({
 		.defaultNow()
 		.notNull()
 		.$onUpdateFn(() => sql`now()`),
+	// Separate timestamp for embedding triggers (debounced longer)
+	embed_updated_at: t
+		.timestamp({ mode: "string", withTimezone: true })
+		.defaultNow()
+		.notNull(),
 }));
 
 export type Page = typeof Page.$inferSelect;

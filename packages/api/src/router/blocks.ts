@@ -275,7 +275,7 @@ export const blocksRouter = {
 							.onConflictDoUpdate({
 								set: {
 									...blockData,
-									updated_at: new Date(),
+									updated_at: new Date().toISOString(),
 								},
 								target: Block.id,
 							});

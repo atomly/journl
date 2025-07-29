@@ -109,7 +109,6 @@ export function useBlockEditor(
 
 	// Force embedding update (used for cleanup)
 	const forceEmbeddingUpdate = useCallback(() => {
-		console.log("zzz forceEmbeddingUpdate", parentType, parentId);
 		if (
 			parentType === "page" &&
 			hasPendingEmbeddingUpdate.current &&
@@ -141,7 +140,6 @@ export function useBlockEditor(
 	// Handle editor changes - captures both block changes and page children order
 	const handleEditorChange = useCallback(
 		(e: { document: BlockNoteBlock[] }) => {
-			console.log("zzz handleEditorChange", e.document);
 			// Skip all processing while loading
 			if (!isFullyLoaded) {
 				return;

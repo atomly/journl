@@ -1,7 +1,15 @@
-import { and, desc, eq, inArray } from "@acme/db";
-import { Block, Page, zInsertPage, zUpdatePage } from "@acme/db/schema";
+import { and, cosineDistance, desc, eq, gt, inArray, sql } from "@acme/db";
+import {
+	Block,
+	Page,
+	PageEmbedding,
+	zInsertPage,
+	zUpdatePage,
+} from "@acme/db/schema";
+import { openai } from "@ai-sdk/openai";
 import type { TRPCRouterRecord } from "@trpc/server";
 import { TRPCError } from "@trpc/server";
+import { embed } from "ai";
 import { z } from "zod/v4";
 import { protectedProcedure } from "../trpc.js";
 
@@ -171,6 +179,44 @@ export const pagesRouter = {
 					message: "Failed to delete page",
 				});
 			}
+		}),
+	getRelevantPageChunks: protectedProcedure
+		.input(
+			z.object({
+				limit: z.number().min(1).max(20).default(5),
+				query: z.string().max(10000),
+				threshold: z.number().min(0).max(1).default(0.3),
+			}),
+		)
+		.query(async ({ ctx, input }) => {
+			// embed the query
+			const { embedding } = await embed({
+				model: openai.embedding("text-embedding-3-small"),
+				value: input.query,
+			});
+
+			// https://orm.drizzle.team/docs/guides/vector-similarity-search
+			const similarity = sql<number>`1 - (${cosineDistance(PageEmbedding.embedding, embedding)})`;
+
+			const similarPages = await ctx.db
+				.select({
+					content: PageEmbedding.chunk_text,
+					page_id: Page.id,
+					page_title: Page.title,
+					similarity,
+				})
+				.from(PageEmbedding)
+				.where(
+					and(
+						eq(Page.user_id, ctx.session.user.id),
+						gt(similarity, input.threshold),
+					),
+				)
+				.innerJoin(Page, eq(PageEmbedding.page_id, Page.id))
+				.orderBy(desc(similarity))
+				.limit(input.limit);
+
+			return similarPages;
 		}),
 
 	// Update an existing page

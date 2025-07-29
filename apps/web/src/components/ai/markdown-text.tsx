@@ -9,6 +9,7 @@ import {
 	useIsMarkdownCodeBlock,
 } from "@assistant-ui/react-markdown";
 import { CheckIcon, CopyIcon } from "lucide-react";
+import Link from "next/link";
 import { memo, useState } from "react";
 import remarkGfm from "remark-gfm";
 
@@ -65,15 +66,39 @@ function useCopyToClipboard({
 }
 
 const defaultComponents = memoizeMarkdownComponents({
-	a: ({ className, ...props }) => (
-		<a
-			className={cn(
-				"font-medium text-primary underline underline-offset-4",
-				className,
-			)}
-			{...props}
-		/>
-	),
+	a: ({ className, href, ...props }) => {
+		const isExternal =
+			href &&
+			(href.startsWith("http://") ||
+				href.startsWith("https://") ||
+				href.startsWith("mailto:"));
+
+		if (isExternal) {
+			return (
+				<a
+					className={cn(
+						"font-medium text-primary underline underline-offset-4",
+						className,
+					)}
+					href={href}
+					target="_blank"
+					rel="noopener noreferrer"
+					{...props}
+				/>
+			);
+		}
+
+		return (
+			<Link
+				className={cn(
+					"font-medium text-primary underline underline-offset-4",
+					className,
+				)}
+				href={href || "#"}
+				{...props}
+			/>
+		);
+	},
 	blockquote: ({ className, ...props }) => (
 		<blockquote
 			className={cn("border-l-2 pl-6 italic", className)}

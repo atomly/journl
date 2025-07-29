@@ -33,11 +33,8 @@ export function LazyBlockEditor({ parentId, parentType }: BlockEditorProps) {
 	const { data: parentData, isLoading: isParentLoading } = useQuery({
 		...trpc.pages.byId.queryOptions({ id: parentId }),
 		enabled: parentType === "page",
-		// Refetch once when navigating to a page (not continuously)
 		refetchOnMount: true,
-		// Refetch when window regains focus to catch external changes
-		refetchOnWindowFocus: true, // 1 second
-		// Short stale time to ensure relatively fresh data but prevent infinite loops
+		refetchOnWindowFocus: true,
 		staleTime: 1000,
 	});
 
@@ -56,10 +53,8 @@ export function LazyBlockEditor({ parentId, parentType }: BlockEditorProps) {
 		getNextPageParam: (lastPage) => {
 			return lastPage.hasMore ? lastPage.nextCursor : undefined;
 		},
-		// Refetch once when navigating to a page (not continuously)
 		refetchOnMount: true,
-		// Short stale time to ensure relatively fresh data but prevent infinite loops
-		staleTime: 1000, // 1 second
+		staleTime: 1000,
 	});
 
 	// Combine all loaded blocks

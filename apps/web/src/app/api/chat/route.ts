@@ -1,4 +1,4 @@
-import { journalAgent } from "~/ai/mastra/journal/journal-agent";
+import { orchestratorAgent } from "~/ai/mastra/orchestrator/orchestrator-agent";
 import { getSession } from "~/auth/server";
 
 export const maxDuration = 30; // Allow streaming responses up to 30 seconds
@@ -13,7 +13,7 @@ export async function POST(req: Request) {
 			return new Response("Unauthorized", { status: 401 });
 		}
 
-		const result = await journalAgent.stream(messages);
+		const result = await orchestratorAgent.stream(messages);
 
 		return result.toDataStreamResponse({
 			getErrorMessage(error) {

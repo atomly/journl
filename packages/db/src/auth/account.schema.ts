@@ -8,13 +8,13 @@ export const account = pgTable("account", {
 	userId: text("user_id")
 		.notNull()
 		.references(() => user.id, { onDelete: "cascade" }),
-	password: text("password"),
-	scope: text("scope"),
-	idToken: text("id_token"),
 	accessToken: text("access_token"),
-	accessTokenExpiresAt: timestamp("access_token_expires_at"),
 	refreshToken: text("refresh_token"),
+	idToken: text("id_token"),
+	accessTokenExpiresAt: timestamp("access_token_expires_at"),
 	refreshTokenExpiresAt: timestamp("refresh_token_expires_at"),
+	scope: text("scope"),
+	password: text("password"),
 	createdAt: timestamp("created_at").notNull(),
 	updatedAt: timestamp("updated_at").notNull(),
 });

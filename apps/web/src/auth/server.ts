@@ -1,10 +1,8 @@
-import "server-only";
-
 import { initAuth } from "@acme/auth";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { cache } from "react";
-import { env } from "~/env";
+import { env } from "../env";
 
 const baseUrl =
 	env.VERCEL_ENV === "production"
@@ -14,9 +12,14 @@ const baseUrl =
 			: "http://localhost:3000";
 
 export const auth = initAuth({
+	appName: "Journl",
 	baseUrl,
 	discordClientId: env.AUTH_DISCORD_ID,
 	discordClientSecret: env.AUTH_DISCORD_SECRET,
+	githubClientId: env.AUTH_GITHUB_ID,
+	githubClientSecret: env.AUTH_GITHUB_SECRET,
+	googleClientId: env.AUTH_GOOGLE_ID,
+	googleClientSecret: env.AUTH_GOOGLE_SECRET,
 	productionUrl: baseUrl,
 	secret: env.AUTH_SECRET,
 });

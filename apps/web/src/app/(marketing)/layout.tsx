@@ -1,12 +1,16 @@
-import { withoutAuth } from "~/auth/utils";
+import { ThemeProvider } from "next-themes";
 import { TRPCReactProvider } from "~/trpc/react";
 
 type AppLayoutProps = {
 	children: React.ReactNode;
 };
 
-function AppLayout({ children }: AppLayoutProps) {
-	return <TRPCReactProvider>{children}</TRPCReactProvider>;
+function MarketingLayout({ children }: AppLayoutProps) {
+	return (
+		<ThemeProvider attribute="class" defaultTheme="marketing" enableSystem>
+			<TRPCReactProvider>{children}</TRPCReactProvider>
+		</ThemeProvider>
+	);
 }
 
-export default withoutAuth(AppLayout);
+export default MarketingLayout;

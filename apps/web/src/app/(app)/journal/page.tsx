@@ -1,4 +1,4 @@
-import { withAuth } from "~/auth/utils";
+import { withAuth } from "~/auth/guards";
 import { prefetch, trpc } from "~/trpc/server";
 import { JournalVirtualList } from "./_components/journal-virtual-list";
 

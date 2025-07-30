@@ -1,0 +1,21 @@
+import { authViewPaths } from "@daveyplate/better-auth-ui/server";
+import { AuthFloatingShapes } from "../../_components/auth-floating-shapes";
+import { AuthView } from "./_components/auth-view";
+
+export function generateStaticParams() {
+	return Object.values(authViewPaths).map((pathname) => ({ pathname }));
+}
+
+export default async function AuthPage({
+	params,
+}: {
+	params: Promise<{ pathname: string }>;
+}) {
+	const { pathname } = await params;
+	return (
+		<>
+			<AuthView pathname={pathname} />
+			<AuthFloatingShapes />
+		</>
+	);
+}

@@ -4,7 +4,9 @@ import { cn } from "~/components/utils/cn";
 
 import "~/app/globals.css";
 
+import { AuthModalProvider } from "~/components/auth/auth-modal-provider";
 import { env } from "~/env";
+import { BetterAuthProvider } from "../components/auth/better-auth-provider";
 
 export const metadata: Metadata = {
 	description: "Simple monorepo for web apps",
@@ -45,8 +47,10 @@ const geistMono = Geist_Mono({
 
 export default function RootLayout({
 	children,
+	authModal,
 }: {
 	children: React.ReactNode;
+	authModal: React.ReactNode;
 }) {
 	return (
 		<html lang="en" suppressHydrationWarning>
@@ -57,7 +61,12 @@ export default function RootLayout({
 					geistMono.variable,
 				)}
 			>
-				{children}
+				<BetterAuthProvider>
+					<AuthModalProvider>
+						{children}
+						{authModal}
+					</AuthModalProvider>
+				</BetterAuthProvider>
 			</body>
 		</html>
 	);

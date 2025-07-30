@@ -7,7 +7,7 @@ import {
 	blockTypeSchema,
 	Page,
 } from "@acme/db/schema";
-import { z } from "zod/v4";
+import { z } from "zod";
 import { protectedProcedure } from "../trpc.js";
 
 // ===== SCHEMAS =====

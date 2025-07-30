@@ -52,12 +52,16 @@ export function JournalVirtualList({
 	);
 
 	if (status === "pending") {
-		return <JournalFeedSkeleton className="flex flex-1 flex-col p-8" />;
+		return (
+			<div className="mx-auto max-w-4xl px-4 pt-8 md:px-8">
+				<JournalFeedSkeleton className="mx-auto flex flex-1 flex-col" />
+			</div>
+		);
 	}
 
 	if (status === "error") {
 		return (
-			<div className="mx-auto flex h-full flex-1 flex-col items-center justify-center gap-y-8 text-center">
+			<div className="mx-auto flex h-full max-w-4xl flex-1 flex-col items-center justify-center gap-y-8 text-center">
 				<div>
 					<div>Sorry, something went wrong.</div>
 					<div>Please try again.</div>

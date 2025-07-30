@@ -1,0 +1,15 @@
+import { authViewPaths } from "@daveyplate/better-auth-ui/server";
+import { AuthView } from "./_components/auth-view";
+
+export function generateStaticParams() {
+	return Object.values(authViewPaths).map((pathname) => ({ pathname }));
+}
+
+export default async function InterceptingAuthModalPage({
+	params,
+}: {
+	params: Promise<{ pathname: string }>;
+}) {
+	const { pathname } = await params;
+	return <AuthView pathname={pathname} />;
+}

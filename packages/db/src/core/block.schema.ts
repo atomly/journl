@@ -1,7 +1,8 @@
 import { sql } from "drizzle-orm";
 import { index, pgTable } from "drizzle-orm/pg-core";
 import { createSelectSchema } from "drizzle-zod";
-import { z } from "zod/v4";
+import { z } from "zod";
+
 import { user } from "../auth/user.schema.js";
 
 export const Block = pgTable(

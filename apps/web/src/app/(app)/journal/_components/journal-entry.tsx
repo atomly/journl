@@ -2,6 +2,7 @@
 
 import type { JournalEntry as TJournalEntry } from "@acme/db/schema";
 import type React from "react";
+import { cn } from "~/components/utils";
 import { formatDate } from "~/lib/format-date";
 import { JournalTextArea } from "./journal-text-area";
 
@@ -9,13 +10,20 @@ type JournalEntryOptions = Omit<React.ComponentProps<"div">, "children"> & {
 	entry: Partial<TJournalEntry>;
 };
 
-export function JournalEntry({ entry, ...rest }: JournalEntryOptions) {
+export function JournalEntry({
+	entry,
+	className,
+	...rest
+}: JournalEntryOptions) {
 	const date = new Date(`${entry.date}T00:00:00`);
 	const now = new Date();
 	const isToday = date.toDateString() === now.toDateString();
 
 	return (
-		<div {...rest}>
+		<div
+			className={cn(isToday && "min-h-96 md:min-h-124", className)}
+			{...rest}
+		>
 			<div className="mb-3">
 				<h2 className="font-semibold text-2xl text-muted-foreground">
 					{isToday ? "Today" : formatDate(date)}

@@ -279,7 +279,7 @@ export function HeroJournlParticles({
 	return (
 		<div
 			className={cn(
-				"relative h-32 w-full animate-in md:h-48 lg:h-72",
+				"relative h-32 w-full animate-in md:h-30",
 				wrapperClassName,
 			)}
 			ref={wrapperRef}

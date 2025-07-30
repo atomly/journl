@@ -28,8 +28,8 @@
 		},
 		"dev": {
 			"cache": false,
-			"dependsOn": ["^dev"],
-			"persistent": false
+			"dependsOn": ["^build"],
+			"persistent": true
 		},
 		"push": {
 			"cache": false,

@@ -1,4 +1,5 @@
 export * from "./auth/account.schema.js";
+export * from "./auth/organization.schema.js";
 export * from "./auth/session.schema.js";
 export * from "./auth/user.schema.js";
 export * from "./auth/verification.schema.js";

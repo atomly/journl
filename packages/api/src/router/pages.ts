@@ -10,7 +10,8 @@ import { openai } from "@ai-sdk/openai";
 import type { TRPCRouterRecord } from "@trpc/server";
 import { TRPCError } from "@trpc/server";
 import { embed } from "ai";
-import { z } from "zod/v4";
+import { z } from "zod";
+
 import { protectedProcedure } from "../trpc.js";
 
 export const pagesRouter = {

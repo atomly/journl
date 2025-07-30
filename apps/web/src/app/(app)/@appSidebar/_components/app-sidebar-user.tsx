@@ -1,6 +1,6 @@
 import { ChevronsUpDown } from "lucide-react";
 import { getUser } from "~/auth/server";
-import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
+import { Avatar, AvatarImage } from "~/components/ui/avatar";
 import {
 	DropdownMenu,
 	DropdownMenuItem,
@@ -13,8 +13,14 @@ import {
 	SidebarMenuButton,
 	SidebarMenuItem,
 } from "~/components/ui/sidebar";
-import { AppSidebarSignOut } from "./app-sidebar-sign-out";
+import {
+	AppSidebarUserEmail,
+	AppSidebarUserInformation,
+	AppSidebarUsername,
+} from "./app-sidebar-user-information";
 import { AppSidebarUserMenu } from "./app-sidebar-user-menu";
+import { AppSidebarUserSettings } from "./app-sidebar-user-settings";
+import { AppSidebarUserSignOut } from "./app-sidebar-user-sign-out";
 
 export async function AppSidebarUser() {
 	const user = await getUser();
@@ -32,14 +38,12 @@ export async function AppSidebarUser() {
 								{user.image ? (
 									<AvatarImage src={user.image} alt={user.name} />
 								) : (
-									<AvatarFallback className="rounded-lg">
-										{user.name?.charAt(0)}
-									</AvatarFallback>
+									<AppSidebarUserInformation />
 								)}
 							</Avatar>
 							<div className="grid flex-1 text-left text-sm leading-tight">
-								<span className="truncate font-medium">{user.name}</span>
-								<span className="truncate text-xs">{user.email}</span>
+								<AppSidebarUsername />
+								<AppSidebarUserEmail />
 							</div>
 							<ChevronsUpDown className="ml-auto size-4" />
 						</SidebarMenuButton>
@@ -55,20 +59,21 @@ export async function AppSidebarUser() {
 									{user.image ? (
 										<AvatarImage src={user.image} alt={user.name} />
 									) : (
-										<AvatarFallback className="rounded-lg">
-											{user.name?.charAt(0)}
-										</AvatarFallback>
+										<AppSidebarUserInformation />
 									)}
 								</Avatar>
 								<div className="grid flex-1 text-left text-sm leading-tight">
-									<span className="truncate font-medium">{user.name}</span>
-									<span className="truncate text-xs">{user.email}</span>
+									<AppSidebarUsername />
+									<AppSidebarUserEmail />
 								</div>
 							</div>
 						</DropdownMenuLabel>
 						<DropdownMenuSeparator />
 						<DropdownMenuItem asChild className="w-full cursor-pointer">
-							<AppSidebarSignOut />
+							<AppSidebarUserSettings />
+						</DropdownMenuItem>
+						<DropdownMenuItem asChild className="w-full cursor-pointer">
+							<AppSidebarUserSignOut />
 						</DropdownMenuItem>
 					</AppSidebarUserMenu>
 				</DropdownMenu>

@@ -1,7 +1,7 @@
 import { sql } from "drizzle-orm";
 import { pgTable, text } from "drizzle-orm/pg-core";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
-import { z } from "zod/v4";
+import { z } from "zod";
 import { user } from "../auth/user.schema.js";
 
 export const Page = pgTable("page", (t) => ({

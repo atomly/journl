@@ -1,9 +1,10 @@
 import { ThemeProvider } from "next-themes";
-import { withAuth } from "~/auth/utils";
+import { withAuth } from "~/auth/guards";
 import { SidebarInset, SidebarProvider } from "~/components/ui/sidebar";
 import { Toaster } from "~/components/ui/toast";
 import { TRPCReactProvider } from "~/trpc/react";
 import ChatSidebarTrigger from "./@chatSidebar/_components/chat-sidebar-trigger";
+import "./globals.css";
 
 type AppLayoutProps = {
 	children: React.ReactNode;
@@ -38,8 +39,8 @@ function AppLayout({
 						<ChatSidebarTrigger />
 					</div>
 				</SidebarProvider>
+				<Toaster />
 			</TRPCReactProvider>
-			<Toaster />
 		</ThemeProvider>
 	);
 }

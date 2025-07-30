@@ -1,14 +1,13 @@
 import { ArrowRight, BookOpen } from "lucide-react";
-import type { Metadata } from "next";
-import { redirect } from "next/navigation";
-import { auth } from "~/auth/server";
-import { withoutAuth } from "~/auth/utils";
-import { Button } from "~/components/ui/button";
+import type { Metadata, Viewport } from "next";
+import { withoutAuth } from "~/auth/guards";
 import { Separator } from "~/components/ui/separator";
 import { HydrateClient } from "~/trpc/server";
 import { HeroFloatingShapes } from "./_components/hero-floating-shapes";
 import { HeroJournlParticles } from "./_components/hero-journl-particles";
-import "./marketing.css";
+import "./globals.css";
+import Link from "next/link";
+import { HeroCtaButton } from "./_components/hero-cta-button";
 
 export const metadata: Metadata = {
 	description:
@@ -28,9 +27,14 @@ export const metadata: Metadata = {
 		type: "website",
 		url: "https://journlapp.com/",
 	},
-	themeColor: "#000000",
 	title: "Journl: Your mind, organized",
 };
+
+export const viewport: Viewport = {
+	themeColor: [{ color: "black" }],
+};
+
+const AUTH_CANCEL_URL = "/";
 
 export default withoutAuth(function RootPage() {
 	const year = new Date().getFullYear();
@@ -39,35 +43,31 @@ export default withoutAuth(function RootPage() {
 			{/* Hero Section */}
 			<section className="relative flex min-h-screen flex-col items-center justify-center bg-black text-white">
 				<HeroFloatingShapes />
-				<div className="flex h-full w-full flex-col items-center justify-center gap-y-10 text-center">
+				<div className="flex h-full w-full flex-col items-center justify-center gap-y-12 text-center">
 					<HeroJournlParticles />
-					<h1 className="mb-6 font-bold text-6xl tracking-tight md:text-8xl">
+					<h1 className="font-bold text-6xl tracking-tight md:text-8xl">
 						<div>Your mind,</div>
 						<div className="text-gray-400">organized.</div>
 					</h1>
-					<form>
-						<Button
-							type="submit"
-							size="lg"
-							formAction={async () => {
-								"use server";
-								const res = await auth.api.signInSocial({
-									body: {
-										callbackURL: "/",
-										provider: "discord",
-									},
-								});
-								if (!res.url) {
-									throw new Error("No URL returned from signInSocial");
-								}
-								redirect(res.url);
-							}}
-							className="w-fit bg-white px-8 py-4 text-black text-lg transition-all duration-200 hover:scale-105 hover:bg-gray-100"
+					<div className="mt-12 flex flex-col gap-x-4 gap-y-4 sm:flex-row">
+						<HeroCtaButton
+							className="border border-white bg-black text-white hover:bg-gray-800 sm:w-40"
+							authCancelUrl={AUTH_CANCEL_URL}
 						>
-							<span className="font-semibold">Start writing</span>
-							<ArrowRight className="ml-2 h-5 w-5 transition-transform duration-200 group-hover:translate-x-1" />
-						</Button>
-					</form>
+							<Link href="/auth/sign-in">
+								<span className="font-semibold">Sign in</span>
+							</Link>
+						</HeroCtaButton>
+						<HeroCtaButton
+							className="bg-white text-black hover:bg-gray-100 sm:w-40"
+							authCancelUrl={AUTH_CANCEL_URL}
+						>
+							<Link href="/auth/sign-up">
+								<span className="font-semibold">Start writing</span>
+								<ArrowRight className="ml-2 h-5 w-5 transition-transform duration-200 group-hover:translate-x-1" />
+							</Link>
+						</HeroCtaButton>
+					</div>
 				</div>
 			</section>
 
@@ -105,8 +105,8 @@ export default withoutAuth(function RootPage() {
 						<span className="font-bold text-white text-xl">Journl</span>
 					</div>
 				</div>
-				<Separator className="mx-auto max-w-screen-lg bg-gray-600 px-8" />
-				<div className="border-white/10 border-t text-center text-sm text-white">
+				<Separator className="mx-auto max-w-screen-lg bg-white/10 px-8" />
+				<div className="text-center text-sm text-white">
 					<p>&copy; {year} Journl. All rights reserved.</p>
 				</div>
 			</footer>

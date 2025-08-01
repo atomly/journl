@@ -23,7 +23,7 @@ type PlaceholderEntry = {
 export const journalRouter = {
 	// Delete a journal entry and all its child blocks (cascade delete)
 	delete: protectedProcedure
-		.input(z.object({ id: z.uuid() }))
+		.input(z.object({ id: z.string().uuid() }))
 		.mutation(async ({ ctx, input }) => {
 			try {
 				return await ctx.db.transaction(async (tx) => {
@@ -149,7 +149,7 @@ export const journalRouter = {
 		}),
 
 	getById: protectedProcedure
-		.input(z.object({ id: z.uuid() }))
+		.input(z.object({ id: z.string().uuid() }))
 		.query(async ({ ctx, input }) => {
 			try {
 				const entry = await ctx.db

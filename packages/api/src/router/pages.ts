@@ -10,7 +10,7 @@ import { openai } from "@ai-sdk/openai";
 import type { TRPCRouterRecord } from "@trpc/server";
 import { TRPCError } from "@trpc/server";
 import { embed } from "ai";
-import { z } from "zod";
+import { z } from "zod/v4";
 
 import { protectedProcedure } from "../trpc.js";
 
@@ -90,7 +90,7 @@ export const pagesRouter = {
 
 	// Delete a page and all its child blocks (cascade delete)
 	delete: protectedProcedure
-		.input(z.object({ id: z.string().uuid() }))
+		.input(z.object({ id: z.uuid() }))
 		.mutation(async ({ ctx, input }) => {
 			try {
 				return await ctx.db.transaction(async (tx) => {
@@ -275,7 +275,7 @@ export const pagesRouter = {
 
 	// Update embed timestamp to trigger embedding generation
 	updateEmbedTimestamp: protectedProcedure
-		.input(z.object({ id: z.string().uuid() }))
+		.input(z.object({ id: z.uuid() }))
 		.mutation(async ({ ctx, input }) => {
 			try {
 				const result = await ctx.db
@@ -309,7 +309,7 @@ export const pagesRouter = {
 	updateTitle: protectedProcedure
 		.input(
 			z.object({
-				id: z.string().uuid(),
+				id: z.uuid(),
 				title: z.string().min(1).max(255),
 			}),
 		)

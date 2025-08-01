@@ -1,7 +1,7 @@
 import { sql } from "drizzle-orm";
 import { index, pgTable } from "drizzle-orm/pg-core";
 import { createSelectSchema } from "drizzle-zod";
-import { z } from "zod";
+import { z } from "zod/v4";
 
 import { user } from "../auth/user.schema.js";
 
@@ -82,9 +82,9 @@ export type BlockWithChildren = Omit<Block, "children"> & {
 
 // Define InlineContent type based on BlockNote structure
 export type InlineContent =
-	| { type: "text"; text: string; styles?: Record<string, any> }
+	| { type: "text"; text: string; styles?: Record<string, unknown> }
 	| { type: "link"; href: string; content: InlineContent[] }
-	| any; // Allow other BlockNote inline content types
+	| unknown; // Allow other BlockNote inline content types
 
 // BlockNote-compatible block props schemas
 export const blockPropsSchemas = {

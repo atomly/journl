@@ -133,17 +133,22 @@ async function collectChildBlockIds(blockId: string): Promise<string[]> {
 /**
  * Extracts text content from block content structure
  */
-function extractTextFromBlock(content: any): string {
+function extractTextFromBlock(content: unknown): string {
 	if (!content || !Array.isArray(content)) {
 		return "";
 	}
 
 	return content
-		.map((item: any) => {
+		.map((item: unknown) => {
 			if (typeof item === "string") {
 				return item;
 			}
-			if (item && typeof item === "object" && item.text) {
+			if (
+				item &&
+				typeof item === "object" &&
+				"text" in item &&
+				typeof item.text === "string"
+			) {
 				return item.text;
 			}
 			return "";

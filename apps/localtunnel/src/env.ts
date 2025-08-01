@@ -15,7 +15,7 @@ export const env = createEnv({
 	server: {
 		LOCALTUNNEL_PORT: z.string().transform(Number),
 		LOCALTUNNEL_SUBDOMAIN: z.string(),
-		NEXT_JS_URL: z.url().default("http://localhost:3000"),
+		NEXT_JS_URL: z.string().url().default("http://localhost:3000"),
 		SUPABASE_SECRET: z.string(),
 	},
 	shared: {

@@ -11,7 +11,7 @@ import type { Auth } from "@acme/auth";
 import { db } from "@acme/db/client";
 import { initTRPC, TRPCError } from "@trpc/server";
 import superjson from "superjson";
-import { ZodError, z } from "zod";
+import { ZodError, z } from "zod/v4";
 
 /**
  * 1. CONTEXT
@@ -26,10 +26,16 @@ import { ZodError, z } from "zod";
  * @see https://trpc.io/docs/server/context
  */
 
+type TRPCContext = {
+	authApi: Auth["api"];
+	db: typeof db;
+	session: Awaited<ReturnType<Auth["api"]["getSession"]>>;
+};
+
 export const createTRPCContext = async (opts: {
 	headers: Headers;
 	auth: Auth;
-}) => {
+}): Promise<TRPCContext> => {
 	const authApi = opts.auth.api;
 	const session = await authApi.getSession({
 		headers: opts.headers,
@@ -74,7 +80,7 @@ const t = initTRPC.context<typeof createTRPCContext>().create({
 export const createTRPCRouter = t.router;
 
 /**
- * Middleware for timing procedure execution and adding an articifial delay in development.
+ * Middleware for timing procedure execution and adding an artificial delay in development.
  *
  * You can remove this if you don't like it, but it can help catch unwanted waterfalls by simulating
  * network latency that would occur in production but not in local development.

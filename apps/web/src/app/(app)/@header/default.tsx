@@ -1,7 +1,8 @@
 import { HeaderThemeToggle } from "~/app/(app)/@header/_components/header-theme-toggle";
 import { SidebarTrigger } from "~/components/ui/sidebar";
 import { HeaderCurrentDate } from "./_components/header-current-date";
-import { HeaderSearchButton } from "./_components/header-search-button";
+import { HeaderSearchButton } from "./_components/header-search-modal";
+import { HeaderSearchTrigger } from "./_components/header-search-trigger";
 
 export default function JournalHeader() {
 	return (
@@ -12,7 +13,9 @@ export default function JournalHeader() {
 					<div className="min-w-0 flex-1">
 						<HeaderCurrentDate />
 					</div>
-					<HeaderSearchButton />
+					<HeaderSearchButton>
+						<HeaderSearchTrigger />
+					</HeaderSearchButton>
 					<HeaderThemeToggle />
 				</div>
 			</div>

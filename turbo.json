@@ -35,6 +35,10 @@
 			"cache": false,
 			"interactive": true
 		},
+		"shadcn": {
+			"cache": false,
+			"interactive": true
+		},
 		"studio": {
 			"cache": false,
 			"persistent": true
@@ -45,10 +49,6 @@
 		"typecheck": {
 			"dependsOn": ["^topo", "^build"],
 			"outputs": [".cache/tsbuildinfo.json"]
-		},
-		"ui-add": {
-			"cache": false,
-			"interactive": true
 		}
 	},
 	"ui": "tui"

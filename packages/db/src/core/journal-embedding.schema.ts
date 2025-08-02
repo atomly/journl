@@ -16,6 +16,9 @@ export const JournalEmbedding = pgTable(
 			.notNull()
 			.references(() => user.id, { onDelete: "cascade" }),
 		date: t.date({ mode: "string" }).notNull(),
+		// Chunk information for managing large page content
+		chunk_text: t.text().notNull(), // The actual text content of this chunk
+		// The actual embedding vector for this chunk
 		embedding: vector({ dimensions: 1536 }).notNull(),
 		created_at: t
 			.timestamp({ mode: "string", withTimezone: true })

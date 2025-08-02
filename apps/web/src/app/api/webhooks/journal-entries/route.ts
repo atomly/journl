@@ -17,6 +17,7 @@ export const POST = handler(zJournalEntry, async (payload) => {
 			);
 		}
 
+		// TODO: Chunk the journal entries.
 		const { embedding } = await embed({
 			maxRetries: 5,
 			model: openai.embedding("text-embedding-3-small"),
@@ -27,6 +28,7 @@ export const POST = handler(zJournalEntry, async (payload) => {
 		await db
 			.insert(JournalEmbedding)
 			.values({
+				chunk_text: payload.record.content,
 				date: payload.record.date,
 				embedding,
 				journal_entry_id: payload.record.id,
@@ -34,6 +36,7 @@ export const POST = handler(zJournalEntry, async (payload) => {
 			})
 			.onConflictDoUpdate({
 				set: {
+					chunk_text: payload.record.content,
 					embedding,
 				},
 				target: [JournalEmbedding.journal_entry_id],

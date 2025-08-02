@@ -1,6 +1,7 @@
 AUTHTOKEN
 biomejs
 blocknote
+cmdk
 envinfo
 hnsw
 Hoverable
@@ -10,6 +11,7 @@ NGROK
 nodenext
 overscan
 poppinss
+rerank
 rmolinamir
 shadcn
 subrouters

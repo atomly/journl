@@ -14,7 +14,7 @@ export function PageEditor({ id }: PageEditorProps) {
 	const trpc = useTRPC();
 
 	const { data: page, isLoading } = useQuery({
-		...trpc.pages.byId.queryOptions({ id }),
+		...trpc.pages.getById.queryOptions({ id }),
 		// Refetch once when navigating to a page (not continuously)
 		refetchOnMount: true,
 		refetchOnWindowFocus: true,
@@ -35,7 +35,7 @@ export function PageEditor({ id }: PageEditorProps) {
 	}
 
 	return (
-		<div className="flex h-full flex-col gap-4 p-4">
+		<div className="flex min-h-full flex-col gap-4 p-4">
 			<PageTitle id={id} initialTitle={page.title ?? ""} />
 			<div className="min-h-0 flex-1">
 				<LazyBlockEditor parentId={id} parentType="page" />

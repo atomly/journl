@@ -32,7 +32,7 @@ export function PageTitle({
 		(variables: { id: string; title: string }) => {
 			// Optimistically update the cache before the mutation
 			queryClient.setQueryData(
-				trpc.pages.byId.queryOptions({ id }).queryKey,
+				trpc.pages.getById.queryOptions({ id }).queryKey,
 				(old) => {
 					if (!old) return old;
 					return {
@@ -45,7 +45,7 @@ export function PageTitle({
 
 			// update the pages.all query
 			queryClient.setQueryData(
-				trpc.pages.all.queryOptions().queryKey,
+				trpc.pages.getAll.queryOptions().queryKey,
 				(old) => {
 					if (!old) return old;
 					return old.map((page) =>
@@ -65,10 +65,10 @@ export function PageTitle({
 				onError: () => {
 					// If the mutation fails, invalidate queries to refetch the correct data
 					queryClient.invalidateQueries({
-						queryKey: trpc.pages.byId.queryOptions({ id }).queryKey,
+						queryKey: trpc.pages.getById.queryOptions({ id }).queryKey,
 					});
 					queryClient.invalidateQueries({
-						queryKey: trpc.pages.all.queryOptions().queryKey,
+						queryKey: trpc.pages.getAll.queryOptions().queryKey,
 					});
 				},
 			});

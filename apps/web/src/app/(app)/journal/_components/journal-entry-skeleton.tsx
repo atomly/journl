@@ -5,18 +5,20 @@ type JournalEntrySkeletonProps = Omit<
 	React.ComponentProps<"div">,
 	"children"
 > & {
+	hasHeader?: boolean;
 	hasContent?: boolean;
 };
 
 export function JournalEntrySkeleton({
 	className,
+	hasHeader = true,
 	hasContent = false,
 	...rest
 }: JournalEntrySkeletonProps) {
 	return (
 		<div className={cn("space-y-3", className)} {...rest}>
 			{/* Date header */}
-			<Skeleton className="h-7 w-40" />
+			{hasHeader && <Skeleton className="h-7 w-40" />}
 
 			{/* Content */}
 			<div className="space-y-2">

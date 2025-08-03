@@ -57,7 +57,7 @@ export function DeletePageButton({ page, className }: DeletePageButtonProps) {
 
 						// Optimistically update the pages list
 						queryClient.setQueryData(
-							trpc.pages.all.queryOptions().queryKey,
+							trpc.pages.getAll.queryOptions().queryKey,
 							(oldPages: Page[] | undefined) => {
 								if (!oldPages) return [];
 								return oldPages.filter((p) => p.id !== deletedPageId);
@@ -66,12 +66,12 @@ export function DeletePageButton({ page, className }: DeletePageButtonProps) {
 
 						// Remove the specific page from cache
 						queryClient.removeQueries({
-							queryKey: trpc.pages.byId.queryKey({ id: deletedPageId }),
+							queryKey: trpc.pages.getById.queryKey({ id: deletedPageId }),
 						});
 
 						// Cancel any in-flight queries for this page
 						queryClient.cancelQueries({
-							queryKey: trpc.pages.byId.queryKey({ id: deletedPageId }),
+							queryKey: trpc.pages.getById.queryKey({ id: deletedPageId }),
 						});
 
 						// Close the dialog after successful deletion

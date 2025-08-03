@@ -36,7 +36,7 @@ export function CreatePageButton() {
 					onSuccess: (newPage) => {
 						// Optimistically update the pages list
 						queryClient.setQueryData(
-							trpc.pages.all.queryOptions().queryKey,
+							trpc.pages.getAll.queryOptions().queryKey,
 							(oldPages: Page[] | undefined) => {
 								if (!oldPages) return [newPage];
 								return [newPage, ...oldPages];

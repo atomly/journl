@@ -4,12 +4,12 @@ import { openai } from "@ai-sdk/openai";
 import type { TRPCRouterRecord } from "@trpc/server";
 import { TRPCError } from "@trpc/server";
 import { embed } from "ai";
-import { z } from "zod";
+import { z } from "zod/v4";
 import { protectedProcedure } from "../trpc.js";
 
 // TODO: Implement a Relevance Scorer/ReRanker once Vercel's `ai` package supports it. It's coming in ~v5.2.0.
 export const notesRouter = {
-	getRelevantNotes: protectedProcedure
+	getSimilarNotes: protectedProcedure
 		.input(
 			z.object({
 				limit: z.number().min(1).max(20).default(5),
@@ -31,12 +31,13 @@ export const notesRouter = {
 				const results = await ctx.db
 					.select({
 						content: JournalEmbedding.chunk_text,
+						created_at: JournalEmbedding.created_at,
 						date: JournalEmbedding.date,
-						entry_id: JournalEmbedding.journal_entry_id,
 						header: sql<string>`''`,
-						id: JournalEmbedding.id,
+						id: JournalEmbedding.journal_entry_id,
 						similarity: journalEmbeddingSimilarity,
 						type: sql<"journal" | "page">`'journal'`,
+						updated_at: JournalEmbedding.updated_at,
 					})
 					.from(JournalEmbedding)
 					.where(
@@ -51,12 +52,13 @@ export const notesRouter = {
 						ctx.db
 							.select({
 								content: PageEmbedding.chunk_text,
-								date: PageEmbedding.updated_at,
-								entry_id: PageEmbedding.page_id,
+								created_at: PageEmbedding.created_at,
+								date: sql<string>`'1970-01-01'`,
 								header: Page.title,
-								id: PageEmbedding.id,
+								id: PageEmbedding.page_id,
 								similarity: pageEmbeddingSimilarity,
 								type: sql<"journal" | "page">`'page'`,
+								updated_at: PageEmbedding.updated_at,
 							})
 							.from(PageEmbedding)
 							.where(

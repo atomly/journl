@@ -31,7 +31,7 @@ export function LazyBlockEditor({ parentId, parentType }: BlockEditorProps) {
 
 	// Get parent data (for pages) - refetch once when navigating
 	const { data: parentData, isLoading: isParentLoading } = useQuery({
-		...trpc.pages.byId.queryOptions({ id: parentId }),
+		...trpc.pages.getById.queryOptions({ id: parentId }),
 		enabled: parentType === "page",
 		refetchOnMount: true,
 		refetchOnWindowFocus: true,

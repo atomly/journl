@@ -29,7 +29,7 @@ export const AppSidebarPages = (props: AppSidebarPagesProps) => {
 	const { state, setOpen } = useSidebar();
 
 	const { data: pages } = useQuery({
-		...trpc.pages.all.queryOptions(),
+		...trpc.pages.getAll.queryOptions(),
 		initialData: props.pages,
 	});
 

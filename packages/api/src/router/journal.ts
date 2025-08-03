@@ -8,20 +8,24 @@ import {
 	inArray,
 	sql,
 } from "@acme/db";
-import { Block, JournalEmbedding, JournalEntry } from "@acme/db/schema";
+import {
+	Block,
+	JournalEmbedding,
+	JournalEntry,
+	zJournalEntryDate,
+} from "@acme/db/schema";
 import { openai } from "@ai-sdk/openai";
 import type { TRPCRouterRecord } from "@trpc/server";
 import { TRPCError } from "@trpc/server";
 import { embed } from "ai";
-import { z } from "zod";
+import { z } from "zod/v4";
 import { protectedProcedure } from "../trpc.js";
 
-type PlaceholderEntry = {
+export type PlaceholderJournalEntry = {
 	date: string;
 };
 
 export const journalRouter = {
-	// Delete a journal entry and all its child blocks (cascade delete)
 	delete: protectedProcedure
 		.input(z.object({ id: z.string().uuid() }))
 		.mutation(async ({ ctx, input }) => {
@@ -122,7 +126,6 @@ export const journalRouter = {
 				});
 			}
 		}),
-
 	getBetween: protectedProcedure
 		.input(
 			z.object({
@@ -147,9 +150,12 @@ export const journalRouter = {
 
 			return entries;
 		}),
-
-	getById: protectedProcedure
-		.input(z.object({ id: z.string().uuid() }))
+	getByDate: protectedProcedure
+		.input(
+			z.object({
+				date: zJournalEntryDate,
+			}),
+		)
 		.query(async ({ ctx, input }) => {
 			try {
 				const entry = await ctx.db
@@ -157,17 +163,16 @@ export const journalRouter = {
 					.from(JournalEntry)
 					.where(
 						and(
-							eq(JournalEntry.id, input.id),
+							eq(JournalEntry.date, input.date),
 							eq(JournalEntry.user_id, ctx.session.user.id),
 						),
 					)
 					.limit(1);
 
 				if (entry.length === 0) {
-					throw new TRPCError({
-						code: "NOT_FOUND",
-						message: "Journal entry not found",
-					});
+					return {
+						date: input.date,
+					};
 				}
 
 				return entry[0];
@@ -182,7 +187,6 @@ export const journalRouter = {
 				});
 			}
 		}),
-
 	getRelevantEntries: protectedProcedure
 		.input(
 			z.object({
@@ -230,7 +234,6 @@ export const journalRouter = {
 				});
 			}
 		}),
-
 	getTimeline: protectedProcedure
 		.input(
 			z.object({
@@ -254,7 +257,7 @@ export const journalRouter = {
 				to.setDate(to.getDate() - (input.limit - 1)); // Subtract (limit - 1) to get exactly 'limit' days
 				to.setHours(0, 0, 0, 0); // Start of day
 
-				const actualEntries = await ctx.db
+				const dbEntries = await ctx.db
 					.select()
 					.from(JournalEntry)
 					.where(
@@ -267,14 +270,14 @@ export const journalRouter = {
 
 				// Create a map of actual entries keyed by date (YYYY-MM-DD format)
 				const entriesByDate = new Map();
-				actualEntries.forEach((entry) => {
+				dbEntries.forEach((entry) => {
 					const dateKey = new Date(entry.date).toISOString().split("T")[0];
 					entriesByDate.set(dateKey, entry);
 				});
 
 				// Generate all dates in the range and fill missing days with placeholders
 				// Start from the newest date and work backwards for descending order
-				const allEntries: (PlaceholderEntry | JournalEntry)[] = [];
+				const allEntries: (PlaceholderJournalEntry | JournalEntry)[] = [];
 				const currentDate = new Date(from);
 				const endDate = new Date(to);
 
@@ -314,12 +317,11 @@ export const journalRouter = {
 				});
 			}
 		}),
-
 	write: protectedProcedure
 		.input(
 			z.object({
 				content: z.string().max(10000),
-				date: z.date(),
+				date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
 			}),
 		)
 		.mutation(async ({ ctx, input }) => {
@@ -328,7 +330,7 @@ export const journalRouter = {
 					.insert(JournalEntry)
 					.values({
 						content: input.content,
-						date: input.date.toISOString(),
+						date: input.date,
 						user_id: ctx.session.user.id,
 					})
 					.onConflictDoUpdate({

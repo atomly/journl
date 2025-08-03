@@ -2,6 +2,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { X } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
@@ -44,6 +45,7 @@ export function HeaderSearchButton({
 	const isMobile = useIsMobile();
 	const [isOpen, setIsOpen] = useState(false);
 	const [query, setQuery] = useState("");
+	const router = useRouter();
 
 	// Keyboard shortcut handlers
 	useEffect(() => {
@@ -64,7 +66,7 @@ export function HeaderSearchButton({
 
 	const trpc = useTRPC();
 	const { data: notes, isLoading } = useQuery({
-		...trpc.notes.getRelevantNotes.queryOptions({
+		...trpc.notes.getSimilarNotes.queryOptions({
 			limit,
 			query,
 			threshold,
@@ -102,9 +104,9 @@ export function HeaderSearchButton({
 					</DialogHeader>
 					<ScrollArea>
 						<CommandList className="p-4">
-							<CommandEmpty className="py-2 text-center">
+							<CommandEmpty className="flex h-full min-h-36 flex-col items-center justify-center py-2 text-center">
 								{isLoading ? (
-									<div className="flex flex-col gap-2">
+									<div className="flex w-full flex-col gap-2">
 										<Skeleton className="h-10 w-full" />
 										<Skeleton className="h-10 w-full" />
 										<Skeleton className="h-10 w-full" />
@@ -123,58 +125,61 @@ export function HeaderSearchButton({
 								className="p-0"
 								heading={notes?.length ? "Results" : undefined}
 							>
-								{notes?.map((note) => (
-									<Link
-										key={note.id}
-										href={
-											note.type === "journal"
-												? `/journal/${note.id}`
-												: `/pages/${note.id}`
-										}
-									>
-										<CommandItem
-											className="my-1 grid cursor-pointer grid-cols-[1fr_auto] gap-2"
-											onSelect={() => setIsOpen(false)}
-										>
-											<div className="grid gap-1">
-												{note.type === "page" ? (
-													<>
-														<div className="font-medium text-sm">
-															<CommandText text={note.header} query={query} />
-														</div>
-														<div className="line-clamp-2 text-muted-foreground text-sm">
-															<CommandText
-																text={note.content}
-																query={query}
-																maxLength={120}
-															/>
-														</div>
-														<div className="text-muted-foreground text-xs">
-															Last updated{" "}
-															{new Date(note.date).toLocaleDateString()}
-														</div>
-													</>
-												) : (
-													<>
-														<div className="text-muted-foreground text-sm">
-															{new Date(note.date).toLocaleDateString()}
-														</div>
-														<div className="line-clamp-2 text-muted-foreground text-sm">
-															<CommandText
-																text={note.content}
-																query={query}
-																maxLength={120}
-															/>
-														</div>
-													</>
-												)}
-											</div>
-											<Badge variant="secondary" className="self-start text-xs">
-												{note.type === "journal" ? "Journal" : "Page"}
-											</Badge>
-										</CommandItem>
-									</Link>
-								))}
+								{notes?.map((note) => {
+									const href =
+										note.type === "journal"
+											? `/journal/${note.date}`
+											: `/pages/${note.id}`;
+									return (
+										<Link key={note.id} href={href}>
+											<CommandItem
+												className="my-1 grid cursor-pointer grid-cols-[1fr_auto] gap-2"
+												onSelect={() => {
+													setIsOpen(false);
+													router.push(href);
+												}}
+											>
+												<div className="grid gap-1">
+													{note.type === "page" ? (
+														<>
+															<div className="font-medium text-sm">
+																<HighlightedText query={query}>
+																	{note.header}
+																</HighlightedText>
+															</div>
+															<div className="line-clamp-2 text-muted-foreground text-sm">
+																<HighlightedText query={query} maxLength={120}>
+																	{note.content}
+																</HighlightedText>
+															</div>
+															<div className="text-muted-foreground text-xs">
+																Last updated{" "}
+																{new Date(note.updated_at).toLocaleDateString()}
+															</div>
+														</>
+													) : (
+														<>
+															<div className="text-muted-foreground text-sm">
+																{new Date(note.updated_at).toLocaleDateString()}
+															</div>
+															<div className="line-clamp-2 text-muted-foreground text-sm">
+																<HighlightedText query={query} maxLength={120}>
+																	{note.content}
+																</HighlightedText>
+															</div>
+														</>
+													)}
+												</div>
+												<Badge
+													variant="secondary"
+													className="self-start text-xs"
+												>
+													{note.type === "journal" ? "Journal" : "Page"}
+												</Badge>
+											</CommandItem>
+										</Link>
+									);
+								})}
 							</CommandGroup>
 						</CommandList>
 					</ScrollArea>
@@ -219,20 +224,18 @@ export function HeaderSearchButton({
 	);
 }
 
-function CommandText({
-	text,
-	query,
-	maxLength,
-}: {
-	text: string;
+type HighlightedTextProps = {
+	children: string;
 	query: string;
 	maxLength?: number;
-}) {
+};
+
+function HighlightedText({ children, query, maxLength }: HighlightedTextProps) {
 	// Truncate text if maxLength is provided
 	const displayText =
-		maxLength && text.length > maxLength
-			? `${text.slice(0, maxLength)}...`
-			: text;
+		maxLength && children.length > maxLength
+			? `${children.slice(0, maxLength)}...`
+			: children;
 
 	if (!query || query.length < MIN_QUERY_LENGTH) {
 		return <>{displayText}</>;
@@ -244,7 +247,7 @@ function CommandText({
 		.filter((word) => word.length > 0);
 
 	if (queryWords.length === 0) {
-		return <>{text}</>;
+		return <>{children}</>;
 	}
 
 	const regex = new RegExp(

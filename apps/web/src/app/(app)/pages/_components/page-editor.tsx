@@ -15,7 +15,7 @@ export function PageEditor({ id }: PageEditorProps) {
 	const trpc = useTRPC();
 
 	const { data: page, isLoading } = useQuery({
-		...trpc.pages.byId.queryOptions({ id }),
+		...trpc.pages.getById.queryOptions({ id }),
 		// Refetch once when navigating to a page (not continuously)
 		refetchOnMount: true,
 		refetchOnWindowFocus: true,

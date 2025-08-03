@@ -10,7 +10,6 @@ import {
 import { z } from "zod/v4";
 import { protectedProcedure } from "../trpc.js";
 
-// ===== SCHEMAS =====
 const blockDataSchema = z.object({
 	children: z.unknown(),
 	content: z.unknown(),
@@ -21,8 +20,6 @@ const blockDataSchema = z.object({
 
 const parentTypeEnum = z.enum(["page", "journal_entry", "block"]);
 const blockChangeTypeEnum = z.enum(["insert", "update", "delete"]);
-
-// ===== HELPER FUNCTIONS =====
 
 /**
  * Updates the children array of a parent entity
@@ -126,7 +123,6 @@ function processBlockData(
 	};
 }
 
-// ===== ROUTER =====
 export const blocksRouter = {
 	/**
 	 * Loads blocks in chunks with pagination (Notion-style)
@@ -182,7 +178,6 @@ export const blocksRouter = {
 				nextCursor,
 			};
 		}),
-
 	/**
 	 * Processes editor changes in a single atomic transaction.
 	 * Handles block insertions, updates, deletions, and parent-child relationships.

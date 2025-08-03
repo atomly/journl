@@ -74,7 +74,7 @@ export function useBlockEditor(
 		trpc.pages.updateEmbedTimestamp.mutationOptions({
 			onError: (error) =>
 				console.error("Update embed timestamp failed:", error),
-			onSuccess: () => toast.success("Embed timestamp updated successfully"),
+			onSuccess: () => toast.success("Your page is now searchable."),
 		}),
 	);
 

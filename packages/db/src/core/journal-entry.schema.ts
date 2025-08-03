@@ -1,6 +1,7 @@
 import { sql } from "drizzle-orm";
 import { pgTable, text, unique } from "drizzle-orm/pg-core";
 import { createSelectSchema } from "drizzle-zod";
+import z from "zod/v4";
 import { user } from "../auth/user.schema.js";
 
 export const JournalEntry = pgTable(
@@ -32,3 +33,8 @@ export const JournalEntry = pgTable(
 export type JournalEntry = typeof JournalEntry.$inferSelect;
 
 export const zJournalEntry = createSelectSchema(JournalEntry);
+
+export const zJournalEntryDate = z
+	.string()
+	.regex(/^\d{4}-\d{2}-\d{2}$/)
+	.describe("The date to fetch the journal entry for in YYYY-MM-DD format.");

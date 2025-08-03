@@ -14,10 +14,10 @@ import { AppSidebarPagesSkeleton } from "./_components/app-sidebar-pages-skeleto
 import { AppSidebarUser } from "./_components/app-sidebar-user";
 import { AppSidebarUserSkeleton } from "./_components/app-sidebar-user-skeleton";
 
-const SidebarPages = async () => {
-	const pages = await api.pages.all();
+async function SuspendedAppSidebarPages() {
+	const pages = await api.pages.getAll();
 	return <AppSidebarPages pages={pages} />;
-};
+}
 
 export default function AppSidebar() {
 	const navigationItems = [
@@ -37,10 +37,10 @@ export default function AppSidebar() {
 				<Separator />
 			</SidebarHeader>
 			<SidebarContent>
-				<SidebarGroup>
+				<SidebarGroup className="gap-y-1">
 					<AppSidebarNavigation items={navigationItems} />
 					<Suspense fallback={<AppSidebarPagesSkeleton />}>
-						<SidebarPages />
+						<SuspendedAppSidebarPages />
 					</Suspense>
 				</SidebarGroup>
 			</SidebarContent>

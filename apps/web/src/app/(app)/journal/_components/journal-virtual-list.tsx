@@ -5,7 +5,13 @@ import { useMemo } from "react";
 import { Virtuoso } from "react-virtuoso";
 import { useDebouncedCallback } from "use-debounce";
 import { useTRPC } from "~/trpc/react";
-import { JournalEntry } from "./journal-entry";
+import {
+	JournalEntryContent,
+	JournalEntryHeader,
+	JournalEntryLink,
+	JournalEntryProvider,
+	JournalEntryTextArea,
+} from "./journal-entry";
 import { JournalEntryLoader } from "./journal-entry-loader";
 import { JournalFeedSkeleton } from "./journal-skeleton";
 
@@ -81,10 +87,17 @@ export function JournalVirtualList({
 			endReached={() => debouncedFetchNextPage()}
 			increaseViewportBy={200}
 			itemContent={(_, entry) => (
-				<JournalEntry
+				<JournalEntryProvider
 					className="mx-auto max-w-4xl border-b px-4 pt-8 pb-20 md:px-8"
 					entry={entry}
-				/>
+				>
+					<JournalEntryLink>
+						<JournalEntryHeader />
+					</JournalEntryLink>
+					<JournalEntryContent>
+						<JournalEntryTextArea />
+					</JournalEntryContent>
+				</JournalEntryProvider>
 			)}
 			components={{
 				Footer: () => (

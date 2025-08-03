@@ -15,50 +15,6 @@ import { z } from "zod/v4";
 import { protectedProcedure } from "../trpc.js";
 
 export const pagesRouter = {
-	// Get all pages for the authenticated user
-	all: protectedProcedure.query(async ({ ctx }) => {
-		try {
-			return await ctx.db
-				.select()
-				.from(Page)
-				.where(eq(Page.user_id, ctx.session.user.id))
-				.orderBy(desc(Page.updated_at));
-		} catch (error) {
-			console.error("Database error in pages.all:", error);
-			throw new TRPCError({
-				code: "INTERNAL_SERVER_ERROR",
-				message: "Failed to fetch pages",
-			});
-		}
-	}),
-
-	// Get a single page by ID
-	byId: protectedProcedure
-		.input(z.object({ id: z.uuid() }))
-		.query(async ({ ctx, input }) => {
-			try {
-				const page = await ctx.db
-					.select()
-					.from(Page)
-					.where(
-						and(eq(Page.id, input.id), eq(Page.user_id, ctx.session.user.id)),
-					)
-					.limit(1);
-
-				return page[0] ?? null;
-			} catch (error) {
-				if (error instanceof TRPCError) {
-					throw error;
-				}
-				console.error("Database error in pages.byId:", error);
-				throw new TRPCError({
-					code: "INTERNAL_SERVER_ERROR",
-					message: "Failed to fetch page",
-				});
-			}
-		}),
-
-	// Create a new page
 	create: protectedProcedure
 		.input(zInsertPage.omit({ user_id: true }))
 		.mutation(async ({ ctx, input }) => {
@@ -230,6 +186,45 @@ export const pagesRouter = {
 				});
 			}
 		}),
+	getAll: protectedProcedure.query(async ({ ctx }) => {
+		try {
+			return await ctx.db
+				.select()
+				.from(Page)
+				.where(eq(Page.user_id, ctx.session.user.id))
+				.orderBy(desc(Page.updated_at));
+		} catch (error) {
+			console.error("Database error in pages.all:", error);
+			throw new TRPCError({
+				code: "INTERNAL_SERVER_ERROR",
+				message: "Failed to fetch pages",
+			});
+		}
+	}),
+	getById: protectedProcedure
+		.input(z.object({ id: z.uuid() }))
+		.query(async ({ ctx, input }) => {
+			try {
+				const page = await ctx.db
+					.select()
+					.from(Page)
+					.where(
+						and(eq(Page.id, input.id), eq(Page.user_id, ctx.session.user.id)),
+					)
+					.limit(1);
+
+				return page[0] ?? null;
+			} catch (error) {
+				if (error instanceof TRPCError) {
+					throw error;
+				}
+				console.error("Database error in pages.byId:", error);
+				throw new TRPCError({
+					code: "INTERNAL_SERVER_ERROR",
+					message: "Failed to fetch page",
+				});
+			}
+		}),
 	getRelevantPageChunks: protectedProcedure
 		.input(
 			z.object({
@@ -268,8 +263,6 @@ export const pagesRouter = {
 
 			return similarPages;
 		}),
-
-	// Update an existing page
 	update: protectedProcedure
 		.input(
 			z.object({
@@ -321,8 +314,6 @@ export const pagesRouter = {
 				});
 			}
 		}),
-
-	// Update embed timestamp to trigger embedding generation
 	updateEmbedTimestamp: protectedProcedure
 		.input(z.object({ id: z.uuid() }))
 		.mutation(async ({ ctx, input }) => {
@@ -354,7 +345,6 @@ export const pagesRouter = {
 				});
 			}
 		}),
-
 	updateTitle: protectedProcedure
 		.input(
 			z.object({

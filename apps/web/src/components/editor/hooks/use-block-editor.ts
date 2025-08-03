@@ -1,10 +1,15 @@
 import type { BlockWithChildren } from "@acme/db/schema";
-import type { Block as BlockNoteBlock } from "@blocknote/core";
+import {
+	type Block,
+	BlockNoteSchema,
+	defaultBlockSpecs,
+} from "@blocknote/core";
 import { useCreateBlockNote } from "@blocknote/react";
 import { useMutation } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import { toast } from "sonner";
 import { useDebouncedCallback } from "use-debounce";
+import { TitleBlock } from "~/components/ui/custom-blocks/title-block";
 import { useTRPC } from "~/trpc/react";
 import type { BlockChange } from "../types";
 import {
@@ -17,6 +22,20 @@ import {
 } from "../utils/document-processor";
 import { useBlockChanges } from "./use-block-changes";
 
+const schema = BlockNoteSchema.create({
+	blockSpecs: {
+		...defaultBlockSpecs,
+		title: TitleBlock,
+	},
+});
+
+// Type for blocks that includes our custom title block
+export type EditorBlock = Block<
+	typeof schema.blockSchema,
+	typeof schema.inlineContentSchema,
+	typeof schema.styleSchema
+>;
+
 /**
  * Hook to manage BlockNote editor with database synchronization.
  * Handles block changes, deletions, and parent-child relationships.
@@ -28,7 +47,7 @@ export function useBlockEditor(
 	isFullyLoaded: boolean,
 ) {
 	const trpc = useTRPC();
-	const prevDocumentRef = useRef<BlockNoteBlock[]>([]);
+	const prevDocumentRef = useRef<EditorBlock[]>([]);
 
 	// Block changes management
 	const {
@@ -71,6 +90,7 @@ export function useBlockEditor(
 	const editor = useCreateBlockNote({
 		animations: false,
 		initialContent: initialBlocks,
+		schema,
 	});
 
 	// Send all changes to API
@@ -139,18 +159,20 @@ export function useBlockEditor(
 
 	// Handle editor changes - captures both block changes and page children order
 	const handleEditorChange = useCallback(
-		(e: { document: BlockNoteBlock[] }) => {
+		(e: { document: EditorBlock[] }) => {
 			// Skip all processing while loading
 			if (!isFullyLoaded) {
 				return;
 			}
 
 			// Extract ALL block IDs from the document (flattened order)
-			const allBlockIds = extractAllBlockIds(e.document);
+			const allBlockIds = extractAllBlockIds(e.document as any);
 			updateParentChildren(allBlockIds);
 
 			// DETECT DELETIONS: Compare current document with previous to find missing blocks
-			const previousAllBlockIds = extractAllBlockIds(prevDocumentRef.current);
+			const previousAllBlockIds = extractAllBlockIds(
+				prevDocumentRef.current as any,
+			);
 			const currentAllBlockIds = new Set(allBlockIds);
 
 			// Find blocks that were in previous document but not in current (these are deletions)
@@ -162,16 +184,16 @@ export function useBlockEditor(
 			for (const deletedBlockId of deletedBlockIds) {
 				// Find the deleted block data from the previous document
 				const findBlockInDocument = (
-					doc: BlockNoteBlock[],
+					doc: EditorBlock[],
 					targetId: string,
-				): BlockNoteBlock | null => {
+				): EditorBlock | null => {
 					for (const block of doc) {
 						if (block.id === targetId) {
 							return block;
 						}
 						if (block.children && block.children.length > 0) {
 							const found = findBlockInDocument(
-								block.children as BlockNoteBlock[],
+								block.children as EditorBlock[],
 								targetId,
 							);
 							if (found) return found;
@@ -278,7 +300,7 @@ export function useBlockEditor(
 			}
 
 			const changes = getChanges();
-			handleBlockChanges(changes);
+			handleBlockChanges(changes as any);
 		});
 
 		return unsubscribe;

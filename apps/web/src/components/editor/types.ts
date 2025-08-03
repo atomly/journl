@@ -1,5 +1,5 @@
 import type { BlockWithChildren } from "@acme/db/schema";
-import type { Block as BlockNoteBlock } from "@blocknote/core";
+import type { EditorBlock } from "./hooks/use-block-editor";
 
 export type BlockNoteEditorProps = {
 	blocks: BlockWithChildren[];
@@ -13,7 +13,7 @@ export type BlockChangeType = "insert" | "update" | "delete";
 export type BlockChange = {
 	type: BlockChangeType;
 	blockId: string;
-	data: BlockNoteBlock;
+	data: EditorBlock;
 	timestamp: number;
 	// Optional parent info for when blocks move between parents
 	newParentId?: string;
@@ -21,14 +21,14 @@ export type BlockChange = {
 };
 
 export type FlattenedBlock = {
-	block: BlockNoteBlock;
+	block: EditorBlock;
 	parentId: string;
 	parentType: string;
 };
 
 export type ProcessedBlockChange = {
 	blockId: string;
-	data: BlockNoteBlock;
+	data: EditorBlock;
 	newParentId?: string;
 	newParentType?: "page" | "journal_entry" | "block";
 	type: BlockChangeType;

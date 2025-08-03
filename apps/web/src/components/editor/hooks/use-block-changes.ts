@@ -1,5 +1,4 @@
 import type { BlockWithChildren } from "@acme/db/schema";
-import type { Block as BlockNoteBlock } from "@blocknote/core";
 import { useCallback, useRef } from "react";
 import type {
 	BlockChange,
@@ -7,6 +6,7 @@ import type {
 	ProcessedBlockChange,
 } from "../types";
 import { flattenBlocks } from "../utils/block-transforms";
+import type { EditorBlock } from "./use-block-editor";
 
 export function useBlockChanges(blocks: BlockWithChildren[]) {
 	// Track all changes per block ID and current parent children order
@@ -35,7 +35,7 @@ export function useBlockChanges(blocks: BlockWithChildren[]) {
 
 	// Handle individual block changes from editor.onChange
 	const handleBlockChanges = useCallback(
-		(changes: Array<{ type: BlockChangeType; block: BlockNoteBlock }>) => {
+		(changes: Array<{ type: BlockChangeType; block: EditorBlock }>) => {
 			for (const change of changes) {
 				const { block, type } = change;
 				const blockId = block.id;

@@ -1,11 +1,12 @@
 import type { Block as BlockNoteBlock } from "@blocknote/core";
+import type { EditorBlock } from "../hooks/use-block-editor";
 import type { FlattenedBlock } from "../types";
 
 /**
  * Flattens BlockNote document and tracks parent-child relationships
  */
 export function flattenDocument(
-	blocks: BlockNoteBlock[],
+	blocks: EditorBlock[],
 	parentId: string,
 	parentType: string,
 	blockParentId?: string,
@@ -59,7 +60,7 @@ export function detectParentChanges(
 ) {
 	const changes: Array<{
 		blockId: string;
-		block: BlockNoteBlock;
+		block: EditorBlock;
 		newParentId: string;
 		newParentType: string;
 		changeType: "moved" | "children_changed";

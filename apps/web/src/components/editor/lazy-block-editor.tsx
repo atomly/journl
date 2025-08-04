@@ -1,9 +1,9 @@
 "use client";
 
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
-import { useEffect, useMemo } from "react";
-import { Skeleton } from "~/components/ui/skeleton";
+import { useEffect, useMemo, useState } from "react";
 import { useTRPC } from "~/trpc/react";
+import { Skeleton } from "../ui/skeleton";
 import { BlockEditor } from "./block-editor";
 import { useNestedBlocks } from "./hooks/use-nested-blocks";
 
@@ -12,25 +12,37 @@ type BlockEditorProps = {
 	parentType: "page" | "block";
 };
 
-function BlockEditorSkeleton() {
+const LazyBlockEditorSkeleton = () => {
 	return (
-		<div className="space-y-4 p-4">
-			<Skeleton className="h-8 w-3/4" />
-			<Skeleton className="h-6 w-full" />
-			<Skeleton className="h-6 w-5/6" />
-			<Skeleton className="h-8 w-2/3" />
-			<Skeleton className="h-6 w-full" />
-			<Skeleton className="h-6 w-4/5" />
-			<Skeleton className="h-6 w-3/4" />
+		<div className="flex flex-col gap-4 p-6">
+			{/* Title skeleton */}
+			{/* Content blocks skeleton */}
+			<div className="space-y-4">
+				<Skeleton className="h-8 w-2/3" />
+				<Skeleton className="h-4 w-full" />
+				<Skeleton className="h-4 w-5/6" />
+				<Skeleton className="h-4 w-4/5" />
+				<div className="space-y-2">
+					<Skeleton className="h-4 w-full" />
+					<Skeleton className="h-4 w-3/4" />
+				</div>
+				<Skeleton className="h-32 w-full" />
+				<div className="space-y-2">
+					<Skeleton className="h-4 w-full" />
+					<Skeleton className="h-4 w-2/3" />
+					<Skeleton className="h-4 w-5/6" />
+				</div>
+			</div>
 		</div>
 	);
-}
+};
 
 export function LazyBlockEditor({ parentId, parentType }: BlockEditorProps) {
 	const trpc = useTRPC();
+	const [ready, setReady] = useState(false);
 
-	// Get parent data (for pages) - refetch once when navigating
-	const { data: parentData, isLoading: isParentLoading } = useQuery({
+	// Fetch parent data (only for pages)
+	const { data: parentData } = useQuery({
 		...trpc.pages.getById.queryOptions({ id: parentId }),
 		enabled: parentType === "page",
 		refetchOnMount: true,
@@ -38,12 +50,11 @@ export function LazyBlockEditor({ parentId, parentType }: BlockEditorProps) {
 		staleTime: 1000,
 	});
 
-	// Progressive loading with infinite query - refetch once when navigating
+	// Progressive loading with infinite query
 	const {
 		data: infiniteData,
 		fetchNextPage,
 		isFetchingNextPage,
-		isLoading: isBlocksLoading,
 	} = useInfiniteQuery({
 		...trpc.blocks.loadPageChunk.infiniteQueryOptions({
 			limit: 100,
@@ -58,7 +69,7 @@ export function LazyBlockEditor({ parentId, parentType }: BlockEditorProps) {
 	});
 
 	// Combine all loaded blocks
-	const combinedBlocks = useMemo(() => {
+	const allBlocks = useMemo(() => {
 		if (!infiniteData?.pages) return [];
 		return infiniteData.pages
 			.flatMap((page) => page.blocks)
@@ -67,38 +78,56 @@ export function LazyBlockEditor({ parentId, parentType }: BlockEditorProps) {
 			);
 	}, [infiniteData?.pages]);
 
-	// Check if we have more pages to load based on the last page's hasMore
-	const hasMoreToLoad = useMemo(() => {
-		if (!infiniteData?.pages || infiniteData.pages.length === 0) return false;
+	// Check if there are more pages to load
+	const hasMorePages = useMemo(() => {
+		if (!infiniteData?.pages?.length) return false;
 		const lastPage = infiniteData.pages[infiniteData.pages.length - 1];
 		return lastPage?.hasMore ?? false;
 	}, [infiniteData?.pages]);
 
-	// Use the hook to get nested blocks with proper typing
-	const nestedBlocks = useNestedBlocks(combinedBlocks);
+	// Transform flat blocks into nested structure
+	const nestedBlocks = useNestedBlocks(allBlocks);
 
-	// Background loading effect - load next chunks faster
+	// Auto-load next page in background
 	useEffect(() => {
-		if (hasMoreToLoad && !isFetchingNextPage) {
-			setTimeout(() => {
+		if (hasMorePages && !isFetchingNextPage) {
+			const timer = setTimeout(() => {
 				fetchNextPage();
-			}, 2000);
+			}, 1000);
+			return () => clearTimeout(timer);
 		}
-	}, [hasMoreToLoad, isFetchingNextPage, fetchNextPage]);
+	}, [hasMorePages, isFetchingNextPage, fetchNextPage]);
 
-	// Show skeleton while loading initial data OR when refetching
-	const isLoading = isParentLoading || isBlocksLoading;
-	if (isLoading) {
-		return <BlockEditorSkeleton />;
+	// Manage ready state with fade-in delay
+	useEffect(() => {
+		// Set ready when we have actual data
+		if (infiniteData?.pages?.length && !ready) {
+			const timer = setTimeout(() => {
+				setReady(true);
+			}, 150); // for fade-in delay
+			return () => clearTimeout(timer);
+		}
+	}, [infiniteData?.pages?.length, ready]);
+
+	// Show loading state until we have stable data
+	if (!ready) {
+		return (
+			<div className="h-full">
+				<LazyBlockEditorSkeleton />
+			</div>
+		);
 	}
 
 	return (
-		<div className="h-full">
+		<div
+			className="fade-in h-full animate-in transition-opacity duration-300 ease-in-out"
+			style={{ opacity: 1 }}
+		>
 			<BlockEditor
 				blocks={nestedBlocks}
 				parentId={parentId}
 				parentType={parentType}
-				isFullyLoaded={!hasMoreToLoad}
+				isFullyLoaded={!hasMorePages}
 			/>
 		</div>
 	);

@@ -20,6 +20,7 @@ export function flattenDocument(
 		// Add current block
 		flattened.push({
 			block,
+			blockId: block.id,
 			parentId: currentParentId,
 			parentType: currentParentType,
 		});
@@ -106,10 +107,10 @@ export function detectParentChanges(
 			previous.parentType === current.parentType
 		) {
 			const prevChildrenIds = Array.isArray(previous.block.children)
-				? previous.block.children.map((child) => child.id || child)
+				? previous.block.children.map((child: any) => child.id || child)
 				: [];
 			const currentChildrenIds = Array.isArray(current.block.children)
-				? current.block.children.map((child) => child.id || child)
+				? current.block.children.map((child: any) => child.id || child)
 				: [];
 
 			// Compare children arrays by ID only

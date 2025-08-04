@@ -43,7 +43,7 @@ export type EditorBlock = Block<
 export function useBlockEditor(
 	blocks: BlockWithChildren[],
 	parentId: string,
-	parentType: "page" | "block",
+	parentType: "page" | "journal_entry" | "block",
 	isFullyLoaded: boolean,
 ) {
 	const trpc = useTRPC();

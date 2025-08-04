@@ -1,6 +1,7 @@
 import { defaultProps } from "@blocknote/core";
 import { createReactBlockSpec } from "@blocknote/react";
 
+// No longer used, but keeping for reference
 export const TitleBlock = createReactBlockSpec(
 	{
 		content: "inline",

@@ -20,10 +20,10 @@ export const pagesRouter = {
 		.mutation(async ({ ctx, input }) => {
 			return await ctx.db.transaction(async (tx) => {
 				try {
-					// First create the page
+					// Create the page
 					const pageData = {
 						...input,
-						children: [], // Will be updated after creating title block
+						children: [],
 						user_id: ctx.session.user.id,
 					};
 
@@ -36,54 +36,7 @@ export const pagesRouter = {
 						});
 					}
 
-					const page = pageResult[0];
-
-					// Create a title block for the page
-					const titleBlockData = {
-						children: [],
-						content: [
-							{ styles: {}, text: input.title || "New page", type: "text" },
-						],
-						created_by: ctx.session.user.id,
-						parent_id: page.id,
-						parent_type: "page" as const,
-						props: {
-							backgroundColor: "default",
-							textAlignment: "left",
-							textColor: "default",
-						},
-						type: "title" as const,
-					};
-
-					const titleBlockResult = await tx
-						.insert(Block)
-						.values(titleBlockData)
-						.returning();
-
-					if (!titleBlockResult[0]) {
-						throw new TRPCError({
-							code: "INTERNAL_SERVER_ERROR",
-							message: "Failed to create title block",
-						});
-					}
-
-					const titleBlock = titleBlockResult[0];
-
-					// Update the page to include the title block as its first child
-					const updatedPageResult = await tx
-						.update(Page)
-						.set({ children: [titleBlock.id] })
-						.where(eq(Page.id, page.id))
-						.returning();
-
-					if (!updatedPageResult[0]) {
-						throw new TRPCError({
-							code: "INTERNAL_SERVER_ERROR",
-							message: "Failed to update page with title block",
-						});
-					}
-
-					return updatedPageResult[0];
+					return pageResult[0];
 				} catch (error) {
 					console.error("Database error in pages.create:", error);
 					throw new TRPCError({
@@ -349,7 +302,7 @@ export const pagesRouter = {
 		.input(
 			z.object({
 				id: z.uuid(),
-				title: z.string().min(1).max(255),
+				title: z.string().max(255),
 			}),
 		)
 		.mutation(async ({ ctx, input }) => {

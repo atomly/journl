@@ -97,7 +97,7 @@ export function useBlockChanges(blocks: BlockWithChildren[]) {
 
 			blockChanges.push({
 				blockId,
-				data: lastChange.data,
+				data: lastChange.data as unknown as EditorBlock,
 				newParentId: lastChange.newParentId,
 				newParentType: lastChange.newParentType,
 				type: finalType,

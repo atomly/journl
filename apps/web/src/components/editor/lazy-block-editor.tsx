@@ -9,16 +9,16 @@ import { useNestedBlocks } from "./hooks/use-nested-blocks";
 
 type BlockEditorProps = {
 	parentId: string;
-	parentType: "page" | "block";
+	parentType: "page" | "journal_entry" | "block";
 };
 
 const LazyBlockEditorSkeleton = () => {
 	return (
 		<div className="flex flex-col gap-4 p-6">
 			{/* Title skeleton */}
+			<Skeleton className="mb-4 h-12 w-2/3" />
 			{/* Content blocks skeleton */}
 			<div className="space-y-4">
-				<Skeleton className="h-8 w-2/3" />
 				<Skeleton className="h-4 w-full" />
 				<Skeleton className="h-4 w-5/6" />
 				<Skeleton className="h-4 w-4/5" />
@@ -128,6 +128,7 @@ export function LazyBlockEditor({ parentId, parentType }: BlockEditorProps) {
 				parentId={parentId}
 				parentType={parentType}
 				isFullyLoaded={!hasMorePages}
+				title={parentData?.title}
 			/>
 		</div>
 	);

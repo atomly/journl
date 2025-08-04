@@ -14,7 +14,10 @@ export const semanticJournalSearch = createTool({
 			threshold: context.threshold,
 		});
 
-		return results;
+		return results.map((result) => ({
+			...result,
+			link: `/journal/${result.date}`,
+		}));
 	},
 	id: "semantic-journal-search",
 	inputSchema: z.object({

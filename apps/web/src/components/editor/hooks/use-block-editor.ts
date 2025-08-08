@@ -9,7 +9,6 @@ import { useMutation } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import { toast } from "sonner";
 import { useDebouncedCallback } from "use-debounce";
-import { TitleBlock } from "~/components/ui/custom-blocks/title-block";
 import { useTRPC } from "~/trpc/react";
 import type { BlockChange } from "../types";
 import {
@@ -25,7 +24,7 @@ import { useBlockChanges } from "./use-block-changes";
 const schema = BlockNoteSchema.create({
 	blockSpecs: {
 		...defaultBlockSpecs,
-		title: TitleBlock,
+		// TODO: Add custom blocks here
 	},
 });
 

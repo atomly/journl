@@ -64,7 +64,6 @@ export const blockTypeSchema = z.enum([
 	"audio",
 	"file",
 	"codeBlock",
-	"title",
 ]);
 
 export const blockParentTypeSchema = z.enum(["page", "journal_entry", "block"]);
@@ -162,11 +161,6 @@ export const blockPropsSchemas = {
 		language: z.string().optional(),
 		textColor: z.string().optional(),
 		backgroundColor: z.string().optional(),
-	}),
-	title: z.object({
-		textColor: z.string().optional(),
-		backgroundColor: z.string().optional(),
-		textAlignment: z.enum(["left", "center", "right", "justify"]).optional(),
 	}),
 } as const;
 

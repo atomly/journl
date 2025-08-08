@@ -18,31 +18,35 @@ export const pagesRouter = {
 	create: protectedProcedure
 		.input(zInsertPage.omit({ user_id: true }))
 		.mutation(async ({ ctx, input }) => {
-			try {
-				const pageData = {
-					...input,
-					children: input.children ?? [],
-					user_id: ctx.session.user.id,
-				};
+			return await ctx.db.transaction(async (tx) => {
+				try {
+					// Create the page
+					const pageData = {
+						...input,
+						children: [],
+						user_id: ctx.session.user.id,
+					};
 
-				const result = await ctx.db.insert(Page).values(pageData).returning();
+					const pageResult = await tx.insert(Page).values(pageData).returning();
 
-				if (!result[0]) {
+					if (!pageResult[0]) {
+						throw new TRPCError({
+							code: "INTERNAL_SERVER_ERROR",
+							message: "Failed to create page",
+						});
+					}
+
+					return pageResult[0];
+				} catch (error) {
+					console.error("Database error in pages.create:", error);
 					throw new TRPCError({
 						code: "INTERNAL_SERVER_ERROR",
 						message: "Failed to create page",
 					});
 				}
-
-				return result[0];
-			} catch (error) {
-				console.error("Database error in pages.create:", error);
-				throw new TRPCError({
-					code: "INTERNAL_SERVER_ERROR",
-					message: "Failed to create page",
-				});
-			}
+			});
 		}),
+	// Delete a page and all its child blocks (cascade delete)
 	delete: protectedProcedure
 		.input(z.object({ id: z.uuid() }))
 		.mutation(async ({ ctx, input }) => {
@@ -298,7 +302,7 @@ export const pagesRouter = {
 		.input(
 			z.object({
 				id: z.uuid(),
-				title: z.string().min(1).max(255),
+				title: z.string().max(255),
 			}),
 		)
 		.mutation(async ({ ctx, input }) => {

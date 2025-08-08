@@ -12,7 +12,10 @@ export const temporalJournalSearch = createTool({
 			to: context.to,
 		});
 
-		return results;
+		return results.map((result) => ({
+			...result,
+			link: `/journal/${result.date}`,
+		}));
 	},
 	id: "temporal-journal-search",
 	inputSchema: z.object({

@@ -14,7 +14,10 @@ export const semanticPageSearch = createTool({
 			threshold: context.threshold,
 		});
 
-		return result;
+		return result.map((result) => ({
+			...result,
+			link: `/pages/${result.page_id}`,
+		}));
 	},
 	id: "semantic-page-search",
 	inputSchema: z.object({

@@ -6,11 +6,12 @@ import {
 import { ThreadMessages } from "~/components/ai/thread-messages";
 import { ThreadWelcome } from "~/components/ai/thread-welcome";
 import { Sidebar, SidebarContent } from "~/components/ui/sidebar";
-import { cn } from "~/components/utils";
 
 const CHAT_SIDEBAR_DEFAULT_WIDTH = "20rem";
 const CHAT_SIDEBAR_MIN_WIDTH = "20rem";
 const CHAT_SIDEBAR_WIDTH_MAX = "50rem";
+const CHAT_THREAD_MIN_WIDTH = "18rem"; // Leave 2rem for the padding.
+const CHAT_THREAD_MAX_WIDTH = "50rem";
 
 export default function ChatSidebar() {
 	return (
@@ -23,14 +24,13 @@ export default function ChatSidebar() {
 			minWidth={CHAT_SIDEBAR_MIN_WIDTH}
 			maxWidth={CHAT_SIDEBAR_WIDTH_MAX}
 		>
-			<SidebarContent
-				className={cn("overflow-x-hidden", `min-w-[${CHAT_SIDEBAR_MIN_WIDTH}]`)}
-			>
+			<SidebarContent className="overflow-x-hidden">
 				<ThreadPrimitive.Root
 					className="relative box-border flex h-full flex-col overflow-hidden pt-2"
 					style={{
-						["--thread-max-width" as string]: CHAT_SIDEBAR_WIDTH_MAX,
-						["--thread-min-width" as string]: CHAT_SIDEBAR_MIN_WIDTH,
+						minWidth: CHAT_THREAD_MIN_WIDTH,
+						["--thread-max-width" as string]: CHAT_THREAD_MAX_WIDTH,
+						["--thread-min-width" as string]: CHAT_THREAD_MIN_WIDTH,
 					}}
 				>
 					<ThreadPrimitive.Viewport className="flex h-full flex-col items-center overflow-y-scroll scroll-smooth bg-inherit px-4">

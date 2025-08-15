@@ -19,7 +19,7 @@ env:
   TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
 
 jobs:
-  lint:
+  check:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -27,14 +27,10 @@ jobs:
       - name: Setup
         uses: ./tooling/github/setup
 
-      - name: Copy env
-        shell: bash
-        run: cp .env.example .env
+      - name: Check (lint and format)
+        run: pnpm check
 
-      - name: Lint
-        run: pnpm lint && pnpm lint:ws
-
-  format:
+  build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -42,8 +38,8 @@ jobs:
       - name: Setup
         uses: ./tooling/github/setup
 
-      - name: Format
-        run: pnpm format
+      - name: Build
+        run: pnpm build
 
   typecheck:
     runs-on: ubuntu-latest

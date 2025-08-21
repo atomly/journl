@@ -7,7 +7,6 @@ import { useMutation } from "@tanstack/react-query";
 import { useRef } from "react";
 import { useDebouncedCallback } from "use-debounce";
 import { BlockEditor } from "~/components/editor/block-editor";
-import { env } from "~/env";
 import { useTRPC } from "~/trpc/react";
 
 type PageEditorProps = {

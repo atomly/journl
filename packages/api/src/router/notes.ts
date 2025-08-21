@@ -7,7 +7,6 @@ import { embed } from "ai";
 import { z } from "zod/v4";
 import { protectedProcedure } from "../trpc.js";
 
-// TODO: Implement a Relevance Scorer/ReRanker once Vercel's `ai` package supports it. It's coming in ~v5.2.0.
 export const notesRouter = {
 	getSimilarNotes: protectedProcedure
 		.input(

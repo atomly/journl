@@ -1,81 +1,356 @@
 "use client";
 
-import type { BlockIdentifier } from "@blocknote/core";
+import type { BlockTransaction } from "@acme/api";
+import type { Block, PartialBlock } from "@blocknote/core";
 import { BlockNoteView } from "@blocknote/mantine";
+import { useCreateBlockNote } from "@blocknote/react";
 import { useTheme } from "next-themes";
-import { useMemo, useRef } from "react";
-import { EditorTitle } from "~/components/editor/editor-title";
-import { useBlockEditor } from "./hooks/use-block-editor";
-import type { BlockNoteEditorProps } from "./types";
+import { type ComponentProps, useRef } from "react";
+import { env } from "~/env";
+import { DefaultMap } from "../utils/default-map";
+import {
+	type BlockPrimitive,
+	type EditorPrimitive,
+	schema,
+} from "./block-schema";
+
+type EditorPrimitiveOnChangeParams = Parameters<
+	Parameters<EditorPrimitive["onChange"]>[0]
+>;
+
+type EditorBlock = BlockPrimitive & {
+	previous?: BlockPrimitive;
+	next?: BlockPrimitive;
+	parent?: BlockPrimitive;
+	index: number;
+};
+
+type BlockChange = {
+	type: "upsert" | "delete" | "dentation" | "parent";
+	block: EditorBlock;
+	oldBlock: EditorBlock | undefined;
+};
+
+type BlockTransactionMap = DefaultMap<
+	Extract<BlockTransaction["type"], `block_${string}`>,
+	Map<Block["id"], BlockTransaction["args"]>
+>;
+
+type EdgeTransactionMap = DefaultMap<
+	Extract<BlockTransaction["type"], `edge_${string}`>,
+	DefaultMap<Block["id"], Map<Block["id"], BlockTransaction["args"]>>
+>;
+
+type BlockEditorProps = Omit<
+	ComponentProps<typeof BlockNoteView>,
+	"editor" | "theme" | "onChange"
+> & {
+	/**
+	 * The initial blocks to render in the editor.
+	 * @note The initial blocks must be a non-empty array.
+	 */
+	initialBlocks?: [PartialBlock, ...PartialBlock[]] | undefined;
+	/**
+	 * The function to call when the editor changes.
+	 */
+	onChange?: (transactions: BlockTransaction[]) => void;
+};
 
 export function BlockEditor({
-	blocks,
-	parentId,
-	parentType,
-	isFullyLoaded,
-	title,
-	titlePlaceholder = "New page",
-}: BlockNoteEditorProps) {
+	initialBlocks,
+	onChange,
+	...rest
+}: BlockEditorProps) {
 	const { theme, systemTheme } = useTheme();
-	const titleRef = useRef<HTMLInputElement>(null);
+	const editor = useCreateBlockNote({
+		animations: false,
+		initialContent: initialBlocks,
+		schema,
+	});
+	const previousEditorRef = useRef<typeof editor.document>(editor.document);
 
-	// Use the main editor hook that contains all the logic
-	const { editor, handleEditorChange } = useBlockEditor(
-		blocks,
-		parentId,
-		parentType,
-		isFullyLoaded,
-	);
+	/**
+	 * Change handler for the editor.
+	 *
+	 * @privateRemarks
+	 *
+	 * The biggest challenge is the computation of the edges rather than the blocks.
+	 * An intuitive approach is to compute the edges for the previous state and the current state and then compute the diff.
+	 * For example, a brute force approach would be to loop over all blocks and detect if their adjacent blocks are different.
+	 * If they are we need to remove the previous edge and insert the new edge.
+	 * However we can take this a step further and reduce the amount of blocks we need to check by keeping track of the affected blocks while handling the block changes.
+	 * After we are done handling block changes we can loop over the affected blocks and compare the previous and current state of the edges.
+	 * If the edges are different we need to remove the previous ones and (if it's not a deleted block) insert the new ones.
+	 *
+	 * 1. Deletes:
+	 * - We must create `block_remove` transactions for all deleted blocks (we get these from BlockNote).
+	 * 	- The backend will handle `edge_remove` transactions for removed blocks.
+	 * - We need to compute `edge_insert` transactions for all edges that need to be reconnected.
+	 * 	- To do this, we need to detect the siblings of the previous and next block of the deleted block that are not being deleted.
+	 *  - For example, it's not necessarily the siblings right next to the deleted block because multiple adjacent blocks can be deleted.
+	 *
+	 * 2. Inserts:
+	 * - We must create `block_upsert` transactions for all inserted blocks (we get these from BlockNote).
+	 * - We need to compute `edge_remove` transactions for the previous edges of the adjacent blocks.
+	 * 	- Remember that we can insert multiple adjacent blocks at once, so we need to check the previous state of the adjacent blocks.
+	 * 	- We will check the previous siblings of the previous and next block of the inserted block and delete the edges between them.
+	 * - We need to compute `edge_insert` transactions for the next edges of the adjacent blocks.
+	 * 	- We will connect the inserted blocks to their adjacent blocks.
+	 *
+	 * 3. Moves:
+	 * - We must create `block_upsert` transactions for all moved blocks (we need to detect these manually).
+	 * 	- A block is considered moved if its parent or position has changed (a changed position means at least one of the adjacent blocks are different).
+	 * - Moves are more complex than inserts and deletes because we need to compute edges for the blocks that moved and the blocks that are adjacent to the moved blocks (assuming they didn't move).
+	 */
+	function handleEditorChange(
+		currentEditor: EditorPrimitiveOnChangeParams[0],
+		context: EditorPrimitiveOnChangeParams[1],
+	) {
+		if (!onChange) return;
 
-	const firstBlock = useMemo(() => {
-		return editor.document[0];
-	}, [editor.document]);
+		const oldBlocks = getEditorBlocks(previousEditorRef.current);
+		const currentBlocks = getEditorBlocks(currentEditor.document);
+
+		const blockChanges: BlockChange[] = [];
+
+		for (const change of context.getChanges()) {
+			if (change.type === "move") continue;
+
+			const oldBlock = oldBlocks.get(change.block.id);
+			const currentBlock = currentBlocks.get(change.block.id);
+
+			if (
+				currentBlock &&
+				(change.type === "update" || change.type === "insert")
+			) {
+				blockChanges.push({
+					block: currentBlock,
+					oldBlock,
+					type: "upsert",
+				});
+			} else if (oldBlock && change.type === "delete") {
+				blockChanges.push({
+					block: oldBlock,
+					oldBlock: undefined,
+					type: "delete",
+				});
+			}
+		}
+
+		// We need to manually detect moves because BlockNote doesn't provide a way to do this.
+		for (const block of currentBlocks.values()) {
+			const oldBlock = oldBlocks.get(block.id);
+
+			// We skip insertions.
+			if (!oldBlock) continue;
+
+			const isParentDifferent = oldBlock.parent?.id !== block.parent?.id;
+			const isPositionDifferent =
+				oldBlock.next?.id !== block.next?.id ||
+				oldBlock.previous?.id !== block.previous?.id;
+
+			if (isParentDifferent || isPositionDifferent) {
+				blockChanges.push({
+					block,
+					oldBlock,
+					type: isParentDifferent ? "parent" : "dentation",
+				});
+			}
+		}
+
+		const blockTransactions: BlockTransactionMap = new DefaultMap(
+			() => new Map(),
+		);
+
+		const edgeTransactions: EdgeTransactionMap = new DefaultMap(
+			() => new DefaultMap(() => new Map()),
+		);
+
+		for (const { block, oldBlock, type } of blockChanges) {
+			if (type === "delete") {
+				blockTransactions.get("block_remove").set(block.id, {
+					id: block.id,
+				});
+			} else if (type === "upsert" || type === "parent") {
+				blockTransactions.get("block_upsert").set(block.id, {
+					data: {
+						content: block.content,
+						props: block.props,
+						type: block.type,
+					},
+					id: block.id,
+					parent_id: block.parent?.id ?? null,
+				});
+			}
+
+			const isPreviousEdgeDifferent =
+				oldBlock?.previous?.id !== block.previous?.id;
+			const isNextEdgeDifferent = oldBlock?.next?.id !== block.next?.id;
+
+			if (isPreviousEdgeDifferent) {
+				if (oldBlock?.previous) {
+					edgeTransactions
+						.get("edge_remove")
+						.get(oldBlock.previous.id)
+						.set(oldBlock.id, {
+							from_id: oldBlock.previous.id,
+							to_id: oldBlock.id,
+						});
+				}
+				if (type !== "delete" && block.previous) {
+					edgeTransactions
+						.get("edge_insert")
+						.get(block.previous.id)
+						.set(block.id, {
+							from_id: block.previous.id,
+							to_id: block.id,
+						});
+				}
+			}
+
+			if (isNextEdgeDifferent) {
+				if (oldBlock?.next) {
+					edgeTransactions
+						.get("edge_remove")
+						.get(oldBlock.id)
+						.set(oldBlock.next.id, {
+							from_id: oldBlock.id,
+							to_id: oldBlock.next.id,
+						});
+				}
+				if (type !== "delete" && block.next) {
+					edgeTransactions.get("edge_insert").get(block.id).set(block.next.id, {
+						from_id: block.id,
+						to_id: block.next.id,
+					});
+				}
+			}
+		}
+
+		previousEditorRef.current = currentEditor.document;
+
+		const transactions = [
+			...flattenBlockTransactions(blockTransactions),
+			...flattenEdgeTransactions(edgeTransactions),
+		];
+
+		// Leaving this here for debugging purposes because this logic is a fucking mess.
+		if (env.NODE_ENV === "development") {
+			console.debug("saveTransactions 👀", {
+				transactions: transactions.map((t) =>
+					t.type === "block_remove" || t.type === "block_upsert"
+						? {
+								...t,
+								element: document.querySelector(`[data-id="${t.args.id}"]`),
+							}
+						: {
+								...t,
+								from_element: document.querySelector(
+									`[data-id="${t.args.from_id}"]`,
+								),
+								to_element: document.querySelector(
+									`[data-id="${t.args.to_id}"]`,
+								),
+							},
+				),
+			});
+		}
+
+		onChange(transactions);
+	}
 
 	const resolvedTheme = theme === "system" ? systemTheme : theme;
 
-	const handleTitleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-		if (e.key === "Enter" || e.key === "ArrowDown") {
-			e.preventDefault();
-			if (editor && firstBlock) {
-				editor.setTextCursorPosition(firstBlock.id as BlockIdentifier, "end");
-				editor.focus();
-			}
-		}
-	};
-
-	const handleEditorKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
-		if (e.key === "ArrowUp" && parentType === "page") {
-			const cursorPos = editor.getTextCursorPosition();
-			if (cursorPos.block.id === firstBlock?.id) {
-				titleRef.current?.focus();
-				setTimeout(() => {
-					const length = titleRef.current?.value.length || 0;
-					titleRef.current?.setSelectionRange(length, length);
-				}, 0);
-			}
-		}
-	};
-
 	return (
-		<>
-			<EditorTitle
-				ref={titleRef}
-				parentId={parentId}
-				parentType={parentType}
-				title={title}
-				placeholder={titlePlaceholder}
-				onKeyDown={handleTitleKeyDown}
-				className="mb-4 pl-13"
-			/>
-			<div className="blocknote-editor" data-color-scheme={resolvedTheme}>
-				<BlockNoteView
-					editor={editor}
-					onChange={isFullyLoaded ? handleEditorChange : undefined}
-					editable={isFullyLoaded}
-					theme={resolvedTheme as "light" | "dark"}
-					onKeyDown={handleEditorKeyDown}
-				/>
-			</div>
-		</>
+		<BlockNoteView
+			{...rest}
+			editor={editor}
+			theme={resolvedTheme as "light" | "dark"}
+			onChange={handleEditorChange}
+		/>
 	);
+}
+
+/**
+ * Flattens a tree of blocks into a single array of blocks.
+ * @param blocks - The blocks to flatten.
+ * @param parent - The parent block of the current block list.
+ * @returns A flattened array of blocks.
+ */
+function getEditorBlocks(blocks: BlockPrimitive[], parent?: BlockPrimitive) {
+	const flattened = new Map<BlockPrimitive["id"], EditorBlock>();
+
+	for (const [index, block] of blocks.entries()) {
+		const editorBlock: EditorBlock = {
+			...block,
+			index,
+			next: blocks[index + 1],
+			parent,
+			previous: blocks[index - 1],
+		};
+
+		flattened.set(block.id, editorBlock);
+
+		if (block.children) {
+			getEditorBlocks(block.children, block).forEach((editorBlock) =>
+				flattened.set(editorBlock.id, editorBlock),
+			);
+		}
+	}
+
+	return flattened;
+}
+
+/**
+ * Flattens BlockTransactions map into an array of BlockTransaction objects.
+ */
+function flattenBlockTransactions(
+	blockTransactions: BlockTransactionMap,
+): BlockTransaction[] {
+	const transactions: BlockTransaction[] = [];
+
+	for (const [type, blockMap] of blockTransactions.entries()) {
+		for (const args of blockMap.values()) {
+			transactions.push({
+				args,
+				type,
+			} as BlockTransaction);
+		}
+	}
+
+	return transactions;
+}
+
+/**
+ * Flattens EdgeTransactions map into an array of BlockTransaction objects.
+ */
+function flattenEdgeTransactions(
+	edgeTransactions: EdgeTransactionMap,
+): BlockTransaction[] {
+	const transactions: BlockTransaction[] = [];
+
+	// Removing redundant edge remove/insert pairs
+	const removeMap = edgeTransactions.get("edge_remove");
+	const insertMap = edgeTransactions.get("edge_insert");
+	for (const [fromId, toMap] of removeMap.entries()) {
+		for (const toId of toMap.keys()) {
+			if (insertMap.get(fromId).has(toId)) {
+				insertMap.get(fromId).delete(toId);
+				removeMap.get(fromId).delete(toId);
+			}
+		}
+	}
+
+	for (const [type, fromMap] of edgeTransactions.entries()) {
+		for (const toMap of fromMap.values()) {
+			for (const args of toMap.values()) {
+				transactions.push({
+					args,
+					type,
+				} as BlockTransaction);
+			}
+		}
+	}
+
+	return transactions;
 }

@@ -1,42 +1,58 @@
-import { and, cosineDistance, desc, eq, gt, inArray, sql } from "@acme/db";
+import { and, cosineDistance, desc, eq, gt, sql } from "@acme/db";
 import {
-	Block,
+	BlockEdge,
+	BlockNode,
+	Document,
 	Page,
 	PageEmbedding,
 	zInsertPage,
-	zUpdatePage,
 } from "@acme/db/schema";
 import { openai } from "@ai-sdk/openai";
 import type { TRPCRouterRecord } from "@trpc/server";
 import { TRPCError } from "@trpc/server";
 import { embed } from "ai";
 import { z } from "zod/v4";
-
+import { blockNoteTree } from "../shared/block-note-tree.js";
 import { protectedProcedure } from "../trpc.js";
 
 export const pagesRouter = {
 	create: protectedProcedure
-		.input(zInsertPage.omit({ user_id: true }))
+		.input(zInsertPage.omit({ document_id: true, user_id: true }))
 		.mutation(async ({ ctx, input }) => {
 			return await ctx.db.transaction(async (tx) => {
 				try {
-					// Create the page
-					const pageData = {
-						...input,
-						children: [],
-						user_id: ctx.session.user.id,
-					};
+					const [document] = await tx
+						.insert(Document)
+						.values({
+							user_id: ctx.session.user.id,
+						})
+						.returning();
 
-					const pageResult = await tx.insert(Page).values(pageData).returning();
+					if (!document) {
+						throw new TRPCError({
+							code: "INTERNAL_SERVER_ERROR",
+							message: "Failed to create document",
+						});
+					}
 
-					if (!pageResult[0]) {
+					const [page] = await tx
+						.insert(Page)
+						.values({
+							...input,
+							children: [],
+							document_id: document.id,
+							user_id: ctx.session.user.id,
+						})
+						.returning();
+
+					if (!page) {
 						throw new TRPCError({
 							code: "INTERNAL_SERVER_ERROR",
 							message: "Failed to create page",
 						});
 					}
 
-					return pageResult[0];
+					return page;
 				} catch (error) {
 					console.error("Database error in pages.create:", error);
 					throw new TRPCError({
@@ -45,99 +61,6 @@ export const pagesRouter = {
 					});
 				}
 			});
-		}),
-	// Delete a page and all its child blocks (cascade delete)
-	delete: protectedProcedure
-		.input(z.object({ id: z.uuid() }))
-		.mutation(async ({ ctx, input }) => {
-			try {
-				return await ctx.db.transaction(async (tx) => {
-					// 1. First, get the page to ensure it exists and belongs to the user
-					const [pageToDelete] = await tx
-						.select()
-						.from(Page)
-						.where(
-							and(eq(Page.id, input.id), eq(Page.user_id, ctx.session.user.id)),
-						)
-						.limit(1);
-
-					if (!pageToDelete) {
-						throw new TRPCError({
-							code: "NOT_FOUND",
-							message: "Page not found",
-						});
-					}
-
-					// 2. Recursively collect all child block IDs
-					const collectChildIds = async (
-						blockId: string,
-					): Promise<string[]> => {
-						const [block] = await tx
-							.select({ children: Block.children })
-							.from(Block)
-							.where(eq(Block.id, blockId))
-							.limit(1);
-
-						if (!block) return [];
-
-						const childIds = (block.children as string[]) || [];
-						const allChildIds = [...childIds];
-
-						// Recursively collect children of children
-						for (const childId of childIds) {
-							const grandChildIds = await collectChildIds(childId);
-							allChildIds.push(...grandChildIds);
-						}
-
-						return allChildIds;
-					};
-
-					// 3. Get all direct child blocks of the page
-					const pageChildren = (pageToDelete.children as string[]) || [];
-					const allChildBlockIds: string[] = [];
-
-					// Collect all nested child block IDs
-					for (const childId of pageChildren) {
-						allChildBlockIds.push(childId);
-						const nestedChildIds = await collectChildIds(childId);
-						allChildBlockIds.push(...nestedChildIds);
-					}
-
-					// 4. Delete all child blocks first
-					if (allChildBlockIds.length > 0) {
-						await tx.delete(Block).where(inArray(Block.id, allChildBlockIds));
-					}
-
-					// 5. Finally, delete the page
-					const result = await tx
-						.delete(Page)
-						.where(
-							and(eq(Page.id, input.id), eq(Page.user_id, ctx.session.user.id)),
-						)
-						.returning();
-
-					if (!result[0]) {
-						throw new TRPCError({
-							code: "NOT_FOUND",
-							message: "Page not found or already deleted",
-						});
-					}
-
-					return {
-						deletedBlocksCount: allChildBlockIds.length,
-						deletedPage: result[0],
-					};
-				});
-			} catch (error) {
-				if (error instanceof TRPCError) {
-					throw error;
-				}
-				console.error("Database error in pages.delete:", error);
-				throw new TRPCError({
-					code: "INTERNAL_SERVER_ERROR",
-					message: "Failed to delete page",
-				});
-			}
 		}),
 	getAll: protectedProcedure.query(async ({ ctx }) => {
 		try {
@@ -158,15 +81,40 @@ export const pagesRouter = {
 		.input(z.object({ id: z.uuid() }))
 		.query(async ({ ctx, input }) => {
 			try {
-				const page = await ctx.db
-					.select()
-					.from(Page)
-					.where(
-						and(eq(Page.id, input.id), eq(Page.user_id, ctx.session.user.id)),
+				const {
+					rows: [page],
+				} = await ctx.db.execute<
+					Page & {
+						blocks: BlockNode[];
+						edges: BlockEdge[];
+					}
+				>(sql`
+					WITH page AS (
+						SELECT * FROM ${Page}
+						WHERE ${Page.id} = ${input.id} AND ${Page.user_id} = ${ctx.session.user.id}
+						LIMIT 1
 					)
-					.limit(1);
+					SELECT 
+						page.*,
+						COALESCE(
+							(SELECT json_agg(${BlockNode}.*) FROM ${BlockNode} WHERE ${BlockNode.document_id} = page.document_id),
+							'[]'::json
+						) as blocks,
+						COALESCE(
+							(SELECT json_agg(${BlockEdge}.*) FROM ${BlockEdge} WHERE ${BlockEdge.document_id} = page.document_id),
+							'[]'::json
+						) as edges
+					FROM page
+				`);
 
-				return page[0] ?? null;
+				if (!page) {
+					return null;
+				}
+
+				return {
+					...page,
+					document: blockNoteTree(page.blocks, page.edges),
+				};
 			} catch (error) {
 				if (error instanceof TRPCError) {
 					throw error;
@@ -215,88 +163,6 @@ export const pagesRouter = {
 				.limit(input.limit);
 
 			return similarPages;
-		}),
-	update: protectedProcedure
-		.input(
-			z.object({
-				data: zUpdatePage,
-				id: z.uuid(),
-				title: z.string().min(1).max(255).optional(),
-			}),
-		)
-		.mutation(async ({ ctx, input }) => {
-			try {
-				const { id, ...updateData } = input;
-
-				// Only update fields that are provided
-				const fieldsToUpdate = Object.fromEntries(
-					Object.entries(updateData).filter(
-						([_, value]) => value !== undefined,
-					),
-				);
-
-				if (Object.keys(fieldsToUpdate).length === 0) {
-					throw new TRPCError({
-						code: "BAD_REQUEST",
-						message: "No fields to update",
-					});
-				}
-
-				const result = await ctx.db
-					.update(Page)
-					.set(fieldsToUpdate)
-					.where(and(eq(Page.id, id), eq(Page.user_id, ctx.session.user.id)))
-					.returning();
-
-				if (result.length === 0) {
-					throw new TRPCError({
-						code: "NOT_FOUND",
-						message: "Page not found",
-					});
-				}
-
-				return result[0];
-			} catch (error) {
-				if (error instanceof TRPCError) {
-					throw error;
-				}
-				console.error("Database error in pages.update:", error);
-				throw new TRPCError({
-					code: "INTERNAL_SERVER_ERROR",
-					message: "Failed to update page",
-				});
-			}
-		}),
-	updateEmbedTimestamp: protectedProcedure
-		.input(z.object({ id: z.uuid() }))
-		.mutation(async ({ ctx, input }) => {
-			try {
-				const result = await ctx.db
-					.update(Page)
-					.set({ embed_updated_at: new Date().toISOString() })
-					.where(
-						and(eq(Page.id, input.id), eq(Page.user_id, ctx.session.user.id)),
-					)
-					.returning();
-
-				if (result.length === 0) {
-					throw new TRPCError({
-						code: "NOT_FOUND",
-						message: "Page not found",
-					});
-				}
-
-				return result[0];
-			} catch (error) {
-				if (error instanceof TRPCError) {
-					throw error;
-				}
-				console.error("Database error in pages.updateEmbedTimestamp:", error);
-				throw new TRPCError({
-					code: "INTERNAL_SERVER_ERROR",
-					message: "Failed to update page embed timestamp",
-				});
-			}
 		}),
 	updateTitle: protectedProcedure
 		.input(

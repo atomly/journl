@@ -41,28 +41,6 @@ export function PageEditor({
 	function handleEditorChange(transactions: BlockTransaction[]) {
 		pendingChangesRef.current.push(...transactions);
 
-		// Leaving this here for debugging purposes because this logic is a fucking mess.
-		if (env.NODE_ENV === "development") {
-			console.debug("saveTransactions 👀", {
-				transactions: pendingChangesRef.current.map((t) =>
-					t.type === "block_remove" || t.type === "block_upsert"
-						? {
-								...t,
-								element: document.querySelector(`[data-id="${t.args.id}"]`),
-							}
-						: {
-								...t,
-								from_element: document.querySelector(
-									`[data-id="${t.args.from_id}"]`,
-								),
-								to_element: document.querySelector(
-									`[data-id="${t.args.to_id}"]`,
-								),
-							},
-				),
-			});
-		}
-
 		debouncedMutate();
 	}
 

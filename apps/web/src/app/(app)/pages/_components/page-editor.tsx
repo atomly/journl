@@ -21,6 +21,8 @@ export function PageEditor({
 	debounceTime = 200,
 }: PageEditorProps) {
 	const trpc = useTRPC();
+	const pendingChangesRef = useRef<BlockTransaction[]>([]);
+
 	const { mutate, isPending } = useMutation({
 		...trpc.blocks.saveTransactions.mutationOptions({}),
 		onSuccess: () => {
@@ -29,7 +31,7 @@ export function PageEditor({
 			}
 		},
 	});
-	const pendingChangesRef = useRef<BlockTransaction[]>([]);
+
 	const debouncedMutate = useDebouncedCallback(() => {
 		if (isPending) return;
 		const transactions = pendingChangesRef.current;

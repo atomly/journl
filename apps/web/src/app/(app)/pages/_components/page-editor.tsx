@@ -1,17 +1,51 @@
 "use client";
 
-import { LazyBlockEditor } from "~/components/editor/lazy-block-editor";
+import type { BlockTransaction } from "@acme/api";
+import type { Page } from "@acme/db/schema";
+import type { PartialBlock } from "@blocknote/core";
+import { useMutation } from "@tanstack/react-query";
+import { useRef } from "react";
+import { useDebouncedCallback } from "use-debounce";
+import { BlockEditor } from "~/components/editor/block-editor";
+import { useTRPC } from "~/trpc/react";
 
 type PageEditorProps = {
-	id: string;
+	page: Pick<Page, "id" | "title" | "document_id">;
+	initialBlocks: [PartialBlock, ...PartialBlock[]] | undefined;
+	debounceTime?: number;
 };
 
-export function PageEditor({ id }: PageEditorProps) {
+export function PageEditor({
+	page,
+	initialBlocks,
+	debounceTime = 200,
+}: PageEditorProps) {
+	const trpc = useTRPC();
+	const pendingChangesRef = useRef<BlockTransaction[]>([]);
+
+	const { mutate, isPending } = useMutation({
+		...trpc.blocks.saveTransactions.mutationOptions({}),
+		onSuccess: () => {
+			if (pendingChangesRef.current.length > 0) {
+				debouncedMutate();
+			}
+		},
+	});
+
+	const debouncedMutate = useDebouncedCallback(() => {
+		if (isPending) return;
+		const transactions = pendingChangesRef.current;
+		pendingChangesRef.current = [];
+		mutate({ document_id: page.document_id, transactions });
+	}, debounceTime);
+
+	function handleEditorChange(transactions: BlockTransaction[]) {
+		pendingChangesRef.current.push(...transactions);
+
+		debouncedMutate();
+	}
+
 	return (
-		<div className="flex h-full flex-col gap-4 p-4">
-			<div className="min-h-0 flex-1">
-				<LazyBlockEditor parentId={id} parentType="page" />
-			</div>
-		</div>
+		<BlockEditor initialBlocks={initialBlocks} onChange={handleEditorChange} />
 	);
 }

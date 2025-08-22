@@ -3,14 +3,18 @@ import { pgTable, text } from "drizzle-orm/pg-core";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 import { user } from "../auth/user.schema.js";
+import { Document } from "./document.schema.js";
 
 export const Page = pgTable("page", (t) => ({
 	id: t.uuid().notNull().primaryKey().defaultRandom(),
 	user_id: text()
 		.notNull()
 		.references(() => user.id, { onDelete: "cascade" }),
+	document_id: t
+		.uuid()
+		.notNull()
+		.references(() => Document.id, { onDelete: "cascade" }),
 	title: t.text().notNull(),
-	// Children array stores ordered list of child block IDs
 	children: t.text().array().notNull().default([]),
 	created_at: t
 		.timestamp({ mode: "string", withTimezone: true })
@@ -29,8 +33,9 @@ export const Page = pgTable("page", (t) => ({
 }));
 
 export type Page = typeof Page.$inferSelect;
+
 export const zInsertPage = createInsertSchema(Page, {
-	title: z.string().min(1).max(255),
+	title: z.string().max(255),
 	children: z.array(z.uuid()).default([]),
 }).omit({
 	created_at: true,

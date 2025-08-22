@@ -22,3 +22,6 @@ type RouterOutputs = inferRouterOutputs<AppRouter>;
 
 export { createTRPCContext, appRouter };
 export type { AppRouter, RouterInputs, RouterOutputs };
+
+// Export types from sub-routers
+export type { BlockTransaction } from "./router/blocks.js";

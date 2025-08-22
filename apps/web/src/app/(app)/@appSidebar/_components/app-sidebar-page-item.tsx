@@ -34,7 +34,7 @@ export function AppSidebarPageItem(props: AppSidebarPageItemProps) {
 						href={`/pages/${page?.id}`}
 						className="line-clamp-1 min-w-0 flex-1 truncate hover:underline"
 					>
-						{page?.title || "New Page"}
+						{page?.title || "New page"}
 					</Link>
 					{!!page && (
 						<DeletePageButton

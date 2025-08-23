@@ -30,17 +30,6 @@ jobs:
       - name: Check (lint and format)
         run: pnpm check
 
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup
-        uses: ./tooling/github/setup
-
-      - name: Build
-        run: pnpm build
-
   typecheck:
     runs-on: ubuntu-latest
     steps:
@@ -51,3 +40,14 @@ jobs:
 
       - name: Typecheck
         run: pnpm typecheck
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup
+        uses: ./tooling/github/setup
+
+      - name: Build
+        run: pnpm build

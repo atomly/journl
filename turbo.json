@@ -47,8 +47,7 @@
 			"dependsOn": ["^topo"]
 		},
 		"typecheck": {
-			"dependsOn": ["^topo", "^build"],
-			"outputs": [".cache/tsbuildinfo.json"]
+			"dependsOn": ["^topo", "^build"]
 		}
 	},
 	"ui": "tui"

@@ -6,46 +6,46 @@ import { user } from "../auth/user.schema.js";
 import { Document } from "./document.schema.js";
 
 export const Page = pgTable("page", (t) => ({
-	id: t.uuid().notNull().primaryKey().defaultRandom(),
-	user_id: text()
-		.notNull()
-		.references(() => user.id, { onDelete: "cascade" }),
-	document_id: t
-		.uuid()
-		.notNull()
-		.references(() => Document.id, { onDelete: "cascade" }),
-	title: t.text().notNull(),
-	children: t.text().array().notNull().default([]),
-	created_at: t
-		.timestamp({ mode: "string", withTimezone: true })
-		.defaultNow()
-		.notNull(),
-	updated_at: t
-		.timestamp({ mode: "string", withTimezone: true })
-		.defaultNow()
-		.notNull()
-		.$onUpdateFn(() => sql`now()`),
+  id: t.uuid().notNull().primaryKey().defaultRandom(),
+  user_id: text()
+    .notNull()
+    .references(() => user.id, { onDelete: "cascade" }),
+  document_id: t
+    .uuid()
+    .notNull()
+    .references(() => Document.id, { onDelete: "cascade" }),
+  title: t.text().notNull(),
+  children: t.text().array().notNull().default([]),
+  created_at: t
+    .timestamp({ mode: "string", withTimezone: true })
+    .defaultNow()
+    .notNull(),
+  updated_at: t
+    .timestamp({ mode: "string", withTimezone: true })
+    .defaultNow()
+    .notNull()
+    .$onUpdateFn(() => sql`now()`),
 }));
 
 export type Page = typeof Page.$inferSelect;
 
 export const zInsertPage = createInsertSchema(Page, {
-	title: z.string().max(255),
-	children: z.array(z.uuid()).default([]),
+  title: z.string().max(255),
+  children: z.array(z.uuid()).default([]),
 }).omit({
-	created_at: true,
-	id: true,
-	updated_at: true,
+  created_at: true,
+  id: true,
+  updated_at: true,
 });
 
 export const zUpdatePage = createInsertSchema(Page, {
-	title: z.string().min(1).max(255),
-	children: z.array(z.uuid()).optional(),
+  title: z.string().min(1).max(255),
+  children: z.array(z.uuid()).optional(),
 }).omit({
-	created_at: true,
-	id: true,
-	updated_at: true,
-	user_id: true,
+  created_at: true,
+  id: true,
+  updated_at: true,
+  user_id: true,
 });
 
 export const zPage = createSelectSchema(Page);

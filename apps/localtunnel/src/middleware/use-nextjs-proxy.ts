@@ -20,23 +20,23 @@ import { signPayload } from "../lib/sign-payload.ts";
  * ```
  */
 export function useNextjsProxy(app: express.Application) {
-	app.use(async (req, res) => {
-		try {
-			const payload = JSON.stringify(req.body);
-			const signature = signPayload(payload, env.SUPABASE_SECRET);
-			const webhookEndpoint = new URL(req.url, env.NEXT_JS_URL);
-			// Proxy the request to Next.js server
-			void fetch(webhookEndpoint, {
-				body: payload,
-				headers: {
-					"Content-Type": "application/json",
-					"x-supabase-signature": signature,
-				},
-				method: req.method,
-			});
-		} catch (error) {
-			console.error("Error proxying webhook:", error);
-			res.status(500).json({ error: "Failed to proxy webhook" });
-		}
-	});
+  app.use(async (req, res) => {
+    try {
+      const payload = JSON.stringify(req.body);
+      const signature = signPayload(payload, env.SUPABASE_SECRET);
+      const webhookEndpoint = new URL(req.url, env.NEXT_JS_URL);
+      // Proxy the request to Next.js server
+      void fetch(webhookEndpoint, {
+        body: payload,
+        headers: {
+          "Content-Type": "application/json",
+          "x-supabase-signature": signature,
+        },
+        method: req.method,
+      });
+    } catch (error) {
+      console.error("Error proxying webhook:", error);
+      res.status(500).json({ error: "Failed to proxy webhook" });
+    }
+  });
 }

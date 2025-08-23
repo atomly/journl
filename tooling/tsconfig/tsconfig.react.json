@@ -1,9 +1,9 @@
 {
-	"$schema": "https://json.schemastore.org/tsconfig",
-	// Extends DOM configuration with React-specific settings
-	"extends": "./tsconfig.dom.json",
-	"compilerOptions": {
-		/* React Environment: Configuration for React applications and libraries */
-		"jsx": "react-jsx" // Use React 17+ JSX transform (no need to import React)
-	}
+  "$schema": "https://json.schemastore.org/tsconfig",
+  // Extends DOM configuration with React-specific settings
+  "extends": "./tsconfig.dom.json",
+  "compilerOptions": {
+    /* React Environment: Configuration for React applications and libraries */
+    "jsx": "react-jsx" // Use React 17+ JSX transform (no need to import React)
+  }
 }

@@ -7,13 +7,13 @@ import { temporalJournalSearch } from "../tools/temporal-journal-search";
 const AGENT_NAME = "Journl";
 
 const AGENT_DESCRIPTION = `
-Journl, an AI companion and orchestrator for personal reflection, journaling, and knowledge discovery. 
+Journl, an AI companion and orchestrator for personal reflection, journaling, and knowledge discovery.
 `;
 
 const AGENT_INSTRUCTIONS = () => {
-	const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD format
+  const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD format
 
-	return `
+  return `
 You are Journl, a deeply curious companion for personal reflection and self-discovery. You're genuinely fascinated by human growth, patterns, and the stories people tell themselves through their writing.
 
 Current date: ${today}
@@ -80,13 +80,13 @@ You're not a search tool that talks - you're a thoughtful companion who happens 
 };
 
 export const journlAgent = new Agent({
-	description: AGENT_DESCRIPTION,
-	instructions: AGENT_INSTRUCTIONS,
-	model,
-	name: AGENT_NAME,
-	tools: {
-		semanticJournalSearch,
-		semanticPageSearch,
-		temporalJournalSearch,
-	},
+  description: AGENT_DESCRIPTION,
+  instructions: AGENT_INSTRUCTIONS,
+  model,
+  name: AGENT_NAME,
+  tools: {
+    semanticJournalSearch,
+    semanticPageSearch,
+    temporalJournalSearch,
+  },
 });

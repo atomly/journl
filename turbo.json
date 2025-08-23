@@ -1,54 +1,54 @@
 {
-	"$schema": "https://turborepo.org/schema.json",
-	"globalEnv": [
-		"POSTGRES_URL",
-		"AUTH_REDIRECT_PROXY_URL",
-		"AUTH_SECRET",
-		"PORT"
-	],
-	"globalPassThroughEnv": [
-		"NODE_ENV",
-		"CI",
-		"VERCEL",
-		"VERCEL_ENV",
-		"VERCEL_URL",
-		"npm_lifecycle_event"
-	],
-	"tasks": {
-		"build": {
-			"dependsOn": ["^build"],
-			"outputs": [".cache/tsbuildinfo.json", "dist/**"]
-		},
-		"check": {
-			"dependsOn": ["^topo", "^build"],
-			"outputLogs": "new-only"
-		},
-		"clean": {
-			"cache": false
-		},
-		"dev": {
-			"cache": false,
-			"dependsOn": ["^build"],
-			"persistent": true
-		},
-		"push": {
-			"cache": false,
-			"interactive": true
-		},
-		"shadcn": {
-			"cache": false,
-			"interactive": true
-		},
-		"studio": {
-			"cache": false,
-			"persistent": true
-		},
-		"topo": {
-			"dependsOn": ["^topo"]
-		},
-		"typecheck": {
-			"dependsOn": ["^topo", "^build"]
-		}
-	},
-	"ui": "stream"
+  "$schema": "https://turborepo.org/schema.json",
+  "globalEnv": [
+    "POSTGRES_URL",
+    "AUTH_REDIRECT_PROXY_URL",
+    "AUTH_SECRET",
+    "PORT"
+  ],
+  "globalPassThroughEnv": [
+    "NODE_ENV",
+    "CI",
+    "VERCEL",
+    "VERCEL_ENV",
+    "VERCEL_URL",
+    "npm_lifecycle_event"
+  ],
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": [".cache/tsbuildinfo.json", "dist/**"]
+    },
+    "check": {
+      "dependsOn": ["^topo", "^build"],
+      "outputLogs": "new-only"
+    },
+    "clean": {
+      "cache": false
+    },
+    "dev": {
+      "cache": false,
+      "dependsOn": ["^build"],
+      "persistent": true
+    },
+    "push": {
+      "cache": false,
+      "interactive": true
+    },
+    "shadcn": {
+      "cache": false,
+      "interactive": true
+    },
+    "studio": {
+      "cache": false,
+      "persistent": true
+    },
+    "topo": {
+      "dependsOn": ["^topo"]
+    },
+    "typecheck": {
+      "dependsOn": ["^topo", "^build"]
+    }
+  },
+  "ui": "stream"
 }

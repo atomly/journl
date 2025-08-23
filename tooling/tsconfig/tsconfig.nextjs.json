@@ -1,16 +1,16 @@
 {
-	"$schema": "https://json.schemastore.org/tsconfig",
-	// Extends DOM configuration with Next.js-specific optimizations
-	"extends": "./tsconfig.dom.json",
-	"compilerOptions": {
-		/* Next.js Environment: Configuration optimized for Next.js applications */
-		"allowJs": true, // Allow JavaScript files to be compiled
-		"jsx": "preserve", // Keep JSX as-is for Next.js to handle
-		"module": "ESNext", // Use ESNext modules for better tree-shaking
-		"moduleResolution": "Bundler", // Use bundler-style resolution for faster builds
-		"noEmit": true, // Don't emit files (Next.js handles compilation)
-		"declaration": false, // Don't emit declaration files
-		"declarationMap": false, // Don't emit declaration map files
-		"plugins": [{ "name": "next" }] // Enable Next.js TypeScript plugin for enhanced features
-	}
+  "$schema": "https://json.schemastore.org/tsconfig",
+  // Extends DOM configuration with Next.js-specific optimizations
+  "extends": "./tsconfig.dom.json",
+  "compilerOptions": {
+    /* Next.js Environment: Configuration optimized for Next.js applications */
+    "allowJs": true, // Allow JavaScript files to be compiled
+    "jsx": "preserve", // Keep JSX as-is for Next.js to handle
+    "module": "ESNext", // Use ESNext modules for better tree-shaking
+    "moduleResolution": "Bundler", // Use bundler-style resolution for faster builds
+    "noEmit": true, // Don't emit files (Next.js handles compilation)
+    "declaration": false, // Don't emit declaration files
+    "declarationMap": false, // Don't emit declaration map files
+    "plugins": [{ "name": "next" }] // Enable Next.js TypeScript plugin for enhanced features
+  }
 }

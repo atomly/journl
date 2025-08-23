@@ -1,14 +1,14 @@
 {
-	"name": "@acme/drizzle-studio",
-	"version": "0.0.0",
-	"private": true,
-	"type": "module",
-	"scripts": {
-		"dev": "NODE_ENV=development pnpm with-env pnpm --filter=db studio",
-		"with-env": "dotenv -e ../../.env --"
-	},
-	"devDependencies": {
-		"@acme/db": "workspace:*",
-		"dotenv-cli": "^8.0.0"
-	}
+  "name": "@acme/drizzle-studio",
+   "version": "0.0.0",
+   "private": true,
+   "type": "module",
+   "scripts": {
+      "dev": "NODE_ENV=development pnpm with-env pnpm --filter=db studio",
+      "with-env": "dotenv -e ../../.env --"
+   },
+   "devDependencies": {
+      "@acme/db": "workspace:*",
+      "dotenv-cli": "^8.0.0"
+   }
 }

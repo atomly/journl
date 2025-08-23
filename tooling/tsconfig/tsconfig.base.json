@@ -1,25 +1,25 @@
 {
-	"$schema": "https://json.schemastore.org/tsconfig",
-	"compilerOptions": {
-		/* Base Options: Essential TypeScript settings for all projects */
-		"esModuleInterop": true, // Enables default imports from CommonJS modules
-		"skipLibCheck": true, // Skip type checking of declaration files for faster builds
-		"resolveJsonModule": true, // Allow importing JSON files as modules
-		"isolatedModules": true, // Ensure each file can be safely transpiled individually
-		"target": "ES2022", // Target modern JavaScript features for better performance
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "compilerOptions": {
+    /* Base Options: Essential TypeScript settings for all projects */
+    "esModuleInterop": true, // Enables default imports from CommonJS modules
+    "skipLibCheck": true, // Skip type checking of declaration files for faster builds
+    "resolveJsonModule": true, // Allow importing JSON files as modules
+    "isolatedModules": true, // Ensure each file can be safely transpiled individually
+    "target": "ES2022", // Target modern JavaScript features for better performance
 
-		/* Module Options: How TypeScript resolves and handles modules */
-		"module": "NodeNext", // Use Node.js-style module resolution for compatibility
-		"moduleDetection": "force", // Force detection of module format from file extension
-		"moduleResolution": "NodeNext", // Use Node.js module resolution algorithm
+    /* Module Options: How TypeScript resolves and handles modules */
+    "module": "NodeNext", // Use Node.js-style module resolution for compatibility
+    "moduleDetection": "force", // Force detection of module format from file extension
+    "moduleResolution": "NodeNext", // Use Node.js module resolution algorithm
 
-		/* Strictness: Enable strict type checking for better code quality */
-		"strict": true, // Enable all strict type checking options
-		"noUncheckedIndexedAccess": true, // Require explicit checks for array/object access
+    /* Strictness: Enable strict type checking for better code quality */
+    "strict": true, // Enable all strict type checking options
+    "noUncheckedIndexedAccess": true, // Require explicit checks for array/object access
 
-		/* Build Options: Control TypeScript compilation output */
-		"declaration": true, // Generate .d.ts declaration files
-		"declarationMap": true, // Generate sourcemaps for declaration files
-		"incremental": false // Disable incremental compilation for consistent builds
-	}
+    /* Build Options: Control TypeScript compilation output */
+    "declaration": true, // Generate .d.ts declaration files
+    "declarationMap": true, // Generate sourcemaps for declaration files
+    "incremental": false // Disable incremental compilation for consistent builds
+  }
 }

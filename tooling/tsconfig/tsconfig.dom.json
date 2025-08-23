@@ -1,10 +1,10 @@
 {
-	"$schema": "https://json.schemastore.org/tsconfig",
-	// Extends base configuration with DOM-specific settings
-	"extends": "./tsconfig.base.json",
-	"compilerOptions": {
-		/* DOM Environment: Configuration for browser/DOM environments */
-		// Include ES2022 features plus DOM APIs for web applications
-		"lib": ["es2022", "DOM", "DOM.Iterable"] // Enable DOM types and modern JavaScript features
-	}
+  "$schema": "https://json.schemastore.org/tsconfig",
+  // Extends base configuration with DOM-specific settings
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    /* DOM Environment: Configuration for browser/DOM environments */
+    // Include ES2022 features plus DOM APIs for web applications
+    "lib": ["es2022", "DOM", "DOM.Iterable"] // Enable DOM types and modern JavaScript features
+  }
 }

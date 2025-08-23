@@ -22,6 +22,7 @@
 		"check": "biome check",
 		"clean": "git clean -xdf .cache .turbo dist node_modules",
 		"dev": "pnpm build --watch",
+		"prepush": "pnpm build",
 		"push": "pnpm with-env drizzle-kit push",
 		"studio": "pnpm with-env drizzle-kit studio",
 		"typecheck": "tsc --noEmit --emitDeclarationOnly false",

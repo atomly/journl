@@ -50,5 +50,5 @@
 			"dependsOn": ["^topo", "^build"]
 		}
 	},
-	"ui": "tui"
+	"ui": "stream"
 }

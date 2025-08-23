@@ -1,7 +1,8 @@
-import { and, eq } from "@acme/db";
+import { and, eq, sql } from "@acme/db";
 import {
 	BlockEdge,
 	BlockNode,
+	DocumentEmbeddingTask,
 	zInsertBlockEdge,
 	zInsertBlockNode,
 } from "@acme/db/schema";
@@ -95,6 +96,21 @@ export const blocksRouter = {
 						});
 					}
 				}
+
+				// Anytime we save a transaction we need to update the document embedding task status to debounced.
+				await tx
+					.insert(DocumentEmbeddingTask)
+					.values({
+						document_id: input.document_id,
+						user_id: ctx.session.user.id,
+					})
+					.onConflictDoUpdate({
+						set: {
+							status: "debounced",
+						},
+						target: [DocumentEmbeddingTask.document_id],
+						targetWhere: sql`${DocumentEmbeddingTask.status} != 'completed'`,
+					});
 			});
 		}),
 };

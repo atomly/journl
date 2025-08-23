@@ -4,46 +4,46 @@ import { Dialog, DialogContent, DialogTitle } from "~/components/ui/dialog";
 import { useAuthModal } from "./auth-modal-provider";
 
 type AuthModalProps = {
-	/**
-	 * The children to render inside the dialog.
-	 */
-	children: React.ReactNode;
+  /**
+   * The children to render inside the dialog.
+   */
+  children: React.ReactNode;
 };
 
 const screenReaderContent: Record<string, string> = {
-	default: "Authentication page",
-	security: "Update your security settings",
-	settings: "Change your account settings",
-	"sign-in": "Sign in to your account",
-	"sign-up": "Create your account",
+  default: "Authentication page",
+  security: "Update your security settings",
+  settings: "Change your account settings",
+  "sign-in": "Sign in to your account",
+  "sign-up": "Create your account",
 };
 
 function getScreenReaderContent(pathname: string) {
-	const path = pathname.split("/").pop() || "default";
-	return screenReaderContent[path] || screenReaderContent.default;
+  const path = pathname.split("/").pop() || "default";
+  return screenReaderContent[path] || screenReaderContent.default;
 }
 
 export function AuthModal({ children }: AuthModalProps) {
-	const router = useRouter();
-	const pathname = usePathname();
-	const { cancelUrl } = useAuthModal();
-	return (
-		<Dialog
-			open={pathname.startsWith("/auth")}
-			onOpenChange={(open) => {
-				if (!open) {
-					router.replace(
-						cancelUrl.startsWith("/") ? cancelUrl : `/${cancelUrl}`,
-					);
-				}
-			}}
-		>
-			<DialogTitle className="sr-only">
-				{getScreenReaderContent(pathname)}
-			</DialogTitle>
-			<DialogContent className="flex w-full items-center justify-center border bg-sidebar">
-				{children}
-			</DialogContent>
-		</Dialog>
-	);
+  const router = useRouter();
+  const pathname = usePathname();
+  const { cancelUrl } = useAuthModal();
+  return (
+    <Dialog
+      open={pathname.startsWith("/auth")}
+      onOpenChange={(open) => {
+        if (!open) {
+          router.replace(
+            cancelUrl.startsWith("/") ? cancelUrl : `/${cancelUrl}`,
+          );
+        }
+      }}
+    >
+      <DialogTitle className="sr-only">
+        {getScreenReaderContent(pathname)}
+      </DialogTitle>
+      <DialogContent className="flex w-full items-center justify-center border bg-sidebar">
+        {children}
+      </DialogContent>
+    </Dialog>
+  );
 }

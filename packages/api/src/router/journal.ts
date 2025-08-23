@@ -1,8 +1,8 @@
 import { and, between, cosineDistance, desc, eq, gt, sql } from "@acme/db";
 import {
-	JournalEmbedding,
-	JournalEntry,
-	zJournalEntryDate,
+  JournalEmbedding,
+  JournalEntry,
+  zJournalEntryDate,
 } from "@acme/db/schema";
 import { openai } from "@ai-sdk/openai";
 import type { TRPCRouterRecord } from "@trpc/server";
@@ -12,242 +12,242 @@ import { z } from "zod/v4";
 import { protectedProcedure } from "../trpc.js";
 
 export type PlaceholderJournalEntry = {
-	date: string;
+  date: string;
 };
 
 export const journalRouter = {
-	getBetween: protectedProcedure
-		.input(
-			z.object({
-				from: z
-					.string()
-					.describe("The start date of the search in ISO 8601 format"),
-				to: z
-					.string()
-					.describe("The end date of the search in ISO 8601 format"),
-			}),
-		)
-		.query(async ({ ctx, input }) => {
-			const entries = await ctx.db
-				.select()
-				.from(JournalEntry)
-				.where(
-					and(
-						eq(JournalEntry.user_id, ctx.session.user.id),
-						between(JournalEntry.date, input.from, input.to),
-					),
-				);
+  getBetween: protectedProcedure
+    .input(
+      z.object({
+        from: z
+          .string()
+          .describe("The start date of the search in ISO 8601 format"),
+        to: z
+          .string()
+          .describe("The end date of the search in ISO 8601 format"),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const entries = await ctx.db
+        .select()
+        .from(JournalEntry)
+        .where(
+          and(
+            eq(JournalEntry.user_id, ctx.session.user.id),
+            between(JournalEntry.date, input.from, input.to),
+          ),
+        );
 
-			return entries;
-		}),
-	getByDate: protectedProcedure
-		.input(
-			z.object({
-				date: zJournalEntryDate,
-			}),
-		)
-		.query(async ({ ctx, input }) => {
-			try {
-				const entry = await ctx.db
-					.select()
-					.from(JournalEntry)
-					.where(
-						and(
-							eq(JournalEntry.date, input.date),
-							eq(JournalEntry.user_id, ctx.session.user.id),
-						),
-					)
-					.limit(1);
+      return entries;
+    }),
+  getByDate: protectedProcedure
+    .input(
+      z.object({
+        date: zJournalEntryDate,
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      try {
+        const entry = await ctx.db
+          .select()
+          .from(JournalEntry)
+          .where(
+            and(
+              eq(JournalEntry.date, input.date),
+              eq(JournalEntry.user_id, ctx.session.user.id),
+            ),
+          )
+          .limit(1);
 
-				if (entry.length === 0) {
-					return {
-						date: input.date,
-					};
-				}
+        if (entry.length === 0) {
+          return {
+            date: input.date,
+          };
+        }
 
-				return entry[0];
-			} catch (error) {
-				if (error instanceof TRPCError) {
-					throw error;
-				}
-				console.error("Database error in journal.byId:", error);
-				throw new TRPCError({
-					code: "INTERNAL_SERVER_ERROR",
-					message: "Failed to fetch journal entry",
-				});
-			}
-		}),
-	getRelevantEntries: protectedProcedure
-		.input(
-			z.object({
-				limit: z.number().min(1).max(20).default(5),
-				query: z.string().max(10000),
-				threshold: z.number().min(0).max(1).default(0.3),
-			}),
-		)
-		.query(async ({ ctx, input }) => {
-			try {
-				const { embedding } = await embed({
-					model: openai.embedding("text-embedding-3-small"),
-					value: input.query,
-				});
+        return entry[0];
+      } catch (error) {
+        if (error instanceof TRPCError) {
+          throw error;
+        }
+        console.error("Database error in journal.byId:", error);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to fetch journal entry",
+        });
+      }
+    }),
+  getRelevantEntries: protectedProcedure
+    .input(
+      z.object({
+        limit: z.number().min(1).max(20).default(5),
+        query: z.string().max(10000),
+        threshold: z.number().min(0).max(1).default(0.3),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      try {
+        const { embedding } = await embed({
+          model: openai.embedding("text-embedding-3-small"),
+          value: input.query,
+        });
 
-				const similarity = sql<number>`1 - (${cosineDistance(JournalEmbedding.embedding, embedding)})`;
+        const similarity = sql<number>`1 - (${cosineDistance(JournalEmbedding.embedding, embedding)})`;
 
-				const results = await ctx.db
-					.select({
-						content: JournalEntry.content,
-						date: JournalEntry.date,
-						id: JournalEntry.id,
-						similarity,
-					})
-					.from(JournalEmbedding)
-					.where(
-						and(
-							eq(JournalEntry.user_id, ctx.session.user.id),
-							gt(similarity, input.threshold),
-						),
-					)
-					.innerJoin(
-						JournalEntry,
-						eq(JournalEmbedding.journal_entry_id, JournalEntry.id),
-					)
-					.orderBy(desc(similarity))
-					.limit(input.limit);
+        const results = await ctx.db
+          .select({
+            content: JournalEntry.content,
+            date: JournalEntry.date,
+            id: JournalEntry.id,
+            similarity,
+          })
+          .from(JournalEmbedding)
+          .where(
+            and(
+              eq(JournalEntry.user_id, ctx.session.user.id),
+              gt(similarity, input.threshold),
+            ),
+          )
+          .innerJoin(
+            JournalEntry,
+            eq(JournalEmbedding.journal_entry_id, JournalEntry.id),
+          )
+          .orderBy(desc(similarity))
+          .limit(input.limit);
 
-				return results;
-			} catch (error) {
-				console.error("Database error in journal.getRelevantEntries:", error);
-				throw new TRPCError({
-					code: "INTERNAL_SERVER_ERROR",
-					message: "Failed to fetch similar journal entries",
-				});
-			}
-		}),
-	getTimeline: protectedProcedure
-		.input(
-			z.object({
-				cursor: z
-					.number()
-					.default(0)
-					.describe("The cursor to start the search from, 0 is today"),
-				limit: z
-					.number()
-					.min(1)
-					.max(30)
-					.default(7)
-					.describe("The number of days to search for, 7 is a week"),
-			}),
-		)
-		.query(async ({ ctx, input }) => {
-			try {
-				// Given a limit of 7 days, 1 page will be equivalent to 7 days going backward from today
-				const from = new Date(input.cursor);
-				const to = new Date(from);
-				to.setDate(to.getDate() - (input.limit - 1)); // Subtract (limit - 1) to get exactly 'limit' days
-				to.setHours(0, 0, 0, 0); // Start of day
+        return results;
+      } catch (error) {
+        console.error("Database error in journal.getRelevantEntries:", error);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to fetch similar journal entries",
+        });
+      }
+    }),
+  getTimeline: protectedProcedure
+    .input(
+      z.object({
+        cursor: z
+          .number()
+          .default(0)
+          .describe("The cursor to start the search from, 0 is today"),
+        limit: z
+          .number()
+          .min(1)
+          .max(30)
+          .default(7)
+          .describe("The number of days to search for, 7 is a week"),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      try {
+        // Given a limit of 7 days, 1 page will be equivalent to 7 days going backward from today
+        const from = new Date(input.cursor);
+        const to = new Date(from);
+        to.setDate(to.getDate() - (input.limit - 1)); // Subtract (limit - 1) to get exactly 'limit' days
+        to.setHours(0, 0, 0, 0); // Start of day
 
-				const dbEntries = await ctx.db
-					.select()
-					.from(JournalEntry)
-					.where(
-						and(
-							eq(JournalEntry.user_id, ctx.session.user.id),
-							between(JournalEntry.date, to.toISOString(), from.toISOString()),
-						),
-					)
-					.orderBy(JournalEntry.date);
+        const dbEntries = await ctx.db
+          .select()
+          .from(JournalEntry)
+          .where(
+            and(
+              eq(JournalEntry.user_id, ctx.session.user.id),
+              between(JournalEntry.date, to.toISOString(), from.toISOString()),
+            ),
+          )
+          .orderBy(JournalEntry.date);
 
-				// Create a map of actual entries keyed by date (YYYY-MM-DD format)
-				const entriesByDate = new Map();
-				dbEntries.forEach((entry) => {
-					const dateKey = new Date(entry.date).toISOString().split("T")[0];
-					entriesByDate.set(dateKey, entry);
-				});
+        // Create a map of actual entries keyed by date (YYYY-MM-DD format)
+        const entriesByDate = new Map();
+        dbEntries.forEach((entry) => {
+          const dateKey = new Date(entry.date).toISOString().split("T")[0];
+          entriesByDate.set(dateKey, entry);
+        });
 
-				// Generate all dates in the range and fill missing days with placeholders
-				// Start from the newest date and work backwards for descending order
-				const allEntries: (PlaceholderJournalEntry | JournalEntry)[] = [];
-				const currentDate = new Date(from);
-				const endDate = new Date(to);
+        // Generate all dates in the range and fill missing days with placeholders
+        // Start from the newest date and work backwards for descending order
+        const allEntries: (PlaceholderJournalEntry | JournalEntry)[] = [];
+        const currentDate = new Date(from);
+        const endDate = new Date(to);
 
-				while (currentDate >= endDate) {
-					const dateKey = currentDate.toISOString().split("T")[0];
+        while (currentDate >= endDate) {
+          const dateKey = currentDate.toISOString().split("T")[0];
 
-					if (!dateKey) continue;
+          if (!dateKey) continue;
 
-					if (entriesByDate.has(dateKey)) {
-						// Use actual entry
-						allEntries.push(entriesByDate.get(dateKey));
-					} else {
-						// Create placeholder entry
-						allEntries.push({
-							date: dateKey,
-						});
-					}
+          if (entriesByDate.has(dateKey)) {
+            // Use actual entry
+            allEntries.push(entriesByDate.get(dateKey));
+          } else {
+            // Create placeholder entry
+            allEntries.push({
+              date: dateKey,
+            });
+          }
 
-					// Move to previous day
-					currentDate.setDate(currentDate.getDate() - 1);
-				}
+          // Move to previous day
+          currentDate.setDate(currentDate.getDate() - 1);
+        }
 
-				// Calculate next page cursor: continue from where this page ends
-				// If current page is July 8th to July 2nd, next page should start July 1st
-				const nextPageDate = new Date(from);
-				nextPageDate.setDate(nextPageDate.getDate() - input.limit);
+        // Calculate next page cursor: continue from where this page ends
+        // If current page is July 8th to July 2nd, next page should start July 1st
+        const nextPageDate = new Date(from);
+        nextPageDate.setDate(nextPageDate.getDate() - input.limit);
 
-				return {
-					entries: allEntries,
-					nextPage: nextPageDate.getTime(),
-				};
-			} catch (error) {
-				console.error("Database error in journal.byPage:", error);
-				throw new TRPCError({
-					code: "INTERNAL_SERVER_ERROR",
-					message: "Failed to fetch journal entries",
-				});
-			}
-		}),
-	write: protectedProcedure
-		.input(
-			z.object({
-				content: z.string().max(10000),
-				date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-			}),
-		)
-		.mutation(async ({ ctx, input }) => {
-			try {
-				const result = await ctx.db
-					.insert(JournalEntry)
-					.values({
-						content: input.content,
-						date: input.date,
-						user_id: ctx.session.user.id,
-					})
-					.onConflictDoUpdate({
-						set: {
-							content: input.content,
-						},
-						target: [JournalEntry.user_id, JournalEntry.date],
-					})
-					.returning();
+        return {
+          entries: allEntries,
+          nextPage: nextPageDate.getTime(),
+        };
+      } catch (error) {
+        console.error("Database error in journal.byPage:", error);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to fetch journal entries",
+        });
+      }
+    }),
+  write: protectedProcedure
+    .input(
+      z.object({
+        content: z.string().max(10000),
+        date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      try {
+        const result = await ctx.db
+          .insert(JournalEntry)
+          .values({
+            content: input.content,
+            date: input.date,
+            user_id: ctx.session.user.id,
+          })
+          .onConflictDoUpdate({
+            set: {
+              content: input.content,
+            },
+            target: [JournalEntry.user_id, JournalEntry.date],
+          })
+          .returning();
 
-				if (result.length === 0) {
-					throw new TRPCError({
-						code: "NOT_FOUND",
-						message: "Journal entry not found",
-					});
-				}
+        if (result.length === 0) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Journal entry not found",
+          });
+        }
 
-				return result[0];
-			} catch (error) {
-				if (error instanceof TRPCError) {
-					throw error;
-				}
-				console.error("Database error in journal.write:", error);
-				throw new TRPCError({
-					code: "INTERNAL_SERVER_ERROR",
-					message: "Failed to update journal entry",
-				});
-			}
-		}),
+        return result[0];
+      } catch (error) {
+        if (error instanceof TRPCError) {
+          throw error;
+        }
+        console.error("Database error in journal.write:", error);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to update journal entry",
+        });
+      }
+    }),
 } satisfies TRPCRouterRecord;

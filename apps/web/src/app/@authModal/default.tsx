@@ -1,3 +1,3 @@
 export default function DefaultAuthModalPage() {
-	return null;
+  return null;
 }

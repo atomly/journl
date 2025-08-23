@@ -1,35 +1,35 @@
 {
-	"name": "@acme/api",
-	"version": "0.0.0",
-	"private": true,
-	"type": "module",
-	"exports": {
-		".": {
-			"types": "./src/index.ts",
-			"default": "./dist/index.js"
-		}
-	},
-	"scripts": {
-		"build": "tsc",
-		"check": "biome check",
-		"clean": "git clean -xdf .cache .turbo dist node_modules",
-		"dev": "pnpm build --watch",
-		"typecheck": "tsc --noEmit --emitDeclarationOnly false"
-	},
-	"dependencies": {
-		"@acme/auth": "workspace:*",
-		"@acme/db": "workspace:*",
-		"@ai-sdk/openai": "^1.3.23",
-		"@blocknote/core": "^0.35.0",
-		"@trpc/server": "^11.4.0",
-		"ai": "^4.3.17",
-		"superjson": "2.2.2",
-		"zod": "^3.25.71"
-	},
-	"devDependencies": {
-		"@acme/tsconfig": "workspace:*",
-		"@biomejs/biome": "^2.0.6",
-		"@blocknote/core": "^0.35.0",
-		"typescript": "^5.8.3"
-	}
+  "name": "@acme/api",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "check": "biome check",
+    "clean": "git clean -xdf .cache .turbo dist node_modules",
+    "dev": "pnpm build --watch",
+    "typecheck": "tsc --noEmit --emitDeclarationOnly false"
+  },
+  "dependencies": {
+    "@acme/auth": "workspace:*",
+    "@acme/db": "workspace:*",
+    "@ai-sdk/openai": "^1.3.23",
+    "@blocknote/core": "^0.35.0",
+    "@trpc/server": "^11.4.0",
+    "ai": "^4.3.17",
+    "superjson": "2.2.2",
+    "zod": "^3.25.71"
+  },
+  "devDependencies": {
+    "@acme/tsconfig": "workspace:*",
+    "@biomejs/biome": "^2.0.6",
+    "@blocknote/core": "^0.35.0",
+    "typescript": "^5.8.3"
+  }
 }

@@ -1,41 +1,43 @@
 {
-	"[javascript]": {
-		"editor.defaultFormatter": "biomejs.biome"
-	},
-	"[json]": {
-		"editor.defaultFormatter": "biomejs.biome",
-		"editor.formatOnSave": false
-	},
-	"[shellscript]": {
-		"editor.defaultFormatter": "foxundermoon.shell-format"
-	},
-	"[typescript]": {
-		"editor.defaultFormatter": "biomejs.biome"
-	},
-	"[typescriptreact]": {
-		"editor.defaultFormatter": "biomejs.biome"
-	},
-	"editor.codeActionsOnSave": {
-		"source.fixAll.biome": "explicit",
-		"source.fixAll.eslint": "explicit"
-	},
-	"editor.defaultFormatter": "biomejs.biome",
-	"editor.formatOnSave": true,
-	"editor.tabSize": 2,
-	"gitlens.remotes": [
-		{
-			"domain": "www.github.com",
-			"type": "GitHub"
-		}
-	],
-	"liveshare.connectionMode": "relay",
-	"liveshare.launcherClient": "visualStudioCode",
-	"markdownlint.config": {
-		"MD033": false // allow inline HTML
-	},
-	"tailwindCSS.experimental.configFile": "./apps/web/src/app/globals.css",
-	"typescript.tsdk": "node_modules/typescript/lib",
-	"yaml.schemas": {
-		"https://json.schemastore.org/github-issue-config.json": ".github/ISSUE_TEMPLATE/config.yml"
-	}
+  "[javascript]": {
+    "editor.defaultFormatter": "biomejs.biome"
+  },
+  "[json]": {
+    "editor.defaultFormatter": "biomejs.biome",
+    "editor.formatOnSave": false
+  },
+  "[shellscript]": {
+    "editor.defaultFormatter": "foxundermoon.shell-format"
+  },
+  "[typescript]": {
+    "editor.defaultFormatter": "biomejs.biome"
+  },
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "biomejs.biome"
+  },
+  "editor.codeActionsOnSave": {
+    "source.fixAll.biome": "explicit",
+    "source.fixAll.eslint": "explicit"
+  },
+  "editor.defaultFormatter": "biomejs.biome",
+  "editor.detectIndentation": false,
+  "editor.formatOnSave": true,
+  "editor.insertSpaces": true,
+  "editor.tabSize": 2,
+  "gitlens.remotes": [
+    {
+      "domain": "www.github.com",
+      "type": "GitHub"
+    }
+  ],
+  "liveshare.connectionMode": "relay",
+  "liveshare.launcherClient": "visualStudioCode",
+  "markdownlint.config": {
+    "MD033": false // allow inline HTML
+  },
+  "tailwindCSS.experimental.configFile": "./apps/web/src/app/globals.css",
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "yaml.schemas": {
+    "https://json.schemastore.org/github-issue-config.json": ".github/ISSUE_TEMPLATE/config.yml"
+  }
 }

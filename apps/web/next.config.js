@@ -7,13 +7,13 @@ await jiti.import("./src/env");
 
 /** @type {import("next").NextConfig} */
 const config = {
-	/** We already do linting and typechecking as separate tasks in CI */
-	eslint: { ignoreDuringBuilds: true },
-	/** These packages won't be bundled in the server build */
-	serverExternalPackages: ["@mastra/*"],
-	/** Enables hot reloading for local packages without a build step */
-	transpilePackages: ["@acme/api", "@acme/auth", "@acme/db"],
-	typescript: { ignoreBuildErrors: true },
+  /** We already do linting and typechecking as separate tasks in CI */
+  eslint: { ignoreDuringBuilds: true },
+  /** These packages won't be bundled in the server build */
+  serverExternalPackages: ["@mastra/*"],
+  /** Enables hot reloading for local packages without a build step */
+  transpilePackages: ["@acme/api", "@acme/auth", "@acme/db"],
+  typescript: { ignoreBuildErrors: true },
 };
 
 export default config;

@@ -16,26 +16,23 @@ export async function POST(req: Request) {
 
     const result = await journlAgent.stream(messages, {
       onFinish: async (result) => {
-        // Store LLM token usage
+        const model = JSON.parse(result.request.body || "{}").model;
+        const provider = Object.keys(result.providerMetadata ?? {})[0] || "";
+
         if (result.usage && session.user?.id) {
-          try {
-            await db.transaction(async (tx) => {
-              await insertLLMTokenUsage(tx, {
-                inputTokens: result.usage.promptTokens,
-                metadata: {
-                  message_count: messages.length,
-                  request_type: "chat",
-                }, // Update this based on your agent configuration
-                model: "gpt-4o-mini",
-                outputTokens: result.usage.completionTokens,
-                provider: "openai",
-                userId: session.user.id,
-              });
+          await db.transaction(async (tx) => {
+            await insertLLMTokenUsage(tx, {
+              inputTokens: result.usage.promptTokens,
+              metadata: {
+                message_count: messages.length,
+                request_type: "chat",
+              }, // Update this based on your agent configuration
+              model,
+              outputTokens: result.usage.completionTokens,
+              provider, // fallback since provider not available in result
+              userId: session.user.id,
             });
-          } catch (error) {
-            // eslint-disable-next-line no-console
-            console.error("Failed to store LLM token usage:", error);
-          }
+          });
         }
       },
     });

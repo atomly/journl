@@ -17,7 +17,6 @@ export const POST = handler(zJournalEntry, async (payload) => {
 			);
 		}
 
-		// TODO: Chunk the journal entries.
 		const { embedding } = await embed({
 			maxRetries: 5,
 			model: openai.embedding("text-embedding-3-small"),

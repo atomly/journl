@@ -32,7 +32,7 @@ export function DeletePageButton({ page, className }: DeletePageButtonProps) {
 	const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
 	const { mutate: deletePage, isPending: isDeleting } = useMutation(
-		trpc.pages.delete.mutationOptions({}),
+		trpc.document.delete.mutationOptions({}),
 	);
 
 	const handleDelete = () => {
@@ -42,16 +42,14 @@ export function DeletePageButton({ page, className }: DeletePageButtonProps) {
 	const confirmDelete = () => {
 		startTransition(() => {
 			deletePage(
-				{ id: page.id },
+				{ id: page.document_id },
 				{
 					onError: (error) => {
 						console.error("Failed to delete page:", error);
 					},
-					onSuccess: (result) => {
-						const deletedPageId = result.deletedPage.id;
-
+					onSuccess: () => {
 						// Only navigate away if we're currently on the deleted page
-						if (pathname === `/pages/${deletedPageId}`) {
+						if (pathname === `/pages/${page.id}`) {
 							router.push("/journal");
 						}
 
@@ -60,18 +58,18 @@ export function DeletePageButton({ page, className }: DeletePageButtonProps) {
 							trpc.pages.getAll.queryOptions().queryKey,
 							(oldPages: Page[] | undefined) => {
 								if (!oldPages) return [];
-								return oldPages.filter((p) => p.id !== deletedPageId);
+								return oldPages.filter((p) => p.id !== page.id);
 							},
 						);
 
 						// Remove the specific page from cache
 						queryClient.removeQueries({
-							queryKey: trpc.pages.getById.queryKey({ id: deletedPageId }),
+							queryKey: trpc.pages.getById.queryKey({ id: page.id }),
 						});
 
 						// Cancel any in-flight queries for this page
 						queryClient.cancelQueries({
-							queryKey: trpc.pages.getById.queryKey({ id: deletedPageId }),
+							queryKey: trpc.pages.getById.queryKey({ id: page.id }),
 						});
 
 						// Close the dialog after successful deletion

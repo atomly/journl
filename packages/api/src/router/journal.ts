@@ -1,15 +1,5 @@
+import { and, between, cosineDistance, desc, eq, gt, sql } from "@acme/db";
 import {
-	and,
-	between,
-	cosineDistance,
-	desc,
-	eq,
-	gt,
-	inArray,
-	sql,
-} from "@acme/db";
-import {
-	Block,
 	JournalEmbedding,
 	JournalEntry,
 	zJournalEntryDate,
@@ -26,106 +16,6 @@ export type PlaceholderJournalEntry = {
 };
 
 export const journalRouter = {
-	delete: protectedProcedure
-		.input(z.object({ id: z.string().uuid() }))
-		.mutation(async ({ ctx, input }) => {
-			try {
-				return await ctx.db.transaction(async (tx) => {
-					// 1. First, get the journal entry to ensure it exists and belongs to the user
-					const [journalToDelete] = await tx
-						.select()
-						.from(JournalEntry)
-						.where(
-							and(
-								eq(JournalEntry.id, input.id),
-								eq(JournalEntry.user_id, ctx.session.user.id),
-							),
-						)
-						.limit(1);
-
-					if (!journalToDelete) {
-						throw new TRPCError({
-							code: "NOT_FOUND",
-							message: "Journal entry not found",
-						});
-					}
-
-					// 2. Recursively collect all child block IDs
-					const collectChildIds = async (
-						blockId: string,
-					): Promise<string[]> => {
-						const [block] = await tx
-							.select({ children: Block.children })
-							.from(Block)
-							.where(eq(Block.id, blockId))
-							.limit(1);
-
-						if (!block) return [];
-
-						const childIds = (block.children as string[]) || [];
-						const allChildIds = [...childIds];
-
-						// Recursively collect children of children
-						for (const childId of childIds) {
-							const grandChildIds = await collectChildIds(childId);
-							allChildIds.push(...grandChildIds);
-						}
-
-						return allChildIds;
-					};
-
-					// 3. Get all blocks that belong to this journal entry
-					const journalBlocks = await tx
-						.select({ id: Block.id })
-						.from(Block)
-						.where(
-							and(
-								eq(Block.parent_type, "journal_entry"),
-								eq(Block.parent_id, input.id),
-							),
-						);
-
-					const allChildBlockIds: string[] = [];
-
-					// Collect all nested child block IDs
-					for (const block of journalBlocks) {
-						allChildBlockIds.push(block.id);
-						const nestedChildIds = await collectChildIds(block.id);
-						allChildBlockIds.push(...nestedChildIds);
-					}
-
-					// 4. Delete all child blocks first
-					if (allChildBlockIds.length > 0) {
-						await tx.delete(Block).where(inArray(Block.id, allChildBlockIds));
-					}
-
-					// 5. Finally, delete the journal entry
-					const result = await tx
-						.delete(JournalEntry)
-						.where(
-							and(
-								eq(JournalEntry.id, input.id),
-								eq(JournalEntry.user_id, ctx.session.user.id),
-							),
-						)
-						.returning();
-
-					return {
-						deletedBlocksCount: allChildBlockIds.length,
-						deletedJournalEntry: result[0],
-					};
-				});
-			} catch (error) {
-				if (error instanceof TRPCError) {
-					throw error;
-				}
-				console.error("Database error in journal.delete:", error);
-				throw new TRPCError({
-					code: "INTERNAL_SERVER_ERROR",
-					message: "Failed to delete journal entry",
-				});
-			}
-		}),
 	getBetween: protectedProcedure
 		.input(
 			z.object({

@@ -27,7 +27,7 @@ export function CreatePageButton() {
 			createPage(
 				{
 					children: [],
-					title: "New Page",
+					title: "",
 				},
 				{
 					onError: (error) => {
@@ -64,7 +64,7 @@ export function CreatePageButton() {
 						disabled={showLoading}
 					>
 						<Plus />
-						{showLoading ? "Creating..." : "New Page"}
+						{showLoading ? "Creating..." : "New page"}
 					</Button>
 				</div>
 			</SidebarMenuSubButton>

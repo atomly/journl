@@ -25,6 +25,9 @@ export function PageEditor({
 
 	const { mutate, isPending } = useMutation({
 		...trpc.blocks.saveTransactions.mutationOptions({}),
+		// ! TODO: When the mutation fails we need to revert the changes to the editor just like Notion does.
+		// ! To do this we can use `onError` and `editor.undo()`, without calling the transactions. We might have to get creative.
+		// ! Maybe we can refetch the blocks after an error instead of `undo`?
 		onSuccess: () => {
 			if (pendingChangesRef.current.length > 0) {
 				debouncedMutate();

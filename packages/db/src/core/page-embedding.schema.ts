@@ -4,6 +4,8 @@ import { createSelectSchema } from "drizzle-zod";
 import { user } from "../auth/user.schema.js";
 import { Page } from "./page.schema.js";
 
+const EMBEDDING_DIMENSIONS = 1536;
+
 export const PageEmbedding = pgTable(
 	"page_embedding",
 	(t) => ({
@@ -23,7 +25,7 @@ export const PageEmbedding = pgTable(
 		// Hash of the entire page's text content for change detection
 		page_text_hash: t.text().notNull(),
 		// The actual embedding vector for this chunk
-		embedding: vector({ dimensions: 1536 }).notNull(),
+		embedding: vector({ dimensions: EMBEDDING_DIMENSIONS }).notNull(),
 		created_at: t
 			.timestamp({ mode: "string", withTimezone: true })
 			.defaultNow()

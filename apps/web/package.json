@@ -4,12 +4,12 @@
 	"private": true,
 	"type": "module",
 	"scripts": {
-		"build": "pnpm with-env next build",
+		"build": "NODE_ENV=production pnpm with-env next build",
 		"check": "biome check",
 		"clean": "git clean -xdf .cache .next .turbo node_modules",
-		"dev": "pnpm with-env next dev --turbopack",
+		"dev": "NODE_ENV=development pnpm with-env next dev --turbopack",
 		"shadcn": "pnpm dlx shadcn@latest add && pnpm check --write --unsafe",
-		"start": "pnpm with-env next start",
+		"start": "NODE_ENV=production pnpm with-env next start",
 		"typecheck": "tsc --noEmit",
 		"with-env": "dotenv -e ../../.env --"
 	},

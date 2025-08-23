@@ -6,7 +6,7 @@
 	"scripts": {
 		"check": "biome check",
 		"clean": "git clean -xdf .cache .next .turbo node_modules tsconfig.tsbuildinfo",
-		"dev": "pnpm with-env concurrently \"pnpm watch\" \"pnpm tunnel\"",
+		"dev": "NODE_ENV=development pnpm with-env concurrently \"pnpm watch\" \"pnpm tunnel\"",
 		"tunnel": "pnpm with-env sh -c 'pnpm lt --port $LOCALTUNNEL_PORT --subdomain $LOCALTUNNEL_SUBDOMAIN'",
 		"typecheck": "tsc --noEmit",
 		"watch": "pnpm with-env tsx watch ./src/main.ts",

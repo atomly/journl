@@ -38,6 +38,7 @@
 		"@acme/tsconfig": "workspace:*",
 		"dotenv-cli": "^8.0.0",
 		"drizzle-kit": "^0.31.1",
+		"tsx": "^4.20.3",
 		"typescript": "^5.8.3"
 	}
 }

@@ -1,16 +1,16 @@
 {
   "name": "@acme/tsconfig",
-    "description": "Shared TypeScript configurations for different environments (Node.js, DOM, React, Next.js)",
-    "private": true,
-    "version": "0.0.0",
-    "type": "module",
-    "files": [
-        "*.json"
-    ],
-    "scripts": {
-        "check": "biome check"
-    },
-    "devDependencies": {
-        "@biomejs/biome": "^2.0.6"
-    }
+  "description": "Shared TypeScript configurations for different environments (Node.js, DOM, React, Next.js)",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "files": [
+    "*.json"
+  ],
+  "scripts": {
+    "check": "biome check"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.0.6"
+  }
 }

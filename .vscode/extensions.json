@@ -1,8 +1,8 @@
 {
-	"recommendations": [
-		"biomejs.biome",
-		"bradlc.vscode-tailwindcss",
-		"deque-systems.vscode-axe-linter",
-		"yoavbls.pretty-ts-errors"
-	]
+  "recommendations": [
+    "biomejs.biome",
+    "bradlc.vscode-tailwindcss",
+    "deque-systems.vscode-axe-linter",
+    "yoavbls.pretty-ts-errors"
+  ]
 }

@@ -5,15 +5,15 @@ import Link from "next/link";
 import { BetterAuthProvider } from "~/components/auth/better-auth-provider";
 
 type AuthModalLayoutProps = {
-	children: React.ReactNode;
+  children: React.ReactNode;
 };
 
 export default async function AuthModalLayout({
-	children,
+  children,
 }: AuthModalLayoutProps) {
-	return (
-		<BetterAuthProvider Link={Link}>
-			<AuthModal>{children}</AuthModal>
-		</BetterAuthProvider>
-	);
+  return (
+    <BetterAuthProvider Link={Link}>
+      <AuthModal>{children}</AuthModal>
+    </BetterAuthProvider>
+  );
 }

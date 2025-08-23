@@ -6,25 +6,25 @@ import type { ComponentProps } from "react";
 import { BetterAuthProvider } from "../../../components/auth/better-auth-provider";
 
 function AuthLink({
-	href,
-	...rest
+  href,
+  ...rest
 }: Omit<ComponentProps<typeof Link>, "onNavigate">) {
-	return (
-		<Link
-			{...rest}
-			href={href}
-			onNavigate={(e) => {
-				e.preventDefault();
-				window.location.href = href.toString();
-			}}
-		/>
-	);
+  return (
+    <Link
+      {...rest}
+      href={href}
+      onNavigate={(e) => {
+        e.preventDefault();
+        window.location.href = href.toString();
+      }}
+    />
+  );
 }
 
 export function AuthProviders({ children }: { children: React.ReactNode }) {
-	return (
-		<ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-			<BetterAuthProvider Link={AuthLink}>{children}</BetterAuthProvider>
-		</ThemeProvider>
-	);
+  return (
+    <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+      <BetterAuthProvider Link={AuthLink}>{children}</BetterAuthProvider>
+    </ThemeProvider>
+  );
 }

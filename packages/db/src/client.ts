@@ -7,13 +7,13 @@ import { drizzle } from "drizzle-orm/vercel-postgres";
 import * as schema from "./schema.js";
 
 export const db = drizzle({
-	casing: "snake_case",
-	client: sql,
-	schema,
+  casing: "snake_case",
+  client: sql,
+  schema,
 });
 
 export type DbTransaction = PgTransaction<
-	VercelPgQueryResultHKT,
-	typeof schema,
-	ExtractTablesWithRelations<typeof schema>
+  VercelPgQueryResultHKT,
+  typeof schema,
+  ExtractTablesWithRelations<typeof schema>
 >;

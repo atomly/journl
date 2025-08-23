@@ -7,12 +7,12 @@ import { pagesRouter } from "./router/pages.js";
 import { createTRPCRouter } from "./trpc.js";
 
 export const appRouter = createTRPCRouter({
-	auth: authRouter,
-	blocks: blocksRouter,
-	document: documentRouter,
-	journal: journalRouter,
-	notes: notesRouter,
-	pages: pagesRouter,
+  auth: authRouter,
+  blocks: blocksRouter,
+  document: documentRouter,
+  journal: journalRouter,
+  notes: notesRouter,
+  pages: pagesRouter,
 });
 
 export type AppRouter = typeof appRouter;

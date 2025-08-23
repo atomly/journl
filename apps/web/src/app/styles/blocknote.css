@@ -3,16 +3,16 @@
 
 /* Custom theme with transparent background */
 .bn-container[data-color-scheme] {
-	--bn-colors-editor-background: transparent;
+  --bn-colors-editor-background: transparent;
 }
 
 .bn-container[data-color-scheme="dark"] {
-	--bn-colors-editor-background: transparent;
+  --bn-colors-editor-background: transparent;
 }
 
 /* Remove nested block border */
 .bn-block-group .bn-block:not(:has(.bn-toggle-wrapper))
-	.bn-block-group
-	.bn-block-outer:not([data-prev-depth-changed]):before {
-	border-left: none;
+  .bn-block-group
+  .bn-block-outer:not([data-prev-depth-changed]):before {
+  border-left: none;
 }

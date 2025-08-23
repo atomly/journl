@@ -15,12 +15,12 @@ app.use(json());
 
 // Start the server, we'll proxy the requests to the Next.js server using the `useNextjsProxy` middleware.
 app.listen(env.LOCALTUNNEL_PORT, () => {
-	console.debug(`Tunnel server listening on port ${env.LOCALTUNNEL_PORT}!`);
+  console.debug(`Tunnel server listening on port ${env.LOCALTUNNEL_PORT}!`);
 });
 
 // Small route for health checks, helps us know if the server is running.
 app.get("/", (_req, res) => {
-	res.send("Hello World");
+  res.send("Hello World");
 });
 
 usePayloadLogger(app);

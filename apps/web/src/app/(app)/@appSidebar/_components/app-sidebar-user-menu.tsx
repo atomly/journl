@@ -5,14 +5,14 @@ import { DropdownMenuContent } from "~/components/ui/dropdown-menu";
 import { useSidebar } from "~/components/ui/sidebar";
 
 type AppSidebarUserMenuProps = Omit<
-	ComponentProps<typeof DropdownMenuContent>,
-	"side"
+  ComponentProps<typeof DropdownMenuContent>,
+  "side"
 >;
 
 export function AppSidebarUserMenu(props: AppSidebarUserMenuProps) {
-	const { isMobile } = useSidebar();
+  const { isMobile } = useSidebar();
 
-	return (
-		<DropdownMenuContent side={isMobile ? "bottom" : "right"} {...props} />
-	);
+  return (
+    <DropdownMenuContent side={isMobile ? "bottom" : "right"} {...props} />
+  );
 }

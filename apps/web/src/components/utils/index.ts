@@ -1,1 +1,1 @@
-export * from "./cn";
+export * from "../../lib/cn";

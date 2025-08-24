@@ -21,7 +21,7 @@ export const aiRouter = {
         journalEntryId: z.string().uuid(),
         model: z.string(),
         provider: z.string(),
-        userId: z.string().uuid(),
+        userId: z.string(),
       }),
     )
     .mutation(async ({ ctx, input }) => {

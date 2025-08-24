@@ -1,3 +1,4 @@
+import { aiRouter } from "./router/ai.js";
 import { authRouter } from "./router/auth.js";
 import { blocksRouter } from "./router/blocks.js";
 import { documentRouter } from "./router/document.js";
@@ -7,6 +8,7 @@ import { pagesRouter } from "./router/pages.js";
 import { createTRPCRouter } from "./trpc.js";
 
 export const appRouter = createTRPCRouter({
+  ai: aiRouter,
   auth: authRouter,
   blocks: blocksRouter,
   document: documentRouter,

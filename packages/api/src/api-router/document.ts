@@ -1,7 +1,6 @@
 import { and, eq } from "@acme/db";
 import { Document, zDocument } from "@acme/db/schema";
 import type { TRPCRouterRecord } from "@trpc/server";
-
 import { protectedProcedure } from "../trpc.js";
 
 export const documentRouter = {

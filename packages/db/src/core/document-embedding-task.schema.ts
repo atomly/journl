@@ -7,7 +7,7 @@ import { Document } from "./document.schema.js";
 
 export const DocumentEmbeddingTaskStatus = pgEnum(
   "document_embedding_task_status",
-  ["debounced", "ready", "running", "completed", "failed"],
+  ["debounced", "ready", "completed", "failed"],
 );
 
 export const DocumentEmbeddingTask = pgTable(
@@ -22,6 +22,7 @@ export const DocumentEmbeddingTask = pgTable(
       .notNull()
       .references(() => Document.id, { onDelete: "cascade" }),
     status: DocumentEmbeddingTaskStatus().notNull().default("debounced"),
+    retries: t.integer().notNull().default(0),
     created_at: t
       .timestamp({ mode: "string", withTimezone: true })
       .defaultNow()
@@ -35,7 +36,7 @@ export const DocumentEmbeddingTask = pgTable(
   (t) => [
     // Unique constraint: only one non-completed task per page
     // This allows multiple completed tasks but prevents multiple active tasks
-    uniqueIndex("unique_non_completed_task_per_page")
+    uniqueIndex("document_embedding_task_unique_non_completed_task_per_page")
       .on(t.document_id)
       .where(sql`${t.status} != 'completed'`),
   ],

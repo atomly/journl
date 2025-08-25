@@ -1,4 +1,4 @@
-import { appRouter, createTRPCContext } from "@acme/api";
+import { apiRouter, createTRPCContext } from "@acme/api";
 import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
 import type { NextRequest } from "next/server";
 
@@ -35,7 +35,7 @@ const handler = async (req: NextRequest) => {
       console.error(`>>> tRPC Error on '${path}'`, error);
     },
     req,
-    router: appRouter,
+    router: apiRouter,
   });
 
   setCorsHeaders(response);

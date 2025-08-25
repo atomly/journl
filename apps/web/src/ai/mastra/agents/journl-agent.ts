@@ -1,5 +1,5 @@
 import { Agent } from "@mastra/core/agent";
-import { model } from "~/ai/providers/openai/llm";
+import { model } from "~/ai/providers/openai/text";
 import { semanticJournalSearch } from "../tools/semantic-journal-search";
 import { semanticPageSearch } from "../tools/semantic-page-search";
 import { temporalJournalSearch } from "../tools/temporal-journal-search";

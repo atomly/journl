@@ -10,7 +10,13 @@ const config = {
   /** We already do linting and typechecking as separate tasks in CI */
   eslint: { ignoreDuringBuilds: true },
   /** These packages won't be bundled in the server build */
-  serverExternalPackages: ["@mastra/*"],
+  /** @see https://nextjs.org/docs/app/api-reference/config/next-config-js/serverExternalPackages */
+  serverExternalPackages: [
+    "@mastra/*",
+    "@blocknote/server-util",
+    "@blocknote/react",
+    "@blocknote/core",
+  ],
   /** Enables hot reloading for local packages without a build step */
   transpilePackages: ["@acme/api", "@acme/auth", "@acme/db"],
   typescript: { ignoreBuildErrors: true },

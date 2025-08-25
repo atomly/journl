@@ -1,0 +1,18 @@
+import { createTRPCRouter } from "../trpc.js";
+import { authRouter } from "./auth.js";
+import { blocksRouter } from "./blocks.js";
+import { documentRouter } from "./document.js";
+import { journalRouter } from "./journal.js";
+import { notesRouter } from "./notes.js";
+import { pagesRouter } from "./pages.js";
+
+export const apiRouter = createTRPCRouter({
+  auth: authRouter,
+  blocks: blocksRouter,
+  document: documentRouter,
+  journal: journalRouter,
+  notes: notesRouter,
+  pages: pagesRouter,
+});
+
+export type ApiRouter = typeof apiRouter;

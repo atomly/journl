@@ -1,9 +1,9 @@
 "use client";
 
+import type { PlaceholderJournalEntry } from "@acme/api";
 import type { JournalEntry } from "@acme/db/schema";
 import { useMutation } from "@tanstack/react-query";
 import Link from "next/link";
-import type { PlaceholderJournalEntry } from "node_modules/@acme/api/src/router/journal";
 import type React from "react";
 import {
   type ComponentProps,

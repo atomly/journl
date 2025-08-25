@@ -1,6 +1,6 @@
 import { and, between, cosineDistance, desc, eq, gt, sql } from "@acme/db";
 import {
-  JournalEmbedding,
+  DocumentEmbedding,
   JournalEntry,
   zJournalEntryDate,
 } from "@acme/db/schema";
@@ -88,32 +88,35 @@ export const journalRouter = {
     .query(async ({ ctx, input }) => {
       try {
         const { embedding } = await embed({
+          // ! TODO: Move this to a shared package called `@acme/ai`.
           model: openai.embedding("text-embedding-3-small"),
           value: input.query,
         });
 
-        const similarity = sql<number>`1 - (${cosineDistance(JournalEmbedding.embedding, embedding)})`;
+        const embeddingSimilarity = sql<number>`1 - (${cosineDistance(DocumentEmbedding.vector, embedding)})`;
 
         const results = await ctx.db
-          .select({
-            content: JournalEntry.content,
-            date: JournalEntry.date,
-            id: JournalEntry.id,
-            similarity,
+          .selectDistinctOn([DocumentEmbedding.document_id], {
+            embedding: DocumentEmbedding,
+            journal_entry: JournalEntry,
+            similarity: embeddingSimilarity,
           })
-          .from(JournalEmbedding)
+          .from(DocumentEmbedding)
           .where(
             and(
-              eq(JournalEntry.user_id, ctx.session.user.id),
-              gt(similarity, input.threshold),
+              eq(DocumentEmbedding.user_id, ctx.session.user.id),
+              gt(embeddingSimilarity, input.threshold),
             ),
           )
           .innerJoin(
             JournalEntry,
-            eq(JournalEmbedding.journal_entry_id, JournalEntry.id),
+            eq(DocumentEmbedding.document_id, JournalEntry.document_id),
           )
-          .orderBy(desc(similarity))
-          .limit(input.limit);
+          .orderBy(DocumentEmbedding.document_id, desc(embeddingSimilarity));
+
+        results.sort((a, b) => {
+          return b.similarity - a.similarity;
+        });
 
         return results;
       } catch (error) {

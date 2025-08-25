@@ -97,7 +97,8 @@ export const blocksRouter = {
           }
         }
 
-        // Anytime we save a transaction we need to update the document embedding task status to debounced.
+        // ! TODO: Check if a block with text was amongst the upserted, if so, trigger the document embedding task.
+        // ! Anytime we save a transaction we need to update the document embedding task status to debounced.
         await tx
           .insert(DocumentEmbeddingTask)
           .values({

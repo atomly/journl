@@ -1,7 +1,10 @@
 import type { inferRouterInputs, inferRouterOutputs } from "@trpc/server";
 
-import type { AppRouter } from "./root.js";
-import { appRouter } from "./root.js";
+import { type ApiRouter, apiRouter } from "./api-router/index.js";
+import {
+  type EmbedderRouter,
+  embedderRouter,
+} from "./embedder-router/index.js";
 import { createTRPCContext } from "./trpc.js";
 
 /**
@@ -10,7 +13,7 @@ import { createTRPCContext } from "./trpc.js";
  * type PostByIdInput = RouterInputs['post']['byId']
  *      ^? { id: number }
  **/
-type RouterInputs = inferRouterInputs<AppRouter>;
+type RouterInputs = inferRouterInputs<ApiRouter>;
 
 /**
  * Inference helpers for output types
@@ -18,10 +21,11 @@ type RouterInputs = inferRouterInputs<AppRouter>;
  * type AllPostsOutput = RouterOutputs['post']['all']
  *      ^? Post[]
  **/
-type RouterOutputs = inferRouterOutputs<AppRouter>;
+type RouterOutputs = inferRouterOutputs<ApiRouter>;
 
-export { createTRPCContext, appRouter };
-export type { AppRouter, RouterInputs, RouterOutputs };
+export { createTRPCContext, apiRouter, embedderRouter };
+export type { ApiRouter, RouterInputs, RouterOutputs, EmbedderRouter };
 
 // Export types from sub-routers
-export type { BlockTransaction } from "./router/blocks.js";
+export type { BlockTransaction } from "./api-router/blocks.js";
+export type { PlaceholderJournalEntry } from "./api-router/journal.js";

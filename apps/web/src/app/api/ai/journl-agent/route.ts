@@ -20,15 +20,20 @@ export async function POST(req: Request) {
         const provider = Object.keys(result.providerMetadata ?? {})[0] || "";
 
         if (result.usage && session.user?.id) {
-          await api.ai.trackLLMUsage({
-            inputTokens: result.usage.promptTokens,
-            metadata: {
-              message_count: messages.length,
-              request_type: "chat",
-            },
-            model,
-            outputTokens: result.usage.completionTokens,
-            provider,
+          await api.usage.trackAiModelUsage({
+            metrics: [
+              {
+                quantity: result.usage.promptTokens,
+                unit: "input_tokens",
+              },
+              {
+                quantity: result.usage.completionTokens,
+                unit: "output_tokens",
+              },
+            ],
+            model_id: model,
+            model_provider: provider,
+            user_id: session.user.id,
           });
         }
       },

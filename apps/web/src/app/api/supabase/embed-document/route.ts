@@ -10,7 +10,7 @@ import removeMarkdown from "remove-markdown";
 import type { z } from "zod/v4";
 import { model } from "~/ai/providers/openai/embedding";
 import { schema } from "~/components/editor/block-schema";
-import { embedder } from "~/trpc/server";
+import { api, embedder } from "~/trpc/server";
 import { handler } from "../_lib/webhook-handler";
 
 const CHUNK_PARAMS: ChunkParams = {
@@ -102,13 +102,32 @@ export const POST = handler(zDocumentEmbeddingTask, async (payload) => {
     const mDocument =
       await MDocument.fromMarkdown(markdown).chunk(CHUNK_PARAMS);
 
-    // ! TODO: Here's where we get the usage tokens, we must process these in a different transaction
-    // ! To guarantee that the usage is tracked regardless of the success of the embedding.
-    const { embeddings, usage: _usage } = await embedMany({
+    const { embeddings, usage } = await embedMany({
       maxRetries: 5,
       model,
       values: mDocument.map((chunk) => chunk.text),
     });
+
+    if (usage) {
+      try {
+        await api.usage.trackAiModelUsage({
+          metadata: {
+            document_id: document.id,
+            model_version: model.specificationVersion,
+          },
+          metrics: [{ quantity: usage.tokens, unit: "tokens" }],
+          model_id: model.modelId,
+          model_provider: model.provider,
+          user_id: document.user_id,
+        });
+      } catch (error) {
+        console.error(
+          "Failed to track AI usage for document embedding:",
+          error,
+        );
+        // Continue with embedding even if usage tracking fails
+      }
+    }
 
     const insertions: z.infer<typeof zInsertDocumentEmbedding>[] = [];
 

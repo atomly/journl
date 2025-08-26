@@ -1,25 +1,23 @@
 import { eq } from "@acme/db";
 import { UsageEvent, UsageEventStatus } from "@acme/db/schema";
-import { TRPCError } from "@trpc/server";
+import { TRPCError, type TRPCRouterRecord } from "@trpc/server";
 import { z } from "zod/v4";
-import { protectedProcedure } from "../trpc.js";
+import { publicProcedure } from "../trpc.js";
 
 export const usageRouter = {
-  createUsageEvent: protectedProcedure
+  trackAiModelUsage: publicProcedure
     .input(
       z.object({
-        metadata: z.record(z.string(), z.string()),
+        metadata: z.record(z.string(), z.string()).optional(),
         metrics: z.array(z.object({ quantity: z.number(), unit: z.string() })),
         model_id: z.string(),
         model_provider: z.string(),
+        user_id: z.string(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
       try {
-        return await ctx.db.insert(UsageEvent).values({
-          ...input,
-          user_id: ctx.session.user.id,
-        });
+        return await ctx.db.insert(UsageEvent).values(input);
       } catch (error) {
         console.error("Database error in usage.createUsageEvent:", error);
         throw new TRPCError({
@@ -28,7 +26,7 @@ export const usageRouter = {
         });
       }
     }),
-  processUsageEvent: protectedProcedure
+  updateUsageEventStatus: publicProcedure
     .input(
       z.object({
         id: z.string(),
@@ -51,4 +49,4 @@ export const usageRouter = {
         });
       }
     }),
-};
+} satisfies TRPCRouterRecord;

@@ -5,6 +5,7 @@ import { documentRouter } from "./document.js";
 import { journalRouter } from "./journal.js";
 import { notesRouter } from "./notes.js";
 import { pagesRouter } from "./pages.js";
+import { usageRouter } from "./usage.js";
 
 export const apiRouter = createTRPCRouter({
   auth: authRouter,
@@ -13,6 +14,7 @@ export const apiRouter = createTRPCRouter({
   journal: journalRouter,
   notes: notesRouter,
   pages: pagesRouter,
+  usage: usageRouter,
 });
 
 export type ApiRouter = typeof apiRouter;

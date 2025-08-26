@@ -8,7 +8,7 @@ type UsageEventMetrics = {
 
 export const UsageEventStatus = pgEnum("usage_event_status", [
   "pending",
-  "completed",
+  "processed",
   "failed",
 ]);
 

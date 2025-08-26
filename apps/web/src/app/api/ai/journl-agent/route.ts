@@ -16,8 +16,10 @@ export async function POST(req: Request) {
 
     const result = await journlAgent.stream(messages, {
       onFinish: async (result) => {
-        const model = JSON.parse(result.request.body || "{}").model;
-        const provider = Object.keys(result.providerMetadata ?? {})[0] || "";
+        const modelData = await journlAgent.getModel();
+
+        const provider = modelData.provider;
+        const model = modelData.modelId;
 
         if (result.usage && session.user?.id) {
           await api.usage.trackAiModelUsage({

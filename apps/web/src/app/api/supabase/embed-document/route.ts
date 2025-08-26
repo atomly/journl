@@ -108,26 +108,16 @@ export const POST = handler(zDocumentEmbeddingTask, async (payload) => {
       values: mDocument.map((chunk) => chunk.text),
     });
 
-    if (usage) {
-      try {
-        await api.usage.trackAiModelUsage({
-          metadata: {
-            document_id: document.id,
-            model_version: model.specificationVersion,
-          },
-          metrics: [{ quantity: usage.tokens, unit: "tokens" }],
-          model_id: model.modelId,
-          model_provider: model.provider,
-          user_id: document.user_id,
-        });
-      } catch (error) {
-        console.error(
-          "Failed to track AI usage for document embedding:",
-          error,
-        );
-        // Continue with embedding even if usage tracking fails
-      }
-    }
+    await api.usage.trackAiModelUsage({
+      metadata: {
+        document_id: document.id,
+        model_version: model.specificationVersion,
+      },
+      metrics: [{ quantity: usage.tokens, unit: "tokens" }],
+      model_id: model.modelId,
+      model_provider: model.provider,
+      user_id: document.user_id,
+    });
 
     const insertions: z.infer<typeof zInsertDocumentEmbedding>[] = [];
 

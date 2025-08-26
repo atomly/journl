@@ -3,6 +3,7 @@ import { pgTable, text, unique } from "drizzle-orm/pg-core";
 import { createSelectSchema } from "drizzle-zod";
 import z from "zod/v4";
 import { user } from "../auth/user.schema.js";
+import { Document } from "./document.schema.js";
 
 export const JournalEntry = pgTable(
   "journal_entry",
@@ -11,9 +12,12 @@ export const JournalEntry = pgTable(
     user_id: text()
       .notNull()
       .references(() => user.id, { onDelete: "cascade" }),
-    // Content stores the journal entry text content
-    content: text().notNull(),
+    document_id: t
+      .uuid()
+      // .notNull()
+      .references(() => Document.id, { onDelete: "cascade" }),
     date: t.date({ mode: "string" }).notNull(),
+    content: text().notNull(),
     created_at: t
       .timestamp({ mode: "string", withTimezone: true })
       .defaultNow()
@@ -24,9 +28,9 @@ export const JournalEntry = pgTable(
       .notNull()
       .$onUpdateFn(() => sql`now()`),
   }),
-  (table) => [
+  (t) => [
     // Enforce uniqueness: one journal entry per user per day
-    unique("unique_journal_entry_user_date").on(table.user_id, table.date),
+    unique("journal_entry_unique_user_date").on(t.user_id, t.date),
   ],
 );
 

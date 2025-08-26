@@ -4,6 +4,7 @@ import { X } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { useDebounce } from "use-debounce";
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
 import {
@@ -30,22 +31,27 @@ import { useTRPC } from "~/trpc/react";
 const MIN_QUERY_LENGTH = 2;
 const DEFAULT_THRESHOLD = 0.25;
 const DEFAULT_LIMIT = 10;
+const DEFAULT_DEBOUNCE_TIME = 500;
+
 type HeaderSearchButtonProps = React.ComponentProps<typeof Dialog> & {
   children: React.ReactNode;
   limit?: number;
   threshold?: number;
+  debounceTime?: number;
 };
 
 export function HeaderSearchButton({
   children,
   limit = DEFAULT_LIMIT,
   threshold = DEFAULT_THRESHOLD,
+  debounceTime = DEFAULT_DEBOUNCE_TIME,
   ...rest
 }: HeaderSearchButtonProps) {
   const isMobile = useIsMobile();
   const [isOpen, setIsOpen] = useState(false);
   const [query, setQuery] = useState("");
   const router = useRouter();
+  const [debouncedQuery] = useDebounce(query, debounceTime);
 
   // Keyboard shortcut handlers
   useEffect(() => {
@@ -65,13 +71,17 @@ export function HeaderSearchButton({
   }, [isOpen]);
 
   const trpc = useTRPC();
-  const { data: notes, isLoading } = useQuery({
+  const {
+    data: notes,
+    isLoading,
+    isError,
+  } = useQuery({
     ...trpc.notes.getSimilarNotes.queryOptions({
       limit,
-      query,
+      query: debouncedQuery,
       threshold,
     }),
-    enabled: query.length > MIN_QUERY_LENGTH,
+    enabled: debouncedQuery.length > MIN_QUERY_LENGTH,
   });
 
   return (
@@ -97,7 +107,6 @@ export function HeaderSearchButton({
                 autoCorrect="off"
                 spellCheck={false}
                 autoFocus
-                value={query}
                 onValueChange={(value) => setQuery(value)}
               />
             </div>
@@ -113,7 +122,9 @@ export function HeaderSearchButton({
                   </div>
                 ) : !notes ? (
                   <span className="text-muted-foreground text-sm">
-                    Write something to search
+                    {isError
+                      ? "Something went wrong. Please try again later."
+                      : "Write something to search."}
                   </span>
                 ) : (
                   <span className="text-muted-foreground text-sm">

@@ -15,8 +15,11 @@ export const semanticJournalSearch = createTool({
     });
 
     return results.map((result) => ({
-      ...result,
-      link: `/journal/${result.date}`,
+      content: result.embedding.chunk_markdown_text,
+      date: result.journal_entry.date,
+      id: result.journal_entry.id,
+      link: `/journal/${result.journal_entry.date}`,
+      similarity: result.similarity,
     }));
   },
   id: "semantic-journal-search",

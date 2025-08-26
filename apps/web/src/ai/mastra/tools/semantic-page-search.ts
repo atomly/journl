@@ -15,8 +15,11 @@ export const semanticPageSearch = createTool({
     });
 
     return result.map((result) => ({
-      ...result,
-      link: `/pages/${result.page_id}`,
+      content: result.embedding.chunk_markdown_text,
+      link: `/pages/${result.page.id}`,
+      page_id: result.page.id,
+      page_title: result.page.title,
+      similarity: result.similarity,
     }));
   },
   id: "semantic-page-search",
@@ -31,6 +34,7 @@ export const semanticPageSearch = createTool({
   outputSchema: z.array(
     z.object({
       content: z.string(),
+      link: z.string(),
       page_id: z.string(),
       page_title: z.string(),
       similarity: z.number(),

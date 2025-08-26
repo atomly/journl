@@ -1,6 +1,6 @@
 "use client";
 
-import type { AppRouter } from "@acme/api";
+import type { ApiRouter } from "@acme/api";
 import type { QueryClient } from "@tanstack/react-query";
 import { QueryClientProvider } from "@tanstack/react-query";
 import {
@@ -28,13 +28,13 @@ const getQueryClient = () => {
   return clientQueryClientSingleton;
 };
 
-export const { useTRPC, TRPCProvider } = createTRPCContext<AppRouter>();
+export const { useTRPC, TRPCProvider } = createTRPCContext<ApiRouter>();
 
 export function TRPCReactProvider(props: { children: React.ReactNode }) {
   const queryClient = getQueryClient();
 
   const [trpcClient] = useState(() =>
-    createTRPCClient<AppRouter>({
+    createTRPCClient<ApiRouter>({
       links: [
         loggerLink({
           enabled: (op) =>

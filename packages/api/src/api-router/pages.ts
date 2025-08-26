@@ -3,8 +3,8 @@ import {
   BlockEdge,
   BlockNode,
   Document,
+  DocumentEmbedding,
   Page,
-  PageEmbedding,
   zInsertPage,
 } from "@acme/db/schema";
 import { openai } from "@ai-sdk/openai";
@@ -89,23 +89,23 @@ export const pagesRouter = {
             edges: BlockEdge[];
           }
         >(sql`
-               WITH page AS (
-                  SELECT * FROM ${Page}
-                  WHERE ${Page.id} = ${input.id} AND ${Page.user_id} = ${ctx.session.user.id}
-                  LIMIT 1
-               )
-               SELECT
-                  page.*,
-                  COALESCE(
-                     (SELECT json_agg(${BlockNode}.*) FROM ${BlockNode} WHERE ${BlockNode.document_id} = page.document_id),
-                     '[]'::json
-                  ) as blocks,
-                  COALESCE(
-                     (SELECT json_agg(${BlockEdge}.*) FROM ${BlockEdge} WHERE ${BlockEdge.document_id} = page.document_id),
-                     '[]'::json
-                  ) as edges
-               FROM page
-            `);
+          WITH page AS (
+            SELECT * FROM ${Page}
+            WHERE ${Page.id} = ${input.id} AND ${Page.user_id} = ${ctx.session.user.id}
+            LIMIT 1
+          )
+          SELECT
+            page.*,
+            COALESCE(
+                (SELECT json_agg(${BlockNode}.*) FROM ${BlockNode} WHERE ${BlockNode.document_id} = page.document_id),
+                '[]'::json
+            ) as blocks,
+            COALESCE(
+                (SELECT json_agg(${BlockEdge}.*) FROM ${BlockEdge} WHERE ${BlockEdge.document_id} = page.document_id),
+                '[]'::json
+            ) as edges
+          FROM page
+      `);
 
         if (!page) {
           return null;
@@ -135,34 +135,43 @@ export const pagesRouter = {
       }),
     )
     .query(async ({ ctx, input }) => {
-      // embed the query
-      const { embedding } = await embed({
-        model: openai.embedding("text-embedding-3-small"),
-        value: input.query,
-      });
+      try {
+        const { embedding } = await embed({
+          // ! TODO: Move this to a shared package called `@acme/ai`.
+          model: openai.embedding("text-embedding-3-small"),
+          value: input.query,
+        });
 
-      // https://orm.drizzle.team/docs/guides/vector-similarity-search
-      const similarity = sql<number>`1 - (${cosineDistance(PageEmbedding.embedding, embedding)})`;
+        const embeddingSimilarity = sql<number>`1 - (${cosineDistance(DocumentEmbedding.vector, embedding)})`;
 
-      const similarPages = await ctx.db
-        .select({
-          content: PageEmbedding.chunk_text,
-          page_id: Page.id,
-          page_title: Page.title,
-          similarity,
-        })
-        .from(PageEmbedding)
-        .where(
-          and(
-            eq(Page.user_id, ctx.session.user.id),
-            gt(similarity, input.threshold),
-          ),
-        )
-        .innerJoin(Page, eq(PageEmbedding.page_id, Page.id))
-        .orderBy(desc(similarity))
-        .limit(input.limit);
+        const results = await ctx.db
+          .selectDistinctOn([DocumentEmbedding.document_id], {
+            embedding: DocumentEmbedding,
+            page: Page,
+            similarity: embeddingSimilarity,
+          })
+          .from(DocumentEmbedding)
+          .where(
+            and(
+              eq(DocumentEmbedding.user_id, ctx.session.user.id),
+              gt(embeddingSimilarity, input.threshold),
+            ),
+          )
+          .innerJoin(Page, eq(DocumentEmbedding.document_id, Page.document_id))
+          .orderBy(DocumentEmbedding.document_id, desc(embeddingSimilarity));
 
-      return similarPages;
+        results.sort((a, b) => {
+          return b.similarity - a.similarity;
+        });
+
+        return results;
+      } catch (error) {
+        console.error("Database error in journal.getRelevantEntries:", error);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to fetch similar journal entries",
+        });
+      }
     }),
   updateTitle: protectedProcedure
     .input(

@@ -6,7 +6,7 @@ import { ThreadRuntime } from "~/components/ai/thread-runtime";
 export function AppProviders({ children }: { children: React.ReactNode }) {
   return (
     <MantineProvider>
-      <ThreadRuntime api="/api/chat" initialMessages={[]}>
+      <ThreadRuntime api="/api/ai/journl-agent" initialMessages={[]}>
         {children}
       </ThreadRuntime>
     </MantineProvider>

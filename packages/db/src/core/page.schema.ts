@@ -1,8 +1,9 @@
-import { sql } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm";
 import { pgTable, text } from "drizzle-orm/pg-core";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 import { user } from "../auth/user.schema.js";
+import { BlockEdge, BlockNode } from "./block-node.schema.js";
 import { Document } from "./document.schema.js";
 
 export const Page = pgTable("page", (t) => ({
@@ -25,6 +26,11 @@ export const Page = pgTable("page", (t) => ({
     .defaultNow()
     .notNull()
     .$onUpdateFn(() => sql`now()`),
+}));
+
+export const PageRelations = relations(Page, ({ many }) => ({
+  block_nodes: many(BlockNode),
+  block_edges: many(BlockEdge),
 }));
 
 export type Page = typeof Page.$inferSelect;

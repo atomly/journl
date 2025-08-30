@@ -26,9 +26,9 @@ import { ZodError, z } from "zod/v4";
  * @see https://trpc.io/docs/server/context
  */
 
-type TRPCContext = {
+export type TRPCContext = {
   authApi: Auth["api"];
-  db: typeof db;
+  db: typeof db | Parameters<Parameters<typeof db.transaction>[0]>[0];
   session: Awaited<ReturnType<Auth["api"]["getSession"]>>;
 };
 

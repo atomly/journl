@@ -55,7 +55,7 @@ export function DeletePageButton({ page, className }: DeletePageButtonProps) {
 
             // Optimistically update the pages list
             queryClient.setQueryData(
-              trpc.pages.getAll.queryOptions().queryKey,
+              trpc.pages.getByUser.queryOptions().queryKey,
               (oldPages: Page[] | undefined) => {
                 if (!oldPages) return [];
                 return oldPages.filter((p) => p.id !== page.id);

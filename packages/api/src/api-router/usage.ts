@@ -5,7 +5,7 @@ import { z } from "zod/v4";
 import { publicProcedure } from "../trpc.js";
 
 export const usageRouter = {
-  trackAiModelUsage: publicProcedure
+  trackModelUsage: publicProcedure
     .input(
       z.object({
         metadata: z.record(z.string(), z.string()).optional(),

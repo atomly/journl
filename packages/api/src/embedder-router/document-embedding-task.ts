@@ -5,11 +5,18 @@ import { publicProcedure } from "../trpc.js";
 
 export const documentEmbeddingTaskRouter = {
   updateStatus: publicProcedure
-    .input(zDocumentEmbeddingTask.pick({ id: true, status: true }))
+    .input(
+      zDocumentEmbeddingTask.pick({
+        id: true,
+        metadata: true,
+        status: true,
+      }),
+    )
     .mutation(async ({ ctx, input }) => {
       await ctx.db
         .update(DocumentEmbeddingTask)
         .set({
+          metadata: input.metadata,
           status: input.status,
         })
         .where(eq(DocumentEmbeddingTask.id, input.id));

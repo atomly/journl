@@ -18,14 +18,14 @@ export default async function Page({
   }
 
   return (
-    <div className="flex h-full flex-col gap-4 p-4">
+    <div className="mx-auto flex min-h-full max-w-5xl flex-col gap-4 pt-8 pb-20">
       <div className="min-h-0 flex-1">
         <PageTitleInput
           page={{
             id: page.id,
             title: page.title,
           }}
-          className="mb-4 pl-13"
+          className="mb-6 pl-13"
         />
         <Suspense>
           <DynamicPageEditor

@@ -1,5 +1,6 @@
 import { and, between, cosineDistance, desc, eq, gt, sql } from "@acme/db";
 import {
+  Document,
   DocumentEmbedding,
   JournalEntry,
   zJournalEntryDate,
@@ -9,11 +10,16 @@ import type { TRPCRouterRecord } from "@trpc/server";
 import { TRPCError } from "@trpc/server";
 import { embed } from "ai";
 import { z } from "zod/v4";
+import { blockNoteTree } from "../shared/block-note-tree.js";
+import {
+  saveTransactions,
+  zBlockTransactions,
+} from "../shared/block-transaction.js";
 import { protectedProcedure } from "../trpc.js";
 
-export type PlaceholderJournalEntry = {
-  date: string;
-};
+export type TimelineEntry = Awaited<
+  ReturnType<typeof journalRouter.getTimeline>
+>["timeline"][number];
 
 export const journalRouter = {
   getBetween: protectedProcedure
@@ -28,17 +34,21 @@ export const journalRouter = {
       }),
     )
     .query(async ({ ctx, input }) => {
-      const entries = await ctx.db
-        .select()
-        .from(JournalEntry)
-        .where(
-          and(
-            eq(JournalEntry.user_id, ctx.session.user.id),
-            between(JournalEntry.date, input.from, input.to),
-          ),
-        );
+      const entries = await ctx.db.query.JournalEntry.findMany({
+        where: and(
+          eq(JournalEntry.user_id, ctx.session.user.id),
+          between(JournalEntry.date, input.from, input.to),
+        ),
+        with: {
+          block_edges: true,
+          block_nodes: true,
+        },
+      });
 
-      return entries;
+      return entries.map(({ block_nodes, block_edges, ...entry }) => ({
+        ...entry,
+        document: blockNoteTree(block_nodes, block_edges),
+      }));
     }),
   getByDate: protectedProcedure
     .input(
@@ -48,24 +58,29 @@ export const journalRouter = {
     )
     .query(async ({ ctx, input }) => {
       try {
-        const entry = await ctx.db
-          .select()
-          .from(JournalEntry)
-          .where(
-            and(
-              eq(JournalEntry.date, input.date),
-              eq(JournalEntry.user_id, ctx.session.user.id),
-            ),
-          )
-          .limit(1);
+        const result = await ctx.db.query.JournalEntry.findFirst({
+          where: and(
+            eq(JournalEntry.date, input.date),
+            eq(JournalEntry.user_id, ctx.session.user.id),
+          ),
+          with: {
+            block_edges: true,
+            block_nodes: true,
+          },
+        });
 
-        if (entry.length === 0) {
+        if (!result) {
           return {
             date: input.date,
           };
         }
 
-        return entry[0];
+        const { block_nodes, block_edges, ...entry } = result;
+
+        return {
+          ...entry,
+          document: blockNoteTree(block_nodes, block_edges),
+        };
       } catch (error) {
         if (error instanceof TRPCError) {
           throw error;
@@ -150,27 +165,37 @@ export const journalRouter = {
         to.setDate(to.getDate() - (input.limit - 1)); // Subtract (limit - 1) to get exactly 'limit' days
         to.setHours(0, 0, 0, 0); // Start of day
 
-        const dbEntries = await ctx.db
-          .select()
-          .from(JournalEntry)
-          .where(
-            and(
-              eq(JournalEntry.user_id, ctx.session.user.id),
-              between(JournalEntry.date, to.toISOString(), from.toISOString()),
-            ),
-          )
-          .orderBy(JournalEntry.date);
-
-        // Create a map of actual entries keyed by date (YYYY-MM-DD format)
-        const entriesByDate = new Map();
-        dbEntries.forEach((entry) => {
-          const dateKey = new Date(entry.date).toISOString().split("T")[0];
-          entriesByDate.set(dateKey, entry);
+        const results = await ctx.db.query.JournalEntry.findMany({
+          orderBy: JournalEntry.date,
+          where: and(
+            eq(JournalEntry.user_id, ctx.session.user.id),
+            between(JournalEntry.date, to.toISOString(), from.toISOString()),
+          ),
+          with: {
+            block_edges: true,
+            block_nodes: true,
+          },
         });
+
+        const entriesByDate = new Map(
+          results.map(({ block_nodes, block_edges, ...entry }) => {
+            const dateKey = new Date(entry.date).toISOString().split("T")[0];
+            return [
+              dateKey,
+              {
+                ...entry,
+                document: blockNoteTree(block_nodes, block_edges),
+              },
+            ];
+          }),
+        );
 
         // Generate all dates in the range and fill missing days with placeholders
         // Start from the newest date and work backwards for descending order
-        const allEntries: (PlaceholderJournalEntry | JournalEntry)[] = [];
+        const timeline: (
+          | { date: string }
+          | Exclude<ReturnType<typeof entriesByDate.get>, undefined>
+        )[] = [];
         const currentDate = new Date(from);
         const endDate = new Date(to);
 
@@ -179,12 +204,14 @@ export const journalRouter = {
 
           if (!dateKey) continue;
 
-          if (entriesByDate.has(dateKey)) {
+          const entry = entriesByDate.get(dateKey);
+
+          if (entry) {
             // Use actual entry
-            allEntries.push(entriesByDate.get(dateKey));
+            timeline.push(entry);
           } else {
             // Create placeholder entry
-            allEntries.push({
+            timeline.push({
               date: dateKey,
             });
           }
@@ -199,8 +226,8 @@ export const journalRouter = {
         nextPageDate.setDate(nextPageDate.getDate() - input.limit);
 
         return {
-          entries: allEntries,
           nextPage: nextPageDate.getTime(),
+          timeline,
         };
       } catch (error) {
         console.error("Database error in journal.byPage:", error);
@@ -210,38 +237,65 @@ export const journalRouter = {
         });
       }
     }),
-  write: protectedProcedure
+  saveTransactions: protectedProcedure
     .input(
-      z.object({
-        content: z.string().max(10000),
+      zBlockTransactions.extend({
         date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+        document_id: z.uuid().nullable(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
       try {
-        const result = await ctx.db
-          .insert(JournalEntry)
-          .values({
-            content: input.content,
-            date: input.date,
-            user_id: ctx.session.user.id,
-          })
-          .onConflictDoUpdate({
-            set: {
-              content: input.content,
+        return await ctx.db.transaction(async (tx) => {
+          let documentId = input.document_id;
+          let journalEntry: JournalEntry | null = null;
+
+          if (!documentId) {
+            const [document] = await tx
+              .insert(Document)
+              .values({
+                user_id: ctx.session.user.id,
+              })
+              .returning();
+
+            if (!document) {
+              throw new TRPCError({
+                code: "INTERNAL_SERVER_ERROR",
+                message: "Failed to create document",
+              });
+            }
+
+            documentId = document.id;
+
+            const [entry] = await tx
+              .insert(JournalEntry)
+              .values({
+                date: input.date,
+                document_id: document.id,
+                user_id: ctx.session.user.id,
+              })
+              .returning();
+
+            if (!entry) {
+              throw new TRPCError({
+                code: "INTERNAL_SERVER_ERROR",
+                message: "Failed to create journal entry",
+              });
+            }
+
+            journalEntry = entry;
+          }
+
+          await saveTransactions(
+            { ...ctx, db: tx },
+            {
+              ...input,
+              document_id: documentId,
             },
-            target: [JournalEntry.user_id, JournalEntry.date],
-          })
-          .returning();
+          );
 
-        if (result.length === 0) {
-          throw new TRPCError({
-            code: "NOT_FOUND",
-            message: "Journal entry not found",
-          });
-        }
-
-        return result[0];
+          return journalEntry ?? null;
+        });
       } catch (error) {
         if (error instanceof TRPCError) {
           throw error;

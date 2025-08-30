@@ -1,21 +1,35 @@
+import { ServerBlockNoteEditor } from "@blocknote/server-util";
 import { createTool } from "@mastra/core/tools";
+import { MDocument } from "@mastra/rag";
 import { z } from "zod";
+import { schema } from "~/components/editor/block-schema";
 import { api } from "~/trpc/server";
 
 export const temporalJournalSearch = createTool({
   description: "Search the journal for entries between two dates",
   execute: async ({ context }) => {
-    console.debug("[temporalJournalSearch] context 👀", context);
-
     const results = await api.journal.getBetween({
       from: context.from,
       to: context.to,
     });
 
-    return results.map((result) => ({
-      ...result,
-      link: `/journal/${result.date}`,
-    }));
+    return await Promise.all(
+      results.map(async (result) => {
+        const editor = ServerBlockNoteEditor.create({
+          schema,
+        });
+        const markdown = result.document
+          ? await editor.blocksToMarkdownLossy(result.document)
+          : "";
+        const mDocument = MDocument.fromMarkdown(markdown);
+        return {
+          content: mDocument.getText().join("\n"),
+          date: result.date,
+          id: result.id,
+          link: `/journal/${result.date}`,
+        };
+      }),
+    );
   },
   id: "temporal-journal-search",
   inputSchema: z.object({
@@ -35,6 +49,7 @@ export const temporalJournalSearch = createTool({
       content: z.string(),
       date: z.string(),
       id: z.string(),
+      link: z.string(),
     }),
   ),
 });

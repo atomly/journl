@@ -13,7 +13,7 @@ export const documentEmbeddingRouter = {
     .input(
       z.object({
         document_id: z.string(),
-        embeddings: z.array(zInsertDocumentEmbedding),
+        embeddings: z.array(zInsertDocumentEmbedding).min(1),
         task_id: z.string(),
         user_id: z.string(),
       }),
@@ -40,6 +40,9 @@ export const documentEmbeddingRouter = {
         await ctx.db
           .update(DocumentEmbeddingTask)
           .set({
+            metadata: {
+              message: error instanceof Error ? error.message : "Unknown error",
+            },
             status: "failed",
           })
           .where(eq(DocumentEmbeddingTask.id, input.task_id));

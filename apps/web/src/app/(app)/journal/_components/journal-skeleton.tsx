@@ -6,7 +6,7 @@ export function JournalFeedSkeleton({ ...rest }: JournalFeedSkeletonProps) {
   return (
     <div {...rest}>
       <div className="mx-auto w-full max-w-4xl flex-1">
-        <div className="space-y-12">
+        <div className="space-y-20">
           {/* Today entry */}
           <JournalEntrySkeleton hasContent={false} />
 
@@ -15,11 +15,9 @@ export function JournalFeedSkeleton({ ...rest }: JournalFeedSkeletonProps) {
 
           {/* Multiple past entries */}
           <JournalEntrySkeleton hasContent={false} />
-          <JournalEntrySkeleton hasContent={false} />
           <JournalEntrySkeleton hasContent={true} />
           <JournalEntrySkeleton hasContent={false} />
-          <JournalEntrySkeleton hasContent={false} />
-          <JournalEntrySkeleton hasContent={false} />
+          <JournalEntrySkeleton hasContent={true} />
         </div>
       </div>
     </div>

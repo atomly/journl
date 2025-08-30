@@ -6,8 +6,6 @@ export const semanticJournalSearch = createTool({
   description:
     "Search the journal for entries that are semantically similar to a query",
   execute: async ({ context }) => {
-    console.debug("[semanticJournalSearch] context 👀", context);
-
     const results = await api.journal.getRelevantEntries({
       limit: context.limit,
       query: context.query,
@@ -17,7 +15,6 @@ export const semanticJournalSearch = createTool({
     return results.map((result) => ({
       content: result.embedding.chunk_markdown_text,
       date: result.journal_entry.date,
-      id: result.journal_entry.id,
       link: `/journal/${result.journal_entry.date}`,
       similarity: result.similarity,
     }));
@@ -35,7 +32,7 @@ export const semanticJournalSearch = createTool({
     z.object({
       content: z.string(),
       date: z.string(),
-      id: z.string(),
+      link: z.string(),
       similarity: z.number(),
     }),
   ),

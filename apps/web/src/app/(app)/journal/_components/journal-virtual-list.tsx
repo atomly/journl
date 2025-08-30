@@ -1,18 +1,20 @@
 "use client";
 
-import { useInfiniteQuery } from "@tanstack/react-query";
+import type { TimelineEntry } from "@acme/api";
+import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { Virtuoso } from "react-virtuoso";
 import { useDebouncedCallback } from "use-debounce";
 import { useTRPC } from "~/trpc/react";
+import { JournalEntryEditor } from "./journal-entry-editor";
+import { JournalEntryLoader } from "./journal-entry-loader";
 import {
   JournalEntryContent,
   JournalEntryHeader,
   JournalEntryLink,
-  JournalEntryProvider,
-  JournalEntryTextArea,
-} from "./journal-entry";
-import { JournalEntryLoader } from "./journal-entry-loader";
+  JournalEntryWrapper,
+} from "./journal-entry-primitives";
+import { JournalEntryProvider } from "./journal-entry-provider";
 import { JournalFeedSkeleton } from "./journal-skeleton";
 
 type JournalVirtualListProps = {
@@ -29,8 +31,12 @@ export function JournalVirtualList({
   ...rest
 }: JournalVirtualListProps) {
   const trpc = useTRPC();
+  const queryClient = useQueryClient();
+  const queryOptions =
+    trpc.journal.getTimeline.infiniteQueryOptions(initialRange);
   const { status, data, error, fetchNextPage, hasNextPage } = useInfiniteQuery({
-    ...trpc.journal.getTimeline.infiniteQueryOptions(initialRange),
+    ...queryOptions,
+    gcTime: 0,
     getNextPageParam: ({ nextPage }) => nextPage,
     initialPageParam: Date.now(),
   });
@@ -40,26 +46,22 @@ export function JournalVirtualList({
     () =>
       data?.pages.reduce(
         (acc, page, index) => {
-          let entries = page.entries;
-          if (index === 0) {
-            entries = entries.filter((entry) => {
-              // The server can return dates in the future, so we need to filter them out
-              const isFutureEntry =
-                new Date(`${entry.date}T00:00:00`) > new Date();
-              return !isFutureEntry;
-            });
+          for (const entry of page.timeline) {
+            if (new Date(`${entry.date}T00:00:00`) > new Date()) {
+              continue;
+            }
+            acc.push({ ...entry, pageIndex: index });
           }
-          acc.push(...entries);
           return acc;
         },
-        [] as (typeof data.pages)[number]["entries"],
+        [] as (TimelineEntry & { pageIndex: number })[],
       ) ?? [],
     [data],
   );
 
   if (status === "pending") {
     return (
-      <div className="mx-auto max-w-4xl px-4 pt-8 md:px-8">
+      <div className="mx-auto max-w-4xl px-13.5 pt-8">
         <JournalFeedSkeleton className="mx-auto flex flex-1 flex-col" />
       </div>
     );
@@ -87,22 +89,36 @@ export function JournalVirtualList({
       endReached={() => debouncedFetchNextPage()}
       increaseViewportBy={200}
       itemContent={(_, entry) => (
-        <JournalEntryProvider
-          className="mx-auto max-w-4xl border-b px-4 pt-8 pb-20 md:px-8"
-          entry={entry}
-        >
-          <JournalEntryLink>
-            <JournalEntryHeader />
-          </JournalEntryLink>
-          <JournalEntryContent>
-            <JournalEntryTextArea />
-          </JournalEntryContent>
+        <JournalEntryProvider entry={entry}>
+          <JournalEntryWrapper className="mx-auto max-w-4xl border-b pt-8 pb-20">
+            <JournalEntryLink>
+              <JournalEntryHeader className="px-13.5" />
+            </JournalEntryLink>
+            <JournalEntryContent>
+              <JournalEntryEditor
+                onCreate={(newEntry) => {
+                  queryClient.setQueryData(queryOptions.queryKey, (old) => ({
+                    ...old,
+                    pageParams: [...(old?.pageParams ?? [])],
+                    pages: [...(old?.pages ?? [])].map((page) => {
+                      return {
+                        ...page,
+                        timeline: page.timeline.map((e) =>
+                          e.date === newEntry.date ? newEntry : e,
+                        ),
+                      };
+                    }),
+                  }));
+                }}
+              />
+            </JournalEntryContent>
+          </JournalEntryWrapper>
         </JournalEntryProvider>
       )}
       components={{
         Footer: () => (
           <JournalEntryLoader
-            className="mx-auto mt-8 max-w-4xl px-4 pb-24 md:px-8"
+            className="mx-auto mt-8 max-w-4xl px-13.5 pb-24"
             hasNextPage={hasNextPage}
           />
         ),

@@ -1,7 +1,5 @@
 import { and, cosineDistance, desc, eq, gt, sql } from "@acme/db";
 import {
-  BlockEdge,
-  BlockNode,
   Document,
   DocumentEmbedding,
   Page,
@@ -13,6 +11,10 @@ import { TRPCError } from "@trpc/server";
 import { embed } from "ai";
 import { z } from "zod/v4";
 import { blockNoteTree } from "../shared/block-note-tree.js";
+import {
+  saveTransactions,
+  zBlockTransactions,
+} from "../shared/block-transaction.js";
 import { protectedProcedure } from "../trpc.js";
 
 export const pagesRouter = {
@@ -62,7 +64,43 @@ export const pagesRouter = {
         }
       });
     }),
-  getAll: protectedProcedure.query(async ({ ctx }) => {
+  getById: protectedProcedure
+    .input(z.object({ id: z.uuid() }))
+    .query(async ({ ctx, input }) => {
+      try {
+        const result = await ctx.db.query.Page.findFirst({
+          where: and(
+            eq(Page.id, input.id),
+            eq(Page.user_id, ctx.session.user.id),
+          ),
+          with: {
+            block_edges: true,
+            block_nodes: true,
+          },
+        });
+
+        if (!result) {
+          return null;
+        }
+
+        const { block_nodes, block_edges, ...page } = result;
+
+        return {
+          ...page,
+          document: blockNoteTree(block_nodes, block_edges),
+        };
+      } catch (error) {
+        if (error instanceof TRPCError) {
+          throw error;
+        }
+        console.error("Database error in pages.byId:", error);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to fetch page",
+        });
+      }
+    }),
+  getByUser: protectedProcedure.query(async ({ ctx }) => {
     try {
       return await ctx.db
         .select()
@@ -77,56 +115,7 @@ export const pagesRouter = {
       });
     }
   }),
-  getById: protectedProcedure
-    .input(z.object({ id: z.uuid() }))
-    .query(async ({ ctx, input }) => {
-      try {
-        const {
-          rows: [page],
-        } = await ctx.db.execute<
-          Page & {
-            blocks: BlockNode[];
-            edges: BlockEdge[];
-          }
-        >(sql`
-          WITH page AS (
-            SELECT * FROM ${Page}
-            WHERE ${Page.id} = ${input.id} AND ${Page.user_id} = ${ctx.session.user.id}
-            LIMIT 1
-          )
-          SELECT
-            page.*,
-            COALESCE(
-                (SELECT json_agg(${BlockNode}.*) FROM ${BlockNode} WHERE ${BlockNode.document_id} = page.document_id),
-                '[]'::json
-            ) as blocks,
-            COALESCE(
-                (SELECT json_agg(${BlockEdge}.*) FROM ${BlockEdge} WHERE ${BlockEdge.document_id} = page.document_id),
-                '[]'::json
-            ) as edges
-          FROM page
-      `);
-
-        if (!page) {
-          return null;
-        }
-
-        return {
-          ...page,
-          document: blockNoteTree(page.blocks, page.edges),
-        };
-      } catch (error) {
-        if (error instanceof TRPCError) {
-          throw error;
-        }
-        console.error("Database error in pages.byId:", error);
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to fetch page",
-        });
-      }
-    }),
-  getRelevantPageChunks: protectedProcedure
+  getRelevantPages: protectedProcedure
     .input(
       z.object({
         limit: z.number().min(1).max(20).default(5),
@@ -172,6 +161,11 @@ export const pagesRouter = {
           message: "Failed to fetch similar journal entries",
         });
       }
+    }),
+  saveTransactions: protectedProcedure
+    .input(zBlockTransactions)
+    .mutation(async ({ ctx, input }) => {
+      return await saveTransactions(ctx, input);
     }),
   updateTitle: protectedProcedure
     .input(

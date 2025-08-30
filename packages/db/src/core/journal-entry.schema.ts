@@ -1,8 +1,9 @@
-import { sql } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm";
 import { pgTable, text, unique } from "drizzle-orm/pg-core";
 import { createSelectSchema } from "drizzle-zod";
 import z from "zod/v4";
 import { user } from "../auth/user.schema.js";
+import { BlockEdge, BlockNode } from "./block-node.schema.js";
 import { Document } from "./document.schema.js";
 
 export const JournalEntry = pgTable(
@@ -14,10 +15,9 @@ export const JournalEntry = pgTable(
       .references(() => user.id, { onDelete: "cascade" }),
     document_id: t
       .uuid()
-      // .notNull()
+      .notNull()
       .references(() => Document.id, { onDelete: "cascade" }),
     date: t.date({ mode: "string" }).notNull(),
-    content: text().notNull(),
     created_at: t
       .timestamp({ mode: "string", withTimezone: true })
       .defaultNow()
@@ -33,6 +33,11 @@ export const JournalEntry = pgTable(
     unique("journal_entry_unique_user_date").on(t.user_id, t.date),
   ],
 );
+
+export const JournalEntryRelations = relations(JournalEntry, ({ many }) => ({
+  block_nodes: many(BlockNode),
+  block_edges: many(BlockEdge),
+}));
 
 export type JournalEntry = typeof JournalEntry.$inferSelect;
 

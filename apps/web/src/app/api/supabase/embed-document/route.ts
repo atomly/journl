@@ -19,8 +19,11 @@ const CHUNK_PARAMS: ChunkParams = {
     summary: true,
     title: true,
   },
+  // ! TODO: MDocument uses `gpt-4o-mini` to chunk the document, but we're not tracking the usage. We need to fix this or remove metadata extraction.
+  modelName: "gpt-4o-mini",
   strategy: "semantic-markdown",
 };
+
 const REMOVE_MARKDOWN_PARAMS: Parameters<typeof removeMarkdown>[1] = {
   /* GitHub-Flavored Markdown */
   gfm: true,
@@ -77,7 +80,6 @@ const REMOVE_MARKDOWN_PARAMS: Parameters<typeof removeMarkdown>[1] = {
  *   AND updated_at < NOW() - INTERVAL '15 minutes';
  * ```
  */
-// ! TODO: Track embeddings token usage.
 export const POST = handler(zDocumentEmbeddingTask, async (payload) => {
   if (payload.type === "DELETE" || payload.record.status !== "ready") {
     return NextResponse.json({ success: true });
@@ -99,16 +101,28 @@ export const POST = handler(zDocumentEmbeddingTask, async (payload) => {
 
     const markdown = await editor.blocksToMarkdownLossy(document.tree);
 
-    const mDocument =
-      await MDocument.fromMarkdown(markdown).chunk(CHUNK_PARAMS);
+    // Saving tokens in case the document is empty.
+    if (!removeMarkdown(markdown, REMOVE_MARKDOWN_PARAMS)) {
+      await embedder.documentEmbeddingTask.updateStatus({
+        id: payload.record.id,
+        metadata: {
+          message: "The markdown is empty.",
+        },
+        status: "completed",
+      });
+      return NextResponse.json({ success: true });
+    }
+
+    const mDocument = MDocument.fromMarkdown(markdown);
+    const chunks = await mDocument.chunk(CHUNK_PARAMS);
 
     const { embeddings, usage } = await embedMany({
       maxRetries: 5,
       model,
-      values: mDocument.map((chunk) => chunk.text),
+      values: chunks.map((chunk) => chunk.text),
     });
 
-    await api.usage.trackAiModelUsage({
+    await api.usage.trackModelUsage({
       metadata: {
         document_id: document.id,
         model_version: model.specificationVersion,
@@ -122,9 +136,16 @@ export const POST = handler(zDocumentEmbeddingTask, async (payload) => {
     const insertions: z.infer<typeof zInsertDocumentEmbedding>[] = [];
 
     for (const [index, embedding] of embeddings.entries()) {
-      const chunk = mDocument.at(index);
+      const chunk = chunks.at(index);
 
       if (!chunk) {
+        continue;
+      }
+
+      const chunkText = chunk.text;
+      const rawText = removeMarkdown(chunkText, REMOVE_MARKDOWN_PARAMS);
+
+      if (!chunkText || !rawText) {
         continue;
       }
 
@@ -134,8 +155,8 @@ export const POST = handler(zDocumentEmbeddingTask, async (payload) => {
 
       insertions.push({
         chunk_id: index,
-        chunk_markdown_text: chunk.text,
-        chunk_raw_text: removeMarkdown(chunk.text, REMOVE_MARKDOWN_PARAMS),
+        chunk_markdown_text: chunkText,
+        chunk_raw_text: rawText,
         document_id: document.id,
         metadata: {
           documentTitle: chunk.metadata.documentTitle,
@@ -145,6 +166,18 @@ export const POST = handler(zDocumentEmbeddingTask, async (payload) => {
         user_id: document.user_id,
         vector: embedding,
       });
+    }
+
+    // Leaving a message in case the document is empty in case we need to debug it.
+    if (insertions.length === 0) {
+      await embedder.documentEmbeddingTask.updateStatus({
+        id: payload.record.id,
+        metadata: {
+          message: "No insertions were made because the document was empty.",
+        },
+        status: "completed",
+      });
+      return NextResponse.json({ success: true });
     }
 
     await embedder.documentEmbedding.embedDocument({
@@ -158,6 +191,9 @@ export const POST = handler(zDocumentEmbeddingTask, async (payload) => {
 
     await embedder.documentEmbeddingTask.updateStatus({
       id: payload.record.id,
+      metadata: {
+        message: error instanceof Error ? error.message : "Unknown error",
+      },
       status: "failed",
     });
   }

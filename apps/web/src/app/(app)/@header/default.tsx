@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { HeaderThemeToggle } from "~/app/(app)/@header/_components/header-theme-toggle";
 import { SidebarTrigger } from "~/components/ui/sidebar";
 import { HeaderCurrentDate } from "./_components/header-current-date";
@@ -11,7 +12,9 @@ export default function JournalHeader() {
         <SidebarTrigger />
         <div className="flex w-full items-center justify-between gap-x-2">
           <div className="min-w-0 flex-1">
-            <HeaderCurrentDate />
+            <Link href="/journal">
+              <HeaderCurrentDate />
+            </Link>
           </div>
           <HeaderSearchButton>
             <HeaderSearchTrigger />

@@ -25,7 +25,4 @@ type RouterOutputs = inferRouterOutputs<ApiRouter>;
 
 export { createTRPCContext, apiRouter, embedderRouter };
 export type { ApiRouter, RouterInputs, RouterOutputs, EmbedderRouter };
-
-// Export types from sub-routers
-export type { BlockTransaction } from "./api-router/blocks.js";
-export type { PlaceholderJournalEntry } from "./api-router/journal.js";
+export * from "./types.js";

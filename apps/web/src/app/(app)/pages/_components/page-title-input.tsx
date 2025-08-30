@@ -8,6 +8,9 @@ import { Input } from "~/components/ui/input";
 import { cn } from "~/components/utils";
 import { useTRPC } from "~/trpc/react";
 
+const DEFAULT_PLACEHOLDER = "New page";
+const DEFAULT_DEBOUNCE_TIME = 150;
+
 type PageEditorTitleProps = {
   page: Pick<Page, "id" | "title">;
   placeholder?: string;
@@ -19,9 +22,9 @@ type PageEditorTitleProps = {
 
 export function PageTitleInput({
   page,
-  placeholder = "New page",
+  placeholder = DEFAULT_PLACEHOLDER,
   className,
-  debounceTime = 150,
+  debounceTime = DEFAULT_DEBOUNCE_TIME,
   onTitleChange,
   onKeyDown,
   ref,
@@ -51,7 +54,7 @@ export function PageTitleInput({
 
     // Update the pages.getAll query cache
     queryClient.setQueryData(
-      trpc.pages.getAll.queryOptions().queryKey,
+      trpc.pages.getByUser.queryOptions().queryKey,
       (old) => {
         if (!old) return old;
         return old.map((p) =>
@@ -75,7 +78,7 @@ export function PageTitleInput({
             queryKey: trpc.pages.getById.queryOptions({ id: page.id }).queryKey,
           });
           queryClient.invalidateQueries({
-            queryKey: trpc.pages.getAll.queryOptions().queryKey,
+            queryKey: trpc.pages.getByUser.queryOptions().queryKey,
           });
         },
       },
@@ -101,7 +104,7 @@ export function PageTitleInput({
       onKeyDown={handleKeyDown}
       placeholder={placeholder}
       className={cn(
-        "!bg-transparent !outline-none !ring-0 !text-3xl border-none px-0 font-bold placeholder:text-muted-foreground/60",
+        "!bg-transparent !outline-none !ring-0 !text-5xl border-none px-0 font-bold placeholder:text-muted-foreground/60",
         className,
       )}
       {...rest}

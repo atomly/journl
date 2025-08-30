@@ -5,6 +5,7 @@ import { Toaster } from "~/components/ui/toast";
 import { TRPCReactProvider } from "~/trpc/react";
 import ChatSidebarTrigger from "./@chatSidebar/_components/chat-sidebar-trigger";
 import "./globals.css";
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { AppProviders } from "../_components/app-providers";
 
 type AppLayoutProps = {
@@ -44,6 +45,10 @@ function AppLayout({
             </div>
           </SidebarProvider>
           <Toaster />
+          <ReactQueryDevtools
+            buttonPosition="bottom-left"
+            initialIsOpen={false}
+          />
         </TRPCReactProvider>
       </AppProviders>
     </ThemeProvider>

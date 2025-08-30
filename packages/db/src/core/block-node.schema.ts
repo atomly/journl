@@ -1,4 +1,4 @@
-import { sql } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm";
 import {
   foreignKey,
   pgEnum,
@@ -10,6 +10,8 @@ import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 import { user } from "../auth/user.schema.js";
 import { Document } from "./document.schema.js";
+import { JournalEntry } from "./journal-entry.schema.js";
+import { Page } from "./page.schema.js";
 
 export const BlockNode = pgTable(
   "block_node",
@@ -46,6 +48,22 @@ export const BlockNode = pgTable(
   ],
 );
 export type BlockNode = typeof BlockNode.$inferSelect;
+
+export const BlockNodeRelations = relations(BlockNode, ({ one, many }) => ({
+  document: one(Document, {
+    fields: [BlockNode.document_id],
+    references: [Document.id],
+  }),
+  page: one(Page, {
+    fields: [BlockNode.document_id],
+    references: [Page.document_id],
+  }),
+  journal_entry: one(JournalEntry, {
+    fields: [BlockNode.document_id],
+    references: [JournalEntry.document_id],
+  }),
+  block_edges: many(BlockEdge),
+}));
 
 export const zInsertBlockNode = createInsertSchema(BlockNode, {
   id: z.uuid(),
@@ -89,6 +107,25 @@ export const BlockEdge = pgTable(
   (t) => [primaryKey({ columns: [t.from_id, t.to_id] })],
 );
 export type BlockEdge = typeof BlockEdge.$inferSelect;
+
+export const BlockEdgeRelations = relations(BlockEdge, ({ one }) => ({
+  page: one(Page, {
+    fields: [BlockEdge.document_id],
+    references: [Page.document_id],
+  }),
+  journal_entry: one(JournalEntry, {
+    fields: [BlockEdge.document_id],
+    references: [JournalEntry.document_id],
+  }),
+  from_node: one(BlockNode, {
+    fields: [BlockEdge.from_id],
+    references: [BlockNode.id],
+  }),
+  to_node: one(BlockNode, {
+    fields: [BlockEdge.to_id],
+    references: [BlockNode.id],
+  }),
+}));
 
 export const zInsertBlockEdge = createInsertSchema(BlockEdge, {
   from_id: z.string(),

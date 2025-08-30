@@ -23,6 +23,9 @@ export const DocumentEmbeddingTask = pgTable(
       .references(() => Document.id, { onDelete: "cascade" }),
     status: DocumentEmbeddingTaskStatus().notNull().default("debounced"),
     retries: t.integer().notNull().default(0),
+    metadata: t.jsonb().$type<{
+      message?: string;
+    }>(),
     created_at: t
       .timestamp({ mode: "string", withTimezone: true })
       .defaultNow()

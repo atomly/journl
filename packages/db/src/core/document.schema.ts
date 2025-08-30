@@ -1,7 +1,8 @@
-import { sql } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm";
 import { pgTable, text } from "drizzle-orm/pg-core";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { user } from "../auth/user.schema.js";
+import { BlockEdge, BlockNode } from "./block-node.schema.js";
 
 export const Document = pgTable("document", (t) => ({
   id: t.uuid().notNull().primaryKey().defaultRandom(),
@@ -20,6 +21,11 @@ export const Document = pgTable("document", (t) => ({
 }));
 
 export type Document = typeof Document.$inferSelect;
+
+export const DocumentRelations = relations(Document, ({ many }) => ({
+  block_nodes: many(BlockNode),
+  block_edges: many(BlockEdge),
+}));
 
 export const zInsertDocument = createInsertSchema(Document).pick({
   user_id: true,

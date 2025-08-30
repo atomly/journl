@@ -29,7 +29,7 @@ export const AppSidebarPages = (props: AppSidebarPagesProps) => {
   const { state, setOpen } = useSidebar();
 
   const { data: pages } = useQuery({
-    ...trpc.pages.getAll.queryOptions(),
+    ...trpc.pages.getByUser.queryOptions(),
     initialData: props.pages,
   });
 
@@ -62,7 +62,7 @@ export const AppSidebarPages = (props: AppSidebarPagesProps) => {
         </SidebarMenuButton>
       </CollapsibleTrigger>
       <CollapsibleContent>
-        <SidebarMenuSub>
+        <SidebarMenuSub className="mr-0 pr-0">
           <CreatePageButton />
           {pages?.map((page) => (
             <AppSidebarPageItem key={page.id} page={page} />

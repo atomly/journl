@@ -1,12 +1,14 @@
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { api } from "~/trpc/server";
+import { JournalEntryEditor } from "../_components/journal-entry-editor";
 import {
   JournalEntryContent,
   JournalEntryHeader,
-  JournalEntryProvider,
-  JournalEntryTextArea,
-} from "../_components/journal-entry";
+  JournalEntryLink,
+  JournalEntryWrapper,
+} from "../_components/journal-entry-primitives";
+import { JournalEntryProvider } from "../_components/journal-entry-provider";
 import { JournalEntrySkeleton } from "../_components/journal-entry-skeleton";
 
 export default async function Page({
@@ -21,6 +23,19 @@ export default async function Page({
     </Suspense>
   );
 }
+
+function JournalEntryFallback({ date }: { date: string }) {
+  return (
+    <JournalEntryProvider
+      className="mx-auto min-h-full max-w-5xl px-13.5 py-8"
+      entry={{ date }}
+    >
+      <JournalEntryHeader className="mb-6" />
+      <JournalEntrySkeleton hasHeader={false} hasContent={true} />
+    </JournalEntryProvider>
+  );
+}
+
 async function SuspendedJournalEntry({ date }: { date: string }) {
   const entry = await api.journal.getByDate({ date });
 
@@ -29,26 +44,15 @@ async function SuspendedJournalEntry({ date }: { date: string }) {
   }
 
   return (
-    <JournalEntryProvider
-      className="mx-auto h-full max-w-4xl px-4 py-8 md:px-8"
-      entry={entry}
-    >
-      <JournalEntryHeader forceDate />
-      <JournalEntryContent>
-        <JournalEntryTextArea autoFocus />
-      </JournalEntryContent>
-    </JournalEntryProvider>
-  );
-}
-
-function JournalEntryFallback({ date }: { date: string }) {
-  return (
-    <JournalEntryProvider
-      className="mx-auto min-h-full max-w-4xl px-4 py-8 md:px-8"
-      entry={{ date }}
-    >
-      <JournalEntryHeader className="mb-2" forceDate />
-      <JournalEntrySkeleton hasHeader={false} hasContent={true} />
+    <JournalEntryProvider entry={entry}>
+      <JournalEntryWrapper className="mx-auto max-w-5xl pt-8 pb-20">
+        <JournalEntryLink>
+          <JournalEntryHeader className="px-13.5" />
+        </JournalEntryLink>
+        <JournalEntryContent>
+          <JournalEntryEditor />
+        </JournalEntryContent>
+      </JournalEntryWrapper>
     </JournalEntryProvider>
   );
 }

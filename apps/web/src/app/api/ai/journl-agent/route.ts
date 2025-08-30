@@ -22,7 +22,7 @@ export async function POST(req: Request) {
         const model = modelData.modelId;
 
         if (result.usage && session.user?.id) {
-          await api.usage.trackAiModelUsage({
+          await api.usage.trackModelUsage({
             metrics: [
               {
                 quantity: result.usage.promptTokens,

@@ -31,7 +31,7 @@ import { useTRPC } from "~/trpc/react";
 const MIN_QUERY_LENGTH = 2;
 const DEFAULT_THRESHOLD = 0.25;
 const DEFAULT_LIMIT = 10;
-const DEFAULT_DEBOUNCE_TIME = 500;
+const DEFAULT_DEBOUNCE_TIME = 150;
 
 type HeaderSearchButtonProps = React.ComponentProps<typeof Dialog> & {
   children: React.ReactNode;

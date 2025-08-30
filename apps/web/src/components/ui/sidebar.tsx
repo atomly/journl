@@ -293,7 +293,7 @@ function Sidebar({
           {/* Draggable border overlay */}
           <div
             className={cn(
-              "absolute inset-y-0 z-20",
+              "absolute inset-y-0 z-2000",
               side === "left" ? "right-0" : "left-0",
             )}
           >
@@ -365,7 +365,7 @@ function Sidebar({
       <div
         data-slot="sidebar-container"
         className={cn(
-          "fixed inset-y-0 z-10 hidden h-svh w-(--sidebar-width) max-w-[70vw] transition-[left,right,width] duration-200 ease-linear md:flex",
+          "fixed inset-y-0 z-2000 hidden h-svh w-(--sidebar-width) max-w-[70vw] transition-[left,right,width] duration-200 ease-linear md:flex",
           side === "left"
             ? "left-0 group-data-[collapsible=offcanvas]:left-[calc(var(--sidebar-width)*-1)]"
             : "right-0 group-data-[collapsible=offcanvas]:right-[calc(var(--sidebar-width)*-1)]",
@@ -391,7 +391,7 @@ function Sidebar({
           {/* Draggable border overlay */}
           <div
             className={cn(
-              "absolute inset-y-0 z-20",
+              "absolute inset-y-0 z-2000",
               side === "left" ? "right-0" : "left-0",
             )}
           >
@@ -479,7 +479,7 @@ function SidebarDragger({
       {isHovering && (
         <div
           className={cn(
-            "pointer-events-none absolute z-50 rounded-md border px-3 py-2 text-xs shadow-lg",
+            "pointer-events-none absolute z-2000 rounded-md border px-3 py-2 text-xs shadow-lg",
             "whitespace-nowrap bg-popover text-popover-foreground",
             side === "left" ? "left-4" : "right-4",
           )}
@@ -556,7 +556,7 @@ function SidebarRail({
       onMouseDown={handleMouseDown}
       title="Toggle Sidebar"
       className={cn(
-        "-translate-x-1/2 group-data-[side=left]:-right-4 absolute inset-y-0 z-20 hidden w-4 transition-all ease-linear after:absolute after:inset-y-0 after:left-1/2 after:w-[2px] hover:after:bg-sidebar-border group-data-[side=right]:left-0 sm:flex",
+        "-translate-x-1/2 group-data-[side=left]:-right-4 absolute inset-y-0 z-2000 hidden w-4 transition-all ease-linear after:absolute after:inset-y-0 after:left-1/2 after:w-[2px] hover:after:bg-sidebar-border group-data-[side=right]:left-0 sm:flex",
         "in-data-[side=left]:cursor-w-resize in-data-[side=right]:cursor-e-resize",
         "[[data-side=left][data-state=collapsed]_&]:cursor-e-resize [[data-side=right][data-state=collapsed]_&]:cursor-w-resize",
         "group-data-[collapsible=offcanvas]:translate-x-0 hover:group-data-[collapsible=offcanvas]:bg-sidebar group-data-[collapsible=offcanvas]:after:left-full",

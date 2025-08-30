@@ -1,5 +1,5 @@
-import { sql } from "@acme/db";
-import { BlockEdge, BlockNode, Document } from "@acme/db/schema";
+import { eq } from "@acme/db";
+import { Document } from "@acme/db/schema";
 import { TRPCError, type TRPCRouterRecord } from "@trpc/server";
 import z from "zod/v4";
 import { blockNoteTree } from "../shared/block-note-tree.js";
@@ -10,31 +10,13 @@ export const documentRouter = {
     .input(z.object({ id: z.uuid(), user_id: z.string() }))
     .query(async ({ ctx, input }) => {
       try {
-        const {
-          rows: [document],
-        } = await ctx.db.execute<
-          Document & {
-            blocks: BlockNode[];
-            edges: BlockEdge[];
-          }
-        >(sql`
-          WITH document AS (
-            SELECT * FROM ${Document}
-            WHERE ${Document.id} = ${input.id} AND ${Document.user_id} = ${input.user_id}
-            LIMIT 1
-          )
-          SELECT
-            document.*,
-            COALESCE(
-                (SELECT json_agg(${BlockNode}.*) FROM ${BlockNode} WHERE ${BlockNode.document_id} = document.id),
-                '[]'::json
-            ) as blocks,
-            COALESCE(
-                (SELECT json_agg(${BlockEdge}.*) FROM ${BlockEdge} WHERE ${BlockEdge.document_id} = document.id),
-                '[]'::json
-            ) as edges
-          FROM document
-      `);
+        const document = await ctx.db.query.Document.findFirst({
+          where: eq(Document.id, input.id),
+          with: {
+            block_edges: true,
+            block_nodes: true,
+          },
+        });
 
         if (!document) {
           return null;
@@ -42,7 +24,7 @@ export const documentRouter = {
 
         return {
           ...document,
-          tree: blockNoteTree(document.blocks, document.edges),
+          tree: blockNoteTree(document.block_nodes, document.block_edges),
         };
       } catch (error) {
         if (error instanceof TRPCError) {

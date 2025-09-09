@@ -1,3 +1,4 @@
+import { blocknoteBlocks } from "@acme/blocknote/server";
 import { and, between, cosineDistance, desc, eq, gt, sql } from "@acme/db";
 import {
   Document,
@@ -10,16 +11,11 @@ import type { TRPCRouterRecord } from "@trpc/server";
 import { TRPCError } from "@trpc/server";
 import { embed } from "ai";
 import { z } from "zod/v4";
-import { blockNoteTree } from "../shared/block-note-tree.js";
 import {
   saveTransactions,
   zBlockTransactions,
 } from "../shared/block-transaction.js";
 import { protectedProcedure } from "../trpc.js";
-
-export type TimelineEntry = Awaited<
-  ReturnType<typeof journalRouter.getTimeline>
->["timeline"][number];
 
 export const journalRouter = {
   getBetween: protectedProcedure
@@ -47,7 +43,7 @@ export const journalRouter = {
 
       return entries.map(({ block_nodes, block_edges, ...entry }) => ({
         ...entry,
-        document: blockNoteTree(block_nodes, block_edges),
+        blocks: blocknoteBlocks(block_nodes, block_edges),
       }));
     }),
   getByDate: protectedProcedure
@@ -79,7 +75,7 @@ export const journalRouter = {
 
         return {
           ...entry,
-          document: blockNoteTree(block_nodes, block_edges),
+          blocks: blocknoteBlocks(block_nodes, block_edges),
         };
       } catch (error) {
         if (error instanceof TRPCError) {
@@ -184,7 +180,7 @@ export const journalRouter = {
               dateKey,
               {
                 ...entry,
-                document: blockNoteTree(block_nodes, block_edges),
+                blocks: blocknoteBlocks(block_nodes, block_edges),
               },
             ];
           }),

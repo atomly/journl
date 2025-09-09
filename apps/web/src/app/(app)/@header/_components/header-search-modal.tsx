@@ -90,7 +90,7 @@ export function HeaderSearchButton({
         <DialogTrigger asChild>{children}</DialogTrigger>
       </div>
       <DialogContent
-        className="gap-0 rounded-2xl border-4 border-muted bg-sidebar p-0"
+        className="z-5000 gap-0 rounded-2xl border-4 border-muted bg-sidebar p-0"
         data-state="open"
         showCloseButton={false}
       >

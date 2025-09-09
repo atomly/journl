@@ -13,6 +13,12 @@ export function NotFoundEditor() {
       },
       {
         content: "Page not found.",
+        props: {
+          textAlignment: "center",
+        },
+        type: "paragraph",
+      },
+      {
         type: "paragraph",
       },
       {
@@ -20,18 +26,7 @@ export function NotFoundEditor() {
         type: "bulletListItem",
       },
       {
-        content: "Will investigate later... or probably forget.",
-        type: "bulletListItem",
-      },
-      {
-        children: [
-          {
-            content: "window.location.href = '/';",
-            props: { language: "json" },
-            type: "codeBlock",
-          },
-        ],
-        content: "This should help users find their way back...",
+        content: "Will investigate later... I hope.",
         type: "bulletListItem",
       },
       {

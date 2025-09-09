@@ -109,6 +109,10 @@ export const BlockEdge = pgTable(
 export type BlockEdge = typeof BlockEdge.$inferSelect;
 
 export const BlockEdgeRelations = relations(BlockEdge, ({ one }) => ({
+  document: one(Document, {
+    fields: [BlockEdge.document_id],
+    references: [Document.id],
+  }),
   page: one(Page, {
     fields: [BlockEdge.document_id],
     references: [Page.document_id],

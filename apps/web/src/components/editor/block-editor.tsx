@@ -1,18 +1,15 @@
 "use client";
 
 import type { BlockTransaction } from "@acme/api";
+import type { BlockPrimitive, EditorPrimitive } from "@acme/blocknote/schema";
 import type { Block, PartialBlock } from "@blocknote/core";
 import { BlockNoteView } from "@blocknote/mantine";
-import { useCreateBlockNote } from "@blocknote/react";
+import { AIMenuController, getAIExtension } from "@blocknote/xl-ai";
 import { useTheme } from "next-themes";
-import { type ComponentProps, useRef } from "react";
+import { type ComponentProps, useEffect, useRef } from "react";
+import { useJournlAgentAwareness } from "~/ai/agents/use-journl-agent-awareness";
 import { env } from "~/env";
 import { DefaultMap } from "../../lib/default-map";
-import {
-  type BlockPrimitive,
-  type EditorPrimitive,
-  schema,
-} from "./block-schema";
 
 type EditorPrimitiveOnChangeParams = Parameters<
   Parameters<EditorPrimitive["onChange"]>[0]
@@ -46,6 +43,10 @@ type BlockEditorProps = Omit<
   "editor" | "theme" | "onChange"
 > & {
   /**
+   * The editor to use.
+   */
+  editor: EditorPrimitive;
+  /**
    * The initial blocks to render in the editor.
    * @note The initial blocks must be a non-empty array.
    */
@@ -54,20 +55,31 @@ type BlockEditorProps = Omit<
    * The function to call when the editor changes.
    */
   onChange?: (transactions: BlockTransaction[]) => void;
+  /**
+   * Whether to enable debugging.
+   */
+  debug?: boolean;
 };
 
 export function BlockEditor({
+  editor,
   initialBlocks,
   onChange,
+  children,
+  debug = env.NODE_ENV === "development",
   ...rest
 }: BlockEditorProps) {
   const { theme, systemTheme } = useTheme();
-  const editor = useCreateBlockNote({
-    animations: false,
-    initialContent: initialBlocks,
-    schema,
-  });
   const previousEditorRef = useRef<typeof editor.document>(editor.document);
+  const { forgetEditorSelections, getSelections, forgetSelection } =
+    useJournlAgentAwareness();
+
+  // Remove block selections when the editor is unmounted.
+  useEffect(() => {
+    return () => {
+      forgetEditorSelections(editor);
+    };
+  }, [forgetEditorSelections, editor]);
 
   /**
    * Change handler for the editor.
@@ -102,35 +114,46 @@ export function BlockEditor({
    *   - A block is considered moved if its parent or position has changed (a changed position means at least one of the adjacent blocks are different).
    * - Moves are more complex than inserts and deletes because we need to compute edges for the blocks that moved and the blocks that are adjacent to the moved blocks (assuming they didn't move).
    */
-  function handleEditorChange(
-    currentEditor: EditorPrimitiveOnChangeParams[0],
-    context: EditorPrimitiveOnChangeParams[1],
-  ) {
-    if (!onChange) return;
+  function handleEditorChange(currentEditor: EditorPrimitiveOnChangeParams[0]) {
+    if (!onChange || isEditorAgentProcessing(currentEditor)) return;
 
     const oldBlocks = getEditorBlocks(previousEditorRef.current);
     const currentBlocks = getEditorBlocks(currentEditor.document);
+    const deletedBlockIds = new Set(oldBlocks.keys());
 
     const blockChanges: BlockChange[] = [];
 
-    for (const change of context.getChanges()) {
-      if (change.type === "move") continue;
+    for (const currentBlock of currentBlocks.values()) {
+      const oldBlock = oldBlocks.get(currentBlock.id);
 
-      const oldBlock = oldBlocks.get(change.block.id);
-      const currentBlock = currentBlocks.get(change.block.id);
+      // It's an insert if the block doesn't exist in the previous state or if the previous state is empty.
+      const isInsert = !oldBlock || oldBlocks.size <= 1;
 
-      if (
-        currentBlock &&
-        (change.type === "update" || change.type === "insert")
-      ) {
+      // It's an update if the block type, props, or content has changed.
+      const isUpdate =
+        currentBlock.type !== oldBlock?.type ||
+        JSON.stringify(currentBlock.props) !==
+          JSON.stringify(oldBlock?.props) ||
+        JSON.stringify(currentBlock.content) !==
+          JSON.stringify(oldBlock?.content);
+
+      deletedBlockIds.delete(currentBlock.id);
+
+      if (isInsert || isUpdate) {
         blockChanges.push({
           block: currentBlock,
           oldBlock,
           type: "upsert",
         });
-      } else if (oldBlock && change.type === "delete") {
+      }
+    }
+
+    for (const deletedBlockId of deletedBlockIds) {
+      const deletedBlock = oldBlocks.get(deletedBlockId);
+
+      if (deletedBlock) {
         blockChanges.push({
-          block: oldBlock,
+          block: deletedBlock,
           oldBlock: undefined,
           type: "delete",
         });
@@ -234,8 +257,8 @@ export function BlockEditor({
       ...flattenEdgeTransactions(edgeTransactions),
     ];
 
-    // Leaving this here for debugging purposes because this logic is a fucking mess.
-    if (env.NODE_ENV === "development") {
+    // Leaving this here for debugging purposes because this logic is the wild west.
+    if (debug) {
       console.debug("saveTransactions 👀", {
         transactions: transactions.map((t) =>
           t.type === "block_remove" || t.type === "block_upsert"
@@ -256,6 +279,17 @@ export function BlockEditor({
       });
     }
 
+    // Removing chat selections that include deleted blocks.
+    for (const selection of getSelections()) {
+      if (currentEditor !== selection.editor) continue;
+      const isDeleted = Array.from(selection.blockIds).some((b) =>
+        deletedBlockIds.has(b),
+      );
+      if (isDeleted) {
+        forgetSelection(selection);
+      }
+    }
+
     onChange(transactions);
   }
 
@@ -267,7 +301,10 @@ export function BlockEditor({
       editor={editor}
       theme={resolvedTheme as "light" | "dark"}
       onChange={handleEditorChange}
-    />
+    >
+      <AIMenuController />
+      {children}
+    </BlockNoteView>
   );
 }
 
@@ -299,6 +336,15 @@ function getEditorBlocks(blocks: BlockPrimitive[], parent?: BlockPrimitive) {
   }
 
   return flattened;
+}
+
+function isEditorAgentProcessing(editor: EditorPrimitive) {
+  const aiExtension = getAIExtension(editor);
+  const state = aiExtension.store.getState().aiMenuState;
+
+  if (!state || typeof state !== "object") return false;
+
+  return state.status === "thinking" || state.status === "ai-writing";
 }
 
 /**

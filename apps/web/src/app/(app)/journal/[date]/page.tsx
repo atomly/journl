@@ -1,14 +1,15 @@
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { api } from "~/trpc/server";
-import { JournalEntryEditor } from "../_components/journal-entry-editor";
 import {
+  JournalEntryAgentView,
   JournalEntryContent,
+  JournalEntryEditor,
   JournalEntryHeader,
   JournalEntryLink,
+  JournalEntryProvider,
   JournalEntryWrapper,
-} from "../_components/journal-entry-primitives";
-import { JournalEntryProvider } from "../_components/journal-entry-provider";
+} from "../_components/journal-entry-editor";
 import { JournalEntrySkeleton } from "../_components/journal-entry-skeleton";
 
 export default async function Page({
@@ -53,6 +54,7 @@ async function SuspendedJournalEntry({ date }: { date: string }) {
           <JournalEntryEditor />
         </JournalEntryContent>
       </JournalEntryWrapper>
+      <JournalEntryAgentView />
     </JournalEntryProvider>
   );
 }

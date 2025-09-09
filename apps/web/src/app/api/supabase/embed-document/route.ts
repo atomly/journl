@@ -1,26 +1,26 @@
+import { blocknoteMarkdown } from "@acme/blocknote/server";
 import {
   zDocumentEmbeddingTask,
   type zInsertDocumentEmbedding,
 } from "@acme/db/schema";
-import { ServerBlockNoteEditor } from "@blocknote/server-util";
 import { type ChunkParams, MDocument } from "@mastra/rag";
 import { embedMany } from "ai";
 import { NextResponse } from "next/server";
 import removeMarkdown from "remove-markdown";
 import type { z } from "zod/v4";
 import { model } from "~/ai/providers/openai/embedding";
-import { schema } from "~/components/editor/block-schema";
 import { api, embedder } from "~/trpc/server";
 import { handler } from "../_lib/webhook-handler";
 
 const CHUNK_PARAMS: ChunkParams = {
-  extract: {
-    keywords: true,
-    summary: true,
-    title: true,
-  },
-  // ! TODO: MDocument uses `gpt-4o-mini` to chunk the document, but we're not tracking the usage. We need to fix this or remove metadata extraction.
-  modelName: "gpt-4o-mini",
+  // ! TODO: Mastra's MDocument uses `gpt-4o-mini` to chunk the document, but we're not tracking the usage.
+  // ! We need to fix this or remove metadata extraction. I'm disabling this until we can track usage.
+  // extract: {
+  //   keywords: true,
+  //   summary: true,
+  //   title: true,
+  // },
+  // modelName: "gpt-4o-mini",
   strategy: "semantic-markdown",
 };
 
@@ -91,15 +91,13 @@ export const POST = handler(zDocumentEmbeddingTask, async (payload) => {
       user_id: payload.record.user_id,
     });
 
-    if (!document?.tree) {
+    if (!document?.blocks) {
       throw new Error("Document not found");
     }
 
-    const editor = ServerBlockNoteEditor.create({
-      schema,
-    });
-
-    const markdown = await editor.blocksToMarkdownLossy(document.tree);
+    const markdown = document.blocks
+      ? await blocknoteMarkdown(document.blocks)
+      : "";
 
     // Saving tokens in case the document is empty.
     if (!removeMarkdown(markdown, REMOVE_MARKDOWN_PARAMS)) {

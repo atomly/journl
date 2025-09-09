@@ -2,11 +2,13 @@ import { ComposerPrimitive, ThreadPrimitive } from "@assistant-ui/react";
 import { SendHorizontalIcon } from "lucide-react";
 import {
   ComposerAction,
+  ComposerInput,
   ThreadScrollToBottom,
-} from "~/components/ai/thread-components";
-import { ThreadMessages } from "~/components/ai/thread-messages";
-import { ThreadWelcome } from "~/components/ai/thread-welcome";
-import { TooltipIconButton } from "~/components/ai/tooltip-icon-button";
+} from "~/components/assistant-ui/thread-components";
+import { ThreadMessages } from "~/components/assistant-ui/thread-messages";
+import { ComposerSources } from "~/components/assistant-ui/thread-sources";
+import { ThreadWelcome } from "~/components/assistant-ui/thread-welcome";
+import { TooltipIconButton } from "~/components/assistant-ui/tooltip-icon-button";
 
 import {
   Drawer,
@@ -56,12 +58,9 @@ export default function ChatDrawer() {
 
               <div className="sticky bottom-0 mt-3 flex w-full max-w-[var(--thread-max-width)] flex-col items-center justify-end rounded-t-lg bg-sidebar pb-4">
                 <ThreadScrollToBottom />
-                <ComposerPrimitive.Root className="flex w-full flex-wrap items-center rounded-lg border bg-inherit px-2.5 shadow-sm transition-colors ease-in focus-within:border-ring/20">
-                  <ComposerPrimitive.Input
-                    rows={1}
-                    placeholder="Ask anything..."
-                    className="max-h-40 flex-grow resize-none border-none px-2 py-4 text-md outline-none placeholder:text-muted-foreground focus:ring-0 disabled:cursor-not-allowed"
-                  />
+                <ComposerPrimitive.Root className="relative flex w-full flex-col rounded-lg border bg-muted px-1 pt-2 shadow-sm focus-within:border-ring/20 [&_button]:self-end">
+                  <ComposerSources />
+                  <ComposerInput className="py-0" />
                   <ComposerAction />
                 </ComposerPrimitive.Root>
               </div>

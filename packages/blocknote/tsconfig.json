@@ -1,0 +1,13 @@
+{
+  "extends": "@acme/tsconfig/tsconfig.react.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "rootDir": "./src",
+    "skipLibCheck": true,
+    "module": "ESNext", // Use Node.js-style module resolution for compatibility
+    "moduleDetection": "force", // Force detection of module format from file extension
+    "moduleResolution": "Bundler" // Use Node.js module resolution algorithm
+  },
+  "include": ["src"],
+  "exclude": ["node_modules"]
+}

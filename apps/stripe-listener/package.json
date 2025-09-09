@@ -1,0 +1,15 @@
+{
+  "name": "@acme/stripe-listener",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "clean": "git clean -xdf .cache .turbo node_modules tsconfig.tsbuildinfo",
+    "dev": "stripe listen --forward-to localhost:3000/api/auth/stripe/webhook",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@acme/tsconfig": "workspace:*",
+    "@types/node": "^22.15.29"
+  }
+}

@@ -11,13 +11,13 @@ export function JournalListSkeleton({ ...rest }: JournalFeedSkeletonProps) {
           <JournalEntrySkeleton hasContent={false} />
 
           {/* Yesterday with content */}
-          <JournalEntrySkeleton hasContent={true} />
+          <JournalEntrySkeleton hasContent />
 
           {/* Multiple past entries */}
           <JournalEntrySkeleton hasContent={false} />
-          <JournalEntrySkeleton hasContent={true} />
+          <JournalEntrySkeleton hasContent />
           <JournalEntrySkeleton hasContent={false} />
-          <JournalEntrySkeleton hasContent={true} />
+          <JournalEntrySkeleton hasContent />
         </div>
       </div>
     </div>

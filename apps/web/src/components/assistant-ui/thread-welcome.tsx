@@ -50,5 +50,7 @@ function getRandomMessage(user: User) {
 
 async function ThreadWelcomeMessage() {
   const user = await getUser();
-  return <p className="mt-4 font-medium">{getRandomMessage(user)}</p>;
+  return (
+    <p className="mt-4 text-center font-medium">{getRandomMessage(user)}</p>
+  );
 }

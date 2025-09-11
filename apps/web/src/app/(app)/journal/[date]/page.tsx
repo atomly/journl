@@ -4,12 +4,12 @@ import { api } from "~/trpc/server";
 import {
   JournalEntryAgentView,
   JournalEntryContent,
-  JournalEntryEditor,
   JournalEntryHeader,
   JournalEntryLink,
   JournalEntryProvider,
   JournalEntryWrapper,
 } from "../_components/journal-entry-editor";
+import { DynamicJournalEntryEditor } from "../_components/journal-entry-editor.dynamic";
 import { JournalEntrySkeleton } from "../_components/journal-entry-skeleton";
 
 export default async function Page({
@@ -32,7 +32,7 @@ function JournalEntryFallback({ date }: { date: string }) {
       entry={{ date }}
     >
       <JournalEntryHeader className="mb-6" />
-      <JournalEntrySkeleton hasHeader={false} hasContent={true} />
+      <JournalEntrySkeleton hasHeader={false} hasContent />
     </JournalEntryProvider>
   );
 }
@@ -51,7 +51,9 @@ async function SuspendedJournalEntry({ date }: { date: string }) {
           <JournalEntryHeader className="px-13.5" />
         </JournalEntryLink>
         <JournalEntryContent>
-          <JournalEntryEditor />
+          <Suspense fallback={<JournalEntrySkeleton hasContent />}>
+            <DynamicJournalEntryEditor />
+          </Suspense>
         </JournalEntryContent>
       </JournalEntryWrapper>
       <JournalEntryAgentView />

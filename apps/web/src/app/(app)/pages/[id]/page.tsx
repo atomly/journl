@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { api } from "~/trpc/server";
 import { DynamicPageEditor } from "../_components/page-editor.dynamic";
+import { PageEditorSkeleton } from "../_components/page-editor-skeleton";
 import { PageTitleTextarea } from "../_components/page-title-textarea";
 
 export default async function Page({
@@ -27,7 +28,7 @@ export default async function Page({
           }}
           className="mb-4 px-13 py-0"
         />
-        <Suspense>
+        <Suspense fallback={<PageEditorSkeleton />}>
           <DynamicPageEditor
             page={{
               document_id: page.document_id,

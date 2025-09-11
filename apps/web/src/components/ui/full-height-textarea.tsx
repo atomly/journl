@@ -4,6 +4,9 @@ import { useCallback, useEffect, useRef } from "react";
 import { cn } from "~/lib/cn";
 import { Textarea } from "./textarea";
 
+/**
+ * A textarea that automatically adjusts its height to fit the content.
+ */
 export function FullHeightTextarea({
   className,
   ref,
@@ -51,7 +54,7 @@ export function FullHeightTextarea({
   return (
     <Textarea
       className={cn(
-        "flex min-h-[60px] w-full transition-all duration-100",
+        "flex min-h-fit-content w-full resize-none transition-all duration-100",
         className,
         "overflow-y-hidden",
       )}

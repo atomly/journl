@@ -43,10 +43,6 @@ export const zBlockTransactions = z.object({
   ),
 });
 
-export type BlockTransaction = z.infer<
-  typeof zBlockTransactions
->["transactions"][number];
-
 /**
  * Saves a list of block transactions to the database.
  * @param driver - The database driver to use.

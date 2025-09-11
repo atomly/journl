@@ -4,9 +4,15 @@ import type { BlockTransaction } from "@acme/api";
 import type { Page } from "@acme/db/schema";
 import type { PartialBlock } from "@blocknote/core";
 import { useMutation } from "@tanstack/react-query";
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import { useDebouncedCallback } from "use-debounce";
+import { useJournlAgentAwareness } from "~/ai/agents/use-journl-agent-awareness";
 import { BlockEditor } from "~/components/editor/block-editor";
+import {
+  BlockEditorFormattingToolbar,
+  BlockEditorSlashMenu,
+} from "~/components/editor/block-editor-tools";
+import { useBlockEditor } from "~/components/editor/use-block-editor";
 import { useTRPC } from "~/trpc/react";
 
 const DEFAULT_DEBOUNCE_TIME = 150;
@@ -24,6 +30,12 @@ export function PageEditor({
 }: PageEditorProps) {
   const trpc = useTRPC();
   const pendingChangesRef = useRef<BlockTransaction[]>([]);
+  const {
+    rememberEditor: setEditor,
+    forgetEditor: removeEditor,
+    rememberView: setView,
+  } = useJournlAgentAwareness();
+  const editor = useBlockEditor({ initialBlocks });
 
   const { mutate, isPending } = useMutation({
     ...trpc.pages.saveTransactions.mutationOptions({}),
@@ -50,7 +62,38 @@ export function PageEditor({
     debouncedMutate();
   }
 
+  useEffect(() => {
+    setView({
+      id: page.id,
+      name: "page",
+      title: page.title,
+    });
+    return () => {
+      setView({
+        name: "other",
+      });
+    };
+  }, [page.id, page.title, setView]);
+
+  useEffect(() => {
+    setEditor(page.id, editor);
+    return () => {
+      removeEditor(page.id);
+    };
+  }, [page.id, editor, setEditor, removeEditor]);
+
   return (
-    <BlockEditor initialBlocks={initialBlocks} onChange={handleEditorChange} />
+    <BlockEditor
+      editor={editor}
+      initialBlocks={initialBlocks}
+      onChange={handleEditorChange}
+      // Disabling the default because we're using a formatting toolbar with the AI option.
+      formattingToolbar={false}
+      // Disabling the default because we're using a slash menu with the AI option.
+      slashMenu={false}
+    >
+      <BlockEditorFormattingToolbar />
+      <BlockEditorSlashMenu />
+    </BlockEditor>
   );
 }

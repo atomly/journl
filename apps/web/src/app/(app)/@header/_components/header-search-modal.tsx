@@ -90,7 +90,7 @@ export function HeaderSearchButton({
         <DialogTrigger asChild>{children}</DialogTrigger>
       </div>
       <DialogContent
-        className="gap-0 rounded-2xl border-4 border-muted bg-sidebar p-0"
+        className="z-5000 gap-0 rounded-2xl border-4 border-muted bg-sidebar p-0"
         data-state="open"
         showCloseButton={false}
       >
@@ -99,7 +99,7 @@ export function HeaderSearchButton({
             <DialogTitle className="sr-only">
               Search pages and journal entries
             </DialogTitle>
-            <div className="flex w-full items-center gap-x-2 rounded-lg border-2 bg-muted px-2 [&>div]:w-full">
+            <div className="flex w-full items-center gap-x-2 rounded-lg border-2 bg-muted px-2 [&>div]:w-full [&>div]:px-0">
               <CommandInput
                 className="flex h-10 w-full rounded-md border-0 bg-transparent text-sm outline-none placeholder:text-muted-foreground focus-visible:ring-0 disabled:cursor-not-allowed disabled:opacity-50"
                 placeholder="Search notes..."
@@ -171,7 +171,7 @@ export function HeaderSearchButton({
                           ) : (
                             <>
                               <div className="text-muted-foreground text-sm">
-                                {new Date(note.updated_at).toLocaleDateString()}
+                                {new Date(note.date).toLocaleDateString()}
                               </div>
                               <div className="line-clamp-2 text-muted-foreground text-sm">
                                 <HighlightedText query={query} maxLength={120}>

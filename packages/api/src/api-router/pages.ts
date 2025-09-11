@@ -1,3 +1,4 @@
+import { blocknoteBlocks } from "@acme/blocknote/server";
 import { and, cosineDistance, desc, eq, gt, sql } from "@acme/db";
 import {
   Document,
@@ -10,7 +11,6 @@ import type { TRPCRouterRecord } from "@trpc/server";
 import { TRPCError } from "@trpc/server";
 import { embed } from "ai";
 import { z } from "zod/v4";
-import { blockNoteTree } from "../shared/block-note-tree.js";
 import {
   saveTransactions,
   zBlockTransactions,
@@ -87,7 +87,7 @@ export const pagesRouter = {
 
         return {
           ...page,
-          document: blockNoteTree(block_nodes, block_edges),
+          blocks: blocknoteBlocks(block_nodes, block_edges),
         };
       } catch (error) {
         if (error instanceof TRPCError) {

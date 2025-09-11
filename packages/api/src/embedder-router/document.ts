@@ -1,8 +1,8 @@
+import { blocknoteBlocks } from "@acme/blocknote/server";
 import { eq } from "@acme/db";
 import { Document } from "@acme/db/schema";
 import { TRPCError, type TRPCRouterRecord } from "@trpc/server";
 import z from "zod/v4";
-import { blockNoteTree } from "../shared/block-note-tree.js";
 import { publicProcedure } from "../trpc.js";
 
 export const documentRouter = {
@@ -24,7 +24,7 @@ export const documentRouter = {
 
         return {
           ...document,
-          tree: blockNoteTree(document.block_nodes, document.block_edges),
+          blocks: blocknoteBlocks(document.block_nodes, document.block_edges),
         };
       } catch (error) {
         if (error instanceof TRPCError) {

@@ -11,9 +11,10 @@ import { HeaderUpgradePro } from "./_components/header-upgrade-pro";
 
 async function UpgradeProButton() {
   const user = await getUser();
+  const requestHeaders = await headers();
 
   const subscriptions = await auth.api.listActiveSubscriptions({
-    headers: await headers(),
+    headers: requestHeaders,
     query: {
       referenceId: user.id,
     },

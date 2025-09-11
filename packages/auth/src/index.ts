@@ -38,12 +38,6 @@ export function initAuth(options: {
     plugins: [
       stripe({
         createCustomerOnSignUp: true,
-        onCustomerCreate: async ({ stripeCustomer, user }, request) => {
-          // Do something with the newly created customer
-          console.log(
-            `Customer ${stripeCustomer.id} created for user ${user.id}`,
-          );
-        },
         stripeClient,
         stripeWebhookSecret: options.stripeWebhookSecret,
         subscription: {

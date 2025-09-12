@@ -1,5 +1,5 @@
 import { and, cosineDistance, desc, eq, gt, sql } from "@acme/db";
-import { DocumentEmbedding, Page } from "@acme/db/schema";
+import { DocumentEmbedding, JournalEntry, Page } from "@acme/db/schema";
 import { openai } from "@ai-sdk/openai";
 import { TRPCError, type TRPCRouterRecord } from "@trpc/server";
 import { embed } from "ai";
@@ -22,7 +22,6 @@ type Note =
       date: string;
       content: string;
       created_at: string;
-      header: string;
       similarity: number;
       updated_at: string;
     };
@@ -50,7 +49,7 @@ export const notesRouter = {
         const results = await ctx.db
           .selectDistinctOn([DocumentEmbedding.document_id], {
             embedding: DocumentEmbedding,
-            // journal_entry: JournalEntry,
+            journal_entry: JournalEntry,
             page: Page,
             similarity: embeddingSimilarity,
           })
@@ -62,10 +61,10 @@ export const notesRouter = {
             ),
           )
           .leftJoin(Page, eq(DocumentEmbedding.document_id, Page.document_id))
-          // .leftJoin(
-          //   JournalEntry,
-          //   eq(DocumentEmbedding.document_id, JournalEntry.document_id),
-          // )
+          .leftJoin(
+            JournalEntry,
+            eq(DocumentEmbedding.document_id, JournalEntry.document_id),
+          )
           .orderBy(DocumentEmbedding.document_id, desc(embeddingSimilarity));
 
         results.sort((a, b) => {
@@ -87,18 +86,17 @@ export const notesRouter = {
             });
           }
 
-          // if (result.journal_entry) {
-          //   notes.push({
-          //     content: result.embedding.chunk_raw_text,
-          //     created_at: result.journal_entry.created_at,
-          //     date: result.journal_entry.date,
-          //     header: result.journal_entry.content,
-          //     id: result.journal_entry.id,
-          //     similarity: result.similarity,
-          //     type: "journal",
-          //     updated_at: result.embedding.updated_at,
-          //   });
-          // }
+          if (result.journal_entry) {
+            notes.push({
+              content: result.embedding.chunk_raw_text,
+              created_at: result.journal_entry.created_at,
+              date: result.journal_entry.date,
+              id: result.journal_entry.id,
+              similarity: result.similarity,
+              type: "journal",
+              updated_at: result.embedding.updated_at,
+            });
+          }
         }
 
         return notes;

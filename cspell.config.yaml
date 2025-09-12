@@ -35,14 +35,17 @@ languageSettings:
     allowCompoundWords: false
 useGitignore: true
 words:
+  - AISDK
   - autohide
   - CLIENTVAR
   - daveyplate
+  - Embla
   - evals
   - HMAC
   - journaling
   - Journl
   - libsql
+  - mantine
   - sonner
   - supabase
   - topo

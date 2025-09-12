@@ -1,0 +1,46 @@
+{
+  "name": "@acme/blocknote",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./ai": "./src/blocknote-ai.ts",
+    "./server": "./src/server/index.ts",
+    "./schema": "./src/blocknote-schema.ts"
+  },
+  "scripts": {
+    "build": "tsc",
+    "check": "biome check",
+    "clean": "git clean -xdf .cache .turbo dist node_modules",
+    "dev": "pnpm build --watch",
+    "typecheck": "tsc --noEmit --emitDeclarationOnly false"
+  },
+  "peerDependencies": {
+    "@blocknote/core": "^0.35.0",
+    "@blocknote/mantine": "^0.35.0",
+    "@blocknote/react": "^0.35.0",
+    "@blocknote/server-util": "^0.35.0",
+    "@blocknote/xl-ai": "^0.35.0"
+  },
+  "dependencies": {
+    "@acme/db": "workspace:*",
+    "@ai-sdk/openai": "^1.3.22",
+    "@blocknote/core": "^0.35.0",
+    "@blocknote/mantine": "^0.35.0",
+    "@blocknote/react": "^0.35.0",
+    "@blocknote/server-util": "^0.35.0",
+    "@blocknote/xl-ai": "^0.35.0",
+    "ai": "^4.3.19",
+    "zod": "^3.25.71"
+  },
+  "devDependencies": {
+    "@acme/tsconfig": "workspace:*",
+    "@biomejs/biome": "^2.0.6",
+    "@blocknote/core": "^0.35.0",
+    "@blocknote/mantine": "^0.35.0",
+    "@blocknote/react": "^0.35.0",
+    "@blocknote/server-util": "^0.35.0",
+    "@blocknote/xl-ai": "^0.35.0",
+    "typescript": "^5.8.3"
+  }
+}

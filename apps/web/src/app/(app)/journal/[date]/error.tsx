@@ -15,7 +15,7 @@ export default function JournalEntryError({
   }, [error]);
 
   return (
-    <div className="mx-auto flex h-full max-w-4xl flex-col items-center justify-center gap-y-4 px-4 py-8 md:px-8">
+    <div className="mx-auto flex h-full max-w-4xl flex-col items-center justify-center gap-y-4 px-4 py-8 text-center md:px-8">
       <h2 className="font-bold text-2xl">Sorry, something went wrong.</h2>
       <Button asChild>
         <Link href="/journal">Go back to your Journal</Link>

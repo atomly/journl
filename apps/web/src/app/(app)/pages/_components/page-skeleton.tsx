@@ -1,5 +1,6 @@
 import { Skeleton } from "~/components/ui/skeleton";
 import { cn } from "~/components/utils";
+import { PageEditorSkeleton } from "./page-editor-skeleton";
 
 type PageSkeletonProps = Omit<React.ComponentProps<"div">, "children">;
 
@@ -7,7 +8,7 @@ export function PageSkeleton({ className, ...rest }: PageSkeletonProps) {
   return (
     <div className={cn("flex flex-col gap-4", className)} {...rest}>
       {/* Title skeleton */}
-      <Skeleton className="mb-6 h-8 w-3/5" />
+      <Skeleton className="mb-6 h-12 w-3/5" />
 
       {/* Content skeleton */}
       <div className="space-y-3">
@@ -15,22 +16,7 @@ export function PageSkeleton({ className, ...rest }: PageSkeletonProps) {
           {/* Title skeleton */}
           <Skeleton className="h-6 w-2/3" />
 
-          {/* Content blocks skeleton */}
-          <div className="space-y-4">
-            <Skeleton className="h-6 w-full" />
-            <Skeleton className="h-6 w-5/6" />
-            <Skeleton className="h-6 w-4/5" />
-            <div className="space-y-2">
-              <Skeleton className="h-6 w-full" />
-              <Skeleton className="h-6 w-3/4" />
-            </div>
-            <Skeleton className="h-32 w-full" />
-            <div className="space-y-2">
-              <Skeleton className="h-6 w-full" />
-              <Skeleton className="h-6 w-2/3" />
-              <Skeleton className="h-6 w-5/6" />
-            </div>
-          </div>
+          <PageEditorSkeleton />
         </div>
       </div>
     </div>

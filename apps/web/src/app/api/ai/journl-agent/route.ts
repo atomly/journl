@@ -1,20 +1,22 @@
-import { journlAgent } from "~/ai/mastra/agents/journl-agent";
+import { journlAgent, setJournlRuntimeContext } from "~/ai/agents/journl-agent";
+import { handler as corsHandler } from "~/app/api/_cors/cors";
 import { getSession } from "~/auth/server";
 import { api } from "~/trpc/server";
 
 export const maxDuration = 30; // Allow streaming responses up to 30 seconds
 
-export async function POST(req: Request) {
+async function handler(req: Request) {
+  const session = await getSession();
+
+  if (!session) {
+    return new Response("Unauthorized", { status: 401 });
+  }
+
   try {
-    const { messages } = await req.json();
+    const { messages, ...rest } = await req.json();
 
-    const session = await getSession();
-
-    if (!session) {
-      return new Response("Unauthorized", { status: 401 });
-    }
-
-    const result = await journlAgent.stream(messages, {
+    const result = await journlAgent.streamVNext(messages, {
+      format: "aisdk",
       onFinish: async (result) => {
         const modelData = await journlAgent.getModel();
 
@@ -39,15 +41,14 @@ export async function POST(req: Request) {
           });
         }
       },
+      runtimeContext: setJournlRuntimeContext(rest.context),
     });
 
-    return result.toDataStreamResponse({
-      getErrorMessage(error) {
-        return `An error occurred while processing your request. ${error instanceof Error ? error.message : JSON.stringify(error)}`;
-      },
-    });
+    return result.toUIMessageStreamResponse();
   } catch (error) {
     console.error("[api.chat.route] error 👀", error);
     return new Response("Internal Server Error", { status: 500 });
   }
 }
+
+export { handler as POST, corsHandler as OPTIONS };

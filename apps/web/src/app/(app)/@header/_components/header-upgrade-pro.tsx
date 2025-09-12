@@ -1,21 +1,17 @@
 "use client";
 
+import type { ActiveSubscription } from "@acme/api";
 import { usePathname } from "next/navigation";
 import { toast } from "sonner";
 import { authClient } from "~/auth/client";
-import type { auth } from "~/auth/server";
 import { Button } from "../../../../components/ui/button";
-
-type ActiveSubscription =
-  | Awaited<ReturnType<typeof auth.api.listActiveSubscriptions>>[0]
-  | undefined;
 
 export function HeaderUpgradePro({
   activeSubscription,
 }: {
   activeSubscription: ActiveSubscription;
 }) {
-  const currentUrl = usePathname();
+  const pathname = usePathname();
 
   if (activeSubscription?.status === "active") {
     return null;
@@ -25,9 +21,9 @@ export function HeaderUpgradePro({
     <Button
       onClick={async () => {
         const { error } = await authClient.subscription.upgrade({
-          cancelUrl: `/payment/cancel?redirect=${encodeURIComponent(currentUrl)}`,
+          cancelUrl: `/payment/cancel?redirect=${encodeURIComponent(pathname)}`,
           plan: "pro",
-          successUrl: `/payment/success?redirect=${encodeURIComponent(currentUrl)}`,
+          successUrl: `/payment/success?redirect=${encodeURIComponent(pathname)}`,
         });
 
         if (error) {

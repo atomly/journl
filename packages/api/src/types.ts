@@ -8,3 +8,7 @@ export type BlockTransaction = inferProcedureInput<
 export type TimelineEntry = inferProcedureOutput<
   ApiRouter["journal"]["getTimeline"]
 >["timeline"][number];
+
+export type ActiveSubscription = inferProcedureOutput<
+  ApiRouter["subscription"]["getActiveSubscription"]
+>;

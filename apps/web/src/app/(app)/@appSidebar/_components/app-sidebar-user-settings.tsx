@@ -1,27 +1,28 @@
 "use client";
+
 import { Settings } from "lucide-react";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-import type { ComponentProps } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import { useAuthModal } from "~/components/auth/auth-modal-provider";
+import { DropdownMenuItem } from "~/components/ui/dropdown-menu";
 
-type AppSidebarUserSettingsProps = ComponentProps<"button">;
-
-export function AppSidebarUserSettings(props: AppSidebarUserSettingsProps) {
+export function AppSidebarUserSettings() {
+  const router = useRouter();
   const pathname = usePathname();
   const { setCancelUrl } = useAuthModal();
+
+  const handleClick = () => {
+    setCancelUrl(pathname);
+
+    // Add a small delay to allow the dropdown to close before navigation
+    setTimeout(() => {
+      router.push("/auth/settings");
+    }, 100);
+  };
+
   return (
-    <button type="button" {...props}>
-      <Link
-        className="flex w-full items-center gap-x-2"
-        href="/auth/settings"
-        onClick={() => {
-          setCancelUrl(pathname);
-        }}
-      >
-        <Settings />
-        Settings
-      </Link>
-    </button>
+    <DropdownMenuItem className="w-full cursor-pointer" onClick={handleClick}>
+      <Settings />
+      Settings
+    </DropdownMenuItem>
   );
 }

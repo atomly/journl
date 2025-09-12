@@ -3,7 +3,6 @@ import { getUser } from "~/auth/server";
 import { Avatar, AvatarImage } from "~/components/ui/avatar";
 import {
   DropdownMenu,
-  DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
@@ -13,6 +12,8 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "~/components/ui/sidebar";
+import { api } from "~/trpc/server";
+import { AppSidebarManageSubscription } from "./app-sidebar-manage-subscription";
 import {
   AppSidebarUserEmail,
   AppSidebarUserInformation,
@@ -24,6 +25,7 @@ import { AppSidebarUserSignOut } from "./app-sidebar-user-sign-out";
 
 export async function AppSidebarUser() {
   const user = await getUser();
+  const activeSubscription = await api.subscription.getActiveSubscription();
 
   return (
     <SidebarMenu>
@@ -49,7 +51,7 @@ export async function AppSidebarUser() {
             </SidebarMenuButton>
           </DropdownMenuTrigger>
           <AppSidebarUserMenu
-            className="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg"
+            className="z-[2001] w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg"
             align="end"
             sideOffset={4}
           >
@@ -69,12 +71,11 @@ export async function AppSidebarUser() {
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem asChild className="w-full cursor-pointer">
-              <AppSidebarUserSettings />
-            </DropdownMenuItem>
-            <DropdownMenuItem asChild className="w-full cursor-pointer">
-              <AppSidebarUserSignOut />
-            </DropdownMenuItem>
+            <AppSidebarUserSettings />
+            <AppSidebarUserSignOut />
+            <AppSidebarManageSubscription
+              activeSubscription={activeSubscription}
+            />
           </AppSidebarUserMenu>
         </DropdownMenu>
       </SidebarMenuItem>

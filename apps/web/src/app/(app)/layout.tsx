@@ -15,6 +15,7 @@ type AppLayoutProps = {
   chatDrawer: React.ReactNode;
   chatSidebar: React.ReactNode;
   header: React.ReactNode;
+  billingModal: React.ReactNode;
 };
 
 function AppLayout({
@@ -23,6 +24,7 @@ function AppLayout({
   chatDrawer,
   chatSidebar,
   header,
+  billingModal,
 }: AppLayoutProps) {
   return (
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
@@ -45,6 +47,7 @@ function AppLayout({
             </div>
           </SidebarProvider>
           <Toaster />
+          {billingModal}
           <ReactQueryDevtools
             buttonPosition="bottom-left"
             initialIsOpen={false}

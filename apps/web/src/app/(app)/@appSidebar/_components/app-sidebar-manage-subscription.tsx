@@ -1,9 +1,9 @@
 "use client";
 
 import type { ActiveSubscription } from "@acme/api";
-import { Settings } from "lucide-react";
+import { CreditCard } from "lucide-react";
+import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { authClient } from "~/auth/client";
 import {
   DropdownMenuItem,
   DropdownMenuSeparator,
@@ -15,26 +15,28 @@ export const AppSidebarManageSubscription = ({
   activeSubscription: ActiveSubscription;
 }) => {
   const pathname = usePathname();
-  const { data: sessionData } = authClient.useSession();
 
   if (!activeSubscription) {
     return null;
   }
 
-  const handleClick = () => {
-    authClient.subscription.billingPortal({
-      locale: "en",
-      referenceId: sessionData?.user?.id,
-      returnUrl: pathname,
-    });
-  };
+  const isOnSubscriptionPage = pathname === "/subscription";
 
   return (
     <>
       <DropdownMenuSeparator />
-      <DropdownMenuItem className="w-full cursor-pointer" onClick={handleClick}>
-        <Settings />
-        Manage Subscription
+      <DropdownMenuItem asChild className={"w-full cursor-pointer"}>
+        {isOnSubscriptionPage ? (
+          <div className="flex items-center gap-2">
+            <CreditCard />
+            Subscription
+          </div>
+        ) : (
+          <Link href="/subscription" className="flex items-center gap-2">
+            <CreditCard />
+            Subscription
+          </Link>
+        )}
       </DropdownMenuItem>
     </>
   );

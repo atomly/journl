@@ -16,7 +16,7 @@ export function AppSidebarUserSettings() {
     // Add a small delay to allow the dropdown to close before navigation
     setTimeout(() => {
       router.push("/auth/settings");
-    }, 100);
+    }, 150);
   };
 
   return (

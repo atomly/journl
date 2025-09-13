@@ -1,13 +1,43 @@
 "use client";
 
 import type * as React from "react";
+import { createContext, useCallback, useContext, useState } from "react";
 import { Drawer as DrawerPrimitive } from "vaul";
 import { cn } from "~/lib/cn";
 
+type DrawerContextValue = React.ComponentProps<typeof DrawerPrimitive.Root> & {
+  setOpen: React.Dispatch<React.SetStateAction<boolean>>;
+};
+
+const DrawerContext = createContext<DrawerContextValue | null>(null);
+
+function DrawerProvider({ children, ...props }: React.PropsWithChildren) {
+  const [open, setOpen] = useState(false);
+  return (
+    <DrawerContext.Provider value={{ open, setOpen, ...props }}>
+      {children}
+    </DrawerContext.Provider>
+  );
+}
+
 function Drawer({
+  open,
+  onOpenChange,
   ...props
 }: React.ComponentProps<typeof DrawerPrimitive.Root>) {
-  return <DrawerPrimitive.Root data-slot="drawer" {...props} />;
+  const context = useContext(DrawerContext);
+  function handleOpenChange(open: boolean) {
+    onOpenChange?.(open);
+    context?.setOpen(open);
+  }
+  return (
+    <DrawerPrimitive.Root
+      data-slot="drawer"
+      {...context}
+      onOpenChange={handleOpenChange}
+      {...props}
+    />
+  );
 }
 
 function DrawerTrigger({
@@ -16,15 +46,15 @@ function DrawerTrigger({
   return <DrawerPrimitive.Trigger data-slot="drawer-trigger" {...props} />;
 }
 
-function DrawerPortal({
-  ...props
-}: React.ComponentProps<typeof DrawerPrimitive.Portal>) {
+function DrawerPortal(
+  props: React.ComponentProps<typeof DrawerPrimitive.Portal>,
+) {
   return <DrawerPrimitive.Portal data-slot="drawer-portal" {...props} />;
 }
 
-function DrawerClose({
-  ...props
-}: React.ComponentProps<typeof DrawerPrimitive.Close>) {
+function DrawerClose(
+  props: React.ComponentProps<typeof DrawerPrimitive.Close>,
+) {
   return <DrawerPrimitive.Close data-slot="drawer-close" {...props} />;
 }
 
@@ -134,8 +164,26 @@ function DrawerDescription({
   );
 }
 
+function useDrawer() {
+  const context = useContext(DrawerContext);
+  if (!context) {
+    throw new Error("useDrawer must be used within a DrawerProvider");
+  }
+
+  const closeDrawer = useCallback(() => {
+    context.setOpen(false);
+  }, [context.setOpen]);
+
+  const openDrawer = useCallback(() => {
+    context.setOpen(true);
+  }, [context.setOpen]);
+
+  return { closeDrawer, openDrawer };
+}
+
 export {
   Drawer,
+  DrawerProvider,
   DrawerPortal,
   DrawerOverlay,
   DrawerTrigger,
@@ -146,4 +194,5 @@ export {
   DrawerFooter,
   DrawerTitle,
   DrawerDescription,
+  useDrawer,
 };

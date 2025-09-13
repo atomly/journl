@@ -80,7 +80,7 @@ export function ComposerSources({ className }: ComposerSourcesProps) {
               +{dropdown.length}
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent className="z-2000 space-y-2 p-2">
+          <DropdownMenuContent className="z-1600 space-y-2 p-2">
             <div className="text-muted-foreground text-xs">Selections</div>
             <ScrollArea className="flex h-full max-h-42 flex-col [&_div:has(button)]:space-y-1">
               {dropdown.map((source) => {

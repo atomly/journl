@@ -4,6 +4,7 @@ import { Slot } from "@radix-ui/react-slot";
 import { cva, type VariantProps } from "class-variance-authority";
 import { PanelLeftIcon } from "lucide-react";
 import * as React from "react";
+import { createPortal } from "react-dom";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { Separator } from "~/components/ui/separator";
@@ -32,6 +33,7 @@ const SIDEBAR_WIDTH = "14rem";
 const SIDEBAR_WIDTH_ICON = "3rem";
 const SIDEBAR_WIDTH_MAX = "50rem";
 const SIDEBAR_WIDTH_MOBILE = "18rem";
+const SIDEBAR_DRAG_HANDLE_SPACING = 16;
 
 type SidebarContextProps = {
   state: "expanded" | "collapsed";
@@ -55,6 +57,12 @@ function useSidebar() {
   return context;
 }
 
+type SidebarProviderProps = React.ComponentProps<"div"> & {
+  defaultOpen?: boolean;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+};
+
 function SidebarProvider({
   defaultOpen = true,
   open: openProp,
@@ -64,11 +72,7 @@ function SidebarProvider({
   children,
   ref,
   ...props
-}: React.ComponentProps<"div"> & {
-  defaultOpen?: boolean;
-  open?: boolean;
-  onOpenChange?: (open: boolean) => void;
-}) {
+}: SidebarProviderProps) {
   const isMobile = useIsMobile();
   const [openMobile, setOpenMobile] = React.useState(false);
   const [isDraggingRail, setIsDraggingRail] = React.useState(false);
@@ -293,11 +297,11 @@ function Sidebar({
           {/* Draggable border overlay */}
           <div
             className={cn(
-              "absolute inset-y-0 z-2000",
+              "absolute inset-y-0 z-1500",
               side === "left" ? "right-0" : "left-0",
             )}
           >
-            <SidebarDragger
+            <SidebarDragHandle
               side={side}
               onMouseDown={handleBorderMouseDown}
               collapsible={collapsible}
@@ -365,7 +369,7 @@ function Sidebar({
       <div
         data-slot="sidebar-container"
         className={cn(
-          "fixed inset-y-0 z-2000 hidden h-svh w-(--sidebar-width) max-w-[70vw] transition-[left,right,width] duration-200 ease-linear md:flex",
+          "fixed inset-y-0 z-1500 hidden h-svh w-(--sidebar-width) max-w-[70vw] transition-[left,right,width] duration-200 ease-linear md:flex",
           side === "left"
             ? "left-0 group-data-[collapsible=offcanvas]:left-[calc(var(--sidebar-width)*-1)]"
             : "right-0 group-data-[collapsible=offcanvas]:right-[calc(var(--sidebar-width)*-1)]",
@@ -391,12 +395,12 @@ function Sidebar({
           {/* Draggable border overlay */}
           <div
             className={cn(
-              "absolute inset-y-0 z-2000",
+              "absolute inset-y-0 z-1500",
               side === "left" ? "right-0" : "left-0",
             )}
           >
             {!(collapsible === "offcanvas" && state === "collapsed") && (
-              <SidebarDragger
+              <SidebarDragHandle
                 side={side}
                 onMouseDown={handleBorderMouseDown}
                 collapsible={collapsible}
@@ -416,24 +420,27 @@ type SidebarDraggerProps = {
   collapsible?: "offcanvas" | "icon" | "none";
 };
 
-function SidebarDragger({
+function SidebarDragHandle({
   className,
   side,
   onMouseDown,
   collapsible,
 }: SidebarDraggerProps) {
-  const [mouseY, setMouseY] = React.useState(0);
+  const dragHandleRef = React.useRef<HTMLButtonElement>(null);
   const [isHovering, setIsHovering] = React.useState(false);
+  const [isDragging, setIsDragging] = React.useState(false);
+  const [position, setPosition] = React.useState({
+    x: 0,
+    y: 0,
+  });
 
-  function handleMouseDown(e: React.MouseEvent<HTMLButtonElement>) {
-    e.preventDefault();
-    e.stopPropagation();
-    onMouseDown(e);
+  function handleMouseDown() {
+    setIsDragging(true);
   }
 
-  function handleMouseMove(e: React.MouseEvent) {
-    const rect = e.currentTarget.getBoundingClientRect();
-    setMouseY(e.clientY - rect.top);
+  function handleButtonMouseDown(e: React.MouseEvent<HTMLButtonElement>) {
+    handleMouseDown();
+    onMouseDown(e);
   }
 
   function handleMouseEnter() {
@@ -444,13 +451,39 @@ function SidebarDragger({
     setIsHovering(false);
   }
 
+  function handleMouseMove(e: React.MouseEvent) {
+    const mouseRect = e.currentTarget.getBoundingClientRect();
+    const dragRect = dragHandleRef.current?.getBoundingClientRect();
+    setPosition({
+      x:
+        side === "left"
+          ? (dragRect?.[side] || 0) + SIDEBAR_DRAG_HANDLE_SPACING
+          : window.innerWidth -
+            (dragRect?.[side] || 0) +
+            SIDEBAR_DRAG_HANDLE_SPACING,
+      y: e.clientY - mouseRect.top,
+    });
+  }
+
+  React.useEffect(() => {
+    function handleMouseUp() {
+      setIsDragging(false);
+    }
+
+    window.addEventListener("mouseup", handleMouseUp);
+    return () => {
+      window.removeEventListener("mouseup", handleMouseUp);
+    };
+  }, []);
+
   return (
     // biome-ignore lint/a11y/noStaticElementInteractions: <This is element tracks the mouse cursor, it's not technically interactive.>
     <div
       className="group/resize-border relative h-full w-1"
-      onMouseMove={handleMouseMove}
+      onMouseDown={handleMouseDown}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
+      onMouseMove={handleMouseMove}
     >
       {/* Visual resize indicator - thin border highlight */}
       <div
@@ -467,39 +500,43 @@ function SidebarDragger({
         type="button"
         aria-hidden="true"
         tabIndex={-1}
-        onMouseDown={handleMouseDown}
+        onMouseDown={handleButtonMouseDown}
         className={cn(
           "absolute inset-y-0 cursor-col-resize bg-transparent",
           side === "left" ? "-left-1 w-3" : "-right-1 w-3",
           "group/resize-border transition-colors",
         )}
+        ref={dragHandleRef}
       />
 
       {/* Custom tooltip that follows mouse cursor */}
-      {isHovering && (
-        <div
-          className={cn(
-            "pointer-events-none absolute z-2000 rounded-md border px-3 py-2 text-xs shadow-lg",
-            "whitespace-nowrap bg-popover text-popover-foreground",
-            side === "left" ? "left-4" : "right-4",
-          )}
-          style={{
-            top: `${mouseY}px`,
-            transform: "translateY(-50%)",
-          }}
-        >
-          <div className="space-y-0.5 text-left font-normal">
-            <div>
-              <span className="font-semibold">Drag</span> to resize sidebar
-            </div>
-            {collapsible !== "none" && (
-              <div>
-                <span className="font-semibold">Click</span> to toggle sidebar
-              </div>
+      {isHovering &&
+        !isDragging &&
+        createPortal(
+          <div
+            className={cn(
+              "pointer-events-none absolute z-6000 rounded-md border px-3 py-2 text-xs shadow-lg",
+              "whitespace-nowrap bg-popover text-popover-foreground",
             )}
-          </div>
-        </div>
-      )}
+            style={{
+              top: `${position.y}px`,
+              [side]: `${position.x}px`,
+              transform: "translateY(-50%)",
+            }}
+          >
+            <div className="space-y-0.5 text-left font-normal">
+              <div>
+                <span className="font-semibold">Drag</span> to resize sidebar
+              </div>
+              {collapsible !== "none" && (
+                <div>
+                  <span className="font-semibold">Click</span> to toggle sidebar
+                </div>
+              )}
+            </div>
+          </div>,
+          document.body,
+        )}
     </div>
   );
 }
@@ -556,7 +593,7 @@ function SidebarRail({
       onMouseDown={handleMouseDown}
       title="Toggle Sidebar"
       className={cn(
-        "-translate-x-1/2 group-data-[side=left]:-right-4 absolute inset-y-0 z-2000 hidden w-4 transition-all ease-linear after:absolute after:inset-y-0 after:left-1/2 after:w-[2px] hover:after:bg-sidebar-border group-data-[side=right]:left-0 sm:flex",
+        "-translate-x-1/2 group-data-[side=left]:-right-4 absolute inset-y-0 z-1500 hidden w-4 transition-all ease-linear after:absolute after:inset-y-0 after:left-1/2 after:w-[2px] hover:after:bg-sidebar-border group-data-[side=right]:left-0 sm:flex",
         "in-data-[side=left]:cursor-w-resize in-data-[side=right]:cursor-e-resize",
         "[[data-side=left][data-state=collapsed]_&]:cursor-e-resize [[data-side=right][data-state=collapsed]_&]:cursor-w-resize",
         "group-data-[collapsible=offcanvas]:translate-x-0 hover:group-data-[collapsible=offcanvas]:bg-sidebar group-data-[collapsible=offcanvas]:after:left-full",

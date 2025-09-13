@@ -1,12 +1,14 @@
 "use client";
 
 import { getAIExtension } from "@blocknote/xl-ai";
+import { useDrawer } from "~/components/ui/drawer";
 import { useJournlAgentAwareness } from "../agents/use-journl-agent-awareness";
 import { createClientTool } from "../utils/create-client-tool";
 import { zManipulateEditorInput } from "./manipulate-editor.schema";
 
 export function useManipulateEditorTool() {
   const { getEditors } = useJournlAgentAwareness();
+  const { closeDrawer } = useDrawer();
   const tool = createClientTool({
     execute: async (toolCall, chat) => {
       try {
@@ -25,7 +27,7 @@ export function useManipulateEditorTool() {
 
         const aiExtension = getAIExtension(editor);
 
-        const result = await aiExtension.callLLM({
+        const response = await aiExtension.callLLM({
           onBlockUpdate: (block) => {
             const blockElement = document.querySelector(`[data-id="${block}"]`);
             if (blockElement && !isElementPartiallyInViewport(blockElement)) {
@@ -35,15 +37,20 @@ export function useManipulateEditorTool() {
           userPrompt: toolCall.input.userPrompt,
         });
 
-        const changes = await result?.llmResult.streamObjectResult?.object;
+        const stream = response?.llmResult.streamObjectResult;
+        const changes = await stream?.object;
 
         void chat.addToolResult({
-          output: `The following changes were made to the editor: ${JSON.stringify(
-            changes,
-          )}`,
+          output: changes
+            ? `The following changes were made: ${JSON.stringify(changes)}`
+            : "Something went wrong and no changes were made.",
           tool: toolCall.toolName,
           toolCallId: toolCall.toolCallId,
         });
+
+        if (changes) {
+          closeDrawer();
+        }
       } catch (error) {
         void chat.addToolResult({
           output: `Error when calling the tool: ${error}`,

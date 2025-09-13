@@ -37,10 +37,10 @@ export default function ChatDrawer() {
           </div>
         </div>
       </DrawerTrigger>
-      <DrawerContent className="!h-full !max-h-[90dvh]">
+      <DrawerContent className="!h-full !max-h-[90dvh] z-4500">
         <DrawerTitle className="hidden">Journl</DrawerTitle>
         <div className="!h-full relative">
-          <DrawerDivider className="-translate-x-1/2 absolute top-0 left-1/2 z-50" />
+          <DrawerDivider className="-translate-x-1/2 absolute top-0 left-1/2 z-4500" />
           <ThreadPrimitive.Root
             className="relative box-border flex h-full flex-col overflow-hidden bg-sidebar pt-6"
             style={{

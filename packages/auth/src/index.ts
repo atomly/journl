@@ -41,23 +41,15 @@ export function initAuth(options: {
         stripeClient,
         stripeWebhookSecret: options.stripeWebhookSecret,
         subscription: {
-          authorizeReference: async ({
-            user,
-            session,
-            referenceId,
-            action,
-          }) => {
-            // TODO: Add permission check (at least user has to be in the organization)
+          authorizeReference: async ({ user, referenceId, action }) => {
             // Check if the user has permission to manage subscriptions for this reference
-            //   if (action === "upgrade-subscription" || action === "cancel-subscription" || action === "restore-subscription") {
-            //     const org = await db.member.findFirst({
-            //         where: {
-            //             organizationId: referenceId,
-            //             userId: user.id
-            //         }
-            //     });
-            //     return org?.role === "owner"
-            // }
+            if (
+              action === "upgrade-subscription" ||
+              action === "cancel-subscription" ||
+              action === "restore-subscription"
+            ) {
+              return user.id === referenceId;
+            }
 
             return true;
           },

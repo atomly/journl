@@ -30,6 +30,7 @@ export type TRPCContext = {
   authApi: Auth["api"];
   db: typeof db | Parameters<Parameters<typeof db.transaction>[0]>[0];
   session: Awaited<ReturnType<Auth["api"]["getSession"]>>;
+  headers: Headers;
 };
 
 export const createTRPCContext = async (opts: {
@@ -43,6 +44,7 @@ export const createTRPCContext = async (opts: {
   return {
     authApi,
     db,
+    headers: opts.headers,
     session,
   };
 };

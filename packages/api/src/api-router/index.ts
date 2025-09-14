@@ -4,6 +4,7 @@ import { documentRouter } from "./document.js";
 import { journalRouter } from "./journal.js";
 import { notesRouter } from "./notes.js";
 import { pagesRouter } from "./pages.js";
+import { subscriptionRouter } from "./subscription.js";
 import { usageRouter } from "./usage.js";
 
 export const apiRouter = createTRPCRouter({
@@ -12,6 +13,7 @@ export const apiRouter = createTRPCRouter({
   journal: journalRouter,
   notes: notesRouter,
   pages: pagesRouter,
+  subscription: subscriptionRouter,
   usage: usageRouter,
 });
 

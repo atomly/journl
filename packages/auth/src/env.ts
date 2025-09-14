@@ -16,6 +16,8 @@ export function authEnv() {
           ? z.string().min(1)
           : z.string().min(1).optional(),
       NODE_ENV: z.enum(["development", "production"]).optional(),
+      STRIPE_SECRET_KEY: z.string().min(1),
+      STRIPE_WEBHOOK_SECRET: z.string().min(1),
     },
     skipValidation:
       !!process.env.CI || process.env.npm_lifecycle_event === "lint",

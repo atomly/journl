@@ -21,8 +21,6 @@ export async function AuthView({ pathname }: { pathname: string }) {
   return (
     <AuthCard
       pathname={pathname}
-      // className="flex w-full max-w-sm flex-col gap-6 rounded-xl border bg-card py-6 text-card-foreground shadow-sm"
-
       className="z-10 w-full flex-col gap-6 rounded-xl border bg-card py-6 text-card-foreground shadow-sm"
       classNames={{
         base: "bg-transparent border-none",
@@ -38,6 +36,7 @@ export async function AuthView({ pathname }: { pathname: string }) {
             trigger: "md:hidden",
           },
           sidebar: {
+            base: "gap-y-2",
             button: "cursor-pointer text-primary",
             buttonActive:
               "cursor-pointer border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50",

@@ -51,7 +51,8 @@ export async function AppSidebarUser() {
             </SidebarMenuButton>
           </DropdownMenuTrigger>
           <AppSidebarUserMenu
-            className="z-[2001] w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg"
+            data-name="app-sidebar-user-menu"
+            className="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg"
             align="end"
             sideOffset={4}
           >

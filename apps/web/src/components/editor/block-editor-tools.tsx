@@ -24,6 +24,9 @@ import { useJournlAgentAwareness } from "~/ai/agents/use-journl-agent-awareness"
 export function BlockEditorFormattingToolbar() {
   return (
     <FormattingToolbarController
+      floatingOptions={{
+        strategy: "fixed",
+      }}
       formattingToolbar={() => (
         <FormattingToolbar>
           <AIToolbarButton />
@@ -46,6 +49,9 @@ export function BlockEditorSlashMenu() {
   return (
     <SuggestionMenuController
       triggerCharacter="/"
+      floatingOptions={{
+        strategy: "fixed",
+      }}
       getItems={async (query) =>
         filterSuggestionItems(
           [

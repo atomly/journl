@@ -1,11 +1,41 @@
 import type { NextRequest } from "next/server";
+import z from "zod";
 import { handler as corsHandler } from "~/app/api/_cors/cors";
 import { getSession } from "~/auth/server";
 import { env } from "~/env";
+import { api } from "~/trpc/server";
 
-// import { api } from "~/trpc/server";
+const OPENAI_MESSAGE_PREFIX = "data: ";
+const OPENAI_MESSAGE_DONE_TEXT = "[DONE]";
+const OPENAI_MODEL_PROVIDER = "openai";
 
-const OPENAI_API_URL = "https://api.openai.com/v1/";
+const zChatCompletionMessage = z.object({
+  choices: z.array(z.unknown()),
+  created: z.number(),
+  id: z.string(),
+  model: z.string(),
+  obfuscation: z.string(),
+  object: z.literal("chat.completion.chunk"),
+  service_tier: z.string(),
+  system_fingerprint: z.string(),
+  usage: z
+    .object({
+      completion_tokens: z.number(),
+      completion_tokens_details: z.object({
+        accepted_prediction_tokens: z.number(),
+        audio_tokens: z.number(),
+        reasoning_tokens: z.number(),
+        rejected_prediction_tokens: z.number(),
+      }),
+      prompt_tokens: z.number(),
+      prompt_tokens_details: z.object({
+        audio_tokens: z.number(),
+        cached_tokens: z.number(),
+      }),
+      total_tokens: z.number(),
+    })
+    .nullable(),
+});
 
 async function handler(req: NextRequest) {
   const session = await getSession();
@@ -22,7 +52,7 @@ async function handler(req: NextRequest) {
     return new Response("Not found", { status: 404 });
   }
 
-  const openAIResponse = await fetch(new URL(url, OPENAI_API_URL), {
+  const openAIResponse = await fetch(new URL(url, env.OPENAI_API_URL), {
     body: JSON.stringify({
       ...requestBody,
       stream: true,
@@ -40,22 +70,46 @@ async function handler(req: NextRequest) {
 
   const transformStream = new TransformStream({
     async transform(chunk, controller) {
-      const text = new TextDecoder().decode(chunk);
+      try {
+        const text = new TextDecoder().decode(chunk);
 
-      // TODO: Parse chunk and determine if it's a usage chunk.
-      console.log("Intercepted chunk:", text);
+        if (text === `${OPENAI_MESSAGE_PREFIX}${OPENAI_MESSAGE_DONE_TEXT}`) {
+          return controller.enqueue(chunk);
+        }
 
-      // ! TODO: Track usage.
-      // api.usage.trackModelUsage({
-      //   model: requestBody.model,
-      //   provider: requestBody.provider,
-      //   user_id: session.user.id,
-      //   quantity: requestBody.stream_options.include_usage ? 1 : 0,
-      //   unit: "output_tokens",
-      // });
+        // Parsing the messages from the openAI response by removing the newline characters and the prefix.
+        const data = text
+          .replace(/[\r\n]+/g, "")
+          .trim()
+          .split(OPENAI_MESSAGE_PREFIX)
+          .filter((t) => t !== "" && t !== OPENAI_MESSAGE_DONE_TEXT);
 
-      // TODO: Do not forward the usage chunk.
-      controller.enqueue(chunk);
+        for (const json of data) {
+          const message = zChatCompletionMessage.parse(JSON.parse(json));
+
+          if (!message.usage) continue;
+
+          await api.usage.trackModelUsage({
+            metrics: [
+              {
+                quantity: message.usage.prompt_tokens,
+                unit: "input_tokens",
+              },
+              {
+                quantity: message.usage.completion_tokens,
+                unit: "output_tokens",
+              },
+            ],
+            model_id: message.model,
+            model_provider: OPENAI_MODEL_PROVIDER,
+            user_id: session.user.id,
+          });
+        }
+
+        controller.enqueue(chunk);
+      } catch (error) {
+        console.error("Error tracking model usage", error);
+      }
     },
   });
 

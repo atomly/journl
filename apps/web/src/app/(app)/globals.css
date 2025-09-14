@@ -1,1 +1,30 @@
 @import "../styles/blocknote.css";
+
+/*
+Z-Index Hierarchy
+
+The following is the z-index hierarchy for the app.
+The only component we need to edit in this file is the overlay.
+The rest of the components are set by the Tailwind CSS classes, or by our editor framework.
+
+- Sidebar Drag Handles (`z-index`: 6000)
+- Auth Settings Modal (`z-index`: 5000)
+- Header Search Modal and Overlay (`z-index`: 5000)
+- Auth Settings Dropdown (`z-index`: 4500)
+- Drawer (with its overlay and drag handles)(`z-index`: 4500)
+- Editor Options/Drag Handle (`z-index`: 4000)
+- Editor Toolbar (`z-index`: 3000)
+- Editor AI Review (`z-index`: 3000)
+- Editor Menu (`z-index`: 2000)
+- Thread Composer Sources (`z-index`: 1600)
+- Sidebars (`z-index`: 1500)
+- Header (none)
+- Main Content (none)
+*/
+/* NOTE: This affects all dialog overlays */
+[data-slot="dialog-overlay"] {
+  z-index: 5000;
+}
+[data-radix-popper-content-wrapper]:has([data-name="app-sidebar-user-menu"]) {
+  z-index: 4500 !important;
+}

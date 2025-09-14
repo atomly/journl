@@ -7,6 +7,5 @@
     "clean": "git clean -xdf .cache .turbo node_modules tsconfig.tsbuildinfo",
     "dev": "stripe listen --forward-to localhost:3000/api/auth/stripe/webhook",
     "typecheck": "echo 'No TypeScript files to check in stripe-listener'"
-  },
-  "devDependencies": {}
+  }
 }

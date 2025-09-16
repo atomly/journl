@@ -86,9 +86,7 @@ export function HeaderSearchButton({
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen} {...rest}>
-      <div className="@container flex w-full flex-1 justify-end">
-        <DialogTrigger asChild>{children}</DialogTrigger>
-      </div>
+      <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent
         className="z-5000 gap-0 rounded-2xl border-4 border-muted bg-sidebar p-0"
         data-state="open"

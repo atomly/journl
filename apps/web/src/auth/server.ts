@@ -22,6 +22,8 @@ export const auth = initAuth({
   googleClientSecret: env.AUTH_GOOGLE_SECRET,
   productionUrl: baseUrl,
   secret: env.AUTH_SECRET,
+  stripeSecretKey: env.STRIPE_SECRET_KEY,
+  stripeWebhookSecret: env.STRIPE_WEBHOOK_SECRET,
 });
 
 export const getSession = cache(async () =>

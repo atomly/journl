@@ -8,7 +8,8 @@ The only component we need to edit in this file is the overlay.
 The rest of the components are set by the Tailwind CSS classes, or by our editor framework.
 
 - Sidebar Drag Handles (`z-index`: 6000)
-- Auth Settings Modal (`z-index`: 5000)
+- Dialog Content (Billing Modal, Auth Modal, etc.) (`z-index`: 5001)
+- Dialog Overlays (Billing Modal, Auth Modal, etc.) (`z-index`: 5000)
 - Header Search Modal and Overlay (`z-index`: 5000)
 - Auth Settings Dropdown (`z-index`: 4500)
 - Drawer (with its overlay and drag handles)(`z-index`: 4500)
@@ -24,6 +25,11 @@ The rest of the components are set by the Tailwind CSS classes, or by our editor
 /* NOTE: This affects all dialog overlays */
 [data-slot="dialog-overlay"] {
   z-index: 5000;
+}
+
+/* Ensure dialog content appears above the overlay */
+[data-slot="dialog-content"] {
+  z-index: 5001;
 }
 [data-radix-popper-content-wrapper]:has([data-name="app-sidebar-user-menu"]) {
   z-index: 4500 !important;

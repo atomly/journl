@@ -1,8 +1,9 @@
 import { db } from "@acme/db/client";
-import type { BetterAuthOptions } from "better-auth";
-import { betterAuth } from "better-auth";
+import { stripe } from "@better-auth/stripe";
+import { type BetterAuthOptions, betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { oAuthProxy, organization } from "better-auth/plugins";
+import Stripe from "stripe";
 
 export function initAuth(options: {
   appName: string;
@@ -15,7 +16,10 @@ export function initAuth(options: {
   discordClientSecret: string;
   githubClientId: string;
   githubClientSecret: string;
+  stripeSecretKey: string;
+  stripeWebhookSecret: string;
 }) {
+  const stripeClient = new Stripe(options.stripeSecretKey);
   const config = {
     account: {
       accountLinking: {
@@ -32,6 +36,35 @@ export function initAuth(options: {
       enabled: true,
     },
     plugins: [
+      stripe({
+        createCustomerOnSignUp: true,
+        stripeClient,
+        stripeWebhookSecret: options.stripeWebhookSecret,
+        subscription: {
+          authorizeReference: async ({ user, referenceId, action }) => {
+            // Check if the user has permission to manage subscriptions for this reference
+            if (
+              action === "upgrade-subscription" ||
+              action === "cancel-subscription" ||
+              action === "restore-subscription"
+            ) {
+              return user.id === referenceId;
+            }
+
+            return true;
+          },
+          enabled: true,
+          plans: [
+            {
+              limits: {
+                quota: 250, // 2.5 USD
+              },
+              name: "pro",
+              priceId: "price_1S2gQfK8Pm3Qm3VvhM5TuvWI",
+            },
+          ],
+        },
+      }),
       organization(),
       oAuthProxy({
         /**

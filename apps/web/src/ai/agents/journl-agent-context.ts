@@ -5,6 +5,9 @@ export type JournlAgentContext = {
   activeEditors: string[];
   currentDate: string;
   highlightedText: string[];
+  user: {
+    name: string;
+  };
   view:
     | {
         name: "journal-timeline";

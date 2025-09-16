@@ -1,4 +1,5 @@
 import { journlAgent, setJournlRuntimeContext } from "~/ai/agents/journl-agent";
+import type { JournlAgentContext } from "~/ai/agents/journl-agent-context";
 import { handler as corsHandler } from "~/app/api/_cors/cors";
 import { getSession } from "~/auth/server";
 import { api } from "~/trpc/server";
@@ -41,7 +42,13 @@ async function handler(req: Request) {
           });
         }
       },
-      runtimeContext: setJournlRuntimeContext(rest.context),
+      runtimeContext: setJournlRuntimeContext({
+        ...rest.context,
+        user: {
+          email: session.user.email,
+          name: session.user.name,
+        },
+      } satisfies JournlAgentContext),
     });
 
     return result.toUIMessageStreamResponse();

@@ -65,7 +65,7 @@ export function useJournlAgent({ transport, messages }: UseJournlAgentOptions) {
               currentDate: new Date().toLocaleString(),
               highlightedText: selections.map((selection) => selection.text),
               view,
-            } satisfies JournlAgentContext,
+            } satisfies Omit<JournlAgentContext, "user">,
             messageId,
             messages,
             trigger,

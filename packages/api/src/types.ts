@@ -12,3 +12,11 @@ export type TimelineEntry = inferProcedureOutput<
 export type ActiveSubscription = inferProcedureOutput<
   ApiRouter["subscription"]["getActiveSubscription"]
 >;
+
+export type UpgradeSubscriptionResponse = inferProcedureOutput<
+  ApiRouter["subscription"]["upgradeSubscription"]
+>;
+
+export type BillingPortalResponse = inferProcedureOutput<
+  ApiRouter["subscription"]["openBillingPortal"]
+>;

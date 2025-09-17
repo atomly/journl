@@ -24,6 +24,15 @@ export const auth = initAuth({
   secret: env.AUTH_SECRET,
   stripeSecretKey: env.STRIPE_SECRET_KEY,
   stripeWebhookSecret: env.STRIPE_WEBHOOK_SECRET,
+  subscriptionPlans: [
+    {
+      limits: {
+        quota: 250,
+      },
+      name: "pro",
+      priceId: "price_1S2gQfK8Pm3Qm3VvhM5TuvWI",
+    },
+  ],
 });
 
 export const getSession = cache(async () =>

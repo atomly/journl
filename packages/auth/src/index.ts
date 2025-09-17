@@ -18,8 +18,19 @@ export function initAuth(options: {
   githubClientSecret: string;
   stripeSecretKey: string;
   stripeWebhookSecret: string;
+  subscriptionPlans: Array<{
+    name: string;
+    priceId: string;
+    limits: {
+      quota: number;
+    };
+  }>;
 }) {
-  const stripeClient = new Stripe(options.stripeSecretKey);
+  const stripeClient = new Stripe(options.stripeSecretKey as string, {
+    apiVersion: "2025-08-27.basil",
+    typescript: true,
+  });
+
   const config = {
     account: {
       accountLinking: {
@@ -54,15 +65,7 @@ export function initAuth(options: {
             return true;
           },
           enabled: true,
-          plans: [
-            {
-              limits: {
-                quota: 250, // 2.5 USD
-              },
-              name: "pro",
-              priceId: "price_1S2gQfK8Pm3Qm3VvhM5TuvWI",
-            },
-          ],
+          plans: options.subscriptionPlans,
         },
       }),
       organization(),

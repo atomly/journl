@@ -1,23 +1,16 @@
 "use client";
 
-import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { Dialog } from "~/components/ui/dialog";
-import { BillingErrorBoundary } from "../../_components/billing-error-boundary";
 
 export const SubscriptionModal = ({
   children,
 }: {
   children: React.ReactNode;
 }) => {
-  const pathname = usePathname();
   const router = useRouter();
-  const [isOpen, setIsOpen] = useState(false);
-
-  // Use effect to prevent hydration mismatch and flashing
-  useEffect(() => {
-    setIsOpen(pathname === "/subscription");
-  }, [pathname]);
+  const [isOpen, setIsOpen] = useState(true);
 
   const handleOpenChange = (open: boolean) => {
     if (!open) {
@@ -28,7 +21,7 @@ export const SubscriptionModal = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
-      <BillingErrorBoundary>{children}</BillingErrorBoundary>
+      {children}
     </Dialog>
   );
 };

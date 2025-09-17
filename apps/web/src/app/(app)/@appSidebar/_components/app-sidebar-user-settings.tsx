@@ -14,9 +14,9 @@ export function AppSidebarUserSettings() {
     setCancelUrl(pathname);
 
     // Add a small delay to allow the dropdown to close before navigation
-    setTimeout(() => {
+    requestAnimationFrame(() => {
       router.push("/auth/settings");
-    }, 150);
+    });
   };
 
   return (

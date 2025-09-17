@@ -63,7 +63,20 @@ importers:
         specifier: ^3.25.71
         version: 3.25.71
 
-  apps/stripe-listener: {}
+  apps/stripe-listener:
+    devDependencies:
+      '@acme/tsconfig':
+        specifier: workspace:*
+        version: link:../../tooling/tsconfig
+      '@t3-oss/env-nextjs':
+        specifier: ^0.13.6
+        version: 0.13.6(arktype@2.1.20)(typescript@5.8.3)(valibot@1.0.0-beta.15(typescript@5.8.3))(zod@3.25.71)
+      dotenv-cli:
+        specifier: ^8.0.0
+        version: 8.0.0
+      zod:
+        specifier: ^3.25.71
+        version: 3.25.71
 
   apps/web:
     dependencies:

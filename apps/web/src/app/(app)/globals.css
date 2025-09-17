@@ -22,15 +22,17 @@ The rest of the components are set by the Tailwind CSS classes, or by our editor
 - Header (none)
 - Main Content (none)
 */
+
 /* NOTE: This affects all dialog overlays */
+/* Ensure dialog content appears above the overlay */
+[data-slot="dialog-content"] {
+  z-index: 5500;
+}
+
 [data-slot="dialog-overlay"] {
   z-index: 5000;
 }
 
-/* Ensure dialog content appears above the overlay */
-[data-slot="dialog-content"] {
-  z-index: 5001;
-}
 [data-radix-popper-content-wrapper]:has([data-name="app-sidebar-user-menu"]) {
   z-index: 4500 !important;
 }

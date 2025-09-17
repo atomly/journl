@@ -1,9 +1,10 @@
 "use client";
 
 import type { ActiveSubscription } from "@acme/api";
-import { usePathname } from "next/navigation";
+import { useMutation } from "@tanstack/react-query";
+import { redirect, usePathname } from "next/navigation";
 import { toast } from "sonner";
-import { authClient } from "~/auth/client";
+import { useTRPC } from "~/trpc/react";
 import { Button } from "../../../../components/ui/button";
 
 export function HeaderUpgradePro({
@@ -12,6 +13,16 @@ export function HeaderUpgradePro({
   activeSubscription: ActiveSubscription;
 }) {
   const pathname = usePathname();
+  const trpc = useTRPC();
+  const { mutateAsync: upgradeSubscription, isPending } = useMutation(
+    trpc.subscription.upgradeSubscription.mutationOptions({
+      onError: (error) => {
+        console.error("Subscription upgrade error:", error);
+        // Handle specific error cases if needed
+        toast.error("Failed to upgrade subscription");
+      },
+    }),
+  );
 
   if (activeSubscription?.status === "active") {
     return null;
@@ -20,19 +31,19 @@ export function HeaderUpgradePro({
   return (
     <Button
       onClick={async () => {
-        const { error } = await authClient.subscription.upgrade({
+        const res = await upgradeSubscription({
           cancelUrl: `/payment/cancel?redirect=${encodeURIComponent(pathname)}`,
           plan: "pro",
+          returnUrl: pathname,
           successUrl: `/payment/success?redirect=${encodeURIComponent(pathname)}`,
         });
-
-        if (error) {
-          console.error("Subscription upgrade error:", error);
-          if (error.code === "YOURE_ALREADY_SUBSCRIBED_TO_THIS_PLAN") {
-            toast.error("You are already subscribed to this plan");
-          }
+        if (res.url) {
+          redirect(res.url);
+        } else {
+          toast.error("Failed to create checkout session");
         }
       }}
+      disabled={isPending}
       size="sm"
       className="rounded-lg bg-black text-white"
     >

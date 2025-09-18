@@ -44,8 +44,6 @@ export function useCreatePageTool() {
               },
             );
 
-            router.push(`/pages/${newPage.id}`);
-
             eventEmitter.buffer(
               new PageCreatedEvent({
                 chat,
@@ -55,6 +53,8 @@ export function useCreatePageTool() {
                 toolName: toolCall.toolName,
               }),
             );
+
+            router.push(`/pages/${newPage.id}`);
           },
         },
       );

@@ -18,20 +18,6 @@ export function authEnv() {
       NODE_ENV: z.enum(["development", "production"]).optional(),
       STRIPE_SECRET_KEY: z.string().min(1),
       STRIPE_WEBHOOK_SECRET: z.string().min(1),
-      SUBSCRIPTION_PLANS: z
-        .string()
-        .optional()
-        .default(
-          JSON.stringify([
-            {
-              limits: {
-                quota: 250, // 2.5 USD
-              },
-              name: "pro",
-              priceId: "price_1S2gQfK8Pm3Qm3VvhM5TuvWI",
-            },
-          ]),
-        ),
     },
     skipValidation:
       !!process.env.CI || process.env.npm_lifecycle_event === "lint",

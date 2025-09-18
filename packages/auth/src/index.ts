@@ -18,13 +18,6 @@ export function initAuth(options: {
   githubClientSecret: string;
   stripeSecretKey: string;
   stripeWebhookSecret: string;
-  subscriptionPlans: Array<{
-    name: string;
-    priceId: string;
-    limits: {
-      quota: number;
-    };
-  }>;
 }) {
   const stripeClient = new Stripe(options.stripeSecretKey as string, {
     apiVersion: "2025-08-27.basil",
@@ -65,10 +58,32 @@ export function initAuth(options: {
             return true;
           },
           enabled: true,
-          plans: options.subscriptionPlans,
+          plans: async () => {
+            // Fetch available products from Stripe
+            const products = await stripeClient.products.list({
+              active: true,
+              expand: ["data.default_price"],
+            });
+
+            const prices = await stripeClient.prices.list({
+              limit: 3,
+            });
+
+            return products.data.map((product) => {
+              const price = prices.data.find(
+                (price) => price.product === product.id,
+              );
+              return {
+                limits: {
+                  quota: price?.metadata.quota as unknown as number,
+                },
+                name: product.name,
+                priceId: price?.id as string,
+              };
+            });
+          },
         },
       }),
-      organization(),
       oAuthProxy({
         /**
          * Auto-inference blocked by https://github.com/better-auth/better-auth/pull/2891
@@ -76,6 +91,7 @@ export function initAuth(options: {
         currentURL: options.baseUrl,
         productionURL: options.productionUrl,
       }),
+      organization(),
     ],
     secret: options.secret,
     socialProviders: {

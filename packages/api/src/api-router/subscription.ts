@@ -1,18 +1,61 @@
 import type { TRPCRouterRecord } from "@trpc/server";
+import Stripe from "stripe";
 import { z } from "zod/v4";
-import { protectedProcedure } from "../trpc";
+import { env } from "../env";
+import { protectedProcedure, type TRPCContext } from "../trpc";
+
+const stripeClient = new Stripe(env.STRIPE_SECRET_KEY, {
+  apiVersion: "2025-08-27.basil",
+  typescript: true,
+});
+
+const getActiveSubscription = async ({ ctx }: { ctx: TRPCContext }) => {
+  const subscriptions = await ctx.authApi.listActiveSubscriptions({
+    headers: ctx.headers,
+    query: {
+      referenceId: ctx.session?.user.id,
+    },
+  });
+  return subscriptions.find(
+    (sub) => sub.status === "active" || sub.status === "trialing",
+  );
+};
 
 export const subscriptionRouter = {
-  getActiveSubscription: protectedProcedure.query(async ({ ctx }) => {
-    const subscriptions = await ctx.authApi.listActiveSubscriptions({
-      headers: ctx.headers,
-      query: {
-        referenceId: ctx.session.user.id,
-      },
+  getActivePlan: protectedProcedure.query(async ({ ctx }) => {
+    const activeSubscription = await getActiveSubscription({ ctx });
+    const prices = await stripeClient.prices.list({
+      limit: 3,
     });
-    return subscriptions.find(
-      (sub) => sub.status === "active" || sub.status === "trialing",
+    return prices.data.find(
+      (price) => price.id === activeSubscription?.priceId,
     );
+  }),
+  getActiveSubscription: protectedProcedure.query(async ({ ctx }) => {
+    const activeSubscription = await getActiveSubscription({ ctx });
+    return activeSubscription;
+  }),
+  getAvailablePlans: protectedProcedure.query(async () => {
+    const products = await stripeClient.products.list({
+      active: true,
+      expand: ["data.default_price"],
+    });
+
+    const prices = await stripeClient.prices.list({
+      limit: 3,
+    });
+
+    return products.data.map((product) => {
+      const price = prices.data.find((price) => price.product === product.id);
+      return {
+        description: product.description,
+        id: product.id,
+        name: product.name,
+        price: price?.unit_amount,
+        priceId: price?.id,
+        quota: price?.metadata.quota as unknown as number,
+      };
+    });
   }),
   openBillingPortal: protectedProcedure
     .input(

@@ -10,7 +10,17 @@ import { HeaderUpgradePro } from "./_components/header-upgrade-pro";
 
 async function UpgradeProButton() {
   const activeSubscription = await api.subscription.getActiveSubscription();
-  return <HeaderUpgradePro activeSubscription={activeSubscription} />;
+  const availablePlan = await api.subscription.getAvailablePlans();
+  const planName = availablePlan[0]?.name;
+  if (!planName) {
+    return null;
+  }
+  return (
+    <HeaderUpgradePro
+      activeSubscription={activeSubscription}
+      planName={planName}
+    />
+  );
 }
 
 export default function JournalHeader() {

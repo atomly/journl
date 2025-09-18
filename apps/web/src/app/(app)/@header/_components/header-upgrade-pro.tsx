@@ -9,8 +9,10 @@ import { Button } from "../../../../components/ui/button";
 
 export function HeaderUpgradePro({
   activeSubscription,
+  planName,
 }: {
   activeSubscription: ActiveSubscription;
+  planName: string;
 }) {
   const pathname = usePathname();
   const trpc = useTRPC();
@@ -32,10 +34,10 @@ export function HeaderUpgradePro({
     <Button
       onClick={async () => {
         const res = await upgradeSubscription({
-          cancelUrl: `/payment/cancel?redirect=${encodeURIComponent(pathname)}`,
-          plan: "pro",
+          cancelUrl: "/",
+          plan: planName,
           returnUrl: pathname,
-          successUrl: `/payment/success?redirect=${encodeURIComponent(pathname)}`,
+          successUrl: "/",
         });
         if (res.url) {
           redirect(res.url);
@@ -48,7 +50,9 @@ export function HeaderUpgradePro({
       className="rounded-lg bg-black text-white"
     >
       <span className="inline @[280px]:hidden">Upgrade</span>
-      <span className="@[280px]:inline hidden">Upgrade to Pro</span>
+      <span className="@[280px]:inline hidden">
+        Upgrade to {planName.charAt(0).toUpperCase() + planName.slice(1)}
+      </span>
     </Button>
   );
 }

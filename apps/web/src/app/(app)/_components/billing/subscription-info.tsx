@@ -1,13 +1,16 @@
 import type { ActiveSubscription } from "@acme/api";
 import { CreditCard, Edit, Info } from "lucide-react";
 import { Separator } from "~/components/ui/separator";
+import { api } from "~/trpc/server";
 import { SubscriptionManageButton } from "../../(billing)/subscription/_components/subscription-manage-button";
 
-export function SubscriptionInfo({
+export async function SubscriptionInfo({
   activeSubscription,
 }: {
   activeSubscription: ActiveSubscription;
 }) {
+  const availablePlan = await api.subscription.getActivePlan();
+
   const cancelDate =
     activeSubscription?.cancelAtPeriodEnd && activeSubscription.periodEnd
       ? new Date(activeSubscription.periodEnd).toLocaleDateString("en-US", {
@@ -16,10 +19,11 @@ export function SubscriptionInfo({
           year: "numeric",
         })
       : null;
+
   //plan details from the subscription
   const planName = activeSubscription?.plan || "pro";
-  const planPrice = "$4.99"; // Default price from the plan configuration, we can make dynamic later if needed
-  const billingInterval = "month";
+  const planPrice = availablePlan?.unit_amount;
+  const billingInterval = availablePlan?.recurring?.interval;
   return (
     <div>
       <div className="space-y-4">

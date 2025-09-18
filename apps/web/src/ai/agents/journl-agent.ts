@@ -19,7 +19,7 @@ export const journlAgent = new Agent({
   instructions: ({ runtimeContext }) => {
     const context = getJournlRuntimeContext(runtimeContext);
     if (env.NODE_ENV === "development") {
-      console.debug("context 👀", context);
+      console.debug("Journl context", context);
     }
     return `You are ${AGENT_NAME}, an AI companion that helps users write, navigate, and manage their own notes.
 

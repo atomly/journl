@@ -336,12 +336,18 @@ importers:
       '@blocknote/xl-ai':
         specifier: ^0.35.0
         version: 0.35.0(@tiptap/pm@2.26.1)(@types/hast@3.0.4)(@types/react@19.1.8)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(use-sync-external-store@1.5.0(react@19.1.0))(y-protocols@1.0.6(yjs@13.6.27))(yjs@13.6.27)(zod@3.25.71)
+      '@t3-oss/env-nextjs':
+        specifier: ^0.13.6
+        version: 0.13.6(arktype@2.1.20)(typescript@5.8.3)(valibot@1.0.0-beta.15(typescript@5.8.3))(zod@3.25.71)
       '@trpc/server':
         specifier: ^11.4.0
         version: 11.4.0(typescript@5.8.3)
       ai:
         specifier: ^5.0.38
         version: 5.0.38(zod@3.25.71)
+      stripe:
+        specifier: ^18.5.0
+        version: 18.5.0(@types/node@22.15.29)
       superjson:
         specifier: 2.2.2
         version: 2.2.2

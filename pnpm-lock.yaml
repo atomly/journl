@@ -63,7 +63,7 @@ importers:
         specifier: ^3.25.71
         version: 3.25.71
 
-  apps/stripe-listener:
+  apps/stripe:
     devDependencies:
       '@acme/tsconfig':
         specifier: workspace:*

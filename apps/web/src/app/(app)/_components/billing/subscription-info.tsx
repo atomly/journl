@@ -1,6 +1,7 @@
 import type { ActiveSubscription } from "@acme/api";
 import { CreditCard, Edit, Info } from "lucide-react";
 import { Separator } from "~/components/ui/separator";
+import { centsToDollars } from "~/lib/currency";
 import { api } from "~/trpc/server";
 import { SubscriptionManageButton } from "../../(billing)/subscription/_components/subscription-manage-button";
 
@@ -22,7 +23,11 @@ export async function SubscriptionInfo({
 
   //plan details from the subscription
   const planName = activeSubscription?.plan || "pro";
-  const planPrice = availablePlan?.unit_amount;
+  const planPrice = availablePlan?.unit_amount
+    ? centsToDollars(availablePlan.unit_amount, {
+        decimals: 2,
+      })
+    : null;
   const billingInterval = availablePlan?.recurring?.interval;
   return (
     <div>

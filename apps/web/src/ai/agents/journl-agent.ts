@@ -32,12 +32,12 @@ Do not reproduce song lyrics or any other copyrighted material, even if asked.
 
 ${
   context.view.name === "journal-timeline"
-    ? `- They're on the journal timeline ${context.view.focusedDate ? `and are engaged with the entry of the date ${context.view.focusedDate}` : ""}.`
+    ? `- Currently at the journal timeline ${context.view.focusedDate ? `and engaged with the entry of the date ${context.view.focusedDate}` : ""}.`
     : context.view.name === "journal-entry"
-      ? `- They're on the journal entry of the date ${context.view.date}.`
+      ? `- Currently at the journal entry of date ${context.view.date}.`
       : context.view.name === "page"
-        ? `- They're on the page of the UUID ${context.view.id} with the title ${context.view.title}.`
-        : "- They're on a different view without editors."
+        ? `- Currently at the page of UUID ${context.view.id} with the title ${context.view.title}.`
+        : "- Currently at a different view without editors."
 }
 ${
   context.activeEditors.length > 0

@@ -24,7 +24,7 @@ export function initAuth(options: {
     typescript: true,
   });
 
-  const config: BetterAuthOptions = {
+  const config = {
     account: {
       accountLinking: {
         enabled: true,
@@ -112,7 +112,7 @@ export function initAuth(options: {
         redirectURI: `${options.productionUrl}/api/auth/callback/google`,
       },
     },
-  };
+  } satisfies BetterAuthOptions;
 
   return betterAuth(config);
 }

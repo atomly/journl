@@ -12,17 +12,20 @@ export function useManipulateEditorTool() {
   const tool = createClientTool({
     execute: async (toolCall, chat) => {
       try {
-        const editor = getEditors().get(toolCall.input.editorId);
+        const editor = getEditors().get(toolCall.input.targetEditor)?.editor;
 
         if (!editor) {
-          const availableEditors = JSON.stringify(
-            Object.fromEntries(getEditors().entries()),
+          const activeEditors = JSON.stringify(
+            Array.from(getEditors().values()).map(
+              ({ editor, ...rest }) => rest,
+            ),
           );
-          return await chat.addToolResult({
-            output: `Editor ${toolCall.input.editorId} was not found. Please call the tool again with the available editors: ${availableEditors}`,
+          void chat.addToolResult({
+            output: `Editor ${toolCall.input.targetEditor} was not found. Please call the tool again targeting one of the following editors: ${activeEditors}`,
             tool: toolCall.toolName,
             toolCallId: toolCall.toolCallId,
           });
+          return;
         }
 
         const aiExtension = getAIExtension(editor);

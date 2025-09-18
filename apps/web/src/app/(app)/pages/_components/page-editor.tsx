@@ -13,6 +13,8 @@ import {
   BlockEditorSlashMenu,
 } from "~/components/editor/block-editor-tools";
 import { useBlockEditor } from "~/components/editor/use-block-editor";
+import { PageCreatedEvent } from "~/events/page-created-event";
+import { useEventHandler } from "~/hooks/use-event-handler";
 import { useTRPC } from "~/trpc/react";
 
 const DEFAULT_DEBOUNCE_TIME = 150;
@@ -30,11 +32,8 @@ export function PageEditor({
 }: PageEditorProps) {
   const trpc = useTRPC();
   const pendingChangesRef = useRef<BlockTransaction[]>([]);
-  const {
-    rememberEditor: setEditor,
-    forgetEditor: removeEditor,
-    rememberView: setView,
-  } = useJournlAgentAwareness();
+  const { rememberEditor, forgetEditor, rememberView } =
+    useJournlAgentAwareness();
   const editor = useBlockEditor({ initialBlocks });
 
   const { mutate, isPending } = useMutation({
@@ -63,24 +62,35 @@ export function PageEditor({
   }
 
   useEffect(() => {
-    setView({
+    rememberView({
       id: page.id,
       name: "page",
       title: page.title,
     });
     return () => {
-      setView({
+      rememberView({
         name: "other",
       });
     };
-  }, [page.id, page.title, setView]);
+  }, [page.id, page.title, rememberView]);
 
   useEffect(() => {
-    setEditor(page.id, editor);
+    rememberEditor({ editor, id: page.id, title: page.title, type: "page" });
     return () => {
-      removeEditor(page.id);
+      forgetEditor(page.id);
     };
-  }, [page.id, editor, setEditor, removeEditor]);
+  }, [page.id, page.title, editor, rememberEditor, forgetEditor]);
+
+  useEventHandler(
+    ({ payload }) => {
+      void payload.chat.addToolResult({
+        output: `Page ${payload.title} created successfully.`,
+        tool: payload.toolName,
+        toolCallId: payload.toolCallId,
+      });
+    },
+    [PageCreatedEvent, page.id],
+  );
 
   return (
     <BlockEditor

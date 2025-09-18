@@ -16,17 +16,21 @@ export type BlockSelection = {
   text: string;
 };
 
+type JournlEditor = JournlAgentContext["activeEditors"][number] & {
+  editor: EditorPrimitive;
+};
+
 const JournlAgentAwarenessContext = createContext<{
   forgetEditor: (id: string) => void;
   forgetEditorSelections: (editor: EditorPrimitive) => void;
   forgetSelection: (selection: BlockSelection) => void;
-  getEditors: () => Map<string, EditorPrimitive>;
+  getEditors: () => Map<string, JournlEditor>;
   getSelection: (
     selection: Pick<BlockSelection, "editor" | "blockIds">,
   ) => BlockSelection | undefined;
   getSelections: () => BlockSelection[];
   getView: () => JournlAgentContext["view"];
-  rememberEditor: (id: string, editor: EditorPrimitive) => void;
+  rememberEditor: (activeEditor: JournlEditor) => void;
   rememberSelection: (selection: BlockSelection) => void;
   rememberView: (view: JournlAgentContext["view"]) => void;
 } | null>(null);
@@ -47,7 +51,7 @@ export function JournlAgentAwarenessProvider({
   const [_, setSelectedBlocks] = useState<BlockSelection[]>([]);
   const ref = useRef<{
     view: JournlAgentContext["view"];
-    editors: Map<string, EditorPrimitive>;
+    editors: Map<string, JournlEditor>;
     selectedBlocks: BlockSelection[];
   }>({
     editors: new Map(),
@@ -100,8 +104,15 @@ export function JournlAgentAwarenessProvider({
     return ref.current.view;
   }, []);
 
-  const rememberEditor = useCallback((id: string, editor: EditorPrimitive) => {
-    ref.current.editors.set(id, editor);
+  const rememberEditor = useCallback((activeEditor: JournlEditor) => {
+    const id =
+      activeEditor.type === "journal-entry"
+        ? activeEditor.date
+        : activeEditor.id;
+    ref.current.editors.set(id, {
+      ...activeEditor,
+      editor: activeEditor.editor,
+    });
   }, []);
 
   const rememberSelection = useCallback((selection: BlockSelection) => {

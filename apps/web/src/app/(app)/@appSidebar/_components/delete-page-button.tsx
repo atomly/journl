@@ -114,19 +114,19 @@ export function DeletePageButton({ page, className }: DeletePageButtonProps) {
           </DialogHeader>
           <DialogFooter>
             <Button
+              variant="outline"
+              onClick={cancelDelete}
+              disabled={showLoading}
+            >
+              Cancel
+            </Button>
+            <Button
               tabIndex={0}
               variant="destructive"
               onClick={confirmDelete}
               disabled={showLoading}
             >
               {showLoading ? "Deleting..." : "Delete"}
-            </Button>
-            <Button
-              variant="outline"
-              onClick={cancelDelete}
-              disabled={showLoading}
-            >
-              Cancel
             </Button>
           </DialogFooter>
         </DialogContent>

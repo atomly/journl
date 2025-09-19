@@ -10,9 +10,10 @@ import { HeaderUpgradePro } from "./_components/header-upgrade-pro";
 
 async function UpgradeProButton() {
   const activeSubscription = await api.subscription.getActiveSubscription();
-  const availablePlan = await api.subscription.getAvailablePlans();
-  const planName = availablePlan[0]?.name;
-  if (!planName) {
+  const proPlan = await api.subscription.getProPlan();
+  const planName = proPlan?.name;
+
+  if (!planName || activeSubscription?.status === "active") {
     return null;
   }
   return (

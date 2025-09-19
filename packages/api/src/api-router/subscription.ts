@@ -1,17 +1,26 @@
+import { stripePrice } from "@acme/db/schema";
 import type { TRPCRouterRecord } from "@trpc/server";
-import Stripe from "stripe";
+import { eq } from "drizzle-orm";
 import { z } from "zod/v4";
-import { env } from "../env";
 import { protectedProcedure, type TRPCContext } from "../trpc";
 
-const stripeClient = new Stripe(env.STRIPE_SECRET_KEY, {
-  apiVersion: "2025-08-27.basil",
-  typescript: true,
-});
+/**
+ * Create headers with only the cookie header needed for authentication
+ */
+const getAuthHeaders = (headers: Headers): Headers => {
+  const authHeaders = new Headers();
+  const cookieHeader = headers.get("cookie");
+
+  if (cookieHeader) {
+    authHeaders.set("cookie", cookieHeader);
+  }
+
+  return authHeaders;
+};
 
 const getActiveSubscription = async ({ ctx }: { ctx: TRPCContext }) => {
   const subscriptions = await ctx.authApi.listActiveSubscriptions({
-    headers: ctx.headers,
+    headers: getAuthHeaders(ctx.headers),
     query: {
       referenceId: ctx.session?.user.id,
     },
@@ -24,38 +33,47 @@ const getActiveSubscription = async ({ ctx }: { ctx: TRPCContext }) => {
 export const subscriptionRouter = {
   getActivePlan: protectedProcedure.query(async ({ ctx }) => {
     const activeSubscription = await getActiveSubscription({ ctx });
-    const prices = await stripeClient.prices.list({
-      limit: 3,
+    if (!activeSubscription?.priceId) return null;
+
+    const price = await ctx.db.query.stripePrice.findFirst({
+      where: eq(stripePrice.id, activeSubscription.priceId),
+      with: {
+        product: true,
+      },
     });
-    return prices.data.find(
-      (price) => price.id === activeSubscription?.priceId,
-    );
+
+    return price;
   }),
   getActiveSubscription: protectedProcedure.query(async ({ ctx }) => {
     const activeSubscription = await getActiveSubscription({ ctx });
     return activeSubscription;
   }),
-  getAvailablePlans: protectedProcedure.query(async () => {
-    const products = await stripeClient.products.list({
-      active: true,
-      expand: ["data.default_price"],
+  getProPlan: protectedProcedure.query(async ({ ctx }) => {
+    // Find the pro plan by name or metadata
+    const proProduct = await ctx.db.query.stripeProduct.findFirst({
+      where: (products, { ilike, eq }) =>
+        eq(products.active, true) && ilike(products.name, "%pro%"),
+      with: {
+        prices: {
+          where: eq(stripePrice.active, true),
+        },
+      },
     });
 
-    const prices = await stripeClient.prices.list({
-      limit: 3,
-    });
+    if (!proProduct || !proProduct.prices.length) {
+      return null;
+    }
 
-    return products.data.map((product) => {
-      const price = prices.data.find((price) => price.product === product.id);
-      return {
-        description: product.description,
-        id: product.id,
-        name: product.name,
-        price: price?.unit_amount,
-        priceId: price?.id,
-        quota: price?.metadata.quota as unknown as number,
-      };
-    });
+    const price = proProduct.prices[0]; // Take the first active price
+
+    return {
+      description: proProduct.description,
+      id: proProduct.id,
+      name: proProduct.name,
+      price: price?.unit_amount || 0,
+      priceId: price?.id || "",
+      quota: z.coerce.number().parse(price?.metadata?.quota || "0"),
+    };
   }),
   openBillingPortal: protectedProcedure
     .input(
@@ -70,7 +88,7 @@ export const subscriptionRouter = {
           referenceId: ctx.session.user.id,
           returnUrl: input.returnUrl,
         },
-        headers: ctx.headers,
+        headers: getAuthHeaders(ctx.headers),
       });
     }),
   upgradeSubscription: protectedProcedure
@@ -102,7 +120,7 @@ export const subscriptionRouter = {
           subscriptionId: input.subscriptionId,
           successUrl: input.successUrl,
         },
-        headers: ctx.headers,
+        headers: getAuthHeaders(ctx.headers),
       });
     }),
 } satisfies TRPCRouterRecord;

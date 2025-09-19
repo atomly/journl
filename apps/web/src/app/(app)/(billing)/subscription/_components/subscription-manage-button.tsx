@@ -2,7 +2,7 @@
 
 import type { ActiveSubscription } from "@acme/api";
 import { useMutation } from "@tanstack/react-query";
-import { redirect, usePathname } from "next/navigation";
+import { usePathname } from "next/navigation";
 import type { ComponentProps } from "react";
 import { toast } from "sonner";
 import { Button } from "~/components/ui/button";
@@ -19,10 +19,13 @@ export const SubscriptionManageButton = ({
   const pathname = usePathname();
   const trpc = useTRPC();
 
-  const { mutateAsync: openBillingPortal, isPending } = useMutation(
+  const { mutate: openBillingPortal, isPending } = useMutation(
     trpc.subscription.openBillingPortal.mutationOptions({
       onError: (error) => {
         toast.error(error.message || "Failed to open billing portal");
+      },
+      onSuccess: (res) => {
+        window.location.href = res.url;
       },
     }),
   );
@@ -32,17 +35,10 @@ export const SubscriptionManageButton = ({
   }
 
   const handleClick = async (event: React.MouseEvent<HTMLButtonElement>) => {
-    const res = await openBillingPortal({
+    openBillingPortal({
       returnUrl: pathname,
     });
-    // Call the custom onClick handler if provided
     onClick?.(event);
-
-    if (res.url) {
-      redirect(res.url);
-    } else {
-      toast.error("Failed to create billing portal session");
-    }
   };
 
   return (

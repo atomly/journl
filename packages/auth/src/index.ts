@@ -1,9 +1,13 @@
 import { db } from "@acme/db/client";
+import { stripePrice, stripeProduct } from "@acme/db/schema";
 import { stripe } from "@better-auth/stripe";
 import { type BetterAuthOptions, betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { oAuthProxy, organization } from "better-auth/plugins";
+import { eq } from "drizzle-orm";
 import Stripe from "stripe";
+
+import { handleStripeWebhookEvent } from "./stripe-webhooks";
 
 export function initAuth(options: {
   appName: string;
@@ -42,6 +46,7 @@ export function initAuth(options: {
     plugins: [
       stripe({
         createCustomerOnSignUp: true,
+        onEvent: handleStripeWebhookEvent,
         stripeClient,
         stripeWebhookSecret: options.stripeWebhookSecret,
         subscription: {
@@ -59,28 +64,25 @@ export function initAuth(options: {
           },
           enabled: true,
           plans: async () => {
-            // Fetch available products from Stripe
-            const products = await stripeClient.products.list({
-              active: true,
-              expand: ["data.default_price"],
-            });
-
-            const prices = await stripeClient.prices.list({
-              limit: 3,
-            });
-
-            return products.data.map((product) => {
-              const price = prices.data.find(
-                (price) => price.product === product.id,
-              );
-              return {
-                limits: {
-                  quota: price?.metadata.quota as unknown as number,
+            // Fetch available products from database
+            const products = await db.query.stripeProduct.findMany({
+              where: eq(stripeProduct.active, true),
+              with: {
+                prices: {
+                  where: eq(stripePrice.active, true),
                 },
-                name: product.name,
-                priceId: price?.id as string,
-              };
+              },
             });
+
+            return products.flatMap((product) =>
+              product.prices.map((price) => ({
+                limits: {
+                  quota: (price.metadata?.quota as unknown as number) || 0,
+                },
+                name: product.name.toLowerCase(),
+                priceId: price.id,
+              })),
+            );
           },
         },
       }),

@@ -1,8 +1,19 @@
+type JournalEntryEditor = {
+  date: string;
+  type: "journal-entry";
+};
+
+type PageEditor = {
+  id: string;
+  title: string;
+  type: "page";
+};
+
 /**
  * The context of the Journl agent.
  */
 export type JournlAgentContext = {
-  activeEditors: string[];
+  activeEditors: (JournalEntryEditor | PageEditor)[];
   currentDate: string;
   highlightedText: string[];
   user: {

@@ -14,6 +14,7 @@ The rest of the components are set by the Tailwind CSS classes, or by our editor
 - Auth Settings Dropdown (`z-index`: 4500)
 - Drawer (with its overlay and drag handles)(`z-index`: 4500)
 - Editor Options/Drag Handle (`z-index`: 4000)
+- Editor Options/Drag Handle Menu (`z-index`: 4000)
 - Editor Toolbar (`z-index`: 3000)
 - Editor AI Review (`z-index`: 3000)
 - Editor Menu (`z-index`: 2000)
@@ -22,15 +23,19 @@ The rest of the components are set by the Tailwind CSS classes, or by our editor
 - Header (none)
 - Main Content (none)
 */
-/* NOTE: This affects all dialog overlays */
+/* This affects all dialog overlays */
 [data-slot="dialog-overlay"] {
   z-index: 5000;
 }
-
 /* Ensure dialog content appears above the overlay */
 [data-slot="dialog-content"] {
   z-index: 5001;
 }
+/* Ensure the user menu appears above the overlay */
 [data-radix-popper-content-wrapper]:has([data-name="app-sidebar-user-menu"]) {
   z-index: 4500 !important;
+}
+/* Ensure the editor options menu appears above the overlay */
+.bn-container > div[data-floating-ui-focusable] {
+  z-index: 4000 !important;
 }

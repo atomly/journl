@@ -9,6 +9,7 @@ import {
   type UIMessage,
 } from "ai";
 import { env } from "~/env";
+import { useCreatePageTool } from "../tools/create-page.client";
 import { useManipulateEditorTool } from "../tools/manipulate-editor.client";
 import { useNavigateJournalEntryTool } from "../tools/navigate-journal-entry.client";
 import { useNavigatePageTool } from "../tools/navigate-page.client";
@@ -25,11 +26,13 @@ type UseJournlAgentOptions<Message extends UIMessage = UIMessage> = {} & Pick<
 
 export function useJournlAgent({ transport, messages }: UseJournlAgentOptions) {
   const { getEditors, getView, getSelections } = useJournlAgentAwareness();
+  const createPage = useCreatePageTool();
   const navigateJournalEntry = useNavigateJournalEntryTool();
   const navigatePage = useNavigatePageTool();
   const manipulateEditor = useManipulateEditorTool();
 
   const tools = new Map<string, ClientTool<string, UseChatHelpers<UIMessage>>>([
+    [createPage.name, createPage],
     [navigateJournalEntry.name, navigateJournalEntry],
     [navigatePage.name, navigatePage],
     [manipulateEditor.name, manipulateEditor],
@@ -55,13 +58,14 @@ export function useJournlAgent({ transport, messages }: UseJournlAgentOptions) {
     transport: new DefaultChatTransport({
       ...transport,
       prepareSendMessagesRequest: ({ id, messages, trigger, messageId }) => {
-        const activeEditors = Array.from(getEditors().keys());
         const selections = getSelections();
         const view = getView();
         return {
           body: {
             context: {
-              activeEditors,
+              activeEditors: Array.from(getEditors().entries()).map(
+                ([_, { editor, ...rest }]) => rest,
+              ),
               currentDate: new Date().toLocaleString(),
               highlightedText: selections.map((selection) => selection.text),
               view,

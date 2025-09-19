@@ -163,8 +163,7 @@ export function JournalEntryEditor({
   const trpc = useTRPC();
   const pendingChangesRef = useRef<BlockTransaction[]>([]);
   const { initialBlocks, documentId, date } = useJournalEntry();
-  const { rememberEditor: setEditor, forgetEditor: removeEditor } =
-    useJournlAgentAwareness();
+  const { rememberEditor, forgetEditor } = useJournlAgentAwareness();
   const editor = useBlockEditor({ initialBlocks });
 
   const { mutate, isPending } = useMutation({
@@ -196,11 +195,11 @@ export function JournalEntryEditor({
   }
 
   useEffect(() => {
-    setEditor(date, editor);
+    rememberEditor({ date, editor, type: "journal-entry" });
     return () => {
-      removeEditor(date);
+      forgetEditor(date);
     };
-  }, [date, editor, setEditor, removeEditor]);
+  }, [date, editor, rememberEditor, forgetEditor]);
 
   return (
     <BlockEditor

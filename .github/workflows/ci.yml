@@ -17,9 +17,6 @@ env:
   FORCE_COLOR: 3
   TURBO_TEAM: ${{ vars.TURBO_TEAM }}
   TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
-  # Stripe environment variables
-  STRIPE_SECRET_KEY: 'sk_test_placeholder_for_build'
-  STRIPE_WEBHOOK_SECRET: 'whsec_build_placeholder'
 
 jobs:
   check:

@@ -21,6 +21,11 @@ export const subscription = pgTable("subscription", {
   trialEnd: timestamp("trial_end"),
   cancelAtPeriodEnd: boolean("cancel_at_period_end"),
   seats: integer("seats"),
+  // Payment method information
+  cardBrand: text("card_brand"), // e.g., 'visa', 'mastercard', 'amex'
+  cardLast4: text("card_last4"), // last 4 digits
+  cardExpMonth: integer("card_exp_month"),
+  cardExpYear: integer("card_exp_year"),
 });
 
 export type Subscription = typeof subscription.$inferSelect;

@@ -1,8 +1,8 @@
 "use client";
 
-import type { ActiveSubscription } from "@acme/api";
+import type { Subscription } from "@acme/api";
 import { useMutation } from "@tanstack/react-query";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import type { ComponentProps } from "react";
 import { toast } from "sonner";
 import { Button } from "~/components/ui/button";
@@ -14,18 +14,19 @@ export const SubscriptionManageButton = ({
   onClick,
   ...buttonProps
 }: {
-  activeSubscription: ActiveSubscription;
+  activeSubscription: Subscription;
 } & ComponentProps<typeof Button>) => {
   const pathname = usePathname();
   const trpc = useTRPC();
+  const router = useRouter();
 
   const { mutate: openBillingPortal, isPending } = useMutation(
-    trpc.subscription.openBillingPortal.mutationOptions({
+    trpc.subscription.createBillingPortal.mutationOptions({
       onError: (error) => {
         toast.error(error.message || "Failed to open billing portal");
       },
       onSuccess: (res) => {
-        window.location.href = res.url;
+        router.push(res.url);
       },
     }),
   );
@@ -45,8 +46,7 @@ export const SubscriptionManageButton = ({
     <Button
       onClick={handleClick}
       size="sm"
-      className="rounded-lg bg-black text-white"
-      variant="outline"
+      variant="background"
       disabled={isPending}
       {...buttonProps}
     >

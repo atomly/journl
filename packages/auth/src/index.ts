@@ -1,12 +1,11 @@
 import { db } from "@acme/db/client";
-import { stripePrice, stripeProduct } from "@acme/db/schema";
+import { Plan } from "@acme/db/schema";
 import { stripe } from "@better-auth/stripe";
 import { type BetterAuthOptions, betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { oAuthProxy, organization } from "better-auth/plugins";
 import { eq } from "drizzle-orm";
-import Stripe from "stripe";
-
+import { stripeClient } from "./stripe-client";
 import { handleStripeWebhookEvent } from "./stripe-webhooks";
 
 export function initAuth(options: {
@@ -23,11 +22,6 @@ export function initAuth(options: {
   stripeSecretKey: string;
   stripeWebhookSecret: string;
 }) {
-  const stripeClient = new Stripe(options.stripeSecretKey as string, {
-    apiVersion: "2025-08-27.basil",
-    typescript: true,
-  });
-
   const config = {
     account: {
       accountLinking: {
@@ -47,6 +41,15 @@ export function initAuth(options: {
       stripe({
         createCustomerOnSignUp: true,
         onEvent: handleStripeWebhookEvent,
+        schema: {
+          subscription: {
+            fields: {
+              plan: "planName",
+              stripeCustomerId: "stripeCustomerId",
+            },
+            modelName: "Subscription",
+          },
+        },
         stripeClient,
         stripeWebhookSecret: options.stripeWebhookSecret,
         subscription: {
@@ -64,25 +67,20 @@ export function initAuth(options: {
           },
           enabled: true,
           plans: async () => {
-            // Fetch available products from database
-            const products = await db.query.stripeProduct.findMany({
-              where: eq(stripeProduct.active, true),
+            const plans = await db.query.Plan.findMany({
+              where: eq(Plan.active, true),
               with: {
-                prices: {
-                  where: eq(stripePrice.active, true),
-                },
+                price: true,
               },
             });
 
-            return products.flatMap((product) =>
-              product.prices.map((price) => ({
-                limits: {
-                  quota: (price.metadata?.quota as unknown as number) || 0,
-                },
-                name: product.name.toLowerCase(),
-                priceId: price.id,
-              })),
-            );
+            return plans.map((plan) => ({
+              limits: {
+                quota: plan.quota,
+              },
+              name: plan.name,
+              priceId: plan.price.id,
+            }));
           },
         },
       }),

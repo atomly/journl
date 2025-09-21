@@ -1,13 +1,13 @@
-import { stripePrice } from "@acme/db/schema";
+import { and, eq, or } from "@acme/db";
+import { Subscription } from "@acme/db/schema";
 import type { TRPCRouterRecord } from "@trpc/server";
-import { eq } from "drizzle-orm";
 import { z } from "zod/v4";
-import { protectedProcedure, type TRPCContext } from "../trpc";
+import { protectedProcedure } from "../trpc";
 
 /**
  * Create headers with only the cookie header needed for authentication
  */
-const getAuthHeaders = (headers: Headers): Headers => {
+function getAuthHeaders(headers: Headers): Headers {
   const authHeaders = new Headers();
   const cookieHeader = headers.get("cookie");
 
@@ -16,66 +16,19 @@ const getAuthHeaders = (headers: Headers): Headers => {
   }
 
   return authHeaders;
-};
+}
 
-const getActiveSubscription = async ({ ctx }: { ctx: TRPCContext }) => {
-  const subscriptions = await ctx.authApi.listActiveSubscriptions({
-    headers: getAuthHeaders(ctx.headers),
-    query: {
-      referenceId: ctx.session?.user.id,
-    },
-  });
-  return subscriptions.find(
-    (sub) => sub.status === "active" || sub.status === "trialing",
-  );
-};
+const zProPlan = z.object({
+  description: z.string().nullable(),
+  displayName: z.string(),
+  id: z.string(),
+  name: z.string(),
+  price: z.number(),
+  quota: z.number(),
+});
 
 export const subscriptionRouter = {
-  getActivePlan: protectedProcedure.query(async ({ ctx }) => {
-    const activeSubscription = await getActiveSubscription({ ctx });
-    if (!activeSubscription?.priceId) return null;
-
-    const price = await ctx.db.query.stripePrice.findFirst({
-      where: eq(stripePrice.id, activeSubscription.priceId),
-      with: {
-        product: true,
-      },
-    });
-
-    return price;
-  }),
-  getActiveSubscription: protectedProcedure.query(async ({ ctx }) => {
-    const activeSubscription = await getActiveSubscription({ ctx });
-    return activeSubscription;
-  }),
-  getProPlan: protectedProcedure.query(async ({ ctx }) => {
-    // Find the pro plan by name or metadata
-    const proProduct = await ctx.db.query.stripeProduct.findFirst({
-      where: (products, { ilike, eq }) =>
-        eq(products.active, true) && ilike(products.name, "%pro%"),
-      with: {
-        prices: {
-          where: eq(stripePrice.active, true),
-        },
-      },
-    });
-
-    if (!proProduct || !proProduct.prices.length) {
-      return null;
-    }
-
-    const price = proProduct.prices[0]; // Take the first active price
-
-    return {
-      description: proProduct.description,
-      id: proProduct.id,
-      name: proProduct.name,
-      price: price?.unit_amount || 0,
-      priceId: price?.id || "",
-      quota: z.coerce.number().parse(price?.metadata?.quota || "0"),
-    };
-  }),
-  openBillingPortal: protectedProcedure
+  createBillingPortal: protectedProcedure
     .input(
       z.object({
         returnUrl: z.string(),
@@ -91,6 +44,68 @@ export const subscriptionRouter = {
         headers: getAuthHeaders(ctx.headers),
       });
     }),
+  getProPlan: protectedProcedure.query(async ({ ctx }) => {
+    const plan = await ctx.db.query.Plan.findFirst({
+      where: (products, { ilike, eq }) =>
+        eq(products.active, true) && ilike(products.name, "%pro%"),
+      with: {
+        price: true,
+      },
+    });
+
+    if (!plan || !plan.price) {
+      return null;
+    }
+
+    return zProPlan.parse({
+      description: plan.description,
+      displayName: plan.displayName,
+      id: plan.id,
+      name: plan.name,
+      price: plan.price.unitAmount,
+      quota: plan.quota,
+    });
+  }),
+  // getActivePlan: protectedProcedure.query(async ({ ctx }) => {
+  //   const activeSubscription = await getActiveSubscription({ ctx });
+  //   if (!activeSubscription?.priceId) return null;
+
+  //   const plan = await ctx.db.query.Plan.findFirst({
+  //     where: eq(Plan.id, activeSubscription.priceId),
+  //     with: {
+  //       prices: true,
+  //     },
+  //   });
+
+  //   return plan;
+  // }),
+  getSubscription: protectedProcedure.query(async ({ ctx }) => {
+    const subscription = await ctx.db.query.Subscription.findFirst({
+      where: and(
+        eq(Subscription.referenceId, ctx.session.user.id),
+        or(
+          eq(Subscription.status, "active"),
+          eq(Subscription.status, "trialing"),
+        ),
+      ),
+      with: {
+        plan: {
+          with: {
+            price: true,
+          },
+        },
+      },
+    });
+
+    if (!subscription?.plan) {
+      return null;
+    }
+
+    return {
+      ...subscription,
+      plan: subscription.plan,
+    };
+  }),
   upgradeSubscription: protectedProcedure
     .input(
       z.object({

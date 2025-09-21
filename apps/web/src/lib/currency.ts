@@ -1,19 +1,17 @@
 export function centsToDollars(
   cents: number,
-  options: {
+  {
+    includeSymbol = true,
+    decimals = 2,
+    locale = "en-US",
+    currency = "USD",
+  }: {
     includeSymbol?: boolean;
     decimals?: number;
     locale?: string;
     currency?: string;
   } = {},
 ): string {
-  const {
-    includeSymbol = true,
-    decimals = 2,
-    locale = "en-US",
-    currency = "USD",
-  } = options;
-
   const dollars = cents / 100;
 
   if (includeSymbol) {

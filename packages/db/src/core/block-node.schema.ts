@@ -49,7 +49,7 @@ export const BlockNode = pgTable(
 );
 export type BlockNode = typeof BlockNode.$inferSelect;
 
-export const BlockNodeRelations = relations(BlockNode, ({ one, many }) => ({
+export const BlockNodeRelations = relations(BlockNode, ({ one }) => ({
   document: one(Document, {
     fields: [BlockNode.document_id],
     references: [Document.id],
@@ -62,7 +62,6 @@ export const BlockNodeRelations = relations(BlockNode, ({ one, many }) => ({
     fields: [BlockNode.document_id],
     references: [JournalEntry.document_id],
   }),
-  block_edges: many(BlockEdge),
 }));
 
 export const zInsertBlockNode = createInsertSchema(BlockNode, {

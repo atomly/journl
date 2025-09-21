@@ -42,13 +42,17 @@ words:
   - Embla
   - evals
   - HMAC
+  - ilike
   - journaling
   - Journl
   - libsql
   - mantine
+  - pooler
   - sonner
   - supabase
   - topo
+  - typesafe
+  - uncollectible
   - upserted
   - weathercode
   - ZROK

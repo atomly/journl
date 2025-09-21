@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { ThemeProvider } from "next-themes";
 import type { ComponentProps } from "react";
+import { TRPCReactProvider } from "~/trpc/react";
 import { BetterAuthProvider } from "../../../components/auth/better-auth-provider";
 
 function AuthLink({
@@ -21,10 +22,16 @@ function AuthLink({
   );
 }
 
-export function AuthProviders({ children }: { children: React.ReactNode }) {
+export function DashboardProviders({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-      <BetterAuthProvider Link={AuthLink}>{children}</BetterAuthProvider>
+      <TRPCReactProvider>
+        <BetterAuthProvider Link={AuthLink}>{children}</BetterAuthProvider>
+      </TRPCReactProvider>
     </ThemeProvider>
   );
 }

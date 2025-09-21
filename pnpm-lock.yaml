@@ -469,6 +469,9 @@ importers:
       drizzle-kit:
         specifier: ^0.31.1
         version: 0.31.4
+      stripe:
+        specifier: ^18.5.0
+        version: 18.5.0(@types/node@22.15.29)
       typescript:
         specifier: ^5.8.3
         version: 5.8.3

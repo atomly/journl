@@ -41,7 +41,7 @@ export function AuthModal({ children }: AuthModalProps) {
       <DialogTitle className="sr-only">
         {getScreenReaderContent(pathname)}
       </DialogTitle>
-      <DialogContent className="flex w-full items-center justify-center border bg-sidebar">
+      <DialogContent className="flex w-full items-center justify-center border">
         {children}
       </DialogContent>
     </Dialog>

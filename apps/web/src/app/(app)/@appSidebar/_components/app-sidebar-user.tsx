@@ -24,8 +24,10 @@ import { AppSidebarUserSettings } from "./app-sidebar-user-settings";
 import { AppSidebarUserSignOut } from "./app-sidebar-user-sign-out";
 
 export async function AppSidebarUser() {
-  const user = await getUser();
-  const activeSubscription = await api.subscription.getActiveSubscription();
+  const [user, subscription] = await Promise.all([
+    getUser(),
+    api.subscription.getSubscription(),
+  ]);
 
   return (
     <SidebarMenu>
@@ -74,9 +76,7 @@ export async function AppSidebarUser() {
             <DropdownMenuSeparator />
             <AppSidebarUserSettings />
             <AppSidebarUserSignOut />
-            <AppSidebarManageSubscription
-              activeSubscription={activeSubscription}
-            />
+            <AppSidebarManageSubscription subscription={subscription} />
           </AppSidebarUserMenu>
         </DropdownMenu>
       </SidebarMenuItem>

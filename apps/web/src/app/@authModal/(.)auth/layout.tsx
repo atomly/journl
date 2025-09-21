@@ -1,6 +1,6 @@
 import { AuthModal } from "~/components/auth/auth-modal";
 
-import "../../(auth)/globals.css";
+import "../../(dashboard)/globals.css";
 import Link from "next/link";
 import { BetterAuthProvider } from "~/components/auth/better-auth-provider";
 

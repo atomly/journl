@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect } from "react";
 import { Button } from "~/components/ui/button";
 import {
@@ -31,13 +32,8 @@ export default function BillingModalError({
             We encountered an error while loading your billing information.
           </p>
           <div className="flex justify-end space-x-2">
-            <Button
-              variant="outline"
-              onClick={() => {
-                window.location.href = "/";
-              }}
-            >
-              Go Home
+            <Button asChild>
+              <Link href="/journal">Go back to your Journal</Link>
             </Button>
             <Button onClick={reset}>Try Again</Button>
           </div>

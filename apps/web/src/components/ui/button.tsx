@@ -19,6 +19,8 @@ const buttonVariants = cva(
         sm: "h-8 rounded-md gap-1.5 px-3 has-[>svg]:px-2.5",
       },
       variant: {
+        background:
+          "bg-background text-background-foreground shadow-xs hover:bg-background/50",
         default:
           "bg-primary text-primary-foreground shadow-xs hover:bg-primary/90",
         destructive:

@@ -9,6 +9,18 @@ export type TimelineEntry = inferProcedureOutput<
   ApiRouter["journal"]["getTimeline"]
 >["timeline"][number];
 
-export type ActiveSubscription = inferProcedureOutput<
-  ApiRouter["subscription"]["getActiveSubscription"]
+export type Subscription = inferProcedureOutput<
+  ApiRouter["subscription"]["getSubscription"]
+>;
+
+export type ProPlan = inferProcedureOutput<
+  ApiRouter["subscription"]["getProPlan"]
+>;
+
+export type UpgradedSubscription = inferProcedureOutput<
+  ApiRouter["subscription"]["upgradeSubscription"]
+>;
+
+export type BillingPortal = inferProcedureOutput<
+  ApiRouter["subscription"]["createBillingPortal"]
 >;

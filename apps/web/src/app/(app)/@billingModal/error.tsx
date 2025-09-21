@@ -1,8 +1,10 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect } from "react";
 import { Button } from "~/components/ui/button";
 import {
+  Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
@@ -20,26 +22,23 @@ export default function BillingModalError({
   }, [error]);
 
   return (
-    <DialogContent>
-      <DialogHeader>
-        <DialogTitle>Billing Error</DialogTitle>
-      </DialogHeader>
-      <div className="space-y-4">
-        <p className="text-muted-foreground">
-          We encountered an error while loading your billing information.
-        </p>
-        <div className="flex justify-end space-x-2">
-          <Button
-            variant="outline"
-            onClick={() => {
-              window.location.href = "/";
-            }}
-          >
-            Go Home
-          </Button>
-          <Button onClick={reset}>Try Again</Button>
+    <Dialog open={true}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Billing Error</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4">
+          <p className="text-muted-foreground">
+            We encountered an error while loading your billing information.
+          </p>
+          <div className="flex justify-end space-x-2">
+            <Button asChild>
+              <Link href="/journal">Go back to your Journal</Link>
+            </Button>
+            <Button onClick={reset}>Try Again</Button>
+          </div>
         </div>
-      </div>
-    </DialogContent>
+      </DialogContent>
+    </Dialog>
   );
 }

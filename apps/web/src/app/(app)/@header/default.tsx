@@ -2,16 +2,10 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { HeaderThemeToggle } from "~/app/(app)/@header/_components/header-theme-toggle";
 import { SidebarTrigger } from "~/components/ui/sidebar";
-import { api } from "~/trpc/server";
 import { HeaderCurrentDate } from "./_components/header-current-date";
 import { HeaderSearchButton } from "./_components/header-search-modal";
 import { HeaderSearchTrigger } from "./_components/header-search-trigger";
-import { HeaderUpgradePro } from "./_components/header-upgrade-pro";
-
-async function UpgradeProButton() {
-  const activeSubscription = await api.subscription.getActiveSubscription();
-  return <HeaderUpgradePro activeSubscription={activeSubscription} />;
-}
+import { HeaderSubscriptionButton } from "./_components/header-subscription-button";
 
 export default function JournalHeader() {
   return (
@@ -26,7 +20,7 @@ export default function JournalHeader() {
           </div>
           <div className="@container flex w-full flex-1 justify-end gap-x-2">
             <Suspense>
-              <UpgradeProButton />
+              <HeaderSubscriptionButton />
             </Suspense>
             <HeaderSearchButton>
               <HeaderSearchTrigger />

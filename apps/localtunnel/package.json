@@ -19,7 +19,7 @@
     "@types/express": "^5.0.3",
     "@types/localtunnel": "^2.0.4",
     "@types/node": "^22.15.29",
-    "concurrently": "^9.2.0",
+    "concurrently": "^9.2.1",
     "dotenv-cli": "^8.0.0",
     "express": "^5.1.0",
     "localtunnel": "^2.0.2",

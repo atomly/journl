@@ -20,7 +20,7 @@
     "@acme/db": "workspace:*",
     "@ai-sdk/openai": "^2.0.27",
     "@ai-sdk/provider-utils": "^3.0.9",
-    "@ai-sdk/react": "2.0.38",
+    "@ai-sdk/react": "2.0.49",
     "@assistant-ui/react": "^0.11.0",
     "@assistant-ui/react-ai-sdk": "^1.1.0",
     "@assistant-ui/react-markdown": "^0.11.0",

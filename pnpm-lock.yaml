@@ -374,8 +374,8 @@ importers:
         specifier: workspace:*
         version: link:../db
       '@better-auth/stripe':
-        specifier: 1.3.9
-        version: 1.3.9(better-auth@1.3.9(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(stripe@18.5.0(@types/node@22.15.29))
+        specifier: 1.3.14
+        version: 1.3.14(better-auth@1.3.9(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(stripe@18.5.0(@types/node@22.15.29))
       '@t3-oss/env-nextjs':
         specifier: ^0.13.6
         version: 0.13.6(arktype@2.1.20)(typescript@5.8.3)(valibot@1.0.0-beta.15(typescript@5.8.3))(zod@3.25.71)
@@ -650,10 +650,10 @@ packages:
     resolution: {integrity: sha512-vbavdySgbTTrmFE+EsiqUTzlOr5bzlnJtUv9PynGCAKvfQqjIXbvFdumPM/GxMDfyuGMJaJAU6TO4zc1Jf1i8Q==}
     engines: {node: '>=6.9.0'}
 
-  '@better-auth/stripe@1.3.9':
-    resolution: {integrity: sha512-mc0esrp2dWjGGVmQbXTTHmVEv7XAlvLJeuqJIMj7+z9q80UeT9JT0/xILrwPFhZiDmXUEVQZrd+loF2m8g9Wmg==}
+  '@better-auth/stripe@1.3.14':
+    resolution: {integrity: sha512-xxkdVtxFPvUokAXxK+yxmSiQVM0yChQf/V2LA2qT5vjuoPdPG4ZOeL1AlSrgI/2z525Fx70c7stZcQDelZ23ag==}
     peerDependencies:
-      better-auth: 1.3.9
+      better-auth: 1.3.14
       stripe: ^18
 
   '@better-auth/utils@0.2.6':
@@ -7247,7 +7247,7 @@ snapshots:
 
   '@babel/runtime@7.27.6': {}
 
-  '@better-auth/stripe@1.3.9(better-auth@1.3.9(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(stripe@18.5.0(@types/node@22.15.29))':
+  '@better-auth/stripe@1.3.14(better-auth@1.3.9(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(stripe@18.5.0(@types/node@22.15.29))':
     dependencies:
       better-auth: 1.3.9(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       stripe: 18.5.0(@types/node@22.15.29)

@@ -28,7 +28,7 @@
     "@acme/blocknote": "workspace:*",
     "@acme/db": "workspace:*",
     "@ai-sdk/openai": "^2.0.27",
-    "@t3-oss/env-nextjs": "^0.13.6",
+    "@t3-oss/env-nextjs": "^0.13.8",
     "@trpc/server": "^11.4.0",
     "ai": "^5.0.38",
     "stripe": "^18.5.0",

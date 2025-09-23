@@ -1,12 +1,9 @@
-@import "@blocknote/core/fonts/inter.css";
 @import "@blocknote/mantine/style.css";
+@import "@blocknote/core/fonts/inter.css";
 @import "@blocknote/xl-ai/style.css";
 
 /* Custom theme with transparent background */
-.bn-container[data-color-scheme] {
-  --bn-colors-editor-background: transparent;
-}
-
+.bn-container[data-color-scheme],
 .bn-container[data-color-scheme="dark"] {
   --bn-colors-editor-background: transparent;
 }
@@ -16,4 +13,11 @@
   .bn-block-group
   .bn-block-outer:not([data-prev-depth-changed]):before {
   border-left: none;
+}
+
+/* Checkbox spacing similar to a bullet point */
+.bn-block-content > input[type="checkbox"] {
+  align-self: start;
+  margin-right: 0.7rem;
+  margin-top: 0.34375rem;
 }

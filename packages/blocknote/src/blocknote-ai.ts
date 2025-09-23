@@ -18,4 +18,4 @@ export const model = createOpenAI({
       credentials: "include",
     });
   },
-})("gpt-4o-mini-2024-07-18");
+})("gpt-5-mini");

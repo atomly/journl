@@ -14,7 +14,7 @@ import { handler } from "../_lib/webhook-handler";
 
 const CHUNK_PARAMS: ChunkParams = {
   // ! TODO: Mastra's MDocument uses `gpt-4o-mini` to chunk the document, but we're not tracking the usage.
-  // ! We need to fix this or remove metadata extraction. I'm disabling this until we can track usage.
+  // ! We need to fix this or remove metadata extraction (or do it ourselves). I'm disabling this until we can track usage.
   // extract: {
   //   keywords: true,
   //   summary: true,

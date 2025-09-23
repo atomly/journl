@@ -30,14 +30,22 @@ export function useManipulateEditorTool() {
 
         const aiExtension = getAIExtension(editor);
 
+        let hasScrolledAtLeastOnce = false;
+        function handleBlockUpdate(block: string) {
+          const blockElement = document.querySelector(`[data-id="${block}"]`);
+          if (
+            blockElement &&
+            !isElementPartiallyInViewport(blockElement) &&
+            !hasScrolledAtLeastOnce
+          ) {
+            blockElement.scrollIntoView({ behavior: "smooth" });
+            hasScrolledAtLeastOnce = true;
+          }
+        }
+
         const response = await aiExtension.callLLM({
-          onBlockUpdate: (block) => {
-            const blockElement = document.querySelector(`[data-id="${block}"]`);
-            if (blockElement && !isElementPartiallyInViewport(blockElement)) {
-              blockElement.scrollIntoView({ behavior: "smooth" });
-            }
-          },
-          userPrompt: toolCall.input.userPrompt,
+          onBlockUpdate: handleBlockUpdate,
+          userPrompt: toolCall.input.editorPrompt,
         });
 
         const stream = response?.llmResult.streamObjectResult;

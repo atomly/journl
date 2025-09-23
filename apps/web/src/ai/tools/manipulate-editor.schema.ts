@@ -6,7 +6,7 @@ export const zManipulateEditorInput = z.object({
     .describe(
       "The target editor to manipulate. It is the date of a journal entry (in YYYY-MM-DD format) or a page ID (UUID format).",
     ),
-  userPrompt: z
+  editorPrompt: z
     .string()
-    .describe("The user prompt to use for the editor's LLM call."),
+    .describe("The prompt to pass to the editor's agent."),
 });

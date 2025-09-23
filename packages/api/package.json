@@ -17,28 +17,28 @@
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },
   "peerDependencies": {
-    "@blocknote/core": "^0.35.0",
-    "@blocknote/mantine": "^0.35.0",
-    "@blocknote/react": "^0.35.0",
-    "@blocknote/server-util": "^0.35.0",
-    "@blocknote/xl-ai": "^0.35.0"
+    "@blocknote/core": "~0.39.1",
+    "@blocknote/mantine": "~0.39.1",
+    "@blocknote/react": "~0.39.1",
+    "@blocknote/server-util": "~0.39.1",
+    "@blocknote/xl-ai": "~0.39.1"
   },
   "dependencies": {
     "@acme/auth": "workspace:*",
     "@acme/blocknote": "workspace:*",
     "@acme/db": "workspace:*",
-    "@ai-sdk/openai": "^2.0.27",
-    "@t3-oss/env-nextjs": "^0.13.6",
-    "@trpc/server": "^11.4.0",
-    "ai": "^5.0.38",
-    "stripe": "^18.5.0",
+    "@ai-sdk/openai": "~2.0.27",
+    "@t3-oss/env-nextjs": "~0.13.6",
+    "@trpc/server": "~11.4.0",
+    "ai": "~5.0.38",
+    "stripe": "~18.5.0",
     "superjson": "2.2.2",
-    "zod": "^3.25.71"
+    "zod": "~3.25.71"
   },
   "devDependencies": {
     "@acme/tsconfig": "workspace:*",
-    "@biomejs/biome": "^2.0.6",
-    "@blocknote/core": "^0.35.0",
-    "typescript": "^5.8.3"
+    "@biomejs/biome": "~2.0.6",
+    "@blocknote/core": "~0.39.1",
+    "typescript": "~5.8.3"
   }
 }

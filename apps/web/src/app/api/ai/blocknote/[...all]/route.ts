@@ -10,32 +10,32 @@ const OPENAI_MESSAGE_DONE_TEXT = "[DONE]";
 const OPENAI_MODEL_PROVIDER = "openai";
 
 const zChatCompletionMessage = z.object({
-  choices: z.array(z.unknown()),
-  created: z.number(),
   id: z.string(),
   model: z.string(),
-  obfuscation: z.string(),
-  object: z.literal("chat.completion.chunk"),
-  service_tier: z.string(),
-  system_fingerprint: z.string(),
-  usage: z
-    .object({
-      completion_tokens: z.number(),
-      completion_tokens_details: z.object({
-        accepted_prediction_tokens: z.number(),
-        audio_tokens: z.number(),
-        reasoning_tokens: z.number(),
-        rejected_prediction_tokens: z.number(),
-      }),
-      prompt_tokens: z.number(),
-      prompt_tokens_details: z.object({
-        audio_tokens: z.number(),
-        cached_tokens: z.number(),
-      }),
-      total_tokens: z.number(),
-    })
-    .nullable(),
+  usage: z.object({
+    completion_tokens: z.number(),
+    completion_tokens_details: z.object({
+      accepted_prediction_tokens: z.number(),
+      audio_tokens: z.number(),
+      reasoning_tokens: z.number(),
+      rejected_prediction_tokens: z.number(),
+    }),
+    prompt_tokens: z.number(),
+    prompt_tokens_details: z.object({
+      audio_tokens: z.number(),
+      cached_tokens: z.number(),
+    }),
+    total_tokens: z.number(),
+  }),
 });
+
+function JSONSafeParse<T>(json: string, schema: z.ZodSchema<T>) {
+  try {
+    return schema.parse(JSON.parse(json));
+  } catch {
+    return null;
+  }
+}
 
 async function handler(req: NextRequest) {
   const session = await getSession();
@@ -84,11 +84,9 @@ async function handler(req: NextRequest) {
           .split(OPENAI_MESSAGE_PREFIX)
           .filter((t) => t !== "" && t !== OPENAI_MESSAGE_DONE_TEXT);
 
-        for (const json of data) {
-          const message = zChatCompletionMessage.parse(JSON.parse(json));
-
-          if (!message.usage) continue;
-
+        for (const serialized of data) {
+          const message = JSONSafeParse(serialized, zChatCompletionMessage);
+          if (!message) continue;
           await api.usage.trackModelUsage({
             metrics: [
               {

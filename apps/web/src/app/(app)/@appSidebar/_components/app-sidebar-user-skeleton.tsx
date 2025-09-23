@@ -22,7 +22,7 @@ export function AppSidebarUserSkeleton() {
               size="lg"
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
             >
-              <Skeleton className="h-8 w-8 rounded-lg" />
+              <Skeleton className="h-8 w-8 shrink-0 rounded-lg" />
               <div className="grid flex-1 gap-y-1 text-left text-sm leading-tight">
                 <Skeleton className="h-4 w-24 rounded-lg" />
                 <Skeleton className="h-3 w-16 rounded-lg" />

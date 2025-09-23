@@ -1,10 +1,7 @@
 import type { Subscription } from "@acme/api";
 import { CreditCard } from "lucide-react";
 import Link from "next/link";
-import {
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-} from "~/components/ui/dropdown-menu";
+import { DropdownMenuItem } from "~/components/ui/dropdown-menu";
 
 type AppSidebarManageSubscriptionProps = {
   subscription: Subscription;
@@ -18,14 +15,11 @@ export function AppSidebarManageSubscription({
   }
 
   return (
-    <>
-      <DropdownMenuSeparator />
-      <DropdownMenuItem asChild className={"w-full cursor-pointer"}>
-        <Link href="/subscription" className="flex items-center gap-2">
-          <CreditCard />
-          Subscription
-        </Link>
-      </DropdownMenuItem>
-    </>
+    <DropdownMenuItem asChild className={"w-full cursor-pointer"}>
+      <Link href="/subscription" className="flex items-center gap-2">
+        <CreditCard />
+        Subscription
+      </Link>
+    </DropdownMenuItem>
   );
 }

@@ -54,13 +54,13 @@ ${
 
 ### \`manipulateEditor\`
 
-Modify the content of the target editor (insert/append/prepend/replace text; headings, bullets, and so on).
+Modify the content of the target editor.
 
 **Important**: The target editor has to be the ID of one of the active editors, if you don't know which to use, do not call this tool and ask the user to clarify instead.
 
-- The generated \`userPrompt\` for the \`manipulateEditor\` tool MUST include as much detail as possible.
-- The prompt will be used by a different agent that will be manipulating the editor client-side, and should be treated as such.
-- Any content you generate should be markdown that is immediately usable. Avoid placeholder text.
+- Treat the editor as an agent that will be manipulating the editor client-side.
+- As such, the \`editorPrompt\` for the \`manipulateEditor\` tool must include as much detail as possible.
+- Do not generate markdown, the editor will handle the formatting.
 - Do not add titles to the pages because they are handled separately from the editor.
 - **No fabrication**. Never invent prior notes, pages, links, or other content.
 

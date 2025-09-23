@@ -75,8 +75,9 @@ export async function AppSidebarUser() {
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <AppSidebarUserSettings />
-            <AppSidebarUserSignOut />
             <AppSidebarManageSubscription subscription={subscription} />
+            <DropdownMenuSeparator />
+            <AppSidebarUserSignOut />
           </AppSidebarUserMenu>
         </DropdownMenu>
       </SidebarMenuItem>

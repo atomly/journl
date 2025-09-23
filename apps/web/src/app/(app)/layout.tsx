@@ -3,7 +3,6 @@ import { SidebarInset, SidebarProvider } from "~/components/ui/sidebar";
 import { Toaster } from "~/components/ui/toast";
 import ChatSidebarTrigger from "./@chatSidebar/_components/chat-sidebar-trigger";
 import "./globals.css";
-import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { AppProviders } from "../_components/app-providers";
 
 type AppLayoutProps = {
@@ -28,7 +27,7 @@ function AppLayout({
     <AppProviders>
       <SidebarProvider className="flex min-h-screen-safe flex-col">
         <div className="flex flex-1">
-          <SidebarProvider defaultOpen={false}>
+          <SidebarProvider>
             {appSidebar}
             <SidebarInset className="flex max-h-svh flex-col">
               {header}
@@ -42,7 +41,6 @@ function AppLayout({
       </SidebarProvider>
       {billingModal}
       <Toaster />
-      <ReactQueryDevtools buttonPosition="bottom-left" initialIsOpen={false} />
     </AppProviders>
   );
 }

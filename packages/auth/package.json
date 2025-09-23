@@ -36,6 +36,6 @@
   },
   "devDependencies": {
     "@acme/tsconfig": "workspace:*",
-    "@types/react": "~19.1.8"
+    "@types/react": "~19.1.13"
   }
 }

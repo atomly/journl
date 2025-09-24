@@ -329,9 +329,9 @@ function getEditorBlocks(blocks: BlockPrimitive[], parent?: BlockPrimitive) {
     flattened.set(block.id, editorBlock);
 
     if (block.children) {
-      getEditorBlocks(block.children, block).forEach((editorBlock) =>
-        flattened.set(editorBlock.id, editorBlock),
-      );
+      getEditorBlocks(block.children, block).forEach((editorBlock) => {
+        flattened.set(editorBlock.id, editorBlock);
+      });
     }
   }
 

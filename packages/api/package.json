@@ -37,7 +37,6 @@
   },
   "devDependencies": {
     "@acme/tsconfig": "workspace:*",
-    "@biomejs/biome": "~2.0.6",
     "@blocknote/core": "~0.39.1",
     "typescript": "~5.8.3"
   }

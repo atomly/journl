@@ -16,7 +16,9 @@ export class AppEventEmitter<T extends AppEventPayload = AppEventPayload> {
    */
   emit<E extends AppEvent<T>>(event: E): void {
     const eventListeners = this.eventListeners.get(event.eventType) || [];
-    eventListeners.forEach((listener) => listener(event));
+    eventListeners.forEach((listener) => {
+      listener(event);
+    });
     this.eventBuffer.store(event);
   }
 
@@ -29,7 +31,9 @@ export class AppEventEmitter<T extends AppEventPayload = AppEventPayload> {
 
     if (eventListeners.length > 0) {
       // If there are active listeners, emit immediately
-      eventListeners.forEach((listener) => listener(event));
+      eventListeners.forEach((listener) => {
+        listener(event);
+      });
     } else {
       // If no listeners, buffer the event for later consumption
       this.eventBuffer.store(event);

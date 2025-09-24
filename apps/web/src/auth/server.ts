@@ -14,8 +14,6 @@ const baseUrl =
 export const auth = initAuth({
   appName: "Journl",
   baseUrl,
-  discordClientId: env.AUTH_DISCORD_ID,
-  discordClientSecret: env.AUTH_DISCORD_SECRET,
   githubClientId: env.AUTH_GITHUB_ID,
   githubClientSecret: env.AUTH_GITHUB_SECRET,
   googleClientId: env.AUTH_GOOGLE_ID,

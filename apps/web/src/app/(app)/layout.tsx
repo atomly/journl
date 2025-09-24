@@ -12,7 +12,7 @@ type AppLayoutProps = {
   chatDrawer: React.ReactNode;
   chatSidebar: React.ReactNode;
   header: React.ReactNode;
-  billingModal: React.ReactNode;
+  subscriptionModal: React.ReactNode;
 };
 
 function AppLayout({
@@ -21,7 +21,7 @@ function AppLayout({
   chatDrawer,
   chatSidebar,
   header,
-  billingModal,
+  subscriptionModal,
 }: AppLayoutProps) {
   return (
     <AppProviders>
@@ -39,7 +39,7 @@ function AppLayout({
           <ChatSidebarTrigger />
         </div>
       </SidebarProvider>
-      {billingModal}
+      {subscriptionModal}
       <Toaster />
     </AppProviders>
   );

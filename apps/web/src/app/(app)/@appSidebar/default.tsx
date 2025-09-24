@@ -21,7 +21,7 @@ import { AppSidebarUserSkeleton } from "./_components/app-sidebar-user-skeleton"
 
 async function SuspendedAppSidebarPages() {
   const pages = await api.pages.getByUser();
-  return <AppSidebarPages pages={pages} />;
+  return <AppSidebarPages initialPages={pages} />;
 }
 
 export default function AppSidebar() {

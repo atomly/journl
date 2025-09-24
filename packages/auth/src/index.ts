@@ -15,8 +15,6 @@ export function initAuth(options: {
   secret: string | undefined;
   googleClientId: string;
   googleClientSecret: string;
-  discordClientId: string;
-  discordClientSecret: string;
   githubClientId: string;
   githubClientSecret: string;
   stripeSecretKey: string;
@@ -96,11 +94,6 @@ export function initAuth(options: {
     secret: options.secret,
     socialProviders: {
       // Social providers can be added here when needed
-      discord: {
-        clientId: options.discordClientId,
-        clientSecret: options.discordClientSecret,
-        redirectURI: `${options.productionUrl}/api/auth/callback/discord`,
-      },
       github: {
         clientId: options.githubClientId,
         clientSecret: options.githubClientSecret,

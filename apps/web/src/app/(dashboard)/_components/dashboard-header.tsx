@@ -1,3 +1,5 @@
+"use client";
+
 import { SignedIn, SignedOut } from "@daveyplate/better-auth-ui";
 import { ArrowLeft, LogOut } from "lucide-react";
 import Link from "next/link";
@@ -25,7 +27,7 @@ export function DashboardHeader({ className }: UserHeaderProps) {
         className,
       )}
     >
-      <div className="hidden flex-row items-center sm:flex">
+      <div className="flex flex-row items-center">
         <div className="flex flex-row items-center gap-x-2">
           <span className="font-bold text-xl">Dashboard</span>
         </div>
@@ -34,7 +36,7 @@ export function DashboardHeader({ className }: UserHeaderProps) {
         className="mx-auto flex max-w-svw flex-1 justify-between [&>div]:w-full"
         viewport={false}
       >
-        <NavigationMenuList className="w-full justify-between gap-x-2 sm:justify-end">
+        <NavigationMenuList className="w-full justify-end gap-x-2">
           <SignedOut>
             <NavigationMenuItem>
               <NavigationMenuLink

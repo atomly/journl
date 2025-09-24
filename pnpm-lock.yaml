@@ -99,8 +99,8 @@ importers:
         specifier: ~3.0.9
         version: 3.0.9(zod@3.25.71)
       '@ai-sdk/react':
-        specifier: 2.0.50
-        version: 2.0.50(react@19.1.1)(zod@3.25.71)
+        specifier: ~2.0.51
+        version: 2.0.51(react@19.1.1)(zod@3.25.71)
       '@assistant-ui/react':
         specifier: ~0.11.16
         version: 0.11.16(@types/react-dom@19.1.9(@types/react@19.1.13))(@types/react@19.1.13)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)(use-sync-external-store@1.5.0(react@19.1.1))
@@ -477,6 +477,12 @@ packages:
     peerDependencies:
       zod: ^3.25.76 || ^4
 
+  '@ai-sdk/gateway@1.0.28':
+    resolution: {integrity: sha512-e9RKgWVDYHsd4UkKCgKQpK+nxLSDydN18yXctzgNlmf2R7BR+HqUsTKJdZT6ArSoXBWBGhyZss0cJJnpm6YVfw==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      zod: ^3.25.76 || ^4
+
   '@ai-sdk/gateway@1.0.7':
     resolution: {integrity: sha512-Athrq7OARuNc0iHZJP6InhSQ53tImCc990vMWyR1UHaZgPZJbXjKhIMiOj54F0I0Nlemx48V4fHYUTfLkJotnQ==}
     engines: {node: '>=18'}
@@ -531,8 +537,8 @@ packages:
       zod:
         optional: true
 
-  '@ai-sdk/react@2.0.50':
-    resolution: {integrity: sha512-JCWJHV2UWuh2qFfAaRUUeXdsrcor418G0CaW0NZXimdoc+NG9fJ1aYb+vCTvYWzGhQ723ibs0hTCfrNloDR8uQ==}
+  '@ai-sdk/react@2.0.51':
+    resolution: {integrity: sha512-FcOgt99Agvk1btAVQDO86ZgIv7Vct6kyGvoUY91CpxEmfQU/kSjs4/8mYZAeVY8AiXGBe+46EHIFquokN0nTDA==}
     engines: {node: '>=18'}
     peerDependencies:
       react: ^18 || ^19 || ^19.0.0-rc
@@ -3556,6 +3562,12 @@ packages:
 
   ai@5.0.50:
     resolution: {integrity: sha512-lMc54jrFI7RiwVZ2wHIb+jIUhbyMt8TtAD71vkcCwl67UjqVCp7i6dqJeunc+i6iSMTQr72kvg3YYCrFm/PAyw==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      zod: ^3.25.76 || ^4
+
+  ai@5.0.51:
+    resolution: {integrity: sha512-ToKW099QWUJNqePZbWGg8FSfxTxS3UN9U6yCla8rYdW0EBTDNPnpRwK1N6ER9TfV+dFtdUu+ZgKSlhQnEThriQ==}
     engines: {node: '>=18'}
     peerDependencies:
       zod: ^3.25.76 || ^4
@@ -6664,7 +6676,13 @@ snapshots:
       '@ai-sdk/provider-utils': 3.0.9(zod@3.25.71)
       zod: 3.25.71
 
-  '@ai-sdk/gateway@1.0.27(zod@4.1.5)':
+  '@ai-sdk/gateway@1.0.28(zod@3.25.71)':
+    dependencies:
+      '@ai-sdk/provider': 2.0.0
+      '@ai-sdk/provider-utils': 3.0.9(zod@3.25.71)
+      zod: 3.25.71
+
+  '@ai-sdk/gateway@1.0.28(zod@4.1.5)':
     dependencies:
       '@ai-sdk/provider': 2.0.0
       '@ai-sdk/provider-utils': 3.0.9(zod@4.1.5)
@@ -6735,20 +6753,20 @@ snapshots:
     optionalDependencies:
       zod: 3.25.71
 
-  '@ai-sdk/react@2.0.50(react@19.1.1)(zod@3.25.71)':
+  '@ai-sdk/react@2.0.51(react@19.1.1)(zod@3.25.71)':
     dependencies:
       '@ai-sdk/provider-utils': 3.0.9(zod@3.25.71)
-      ai: 5.0.50(zod@3.25.71)
+      ai: 5.0.51(zod@3.25.71)
       react: 19.1.1
       swr: 2.3.4(react@19.1.1)
       throttleit: 2.1.0
     optionalDependencies:
       zod: 3.25.71
 
-  '@ai-sdk/react@2.0.50(react@19.1.1)(zod@4.1.5)':
+  '@ai-sdk/react@2.0.51(react@19.1.1)(zod@4.1.5)':
     dependencies:
       '@ai-sdk/provider-utils': 3.0.9(zod@4.1.5)
-      ai: 5.0.50(zod@4.1.5)
+      ai: 5.0.51(zod@4.1.5)
       react: 19.1.1
       swr: 2.3.4(react@19.1.1)
       throttleit: 2.1.0
@@ -6789,11 +6807,11 @@ snapshots:
   '@assistant-ui/react-ai-sdk@1.1.0(@assistant-ui/react@0.11.16(@types/react-dom@19.1.9(@types/react@19.1.13))(@types/react@19.1.13)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)(use-sync-external-store@1.5.0(react@19.1.1)))(@types/react@19.1.13)(assistant-cloud@0.1.1)(react@19.1.1)(use-sync-external-store@1.5.0(react@19.1.1))':
     dependencies:
       '@ai-sdk/provider': 2.0.0
-      '@ai-sdk/react': 2.0.50(react@19.1.1)(zod@4.1.5)
+      '@ai-sdk/react': 2.0.51(react@19.1.1)(zod@4.1.5)
       '@assistant-ui/react': 0.11.16(@types/react-dom@19.1.9(@types/react@19.1.13))(@types/react@19.1.13)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)(use-sync-external-store@1.5.0(react@19.1.1))
       '@radix-ui/react-use-callback-ref': 1.1.1(@types/react@19.1.13)(react@19.1.1)
       '@types/json-schema': 7.0.15
-      ai: 5.0.50(zod@4.1.5)
+      ai: 5.0.51(zod@4.1.5)
       assistant-stream: 0.2.29
       json-schema: 0.4.0
       react: 19.1.1
@@ -10167,9 +10185,17 @@ snapshots:
       '@opentelemetry/api': 1.9.0
       zod: 3.25.71
 
-  ai@5.0.50(zod@4.1.5):
+  ai@5.0.51(zod@3.25.71):
     dependencies:
-      '@ai-sdk/gateway': 1.0.27(zod@4.1.5)
+      '@ai-sdk/gateway': 1.0.28(zod@3.25.71)
+      '@ai-sdk/provider': 2.0.0
+      '@ai-sdk/provider-utils': 3.0.9(zod@3.25.71)
+      '@opentelemetry/api': 1.9.0
+      zod: 3.25.71
+
+  ai@5.0.51(zod@4.1.5):
+    dependencies:
+      '@ai-sdk/gateway': 1.0.28(zod@4.1.5)
       '@ai-sdk/provider': 2.0.0
       '@ai-sdk/provider-utils': 3.0.9(zod@4.1.5)
       '@opentelemetry/api': 1.9.0

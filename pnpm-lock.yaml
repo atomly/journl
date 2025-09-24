@@ -144,8 +144,8 @@ importers:
         specifier: ~0.13.7
         version: 0.13.7(@mastra/core@0.15.2(arktype@2.1.20)(openapi-types@12.1.3)(react@19.1.1)(valibot@1.0.0-beta.15(typescript@5.8.3))(zod@3.25.71))(bufferutil@4.0.9)
       '@mastra/loggers':
-        specifier: ~0.10.12
-        version: 0.10.12(@mastra/core@0.15.2(arktype@2.1.20)(openapi-types@12.1.3)(react@19.1.1)(valibot@1.0.0-beta.15(typescript@5.8.3))(zod@3.25.71))
+        specifier: ~0.10.13
+        version: 0.10.13(@mastra/core@0.15.2(arktype@2.1.20)(openapi-types@12.1.3)(react@19.1.1)(valibot@1.0.0-beta.15(typescript@5.8.3))(zod@3.25.71))
       '@mastra/memory':
         specifier: ~0.14.2
         version: 0.14.2(@mastra/core@0.15.2(arktype@2.1.20)(openapi-types@12.1.3)(react@19.1.1)(valibot@1.0.0-beta.15(typescript@5.8.3))(zod@3.25.71))(react@19.1.1)(zod@3.25.71)
@@ -1439,10 +1439,10 @@ packages:
     peerDependencies:
       '@mastra/core': '>=0.13.0-0 <0.16.0-0'
 
-  '@mastra/loggers@0.10.12':
-    resolution: {integrity: sha512-0iqjsnOyBuZm4qY6aRm07dRJyUIt1E0VtQTsswPueV6nlqEj9vxdM/mDVSgaYzNC6OH8lnE96Dwy23bzHjsbQQ==}
+  '@mastra/loggers@0.10.13':
+    resolution: {integrity: sha512-78JUoUkBg3CTqZGWkv+69hFMyug3DaOsOqCYW3DlVlagpvEIWQU82HE22JdM/mZIIpiDZQfwaM9ar3IcApXlPw==}
     peerDependencies:
-      '@mastra/core': '>=0.17.0-0 <0.18.0-0'
+      '@mastra/core': '>=0.17.0-0 <0.19.0-0'
 
   '@mastra/memory@0.14.2':
     resolution: {integrity: sha512-wFfZJcuiaNnlPnBmumW9q1fuYUUqsmGyyIPuL1bHewJ++wsbEmex/jLmBeGnyV+vopG0Xy6m1KUNwjuAJi8BtA==}
@@ -7824,7 +7824,7 @@ snapshots:
       - bufferutil
       - utf-8-validate
 
-  '@mastra/loggers@0.10.12(@mastra/core@0.15.2(arktype@2.1.20)(openapi-types@12.1.3)(react@19.1.1)(valibot@1.0.0-beta.15(typescript@5.8.3))(zod@3.25.71))':
+  '@mastra/loggers@0.10.13(@mastra/core@0.15.2(arktype@2.1.20)(openapi-types@12.1.3)(react@19.1.1)(valibot@1.0.0-beta.15(typescript@5.8.3))(zod@3.25.71))':
     dependencies:
       '@mastra/core': 0.15.2(arktype@2.1.20)(openapi-types@12.1.3)(react@19.1.1)(valibot@1.0.0-beta.15(typescript@5.8.3))(zod@3.25.71)
       pino: 9.7.0

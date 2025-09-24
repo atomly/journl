@@ -43,6 +43,7 @@ words:
   - evals
   - HMAC
   - ilike
+  - interruptible
   - journaling
   - Journl
   - libsql

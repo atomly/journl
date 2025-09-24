@@ -60,8 +60,8 @@ importers:
         specifier: ~4.20.5
         version: 4.20.5
       zod:
-        specifier: ~3.25.71
-        version: 3.25.71
+        specifier: ~3.25.76
+        version: 3.25.76
 
   apps/stripe:
     devDependencies:
@@ -70,13 +70,13 @@ importers:
         version: link:../../tooling/tsconfig
       '@t3-oss/env-nextjs':
         specifier: ~0.13.8
-        version: 0.13.8(arktype@2.1.20)(typescript@5.8.3)(valibot@1.0.0-beta.15(typescript@5.8.3))(zod@3.25.71)
+        version: 0.13.8(arktype@2.1.20)(typescript@5.8.3)(valibot@1.0.0-beta.15(typescript@5.8.3))(zod@3.25.76)
       dotenv-cli:
         specifier: ~8.0.0
         version: 8.0.0
       zod:
-        specifier: ~3.25.71
-        version: 3.25.71
+        specifier: ~3.25.76
+        version: 3.25.76
 
   apps/web:
     dependencies:
@@ -94,13 +94,13 @@ importers:
         version: link:../../packages/db
       '@ai-sdk/openai':
         specifier: ~2.0.32
-        version: 2.0.32(zod@3.25.71)
+        version: 2.0.32(zod@3.25.76)
       '@ai-sdk/provider-utils':
         specifier: ~3.0.9
-        version: 3.0.9(zod@3.25.71)
+        version: 3.0.9(zod@3.25.76)
       '@ai-sdk/react':
         specifier: ~2.0.51
-        version: 2.0.51(react@19.1.1)(zod@3.25.71)
+        version: 2.0.51(react@19.1.1)(zod@3.25.76)
       '@assistant-ui/react':
         specifier: ~0.11.16
         version: 0.11.16(@types/react-dom@19.1.9(@types/react@19.1.13))(@types/react@19.1.13)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)(use-sync-external-store@1.5.0(react@19.1.1))
@@ -127,10 +127,10 @@ importers:
         version: 0.39.1(@floating-ui/dom@1.7.4)(@tiptap/extensions@3.4.4(@tiptap/core@3.4.4(@tiptap/pm@3.4.4))(@tiptap/pm@3.4.4))(@types/hast@3.0.4)(@types/react-dom@19.1.9(@types/react@19.1.13))(@types/react@19.1.13)(bufferutil@4.0.9)(prosemirror-model@1.25.3)(prosemirror-state@1.4.3)(prosemirror-view@1.41.1)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
       '@blocknote/xl-ai':
         specifier: ~0.39.1
-        version: 0.39.1(@floating-ui/dom@1.7.4)(@tiptap/extensions@3.4.4(@tiptap/core@3.4.4(@tiptap/pm@3.4.4))(@tiptap/pm@3.4.4))(@tiptap/pm@3.4.4)(@types/hast@3.0.4)(@types/react-dom@19.1.9(@types/react@19.1.13))(@types/react@19.1.13)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)(use-sync-external-store@1.5.0(react@19.1.1))(y-protocols@1.0.6(yjs@13.6.27))(yjs@13.6.27)(zod@3.25.71)
+        version: 0.39.1(@floating-ui/dom@1.7.4)(@tiptap/extensions@3.4.4(@tiptap/core@3.4.4(@tiptap/pm@3.4.4))(@tiptap/pm@3.4.4))(@tiptap/pm@3.4.4)(@types/hast@3.0.4)(@types/react-dom@19.1.9(@types/react@19.1.13))(@types/react@19.1.13)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)(use-sync-external-store@1.5.0(react@19.1.1))(y-protocols@1.0.6(yjs@13.6.27))(yjs@13.6.27)(zod@3.25.76)
       '@daveyplate/better-auth-ui':
         specifier: ~3.2.5
-        version: 3.2.5(1030396e4c16f20f38ec357b6584f7af)
+        version: 3.2.5(0c1060556cd110e62c737e4324360b55)
       '@hookform/resolvers':
         specifier: ~5.0.1
         version: 5.0.1(react-hook-form@7.57.0(react@19.1.1))
@@ -139,19 +139,19 @@ importers:
         version: 8.1.3(@mantine/hooks@7.17.8(react@19.1.1))(@types/react@19.1.13)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
       '@mastra/core':
         specifier: ~0.15.2
-        version: 0.15.2(arktype@2.1.20)(openapi-types@12.1.3)(react@19.1.1)(valibot@1.0.0-beta.15(typescript@5.8.3))(zod@3.25.71)
+        version: 0.15.2(arktype@2.1.20)(openapi-types@12.1.3)(react@19.1.1)(valibot@1.0.0-beta.15(typescript@5.8.3))(zod@3.25.76)
       '@mastra/libsql':
         specifier: ~0.13.7
-        version: 0.13.7(@mastra/core@0.15.2(arktype@2.1.20)(openapi-types@12.1.3)(react@19.1.1)(valibot@1.0.0-beta.15(typescript@5.8.3))(zod@3.25.71))(bufferutil@4.0.9)
+        version: 0.13.7(@mastra/core@0.15.2(arktype@2.1.20)(openapi-types@12.1.3)(react@19.1.1)(valibot@1.0.0-beta.15(typescript@5.8.3))(zod@3.25.76))(bufferutil@4.0.9)
       '@mastra/loggers':
         specifier: ~0.10.13
-        version: 0.10.13(@mastra/core@0.15.2(arktype@2.1.20)(openapi-types@12.1.3)(react@19.1.1)(valibot@1.0.0-beta.15(typescript@5.8.3))(zod@3.25.71))
+        version: 0.10.13(@mastra/core@0.15.2(arktype@2.1.20)(openapi-types@12.1.3)(react@19.1.1)(valibot@1.0.0-beta.15(typescript@5.8.3))(zod@3.25.76))
       '@mastra/memory':
         specifier: ~0.14.2
-        version: 0.14.2(@mastra/core@0.15.2(arktype@2.1.20)(openapi-types@12.1.3)(react@19.1.1)(valibot@1.0.0-beta.15(typescript@5.8.3))(zod@3.25.71))(react@19.1.1)(zod@3.25.71)
+        version: 0.14.2(@mastra/core@0.15.2(arktype@2.1.20)(openapi-types@12.1.3)(react@19.1.1)(valibot@1.0.0-beta.15(typescript@5.8.3))(zod@3.25.76))(react@19.1.1)(zod@3.25.76)
       '@mastra/rag':
         specifier: ~1.2.2
-        version: 1.2.2(@mastra/core@0.15.2(arktype@2.1.20)(openapi-types@12.1.3)(react@19.1.1)(valibot@1.0.0-beta.15(typescript@5.8.3))(zod@3.25.71))(ai@5.0.50(zod@3.25.71))(zod@3.25.71)
+        version: 1.2.2(@mastra/core@0.15.2(arktype@2.1.20)(openapi-types@12.1.3)(react@19.1.1)(valibot@1.0.0-beta.15(typescript@5.8.3))(zod@3.25.76))(ai@5.0.50(zod@3.25.76))(zod@3.25.76)
       '@radix-ui/react-avatar':
         specifier: ~1.1.10
         version: 1.1.10(@types/react-dom@19.1.9(@types/react@19.1.13))(@types/react@19.1.13)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
@@ -184,7 +184,7 @@ importers:
         version: 1.2.7(@types/react-dom@19.1.9(@types/react@19.1.13))(@types/react@19.1.13)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
       '@t3-oss/env-nextjs':
         specifier: ~0.13.8
-        version: 0.13.8(arktype@2.1.20)(typescript@5.8.3)(valibot@1.0.0-beta.15(typescript@5.8.3))(zod@3.25.71)
+        version: 0.13.8(arktype@2.1.20)(typescript@5.8.3)(valibot@1.0.0-beta.15(typescript@5.8.3))(zod@3.25.76)
       '@tanstack/react-query':
         specifier: ~5.80.7
         version: 5.80.7(react@19.1.1)
@@ -205,7 +205,7 @@ importers:
         version: 11.4.0(@tanstack/react-query@5.80.7(react@19.1.1))(@trpc/client@11.4.0(@trpc/server@11.4.0(typescript@5.8.3))(typescript@5.8.3))(@trpc/server@11.4.0(typescript@5.8.3))(react-dom@19.1.1(react@19.1.1))(react@19.1.1)(typescript@5.8.3)
       ai:
         specifier: ~5.0.49
-        version: 5.0.50(zod@3.25.71)
+        version: 5.0.50(zod@3.25.76)
       class-variance-authority:
         specifier: ~0.7.1
         version: 0.7.1
@@ -273,8 +273,8 @@ importers:
         specifier: ~1.1.2
         version: 1.1.2(@types/react-dom@19.1.9(@types/react@19.1.13))(@types/react@19.1.13)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
       zod:
-        specifier: ~3.25.71
-        version: 3.25.71
+        specifier: ~3.25.76
+        version: 3.25.76
     devDependencies:
       '@acme/tsconfig':
         specifier: workspace:*
@@ -314,7 +314,7 @@ importers:
         version: link:../db
       '@ai-sdk/openai':
         specifier: ~2.0.32
-        version: 2.0.32(zod@3.25.71)
+        version: 2.0.32(zod@3.25.76)
       '@blocknote/mantine':
         specifier: ~0.39.1
         version: 0.39.1(@floating-ui/dom@1.7.4)(@tiptap/extensions@3.4.4(@tiptap/core@3.4.4(@tiptap/pm@3.4.4))(@tiptap/pm@3.4.4))(@types/hast@3.0.4)(@types/react-dom@19.1.9(@types/react@19.1.13))(@types/react@19.1.13)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
@@ -326,16 +326,16 @@ importers:
         version: 0.39.1(@floating-ui/dom@1.7.4)(@tiptap/extensions@3.4.4(@tiptap/core@3.4.4(@tiptap/pm@3.4.4))(@tiptap/pm@3.4.4))(@types/hast@3.0.4)(@types/react-dom@19.1.9(@types/react@19.1.13))(@types/react@19.1.13)(bufferutil@4.0.9)(prosemirror-model@1.25.3)(prosemirror-state@1.4.3)(prosemirror-view@1.41.1)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
       '@blocknote/xl-ai':
         specifier: ~0.39.1
-        version: 0.39.1(@floating-ui/dom@1.7.4)(@tiptap/extensions@3.4.4(@tiptap/core@3.4.4(@tiptap/pm@3.4.4))(@tiptap/pm@3.4.4))(@tiptap/pm@3.4.4)(@types/hast@3.0.4)(@types/react-dom@19.1.9(@types/react@19.1.13))(@types/react@19.1.13)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)(use-sync-external-store@1.5.0(react@19.1.1))(y-protocols@1.0.6(yjs@13.6.27))(yjs@13.6.27)(zod@3.25.71)
+        version: 0.39.1(@floating-ui/dom@1.7.4)(@tiptap/extensions@3.4.4(@tiptap/core@3.4.4(@tiptap/pm@3.4.4))(@tiptap/pm@3.4.4))(@tiptap/pm@3.4.4)(@types/hast@3.0.4)(@types/react-dom@19.1.9(@types/react@19.1.13))(@types/react@19.1.13)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)(use-sync-external-store@1.5.0(react@19.1.1))(y-protocols@1.0.6(yjs@13.6.27))(yjs@13.6.27)(zod@3.25.76)
       '@t3-oss/env-nextjs':
         specifier: ~0.13.8
-        version: 0.13.8(arktype@2.1.20)(typescript@5.8.3)(valibot@1.0.0-beta.15(typescript@5.8.3))(zod@3.25.71)
+        version: 0.13.8(arktype@2.1.20)(typescript@5.8.3)(valibot@1.0.0-beta.15(typescript@5.8.3))(zod@3.25.76)
       '@trpc/server':
         specifier: ~11.4.0
         version: 11.4.0(typescript@5.8.3)
       ai:
         specifier: ~5.0.49
-        version: 5.0.50(zod@3.25.71)
+        version: 5.0.50(zod@3.25.76)
       stripe:
         specifier: ~18.5.0
         version: 18.5.0(@types/node@22.15.29)
@@ -343,8 +343,8 @@ importers:
         specifier: 2.2.2
         version: 2.2.2
       zod:
-        specifier: ~3.25.71
-        version: 3.25.71
+        specifier: ~3.25.76
+        version: 3.25.76
     devDependencies:
       '@acme/tsconfig':
         specifier: workspace:*
@@ -366,7 +366,7 @@ importers:
         version: 1.3.16(better-auth@1.3.9(react-dom@19.1.1(react@19.1.1))(react@19.1.1))(stripe@18.5.0(@types/node@22.15.29))
       '@t3-oss/env-nextjs':
         specifier: ~0.13.8
-        version: 0.13.8(arktype@2.1.20)(typescript@5.8.3)(valibot@1.0.0-beta.15(typescript@5.8.3))(zod@3.25.71)
+        version: 0.13.8(arktype@2.1.20)(typescript@5.8.3)(valibot@1.0.0-beta.15(typescript@5.8.3))(zod@3.25.76)
       better-auth:
         specifier: ~1.3.9
         version: 1.3.9(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
@@ -383,8 +383,8 @@ importers:
         specifier: ~18.5.0
         version: 18.5.0(@types/node@22.15.29)
       zod:
-        specifier: ~3.25.71
-        version: 3.25.71
+        specifier: ~3.25.76
+        version: 3.25.76
     devDependencies:
       '@acme/tsconfig':
         specifier: workspace:*
@@ -400,13 +400,13 @@ importers:
         version: link:../db
       '@ai-sdk/openai':
         specifier: ~1.3.22
-        version: 1.3.24(zod@3.25.71)
+        version: 1.3.24(zod@3.25.76)
       ai:
         specifier: ~4.3.19
-        version: 4.3.19(react@19.1.1)(zod@3.25.71)
+        version: 4.3.19(react@19.1.1)(zod@3.25.76)
       zod:
-        specifier: ~3.25.71
-        version: 3.25.71
+        specifier: ~3.25.76
+        version: 3.25.76
     devDependencies:
       '@acme/tsconfig':
         specifier: workspace:*
@@ -425,7 +425,7 @@ importers:
         version: 0.39.1(@floating-ui/dom@1.7.4)(@tiptap/extensions@3.4.4(@tiptap/core@3.4.4(@tiptap/pm@3.4.4))(@tiptap/pm@3.4.4))(@types/hast@3.0.4)(@types/react-dom@19.1.9(@types/react@19.1.13))(@types/react@19.1.13)(bufferutil@4.0.9)(prosemirror-model@1.25.3)(prosemirror-state@1.4.3)(prosemirror-view@1.41.1)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
       '@blocknote/xl-ai':
         specifier: ~0.39.1
-        version: 0.39.1(@floating-ui/dom@1.7.4)(@tiptap/extensions@3.4.4(@tiptap/core@3.4.4(@tiptap/pm@3.4.4))(@tiptap/pm@3.4.4))(@tiptap/pm@3.4.4)(@types/hast@3.0.4)(@types/react-dom@19.1.9(@types/react@19.1.13))(@types/react@19.1.13)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)(use-sync-external-store@1.5.0(react@19.1.1))(y-protocols@1.0.6(yjs@13.6.27))(yjs@13.6.27)(zod@3.25.71)
+        version: 0.39.1(@floating-ui/dom@1.7.4)(@tiptap/extensions@3.4.4(@tiptap/core@3.4.4(@tiptap/pm@3.4.4))(@tiptap/pm@3.4.4))(@tiptap/pm@3.4.4)(@types/hast@3.0.4)(@types/react-dom@19.1.9(@types/react@19.1.13))(@types/react@19.1.13)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)(use-sync-external-store@1.5.0(react@19.1.1))(y-protocols@1.0.6(yjs@13.6.27))(yjs@13.6.27)(zod@3.25.76)
       typescript:
         specifier: ~5.8.3
         version: 5.8.3
@@ -440,10 +440,10 @@ importers:
         version: 0.44.5(@libsql/client@0.15.14(bufferutil@4.0.9))(@opentelemetry/api@1.9.0)(@types/pg@8.15.4)(@upstash/redis@1.35.3)(@vercel/postgres@0.10.0)(kysely@0.28.5)(pg@8.16.3)(postgres@3.4.7)
       drizzle-zod:
         specifier: ~0.8.3
-        version: 0.8.3(drizzle-orm@0.44.5(@libsql/client@0.15.14(bufferutil@4.0.9))(@opentelemetry/api@1.9.0)(@types/pg@8.15.4)(@upstash/redis@1.35.3)(@vercel/postgres@0.10.0)(kysely@0.28.5)(pg@8.16.3)(postgres@3.4.7))(zod@3.25.71)
+        version: 0.8.3(drizzle-orm@0.44.5(@libsql/client@0.15.14(bufferutil@4.0.9))(@opentelemetry/api@1.9.0)(@types/pg@8.15.4)(@upstash/redis@1.35.3)(@vercel/postgres@0.10.0)(kysely@0.28.5)(pg@8.16.3)(postgres@3.4.7))(zod@3.25.76)
       zod:
-        specifier: ~3.25.71
-        version: 3.25.71
+        specifier: ~3.25.76
+        version: 3.25.76
     devDependencies:
       '@acme/tsconfig':
         specifier: workspace:*
@@ -6745,8 +6745,8 @@ packages:
     peerDependencies:
       zod: ^3.24.1
 
-  zod@3.25.71:
-    resolution: {integrity: sha512-BsBc/NPk7h8WsUWYWYL+BajcJPY8YhjelaWu2NMLuzgraKAz4Lb4/6K11g9jpuDetjMiqhZ6YaexFLOC0Ogi3Q==}
+  zod@3.25.76:
+    resolution: {integrity: sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ==}
 
   zod@4.1.5:
     resolution: {integrity: sha512-rcUUZqlLJgBC33IT3PNMgsCq6TzLQEG/Ei/KTCU0PedSWRMAXoOUN+4t/0H+Q8bdnLPdqUYnvboJT0bn/229qg==}
@@ -6785,17 +6785,17 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@ai-sdk/gateway@1.0.27(zod@3.25.71)':
+  '@ai-sdk/gateway@1.0.27(zod@3.25.76)':
     dependencies:
       '@ai-sdk/provider': 2.0.0
-      '@ai-sdk/provider-utils': 3.0.9(zod@3.25.71)
-      zod: 3.25.71
+      '@ai-sdk/provider-utils': 3.0.9(zod@3.25.76)
+      zod: 3.25.76
 
-  '@ai-sdk/gateway@1.0.28(zod@3.25.71)':
+  '@ai-sdk/gateway@1.0.28(zod@3.25.76)':
     dependencies:
       '@ai-sdk/provider': 2.0.0
-      '@ai-sdk/provider-utils': 3.0.9(zod@3.25.71)
-      zod: 3.25.71
+      '@ai-sdk/provider-utils': 3.0.9(zod@3.25.76)
+      zod: 3.25.76
 
   '@ai-sdk/gateway@1.0.28(zod@4.1.5)':
     dependencies:
@@ -6803,45 +6803,45 @@ snapshots:
       '@ai-sdk/provider-utils': 3.0.9(zod@4.1.5)
       zod: 4.1.5
 
-  '@ai-sdk/gateway@1.0.7(zod@3.25.71)':
+  '@ai-sdk/gateway@1.0.7(zod@3.25.76)':
     dependencies:
       '@ai-sdk/provider': 2.0.0
-      '@ai-sdk/provider-utils': 3.0.3(zod@3.25.71)
-      zod: 3.25.71
+      '@ai-sdk/provider-utils': 3.0.3(zod@3.25.76)
+      zod: 3.25.76
 
-  '@ai-sdk/openai@1.3.24(zod@3.25.71)':
+  '@ai-sdk/openai@1.3.24(zod@3.25.76)':
     dependencies:
       '@ai-sdk/provider': 1.1.3
-      '@ai-sdk/provider-utils': 2.2.8(zod@3.25.71)
-      zod: 3.25.71
+      '@ai-sdk/provider-utils': 2.2.8(zod@3.25.76)
+      zod: 3.25.76
 
-  '@ai-sdk/openai@2.0.32(zod@3.25.71)':
+  '@ai-sdk/openai@2.0.32(zod@3.25.76)':
     dependencies:
       '@ai-sdk/provider': 2.0.0
-      '@ai-sdk/provider-utils': 3.0.9(zod@3.25.71)
-      zod: 3.25.71
+      '@ai-sdk/provider-utils': 3.0.9(zod@3.25.76)
+      zod: 3.25.76
 
-  '@ai-sdk/provider-utils@2.2.8(zod@3.25.71)':
+  '@ai-sdk/provider-utils@2.2.8(zod@3.25.76)':
     dependencies:
       '@ai-sdk/provider': 1.1.3
       nanoid: 3.3.11
       secure-json-parse: 2.7.0
-      zod: 3.25.71
+      zod: 3.25.76
 
-  '@ai-sdk/provider-utils@3.0.3(zod@3.25.71)':
+  '@ai-sdk/provider-utils@3.0.3(zod@3.25.76)':
     dependencies:
       '@ai-sdk/provider': 2.0.0
       '@standard-schema/spec': 1.0.0
       eventsource-parser: 3.0.6
-      zod: 3.25.71
-      zod-to-json-schema: 3.24.6(zod@3.25.71)
+      zod: 3.25.76
+      zod-to-json-schema: 3.24.6(zod@3.25.76)
 
-  '@ai-sdk/provider-utils@3.0.9(zod@3.25.71)':
+  '@ai-sdk/provider-utils@3.0.9(zod@3.25.76)':
     dependencies:
       '@ai-sdk/provider': 2.0.0
       '@standard-schema/spec': 1.0.0
       eventsource-parser: 3.0.6
-      zod: 3.25.71
+      zod: 3.25.76
 
   '@ai-sdk/provider-utils@3.0.9(zod@4.1.5)':
     dependencies:
@@ -6858,25 +6858,25 @@ snapshots:
     dependencies:
       json-schema: 0.4.0
 
-  '@ai-sdk/react@1.2.12(react@19.1.1)(zod@3.25.71)':
+  '@ai-sdk/react@1.2.12(react@19.1.1)(zod@3.25.76)':
     dependencies:
-      '@ai-sdk/provider-utils': 2.2.8(zod@3.25.71)
-      '@ai-sdk/ui-utils': 1.2.11(zod@3.25.71)
+      '@ai-sdk/provider-utils': 2.2.8(zod@3.25.76)
+      '@ai-sdk/ui-utils': 1.2.11(zod@3.25.76)
       react: 19.1.1
       swr: 2.3.4(react@19.1.1)
       throttleit: 2.1.0
     optionalDependencies:
-      zod: 3.25.71
+      zod: 3.25.76
 
-  '@ai-sdk/react@2.0.51(react@19.1.1)(zod@3.25.71)':
+  '@ai-sdk/react@2.0.51(react@19.1.1)(zod@3.25.76)':
     dependencies:
-      '@ai-sdk/provider-utils': 3.0.9(zod@3.25.71)
-      ai: 5.0.51(zod@3.25.71)
+      '@ai-sdk/provider-utils': 3.0.9(zod@3.25.76)
+      ai: 5.0.51(zod@3.25.76)
       react: 19.1.1
       swr: 2.3.4(react@19.1.1)
       throttleit: 2.1.0
     optionalDependencies:
-      zod: 3.25.71
+      zod: 3.25.76
 
   '@ai-sdk/react@2.0.51(react@19.1.1)(zod@4.1.5)':
     dependencies:
@@ -6888,12 +6888,12 @@ snapshots:
     optionalDependencies:
       zod: 4.1.5
 
-  '@ai-sdk/ui-utils@1.2.11(zod@3.25.71)':
+  '@ai-sdk/ui-utils@1.2.11(zod@3.25.76)':
     dependencies:
       '@ai-sdk/provider': 1.1.3
-      '@ai-sdk/provider-utils': 2.2.8(zod@3.25.71)
-      zod: 3.25.71
-      zod-to-json-schema: 3.24.6(zod@3.25.71)
+      '@ai-sdk/provider-utils': 2.2.8(zod@3.25.76)
+      zod: 3.25.76
+      zod-to-json-schema: 3.24.6(zod@3.25.76)
 
   '@alloc/quick-lru@5.2.0': {}
 
@@ -7178,7 +7178,7 @@ snapshots:
       - supports-color
       - utf-8-validate
 
-  '@blocknote/xl-ai@0.39.1(@floating-ui/dom@1.7.4)(@tiptap/extensions@3.4.4(@tiptap/core@3.4.4(@tiptap/pm@3.4.4))(@tiptap/pm@3.4.4))(@tiptap/pm@3.4.4)(@types/hast@3.0.4)(@types/react-dom@19.1.9(@types/react@19.1.13))(@types/react@19.1.13)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)(use-sync-external-store@1.5.0(react@19.1.1))(y-protocols@1.0.6(yjs@13.6.27))(yjs@13.6.27)(zod@3.25.71)':
+  '@blocknote/xl-ai@0.39.1(@floating-ui/dom@1.7.4)(@tiptap/extensions@3.4.4(@tiptap/core@3.4.4(@tiptap/pm@3.4.4))(@tiptap/pm@3.4.4))(@tiptap/pm@3.4.4)(@types/hast@3.0.4)(@types/react-dom@19.1.9(@types/react@19.1.13))(@types/react@19.1.13)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)(use-sync-external-store@1.5.0(react@19.1.1))(y-protocols@1.0.6(yjs@13.6.27))(yjs@13.6.27)(zod@3.25.76)':
     dependencies:
       '@blocknote/core': 0.39.1(@tiptap/extensions@3.4.4(@tiptap/core@3.4.4(@tiptap/pm@3.4.4))(@tiptap/pm@3.4.4))(@types/hast@3.0.4)
       '@blocknote/mantine': 0.39.1(@floating-ui/dom@1.7.4)(@tiptap/extensions@3.4.4(@tiptap/core@3.4.4(@tiptap/pm@3.4.4))(@tiptap/pm@3.4.4))(@types/hast@3.0.4)(@types/react-dom@19.1.9(@types/react@19.1.13))(@types/react@19.1.13)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
@@ -7186,7 +7186,7 @@ snapshots:
       '@blocknote/react': 0.39.1(@floating-ui/dom@1.7.4)(@tiptap/extensions@3.4.4(@tiptap/core@3.4.4(@tiptap/pm@3.4.4))(@tiptap/pm@3.4.4))(@types/hast@3.0.4)(@types/react-dom@19.1.9(@types/react@19.1.13))(@types/react@19.1.13)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
       '@floating-ui/react': 0.26.28(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
       '@tiptap/core': 3.4.4(@tiptap/pm@3.4.4)
-      ai: 4.3.19(react@19.1.1)(zod@3.25.71)
+      ai: 4.3.19(react@19.1.1)(zod@3.25.76)
       lodash.isequal: 4.5.0
       prosemirror-changeset: 2.3.1
       prosemirror-model: 1.25.3
@@ -7255,7 +7255,7 @@ snapshots:
       react: 19.1.1
       react-dom: 19.1.1(react@19.1.1)
 
-  '@daveyplate/better-auth-ui@3.2.5(1030396e4c16f20f38ec357b6584f7af)':
+  '@daveyplate/better-auth-ui@3.2.5(0c1060556cd110e62c737e4324360b55)':
     dependencies:
       '@better-fetch/fetch': 1.1.18
       '@daveyplate/better-auth-tanstack': 1.3.6(@tanstack/query-core@5.80.7)(@tanstack/react-query@5.80.7(react@19.1.1))(better-auth@1.3.9(react-dom@19.1.1(react@19.1.1))(react@19.1.1))(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
@@ -7297,7 +7297,7 @@ snapshots:
       tailwindcss: 4.1.13
       ua-parser-js: 2.0.5
       vaul: 1.1.2(@types/react-dom@19.1.9(@types/react@19.1.13))(@types/react@19.1.13)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
-      zod: 3.25.71
+      zod: 3.25.76
     transitivePeerDependencies:
       - '@types/react'
       - '@types/react-dom'
@@ -7766,15 +7766,15 @@ snapshots:
       react: 19.1.1
       react-dom: 19.1.1(react@19.1.1)
 
-  '@mastra/core@0.15.2(arktype@2.1.20)(openapi-types@12.1.3)(react@19.1.1)(valibot@1.0.0-beta.15(typescript@5.8.3))(zod@3.25.71)':
+  '@mastra/core@0.15.2(arktype@2.1.20)(openapi-types@12.1.3)(react@19.1.1)(valibot@1.0.0-beta.15(typescript@5.8.3))(zod@3.25.76)':
     dependencies:
       '@a2a-js/sdk': 0.2.5
       '@ai-sdk/provider': 1.1.3
-      '@ai-sdk/provider-utils': 2.2.8(zod@3.25.71)
-      '@ai-sdk/provider-utils-v5': '@ai-sdk/provider-utils@3.0.3(zod@3.25.71)'
+      '@ai-sdk/provider-utils': 2.2.8(zod@3.25.76)
+      '@ai-sdk/provider-utils-v5': '@ai-sdk/provider-utils@3.0.3(zod@3.25.76)'
       '@ai-sdk/provider-v5': '@ai-sdk/provider@2.0.0'
-      '@ai-sdk/ui-utils': 1.2.11(zod@3.25.71)
-      '@mastra/schema-compat': 0.11.1(ai@4.3.19(react@19.1.1)(zod@3.25.71))(zod@3.25.71)
+      '@ai-sdk/ui-utils': 1.2.11(zod@3.25.76)
+      '@mastra/schema-compat': 0.11.1(ai@4.3.19(react@19.1.1)(zod@3.25.76))(zod@3.25.76)
       '@opentelemetry/api': 1.9.0
       '@opentelemetry/auto-instrumentations-node': 0.62.1(@opentelemetry/api@1.9.0)(@opentelemetry/core@2.0.1(@opentelemetry/api@1.9.0))
       '@opentelemetry/core': 2.0.1(@opentelemetry/api@1.9.0)
@@ -7789,12 +7789,12 @@ snapshots:
       '@opentelemetry/sdk-trace-node': 2.0.1(@opentelemetry/api@1.9.0)
       '@opentelemetry/semantic-conventions': 1.36.0
       '@sindresorhus/slugify': 2.2.1
-      ai: 4.3.19(react@19.1.1)(zod@3.25.71)
-      ai-v5: ai@5.0.15(zod@3.25.71)
+      ai: 4.3.19(react@19.1.1)(zod@3.25.76)
+      ai-v5: ai@5.0.15(zod@3.25.76)
       date-fns: 3.6.0
       dotenv: 16.6.1
       hono: 4.9.5
-      hono-openapi: 0.4.8(arktype@2.1.20)(hono@4.9.5)(openapi-types@12.1.3)(valibot@1.0.0-beta.15(typescript@5.8.3))(zod@3.25.71)
+      hono-openapi: 0.4.8(arktype@2.1.20)(hono@4.9.5)(openapi-types@12.1.3)(valibot@1.0.0-beta.15(typescript@5.8.3))(zod@3.25.76)
       js-tiktoken: 1.0.20
       json-schema: 0.4.0
       json-schema-to-zod: 2.6.1
@@ -7804,8 +7804,8 @@ snapshots:
       radash: 12.1.1
       sift: 17.1.3
       xstate: 5.20.1
-      zod: 3.25.71
-      zod-to-json-schema: 3.24.6(zod@3.25.71)
+      zod: 3.25.76
+      zod-to-json-schema: 3.24.6(zod@3.25.76)
     transitivePeerDependencies:
       - '@hono/arktype-validator'
       - '@hono/effect-validator'
@@ -7823,27 +7823,27 @@ snapshots:
       - valibot
       - zod-openapi
 
-  '@mastra/libsql@0.13.7(@mastra/core@0.15.2(arktype@2.1.20)(openapi-types@12.1.3)(react@19.1.1)(valibot@1.0.0-beta.15(typescript@5.8.3))(zod@3.25.71))(bufferutil@4.0.9)':
+  '@mastra/libsql@0.13.7(@mastra/core@0.15.2(arktype@2.1.20)(openapi-types@12.1.3)(react@19.1.1)(valibot@1.0.0-beta.15(typescript@5.8.3))(zod@3.25.76))(bufferutil@4.0.9)':
     dependencies:
       '@libsql/client': 0.15.14(bufferutil@4.0.9)
-      '@mastra/core': 0.15.2(arktype@2.1.20)(openapi-types@12.1.3)(react@19.1.1)(valibot@1.0.0-beta.15(typescript@5.8.3))(zod@3.25.71)
+      '@mastra/core': 0.15.2(arktype@2.1.20)(openapi-types@12.1.3)(react@19.1.1)(valibot@1.0.0-beta.15(typescript@5.8.3))(zod@3.25.76)
     transitivePeerDependencies:
       - bufferutil
       - utf-8-validate
 
-  '@mastra/loggers@0.10.13(@mastra/core@0.15.2(arktype@2.1.20)(openapi-types@12.1.3)(react@19.1.1)(valibot@1.0.0-beta.15(typescript@5.8.3))(zod@3.25.71))':
+  '@mastra/loggers@0.10.13(@mastra/core@0.15.2(arktype@2.1.20)(openapi-types@12.1.3)(react@19.1.1)(valibot@1.0.0-beta.15(typescript@5.8.3))(zod@3.25.76))':
     dependencies:
-      '@mastra/core': 0.15.2(arktype@2.1.20)(openapi-types@12.1.3)(react@19.1.1)(valibot@1.0.0-beta.15(typescript@5.8.3))(zod@3.25.71)
+      '@mastra/core': 0.15.2(arktype@2.1.20)(openapi-types@12.1.3)(react@19.1.1)(valibot@1.0.0-beta.15(typescript@5.8.3))(zod@3.25.76)
       pino: 9.7.0
       pino-pretty: 13.0.0
 
-  '@mastra/memory@0.14.2(@mastra/core@0.15.2(arktype@2.1.20)(openapi-types@12.1.3)(react@19.1.1)(valibot@1.0.0-beta.15(typescript@5.8.3))(zod@3.25.71))(react@19.1.1)(zod@3.25.71)':
+  '@mastra/memory@0.14.2(@mastra/core@0.15.2(arktype@2.1.20)(openapi-types@12.1.3)(react@19.1.1)(valibot@1.0.0-beta.15(typescript@5.8.3))(zod@3.25.76))(react@19.1.1)(zod@3.25.76)':
     dependencies:
-      '@mastra/core': 0.15.2(arktype@2.1.20)(openapi-types@12.1.3)(react@19.1.1)(valibot@1.0.0-beta.15(typescript@5.8.3))(zod@3.25.71)
-      '@mastra/schema-compat': 0.11.1(ai@4.3.19(react@19.1.1)(zod@3.25.71))(zod@3.25.71)
+      '@mastra/core': 0.15.2(arktype@2.1.20)(openapi-types@12.1.3)(react@19.1.1)(valibot@1.0.0-beta.15(typescript@5.8.3))(zod@3.25.76)
+      '@mastra/schema-compat': 0.11.1(ai@4.3.19(react@19.1.1)(zod@3.25.76))(zod@3.25.76)
       '@upstash/redis': 1.35.3
-      ai: 4.3.19(react@19.1.1)(zod@3.25.71)
-      ai-v5: ai@5.0.15(zod@3.25.71)
+      ai: 4.3.19(react@19.1.1)(zod@3.25.76)
+      ai-v5: ai@5.0.15(zod@3.25.76)
       async-mutex: 0.5.0
       js-tiktoken: 1.0.20
       json-schema: 0.4.0
@@ -7852,34 +7852,34 @@ snapshots:
       postgres: 3.4.7
       redis: 5.8.2
       xxhash-wasm: 1.1.0
-      zod: 3.25.71
-      zod-to-json-schema: 3.24.6(zod@3.25.71)
+      zod: 3.25.76
+      zod-to-json-schema: 3.24.6(zod@3.25.76)
     transitivePeerDependencies:
       - pg-native
       - react
 
-  '@mastra/rag@1.2.2(@mastra/core@0.15.2(arktype@2.1.20)(openapi-types@12.1.3)(react@19.1.1)(valibot@1.0.0-beta.15(typescript@5.8.3))(zod@3.25.71))(ai@5.0.50(zod@3.25.71))(zod@3.25.71)':
+  '@mastra/rag@1.2.2(@mastra/core@0.15.2(arktype@2.1.20)(openapi-types@12.1.3)(react@19.1.1)(valibot@1.0.0-beta.15(typescript@5.8.3))(zod@3.25.76))(ai@5.0.50(zod@3.25.76))(zod@3.25.76)':
     dependencies:
-      '@mastra/core': 0.15.2(arktype@2.1.20)(openapi-types@12.1.3)(react@19.1.1)(valibot@1.0.0-beta.15(typescript@5.8.3))(zod@3.25.71)
+      '@mastra/core': 0.15.2(arktype@2.1.20)(openapi-types@12.1.3)(react@19.1.1)(valibot@1.0.0-beta.15(typescript@5.8.3))(zod@3.25.76)
       '@paralleldrive/cuid2': 2.2.2
-      ai: 5.0.50(zod@3.25.71)
+      ai: 5.0.50(zod@3.25.76)
       big.js: 7.0.1
       js-tiktoken: 1.0.20
       node-html-better-parser: 1.5.3
       pathe: 2.0.3
       zeroentropy: 0.1.0-alpha.6
-      zod: 3.25.71
+      zod: 3.25.76
     transitivePeerDependencies:
       - encoding
 
-  '@mastra/schema-compat@0.11.1(ai@4.3.19(react@19.1.1)(zod@3.25.71))(zod@3.25.71)':
+  '@mastra/schema-compat@0.11.1(ai@4.3.19(react@19.1.1)(zod@3.25.76))(zod@3.25.76)':
     dependencies:
-      ai: 4.3.19(react@19.1.1)(zod@3.25.71)
+      ai: 4.3.19(react@19.1.1)(zod@3.25.76)
       json-schema: 0.4.0
-      zod: 3.25.71
+      zod: 3.25.76
       zod-from-json-schema: 0.5.0
       zod-from-json-schema-v3: zod-from-json-schema@0.0.5
-      zod-to-json-schema: 3.24.6(zod@3.25.71)
+      zod-to-json-schema: 3.24.6(zod@3.25.76)
 
   '@neon-rs/load@0.0.4': {}
 
@@ -9723,21 +9723,21 @@ snapshots:
     dependencies:
       tslib: 2.8.1
 
-  '@t3-oss/env-core@0.13.8(arktype@2.1.20)(typescript@5.8.3)(valibot@1.0.0-beta.15(typescript@5.8.3))(zod@3.25.71)':
+  '@t3-oss/env-core@0.13.8(arktype@2.1.20)(typescript@5.8.3)(valibot@1.0.0-beta.15(typescript@5.8.3))(zod@3.25.76)':
     optionalDependencies:
       arktype: 2.1.20
       typescript: 5.8.3
       valibot: 1.0.0-beta.15(typescript@5.8.3)
-      zod: 3.25.71
+      zod: 3.25.76
 
-  '@t3-oss/env-nextjs@0.13.8(arktype@2.1.20)(typescript@5.8.3)(valibot@1.0.0-beta.15(typescript@5.8.3))(zod@3.25.71)':
+  '@t3-oss/env-nextjs@0.13.8(arktype@2.1.20)(typescript@5.8.3)(valibot@1.0.0-beta.15(typescript@5.8.3))(zod@3.25.76)':
     dependencies:
-      '@t3-oss/env-core': 0.13.8(arktype@2.1.20)(typescript@5.8.3)(valibot@1.0.0-beta.15(typescript@5.8.3))(zod@3.25.71)
+      '@t3-oss/env-core': 0.13.8(arktype@2.1.20)(typescript@5.8.3)(valibot@1.0.0-beta.15(typescript@5.8.3))(zod@3.25.76)
     optionalDependencies:
       arktype: 2.1.20
       typescript: 5.8.3
       valibot: 1.0.0-beta.15(typescript@5.8.3)
-      zod: 3.25.71
+      zod: 3.25.76
 
   '@tailwindcss/node@4.1.13':
     dependencies:
@@ -10287,41 +10287,41 @@ snapshots:
       clean-stack: 2.2.0
       indent-string: 4.0.0
 
-  ai@4.3.19(react@19.1.1)(zod@3.25.71):
+  ai@4.3.19(react@19.1.1)(zod@3.25.76):
     dependencies:
       '@ai-sdk/provider': 1.1.3
-      '@ai-sdk/provider-utils': 2.2.8(zod@3.25.71)
-      '@ai-sdk/react': 1.2.12(react@19.1.1)(zod@3.25.71)
-      '@ai-sdk/ui-utils': 1.2.11(zod@3.25.71)
+      '@ai-sdk/provider-utils': 2.2.8(zod@3.25.76)
+      '@ai-sdk/react': 1.2.12(react@19.1.1)(zod@3.25.76)
+      '@ai-sdk/ui-utils': 1.2.11(zod@3.25.76)
       '@opentelemetry/api': 1.9.0
       jsondiffpatch: 0.6.0
-      zod: 3.25.71
+      zod: 3.25.76
     optionalDependencies:
       react: 19.1.1
 
-  ai@5.0.15(zod@3.25.71):
+  ai@5.0.15(zod@3.25.76):
     dependencies:
-      '@ai-sdk/gateway': 1.0.7(zod@3.25.71)
+      '@ai-sdk/gateway': 1.0.7(zod@3.25.76)
       '@ai-sdk/provider': 2.0.0
-      '@ai-sdk/provider-utils': 3.0.3(zod@3.25.71)
+      '@ai-sdk/provider-utils': 3.0.3(zod@3.25.76)
       '@opentelemetry/api': 1.9.0
-      zod: 3.25.71
+      zod: 3.25.76
 
-  ai@5.0.50(zod@3.25.71):
+  ai@5.0.50(zod@3.25.76):
     dependencies:
-      '@ai-sdk/gateway': 1.0.27(zod@3.25.71)
+      '@ai-sdk/gateway': 1.0.27(zod@3.25.76)
       '@ai-sdk/provider': 2.0.0
-      '@ai-sdk/provider-utils': 3.0.9(zod@3.25.71)
+      '@ai-sdk/provider-utils': 3.0.9(zod@3.25.76)
       '@opentelemetry/api': 1.9.0
-      zod: 3.25.71
+      zod: 3.25.76
 
-  ai@5.0.51(zod@3.25.71):
+  ai@5.0.51(zod@3.25.76):
     dependencies:
-      '@ai-sdk/gateway': 1.0.28(zod@3.25.71)
+      '@ai-sdk/gateway': 1.0.28(zod@3.25.76)
       '@ai-sdk/provider': 2.0.0
-      '@ai-sdk/provider-utils': 3.0.9(zod@3.25.71)
+      '@ai-sdk/provider-utils': 3.0.9(zod@3.25.76)
       '@opentelemetry/api': 1.9.0
-      zod: 3.25.71
+      zod: 3.25.76
 
   ai@5.0.51(zod@4.1.5):
     dependencies:
@@ -10852,10 +10852,10 @@ snapshots:
       pg: 8.16.3
       postgres: 3.4.7
 
-  drizzle-zod@0.8.3(drizzle-orm@0.44.5(@libsql/client@0.15.14(bufferutil@4.0.9))(@opentelemetry/api@1.9.0)(@types/pg@8.15.4)(@upstash/redis@1.35.3)(@vercel/postgres@0.10.0)(kysely@0.28.5)(pg@8.16.3)(postgres@3.4.7))(zod@3.25.71):
+  drizzle-zod@0.8.3(drizzle-orm@0.44.5(@libsql/client@0.15.14(bufferutil@4.0.9))(@opentelemetry/api@1.9.0)(@types/pg@8.15.4)(@upstash/redis@1.35.3)(@vercel/postgres@0.10.0)(kysely@0.28.5)(pg@8.16.3)(postgres@3.4.7))(zod@3.25.76):
     dependencies:
       drizzle-orm: 0.44.5(@libsql/client@0.15.14(bufferutil@4.0.9))(@opentelemetry/api@1.9.0)(@types/pg@8.15.4)(@upstash/redis@1.35.3)(@vercel/postgres@0.10.0)(kysely@0.28.5)(pg@8.16.3)(postgres@3.4.7)
-      zod: 3.25.71
+      zod: 3.25.76
 
   dunder-proto@1.0.1:
     dependencies:
@@ -11465,7 +11465,7 @@ snapshots:
     dependencies:
       react-is: 16.13.1
 
-  hono-openapi@0.4.8(arktype@2.1.20)(hono@4.9.5)(openapi-types@12.1.3)(valibot@1.0.0-beta.15(typescript@5.8.3))(zod@3.25.71):
+  hono-openapi@0.4.8(arktype@2.1.20)(hono@4.9.5)(openapi-types@12.1.3)(valibot@1.0.0-beta.15(typescript@5.8.3))(zod@3.25.76):
     dependencies:
       json-schema-walker: 2.0.0
       openapi-types: 12.1.3
@@ -11473,7 +11473,7 @@ snapshots:
       arktype: 2.1.20
       hono: 4.9.5
       valibot: 1.0.0-beta.15(typescript@5.8.3)
-      zod: 3.25.71
+      zod: 3.25.76
 
   hono@4.9.5: {}
 
@@ -13915,17 +13915,17 @@ snapshots:
 
   zod-from-json-schema@0.0.5:
     dependencies:
-      zod: 3.25.71
+      zod: 3.25.76
 
   zod-from-json-schema@0.5.0:
     dependencies:
       zod: 4.1.5
 
-  zod-to-json-schema@3.24.6(zod@3.25.71):
+  zod-to-json-schema@3.24.6(zod@3.25.76):
     dependencies:
-      zod: 3.25.71
+      zod: 3.25.76
 
-  zod@3.25.71: {}
+  zod@3.25.76: {}
 
   zod@4.1.5: {}
 

@@ -13,6 +13,6 @@
     "@acme/tsconfig": "workspace:*",
     "@t3-oss/env-nextjs": "~0.13.8",
     "dotenv-cli": "~8.0.0",
-    "zod": "~3.25.71"
+    "zod": "~3.25.76"
   }
 }

@@ -13,11 +13,15 @@ export function BetterAuthProvider({ children, Link }: AuthProviderProps) {
   const router = useRouter();
   return (
     <AuthUIProvider
-      settings
+      /* `basePath` is the path for the auth views */
+      basePath="/auth"
+      /* `account` is the path for the account views */
+      account
+      /* `organization` is the path for the organization views */
       organization={false}
       credentials={false}
       social={{
-        providers: ["google", "discord", "github"],
+        providers: ["google", "github"],
       }}
       authClient={authClient}
       navigate={router.push}

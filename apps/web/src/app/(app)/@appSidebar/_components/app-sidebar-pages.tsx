@@ -3,7 +3,6 @@
 import type { Page } from "@acme/db/schema";
 import { useQuery } from "@tanstack/react-query";
 import { BookOpen, ChevronRight } from "lucide-react";
-import { usePathname } from "next/navigation";
 import { useState } from "react";
 import {
   Collapsible,
@@ -20,20 +19,22 @@ import { AppSidebarPageItem } from "./app-sidebar-page-item";
 import { CreatePageButton } from "./create-page-button";
 
 type AppSidebarPagesProps = {
-  pages: Page[];
+  initialPages: Page[];
+  defaultOpen?: boolean;
 };
 
-export const AppSidebarPages = (props: AppSidebarPagesProps) => {
+export const AppSidebarPages = ({
+  initialPages,
+  defaultOpen = true,
+}: AppSidebarPagesProps) => {
   const trpc = useTRPC();
-  const pathname = usePathname();
   const { state, setOpen } = useSidebar();
 
   const { data: pages } = useQuery({
     ...trpc.pages.getByUser.queryOptions(),
-    initialData: props.pages,
+    initialData: initialPages,
   });
 
-  const defaultOpen = pathname.includes("/pages/");
   const [isOpen, setIsOpen] = useState(defaultOpen);
 
   const handlePagesClick = (e: React.MouseEvent) => {

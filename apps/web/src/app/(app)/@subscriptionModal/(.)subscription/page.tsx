@@ -6,9 +6,9 @@ import {
 } from "~/components/ui/dialog";
 import { api } from "~/trpc/server";
 import { SubscriptionView } from "../../../(dashboard)/subscription/_components/subscription-view";
-import { SubscriptionModal } from "./_components/subscription-modal";
+import { SubscriptionModal } from "../_components/subscription-modal";
 
-export default async function SubscriptionBillingModalPage() {
+export default async function SubscriptionModalPage() {
   const subscription = await api.subscription.getSubscription();
   if (!subscription) {
     return redirect("/journal");

@@ -15,7 +15,6 @@
   "devDependencies": {
     "@acme/db": "workspace:*",
     "@acme/tsconfig": "workspace:*",
-    "@biomejs/biome": "~2.0.6",
     "@types/express": "~5.0.3",
     "@types/localtunnel": "~2.0.4",
     "@types/node": "~22.15.29",

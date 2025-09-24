@@ -20,7 +20,7 @@
     "@acme/db": "workspace:*",
     "@ai-sdk/openai": "~2.0.32",
     "@ai-sdk/provider-utils": "~3.0.9",
-    "@ai-sdk/react": "2.0.51",
+    "@ai-sdk/react": "~2.0.51",
     "@assistant-ui/react": "~0.11.16",
     "@assistant-ui/react-ai-sdk": "~1.1.0",
     "@assistant-ui/react-markdown": "~0.11.0",
@@ -82,7 +82,6 @@
   },
   "devDependencies": {
     "@acme/tsconfig": "workspace:*",
-    "@biomejs/biome": "~2.0.6",
     "@tailwindcss/postcss": "~4.1.13",
     "@types/node": "~22.15.29",
     "@types/react": "~19.1.13",

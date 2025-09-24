@@ -47,8 +47,8 @@ The rest of the components are set by the Tailwind CSS classes, or by our editor
 
 /* Tanstack Query Devtools */
 .tsqd-main-panel {
-  background: transparent !important;
+  background: transparent;
 }
 .tsqd-queries-container {
-  border-radius: 1rem !important;
+  border-radius: 1rem;
 }

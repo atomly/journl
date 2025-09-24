@@ -158,7 +158,7 @@ function CarouselItem({ className, ...props }: React.ComponentProps<"div">) {
 
   return (
     <div
-      role="group"
+      role="presentation"
       aria-roledescription="slide"
       data-slot="carousel-item"
       className={cn(

@@ -150,8 +150,8 @@ importers:
         specifier: ~0.14.2
         version: 0.14.2(@mastra/core@0.15.2(arktype@2.1.20)(openapi-types@12.1.3)(react@19.1.1)(valibot@1.0.0-beta.15(typescript@5.9.2))(zod@3.25.76))(react@19.1.1)(zod@3.25.76)
       '@mastra/rag':
-        specifier: ~1.2.2
-        version: 1.2.2(@mastra/core@0.15.2(arktype@2.1.20)(openapi-types@12.1.3)(react@19.1.1)(valibot@1.0.0-beta.15(typescript@5.9.2))(zod@3.25.76))(ai@5.0.50(zod@3.25.76))(zod@3.25.76)
+        specifier: ~1.2.6
+        version: 1.2.6(@mastra/core@0.15.2(arktype@2.1.20)(openapi-types@12.1.3)(react@19.1.1)(valibot@1.0.0-beta.15(typescript@5.9.2))(zod@3.25.76))(ai@5.0.50(zod@3.25.76))(zod@3.25.76)
       '@radix-ui/react-avatar':
         specifier: ~1.1.10
         version: 1.1.10(@types/react-dom@19.1.9(@types/react@19.1.13))(@types/react@19.1.13)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
@@ -1456,10 +1456,10 @@ packages:
       '@mastra/core': '>=0.15.2-0 <0.16.0-0'
       zod: ^3.25.0 || ^4.0.0
 
-  '@mastra/rag@1.2.2':
-    resolution: {integrity: sha512-T17jeLRiu/BI2hQ3qUuRrKBVYqWt2jj29J2djszaTzeD3r/JNf6tyhJLtGE2SRcVvRMXFpPdpKuoAU9KFIxH8g==}
+  '@mastra/rag@1.2.6':
+    resolution: {integrity: sha512-ePkh93eRTs5qn4WJ9WpxWZPTpqtyLNTS85NqiX764zKLGbb4mGz4yIRfyZOTx+QYhjpMMLBgnGhnnQXF8jnPYA==}
     peerDependencies:
-      '@mastra/core': '>=0.15.2-0 <0.16.0-0'
+      '@mastra/core': '>=0.15.3-0 <0.19.0-0'
       ai: ^4.0.0 || ^5.0.0
       zod: ^3.25.0 || ^4.0.0
 
@@ -5266,8 +5266,8 @@ packages:
     resolution: {integrity: sha512-LA4ZjwlnUblHVgq0oBF3Jl/6h/Nvs5fzBLwdEF4nuxnFdsfajde4WfxtJr3CaiH+F6ewcIB/q4jQ4UzPyid+CQ==}
     hasBin: true
 
-  node-html-better-parser@1.5.3:
-    resolution: {integrity: sha512-rvnbT4FUS+pIQPAs3bBpzeuWdgdjne0LsgrEINdsMfAvjAKHTEGVhknMEqBriGuVRWM8iRL1LKhRhZ9RB6gPVA==}
+  node-html-better-parser@1.5.8:
+    resolution: {integrity: sha512-t/wAKvaTSKco43X+yf9+76RiMt18MtMmzd4wc7rKj+fWav6DV4ajDEKdWlLzSE8USDF5zr/06uGj0Wr/dGAFtw==}
 
   node-plop@0.26.3:
     resolution: {integrity: sha512-Cov028YhBZ5aB7MdMWJEmwyBig43aGL5WT4vdoB28Oitau1zZAcHUn8Sgfk9HM33TqhtLJ9PlM/O0Mv+QpV/4Q==}
@@ -7773,14 +7773,14 @@ snapshots:
       - pg-native
       - react
 
-  '@mastra/rag@1.2.2(@mastra/core@0.15.2(arktype@2.1.20)(openapi-types@12.1.3)(react@19.1.1)(valibot@1.0.0-beta.15(typescript@5.9.2))(zod@3.25.76))(ai@5.0.50(zod@3.25.76))(zod@3.25.76)':
+  '@mastra/rag@1.2.6(@mastra/core@0.15.2(arktype@2.1.20)(openapi-types@12.1.3)(react@19.1.1)(valibot@1.0.0-beta.15(typescript@5.9.2))(zod@3.25.76))(ai@5.0.50(zod@3.25.76))(zod@3.25.76)':
     dependencies:
       '@mastra/core': 0.15.2(arktype@2.1.20)(openapi-types@12.1.3)(react@19.1.1)(valibot@1.0.0-beta.15(typescript@5.9.2))(zod@3.25.76)
       '@paralleldrive/cuid2': 2.2.2
       ai: 5.0.50(zod@3.25.76)
       big.js: 7.0.1
       js-tiktoken: 1.0.20
-      node-html-better-parser: 1.5.3
+      node-html-better-parser: 1.5.8
       pathe: 2.0.3
       zeroentropy: 0.1.0-alpha.6
       zod: 3.25.76
@@ -12161,7 +12161,7 @@ snapshots:
 
   node-gyp-build@4.8.4: {}
 
-  node-html-better-parser@1.5.3:
+  node-html-better-parser@1.5.8:
     dependencies:
       html-entities: 2.6.0
 

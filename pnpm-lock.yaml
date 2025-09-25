@@ -138,20 +138,20 @@ importers:
         specifier: ~8.1.3
         version: 8.1.3(@mantine/hooks@7.17.8(react@19.1.1))(@types/react@19.1.13)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
       '@mastra/core':
-        specifier: ~0.15.2
-        version: 0.15.2(arktype@2.1.20)(openapi-types@12.1.3)(react@19.1.1)(valibot@1.0.0-beta.15(typescript@5.9.2))(zod@3.25.76)
+        specifier: ~0.18.0
+        version: 0.18.0(arktype@2.1.20)(openapi-types@12.1.3)(react@19.1.1)(valibot@1.0.0-beta.15(typescript@5.9.2))(zod@3.25.76)
       '@mastra/libsql':
         specifier: ~0.13.7
-        version: 0.13.7(@mastra/core@0.15.2(arktype@2.1.20)(openapi-types@12.1.3)(react@19.1.1)(valibot@1.0.0-beta.15(typescript@5.9.2))(zod@3.25.76))(bufferutil@4.0.9)
+        version: 0.13.7(@mastra/core@0.18.0(arktype@2.1.20)(openapi-types@12.1.3)(react@19.1.1)(valibot@1.0.0-beta.15(typescript@5.9.2))(zod@3.25.76))(bufferutil@4.0.9)
       '@mastra/loggers':
         specifier: ~0.10.13
-        version: 0.10.13(@mastra/core@0.15.2(arktype@2.1.20)(openapi-types@12.1.3)(react@19.1.1)(valibot@1.0.0-beta.15(typescript@5.9.2))(zod@3.25.76))
+        version: 0.10.13(@mastra/core@0.18.0(arktype@2.1.20)(openapi-types@12.1.3)(react@19.1.1)(valibot@1.0.0-beta.15(typescript@5.9.2))(zod@3.25.76))
       '@mastra/memory':
         specifier: ~0.14.2
-        version: 0.14.2(@mastra/core@0.15.2(arktype@2.1.20)(openapi-types@12.1.3)(react@19.1.1)(valibot@1.0.0-beta.15(typescript@5.9.2))(zod@3.25.76))(react@19.1.1)(zod@3.25.76)
+        version: 0.14.2(@mastra/core@0.18.0(arktype@2.1.20)(openapi-types@12.1.3)(react@19.1.1)(valibot@1.0.0-beta.15(typescript@5.9.2))(zod@3.25.76))(react@19.1.1)(zod@3.25.76)
       '@mastra/rag':
         specifier: ~1.2.2
-        version: 1.2.2(@mastra/core@0.15.2(arktype@2.1.20)(openapi-types@12.1.3)(react@19.1.1)(valibot@1.0.0-beta.15(typescript@5.9.2))(zod@3.25.76))(ai@5.0.50(zod@3.25.76))(zod@3.25.76)
+        version: 1.2.2(@mastra/core@0.18.0(arktype@2.1.20)(openapi-types@12.1.3)(react@19.1.1)(valibot@1.0.0-beta.15(typescript@5.9.2))(zod@3.25.76))(ai@5.0.50(zod@3.25.76))(zod@3.25.76)
       '@radix-ui/react-avatar':
         specifier: ~1.1.10
         version: 1.1.10(@types/react-dom@19.1.9(@types/react@19.1.13))(@types/react@19.1.13)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
@@ -470,6 +470,12 @@ packages:
   '@a2a-js/sdk@0.2.5':
     resolution: {integrity: sha512-VTDuRS5V0ATbJ/LkaQlisMnTAeYKXAK6scMguVBstf+KIBQ7HIuKhiXLv+G/hvejkV+THoXzoNifInAkU81P1g==}
     engines: {node: '>=18'}
+
+  '@ai-sdk/gateway@1.0.23':
+    resolution: {integrity: sha512-ynV7WxpRK2zWLGkdOtrU2hW22mBVkEYVS3iMg1+ZGmAYSgzCqzC74bfOJZ2GU1UdcrFWUsFI9qAYjsPkd+AebA==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      zod: ^3.25.76 || ^4
 
   '@ai-sdk/gateway@1.0.27':
     resolution: {integrity: sha512-E7CGv/6qoiu618XSiNirR2LxOlP88RE7yhoHZa57+niMNuJN7syqROwVNKYhBqUfbGKt0D9KXcTsNad4g8x3xg==}
@@ -1315,6 +1321,10 @@ packages:
     resolution: {integrity: sha512-wgm9Ehl2jpeqP3zw/7mo3kRHFp5MEDhqAdwy1fTGkHAwnkGOVsgpvQhL8B5n1qlb01jV3n/bI0ZfZp5lWA1k4w==}
     engines: {node: '>=18.0.0'}
 
+  '@isaacs/ttlcache@1.4.1':
+    resolution: {integrity: sha512-RQgQ4uQ+pLbqXfOmieB91ejmLwvSgv9nLx6sT6sD83s7umBypgg+OIBOBbEUiJXrfpnp9j0mRhYYdzp9uqq3lA==}
+    engines: {node: '>=12'}
+
   '@jridgewell/gen-mapping@0.3.12':
     resolution: {integrity: sha512-OuLGC46TjB5BbN1dH8JULVVZY4WTdkF7tV9Ys6wLL1rubZnCMstOhNHueU5bLCrnRuDhKPDM4g6sw4Bel5Gzqg==}
 
@@ -1434,8 +1444,8 @@ packages:
       react: ^17.0.2 || ^18.0.0 || ^19.0
       react-dom: ^17.0.2 || ^18.0.0 || ^19.0
 
-  '@mastra/core@0.15.2':
-    resolution: {integrity: sha512-9VKaSrbEBQKzeHSIwY2PTbxfsBTfm26FLhhSGYRqAiedyileKEF6Rj8WKEePJC0mxoDqjBzCs4wwNsMUDiE2Pw==}
+  '@mastra/core@0.18.0':
+    resolution: {integrity: sha512-MRvrsGeRYkO4SvEv8PSuNpS8FSM2HtYxsTGkkQcKVRESnQo/MAGBi5flhK4Jbd5wNqSH4ffm3kPiNG6M4CRXvA==}
     engines: {node: '>=20'}
     peerDependencies:
       zod: ^3.25.0 || ^4.0.0
@@ -1465,6 +1475,12 @@ packages:
 
   '@mastra/schema-compat@0.11.1':
     resolution: {integrity: sha512-CUo93j7LXXziMaGG6GRQC5t/jWSGEMcb+V+dODvUjmiAm3LcqPJ8f7A6h3lnBxxdSh66fbv2ZW4G2lrBI+cyzg==}
+    peerDependencies:
+      ai: ^4.0.0 || ^5.0.0
+      zod: ^3.25.0 || ^4.0.0
+
+  '@mastra/schema-compat@0.11.4':
+    resolution: {integrity: sha512-oh3+enP3oYftZlmJAKQQj5VXR86KgTMwfMnwALZyLk04dPSWfVD2wGytoDg5Qbi3rX9qHj6g0rMNa0CUjR6aTg==}
     peerDependencies:
       ai: ^4.0.0 || ^5.0.0
       zod: ^3.25.0 || ^4.0.0
@@ -3474,6 +3490,12 @@ packages:
     peerDependencies:
       zod: ^3.25.76 || ^4
 
+  ai@5.0.44:
+    resolution: {integrity: sha512-l/rdoM4LcRpsRBVvZQBwSU73oNoFGlWj+PcH86QRzxDGJgZqgGItWO0QcKjBNcLDmUjGN1VYd/8J0TAXHJleRQ==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      zod: ^3.25.76 || ^4
+
   ai@5.0.50:
     resolution: {integrity: sha512-lMc54jrFI7RiwVZ2wHIb+jIUhbyMt8TtAD71vkcCwl67UjqVCp7i6dqJeunc+i6iSMTQr72kvg3YYCrFm/PAyw==}
     engines: {node: '>=18'}
@@ -4535,8 +4557,8 @@ packages:
       zod-openapi:
         optional: true
 
-  hono@4.9.5:
-    resolution: {integrity: sha512-aLAVl5/67ifNnoFVxnhR89dpmSLsgwBprw/PT671ASwUpJqmd7Ne8KPTQo37DbRZfgpHaHeZ4bPVUvbOkeedMw==}
+  hono@4.9.8:
+    resolution: {integrity: sha512-JW8Bb4RFWD9iOKxg5PbUarBYGM99IcxFl2FPBo2gSJO11jjUDqlP1Bmfyqt8Z/dGhIQ63PMA9LdcLefXyIasyg==}
     engines: {node: '>=16.9.0'}
 
   html-encoding-sniffer@4.0.0:
@@ -6694,6 +6716,12 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
+  '@ai-sdk/gateway@1.0.23(zod@3.25.76)':
+    dependencies:
+      '@ai-sdk/provider': 2.0.0
+      '@ai-sdk/provider-utils': 3.0.9(zod@3.25.76)
+      zod: 3.25.76
+
   '@ai-sdk/gateway@1.0.27(zod@3.25.76)':
     dependencies:
       '@ai-sdk/provider': 2.0.0
@@ -7548,6 +7576,8 @@ snapshots:
     dependencies:
       minipass: 7.1.2
 
+  '@isaacs/ttlcache@1.4.1': {}
+
   '@jridgewell/gen-mapping@0.3.12':
     dependencies:
       '@jridgewell/sourcemap-codec': 1.5.5
@@ -7681,15 +7711,16 @@ snapshots:
       react: 19.1.1
       react-dom: 19.1.1(react@19.1.1)
 
-  '@mastra/core@0.15.2(arktype@2.1.20)(openapi-types@12.1.3)(react@19.1.1)(valibot@1.0.0-beta.15(typescript@5.9.2))(zod@3.25.76)':
+  '@mastra/core@0.18.0(arktype@2.1.20)(openapi-types@12.1.3)(react@19.1.1)(valibot@1.0.0-beta.15(typescript@5.9.2))(zod@3.25.76)':
     dependencies:
       '@a2a-js/sdk': 0.2.5
       '@ai-sdk/provider': 1.1.3
       '@ai-sdk/provider-utils': 2.2.8(zod@3.25.76)
-      '@ai-sdk/provider-utils-v5': '@ai-sdk/provider-utils@3.0.3(zod@3.25.76)'
+      '@ai-sdk/provider-utils-v5': '@ai-sdk/provider-utils@3.0.9(zod@3.25.76)'
       '@ai-sdk/provider-v5': '@ai-sdk/provider@2.0.0'
       '@ai-sdk/ui-utils': 1.2.11(zod@3.25.76)
-      '@mastra/schema-compat': 0.11.1(ai@4.3.19(react@19.1.1)(zod@3.25.76))(zod@3.25.76)
+      '@isaacs/ttlcache': 1.4.1
+      '@mastra/schema-compat': 0.11.4(ai@4.3.19(react@19.1.1)(zod@3.25.76))(zod@3.25.76)
       '@opentelemetry/api': 1.9.0
       '@opentelemetry/auto-instrumentations-node': 0.62.1(@opentelemetry/api@1.9.0)(@opentelemetry/core@2.0.1(@opentelemetry/api@1.9.0))
       '@opentelemetry/core': 2.0.1(@opentelemetry/api@1.9.0)
@@ -7705,11 +7736,11 @@ snapshots:
       '@opentelemetry/semantic-conventions': 1.36.0
       '@sindresorhus/slugify': 2.2.1
       ai: 4.3.19(react@19.1.1)(zod@3.25.76)
-      ai-v5: ai@5.0.15(zod@3.25.76)
+      ai-v5: ai@5.0.44(zod@3.25.76)
       date-fns: 3.6.0
       dotenv: 16.6.1
-      hono: 4.9.5
-      hono-openapi: 0.4.8(arktype@2.1.20)(hono@4.9.5)(openapi-types@12.1.3)(valibot@1.0.0-beta.15(typescript@5.9.2))(zod@3.25.76)
+      hono: 4.9.8
+      hono-openapi: 0.4.8(arktype@2.1.20)(hono@4.9.8)(openapi-types@12.1.3)(valibot@1.0.0-beta.15(typescript@5.9.2))(zod@3.25.76)
       js-tiktoken: 1.0.20
       json-schema: 0.4.0
       json-schema-to-zod: 2.6.1
@@ -7738,23 +7769,23 @@ snapshots:
       - valibot
       - zod-openapi
 
-  '@mastra/libsql@0.13.7(@mastra/core@0.15.2(arktype@2.1.20)(openapi-types@12.1.3)(react@19.1.1)(valibot@1.0.0-beta.15(typescript@5.9.2))(zod@3.25.76))(bufferutil@4.0.9)':
+  '@mastra/libsql@0.13.7(@mastra/core@0.18.0(arktype@2.1.20)(openapi-types@12.1.3)(react@19.1.1)(valibot@1.0.0-beta.15(typescript@5.9.2))(zod@3.25.76))(bufferutil@4.0.9)':
     dependencies:
       '@libsql/client': 0.15.14(bufferutil@4.0.9)
-      '@mastra/core': 0.15.2(arktype@2.1.20)(openapi-types@12.1.3)(react@19.1.1)(valibot@1.0.0-beta.15(typescript@5.9.2))(zod@3.25.76)
+      '@mastra/core': 0.18.0(arktype@2.1.20)(openapi-types@12.1.3)(react@19.1.1)(valibot@1.0.0-beta.15(typescript@5.9.2))(zod@3.25.76)
     transitivePeerDependencies:
       - bufferutil
       - utf-8-validate
 
-  '@mastra/loggers@0.10.13(@mastra/core@0.15.2(arktype@2.1.20)(openapi-types@12.1.3)(react@19.1.1)(valibot@1.0.0-beta.15(typescript@5.9.2))(zod@3.25.76))':
+  '@mastra/loggers@0.10.13(@mastra/core@0.18.0(arktype@2.1.20)(openapi-types@12.1.3)(react@19.1.1)(valibot@1.0.0-beta.15(typescript@5.9.2))(zod@3.25.76))':
     dependencies:
-      '@mastra/core': 0.15.2(arktype@2.1.20)(openapi-types@12.1.3)(react@19.1.1)(valibot@1.0.0-beta.15(typescript@5.9.2))(zod@3.25.76)
+      '@mastra/core': 0.18.0(arktype@2.1.20)(openapi-types@12.1.3)(react@19.1.1)(valibot@1.0.0-beta.15(typescript@5.9.2))(zod@3.25.76)
       pino: 9.7.0
       pino-pretty: 13.0.0
 
-  '@mastra/memory@0.14.2(@mastra/core@0.15.2(arktype@2.1.20)(openapi-types@12.1.3)(react@19.1.1)(valibot@1.0.0-beta.15(typescript@5.9.2))(zod@3.25.76))(react@19.1.1)(zod@3.25.76)':
+  '@mastra/memory@0.14.2(@mastra/core@0.18.0(arktype@2.1.20)(openapi-types@12.1.3)(react@19.1.1)(valibot@1.0.0-beta.15(typescript@5.9.2))(zod@3.25.76))(react@19.1.1)(zod@3.25.76)':
     dependencies:
-      '@mastra/core': 0.15.2(arktype@2.1.20)(openapi-types@12.1.3)(react@19.1.1)(valibot@1.0.0-beta.15(typescript@5.9.2))(zod@3.25.76)
+      '@mastra/core': 0.18.0(arktype@2.1.20)(openapi-types@12.1.3)(react@19.1.1)(valibot@1.0.0-beta.15(typescript@5.9.2))(zod@3.25.76)
       '@mastra/schema-compat': 0.11.1(ai@4.3.19(react@19.1.1)(zod@3.25.76))(zod@3.25.76)
       '@upstash/redis': 1.35.3
       ai: 4.3.19(react@19.1.1)(zod@3.25.76)
@@ -7773,9 +7804,9 @@ snapshots:
       - pg-native
       - react
 
-  '@mastra/rag@1.2.2(@mastra/core@0.15.2(arktype@2.1.20)(openapi-types@12.1.3)(react@19.1.1)(valibot@1.0.0-beta.15(typescript@5.9.2))(zod@3.25.76))(ai@5.0.50(zod@3.25.76))(zod@3.25.76)':
+  '@mastra/rag@1.2.2(@mastra/core@0.18.0(arktype@2.1.20)(openapi-types@12.1.3)(react@19.1.1)(valibot@1.0.0-beta.15(typescript@5.9.2))(zod@3.25.76))(ai@5.0.50(zod@3.25.76))(zod@3.25.76)':
     dependencies:
-      '@mastra/core': 0.15.2(arktype@2.1.20)(openapi-types@12.1.3)(react@19.1.1)(valibot@1.0.0-beta.15(typescript@5.9.2))(zod@3.25.76)
+      '@mastra/core': 0.18.0(arktype@2.1.20)(openapi-types@12.1.3)(react@19.1.1)(valibot@1.0.0-beta.15(typescript@5.9.2))(zod@3.25.76)
       '@paralleldrive/cuid2': 2.2.2
       ai: 5.0.50(zod@3.25.76)
       big.js: 7.0.1
@@ -7788,6 +7819,15 @@ snapshots:
       - encoding
 
   '@mastra/schema-compat@0.11.1(ai@4.3.19(react@19.1.1)(zod@3.25.76))(zod@3.25.76)':
+    dependencies:
+      ai: 4.3.19(react@19.1.1)(zod@3.25.76)
+      json-schema: 0.4.0
+      zod: 3.25.76
+      zod-from-json-schema: 0.5.0
+      zod-from-json-schema-v3: zod-from-json-schema@0.0.5
+      zod-to-json-schema: 3.24.6(zod@3.25.76)
+
+  '@mastra/schema-compat@0.11.4(ai@4.3.19(react@19.1.1)(zod@3.25.76))(zod@3.25.76)':
     dependencies:
       ai: 4.3.19(react@19.1.1)(zod@3.25.76)
       json-schema: 0.4.0
@@ -10088,6 +10128,14 @@ snapshots:
       '@opentelemetry/api': 1.9.0
       zod: 3.25.76
 
+  ai@5.0.44(zod@3.25.76):
+    dependencies:
+      '@ai-sdk/gateway': 1.0.23(zod@3.25.76)
+      '@ai-sdk/provider': 2.0.0
+      '@ai-sdk/provider-utils': 3.0.9(zod@3.25.76)
+      '@opentelemetry/api': 1.9.0
+      zod: 3.25.76
+
   ai@5.0.50(zod@3.25.76):
     dependencies:
       '@ai-sdk/gateway': 1.0.27(zod@3.25.76)
@@ -11254,17 +11302,17 @@ snapshots:
     dependencies:
       react-is: 16.13.1
 
-  hono-openapi@0.4.8(arktype@2.1.20)(hono@4.9.5)(openapi-types@12.1.3)(valibot@1.0.0-beta.15(typescript@5.9.2))(zod@3.25.76):
+  hono-openapi@0.4.8(arktype@2.1.20)(hono@4.9.8)(openapi-types@12.1.3)(valibot@1.0.0-beta.15(typescript@5.9.2))(zod@3.25.76):
     dependencies:
       json-schema-walker: 2.0.0
       openapi-types: 12.1.3
     optionalDependencies:
       arktype: 2.1.20
-      hono: 4.9.5
+      hono: 4.9.8
       valibot: 1.0.0-beta.15(typescript@5.9.2)
       zod: 3.25.76
 
-  hono@4.9.5: {}
+  hono@4.9.8: {}
 
   html-encoding-sniffer@4.0.0:
     dependencies:

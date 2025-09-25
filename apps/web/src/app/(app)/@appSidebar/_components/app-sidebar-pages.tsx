@@ -1,10 +1,11 @@
 "use client";
 
 import type { Page } from "@acme/db/schema";
-import { useQuery } from "@tanstack/react-query";
-import { BookOpen, ChevronRight } from "lucide-react";
+import { useInfiniteQuery } from "@tanstack/react-query";
+import { BookOpen, ChevronRight, Loader2 } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
+import { List } from "react-window";
 import {
   Collapsible,
   CollapsibleContent,
@@ -15,12 +16,16 @@ import {
   SidebarMenuSub,
   useSidebar,
 } from "~/components/ui/sidebar";
+import { PAGES_INFINITE_QUERY_CONFIG } from "~/lib/pages-config";
 import { useTRPC } from "~/trpc/react";
 import { AppSidebarPageItem } from "./app-sidebar-page-item";
 import { CreatePageButton } from "./create-page-button";
 
 type AppSidebarPagesProps = {
-  pages: Page[];
+  initialPagesData: {
+    items: Page[];
+    nextCursor: string | undefined;
+  };
 };
 
 export const AppSidebarPages = (props: AppSidebarPagesProps) => {
@@ -28,10 +33,21 @@ export const AppSidebarPages = (props: AppSidebarPagesProps) => {
   const pathname = usePathname();
   const { state, setOpen } = useSidebar();
 
-  const { data: pages } = useQuery({
-    ...trpc.pages.getByUser.queryOptions(),
-    initialData: props.pages,
-  });
+  const { data, fetchNextPage, isFetchingNextPage, hasNextPage } =
+    useInfiniteQuery({
+      ...trpc.pages.getInfinite.infiniteQueryOptions(
+        PAGES_INFINITE_QUERY_CONFIG,
+      ),
+      getNextPageParam: ({ nextCursor }) => {
+        return nextCursor;
+      },
+      initialData: {
+        pageParams: [null], // null represents "no cursor" for the first page
+        pages: [props.initialPagesData],
+      },
+    });
+
+  const pages = data?.pages?.flatMap((page) => page.items) ?? [];
 
   const defaultOpen = pathname.includes("/pages/");
   const [isOpen, setIsOpen] = useState(defaultOpen);
@@ -52,23 +68,65 @@ export const AppSidebarPages = (props: AppSidebarPagesProps) => {
     <Collapsible
       open={isOpen}
       onOpenChange={setIsOpen}
-      className="group/collapsible"
+      className="group/collapsible flex min-h-0 flex-1 flex-col"
     >
       <CollapsibleTrigger asChild>
-        <SidebarMenuButton tooltip="Pages" onClick={handlePagesClick}>
-          <BookOpen />
+        <SidebarMenuButton
+          className="min-h-8"
+          tooltip="Pages"
+          onClick={handlePagesClick}
+        >
+          {isFetchingNextPage ? (
+            <Loader2 className="size-3 animate-spin" />
+          ) : (
+            <BookOpen />
+          )}
           <span>Pages</span>
           <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
         </SidebarMenuButton>
       </CollapsibleTrigger>
-      <CollapsibleContent>
-        <SidebarMenuSub className="mr-0 pr-0">
+
+      <CollapsibleContent className="flex min-h-0 flex-col">
+        <SidebarMenuSub className="mr-0 flex-1 overflow-scroll pr-0">
           <CreatePageButton />
-          {pages?.map((page) => (
-            <AppSidebarPageItem key={page.id} page={page} />
-          ))}
+          <List
+            rowComponent={PageRow}
+            rowCount={pages.length}
+            rowHeight={28}
+            // @ts-expect-error - react-window types are incorrectly expecting index/style in rowProps
+            rowProps={{
+              pages,
+            }}
+            onRowsRendered={({ stopIndex }) => {
+              // Fetch next page when user scrolls near the end
+              if (
+                stopIndex >= pages.length - 5 &&
+                !isFetchingNextPage &&
+                hasNextPage
+              ) {
+                fetchNextPage();
+              }
+            }}
+          />
         </SidebarMenuSub>
       </CollapsibleContent>
     </Collapsible>
+  );
+};
+
+const PageRow = ({
+  index,
+  style,
+  pages,
+}: {
+  index: number;
+  style: React.CSSProperties;
+} & { pages: Page[] }) => {
+  const page = pages?.[index];
+  if (!page) return null;
+  return (
+    <div style={style}>
+      <AppSidebarPageItem page={page} />
+    </div>
   );
 };

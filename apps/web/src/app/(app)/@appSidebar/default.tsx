@@ -11,6 +11,7 @@ import {
 } from "~/components/ui/sidebar";
 import { Skeleton } from "~/components/ui/skeleton";
 import { env } from "~/env";
+import { PAGES_INFINITE_QUERY_CONFIG } from "~/lib/pages-config";
 import { api } from "~/trpc/server";
 import { DynamicAppSidebarDevtools } from "./_components/app-sidebar-devtools.dynamic";
 import { AppSidebarNavigation } from "./_components/app-sidebar-main";
@@ -20,8 +21,8 @@ import { AppSidebarUser } from "./_components/app-sidebar-user";
 import { AppSidebarUserSkeleton } from "./_components/app-sidebar-user-skeleton";
 
 async function SuspendedAppSidebarPages() {
-  const pages = await api.pages.getByUser();
-  return <AppSidebarPages pages={pages} />;
+  const pagesData = await api.pages.getInfinite(PAGES_INFINITE_QUERY_CONFIG);
+  return <AppSidebarPages initialPagesData={pagesData} />;
 }
 
 export default function AppSidebar() {
@@ -42,8 +43,8 @@ export default function AppSidebar() {
         </Suspense>
       </SidebarHeader>
       <Separator />
-      <SidebarContent>
-        <SidebarGroup className="gap-y-1">
+      <SidebarContent className="flex flex-1 flex-col">
+        <SidebarGroup className="flex min-h-0 flex-1 flex-col gap-y-1">
           <SidebarGroupLabel>Navigation</SidebarGroupLabel>
           <AppSidebarNavigation items={navigationItems} />
           <Suspense fallback={<AppSidebarPagesSkeleton />}>

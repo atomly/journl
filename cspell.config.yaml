@@ -43,10 +43,12 @@ words:
   - evals
   - HMAC
   - ilike
+  - interruptible
   - journaling
   - Journl
   - libsql
   - mantine
+  - oklch
   - pooler
   - sonner
   - supabase

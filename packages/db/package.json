@@ -32,13 +32,13 @@
     "@vercel/postgres": "~0.10.0",
     "drizzle-orm": "~0.44.5",
     "drizzle-zod": "~0.8.3",
-    "zod": "~3.25.71"
+    "zod": "~3.25.76"
   },
   "devDependencies": {
     "@acme/tsconfig": "workspace:*",
     "dotenv-cli": "~8.0.0",
     "drizzle-kit": "~0.31.4",
     "stripe": "~18.5.0",
-    "typescript": "~5.8.3"
+    "typescript": "~5.9.2"
   }
 }

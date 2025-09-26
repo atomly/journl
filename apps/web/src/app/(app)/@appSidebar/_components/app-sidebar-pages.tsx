@@ -3,7 +3,6 @@
 import type { Page } from "@acme/db/schema";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { BookOpen, ChevronRight, Loader2 } from "lucide-react";
-import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { List } from "react-window";
 import {
@@ -26,11 +25,14 @@ type AppSidebarPagesProps = {
     items: Page[];
     nextCursor: string | undefined;
   };
+  defaultOpen?: boolean;
 };
 
-export const AppSidebarPages = (props: AppSidebarPagesProps) => {
+export const AppSidebarPages = ({
+  initialPagesData,
+  defaultOpen = true,
+}: AppSidebarPagesProps) => {
   const trpc = useTRPC();
-  const pathname = usePathname();
   const { state, setOpen } = useSidebar();
 
   const { data, fetchNextPage, isFetchingNextPage, hasNextPage } =
@@ -43,13 +45,12 @@ export const AppSidebarPages = (props: AppSidebarPagesProps) => {
       },
       initialData: {
         pageParams: [null], // null represents "no cursor" for the first page
-        pages: [props.initialPagesData],
+        pages: [initialPagesData],
       },
     });
 
   const pages = data?.pages?.flatMap((page) => page.items) ?? [];
 
-  const defaultOpen = pathname.includes("/pages/");
   const [isOpen, setIsOpen] = useState(defaultOpen);
 
   const handlePagesClick = (e: React.MouseEvent) => {

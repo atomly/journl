@@ -24,6 +24,9 @@
   "editor.formatOnSave": true,
   "editor.insertSpaces": true,
   "editor.tabSize": 2,
+  "files.associations": {
+    "*.css": "tailwindcss"
+  },
   "gitlens.remotes": [
     {
       "domain": "www.github.com",

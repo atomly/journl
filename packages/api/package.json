@@ -33,12 +33,11 @@
     "ai": "~5.0.49",
     "stripe": "~18.5.0",
     "superjson": "2.2.2",
-    "zod": "~3.25.71"
+    "zod": "~3.25.76"
   },
   "devDependencies": {
     "@acme/tsconfig": "workspace:*",
-    "@biomejs/biome": "~2.0.6",
     "@blocknote/core": "~0.39.1",
-    "typescript": "~5.8.3"
+    "typescript": "~5.9.2"
   }
 }

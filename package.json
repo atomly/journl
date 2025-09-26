@@ -5,8 +5,8 @@
   "type": "module",
   "license": "MIT",
   "engines": {
-    "node": ">=22.14.0",
-    "pnpm": ">=9.6.0"
+    "node": ">=22.20.0",
+    "pnpm": ">=9.15.9"
   },
   "packageManager": "pnpm@10.12.4",
   "scripts": {
@@ -25,7 +25,8 @@
     "typecheck": "turbo run typecheck"
   },
   "devDependencies": {
-    "@turbo/gen": "~2.5.7",
-    "turbo": "~2.5.7"
+    "@biomejs/biome": "~2.2.4",
+    "@turbo/gen": "~2.5.8",
+    "turbo": "~2.5.8"
   }
 }

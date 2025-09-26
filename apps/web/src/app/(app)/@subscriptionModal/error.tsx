@@ -10,7 +10,7 @@ import {
   DialogTitle,
 } from "~/components/ui/dialog";
 
-export default function BillingModalError({
+export default function SubscriptionModalError({
   error,
   reset,
 }: {
@@ -18,18 +18,18 @@ export default function BillingModalError({
   reset: () => void;
 }) {
   useEffect(() => {
-    console.error("Billing modal error:", error);
+    console.error("Subscription modal error:", error);
   }, [error]);
 
   return (
     <Dialog open={true}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Billing Error</DialogTitle>
+          <DialogTitle>Subscription Error</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
           <p className="text-muted-foreground">
-            We encountered an error while loading your billing information.
+            We encountered an error while loading your subscription information.
           </p>
           <div className="flex justify-end space-x-2">
             <Button asChild>

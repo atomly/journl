@@ -10,10 +10,12 @@ import {
   useEffect,
   useMemo,
   useRef,
+  useState,
 } from "react";
 import { useDebouncedCallback } from "use-debounce";
 import { useJournlAgentAwareness } from "~/ai/agents/use-journl-agent-awareness";
 import { BlockEditor } from "~/components/editor/block-editor";
+import { BlockEditorErrorOverlay } from "~/components/editor/block-editor-error-overlay";
 import {
   BlockEditorFormattingToolbar,
   BlockEditorSlashMenu,
@@ -153,30 +155,46 @@ export function JournalEntryContent({
 
 type JournalEntryEditorProps = {
   debounceTime?: number;
-  onCreate?: (newEntry: TimelineEntry) => void;
+  onCreateAction?: (newEntry: TimelineEntry) => void;
 };
 
 export function JournalEntryEditor({
   debounceTime = DEFAULT_DEBOUNCE_TIME,
-  onCreate,
+  onCreateAction,
 }: JournalEntryEditorProps) {
   const trpc = useTRPC();
   const pendingChangesRef = useRef<BlockTransaction[]>([]);
   const { initialBlocks, documentId, date } = useJournalEntry();
   const { rememberEditor, forgetEditor } = useJournlAgentAwareness();
   const editor = useBlockEditor({ initialBlocks });
+  const [isOverlayOpen, setOverlayOpen] = useState(false);
+
+  /**
+   * Handles the error state of the editor.
+   *
+   * @privateRemarks
+   *
+   * Using replace() to avoid creating a new history entry
+   */
+  function handleError() {
+    setOverlayOpen(true);
+    requestAnimationFrame(() => {
+      location.replace(location.href);
+    });
+  }
 
   const { mutate, isPending } = useMutation({
     ...trpc.journal.saveTransactions.mutationOptions({}),
-    // ! TODO: When the mutation fails we need to revert the changes to the editor just like Notion does.
-    // ! To do this we can use `onError` and `editor.undo()`, without calling the transactions. We might have to get creative.
-    // ! Maybe we can refetch the blocks after an error instead of `undo`?
+    onError: (error) => {
+      console.error("[JournalEntryEditor] error 👀", error);
+      handleError();
+    },
     onSuccess: (data) => {
       if (pendingChangesRef.current.length > 0) {
         debouncedMutate();
       }
       if (!documentId && data) {
-        onCreate?.(data);
+        onCreateAction?.(data);
       }
     },
   });
@@ -202,18 +220,21 @@ export function JournalEntryEditor({
   }, [date, editor, rememberEditor, forgetEditor]);
 
   return (
-    <BlockEditor
-      editor={editor}
-      initialBlocks={initialBlocks}
-      onChange={handleEditorChange}
-      // Disabling the default because we're using a formatting toolbar with the AI option.
-      formattingToolbar={false}
-      // Disabling the default because we're using a slash menu with the AI option.
-      slashMenu={false}
-    >
-      <BlockEditorFormattingToolbar />
-      <BlockEditorSlashMenu />
-    </BlockEditor>
+    <>
+      <BlockEditor
+        editor={editor}
+        initialBlocks={initialBlocks}
+        onChange={handleEditorChange}
+        // Disabling the default because we're using a formatting toolbar with the AI option.
+        formattingToolbar={false}
+        // Disabling the default because we're using a slash menu with the AI option.
+        slashMenu={false}
+      >
+        <BlockEditorFormattingToolbar />
+        <BlockEditorSlashMenu />
+      </BlockEditor>
+      <BlockEditorErrorOverlay isOpen={isOverlayOpen} />
+    </>
   );
 }
 

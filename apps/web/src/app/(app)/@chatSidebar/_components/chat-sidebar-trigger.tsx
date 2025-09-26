@@ -21,8 +21,7 @@ export default function ChatSidebarTrigger() {
           data-slot="sidebar-trigger"
           onClick={toggleSidebar}
           size="icon"
-          variant="ghost"
-          className="fixed right-2 bottom-2 hidden size-12 cursor-pointer rounded-full border bg-sidebar md:flex"
+          className="fixed right-2 bottom-2 hidden size-10 cursor-pointer rounded-full border md:flex"
         >
           <Brain className="size-6" />
           <span className="sr-only">Toggle Chat Sidebar</span>

@@ -87,6 +87,7 @@ export function BlockEditor({
    * @privateRemarks
    *
    * The biggest challenge is the computation of the edges rather than the blocks.
+   *
    * An intuitive approach is to compute the edges for the previous state and the current state and then compute the diff.
    * For example, a brute force approach would be to loop over all blocks and detect if their adjacent blocks are different.
    * If they are we need to remove the previous edge and insert the new edge.
@@ -115,7 +116,7 @@ export function BlockEditor({
    * - Moves are more complex than inserts and deletes because we need to compute edges for the blocks that moved and the blocks that are adjacent to the moved blocks (assuming they didn't move).
    */
   function handleEditorChange(currentEditor: EditorPrimitiveOnChangeParams[0]) {
-    if (!onChange || isEditorAgentProcessing(currentEditor)) return;
+    if (!onChange || isAgenticEditorChange(currentEditor)) return;
 
     const oldBlocks = getEditorBlocks(previousEditorRef.current);
     const currentBlocks = getEditorBlocks(currentEditor.document);
@@ -259,7 +260,7 @@ export function BlockEditor({
 
     // Leaving this here for debugging purposes because this logic is the wild west.
     if (debug) {
-      console.debug("saveTransactions 👀", {
+      console.debug("[BlockEditor] transactions 👀", {
         transactions: transactions.map((t) =>
           t.type === "block_remove" || t.type === "block_upsert"
             ? {
@@ -338,7 +339,7 @@ function getEditorBlocks(blocks: BlockPrimitive[], parent?: BlockPrimitive) {
   return flattened;
 }
 
-function isEditorAgentProcessing(editor: EditorPrimitive) {
+function isAgenticEditorChange(editor: EditorPrimitive) {
   const aiExtension = getAIExtension(editor);
   const state = aiExtension.store.getState().aiMenuState;
 

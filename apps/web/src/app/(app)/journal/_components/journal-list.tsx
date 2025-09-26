@@ -9,12 +9,12 @@ import { useJournlAgentAwareness } from "~/ai/agents/use-journl-agent-awareness"
 import { useTRPC } from "~/trpc/react";
 import {
   JournalEntryContent,
+  JournalEntryEditor,
   JournalEntryHeader,
   JournalEntryLink,
   JournalEntryProvider,
   JournalEntryWrapper,
 } from "./journal-entry-editor";
-import { DynamicJournalEntryEditor } from "./journal-entry-editor.dynamic";
 import { JournalEntryLoader } from "./journal-entry-loader";
 import { JournalListSkeleton } from "./journal-list-skeleton";
 
@@ -108,8 +108,8 @@ export function JournalList({
               <JournalEntryHeader className="px-13.5" />
             </JournalEntryLink>
             <JournalEntryContent>
-              <DynamicJournalEntryEditor
-                onCreate={(newEntry) => {
+              <JournalEntryEditor
+                onCreateAction={(newEntry) => {
                   queryClient.setQueryData(queryOptions.queryKey, (old) => ({
                     ...old,
                     pageParams: [...(old?.pageParams ?? [])],

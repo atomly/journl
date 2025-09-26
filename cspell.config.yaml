@@ -35,6 +35,7 @@ languageSettings:
     allowCompoundWords: false
 useGitignore: true
 words:
+  - Agentic
   - AISDK
   - autohide
   - CLIENTVAR

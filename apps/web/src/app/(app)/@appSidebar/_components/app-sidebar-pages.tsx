@@ -1,9 +1,10 @@
 "use client";
 
 import type { Page } from "@acme/db/schema";
-import { useQuery } from "@tanstack/react-query";
-import { BookOpen, ChevronRight } from "lucide-react";
+import { useInfiniteQuery } from "@tanstack/react-query";
+import { BookOpen, ChevronRight, Loader2 } from "lucide-react";
 import { useState } from "react";
+import { List } from "react-window";
 import {
   Collapsible,
   CollapsibleContent,
@@ -19,21 +20,31 @@ import { AppSidebarPageItem } from "./app-sidebar-page-item";
 import { CreatePageButton } from "./create-page-button";
 
 type AppSidebarPagesProps = {
-  initialPages: Page[];
+  infinitePagesQueryOptions: {
+    direction: "forward" | "backward";
+    limit: number;
+  };
   defaultOpen?: boolean;
 };
 
 export const AppSidebarPages = ({
-  initialPages,
+  infinitePagesQueryOptions,
   defaultOpen = true,
 }: AppSidebarPagesProps) => {
   const trpc = useTRPC();
   const { state, setOpen } = useSidebar();
+  const queryOptions = trpc.pages.getInfinite.infiniteQueryOptions(
+    infinitePagesQueryOptions,
+  );
+  const { data, fetchNextPage, isFetchingNextPage, hasNextPage } =
+    useInfiniteQuery({
+      ...queryOptions,
+      getNextPageParam: ({ nextCursor }) => {
+        return nextCursor;
+      },
+    });
 
-  const { data: pages } = useQuery({
-    ...trpc.pages.getByUser.queryOptions(),
-    initialData: initialPages,
-  });
+  const pages = data?.pages?.flatMap((page) => page.items) ?? [];
 
   const [isOpen, setIsOpen] = useState(defaultOpen);
 
@@ -53,23 +64,65 @@ export const AppSidebarPages = ({
     <Collapsible
       open={isOpen}
       onOpenChange={setIsOpen}
-      className="group/collapsible"
+      className="group/collapsible flex min-h-0 flex-1 flex-col"
     >
       <CollapsibleTrigger asChild>
-        <SidebarMenuButton tooltip="Pages" onClick={handlePagesClick}>
-          <BookOpen />
+        <SidebarMenuButton
+          className="min-h-8"
+          tooltip="Pages"
+          onClick={handlePagesClick}
+        >
+          {isFetchingNextPage ? (
+            <Loader2 className="size-3 animate-spin" />
+          ) : (
+            <BookOpen />
+          )}
           <span>Pages</span>
           <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
         </SidebarMenuButton>
       </CollapsibleTrigger>
-      <CollapsibleContent>
-        <SidebarMenuSub className="mr-0 pr-0">
+
+      <CollapsibleContent className="flex min-h-0 flex-col">
+        <SidebarMenuSub className="mr-0 flex-1 overflow-scroll pr-0">
           <CreatePageButton />
-          {pages?.map((page) => (
-            <AppSidebarPageItem key={page.id} page={page} />
-          ))}
+          <List
+            rowComponent={PageRow}
+            rowCount={pages.length}
+            rowHeight={28}
+            // @ts-expect-error - react-window types are incorrectly expecting index/style in rowProps
+            rowProps={{
+              pages,
+            }}
+            onRowsRendered={({ stopIndex }) => {
+              // Fetch next page when user scrolls near the end
+              if (
+                stopIndex >= pages.length - 5 &&
+                !isFetchingNextPage &&
+                hasNextPage
+              ) {
+                fetchNextPage();
+              }
+            }}
+          />
         </SidebarMenuSub>
       </CollapsibleContent>
     </Collapsible>
+  );
+};
+
+const PageRow = ({
+  index,
+  style,
+  pages,
+}: {
+  index: number;
+  style: React.CSSProperties;
+} & { pages: Page[] }) => {
+  const page = pages?.[index];
+  if (!page) return null;
+  return (
+    <div style={style}>
+      <AppSidebarPageItem page={page} />
+    </div>
   );
 };

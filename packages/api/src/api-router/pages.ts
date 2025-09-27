@@ -1,5 +1,5 @@
 import { blocknoteBlocks } from "@acme/blocknote/server";
-import { and, cosineDistance, desc, eq, gt, sql } from "@acme/db";
+import { and, cosineDistance, desc, eq, gt, lt, sql } from "@acme/db";
 import {
   Document,
   DocumentEmbedding,
@@ -114,6 +114,54 @@ export const pagesRouter = {
       });
     }
   }),
+  getInfinite: protectedProcedure
+    .input(
+      z.object({
+        cursor: z.iso.datetime().optional(),
+        direction: z.enum(["forward", "backward"]).default("forward"),
+        limit: z.number().min(1).max(50).default(10),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      try {
+        const { limit, cursor, direction } = input;
+
+        const pages = await ctx.db
+          .select()
+          .from(Page)
+          .where(
+            and(
+              eq(Page.user_id, ctx.session.user.id),
+              cursor
+                ? direction === "forward"
+                  ? lt(Page.updated_at, cursor)
+                  : gt(Page.updated_at, cursor)
+                : undefined,
+            ),
+          )
+          .orderBy(desc(Page.updated_at))
+          .limit(limit + 1);
+
+        let nextCursor: string | undefined;
+        if (pages.length > limit) {
+          const nextItem = pages.pop();
+          nextCursor = nextItem?.updated_at
+            ? new Date(nextItem.updated_at).toISOString()
+            : undefined;
+        }
+
+        return {
+          items: pages,
+          nextCursor,
+        };
+      } catch (error) {
+        console.error("Database error in pages.getInfinite:", error);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to fetch pages",
+        });
+      }
+    }),
   getRelevantPages: protectedProcedure
     .input(
       z.object({

@@ -1,8 +1,9 @@
 import { sql } from "drizzle-orm";
-import { pgEnum, pgTable, text, uniqueIndex } from "drizzle-orm/pg-core";
+import { check, pgEnum, pgTable, text, uniqueIndex } from "drizzle-orm/pg-core";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 import { user } from "../auth/user.schema.js";
+import { JSONB_LIMITS } from "../constants/resource-limits.js";
 import { Document } from "./document.schema.js";
 
 export const DocumentEmbeddingTaskStatus = pgEnum(
@@ -42,6 +43,11 @@ export const DocumentEmbeddingTask = pgTable(
     uniqueIndex("document_embedding_task_unique_non_completed_task_per_page")
       .on(t.document_id)
       .where(sql`${t.status} != 'completed'`),
+    // Resource protection constraint for JSONB metadata
+    check(
+      "task_metadata_size",
+      sql`${t.metadata} IS NULL OR length(${t.metadata}::text) <= ${JSONB_LIMITS.EMBEDDING_TASK_METADATA}`,
+    ),
   ],
 );
 

@@ -1,8 +1,11 @@
 import { sql } from "drizzle-orm";
-import { index, pgTable, text, vector } from "drizzle-orm/pg-core";
+import { check, index, pgTable, text, vector } from "drizzle-orm/pg-core";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { user } from "../auth/user.schema.js";
+import { JSONB_LIMITS } from "../constants/resource-limits.js";
 import { Document } from "./document.schema.js";
+
+const VECTOR_DIMENSIONS = 1536;
 
 export const DocumentEmbedding = pgTable(
   "document_embedding",
@@ -15,10 +18,10 @@ export const DocumentEmbedding = pgTable(
       .uuid()
       .notNull()
       .references(() => Document.id, { onDelete: "cascade" }),
-    vector: vector({ dimensions: 1536 }).notNull(),
+    vector: vector({ dimensions: VECTOR_DIMENSIONS }).notNull(),
     chunk_id: t.integer().notNull(),
-    chunk_markdown_text: t.text().notNull(),
-    chunk_raw_text: t.text().notNull(),
+    chunk_markdown_text: text("chunk_markdown_text").notNull(),
+    chunk_raw_text: text("chunk_raw_text").notNull(),
     metadata: t.jsonb().notNull().$type<{
       sectionSummary: string;
       excerptKeywords: string;
@@ -39,6 +42,15 @@ export const DocumentEmbedding = pgTable(
     index("document_embedding_hnsw_index").using(
       "hnsw",
       t.vector.op("vector_cosine_ops"),
+    ),
+    // Resource protection constraints
+    check(
+      "chunk_markdown_text_length",
+      sql`length(${t.chunk_markdown_text}) <= ${JSONB_LIMITS.CHUNK_TEXT}`,
+    ),
+    check(
+      "chunk_raw_text_length",
+      sql`length(${t.chunk_raw_text}) <= ${JSONB_LIMITS.CHUNK_TEXT}`,
     ),
   ],
 );

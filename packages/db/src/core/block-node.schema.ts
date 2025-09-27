@@ -1,5 +1,6 @@
 import { relations, sql } from "drizzle-orm";
 import {
+  check,
   foreignKey,
   pgEnum,
   pgTable,
@@ -9,6 +10,7 @@ import {
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 import { user } from "../auth/user.schema.js";
+import { JSONB_LIMITS } from "../constants/resource-limits.js";
 import { Document } from "./document.schema.js";
 import { JournalEntry } from "./journal-entry.schema.js";
 import { Page } from "./page.schema.js";
@@ -45,6 +47,11 @@ export const BlockNode = pgTable(
       columns: [t.parent_id],
       foreignColumns: [t.id],
     }).onDelete("cascade"),
+    // Resource protection constraint for JSONB data
+    check(
+      "block_data_size",
+      sql`length(${t.data}::text) <= ${JSONB_LIMITS.BLOCK_DATA}`,
+    ),
   ],
 );
 export type BlockNode = typeof BlockNode.$inferSelect;

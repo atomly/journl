@@ -7,7 +7,9 @@ import {
   text,
   timestamp,
   unique,
+  varchar,
 } from "drizzle-orm/pg-core";
+import { TEXT_LIMITS } from "../constants/resource-limits.js";
 import { Plan } from "./plan.schema.js";
 
 export const Price = pgTable(
@@ -18,16 +20,19 @@ export const Price = pgTable(
       .notNull()
       .unique()
       .references(() => Plan.id),
-    nickname: text("nickname"),
-    currency: text("currency").notNull(),
+    nickname: varchar("nickname", { length: TEXT_LIMITS.PLAN_NAME }),
+    currency: varchar("currency", { length: TEXT_LIMITS.CURRENCY }).notNull(),
     unitAmount: integer("unit_amount").notNull(),
     recurring: jsonb("recurring").notNull().$type<{
       interval: "day" | "week" | "month" | "year";
       intervalCount: number;
     }>(),
-    type: text("type", { enum: ["one_time", "recurring"] }).notNull(),
+    type: varchar("type", {
+      length: 20,
+      enum: ["one_time", "recurring"],
+    }).notNull(),
     active: boolean("active").default(true).notNull(),
-    lookupKey: text("lookup_key"),
+    lookupKey: varchar("lookup_key", { length: TEXT_LIMITS.LOOKUP_KEY }),
     createdAt: timestamp("created_at")
       .$defaultFn(() => /* @__PURE__ */ new Date())
       .notNull(),

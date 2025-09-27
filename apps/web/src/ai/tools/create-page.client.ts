@@ -23,7 +23,6 @@ export function useCreatePageTool() {
     execute: async (toolCall, chat) => {
       createPage(
         {
-          children: [],
           title: toolCall.input.title,
         },
         {

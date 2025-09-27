@@ -26,7 +26,6 @@ export function CreatePageButton() {
     startTransition(() => {
       createPage(
         {
-          children: [],
           title: "",
         },
         {

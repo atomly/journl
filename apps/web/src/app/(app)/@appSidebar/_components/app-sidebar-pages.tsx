@@ -1,10 +1,10 @@
 "use client";
 
-import type { Page } from "@acme/db/schema";
+import type { PaginatedPagesInput } from "@acme/api";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { BookOpen, ChevronRight, Loader2 } from "lucide-react";
 import { useState } from "react";
-import { List } from "react-window";
+import { Virtuoso } from "react-virtuoso";
 import {
   Collapsible,
   CollapsibleContent,
@@ -17,15 +17,16 @@ import {
 } from "~/components/ui/sidebar";
 import { useTRPC } from "~/trpc/react";
 import { AppSidebarPageItem } from "./app-sidebar-page-item";
+import { AppSidebarPageItemSkeleton } from "./app-sidebar-page-item-skeleton";
 import { CreatePageButton } from "./create-page-button";
 
 type AppSidebarPagesProps = {
-  infinitePagesQueryOptions: {
-    direction: "forward" | "backward";
-    limit: number;
-  };
+  infinitePagesQueryOptions: PaginatedPagesInput;
   defaultOpen?: boolean;
 };
+
+const APPROXIMATE_ITEM_HEIGHT = 28;
+const VIEWPORT_INCREASE_FACTOR = 5;
 
 export const AppSidebarPages = ({
   infinitePagesQueryOptions,
@@ -33,16 +34,15 @@ export const AppSidebarPages = ({
 }: AppSidebarPagesProps) => {
   const trpc = useTRPC();
   const { state, setOpen } = useSidebar();
-  const queryOptions = trpc.pages.getInfinite.infiniteQueryOptions(
+  const queryOptions = trpc.pages.getPaginated.infiniteQueryOptions(
     infinitePagesQueryOptions,
   );
-  const { data, fetchNextPage, isFetchingNextPage, hasNextPage } =
-    useInfiniteQuery({
-      ...queryOptions,
-      getNextPageParam: ({ nextCursor }) => {
-        return nextCursor;
-      },
-    });
+  const { status, data, fetchNextPage, hasNextPage } = useInfiniteQuery({
+    ...queryOptions,
+    getNextPageParam: ({ nextCursor }) => {
+      return nextCursor;
+    },
+  });
 
   const pages = data?.pages?.flatMap((page) => page.items) ?? [];
 
@@ -72,7 +72,7 @@ export const AppSidebarPages = ({
           tooltip="Pages"
           onClick={handlePagesClick}
         >
-          {isFetchingNextPage ? (
+          {status === "pending" ? (
             <Loader2 className="size-3 animate-spin" />
           ) : (
             <BookOpen />
@@ -82,47 +82,35 @@ export const AppSidebarPages = ({
         </SidebarMenuButton>
       </CollapsibleTrigger>
 
-      <CollapsibleContent className="flex min-h-0 flex-col">
-        <SidebarMenuSub className="mr-0 flex-1 overflow-scroll pr-0">
-          <CreatePageButton />
-          <List
-            rowComponent={PageRow}
-            rowCount={pages.length}
-            rowHeight={28}
-            // @ts-expect-error - react-window types are incorrectly expecting index/style in rowProps
-            rowProps={{
-              pages,
-            }}
-            onRowsRendered={({ stopIndex }) => {
-              // Fetch next page when user scrolls near the end
-              if (
-                stopIndex >= pages.length - 5 &&
-                !isFetchingNextPage &&
-                hasNextPage
-              ) {
+      <CollapsibleContent className="flex h-full min-h-0 flex-col">
+        <SidebarMenuSub className="mx-0 mr-0 flex-1 gap-0 overflow-scroll border-none px-0">
+          <CreatePageButton className="ml-3.5 border-sidebar-border border-l ps-2.5 pb-2" />
+          <Virtuoso
+            className="h-full w-full"
+            data={pages}
+            increaseViewportBy={
+              APPROXIMATE_ITEM_HEIGHT * VIEWPORT_INCREASE_FACTOR
+            }
+            itemContent={(_, page) => (
+              <AppSidebarPageItem
+                page={page}
+                className="ml-3.5 border-sidebar-border border-l ps-2.5 pb-1"
+              />
+            )}
+            endReached={() => {
+              if (status === "success" && hasNextPage) {
                 fetchNextPage();
               }
+            }}
+            components={{
+              Footer: () =>
+                status === "pending" ? (
+                  <AppSidebarPageItemSkeleton className="ml-3.5 border-sidebar-border border-l ps-2.5" />
+                ) : null,
             }}
           />
         </SidebarMenuSub>
       </CollapsibleContent>
     </Collapsible>
-  );
-};
-
-const PageRow = ({
-  index,
-  style,
-  pages,
-}: {
-  index: number;
-  style: React.CSSProperties;
-} & { pages: Page[] }) => {
-  const page = pages?.[index];
-  if (!page) return null;
-  return (
-    <div style={style}>
-      <AppSidebarPageItem page={page} />
-    </div>
   );
 };

@@ -1,5 +1,5 @@
 import { relations, sql } from "drizzle-orm";
-import { pgTable, text, varchar } from "drizzle-orm/pg-core";
+import { index, pgTable, text, varchar } from "drizzle-orm/pg-core";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 import { user } from "../auth/user.schema.js";
@@ -7,26 +7,36 @@ import { TEXT_LIMITS } from "../constants/resource-limits.js";
 import { BlockEdge, BlockNode } from "./block-node.schema.js";
 import { Document } from "./document.schema.js";
 
-export const Page = pgTable("page", (t) => ({
-  id: t.uuid().notNull().primaryKey().defaultRandom(),
-  user_id: text()
-    .notNull()
-    .references(() => user.id, { onDelete: "cascade" }),
-  document_id: t
-    .uuid()
-    .notNull()
-    .references(() => Document.id, { onDelete: "cascade" }),
-  title: varchar("title", { length: TEXT_LIMITS.PAGE_TITLE }).notNull(),
-  created_at: t
-    .timestamp({ mode: "string", withTimezone: true })
-    .defaultNow()
-    .notNull(),
-  updated_at: t
-    .timestamp({ mode: "string", withTimezone: true })
-    .defaultNow()
-    .notNull()
-    .$onUpdateFn(() => sql`now()`),
-}));
+export const Page = pgTable(
+  "page",
+  (t) => ({
+    id: t.uuid().notNull().primaryKey().defaultRandom(),
+    user_id: text()
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    document_id: t
+      .uuid()
+      .notNull()
+      .references(() => Document.id, { onDelete: "cascade" }),
+    title: varchar("title", { length: TEXT_LIMITS.PAGE_TITLE }).notNull(),
+    created_at: t
+      .timestamp({ mode: "string", withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updated_at: t
+      .timestamp({ mode: "string", withTimezone: true })
+      .defaultNow()
+      .notNull()
+      .$onUpdateFn(() => sql`now()`),
+  }),
+  (t) => [
+    index("page_user_id_updated_at_index").using(
+      "btree",
+      t.user_id,
+      t.updated_at,
+    ),
+  ],
+);
 
 export const PageRelations = relations(Page, ({ many }) => ({
   block_nodes: many(BlockNode),

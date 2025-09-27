@@ -69,7 +69,6 @@
     "react-dom": "~19.1.1",
     "react-hook-form": "~7.57.0",
     "react-virtuoso": "~4.13.0",
-    "react-window": "^2.1.1",
     "remark-gfm": "~4.0.1",
     "remove-markdown": "~0.6.2",
     "sonner": "~2.0.7",

@@ -12,17 +12,19 @@ import { DeletePageButton } from "./delete-page-button";
 
 type AppSidebarPageItemProps = {
   page: Page;
+  className?: string;
 };
 
-export function AppSidebarPageItem(props: AppSidebarPageItemProps) {
-  const { page } = props;
-
+export function AppSidebarPageItem({
+  page,
+  className,
+}: AppSidebarPageItemProps) {
   const pathname = usePathname();
 
   const isActive = pathname.includes(page?.id ?? "");
 
   return (
-    <SidebarMenuSubItem key={page?.id}>
+    <SidebarMenuSubItem key={page?.id} className={className}>
       <SidebarMenuSubButton asChild>
         <div
           className={cn(

@@ -8,7 +8,6 @@
     },
     "dev": {
       "dependsOn": ["^build"],
-      "interruptible": true,
       "persistent": true
     }
   }

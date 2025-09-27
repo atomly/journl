@@ -12,6 +12,7 @@ import {
 import { Skeleton } from "~/components/ui/skeleton";
 import { env } from "~/env";
 import { prefetch, trpc } from "~/trpc/server";
+import { infinitePagesQueryOptions } from "../../api/trpc/options/pages-query-options";
 import { DynamicAppSidebarDevtools } from "./_components/app-sidebar-devtools.dynamic";
 import { AppSidebarNavigation } from "./_components/app-sidebar-main";
 import { AppSidebarPages } from "./_components/app-sidebar-pages";
@@ -19,14 +20,9 @@ import { AppSidebarPagesSkeleton } from "./_components/app-sidebar-pages-skeleto
 import { AppSidebarUser } from "./_components/app-sidebar-user";
 import { AppSidebarUserSkeleton } from "./_components/app-sidebar-user-skeleton";
 
-export const infinitePagesQueryOptions = {
-  direction: "forward" as const,
-  limit: 25,
-} as const;
-
 async function SuspendedAppSidebarPages() {
   prefetch(
-    trpc.pages.getInfinite.infiniteQueryOptions(infinitePagesQueryOptions),
+    trpc.pages.getPaginated.infiniteQueryOptions(infinitePagesQueryOptions),
   );
   return (
     <AppSidebarPages infinitePagesQueryOptions={infinitePagesQueryOptions} />

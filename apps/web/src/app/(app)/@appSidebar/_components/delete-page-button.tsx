@@ -15,6 +15,7 @@ import {
   DialogTitle,
 } from "~/components/ui/dialog";
 import { useTRPC } from "~/trpc/react";
+import { infinitePagesQueryOptions } from "../../../api/trpc/options/pages-query-options";
 
 interface DeletePageButtonProps {
   page: Page;
@@ -55,10 +56,18 @@ export function DeletePageButton({ page, className }: DeletePageButtonProps) {
 
             // Optimistically update the pages list
             queryClient.setQueryData(
-              trpc.pages.getByUser.queryOptions().queryKey,
-              (oldPages: Page[] | undefined) => {
-                if (!oldPages) return [];
-                return oldPages.filter((p) => p.id !== page.id);
+              trpc.pages.getPaginated.infiniteQueryOptions(
+                infinitePagesQueryOptions,
+              ).queryKey,
+              (old) => {
+                if (!old) return old;
+                return {
+                  ...old,
+                  pages: old.pages.map((p) => ({
+                    ...p,
+                    items: p.items.filter((p) => p.id !== page.id),
+                  })),
+                };
               },
             );
 

@@ -6,6 +6,7 @@ import { useEffect, useMemo } from "react";
 import { Virtuoso } from "react-virtuoso";
 import { useDebouncedCallback } from "use-debounce";
 import { useJournlAgentAwareness } from "~/ai/agents/use-journl-agent-awareness";
+import { infiniteJournalEntriesQueryOptions } from "~/app/api/trpc/options/journal-entries-query-options";
 import { useTRPC } from "~/trpc/react";
 import {
   JournalEntryContent,
@@ -18,23 +19,17 @@ import {
 import { JournalEntryLoader } from "./journal-entry-loader";
 import { JournalListSkeleton } from "./journal-list-skeleton";
 
-type JournalVirtualListProps = {
-  initialRange: {
-    limit: number;
-  };
-} & Omit<
+type JournalVirtualListProps = Omit<
   React.ComponentProps<typeof Virtuoso>,
   "data" | "endReached" | "increaseViewportBy" | "itemContent" | "components"
 >;
 
-export function JournalList({
-  initialRange,
-  ...rest
-}: JournalVirtualListProps) {
+export function JournalList({ ...rest }: JournalVirtualListProps) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
-  const queryOptions =
-    trpc.journal.getTimeline.infiniteQueryOptions(initialRange);
+  const queryOptions = trpc.journal.getTimeline.infiniteQueryOptions(
+    infiniteJournalEntriesQueryOptions,
+  );
   const { status, data, error, fetchNextPage, hasNextPage } = useInfiniteQuery({
     ...queryOptions,
     gcTime: 0,

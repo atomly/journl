@@ -1,6 +1,5 @@
 "use client";
 
-import type { Page } from "@acme/db/schema";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -11,8 +10,13 @@ import {
   SidebarMenuSubItem,
 } from "~/components/ui/sidebar";
 import { useTRPC } from "~/trpc/react";
+import { infinitePagesQueryOptions } from "../../../api/trpc/options/pages-query-options";
 
-export function CreatePageButton() {
+type CreatePageButtonProps = {
+  className?: string;
+};
+
+export function CreatePageButton({ className }: CreatePageButtonProps) {
   const router = useRouter();
   const trpc = useTRPC();
   const queryClient = useQueryClient();
@@ -35,10 +39,32 @@ export function CreatePageButton() {
           onSuccess: (newPage) => {
             // Optimistically update the pages list
             queryClient.setQueryData(
-              trpc.pages.getByUser.queryOptions().queryKey,
-              (oldPages: Page[] | undefined) => {
-                if (!oldPages) return [newPage];
-                return [newPage, ...oldPages];
+              trpc.pages.getPaginated.infiniteQueryOptions(
+                infinitePagesQueryOptions,
+              ).queryKey,
+              (old) => {
+                if (!old)
+                  return {
+                    pageParams: [],
+                    pages: [
+                      {
+                        items: [newPage],
+                        nextCursor: undefined,
+                      },
+                    ],
+                  };
+                const [first, ...rest] = old.pages;
+                return {
+                  ...old,
+                  pages: [
+                    {
+                      ...first,
+                      items: [newPage, ...(first?.items ?? [])],
+                      nextCursor: first?.nextCursor,
+                    },
+                    ...rest,
+                  ],
+                };
               },
             );
 
@@ -53,7 +79,7 @@ export function CreatePageButton() {
   const showLoading = isPending || isCreating;
 
   return (
-    <SidebarMenuSubItem>
+    <SidebarMenuSubItem className={className}>
       <SidebarMenuSubButton asChild>
         <div className="border-2 border-sidebar-border border-dashed">
           <Button

@@ -7,7 +7,7 @@ import { useDebouncedCallback } from "use-debounce";
 import { FullHeightTextarea } from "~/components/ui/full-height-textarea";
 import { cn } from "~/components/utils";
 import { useTRPC } from "~/trpc/react";
-import { infinitePagesQueryOptions } from "../../@appSidebar/default";
+import { infinitePagesQueryOptions } from "../../../api/trpc/options/pages-query-options";
 
 const DEFAULT_PLACEHOLDER = "New page";
 const DEFAULT_DEBOUNCE_TIME = 150;
@@ -53,9 +53,9 @@ export function PageTitleTextarea({
       },
     );
 
-    // Update the pages.getInfinite query cache from sidebar
+    // Update the pages.getPaginated query cache from sidebar
     queryClient.setQueryData(
-      trpc.pages.getInfinite.infiniteQueryOptions(infinitePagesQueryOptions)
+      trpc.pages.getPaginated.infiniteQueryOptions(infinitePagesQueryOptions)
         .queryKey,
       (old) => {
         if (!old) return old;

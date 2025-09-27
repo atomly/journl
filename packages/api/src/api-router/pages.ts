@@ -1,5 +1,5 @@
 import { blocknoteBlocks } from "@acme/blocknote/server";
-import { and, cosineDistance, desc, eq, gt, lt, sql } from "@acme/db";
+import { and, cosineDistance, desc, eq, gt, gte, lte, sql } from "@acme/db";
 import {
   Document,
   DocumentEmbedding,
@@ -114,10 +114,10 @@ export const pagesRouter = {
       });
     }
   }),
-  getInfinite: protectedProcedure
+  getPaginated: protectedProcedure
     .input(
       z.object({
-        cursor: z.iso.datetime().optional(),
+        cursor: z.string().optional(),
         direction: z.enum(["forward", "backward"]).default("forward"),
         limit: z.number().min(1).max(50).default(10),
       }),
@@ -134,28 +134,25 @@ export const pagesRouter = {
               eq(Page.user_id, ctx.session.user.id),
               cursor
                 ? direction === "forward"
-                  ? lt(Page.updated_at, cursor)
-                  : gt(Page.updated_at, cursor)
+                  ? lte(Page.updated_at, cursor)
+                  : gte(Page.updated_at, cursor)
                 : undefined,
             ),
           )
           .orderBy(desc(Page.updated_at))
           .limit(limit + 1);
 
-        let nextCursor: string | undefined;
-        if (pages.length > limit) {
-          const nextItem = pages.pop();
-          nextCursor = nextItem?.updated_at
-            ? new Date(nextItem.updated_at).toISOString()
-            : undefined;
-        }
+        const items =
+          pages.length <= 1 ? pages : pages.slice(0, pages.length - 1);
+        const [nextPage] = pages.length <= 1 ? [] : pages.slice(-1);
+        const nextCursor: string | undefined = nextPage?.updated_at;
 
         return {
-          items: pages,
+          items,
           nextCursor,
         };
       } catch (error) {
-        console.error("Database error in pages.getInfinite:", error);
+        console.error("Database error in pages.getPaginated:", error);
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "Failed to fetch pages",

@@ -24,3 +24,11 @@ export type UpgradedSubscription = inferProcedureOutput<
 export type BillingPortal = inferProcedureOutput<
   ApiRouter["subscription"]["createBillingPortal"]
 >;
+
+export type PaginatedPagesInput = inferProcedureInput<
+  ApiRouter["pages"]["getPaginated"]
+>;
+
+export type InfiniteJournalEntriesInput = inferProcedureInput<
+  ApiRouter["journal"]["getTimeline"]
+>;

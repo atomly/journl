@@ -1,8 +1,9 @@
 import { relations, sql } from "drizzle-orm";
-import { pgTable, text } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar } from "drizzle-orm/pg-core";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 import { user } from "../auth/user.schema.js";
+import { TEXT_LIMITS } from "../constants/resource-limits.js";
 import { BlockEdge, BlockNode } from "./block-node.schema.js";
 import { Document } from "./document.schema.js";
 
@@ -15,8 +16,7 @@ export const Page = pgTable("page", (t) => ({
     .uuid()
     .notNull()
     .references(() => Document.id, { onDelete: "cascade" }),
-  title: t.text().notNull(),
-  children: t.text().array().notNull().default([]),
+  title: varchar("title", { length: TEXT_LIMITS.PAGE_TITLE }).notNull(),
   created_at: t
     .timestamp({ mode: "string", withTimezone: true })
     .defaultNow()
@@ -36,8 +36,7 @@ export const PageRelations = relations(Page, ({ many }) => ({
 export type Page = typeof Page.$inferSelect;
 
 export const zInsertPage = createInsertSchema(Page, {
-  title: z.string().max(255),
-  children: z.array(z.uuid()).default([]),
+  title: z.string().max(TEXT_LIMITS.PAGE_TITLE),
 }).omit({
   created_at: true,
   id: true,
@@ -45,8 +44,7 @@ export const zInsertPage = createInsertSchema(Page, {
 });
 
 export const zUpdatePage = createInsertSchema(Page, {
-  title: z.string().min(1).max(255),
-  children: z.array(z.uuid()).optional(),
+  title: z.string().min(1).max(TEXT_LIMITS.PAGE_TITLE),
 }).omit({
   created_at: true,
   id: true,

@@ -41,7 +41,6 @@ export const pagesRouter = {
             .insert(Page)
             .values({
               ...input,
-              children: [],
               document_id: document.id,
               user_id: ctx.session.user.id,
             })

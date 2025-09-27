@@ -32,20 +32,23 @@ export function StickyJournlHeader() {
     <nav
       ref={navRef}
       className={cn(
-        "sticky top-0 z-50 mb-4 flex w-full flex-row items-center justify-center gap-x-2 bg-white px-2 py-4 transition-all duration-300 ease-in-out",
+        "sticky top-0 z-50 mb-4 flex w-full flex-row items-center justify-center gap-x-2 bg-background px-2 py-4 transition-all duration-300 ease-in-out",
         isAtTop
-          ? "border-gray-300 border-b shadow-gray-200 shadow-sm"
+          ? "border-border border-b shadow-sm"
           : "border-none shadow-none",
       )}
     >
       <Button
         variant="ghost"
         size="sm"
-        className="rounded-lg bg-white text-black"
+        className="rounded-lg bg-background text-foreground"
       >
         Sign In
       </Button>
-      <Button size="sm" className="rounded-lg bg-black text-white">
+      <Button
+        size="sm"
+        className="rounded-lg bg-primary text-primary-foreground"
+      >
         Get Started
       </Button>
     </nav>

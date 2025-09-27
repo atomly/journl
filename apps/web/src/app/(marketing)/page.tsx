@@ -41,7 +41,7 @@ export default withoutAuth(function RootPage() {
   return (
     <HydrateClient>
       {/* Hero Section */}
-      <section className="relative flex min-h-screen flex-col items-center justify-center bg-black text-white">
+      <section className="relative flex min-h-screen flex-col items-center justify-center bg-background text-foreground">
         <HeroFloatingShapes />
         <div className="flex h-full w-full flex-col items-center justify-center gap-y-12 text-center">
           <HeroJournlParticles />
@@ -51,7 +51,7 @@ export default withoutAuth(function RootPage() {
           </h1>
           <div className="mt-12 flex flex-col gap-x-4 gap-y-4 sm:flex-row">
             <HeroCtaButton
-              className="border border-white bg-black text-white hover:bg-gray-800 sm:w-40"
+              className="border border-primary bg-background text-foreground hover:bg-background/50 sm:w-40"
               authCancelUrl={AUTH_CANCEL_URL}
             >
               <Link href="/auth/sign-in">
@@ -59,7 +59,7 @@ export default withoutAuth(function RootPage() {
               </Link>
             </HeroCtaButton>
             <HeroCtaButton
-              className="bg-white text-black hover:bg-gray-100 sm:w-40"
+              className="bg-primary text-primary-foreground hover:bg-primary/90 sm:w-40"
               authCancelUrl={AUTH_CANCEL_URL}
             >
               <Link href="/auth/sign-up">
@@ -71,42 +71,18 @@ export default withoutAuth(function RootPage() {
         </div>
       </section>
 
-      {/* TODO: When we have a video of Journl, we can add these sections back in. */}
-      {/* <StickyJournlHeader /> */}
-      {/* Product Showcase */}
-      {/* <section className="relative px-2 pt-4 pb-20">
-                    <div className="mb-6 text-center">
-                        <h2 className="mb-6 font-bold text-4xl text-black md:text-5xl">
-                            See Journl in action
-                        </h2>
-                        <p className="mx-auto max-w-2xl text-gray-600 text-xl">
-                            Experience the perfect blend of structured journaling and
-                            AI-powered insights
-                        </p>
-                    </div>
-                    <div className="rounded-lg border border-gray-200 bg-white p-2 shadow-2xl">
-                        <Image
-                            src="/marketing/journl-interface.png"
-                            alt="Journl Interface"
-                            width={1200}
-                            height={800}
-                            className="w-full rounded-lg"
-                        />
-                    </div>
-                </section> */}
-
       {/* Footer */}
-      <footer className="flex flex-col gap-y-6 bg-black px-2 py-8 text-white">
+      <footer className="flex flex-col gap-y-6 bg-background px-2 py-8 text-foreground">
         <div className="flex flex-col items-center justify-center md:flex-row">
           <div className="flex items-center gap-x-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white">
-              <BookOpen className="h-5 w-5 text-black" />
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
+              <BookOpen className="h-5 w-5 text-foreground" />
             </div>
-            <span className="font-bold text-white text-xl">Journl</span>
+            <span className="font-bold text-foreground text-xl">Journl</span>
           </div>
         </div>
-        <Separator className="mx-auto max-w-screen-lg bg-white/10 px-8" />
-        <div className="text-center text-sm text-white">
+        <Separator className="mx-auto max-w-screen-lg bg-primary/10 px-8" />
+        <div className="text-center text-foreground text-sm">
           <p>&copy; {year} Journl. All rights reserved.</p>
         </div>
       </footer>

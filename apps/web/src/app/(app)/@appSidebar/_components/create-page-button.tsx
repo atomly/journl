@@ -81,17 +81,15 @@ export function CreatePageButton({ className }: CreatePageButtonProps) {
   return (
     <SidebarMenuSubItem className={className}>
       <SidebarMenuSubButton asChild>
-        <div className="border-2 border-sidebar-border border-dashed">
-          <Button
-            variant="ghost"
-            className="w-full flex-row justify-start"
-            onClick={handleCreatePage}
-            disabled={showLoading}
-          >
-            <Plus />
-            {showLoading ? "Creating..." : "New page"}
-          </Button>
-        </div>
+        <Button
+          variant="ghost"
+          className="w-full flex-row items-center justify-center border-2 border-sidebar-border border-dashed px-0!"
+          onClick={handleCreatePage}
+          disabled={showLoading}
+        >
+          <Plus className="-ms-4 size-4" />
+          <span>{showLoading ? "Creating..." : "New page"}</span>
+        </Button>
       </SidebarMenuSubButton>
     </SidebarMenuSubItem>
   );

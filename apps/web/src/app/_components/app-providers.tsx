@@ -10,7 +10,7 @@ import { TRPCReactProvider } from "~/trpc/react";
 
 export function AppProviders({ children }: { children: React.ReactNode }) {
   return (
-    <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+    <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
       <MantineProvider>
         <AppEventProvider>
           <JournlAgentAwarenessProvider>

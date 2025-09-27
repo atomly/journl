@@ -19,7 +19,12 @@ function ReactQueryDevtoolsDialog() {
       </DialogTrigger>
       <DialogContent className="flex h-full w-full max-w-screen-md! items-center justify-center border-none bg-transparent px-0 py-10">
         <ReactQueryDevtoolsPanel
-          style={{ borderRadius: "1rem", height: "100%", width: "100%" }}
+          style={{
+            backgroundColor: "transparent",
+            borderRadius: "1rem",
+            height: "100%",
+            width: "100%",
+          }}
         />
       </DialogContent>
     </Dialog>

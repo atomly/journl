@@ -11,8 +11,7 @@ import {
 } from "~/components/ui/sidebar";
 import { Skeleton } from "~/components/ui/skeleton";
 import { env } from "~/env";
-import { PAGES_INFINITE_QUERY_CONFIG } from "~/lib/pages-config";
-import { api } from "~/trpc/server";
+import { prefetch, trpc } from "~/trpc/server";
 import { DynamicAppSidebarDevtools } from "./_components/app-sidebar-devtools.dynamic";
 import { AppSidebarNavigation } from "./_components/app-sidebar-main";
 import { AppSidebarPages } from "./_components/app-sidebar-pages";
@@ -20,9 +19,18 @@ import { AppSidebarPagesSkeleton } from "./_components/app-sidebar-pages-skeleto
 import { AppSidebarUser } from "./_components/app-sidebar-user";
 import { AppSidebarUserSkeleton } from "./_components/app-sidebar-user-skeleton";
 
+export const infinitePagesQueryOptions = {
+  direction: "forward" as const,
+  limit: 25,
+} as const;
+
 async function SuspendedAppSidebarPages() {
-  const pagesData = await api.pages.getInfinite(PAGES_INFINITE_QUERY_CONFIG);
-  return <AppSidebarPages initialPagesData={pagesData} />;
+  prefetch(
+    trpc.pages.getInfinite.infiniteQueryOptions(infinitePagesQueryOptions),
+  );
+  return (
+    <AppSidebarPages infinitePagesQueryOptions={infinitePagesQueryOptions} />
+  );
 }
 
 export default function AppSidebar() {

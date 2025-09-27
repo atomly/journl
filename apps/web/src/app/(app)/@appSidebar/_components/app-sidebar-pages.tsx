@@ -15,37 +15,32 @@ import {
   SidebarMenuSub,
   useSidebar,
 } from "~/components/ui/sidebar";
-import { PAGES_INFINITE_QUERY_CONFIG } from "~/lib/pages-config";
 import { useTRPC } from "~/trpc/react";
 import { AppSidebarPageItem } from "./app-sidebar-page-item";
 import { CreatePageButton } from "./create-page-button";
 
 type AppSidebarPagesProps = {
-  initialPagesData: {
-    items: Page[];
-    nextCursor: string | undefined;
+  infinitePagesQueryOptions: {
+    direction: "forward" | "backward";
+    limit: number;
   };
   defaultOpen?: boolean;
 };
 
 export const AppSidebarPages = ({
-  initialPagesData,
+  infinitePagesQueryOptions,
   defaultOpen = true,
 }: AppSidebarPagesProps) => {
   const trpc = useTRPC();
   const { state, setOpen } = useSidebar();
-
+  const queryOptions = trpc.pages.getInfinite.infiniteQueryOptions(
+    infinitePagesQueryOptions,
+  );
   const { data, fetchNextPage, isFetchingNextPage, hasNextPage } =
     useInfiniteQuery({
-      ...trpc.pages.getInfinite.infiniteQueryOptions(
-        PAGES_INFINITE_QUERY_CONFIG,
-      ),
+      ...queryOptions,
       getNextPageParam: ({ nextCursor }) => {
         return nextCursor;
-      },
-      initialData: {
-        pageParams: [null], // null represents "no cursor" for the first page
-        pages: [initialPagesData],
       },
     });
 

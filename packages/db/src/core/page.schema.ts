@@ -30,10 +30,9 @@ export const Page = pgTable(
       .$onUpdateFn(() => sql`now()`),
   }),
   (t) => [
-    index("page_user_id_updated_at_index").using(
-      "btree",
+    index("page_user_id_updated_at_desc_index").on(
       t.user_id,
-      t.updated_at,
+      t.updated_at.desc(),
     ),
   ],
 );

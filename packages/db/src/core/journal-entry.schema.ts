@@ -1,5 +1,5 @@
 import { relations, sql } from "drizzle-orm";
-import { pgTable, text, unique } from "drizzle-orm/pg-core";
+import { index, pgTable, text, unique } from "drizzle-orm/pg-core";
 import { createSelectSchema } from "drizzle-zod";
 import z from "zod/v4";
 import { user } from "../auth/user.schema.js";
@@ -31,6 +31,7 @@ export const JournalEntry = pgTable(
   (t) => [
     // Enforce uniqueness: one journal entry per user per day
     unique("journal_entry_unique_user_date").on(t.user_id, t.date),
+    index("journal_entry_user_id_date_desc_index").on(t.user_id, t.date.desc()),
   ],
 );
 

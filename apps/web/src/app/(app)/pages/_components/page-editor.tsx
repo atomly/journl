@@ -4,10 +4,11 @@ import type { BlockTransaction } from "@acme/api";
 import type { Page } from "@acme/db/schema";
 import type { PartialBlock } from "@blocknote/core";
 import { useMutation } from "@tanstack/react-query";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useDebouncedCallback } from "use-debounce";
 import { useJournlAgentAwareness } from "~/ai/agents/use-journl-agent-awareness";
 import { BlockEditor } from "~/components/editor/block-editor";
+import { BlockEditorErrorOverlay } from "~/components/editor/block-editor-error-overlay";
 import {
   BlockEditorFormattingToolbar,
   BlockEditorSlashMenu,
@@ -35,12 +36,28 @@ export function PageEditor({
   const { rememberEditor, forgetEditor, rememberView } =
     useJournlAgentAwareness();
   const editor = useBlockEditor({ initialBlocks });
+  const [isOverlayOpen, setOverlayOpen] = useState(false);
+
+  /**
+   * Handles the error state of the editor.
+   *
+   * @privateRemarks
+   *
+   * Using replace() to avoid creating a new history entry
+   */
+  function handleError() {
+    setOverlayOpen(true);
+    requestAnimationFrame(() => {
+      location.replace(location.href);
+    });
+  }
 
   const { mutate, isPending } = useMutation({
     ...trpc.pages.saveTransactions.mutationOptions({}),
-    // ! TODO: When the mutation fails we need to revert the changes to the editor just like Notion does.
-    // ! To do this we can use `onError` and `editor.undo()`, without calling the transactions. We might have to get creative.
-    // ! Maybe we can refetch the blocks after an error instead of `undo`?
+    onError: (error) => {
+      console.error("[PageEditor] error 👀", error);
+      handleError();
+    },
     onSuccess: () => {
       if (pendingChangesRef.current.length > 0) {
         debouncedMutate();
@@ -93,17 +110,20 @@ export function PageEditor({
   );
 
   return (
-    <BlockEditor
-      editor={editor}
-      initialBlocks={initialBlocks}
-      onChange={handleEditorChange}
-      // Disabling the default because we're using a formatting toolbar with the AI option.
-      formattingToolbar={false}
-      // Disabling the default because we're using a slash menu with the AI option.
-      slashMenu={false}
-    >
-      <BlockEditorFormattingToolbar />
-      <BlockEditorSlashMenu />
-    </BlockEditor>
+    <>
+      <BlockEditor
+        editor={editor}
+        initialBlocks={initialBlocks}
+        onChange={handleEditorChange}
+        // Disabling the default because we're using a formatting toolbar with the AI option.
+        formattingToolbar={false}
+        // Disabling the default because we're using a slash menu with the AI option.
+        slashMenu={false}
+      >
+        <BlockEditorFormattingToolbar />
+        <BlockEditorSlashMenu />
+      </BlockEditor>
+      <BlockEditorErrorOverlay isOpen={isOverlayOpen} />
+    </>
   );
 }

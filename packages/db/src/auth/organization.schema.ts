@@ -1,13 +1,14 @@
-import { pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp, varchar } from "drizzle-orm/pg-core";
+import { TEXT_LIMITS } from "../constants/resource-limits.js";
 import { user } from "./user.schema.js";
 
 export const organization = pgTable("organization", {
   id: text("id").primaryKey(),
-  name: text("name").notNull(),
-  slug: text("slug").unique(),
-  logo: text("logo"),
+  name: varchar("name", { length: TEXT_LIMITS.NAME }).notNull(),
+  slug: varchar("slug", { length: TEXT_LIMITS.SLUG }).unique(),
+  logo: varchar("logo", { length: TEXT_LIMITS.URL }),
   createdAt: timestamp("created_at").notNull(),
-  metadata: text("metadata"),
+  metadata: varchar("metadata", { length: TEXT_LIMITS.URL }),
 });
 
 export const member = pgTable("member", {
@@ -18,7 +19,9 @@ export const member = pgTable("member", {
   userId: text("user_id")
     .notNull()
     .references(() => user.id, { onDelete: "cascade" }),
-  role: text("role").default("member").notNull(),
+  role: varchar("role", { length: TEXT_LIMITS.STATUS })
+    .default("member")
+    .notNull(),
   createdAt: timestamp("created_at").notNull(),
 });
 
@@ -27,9 +30,11 @@ export const invitation = pgTable("invitation", {
   organizationId: text("organization_id")
     .notNull()
     .references(() => organization.id, { onDelete: "cascade" }),
-  email: text("email").notNull(),
-  role: text("role"),
-  status: text("status").default("pending").notNull(),
+  email: varchar("email", { length: TEXT_LIMITS.EMAIL }).notNull(),
+  role: varchar("role", { length: TEXT_LIMITS.STATUS }),
+  status: varchar("status", { length: TEXT_LIMITS.STATUS })
+    .default("pending")
+    .notNull(),
   expiresAt: timestamp("expires_at").notNull(),
   inviterId: text("inviter_id")
     .notNull()

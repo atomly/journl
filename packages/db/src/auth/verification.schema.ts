@@ -1,8 +1,11 @@
-import { pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp, varchar } from "drizzle-orm/pg-core";
+import { TEXT_LIMITS } from "../constants/resource-limits.js";
 
 export const verification = pgTable("verification", {
   id: text("id").primaryKey(),
-  identifier: text("identifier").notNull(),
+  identifier: varchar("identifier", {
+    length: TEXT_LIMITS.VERIFICATION_ID,
+  }).notNull(),
   value: text("value").notNull(),
   expiresAt: timestamp("expires_at").notNull(),
   createdAt: timestamp("created_at").$defaultFn(

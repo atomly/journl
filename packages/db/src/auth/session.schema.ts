@@ -1,4 +1,5 @@
-import { pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp, varchar } from "drizzle-orm/pg-core";
+import { TEXT_LIMITS } from "../constants/resource-limits.js";
 import { user } from "./user.schema.js";
 
 export const session = pgTable("session", {
@@ -7,12 +8,14 @@ export const session = pgTable("session", {
   token: text("token").notNull().unique(),
   createdAt: timestamp("created_at").notNull(),
   updatedAt: timestamp("updated_at").notNull(),
-  ipAddress: text("ip_address"),
-  userAgent: text("user_agent"),
+  ipAddress: varchar("ip_address", { length: TEXT_LIMITS.IP_ADDRESS }),
+  userAgent: varchar("user_agent", { length: TEXT_LIMITS.USER_AGENT }),
   userId: text("user_id")
     .notNull()
     .references(() => user.id, { onDelete: "cascade" }),
-  activeOrganizationId: text("active_organization_id"),
+  activeOrganizationId: varchar("active_organization_id", {
+    length: TEXT_LIMITS.EMAIL,
+  }),
 });
 
 export type Session = typeof session.$inferSelect;

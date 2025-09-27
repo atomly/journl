@@ -6,16 +6,20 @@ import {
   pgTable,
   text,
   timestamp,
+  varchar,
 } from "drizzle-orm/pg-core";
+import { TEXT_LIMITS } from "../constants/resource-limits.js";
 import { Price } from "./price.schema.js";
 
 export const Plan = pgTable(
   "plan",
   {
     id: text("id").primaryKey(),
-    name: text("name").notNull().unique(),
-    displayName: text("display_name").notNull(),
-    description: text("description"),
+    name: varchar("name", { length: TEXT_LIMITS.PLAN_NAME }).notNull().unique(),
+    displayName: varchar("display_name", {
+      length: TEXT_LIMITS.PLAN_NAME,
+    }).notNull(),
+    description: varchar("description", { length: TEXT_LIMITS.DESCRIPTION }),
     active: boolean("active").default(true).notNull(),
     quota: integer("quota").notNull(),
     created_at: timestamp("created_at")

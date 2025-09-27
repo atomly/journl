@@ -46,7 +46,7 @@ export const notesRouter = {
 
         const embeddingSimilarity = sql<number>`1 - (${cosineDistance(DocumentEmbedding.vector, embedding)})`;
 
-        const results = await ctx.db
+        const matches = await ctx.db
           .selectDistinctOn([DocumentEmbedding.document_id], {
             embedding: DocumentEmbedding,
             journal_entry: JournalEntry,
@@ -67,9 +67,12 @@ export const notesRouter = {
           )
           .orderBy(DocumentEmbedding.document_id, desc(embeddingSimilarity));
 
-        results.sort((a, b) => {
-          return b.similarity - a.similarity;
-        });
+        const results = matches
+          // Only include results that have a raw text length greater than 1.
+          .filter((result) => result.embedding.chunk_raw_text.length > 1)
+          .sort((a, b) => {
+            return b.similarity - a.similarity;
+          });
 
         const notes: Note[] = [];
 

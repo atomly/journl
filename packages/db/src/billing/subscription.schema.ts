@@ -6,7 +6,9 @@ import {
   pgTable,
   text,
   timestamp,
+  varchar,
 } from "drizzle-orm/pg-core";
+import { TEXT_LIMITS } from "../constants/resource-limits.js";
 import { user } from "../schema.js";
 import { Plan } from "./plan.schema.js";
 
@@ -18,10 +20,16 @@ export const Subscription = pgTable(
       onDelete: "cascade",
     }),
     planName: text("plan_name").references(() => Plan.name),
-    stripeCustomerId: text("stripe_customer_id"),
-    stripeSubscriptionId: text("stripe_subscription_id"),
+    stripeCustomerId: varchar("stripe_customer_id", {
+      length: TEXT_LIMITS.STRIPE_ID,
+    }),
+    stripeSubscriptionId: varchar("stripe_subscription_id", {
+      length: TEXT_LIMITS.STRIPE_ID,
+    }),
     seats: integer("seats"),
-    status: text("status").default("incomplete"),
+    status: varchar("status", { length: TEXT_LIMITS.STATUS }).default(
+      "incomplete",
+    ),
     periodStart: timestamp("period_start"),
     periodEnd: timestamp("period_end"),
     trialStart: timestamp("trial_start"),

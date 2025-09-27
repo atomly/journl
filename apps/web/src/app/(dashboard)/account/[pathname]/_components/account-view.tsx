@@ -23,9 +23,10 @@ export async function AuthView({ pathname }: { pathname: string }) {
         },
         sidebar: {
           base: "gap-y-2",
-          button: "cursor-pointer text-primary",
+          button:
+            "cursor-pointer bg-card text-card-foreground border-secondary",
           buttonActive:
-            "cursor-pointer border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50",
+            "cursor-pointer border shadow-xs bg-secondary text-secondary-foreground border-primary",
         },
       }}
       pathname={pathname}

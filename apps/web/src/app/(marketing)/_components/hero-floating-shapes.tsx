@@ -22,6 +22,7 @@ export function HeroFloatingShapes() {
     shapes.forEach((shape, index) => {
       const randomType = types[Math.floor(Math.random() * types.length)];
       const element = document.createElement("div");
+
       element.className = "absolute opacity-5 animate-pulse";
       element.style.left = `${shape.x}%`;
       element.style.top = `${shape.y}%`;

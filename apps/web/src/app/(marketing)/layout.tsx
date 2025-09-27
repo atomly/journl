@@ -7,7 +7,7 @@ type AppLayoutProps = {
 
 function MarketingLayout({ children }: AppLayoutProps) {
   return (
-    <ThemeProvider attribute="class" defaultTheme="marketing" enableSystem>
+    <ThemeProvider attribute="class" forcedTheme="dark" enableSystem>
       <TRPCReactProvider>{children}</TRPCReactProvider>
     </ThemeProvider>
   );

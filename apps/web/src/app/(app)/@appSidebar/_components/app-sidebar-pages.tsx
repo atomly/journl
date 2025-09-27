@@ -84,7 +84,7 @@ export const AppSidebarPages = ({
 
       <CollapsibleContent className="flex h-full min-h-0 flex-col">
         <SidebarMenuSub className="mx-0 mr-0 flex-1 gap-0 overflow-scroll border-none px-0">
-          <CreatePageButton className="ml-3.5 border-sidebar-border border-l ps-2.5 pb-2" />
+          <CreatePageButton className="ml-3.5 border-sidebar-border border-l py-2 ps-2.5" />
           <Virtuoso
             className="h-full w-full"
             data={pages}

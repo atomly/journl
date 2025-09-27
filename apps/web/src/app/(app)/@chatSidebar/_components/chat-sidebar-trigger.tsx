@@ -27,7 +27,7 @@ export default function ChatSidebarTrigger() {
           <span className="sr-only">Toggle Chat Sidebar</span>
         </Button>
       </TooltipTrigger>
-      <TooltipContent side="top" align="center">
+      <TooltipContent className="font-bold" side="top" align="center">
         Open Journl assistant
       </TooltipContent>
     </Tooltip>

@@ -488,7 +488,7 @@ function SidebarDragHandle({
       {/* Visual resize indicator - thin border highlight */}
       <div
         className={cn(
-          "h-full cursor-col-resize bg-transparent transition-colors",
+          "my-1.5 h-[calc(100%-1rem)] cursor-col-resize bg-transparent transition-colors",
           "group-hover/resize-border:bg-sidebar-border/70",
           side === "left" ? "ml-auto w-0.5" : "mr-auto w-0.5",
           className,

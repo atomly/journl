@@ -12,4 +12,6 @@ export * from "./core/document-embedding.schema.js";
 export * from "./core/document-embedding-task.schema.js";
 export * from "./core/journal-entry.schema.js";
 export * from "./core/page.schema.js";
+export * from "./usage/usage-aggregate.schema.js";
 export * from "./usage/usage-event.schema.js";
+export * from "./usage/usage-period.schema.js";

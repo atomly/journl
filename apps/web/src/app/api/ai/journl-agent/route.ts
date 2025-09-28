@@ -18,30 +18,6 @@ async function handler(req: Request) {
 
     const result = await journlAgent.streamVNext(messages, {
       format: "aisdk",
-      onFinish: async (result) => {
-        const modelData = await journlAgent.getModel();
-
-        const provider = modelData.provider;
-        const model = modelData.modelId;
-
-        if (result.usage && session.user?.id) {
-          await api.usage.trackModelUsage({
-            metrics: [
-              {
-                quantity: result.usage.promptTokens,
-                unit: "input_tokens",
-              },
-              {
-                quantity: result.usage.completionTokens,
-                unit: "output_tokens",
-              },
-            ],
-            model_id: model,
-            model_provider: provider,
-            user_id: session.user.id,
-          });
-        }
-      },
       runtimeContext: setJournlRuntimeContext({
         ...rest.context,
         user: {
@@ -50,6 +26,38 @@ async function handler(req: Request) {
         },
       } satisfies JournlAgentContext),
     });
+
+    // Track usage after streaming completes
+    if (session.user?.id) {
+      const fullOutput = await result.getFullOutput();
+      const usage = fullOutput.usage;
+
+      if (usage) {
+        const modelData = await journlAgent.getModel();
+        const provider = modelData.provider;
+        const model = modelData.modelId;
+
+        await api.usage.trackModelUsage({
+          metrics: [
+            {
+              quantity: usage.promptTokens || 0,
+              unit: "input_tokens",
+            },
+            {
+              quantity: usage.completionTokens || 0,
+              unit: "output_tokens",
+            },
+            {
+              quantity: usage.reasoningTokens || 0,
+              unit: "reasoning_tokens",
+            },
+          ],
+          model_id: model,
+          model_provider: provider,
+          user_id: session.user.id,
+        });
+      }
+    }
 
     return result.toUIMessageStreamResponse();
   } catch (error) {

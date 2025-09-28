@@ -9,6 +9,7 @@ import {
   varchar,
 } from "drizzle-orm/pg-core";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
+import { z } from "zod/v4";
 import { JSONB_LIMITS, TEXT_LIMITS } from "../constants/resource-limits.js";
 import { user } from "../schema.js";
 
@@ -66,3 +67,9 @@ export const zInsertUsageEvent = createInsertSchema(UsageEvent).omit({
 });
 
 export const zUsageEvent = createSelectSchema(UsageEvent);
+
+// Webhook-compatible schema that accepts string timestamps
+export const zUsageEventWebhook = zUsageEvent.extend({
+  created_at: z.string().optional(),
+  updated_at: z.string().optional(),
+});

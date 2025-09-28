@@ -2,6 +2,7 @@ import { and, eq, or } from "@acme/db";
 import { Subscription } from "@acme/db/schema";
 import type { TRPCRouterRecord } from "@trpc/server";
 import { z } from "zod/v4";
+import type { TRPCContext } from "../trpc";
 import { protectedProcedure } from "../trpc";
 
 /**
@@ -16,6 +17,40 @@ function getAuthHeaders(headers: Headers): Headers {
   }
 
   return authHeaders;
+}
+
+/**
+ * Get the active subscription for a user
+ */
+export async function getActiveSubscription({
+  ctx,
+  userId,
+}: {
+  ctx: TRPCContext;
+  userId?: string;
+}) {
+  const userIdToUse = userId ?? ctx.session?.user?.id;
+
+  if (!userIdToUse) {
+    return null;
+  }
+
+  return ctx.db.query.Subscription.findFirst({
+    where: and(
+      eq(Subscription.referenceId, userIdToUse),
+      or(
+        eq(Subscription.status, "active"),
+        eq(Subscription.status, "trialing"),
+      ),
+    ),
+    with: {
+      plan: {
+        with: {
+          price: true,
+        },
+      },
+    },
+  });
 }
 
 const zProPlan = z.object({
@@ -66,36 +101,8 @@ export const subscriptionRouter = {
       quota: plan.quota,
     });
   }),
-  // getActivePlan: protectedProcedure.query(async ({ ctx }) => {
-  //   const activeSubscription = await getActiveSubscription({ ctx });
-  //   if (!activeSubscription?.priceId) return null;
-
-  //   const plan = await ctx.db.query.Plan.findFirst({
-  //     where: eq(Plan.id, activeSubscription.priceId),
-  //     with: {
-  //       prices: true,
-  //     },
-  //   });
-
-  //   return plan;
-  // }),
   getSubscription: protectedProcedure.query(async ({ ctx }) => {
-    const subscription = await ctx.db.query.Subscription.findFirst({
-      where: and(
-        eq(Subscription.referenceId, ctx.session.user.id),
-        or(
-          eq(Subscription.status, "active"),
-          eq(Subscription.status, "trialing"),
-        ),
-      ),
-      with: {
-        plan: {
-          with: {
-            price: true,
-          },
-        },
-      },
-    });
+    const subscription = await getActiveSubscription({ ctx });
 
     if (!subscription?.plan) {
       return null;

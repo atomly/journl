@@ -1,5 +1,11 @@
-import { and, eq } from "@acme/db";
-import { UsageEvent, UsageEventStatus, UsagePeriod } from "@acme/db/schema";
+import { and, desc, eq, lte, sql } from "@acme/db";
+import {
+  ModelPricing,
+  UsageAggregate,
+  UsageEvent,
+  UsageEventStatus,
+  UsagePeriod,
+} from "@acme/db/schema";
 import { TRPCError, type TRPCRouterRecord } from "@trpc/server";
 import { z } from "zod/v4";
 import { publicProcedure } from "../trpc.js";
@@ -96,6 +102,120 @@ export const usageRouter = {
         }
 
         return usagePeriod;
+      }
+    }),
+  processUsageEvent: publicProcedure
+    .input(
+      z.object({
+        usage_event_id: z.string(),
+        usage_period_id: z.string(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      try {
+        // Get the usage event
+        const usageEvent = await ctx.db.query.UsageEvent.findFirst({
+          where: eq(UsageEvent.id, input.usage_event_id),
+        });
+
+        if (!usageEvent) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Usage event not found",
+          });
+        }
+
+        if (usageEvent.status === "processed") {
+          return { message: "Already processed", success: true };
+        }
+
+        // Get the usage period (already created/retrieved by the caller)
+        const usagePeriod = await ctx.db.query.UsagePeriod.findFirst({
+          where: eq(UsagePeriod.id, input.usage_period_id),
+        });
+
+        if (!usagePeriod) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Usage period not found",
+          });
+        }
+
+        // Calculate total cost for this usage event
+        let totalCost = 0;
+
+        for (const metric of usageEvent.metrics) {
+          // Get current pricing for this model and unit type
+          const eventDate = new Date(usageEvent.created_at!);
+          const pricing = await ctx.db
+            .select()
+            .from(ModelPricing)
+            .where(
+              and(
+                eq(ModelPricing.model_id, usageEvent.model_id),
+                eq(ModelPricing.model_provider, usageEvent.model_provider),
+                eq(ModelPricing.unit_type, metric.unit),
+                lte(ModelPricing.effective_date, eventDate),
+              ),
+            )
+            .orderBy(desc(ModelPricing.effective_date))
+            .limit(1)
+            .then((results) => results[0] || null);
+
+          if (pricing) {
+            const cost =
+              Number.parseFloat(pricing.price_per_unit_usd) * metric.quantity;
+            totalCost += cost;
+          } else {
+            console.warn(
+              `No pricing found for model ${usageEvent.model_id} (${usageEvent.model_provider}) unit ${metric.unit}`,
+            );
+          }
+        }
+
+        // Update or create usage aggregate
+        await ctx.db
+          .insert(UsageAggregate)
+          .values({
+            total_cost_usd: totalCost.toFixed(6),
+            usage_period_id: usagePeriod.id,
+            user_id: usageEvent.user_id,
+          })
+          .onConflictDoUpdate({
+            set: {
+              total_cost_usd: sql`${UsageAggregate.total_cost_usd} + ${totalCost.toFixed(6)}`,
+              updated_at: new Date(),
+            },
+            target: [UsageAggregate.user_id, UsageAggregate.usage_period_id],
+          });
+
+        // Mark usage event as processed and store the calculated cost
+        await ctx.db
+          .update(UsageEvent)
+          .set({
+            status: "processed",
+            total_cost_usd: totalCost.toFixed(6),
+          })
+          .where(eq(UsageEvent.id, input.usage_event_id));
+
+        return {
+          cost_added: totalCost,
+          success: true,
+          usage_period_id: usagePeriod.id,
+        };
+      } catch (error) {
+        console.error("Database error in usage.processUsageEvent:", error);
+
+        // Mark usage event as failed
+        await ctx.db
+          .update(UsageEvent)
+          .set({ status: "failed" })
+          .where(eq(UsageEvent.id, input.usage_event_id));
+
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to process usage event",
+        });
       }
     }),
   trackModelUsage: publicProcedure

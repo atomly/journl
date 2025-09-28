@@ -1,6 +1,7 @@
 import { sql } from "drizzle-orm";
 import {
   check,
+  decimal,
   jsonb,
   pgEnum,
   pgTable,
@@ -40,6 +41,9 @@ export const UsageEvent = pgTable(
       >()
       .notNull(),
     status: UsageEventStatus().notNull().default("pending"),
+    total_cost_usd: decimal("total_cost_usd", { precision: 10, scale: 6 })
+      .notNull()
+      .default("0"),
     created_at: timestamp().defaultNow(),
     updated_at: timestamp()
       .defaultNow()
@@ -68,8 +72,12 @@ export const zInsertUsageEvent = createInsertSchema(UsageEvent).omit({
 
 export const zUsageEvent = createSelectSchema(UsageEvent);
 
-// Webhook-compatible schema that accepts string timestamps
+// Webhook-compatible schema that accepts string timestamps and handles decimal fields
 export const zUsageEventWebhook = zUsageEvent.extend({
   created_at: z.string().optional(),
   updated_at: z.string().optional(),
+  total_cost_usd: z
+    .union([z.string(), z.number()])
+    .optional()
+    .transform((val) => (val !== undefined ? String(val) : "0")),
 });

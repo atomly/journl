@@ -41,7 +41,6 @@ export const handler =
   ) =>
   async (request: NextRequest) => {
     try {
-      console.log("zzz request", request.url);
       // Get the signature from headers
       const signature = request.headers.get("x-supabase-signature");
 

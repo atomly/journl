@@ -33,6 +33,7 @@ export const Price = pgTable(
     }).notNull(),
     active: boolean("active").default(true).notNull(),
     lookupKey: varchar("lookup_key", { length: TEXT_LIMITS.LOOKUP_KEY }),
+    metadata: jsonb("metadata").$type<Record<string, string>>().default({}),
     createdAt: timestamp("created_at")
       .$defaultFn(() => /* @__PURE__ */ new Date())
       .notNull(),

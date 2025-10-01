@@ -4,17 +4,29 @@ import { eq } from "drizzle-orm";
 import type Stripe from "stripe";
 
 async function upsertPlan(product: Stripe.Product) {
-  const data: InsertPlan = {
+  const quota = Number(product.metadata.quota) || 0;
+
+  const insertData: InsertPlan = {
     active: product.active,
     description: product.description,
     displayName: product.name,
     id: product.id,
+    metadata: product.metadata,
     name: product.name.toLowerCase(),
-    quota: Number(product.metadata.quota),
+    quota,
   };
 
-  return db.insert(Plan).values(data).onConflictDoUpdate({
-    set: data,
+  const updateData = {
+    active: insertData.active,
+    description: insertData.description,
+    displayName: insertData.displayName,
+    metadata: insertData.metadata,
+    quota: insertData.quota,
+    updated_at: new Date(),
+  };
+
+  return db.insert(Plan).values(insertData).onConflictDoUpdate({
+    set: updateData,
     target: Plan.id,
   });
 }

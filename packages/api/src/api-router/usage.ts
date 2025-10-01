@@ -10,20 +10,7 @@ import { TRPCError, type TRPCRouterRecord } from "@trpc/server";
 import { z } from "zod/v4";
 import type { TRPCContext } from "../trpc.js";
 import { publicProcedure } from "../trpc.js";
-import { getActiveSubscription } from "./subscription.js";
-
-/**
- * Get the free plan from the database
- */
-async function getFreePlan(ctx: TRPCContext) {
-  return ctx.db.query.Plan.findFirst({
-    where: (plans, { eq, and }) =>
-      and(
-        eq(plans.active, true),
-        eq(plans.name, "free"), // Exact match for "free" plan name
-      ),
-  });
-}
+import { getActiveSubscription, getFreePlan } from "./subscription.js";
 
 /**
  * Get or create the current usage period for a user
@@ -121,7 +108,7 @@ async function getCurrentUsagePeriod({
         .values({
           period_end: monthEnd,
           period_start: monthStart,
-          plan_id: freePlan?.id || null, // Use free plan ID if found
+          plan_id: freePlan?.id,
           subscription_id: null, // Free users don't have a subscription_id
           user_id: userId,
         })
@@ -146,25 +133,20 @@ export const usageRouter = {
     .input(z.object({ user_id: z.string() }))
     .query(async ({ ctx, input }) => {
       try {
-        // Get active subscription
         const activeSubscription = await getActiveSubscription({
           ctx,
           userId: input.user_id,
         });
 
-        // Get current usage period (creates one if it doesn't exist)
         const usagePeriod = await getCurrentUsagePeriod({
           ctx,
           userId: input.user_id,
         });
 
-        // Determine quota based on subscription status
         let quotaUsd: number;
         if (activeSubscription?.plan) {
-          // Pro user: use plan quota
           quotaUsd = activeSubscription.plan.quota / 100;
         } else {
-          // Free user: get quota from free plan
           const freePlan = await getFreePlan(ctx);
           if (!freePlan) {
             throw new TRPCError({

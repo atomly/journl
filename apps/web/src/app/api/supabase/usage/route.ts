@@ -21,19 +21,10 @@ export const POST = handler(zUsageEventWebhook, async (payload) => {
   }
 
   try {
-    // Get or create the usage period for this user
-    const usagePeriod = await api.usage.getCurrentUsagePeriod({
-      user_id: payload.record.user_id,
-    });
-
-    if (!usagePeriod) {
-      throw new Error("Error getting/creating usage period");
-    }
-
     // Process the usage event with the usage period
     const result = await api.usage.processUsageEvent({
       usage_event_id: payload.record.id,
-      usage_period_id: usagePeriod.id,
+      user_id: payload.record.user_id,
     });
 
     return NextResponse.json({ result, success: true });

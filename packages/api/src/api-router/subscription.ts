@@ -20,6 +20,16 @@ function getAuthHeaders(headers: Headers): Headers {
 }
 
 /**
+ * Get the free plan from the database
+ */
+export async function getFreePlan(ctx: TRPCContext) {
+  return ctx.db.query.Plan.findFirst({
+    where: (plans, { eq, and }) =>
+      and(eq(plans.active, true), eq(plans.name, "free")),
+  });
+}
+
+/**
  * Get the active subscription for a user
  */
 export async function getActiveSubscription({

@@ -77,7 +77,7 @@ export const modelPricingRouter = {
           .values(input)
           .onConflictDoUpdate({
             set: {
-              price_per_unit_usd: input.price_per_unit_usd,
+              price_per_unit: input.price_per_unit,
               updated_at: new Date(),
             },
             target: [

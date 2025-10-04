@@ -29,7 +29,6 @@ async function upsertPrice(price: Stripe.Price) {
     unitAmount: price.unit_amount ?? 0,
   };
 
-  // For updates, exclude auto-generated timestamp fields and planId (shouldn't change)
   const updateData = {
     active: insertData.active,
     currency: insertData.currency,

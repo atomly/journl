@@ -170,7 +170,7 @@ export const usageRouter = {
         });
 
         if (usageAggregate) {
-          currentUsageUsd = Number.parseFloat(usageAggregate.total_cost_usd);
+          currentUsageUsd = Number.parseFloat(usageAggregate.total_cost);
         }
 
         const canUse = currentUsageUsd < quotaUsd;
@@ -257,7 +257,7 @@ export const usageRouter = {
 
             if (pricing) {
               const cost =
-                Number.parseFloat(pricing.price_per_unit_usd) * metric.quantity;
+                Number.parseFloat(pricing.price_per_unit) * metric.quantity;
               totalCost += cost;
             } else {
               console.warn(
@@ -270,13 +270,13 @@ export const usageRouter = {
           await tx
             .insert(UsageAggregate)
             .values({
-              total_cost_usd: totalCost.toFixed(6),
+              total_cost: totalCost.toFixed(6),
               usage_period_id: usagePeriod.id,
               user_id: usageEvent.user_id,
             })
             .onConflictDoUpdate({
               set: {
-                total_cost_usd: sql`${UsageAggregate.total_cost_usd} + ${totalCost.toFixed(6)}`,
+                total_cost: sql`${UsageAggregate.total_cost} + ${totalCost.toFixed(6)}`,
                 updated_at: new Date(),
               },
               target: [UsageAggregate.user_id, UsageAggregate.usage_period_id],
@@ -287,7 +287,7 @@ export const usageRouter = {
             .update(UsageEvent)
             .set({
               status: "processed",
-              total_cost_usd: totalCost.toFixed(6),
+              total_cost: totalCost.toFixed(6),
             })
             .where(eq(UsageEvent.id, input.usage_event_id));
 

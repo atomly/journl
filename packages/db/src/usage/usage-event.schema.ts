@@ -41,7 +41,7 @@ export const UsageEvent = pgTable(
       >()
       .notNull(),
     status: UsageEventStatus().notNull().default("pending"),
-    total_cost_usd: decimal("total_cost_usd", { precision: 10, scale: 6 })
+    total_cost: decimal("total_cost", { precision: 10, scale: 6 })
       .notNull()
       .default("0"),
     created_at: timestamp().defaultNow(),
@@ -76,7 +76,7 @@ export const zUsageEvent = createSelectSchema(UsageEvent);
 export const zUsageEventWebhook = zUsageEvent.extend({
   created_at: z.string().optional(),
   updated_at: z.string().optional(),
-  total_cost_usd: z
+  total_cost: z
     .union([z.string(), z.number()])
     .optional()
     .transform((val) => (val !== undefined ? String(val) : "0")),

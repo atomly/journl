@@ -2,7 +2,6 @@ import {
   decimal,
   index,
   pgTable,
-  text,
   timestamp,
   unique,
   varchar,
@@ -19,7 +18,7 @@ export const ModelPricing = pgTable(
       length: TEXT_LIMITS.MODEL_PROVIDER,
     }).notNull(),
     unit_type: varchar("unit_type", { length: 50 }).notNull(), // e.g., "input_tokens", "output_tokens", "reasoning_tokens", "requests"
-    price_per_unit_usd: decimal("price_per_unit_usd", {
+    price_per_unit: decimal("price_per_unit", {
       precision: 12,
       scale: 8,
     }).notNull(), // High precision for token pricing (e.g., $0.00000150 per token)

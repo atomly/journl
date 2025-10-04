@@ -27,7 +27,7 @@ async function handler(req: Request) {
       } satisfies JournlAgentContext),
     });
 
-    // Track usage after streaming completes
+    // Track usage after streaming completes.
     if (session.user?.id) {
       const fullOutput = await result.getFullOutput();
       const usage = fullOutput.usage;

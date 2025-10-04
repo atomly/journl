@@ -5,12 +5,10 @@ import { handler } from "../_lib/webhook-handler";
 
 /**
  * This webhook processes usage events when they are created or updated.
- *
  * Usage events are created when AI features are used (chat, embedding, etc.)
- * and this webhook processes them to update usage aggregates and billing.
  */
 export const POST = handler(zUsageEventWebhook, async (payload) => {
-  // Skip DELETE events for now
+  // Skip DELETE events
   if (payload.type === "DELETE") {
     return NextResponse.json({ success: true });
   }

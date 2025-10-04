@@ -22,110 +22,113 @@ async function getCurrentUsagePeriod({
   ctx: TRPCContext;
   userId: string;
 }) {
-  // First, check if user has an active subscription
-  const activeSubscription = await getActiveSubscription({
-    ctx,
-    userId,
+  return await ctx.db.transaction(async (tx) => {
+    // First, check if user has an active subscription
+    const activeSubscription = await getActiveSubscription({
+      ctx,
+      userId,
+    });
+
+    if (activeSubscription) {
+      // Validate subscription has required fields
+      if (
+        !activeSubscription.periodStart ||
+        !activeSubscription.periodEnd ||
+        !activeSubscription.plan
+      ) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Invalid subscription data",
+        });
+      }
+
+      // Pro user: try to find existing usage period for current subscription period
+      let usagePeriod = await tx.query.UsagePeriod.findFirst({
+        where: and(
+          eq(UsagePeriod.user_id, userId),
+          eq(UsagePeriod.subscription_id, activeSubscription.id),
+          eq(UsagePeriod.period_start, activeSubscription.periodStart),
+          eq(UsagePeriod.period_end, activeSubscription.periodEnd),
+        ),
+      });
+
+      if (!usagePeriod) {
+        // Create usage period for subscription period
+        const [newUsagePeriod] = await tx
+          .insert(UsagePeriod)
+          .values({
+            period_end: activeSubscription.periodEnd,
+            period_start: activeSubscription.periodStart,
+            plan_id: activeSubscription.plan.id,
+            subscription_id: activeSubscription.id,
+            user_id: userId,
+          })
+          .returning();
+
+        usagePeriod = newUsagePeriod;
+      }
+
+      if (!usagePeriod) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to create or retrieve usage period for subscription",
+        });
+      }
+
+      return usagePeriod;
+    } else {
+      // For free users, we will use a monthly usage period (1st of each month) for simplicity
+      const now = new Date();
+      const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+      // The end of the month is the last day of the month at 23:59:59.999
+      const monthEnd = new Date(
+        now.getFullYear(),
+        now.getMonth() + 1,
+        0,
+        23,
+        59,
+        59,
+        999,
+      );
+
+      // Try to find existing usage period for current month
+      let usagePeriod = await tx.query.UsagePeriod.findFirst({
+        where: and(
+          eq(UsagePeriod.user_id, userId),
+          eq(UsagePeriod.period_start, monthStart),
+          eq(UsagePeriod.period_end, monthEnd),
+        ),
+      });
+
+      if (!usagePeriod) {
+        // Get the free plan for free users
+        const freePlan = await getFreePlan(ctx);
+
+        // Create usage period for free user
+        const [newUsagePeriod] = await tx
+          .insert(UsagePeriod)
+          .values({
+            period_end: monthEnd,
+            period_start: monthStart,
+            plan_id: freePlan?.id,
+            subscription_id: null, // Free users don't have a subscription_id
+            user_id: userId,
+          })
+          .returning();
+
+        usagePeriod = newUsagePeriod;
+      }
+
+      if (!usagePeriod) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to create or retrieve usage period for free user",
+        });
+      }
+
+      return usagePeriod;
+    }
   });
-
-  if (activeSubscription) {
-    // Validate subscription has required fields
-    if (
-      !activeSubscription.periodStart ||
-      !activeSubscription.periodEnd ||
-      !activeSubscription.plan
-    ) {
-      throw new TRPCError({
-        code: "INTERNAL_SERVER_ERROR",
-        message: "Invalid subscription data",
-      });
-    }
-
-    // Pro user: try to find existing usage period for current subscription period
-    let usagePeriod = await ctx.db.query.UsagePeriod.findFirst({
-      where: and(
-        eq(UsagePeriod.user_id, userId),
-        eq(UsagePeriod.subscription_id, activeSubscription.id),
-        eq(UsagePeriod.period_start, activeSubscription.periodStart),
-        eq(UsagePeriod.period_end, activeSubscription.periodEnd),
-      ),
-    });
-
-    if (!usagePeriod) {
-      // Create usage period for subscription period
-      const [newUsagePeriod] = await ctx.db
-        .insert(UsagePeriod)
-        .values({
-          period_end: activeSubscription.periodEnd,
-          period_start: activeSubscription.periodStart,
-          plan_id: activeSubscription.plan.id,
-          subscription_id: activeSubscription.id,
-          user_id: userId,
-        })
-        .returning();
-
-      usagePeriod = newUsagePeriod;
-    }
-
-    if (!usagePeriod) {
-      throw new TRPCError({
-        code: "INTERNAL_SERVER_ERROR",
-        message: "Failed to create or retrieve usage period for subscription",
-      });
-    }
-
-    return usagePeriod;
-  } else {
-    // For free users, we will use a monthly usage period (1st of each month) for simplicity
-    const now = new Date();
-    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-    const monthEnd = new Date(
-      now.getFullYear(),
-      now.getMonth() + 1,
-      0,
-      23,
-      59,
-      59,
-      999,
-    );
-
-    // Try to find existing usage period for current month
-    let usagePeriod = await ctx.db.query.UsagePeriod.findFirst({
-      where: and(
-        eq(UsagePeriod.user_id, userId),
-        eq(UsagePeriod.period_start, monthStart),
-        eq(UsagePeriod.period_end, monthEnd),
-      ),
-    });
-
-    if (!usagePeriod) {
-      // Get the free plan for free users
-      const freePlan = await getFreePlan(ctx);
-
-      // Create usage period for free user
-      const [newUsagePeriod] = await ctx.db
-        .insert(UsagePeriod)
-        .values({
-          period_end: monthEnd,
-          period_start: monthStart,
-          plan_id: freePlan?.id,
-          subscription_id: null, // Free users don't have a subscription_id
-          user_id: userId,
-        })
-        .returning();
-
-      usagePeriod = newUsagePeriod;
-    }
-
-    if (!usagePeriod) {
-      throw new TRPCError({
-        code: "INTERNAL_SERVER_ERROR",
-        message: "Failed to create or retrieve usage period for free user",
-      });
-    }
-
-    return usagePeriod;
-  }
 }
 
 export const usageRouter = {
@@ -205,107 +208,109 @@ export const usageRouter = {
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      try {
-        // Get the usage event
-        const usageEvent = await ctx.db.query.UsageEvent.findFirst({
-          where: eq(UsageEvent.id, input.usage_event_id),
-        });
-
-        if (!usageEvent) {
-          throw new TRPCError({
-            code: "NOT_FOUND",
-            message: "Usage event not found",
+      return await ctx.db.transaction(async (tx) => {
+        try {
+          // Get the usage event
+          const usageEvent = await tx.query.UsageEvent.findFirst({
+            where: eq(UsageEvent.id, input.usage_event_id),
           });
-        }
 
-        if (usageEvent.status === "processed") {
-          return { message: "Already processed", success: true };
-        }
-
-        // Get or create the current usage period
-        const usagePeriod = await getCurrentUsagePeriod({
-          ctx,
-          userId: input.user_id,
-        });
-
-        // Calculate total cost for this usage event
-        let totalCost = 0;
-
-        for (const metric of usageEvent.metrics) {
-          // Get current pricing for this model and unit type
-          const eventDate = usageEvent.created_at
-            ? new Date(usageEvent.created_at)
-            : new Date();
-          const pricing = await ctx.db
-            .select()
-            .from(ModelPricing)
-            .where(
-              and(
-                eq(ModelPricing.model_id, usageEvent.model_id),
-                eq(ModelPricing.model_provider, usageEvent.model_provider),
-                eq(ModelPricing.unit_type, metric.unit),
-                lte(ModelPricing.effective_date, eventDate),
-              ),
-            )
-            .orderBy(desc(ModelPricing.effective_date))
-            .limit(1)
-            .then((results) => results[0] || null);
-
-          if (pricing) {
-            const cost =
-              Number.parseFloat(pricing.price_per_unit_usd) * metric.quantity;
-            totalCost += cost;
-          } else {
-            console.warn(
-              `No pricing found for model ${usageEvent.model_id} (${usageEvent.model_provider}) unit ${metric.unit}`,
-            );
+          if (!usageEvent) {
+            throw new TRPCError({
+              code: "NOT_FOUND",
+              message: "Usage event not found",
+            });
           }
-        }
 
-        // Update or create usage aggregate
-        await ctx.db
-          .insert(UsageAggregate)
-          .values({
-            total_cost_usd: totalCost.toFixed(6),
-            usage_period_id: usagePeriod.id,
-            user_id: usageEvent.user_id,
-          })
-          .onConflictDoUpdate({
-            set: {
-              total_cost_usd: sql`${UsageAggregate.total_cost_usd} + ${totalCost.toFixed(6)}`,
-              updated_at: new Date(),
-            },
-            target: [UsageAggregate.user_id, UsageAggregate.usage_period_id],
+          if (usageEvent.status === "processed") {
+            return { message: "Already processed", success: true };
+          }
+
+          // Get or create the current usage period
+          const usagePeriod = await getCurrentUsagePeriod({
+            ctx,
+            userId: input.user_id,
           });
 
-        // Mark usage event as processed and store the calculated cost
-        await ctx.db
-          .update(UsageEvent)
-          .set({
-            status: "processed",
-            total_cost_usd: totalCost.toFixed(6),
-          })
-          .where(eq(UsageEvent.id, input.usage_event_id));
+          // Calculate total cost for this usage event
+          let totalCost = 0;
 
-        return {
-          cost_added: totalCost,
-          success: true,
-          usage_period_id: usagePeriod.id,
-        };
-      } catch (error) {
-        console.error("Database error in usage.processUsageEvent:", error);
+          for (const metric of usageEvent.metrics) {
+            // Get current pricing for this model and unit type
+            const eventDate = usageEvent.created_at
+              ? new Date(usageEvent.created_at)
+              : new Date();
+            const pricing = await tx
+              .select()
+              .from(ModelPricing)
+              .where(
+                and(
+                  eq(ModelPricing.model_id, usageEvent.model_id),
+                  eq(ModelPricing.model_provider, usageEvent.model_provider),
+                  eq(ModelPricing.unit_type, metric.unit),
+                  lte(ModelPricing.effective_date, eventDate),
+                ),
+              )
+              .orderBy(desc(ModelPricing.effective_date))
+              .limit(1)
+              .then((results) => results[0] || null);
 
-        // Mark usage event as failed
-        await ctx.db
-          .update(UsageEvent)
-          .set({ status: "failed" })
-          .where(eq(UsageEvent.id, input.usage_event_id));
+            if (pricing) {
+              const cost =
+                Number.parseFloat(pricing.price_per_unit_usd) * metric.quantity;
+              totalCost += cost;
+            } else {
+              console.warn(
+                `No pricing found for model ${usageEvent.model_id} (${usageEvent.model_provider}) unit ${metric.unit}`,
+              );
+            }
+          }
 
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to process usage event",
-        });
-      }
+          // Update or create usage aggregate
+          await tx
+            .insert(UsageAggregate)
+            .values({
+              total_cost_usd: totalCost.toFixed(6),
+              usage_period_id: usagePeriod.id,
+              user_id: usageEvent.user_id,
+            })
+            .onConflictDoUpdate({
+              set: {
+                total_cost_usd: sql`${UsageAggregate.total_cost_usd} + ${totalCost.toFixed(6)}`,
+                updated_at: new Date(),
+              },
+              target: [UsageAggregate.user_id, UsageAggregate.usage_period_id],
+            });
+
+          // Mark usage event as processed and store the calculated cost
+          await tx
+            .update(UsageEvent)
+            .set({
+              status: "processed",
+              total_cost_usd: totalCost.toFixed(6),
+            })
+            .where(eq(UsageEvent.id, input.usage_event_id));
+
+          return {
+            cost_added: totalCost,
+            success: true,
+            usage_period_id: usagePeriod.id,
+          };
+        } catch (error) {
+          console.error("Database error in usage.processUsageEvent:", error);
+
+          // Mark usage event as failed within the transaction
+          await tx
+            .update(UsageEvent)
+            .set({ status: "failed" })
+            .where(eq(UsageEvent.id, input.usage_event_id));
+
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Failed to process usage event",
+          });
+        }
+      });
     }),
   trackModelUsage: publicProcedure
     .input(

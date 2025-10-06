@@ -39,6 +39,6 @@
     "dotenv-cli": "~8.0.0",
     "drizzle-kit": "~0.31.4",
     "stripe": "~18.5.0",
-    "typescript": "~5.9.2"
+    "typescript": "~5.9.3"
   }
 }

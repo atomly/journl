@@ -37,7 +37,7 @@
   "devDependencies": {
     "@acme/tsconfig": "workspace:*",
     "dotenv-cli": "~8.0.0",
-    "drizzle-kit": "~0.31.4",
+    "drizzle-kit": "~0.31.5",
     "stripe": "~18.5.0",
     "typescript": "~5.9.2"
   }

@@ -8,7 +8,7 @@
     "node": ">=22.20.0",
     "pnpm": ">=9.15.9"
   },
-  "packageManager": "pnpm@10.12.4",
+  "packageManager": "pnpm@10.17.1",
   "scripts": {
     "auth:generate": "pnpm -F @acme/auth generate",
     "build": "turbo run build",

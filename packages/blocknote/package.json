@@ -35,6 +35,6 @@
     "@blocknote/react": "~0.39.1",
     "@blocknote/server-util": "~0.39.1",
     "@blocknote/xl-ai": "~0.39.1",
-    "typescript": "~5.9.2"
+    "typescript": "~5.9.3"
   }
 }

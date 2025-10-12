@@ -8,9 +8,9 @@ import {
 } from "@acme/db/schema";
 import { TRPCError, type TRPCRouterRecord } from "@trpc/server";
 import { z } from "zod/v4";
+import { getActiveSubscription, getFreePlan } from "../shared/subscription.js";
 import type { TRPCContext } from "../trpc.js";
 import { publicProcedure } from "../trpc.js";
-import { getActiveSubscription, getFreePlan } from "./subscription.js";
 
 /**
  * Get or create the current usage period for a user

@@ -29,22 +29,22 @@ async function upsertPrice(price: Stripe.Price) {
     unitAmount: price.unit_amount ?? 0,
   };
 
-  const updateData = {
-    active: insertData.active,
-    currency: insertData.currency,
-    lookupKey: insertData.lookupKey,
-    metadata: insertData.metadata,
-    nickname: insertData.nickname,
-    recurring: insertData.recurring,
-    type: insertData.type,
-    unitAmount: insertData.unitAmount,
-    updatedAt: new Date(),
-  };
-
-  return db.insert(Price).values(insertData).onConflictDoUpdate({
-    set: updateData,
-    target: Price.id,
-  });
+  return db
+    .insert(Price)
+    .values(insertData)
+    .onConflictDoUpdate({
+      set: {
+        active: insertData.active,
+        currency: insertData.currency,
+        lookupKey: insertData.lookupKey,
+        metadata: insertData.metadata,
+        nickname: insertData.nickname,
+        recurring: insertData.recurring,
+        type: insertData.type,
+        unitAmount: insertData.unitAmount,
+      },
+      target: Price.id,
+    });
 }
 
 async function deletePrice(priceId: string) {

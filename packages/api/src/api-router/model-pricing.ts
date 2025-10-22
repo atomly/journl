@@ -19,7 +19,7 @@ export const modelPricingRouter = {
           where: and(
             eq(ModelPricing.model_id, input.model_id),
             eq(ModelPricing.model_provider, input.model_provider),
-            lte(ModelPricing.effective_date, new Date()),
+            lte(ModelPricing.effective_date, new Date().toISOString()),
           ),
         });
 
@@ -51,7 +51,7 @@ export const modelPricingRouter = {
             eq(ModelPricing.model_id, input.model_id),
             eq(ModelPricing.model_provider, input.model_provider),
             eq(ModelPricing.unit_type, input.unit_type),
-            lte(ModelPricing.effective_date, new Date()),
+            lte(ModelPricing.effective_date, new Date().toISOString()),
           ),
         });
 
@@ -78,7 +78,6 @@ export const modelPricingRouter = {
           .onConflictDoUpdate({
             set: {
               price_per_unit: input.price_per_unit,
-              updated_at: new Date(),
             },
             target: [
               ModelPricing.model_id,

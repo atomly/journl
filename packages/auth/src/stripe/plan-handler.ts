@@ -16,19 +16,19 @@ async function upsertPlan(product: Stripe.Product) {
     quota,
   };
 
-  const updateData = {
-    active: insertData.active,
-    description: insertData.description,
-    displayName: insertData.displayName,
-    metadata: insertData.metadata,
-    quota: insertData.quota,
-    updated_at: new Date(),
-  };
-
-  return db.insert(Plan).values(insertData).onConflictDoUpdate({
-    set: updateData,
-    target: Plan.id,
-  });
+  return db
+    .insert(Plan)
+    .values(insertData)
+    .onConflictDoUpdate({
+      set: {
+        active: insertData.active,
+        description: insertData.description,
+        displayName: insertData.displayName,
+        metadata: insertData.metadata,
+        quota: insertData.quota,
+      },
+      target: Plan.id,
+    });
 }
 
 async function deletePlan(productId: string) {

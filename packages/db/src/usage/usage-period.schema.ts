@@ -1,8 +1,10 @@
-import { index, pgTable, text, timestamp, unique } from "drizzle-orm/pg-core";
+import { relations, sql } from "drizzle-orm";
+import { index, pgTable, text, unique } from "drizzle-orm/pg-core";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { user } from "../auth/user.schema.js";
 import { Plan } from "../billing/plan.schema.js";
 import { Subscription } from "../billing/subscription.schema.js";
+import { UsageAggregate } from "./usage-aggregate.schema.js";
 
 export const UsagePeriod = pgTable(
   "usage_period",
@@ -10,15 +12,20 @@ export const UsagePeriod = pgTable(
     id: t.uuid().notNull().primaryKey().defaultRandom(),
     user_id: text()
       .notNull()
-      .references(() => user.id, { onDelete: "cascade" }),
+      .references(() => user.id),
     plan_id: text().references(() => Plan.id),
     subscription_id: text().references(() => Subscription.id),
-    period_start: timestamp({ withTimezone: true }).notNull(),
-    period_end: timestamp({ withTimezone: true }).notNull(),
-    created_at: timestamp().defaultNow(),
-    updated_at: timestamp()
+    period_start: t.timestamp({ mode: "string", withTimezone: true }).notNull(),
+    period_end: t.timestamp({ mode: "string", withTimezone: true }).notNull(),
+    created_at: t
+      .timestamp({ mode: "string", withTimezone: true })
       .defaultNow()
-      .$onUpdateFn(() => new Date()),
+      .notNull(),
+    updated_at: t
+      .timestamp({ mode: "string", withTimezone: true })
+      .defaultNow()
+      .notNull()
+      .$onUpdateFn(() => sql`now()`),
   }),
   (t) => [
     // Prevent duplicate periods for the same user and timeframe
@@ -37,6 +44,25 @@ export const UsagePeriod = pgTable(
     index("usage_period_subscription").on(t.subscription_id),
   ],
 );
+
+export const UsagePeriodRelations = relations(UsagePeriod, ({ one }) => ({
+  plan: one(Plan, {
+    fields: [UsagePeriod.plan_id],
+    references: [Plan.id],
+  }),
+  subscription: one(Subscription, {
+    fields: [UsagePeriod.subscription_id],
+    references: [Subscription.id],
+  }),
+  user: one(user, {
+    fields: [UsagePeriod.user_id],
+    references: [user.id],
+  }),
+  usageAggregate: one(UsageAggregate, {
+    fields: [UsagePeriod.id, UsagePeriod.user_id],
+    references: [UsageAggregate.usage_period_id, UsageAggregate.user_id],
+  }),
+}));
 
 export type UsagePeriod = typeof UsagePeriod.$inferSelect;
 

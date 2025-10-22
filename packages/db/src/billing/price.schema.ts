@@ -1,4 +1,4 @@
-import { relations } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm";
 import {
   boolean,
   integer,
@@ -39,6 +39,7 @@ export const Price = pgTable(
       .notNull(),
     updatedAt: timestamp("updated_at")
       .$defaultFn(() => /* @__PURE__ */ new Date())
+      .$onUpdateFn(() => sql`now()`)
       .notNull(),
   },
   (t) => [unique("price_plan_id_active").on(t.planId, t.active)],

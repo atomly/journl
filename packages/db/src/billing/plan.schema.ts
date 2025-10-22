@@ -29,6 +29,7 @@ export const Plan = pgTable(
       .notNull(),
     updated_at: timestamp("updated_at")
       .$defaultFn(() => /* @__PURE__ */ new Date())
+      .$onUpdateFn(() => sql`now()`)
       .notNull(),
   },
   (t) => [index("plan_name_lower").on(sql`lower(${t.name})`)],

@@ -6,7 +6,6 @@ import {
   pgEnum,
   pgTable,
   text,
-  timestamp,
   varchar,
 } from "drizzle-orm/pg-core";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
@@ -44,10 +43,15 @@ export const UsageEvent = pgTable(
     total_cost: decimal("total_cost", { precision: 10, scale: 6 })
       .notNull()
       .default("0"),
-    created_at: timestamp().defaultNow(),
-    updated_at: timestamp()
+    created_at: t
+      .timestamp({ mode: "string", withTimezone: true })
       .defaultNow()
-      .$onUpdateFn(() => new Date()),
+      .notNull(),
+    updated_at: t
+      .timestamp({ mode: "string", withTimezone: true })
+      .defaultNow()
+      .notNull()
+      .$onUpdateFn(() => sql`now()`),
   }),
   (t) => [
     // Resource protection constraints for JSONB fields

@@ -1,11 +1,5 @@
-import {
-  decimal,
-  index,
-  pgTable,
-  timestamp,
-  unique,
-  varchar,
-} from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
+import { decimal, index, pgTable, unique, varchar } from "drizzle-orm/pg-core";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { TEXT_LIMITS } from "../constants/resource-limits.js";
 
@@ -22,11 +16,19 @@ export const ModelPricing = pgTable(
       precision: 12,
       scale: 8,
     }).notNull(), // High precision for token pricing (e.g., $0.00000150 per token)
-    effective_date: timestamp("effective_date").notNull().defaultNow(),
-    created_at: timestamp().defaultNow(),
-    updated_at: timestamp()
+    effective_date: t
+      .timestamp({ mode: "string", withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    created_at: t
+      .timestamp({ mode: "string", withTimezone: true })
       .defaultNow()
-      .$onUpdateFn(() => new Date()),
+      .notNull(),
+    updated_at: t
+      .timestamp({ mode: "string", withTimezone: true })
+      .defaultNow()
+      .notNull()
+      .$onUpdateFn(() => sql`now()`),
   }),
   (t) => [
     // Ensure unique pricing per model, provider, unit type, and effective date

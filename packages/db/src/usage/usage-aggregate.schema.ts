@@ -1,11 +1,5 @@
-import {
-  decimal,
-  index,
-  pgTable,
-  text,
-  timestamp,
-  unique,
-} from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
+import { decimal, index, pgTable, text, unique } from "drizzle-orm/pg-core";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { user } from "../auth/user.schema.js";
 import { UsagePeriod } from "./usage-period.schema.js";
@@ -16,21 +10,26 @@ export const UsageAggregate = pgTable(
     id: t.uuid().notNull().primaryKey().defaultRandom(),
     user_id: text()
       .notNull()
-      .references(() => user.id, { onDelete: "cascade" }),
+      .references(() => user.id),
     usage_period_id: t
       .uuid()
       .notNull()
-      .references(() => UsagePeriod.id, { onDelete: "cascade" }),
+      .references(() => UsagePeriod.id),
 
     // Aggregated cost for the entire period
     total_cost: decimal("total_cost", { precision: 10, scale: 6 })
       .notNull()
       .default("0"),
 
-    created_at: timestamp().defaultNow(),
-    updated_at: timestamp()
+    created_at: t
+      .timestamp({ mode: "string", withTimezone: true })
       .defaultNow()
-      .$onUpdateFn(() => new Date()),
+      .notNull(),
+    updated_at: t
+      .timestamp({ mode: "string", withTimezone: true })
+      .defaultNow()
+      .notNull()
+      .$onUpdateFn(() => sql`now()`),
   }),
   (t) => [
     // One aggregate per user per period

@@ -25,8 +25,8 @@ export async function createInitialUsagePeriodForUser(userId: string) {
   await db
     .insert(UsagePeriod)
     .values({
-      period_end: periodEnd,
-      period_start: periodStart,
+      period_end: periodEnd.toISOString(),
+      period_start: periodStart.toISOString(),
       plan_id: freePlan.id,
       subscription_id: null,
       user_id: userId,
@@ -80,7 +80,7 @@ export async function createUsagePeriodForSubscription(
     where: and(
       eq(UsagePeriod.user_id, subscription.referenceId),
       isNull(UsagePeriod.subscription_id),
-      gte(UsagePeriod.period_end, subscription.periodStart),
+      gte(UsagePeriod.period_end, subscription.periodStart.toISOString()),
     ),
   });
 
@@ -91,7 +91,7 @@ export async function createUsagePeriodForSubscription(
     await db
       .update(UsagePeriod)
       .set({
-        period_end: newEndDate,
+        period_end: newEndDate.toISOString(),
       })
       .where(eq(UsagePeriod.id, period.id));
   }
@@ -100,8 +100,8 @@ export async function createUsagePeriodForSubscription(
   await db
     .insert(UsagePeriod)
     .values({
-      period_end: subscription.periodEnd,
-      period_start: subscription.periodStart,
+      period_end: subscription.periodEnd.toISOString(),
+      period_start: subscription.periodStart.toISOString(),
       plan_id: plan.id,
       subscription_id: subscription.id,
       user_id: subscription.referenceId,

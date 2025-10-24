@@ -3,6 +3,7 @@ import {
   boolean,
   index,
   integer,
+  jsonb,
   pgTable,
   text,
   timestamp,
@@ -22,11 +23,13 @@ export const Plan = pgTable(
     description: varchar("description", { length: TEXT_LIMITS.DESCRIPTION }),
     active: boolean("active").default(true).notNull(),
     quota: integer("quota").notNull(),
+    metadata: jsonb("metadata").$type<Record<string, string>>().default({}),
     created_at: timestamp("created_at")
       .$defaultFn(() => /* @__PURE__ */ new Date())
       .notNull(),
     updated_at: timestamp("updated_at")
       .$defaultFn(() => /* @__PURE__ */ new Date())
+      .$onUpdateFn(() => sql`now()`)
       .notNull(),
   },
   (t) => [index("plan_name_lower").on(sql`lower(${t.name})`)],

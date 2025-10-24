@@ -7,6 +7,10 @@ import { oAuthProxy, organization } from "better-auth/plugins";
 import { eq } from "drizzle-orm";
 import { stripeClient } from "./stripe-client";
 import { handleStripeWebhookEvent } from "./stripe-webhooks";
+import {
+  createInitialUsagePeriodForUser,
+  createUsagePeriodForSubscription,
+} from "./usage/usage-period-lifecycle";
 
 export function initAuth(options: {
   appName: string;
@@ -38,6 +42,9 @@ export function initAuth(options: {
     plugins: [
       stripe({
         createCustomerOnSignUp: true,
+        onCustomerCreate: async ({ user }) => {
+          await createInitialUsagePeriodForUser(user.id);
+        },
         onEvent: handleStripeWebhookEvent,
         schema: {
           subscription: {
@@ -112,3 +119,5 @@ export function initAuth(options: {
 
 export type Auth = ReturnType<typeof initAuth>;
 export type Session = Auth["$Infer"]["Session"];
+
+export { createInitialUsagePeriodForUser, createUsagePeriodForSubscription };

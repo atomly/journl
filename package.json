@@ -25,7 +25,7 @@
     "typecheck": "turbo run typecheck"
   },
   "devDependencies": {
-    "@biomejs/biome": "~2.2.4",
+    "@biomejs/biome": "~2.2.5",
     "@turbo/gen": "~2.5.8",
     "turbo": "~2.5.8"
   }

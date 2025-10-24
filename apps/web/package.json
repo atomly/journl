@@ -82,14 +82,14 @@
   },
   "devDependencies": {
     "@acme/tsconfig": "workspace:*",
-    "@tailwindcss/postcss": "~4.1.13",
+    "@tailwindcss/postcss": "~4.1.14",
     "@types/node": "~22.18.8",
     "@types/react": "~19.2.0",
     "@types/react-dom": "~19.2.0",
     "dotenv-cli": "~8.0.0",
-    "jiti": "~2.6.0",
-    "react": "~19.1.1",
-    "react-dom": "~19.1.1",
-    "tailwindcss": "~4.1.13"
+    "jiti": "~2.6.1",
+    "react": "~19.2.0",
+    "react-dom": "~19.2.0",
+    "tailwindcss": "~4.1.14"
   }
 }

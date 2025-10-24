@@ -1,4 +1,4 @@
-import { relations } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm";
 import {
   boolean,
   integer,
@@ -33,11 +33,13 @@ export const Price = pgTable(
     }).notNull(),
     active: boolean("active").default(true).notNull(),
     lookupKey: varchar("lookup_key", { length: TEXT_LIMITS.LOOKUP_KEY }),
+    metadata: jsonb("metadata").$type<Record<string, string>>().default({}),
     createdAt: timestamp("created_at")
       .$defaultFn(() => /* @__PURE__ */ new Date())
       .notNull(),
     updatedAt: timestamp("updated_at")
       .$defaultFn(() => /* @__PURE__ */ new Date())
+      .$onUpdateFn(() => sql`now()`)
       .notNull(),
   },
   (t) => [unique("price_plan_id_active").on(t.planId, t.active)],

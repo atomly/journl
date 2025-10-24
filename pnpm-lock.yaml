@@ -130,7 +130,7 @@ importers:
         version: 0.39.1(@floating-ui/dom@1.7.4)(@tiptap/extensions@3.4.4(@tiptap/core@3.4.4(@tiptap/pm@3.4.4))(@tiptap/pm@3.4.4))(@tiptap/pm@3.4.4)(@types/hast@3.0.4)(@types/react-dom@19.2.0(@types/react@19.2.0))(@types/react@19.2.0)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)(use-sync-external-store@1.5.0(react@19.1.1))(y-protocols@1.0.6(yjs@13.6.27))(yjs@13.6.27)(zod@3.25.76)
       '@daveyplate/better-auth-ui':
         specifier: ~3.2.5
-        version: 3.2.5(454f98a271bd345663b12ddb16950e3e)
+        version: 3.2.5(bee194c53b82c6a94ed7afdbf6cef431)
       '@hookform/resolvers':
         specifier: ~5.2.2
         version: 5.2.2(react-hook-form@7.57.0(react@19.1.1))
@@ -363,13 +363,13 @@ importers:
         version: link:../db
       '@better-auth/stripe':
         specifier: ~1.3.17
-        version: 1.3.17(better-auth@1.3.9(react-dom@19.1.1(react@19.1.1))(react@19.1.1))(stripe@18.5.0(@types/node@22.18.8))
+        version: 1.3.17(better-auth@1.3.26)(stripe@18.5.0(@types/node@22.18.8))
       '@t3-oss/env-nextjs':
         specifier: ~0.13.8
         version: 0.13.8(arktype@2.1.20)(typescript@5.9.3)(valibot@1.0.0-beta.15(typescript@5.9.3))(zod@3.25.76)
       better-auth:
         specifier: ~1.3.9
-        version: 1.3.9(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
+        version: 1.3.26(next@15.4.7(@opentelemetry/api@1.9.0)(react-dom@19.1.1(react@19.1.1))(react@19.1.1))(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
       next:
         specifier: ~15.4.7
         version: 15.4.7(@opentelemetry/api@1.9.0)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
@@ -437,10 +437,10 @@ importers:
         version: 0.10.0
       drizzle-orm:
         specifier: ~0.44.5
-        version: 0.44.5(@libsql/client@0.15.14(bufferutil@4.0.9))(@opentelemetry/api@1.9.0)(@types/pg@8.15.4)(@upstash/redis@1.35.3)(@vercel/postgres@0.10.0)(kysely@0.28.5)(pg@8.16.3)(postgres@3.4.7)
+        version: 0.44.5(@libsql/client@0.15.14(bufferutil@4.0.9))(@opentelemetry/api@1.9.0)(@types/pg@8.15.4)(@upstash/redis@1.35.3)(@vercel/postgres@0.10.0)(kysely@0.28.8)(pg@8.16.3)(postgres@3.4.7)
       drizzle-zod:
         specifier: ~0.8.3
-        version: 0.8.3(drizzle-orm@0.44.5(@libsql/client@0.15.14(bufferutil@4.0.9))(@opentelemetry/api@1.9.0)(@types/pg@8.15.4)(@upstash/redis@1.35.3)(@vercel/postgres@0.10.0)(kysely@0.28.5)(pg@8.16.3)(postgres@3.4.7))(zod@3.25.76)
+        version: 0.8.3(drizzle-orm@0.44.5(@libsql/client@0.15.14(bufferutil@4.0.9))(@opentelemetry/api@1.9.0)(@types/pg@8.15.4)(@upstash/redis@1.35.3)(@vercel/postgres@0.10.0)(kysely@0.28.8)(pg@8.16.3)(postgres@3.4.7))(zod@3.25.76)
       zod:
         specifier: ~3.25.76
         version: 3.25.76
@@ -631,14 +631,17 @@ packages:
     resolution: {integrity: sha512-vbavdySgbTTrmFE+EsiqUTzlOr5bzlnJtUv9PynGCAKvfQqjIXbvFdumPM/GxMDfyuGMJaJAU6TO4zc1Jf1i8Q==}
     engines: {node: '>=6.9.0'}
 
+  '@better-auth/core@1.3.26':
+    resolution: {integrity: sha512-S5ooXaOcn9eLV3/JayfbMsAB5PkfoTRaRrtpb5djwvI/UAJOgLyjqhd+rObsBycovQ/nPQvMKjzyM/G1oBKngA==}
+
   '@better-auth/stripe@1.3.17':
     resolution: {integrity: sha512-MlwnecIe5KHixanYAL1nJQvuAPqtPKKe6MK+hlVIVs8Uxqur+2dGkrgNM1AiipkSPp2vHwB0HGU8scJAOb3B3A==}
     peerDependencies:
       better-auth: 1.3.17
       stripe: ^18
 
-  '@better-auth/utils@0.2.6':
-    resolution: {integrity: sha512-3y/vaL5Ox33dBwgJ6ub3OPkVqr6B5xL2kgxNHG8eHZuryLyG/4JSPGqjbdRSgjuy9kALUZYDFl+ORIAxlWMSuA==}
+  '@better-auth/utils@0.3.0':
+    resolution: {integrity: sha512-W+Adw6ZA6mgvnSnhOki270rwJ42t4XzSK6YWGF//BbVXL6SwCLWfyzBc1lN2m/4RM28KubdBKQ4X5VMoLRNPQw==}
 
   '@better-fetch/fetch@1.1.18':
     resolution: {integrity: sha512-rEFOE1MYIsBmoMJtQbl32PGHHXuG2hDxvEd7rUHE0vCBoFQVSDqaVs9hkZEtHCxRoY+CljXKFCOuJ8uxqw1LcA==}
@@ -1526,17 +1529,13 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@noble/ciphers@2.0.0':
-    resolution: {integrity: sha512-j/l6jpnpaIBM87cAYPJzi/6TgqmBv9spkqPyCXvRYsu5uxqh6tPJZDnD85yo8VWqzTuTQPgfv7NgT63u7kbwAQ==}
+  '@noble/ciphers@2.0.1':
+    resolution: {integrity: sha512-xHK3XHPUW8DTAobU+G0XT+/w+JLM7/8k1UFdB5xg/zTFPnFCobhftzw8wl4Lw2aq/Rvir5pxfZV5fEazmeCJ2g==}
     engines: {node: '>= 20.19.0'}
 
   '@noble/hashes@1.8.0':
     resolution: {integrity: sha512-jCs9ldd7NwzpgXDIf6P3+NrHh9/sD6CQdxHyjQI+h/6rDNo88ypBxxz45UDuZHz9r3tNz7N/VInSVoVdtXEI4A==}
     engines: {node: ^14.21.3 || >=16}
-
-  '@noble/hashes@2.0.0':
-    resolution: {integrity: sha512-h8VUBlE8R42+XIDO229cgisD287im3kdY6nbNZJFjc6ZvKIXPYXe6Vc/t+kyjFdMFyt5JpapzTsEg8n63w5/lw==}
-    engines: {node: '>= 20.19.0'}
 
   '@noble/hashes@2.0.1':
     resolution: {integrity: sha512-XlOlEbQcE9fmuXxrVTXCTlG2nlRXa9Rj3rr5Ue/+tX+nmkgbX720YHh0VR3hBF9xDvwnb8D2shVGOwNx+ulArw==}
@@ -2012,20 +2011,41 @@ packages:
   '@paralleldrive/cuid2@2.2.2':
     resolution: {integrity: sha512-ZOBkgDwEdoYVlSeRbYYXs0S9MejQofiVYoTbKzy/6GQa39/q5tQU2IX46+shYnUkpEl3wc+J6wRlar7r2EK2xA==}
 
-  '@peculiar/asn1-android@2.3.16':
-    resolution: {integrity: sha512-a1viIv3bIahXNssrOIkXZIlI2ePpZaNmR30d4aBL99mu2rO+mT9D6zBsp7H6eROWGtmwv0Ionp5olJurIo09dw==}
+  '@peculiar/asn1-android@2.5.0':
+    resolution: {integrity: sha512-t8A83hgghWQkcneRsgGs2ebAlRe54ns88p7ouv8PW2tzF1nAW4yHcL4uZKrFpIU+uszIRzTkcCuie37gpkId0A==}
 
-  '@peculiar/asn1-ecc@2.3.15':
-    resolution: {integrity: sha512-/HtR91dvgog7z/WhCVdxZJ/jitJuIu8iTqiyWVgRE9Ac5imt2sT/E4obqIVGKQw7PIy+X6i8lVBoT6wC73XUgA==}
+  '@peculiar/asn1-cms@2.5.0':
+    resolution: {integrity: sha512-p0SjJ3TuuleIvjPM4aYfvYw8Fk1Hn/zAVyPJZTtZ2eE9/MIer6/18ROxX6N/e6edVSfvuZBqhxAj3YgsmSjQ/A==}
 
-  '@peculiar/asn1-rsa@2.3.15':
-    resolution: {integrity: sha512-p6hsanvPhexRtYSOHihLvUUgrJ8y0FtOM97N5UEpC+VifFYyZa0iZ5cXjTkZoDwxJ/TTJ1IJo3HVTB2JJTpXvg==}
+  '@peculiar/asn1-csr@2.5.0':
+    resolution: {integrity: sha512-ioigvA6WSYN9h/YssMmmoIwgl3RvZlAYx4A/9jD2qaqXZwGcNlAxaw54eSx2QG1Yu7YyBC5Rku3nNoHrQ16YsQ==}
 
-  '@peculiar/asn1-schema@2.3.15':
-    resolution: {integrity: sha512-QPeD8UA8axQREpgR5UTAfu2mqQmm97oUqahDtNdBcfj3qAnoXzFdQW+aNf/tD2WVXF8Fhmftxoj0eMIT++gX2w==}
+  '@peculiar/asn1-ecc@2.5.0':
+    resolution: {integrity: sha512-t4eYGNhXtLRxaP50h3sfO6aJebUCDGQACoeexcelL4roMFRRVgB20yBIu2LxsPh/tdW9I282gNgMOyg3ywg/mg==}
 
-  '@peculiar/asn1-x509@2.3.15':
-    resolution: {integrity: sha512-0dK5xqTqSLaxv1FHXIcd4Q/BZNuopg+u1l23hT9rOmQ1g4dNtw0g/RnEi+TboB0gOwGtrWn269v27cMgchFIIg==}
+  '@peculiar/asn1-pfx@2.5.0':
+    resolution: {integrity: sha512-Vj0d0wxJZA+Ztqfb7W+/iu8Uasw6hhKtCdLKXLG/P3kEPIQpqGI4P4YXlROfl7gOCqFIbgsj1HzFIFwQ5s20ug==}
+
+  '@peculiar/asn1-pkcs8@2.5.0':
+    resolution: {integrity: sha512-L7599HTI2SLlitlpEP8oAPaJgYssByI4eCwQq2C9eC90otFpm8MRn66PpbKviweAlhinWQ3ZjDD2KIVtx7PaVw==}
+
+  '@peculiar/asn1-pkcs9@2.5.0':
+    resolution: {integrity: sha512-UgqSMBLNLR5TzEZ5ZzxR45Nk6VJrammxd60WMSkofyNzd3DQLSNycGWSK5Xg3UTYbXcDFyG8pA/7/y/ztVCa6A==}
+
+  '@peculiar/asn1-rsa@2.5.0':
+    resolution: {integrity: sha512-qMZ/vweiTHy9syrkkqWFvbT3eLoedvamcUdnnvwyyUNv5FgFXA3KP8td+ATibnlZ0EANW5PYRm8E6MJzEB/72Q==}
+
+  '@peculiar/asn1-schema@2.5.0':
+    resolution: {integrity: sha512-YM/nFfskFJSlHqv59ed6dZlLZqtZQwjRVJ4bBAiWV08Oc+1rSd5lDZcBEx0lGDHfSoH3UziI2pXt2UM33KerPQ==}
+
+  '@peculiar/asn1-x509-attr@2.5.0':
+    resolution: {integrity: sha512-9f0hPOxiJDoG/bfNLAFven+Bd4gwz/VzrCIIWc1025LEI4BXO0U5fOCTNDPbbp2ll+UzqKsZ3g61mpBp74gk9A==}
+
+  '@peculiar/asn1-x509@2.5.0':
+    resolution: {integrity: sha512-CpwtMCTJvfvYTFMuiME5IH+8qmDe3yEWzKHe7OOADbGfq7ohxeLaXwQo0q4du3qs0AII3UbLCvb9NF/6q0oTKQ==}
+
+  '@peculiar/x509@1.14.0':
+    resolution: {integrity: sha512-Yc4PDxN3OrxUPiXgU63c+ZRXKGE8YKF2McTciYhUHFtHVB0KMnjeFSU0qpztGhsp4P0uKix4+J2xEpIEDu8oXg==}
 
   '@protobufjs/aspromise@1.1.2':
     resolution: {integrity: sha512-j+gKExEuLmKwvz3OgROXtrJ2UG2x8Ch2YZUxahh+s1F2HZ+wAceUNLkvy6zKCPVRkU++ZWQrdxsUeQXmcg4uoQ==}
@@ -2912,11 +2932,11 @@ packages:
   '@shikijs/vscode-textmate@10.0.2':
     resolution: {integrity: sha512-83yeghZ2xxin3Nj8z1NMd/NCuca+gsYXswywDy5bHvwlWL8tpTQmzGeUuHd9FC3E/SBEMvzJRwWEOz5gGes9Qg==}
 
-  '@simplewebauthn/browser@13.1.2':
-    resolution: {integrity: sha512-aZnW0KawAM83fSBUgglP5WofbrLbLyr7CoPqYr66Eppm7zO86YX6rrCjRB3hQKPrL7ATvY4FVXlykZ6w6FwYYw==}
+  '@simplewebauthn/browser@13.2.2':
+    resolution: {integrity: sha512-FNW1oLQpTJyqG5kkDg5ZsotvWgmBaC6jCHR7Ej0qUNep36Wl9tj2eZu7J5rP+uhXgHaLk+QQ3lqcw2vS5MX1IA==}
 
-  '@simplewebauthn/server@13.1.2':
-    resolution: {integrity: sha512-VwoDfvLXSCaRiD+xCIuyslU0HLxVggeE5BL06+GbsP2l1fGf5op8e0c3ZtKoi+vSg1q4ikjtAghC23ze2Q3H9g==}
+  '@simplewebauthn/server@13.2.2':
+    resolution: {integrity: sha512-HcWLW28yTMGXpwE9VLx9J+N2KEUaELadLrkPEEI9tpI5la70xNEVEsu/C+m3u7uoq4FulLqZQhgBCzR9IZhFpA==}
     engines: {node: '>=20.0.0'}
 
   '@sindresorhus/slugify@2.2.1':
@@ -3568,22 +3588,37 @@ packages:
     resolution: {integrity: sha512-4Bcg1P8xhUuqcii/S0Z9wiHIrQVPMermM1any+MX5GeGD7faD3/msQUDGLol9wOcz4/jbg/WJnGqoJF6LiBdtg==}
     engines: {node: '>=10.0.0'}
 
-  better-auth@1.3.9:
-    resolution: {integrity: sha512-Ty6BHzuShlqSs7I4RMlBRQ3duOWNB7WWriIu2FJVGjQAOtTVvamzFCR4/j5ROFLoNkpvNTRF7BJozsrMICL1gw==}
+  better-auth@1.3.26:
+    resolution: {integrity: sha512-umaOGmv29yF4sD6o2zlW6B0Oayko5yD/A8mKJOFDDEIoVP/pR7nJ/2KsqKy+xvBpnDsKdrZseqA8fmczPviUHw==}
     peerDependencies:
       '@lynx-js/react': '*'
-      react: ^18.0.0 || ^19.0.0
-      react-dom: ^18.0.0 || ^19.0.0
+      '@sveltejs/kit': '*'
+      next: '*'
+      react: '*'
+      react-dom: '*'
+      solid-js: '*'
+      svelte: '*'
+      vue: '*'
     peerDependenciesMeta:
       '@lynx-js/react':
+        optional: true
+      '@sveltejs/kit':
+        optional: true
+      next:
         optional: true
       react:
         optional: true
       react-dom:
         optional: true
+      solid-js:
+        optional: true
+      svelte:
+        optional: true
+      vue:
+        optional: true
 
-  better-call@1.0.18:
-    resolution: {integrity: sha512-Ojyck3P3fs/egBmCW50tvfbCJorNV5KphfPOKrkCxPfOr8Brth1ruDtAJuhHVHEUiWrXv+vpEgWQk7m7FzhbbQ==}
+  better-call@1.0.19:
+    resolution: {integrity: sha512-sI3GcA1SCVa3H+CDHl8W8qzhlrckwXOTKhqq3OOPXjgn5aTOMIqGY34zLY/pHA6tRRMjTUC3lz5Mi7EbDA24Kw==}
 
   big.js@7.0.1:
     resolution: {integrity: sha512-iFgV784tD8kq4ccF1xtNMZnXeZzVuXWWM+ERFzKQjv+A5G9HC8CY3DuV45vgzFFcW+u2tIvmF95+AzWgs6BjCg==}
@@ -3816,8 +3851,8 @@ packages:
   core-js-pure@3.45.1:
     resolution: {integrity: sha512-OHnWFKgTUshEU8MK+lOs1H8kC8GkTi9Z1tvNkxrCcw9wl3MJIO7q2ld77wjWn4/xuGrVu2X+nME1iIIPBSdyEQ==}
 
-  core-js@3.45.1:
-    resolution: {integrity: sha512-L4NPsJlCfZsPeXukyzHFlg/i7IIVwHSItR0wg0FLNqYClJ4MQYTYLbC7EkjKYRLZF2iof2MUgN0EGy7MdQFChg==}
+  core-js@3.46.0:
+    resolution: {integrity: sha512-vDMm9B0xnqqZ8uSBpZ8sNtRtOdmfShrvT6h2TuQGLs0Is+cR0DYbj/KWP6ALVNbWPpqA/qPLoOuppJN07humpA==}
 
   cors@2.8.5:
     resolution: {integrity: sha512-KIHbLJqu73RGr/hnbrO9uBeixNGuvSQjul/jdFvS/KFSIH1hWVd1ng7zOHx+YrEfInLG7q4n6GHQ9cDtxv/P6g==}
@@ -4785,8 +4820,8 @@ packages:
   jsonfile@6.1.0:
     resolution: {integrity: sha512-5dgndWOriYSm5cnYaJNhalLNDKOqFwyDB/rr1E9ZsGciGvKPs8R2xYGCacuf3z6K1YKDz182fd+fY3cn3pMqXQ==}
 
-  kysely@0.28.5:
-    resolution: {integrity: sha512-rlB0I/c6FBDWPcQoDtkxi9zIvpmnV5xoIalfCMSMCa7nuA6VGA3F54TW9mEgX4DVf10sXAWCF5fDbamI/5ZpKA==}
+  kysely@0.28.8:
+    resolution: {integrity: sha512-QUOgl5ZrS9IRuhq5FvOKFSsD/3+IA6MLE81/bOOTRA/YQpKDza2sFdN5g6JCB9BOpqMJDGefLCQ9F12hRS13TA==}
     engines: {node: '>=20.0.0'}
 
   leac@0.6.0:
@@ -5195,9 +5230,14 @@ packages:
     engines: {node: ^18 || >=20}
     hasBin: true
 
-  nanostores@0.11.4:
-    resolution: {integrity: sha512-k1oiVNN4hDK8NcNERSZLQiMfRzEGtfnvZvdBvey3SQbgn8Dcrk0h1I6vpxApjb10PFUflZrgJ2WEZyJQ+5v7YQ==}
-    engines: {node: ^18.0.0 || >=20.0.0}
+  nanoid@5.1.6:
+    resolution: {integrity: sha512-c7+7RQ+dMB5dPwwCp4ee1/iV/q2P6aK1mTZcfr1BTuVlyW9hJYiMPybJCcnBlQtuSmTIWNeazm/zqNoZSSElBg==}
+    engines: {node: ^18 || >=20}
+    hasBin: true
+
+  nanostores@1.0.1:
+    resolution: {integrity: sha512-kNZ9xnoJYKg/AfxjrVL4SS0fKX++4awQReGqWnwTRHxeHGZ1FJFVgTqr/eMrNQdp0Tz7M7tG/TDaX8QfHDwVCw==}
+    engines: {node: ^20.0.0 || >=22.0.0}
 
   negotiator@0.6.3:
     resolution: {integrity: sha512-+EUsqGPLsM+j/zdChZjsnX51g4XrHFOIXwfnCVPGlQk/k5giakcKsuxCObBRu6DSm9opw/O6slWbJdghQM4bBg==}
@@ -5649,9 +5689,9 @@ packages:
   pvtsutils@1.3.6:
     resolution: {integrity: sha512-PLgQXQ6H2FWCaeRak8vvk1GW462lMxB5s3Jm673N82zI4vqtVUPuZdffdZbPDFRoU8kAhItWFtPCWiPpp4/EDg==}
 
-  pvutils@1.1.3:
-    resolution: {integrity: sha512-pMpnA0qRdFp32b1sJl1wOJNxZLQ2cbQx+k6tjNtZ8CpvVhNqEPRgivZ2WOUev2YMajecdH7ctUPDvEe87nariQ==}
-    engines: {node: '>=6.0.0'}
+  pvutils@1.1.4:
+    resolution: {integrity: sha512-lf4Ny9TN57ovn3pnn7H3AX8cZsPD8TQqui/t7yJvfoZn1ZKszw5i7zr5BpYzPLN4clFt5A34z/hbYCw4a8zyJA==}
+    engines: {node: '>=22.0.0'}
 
   qr.js@0.0.0:
     resolution: {integrity: sha512-c4iYnWb+k2E+vYpRimHqSu575b1/wKl4XFeJGpFmrJQz5I88v9aY2czh7s0w36srfCM1sXgC/xpoJz5dJfq+OQ==}
@@ -5815,6 +5855,9 @@ packages:
   redis@5.8.2:
     resolution: {integrity: sha512-31vunZj07++Y1vcFGcnNWEf5jPoTkGARgfWI4+Tk55vdwHxhAvug8VEtW7Cx+/h47NuJTEg/JL77zAwC6E0OeA==}
     engines: {node: '>= 18'}
+
+  reflect-metadata@0.2.2:
+    resolution: {integrity: sha512-urBwgfrvVP/eAyXx4hluJivBKzuEbSQs9rKWCrCkbSxNv8mxPcUZKeuoF3Uy4mJl3Lwprp6yy5/39VWigZ4K6Q==}
 
   registry-auth-token@3.3.2:
     resolution: {integrity: sha512-JL39c60XlzCVgNrO+qq68FoNb56w/m7JYvGR2jT5iR1xBrUA3Mfx5Twk5rqTThPmQKMWydGmq8oFtDlxfrmxnQ==}
@@ -6260,6 +6303,10 @@ packages:
     engines: {node: '>=18.0.0'}
     hasBin: true
 
+  tsyringe@4.10.0:
+    resolution: {integrity: sha512-axr3IdNuVIxnaK5XGEUFTu3YmAQ6lllgrvqfEoR16g/HGnYY/6We4oWENtAnzK6/LpJ2ur9PAb80RBt7/U4ugw==}
+    engines: {node: '>= 6.0.0'}
+
   turbo-darwin-64@2.5.8:
     resolution: {integrity: sha512-Dh5bCACiHO8rUXZLpKw+m3FiHtAp2CkanSyJre+SInEvEr5kIxjGvCK/8MFX8SFRjQuhjtvpIvYYZJB4AGCxNQ==}
     cpu: [x64]
@@ -6657,6 +6704,9 @@ packages:
   zod@3.25.76:
     resolution: {integrity: sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ==}
 
+  zod@4.1.12:
+    resolution: {integrity: sha512-JInaHOamG8pt5+Ey8kGmdcAcg3OL9reK8ltczgHTAwNhMys/6ThXHityHxVV2p3fkw/c+MAvBHFVYHFZDmjMCQ==}
+
   zod@4.1.5:
     resolution: {integrity: sha512-rcUUZqlLJgBC33IT3PNMgsCq6TzLQEG/Ei/KTCU0PedSWRMAXoOUN+4t/0H+Q8bdnLPdqUYnvboJT0bn/229qg==}
 
@@ -6910,15 +6960,18 @@ snapshots:
 
   '@babel/runtime@7.27.6': {}
 
-  '@better-auth/stripe@1.3.17(better-auth@1.3.9(react-dom@19.1.1(react@19.1.1))(react@19.1.1))(stripe@18.5.0(@types/node@22.18.8))':
+  '@better-auth/core@1.3.26':
     dependencies:
-      better-auth: 1.3.9(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
+      better-call: 1.0.19
+      zod: 4.1.12
+
+  '@better-auth/stripe@1.3.17(better-auth@1.3.26)(stripe@18.5.0(@types/node@22.18.8))':
+    dependencies:
+      better-auth: 1.3.26(next@15.4.7(@opentelemetry/api@1.9.0)(react-dom@19.1.1(react@19.1.1))(react@19.1.1))(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
       stripe: 18.5.0(@types/node@22.18.8)
       zod: 4.1.5
 
-  '@better-auth/utils@0.2.6':
-    dependencies:
-      uncrypto: 0.1.3
+  '@better-auth/utils@0.3.0': {}
 
   '@better-fetch/fetch@1.1.18': {}
 
@@ -7162,18 +7215,18 @@ snapshots:
 
   '@date-fns/tz@1.2.0': {}
 
-  '@daveyplate/better-auth-tanstack@1.3.6(@tanstack/query-core@5.80.7)(@tanstack/react-query@5.80.7(react@19.1.1))(better-auth@1.3.9(react-dom@19.1.1(react@19.1.1))(react@19.1.1))(react-dom@19.1.1(react@19.1.1))(react@19.1.1)':
+  '@daveyplate/better-auth-tanstack@1.3.6(@tanstack/query-core@5.80.7)(@tanstack/react-query@5.80.7(react@19.1.1))(better-auth@1.3.26(next@15.4.7(@opentelemetry/api@1.9.0)(react-dom@19.1.1(react@19.1.1))(react@19.1.1))(react-dom@19.1.1(react@19.1.1))(react@19.1.1))(react-dom@19.1.1(react@19.1.1))(react@19.1.1)':
     dependencies:
       '@tanstack/query-core': 5.80.7
       '@tanstack/react-query': 5.80.7(react@19.1.1)
-      better-auth: 1.3.9(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
+      better-auth: 1.3.26(next@15.4.7(@opentelemetry/api@1.9.0)(react-dom@19.1.1(react@19.1.1))(react@19.1.1))(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
       react: 19.1.1
       react-dom: 19.1.1(react@19.1.1)
 
-  '@daveyplate/better-auth-ui@3.2.5(454f98a271bd345663b12ddb16950e3e)':
+  '@daveyplate/better-auth-ui@3.2.5(bee194c53b82c6a94ed7afdbf6cef431)':
     dependencies:
       '@better-fetch/fetch': 1.1.18
-      '@daveyplate/better-auth-tanstack': 1.3.6(@tanstack/query-core@5.80.7)(@tanstack/react-query@5.80.7(react@19.1.1))(better-auth@1.3.9(react-dom@19.1.1(react@19.1.1))(react@19.1.1))(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
+      '@daveyplate/better-auth-tanstack': 1.3.6(@tanstack/query-core@5.80.7)(@tanstack/react-query@5.80.7(react@19.1.1))(better-auth@1.3.26(next@15.4.7(@opentelemetry/api@1.9.0)(react-dom@19.1.1(react@19.1.1))(react@19.1.1))(react-dom@19.1.1(react@19.1.1))(react@19.1.1))(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
       '@hcaptcha/react-hcaptcha': 1.12.1(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
       '@hookform/resolvers': 5.2.2(react-hook-form@7.57.0(react@19.1.1))
       '@instantdb/react': 0.20.12(react@19.1.1)
@@ -7197,7 +7250,7 @@ snapshots:
       '@triplit/client': 1.0.49(typescript@5.9.3)
       '@triplit/react': 1.0.50(react@19.1.1)(typescript@5.9.3)
       '@wojtekmaj/react-recaptcha-v3': 0.1.4(@types/react@19.2.0)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
-      better-auth: 1.3.9(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
+      better-auth: 1.3.26(next@15.4.7(@opentelemetry/api@1.9.0)(react-dom@19.1.1(react@19.1.1))(react@19.1.1))(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
       class-variance-authority: 0.7.1
       clsx: 2.1.1
       input-otp: 1.4.2(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
@@ -7828,11 +7881,9 @@ snapshots:
   '@next/swc-win32-x64-msvc@15.4.7':
     optional: true
 
-  '@noble/ciphers@2.0.0': {}
+  '@noble/ciphers@2.0.1': {}
 
   '@noble/hashes@1.8.0': {}
-
-  '@noble/hashes@2.0.0': {}
 
   '@noble/hashes@2.0.1': {}
 
@@ -8526,38 +8577,101 @@ snapshots:
     dependencies:
       '@noble/hashes': 1.8.0
 
-  '@peculiar/asn1-android@2.3.16':
+  '@peculiar/asn1-android@2.5.0':
     dependencies:
-      '@peculiar/asn1-schema': 2.3.15
+      '@peculiar/asn1-schema': 2.5.0
       asn1js: 3.0.6
       tslib: 2.8.1
 
-  '@peculiar/asn1-ecc@2.3.15':
+  '@peculiar/asn1-cms@2.5.0':
     dependencies:
-      '@peculiar/asn1-schema': 2.3.15
-      '@peculiar/asn1-x509': 2.3.15
+      '@peculiar/asn1-schema': 2.5.0
+      '@peculiar/asn1-x509': 2.5.0
+      '@peculiar/asn1-x509-attr': 2.5.0
       asn1js: 3.0.6
       tslib: 2.8.1
 
-  '@peculiar/asn1-rsa@2.3.15':
+  '@peculiar/asn1-csr@2.5.0':
     dependencies:
-      '@peculiar/asn1-schema': 2.3.15
-      '@peculiar/asn1-x509': 2.3.15
+      '@peculiar/asn1-schema': 2.5.0
+      '@peculiar/asn1-x509': 2.5.0
       asn1js: 3.0.6
       tslib: 2.8.1
 
-  '@peculiar/asn1-schema@2.3.15':
+  '@peculiar/asn1-ecc@2.5.0':
+    dependencies:
+      '@peculiar/asn1-schema': 2.5.0
+      '@peculiar/asn1-x509': 2.5.0
+      asn1js: 3.0.6
+      tslib: 2.8.1
+
+  '@peculiar/asn1-pfx@2.5.0':
+    dependencies:
+      '@peculiar/asn1-cms': 2.5.0
+      '@peculiar/asn1-pkcs8': 2.5.0
+      '@peculiar/asn1-rsa': 2.5.0
+      '@peculiar/asn1-schema': 2.5.0
+      asn1js: 3.0.6
+      tslib: 2.8.1
+
+  '@peculiar/asn1-pkcs8@2.5.0':
+    dependencies:
+      '@peculiar/asn1-schema': 2.5.0
+      '@peculiar/asn1-x509': 2.5.0
+      asn1js: 3.0.6
+      tslib: 2.8.1
+
+  '@peculiar/asn1-pkcs9@2.5.0':
+    dependencies:
+      '@peculiar/asn1-cms': 2.5.0
+      '@peculiar/asn1-pfx': 2.5.0
+      '@peculiar/asn1-pkcs8': 2.5.0
+      '@peculiar/asn1-schema': 2.5.0
+      '@peculiar/asn1-x509': 2.5.0
+      '@peculiar/asn1-x509-attr': 2.5.0
+      asn1js: 3.0.6
+      tslib: 2.8.1
+
+  '@peculiar/asn1-rsa@2.5.0':
+    dependencies:
+      '@peculiar/asn1-schema': 2.5.0
+      '@peculiar/asn1-x509': 2.5.0
+      asn1js: 3.0.6
+      tslib: 2.8.1
+
+  '@peculiar/asn1-schema@2.5.0':
     dependencies:
       asn1js: 3.0.6
       pvtsutils: 1.3.6
       tslib: 2.8.1
 
-  '@peculiar/asn1-x509@2.3.15':
+  '@peculiar/asn1-x509-attr@2.5.0':
     dependencies:
-      '@peculiar/asn1-schema': 2.3.15
+      '@peculiar/asn1-schema': 2.5.0
+      '@peculiar/asn1-x509': 2.5.0
+      asn1js: 3.0.6
+      tslib: 2.8.1
+
+  '@peculiar/asn1-x509@2.5.0':
+    dependencies:
+      '@peculiar/asn1-schema': 2.5.0
       asn1js: 3.0.6
       pvtsutils: 1.3.6
       tslib: 2.8.1
+
+  '@peculiar/x509@1.14.0':
+    dependencies:
+      '@peculiar/asn1-cms': 2.5.0
+      '@peculiar/asn1-csr': 2.5.0
+      '@peculiar/asn1-ecc': 2.5.0
+      '@peculiar/asn1-pkcs9': 2.5.0
+      '@peculiar/asn1-rsa': 2.5.0
+      '@peculiar/asn1-schema': 2.5.0
+      '@peculiar/asn1-x509': 2.5.0
+      pvtsutils: 1.3.6
+      reflect-metadata: 0.2.2
+      tslib: 2.8.1
+      tsyringe: 4.10.0
 
   '@protobufjs/aspromise@1.1.2': {}
 
@@ -9475,17 +9589,18 @@ snapshots:
 
   '@shikijs/vscode-textmate@10.0.2': {}
 
-  '@simplewebauthn/browser@13.1.2': {}
+  '@simplewebauthn/browser@13.2.2': {}
 
-  '@simplewebauthn/server@13.1.2':
+  '@simplewebauthn/server@13.2.2':
     dependencies:
       '@hexagon/base64': 1.1.28
       '@levischuck/tiny-cbor': 0.2.11
-      '@peculiar/asn1-android': 2.3.16
-      '@peculiar/asn1-ecc': 2.3.15
-      '@peculiar/asn1-rsa': 2.3.15
-      '@peculiar/asn1-schema': 2.3.15
-      '@peculiar/asn1-x509': 2.3.15
+      '@peculiar/asn1-android': 2.5.0
+      '@peculiar/asn1-ecc': 2.5.0
+      '@peculiar/asn1-rsa': 2.5.0
+      '@peculiar/asn1-schema': 2.5.0
+      '@peculiar/asn1-x509': 2.5.0
+      '@peculiar/x509': 1.14.0
 
   '@sindresorhus/slugify@2.2.1':
     dependencies:
@@ -9741,9 +9856,9 @@ snapshots:
   '@triplit/db@1.1.10(typescript@5.9.3)':
     dependencies:
       '@triplit/logger': 0.0.3(typescript@5.9.3)
-      core-js: 3.45.1
+      core-js: 3.46.0
       elen: 1.0.10
-      nanoid: 5.1.5
+      nanoid: 5.1.6
       sorted-btree: 1.8.1
       web-worker: 1.5.0
     transitivePeerDependencies:
@@ -10155,7 +10270,7 @@ snapshots:
   asn1js@3.0.6:
     dependencies:
       pvtsutils: 1.3.6
-      pvutils: 1.1.3
+      pvutils: 1.1.4
       tslib: 2.8.1
 
   assistant-cloud@0.1.1:
@@ -10194,26 +10309,29 @@ snapshots:
 
   basic-ftp@5.0.5: {}
 
-  better-auth@1.3.9(react-dom@19.1.1(react@19.1.1))(react@19.1.1):
+  better-auth@1.3.26(next@15.4.7(@opentelemetry/api@1.9.0)(react-dom@19.1.1(react@19.1.1))(react@19.1.1))(react-dom@19.1.1(react@19.1.1))(react@19.1.1):
     dependencies:
-      '@better-auth/utils': 0.2.6
+      '@better-auth/core': 1.3.26
+      '@better-auth/utils': 0.3.0
       '@better-fetch/fetch': 1.1.18
-      '@noble/ciphers': 2.0.0
-      '@noble/hashes': 2.0.0
-      '@simplewebauthn/browser': 13.1.2
-      '@simplewebauthn/server': 13.1.2
-      better-call: 1.0.18
+      '@noble/ciphers': 2.0.1
+      '@noble/hashes': 2.0.1
+      '@simplewebauthn/browser': 13.2.2
+      '@simplewebauthn/server': 13.2.2
+      better-call: 1.0.19
       defu: 6.1.4
       jose: 6.1.0
-      kysely: 0.28.5
-      nanostores: 0.11.4
-      zod: 4.1.5
+      kysely: 0.28.8
+      nanostores: 1.0.1
+      zod: 4.1.12
     optionalDependencies:
+      next: 15.4.7(@opentelemetry/api@1.9.0)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
       react: 19.1.1
       react-dom: 19.1.1(react@19.1.1)
 
-  better-call@1.0.18:
+  better-call@1.0.19:
     dependencies:
+      '@better-auth/utils': 0.3.0
       '@better-fetch/fetch': 1.1.18
       rou3: 0.5.1
       set-cookie-parser: 2.7.1
@@ -10474,7 +10592,7 @@ snapshots:
 
   core-js-pure@3.45.1: {}
 
-  core-js@3.45.1: {}
+  core-js@3.46.0: {}
 
   cors@2.8.5:
     dependencies:
@@ -10630,20 +10748,20 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  drizzle-orm@0.44.5(@libsql/client@0.15.14(bufferutil@4.0.9))(@opentelemetry/api@1.9.0)(@types/pg@8.15.4)(@upstash/redis@1.35.3)(@vercel/postgres@0.10.0)(kysely@0.28.5)(pg@8.16.3)(postgres@3.4.7):
+  drizzle-orm@0.44.5(@libsql/client@0.15.14(bufferutil@4.0.9))(@opentelemetry/api@1.9.0)(@types/pg@8.15.4)(@upstash/redis@1.35.3)(@vercel/postgres@0.10.0)(kysely@0.28.8)(pg@8.16.3)(postgres@3.4.7):
     optionalDependencies:
       '@libsql/client': 0.15.14(bufferutil@4.0.9)
       '@opentelemetry/api': 1.9.0
       '@types/pg': 8.15.4
       '@upstash/redis': 1.35.3
       '@vercel/postgres': 0.10.0
-      kysely: 0.28.5
+      kysely: 0.28.8
       pg: 8.16.3
       postgres: 3.4.7
 
-  drizzle-zod@0.8.3(drizzle-orm@0.44.5(@libsql/client@0.15.14(bufferutil@4.0.9))(@opentelemetry/api@1.9.0)(@types/pg@8.15.4)(@upstash/redis@1.35.3)(@vercel/postgres@0.10.0)(kysely@0.28.5)(pg@8.16.3)(postgres@3.4.7))(zod@3.25.76):
+  drizzle-zod@0.8.3(drizzle-orm@0.44.5(@libsql/client@0.15.14(bufferutil@4.0.9))(@opentelemetry/api@1.9.0)(@types/pg@8.15.4)(@upstash/redis@1.35.3)(@vercel/postgres@0.10.0)(kysely@0.28.8)(pg@8.16.3)(postgres@3.4.7))(zod@3.25.76):
     dependencies:
-      drizzle-orm: 0.44.5(@libsql/client@0.15.14(bufferutil@4.0.9))(@opentelemetry/api@1.9.0)(@types/pg@8.15.4)(@upstash/redis@1.35.3)(@vercel/postgres@0.10.0)(kysely@0.28.5)(pg@8.16.3)(postgres@3.4.7)
+      drizzle-orm: 0.44.5(@libsql/client@0.15.14(bufferutil@4.0.9))(@opentelemetry/api@1.9.0)(@types/pg@8.15.4)(@upstash/redis@1.35.3)(@vercel/postgres@0.10.0)(kysely@0.28.8)(pg@8.16.3)(postgres@3.4.7)
       zod: 3.25.76
 
   dunder-proto@1.0.1:
@@ -11537,7 +11655,7 @@ snapshots:
     optionalDependencies:
       graceful-fs: 4.2.11
 
-  kysely@0.28.5: {}
+  kysely@0.28.8: {}
 
   leac@0.6.0: {}
 
@@ -12104,7 +12222,9 @@ snapshots:
 
   nanoid@5.1.5: {}
 
-  nanostores@0.11.4: {}
+  nanoid@5.1.6: {}
+
+  nanostores@1.0.1: {}
 
   negotiator@0.6.3: {}
 
@@ -12611,7 +12731,7 @@ snapshots:
     dependencies:
       tslib: 2.8.1
 
-  pvutils@1.1.3: {}
+  pvutils@1.1.4: {}
 
   qr.js@0.0.0: {}
 
@@ -12840,6 +12960,8 @@ snapshots:
       '@redis/json': 5.8.2(@redis/client@5.8.2)
       '@redis/search': 5.8.2(@redis/client@5.8.2)
       '@redis/time-series': 5.8.2(@redis/client@5.8.2)
+
+  reflect-metadata@0.2.2: {}
 
   registry-auth-token@3.3.2:
     dependencies:
@@ -13358,6 +13480,10 @@ snapshots:
     optionalDependencies:
       fsevents: 2.3.3
 
+  tsyringe@4.10.0:
+    dependencies:
+      tslib: 1.14.1
+
   turbo-darwin-64@2.5.8:
     optional: true
 
@@ -13708,13 +13834,15 @@ snapshots:
 
   zod-from-json-schema@0.5.0:
     dependencies:
-      zod: 4.1.5
+      zod: 4.1.12
 
   zod-to-json-schema@3.24.6(zod@3.25.76):
     dependencies:
       zod: 3.25.76
 
   zod@3.25.76: {}
+
+  zod@4.1.12: {}
 
   zod@4.1.5: {}
 

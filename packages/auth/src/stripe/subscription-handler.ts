@@ -3,6 +3,7 @@ import { Subscription } from "@acme/db/schema";
 import { eq } from "drizzle-orm";
 import type Stripe from "stripe";
 import { stripeClient } from "../stripe-client";
+import { createUsagePeriodForSubscription } from "../usage/usage-period-lifecycle";
 
 export async function handleSubscriptionEvents(
   event:
@@ -62,11 +63,34 @@ export async function handleSubscriptionEvents(
   const [stripeSubscription] = subscriptions.data;
   if (!stripeSubscription) return;
 
+  const firstItem = stripeSubscription.items.data[0];
+  if (!firstItem) {
+    console.error("No subscription items found");
+    return;
+  }
+
+  const periodStart = firstItem.current_period_start
+    ? new Date(firstItem.current_period_start * 1000)
+    : undefined;
+  const periodEnd = firstItem.current_period_end
+    ? new Date(firstItem.current_period_end * 1000)
+    : undefined;
+
   await db
     .update(Subscription)
     .set({
       cancelAtPeriodEnd: stripeSubscription.cancel_at_period_end,
+      periodEnd,
+      periodStart,
       status: stripeSubscription.status,
     })
     .where(eq(Subscription.stripeSubscriptionId, stripeSubscription.id));
+
+  const updatedSubscription = await db.query.Subscription.findFirst({
+    where: eq(Subscription.stripeSubscriptionId, stripeSubscription.id),
+  });
+
+  if (updatedSubscription && updatedSubscription.status === "active") {
+    await createUsagePeriodForSubscription(updatedSubscription);
+  }
 }

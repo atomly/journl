@@ -87,7 +87,7 @@ async function handler(req: NextRequest) {
         for (const serialized of data) {
           const message = JSONSafeParse(serialized, zChatCompletionMessage);
           if (!message) continue;
-          await api.usage.trackModelUsage({
+          void api.usage.trackModelUsage({
             metrics: [
               {
                 quantity: message.usage.prompt_tokens,

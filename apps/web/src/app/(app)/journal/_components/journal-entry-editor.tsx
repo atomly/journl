@@ -156,11 +156,15 @@ export function JournalEntryContent({
 type JournalEntryEditorProps = {
   debounceTime?: number;
   onCreateAction?: (newEntry: TimelineEntry) => void;
+  onFocusAction?: () => void;
+  onBlurAction?: () => void;
 };
 
 export function JournalEntryEditor({
   debounceTime = DEFAULT_DEBOUNCE_TIME,
   onCreateAction,
+  onFocusAction: onFocus,
+  onBlurAction: onBlur,
 }: JournalEntryEditorProps) {
   const trpc = useTRPC();
   const pendingChangesRef = useRef<BlockTransaction[]>([]);
@@ -225,6 +229,8 @@ export function JournalEntryEditor({
         editor={editor}
         initialBlocks={initialBlocks}
         onChange={handleEditorChange}
+        onFocus={onFocus}
+        onBlur={onBlur}
         // Disabling the default because we're using a formatting toolbar with the AI option.
         formattingToolbar={false}
         // Disabling the default because we're using a slash menu with the AI option.

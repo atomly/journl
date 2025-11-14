@@ -4,6 +4,7 @@ import {
   ComposerInput,
   ThreadScrollToBottom,
 } from "~/components/assistant-ui/thread-components";
+import { ComposerContext } from "~/components/assistant-ui/thread-context";
 import { ThreadMessages } from "~/components/assistant-ui/thread-messages";
 import { ComposerSources } from "~/components/assistant-ui/thread-sources";
 import { ThreadWelcome } from "~/components/assistant-ui/thread-welcome";
@@ -49,7 +50,10 @@ export default function ChatSidebar() {
               <ComposerPrimitive.Root className="relative flex w-full flex-col gap-y-2 rounded-lg border bg-muted px-1 pt-2 shadow-sm focus-within:border-ring/20 [&_button]:self-end">
                 <ComposerSources />
                 <ComposerInput className="py-0" />
-                <ComposerAction />
+                <div className="relative flex w-full flex-row items-center justify-between shadow-sm focus-within:border-ring/20">
+                  <ComposerContext className="h-fit shrink-0 grow-0" />
+                  <ComposerAction />
+                </div>
               </ComposerPrimitive.Root>
             </div>
           </ThreadPrimitive.Viewport>

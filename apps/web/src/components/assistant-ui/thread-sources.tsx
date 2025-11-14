@@ -23,13 +23,13 @@ type Source = {
   selection: BlockSelection;
 };
 
-type ComposerSourcesProps = {
+type ComposerContextProps = {
   className?: string;
 };
 
 const MAX_SOURCES = 3;
 
-export function ComposerSources({ className }: ComposerSourcesProps) {
+export function ComposerSources({ className }: ComposerContextProps) {
   const { getSelections, forgetSelection } = useJournlAgentAwareness();
 
   const sources: Source[] = getSelections().map((selection) => {

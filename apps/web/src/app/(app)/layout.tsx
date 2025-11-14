@@ -29,7 +29,7 @@ function AppLayout({
         <div className="flex flex-1">
           <SidebarProvider>
             {appSidebar}
-            <SidebarInset className="flex max-h-svh flex-col">
+            <SidebarInset className="flex max-h-svh min-w-sm flex-col">
               {header}
               <div className="min-w-54 flex-1 overflow-auto">{children}</div>
               <div className="mt-auto">{chatDrawer}</div>

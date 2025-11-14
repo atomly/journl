@@ -6,7 +6,7 @@ import type {
   AppEventPayload,
 } from "../events/app-event";
 
-export function useEventHandler<
+export function useAppEventHandler<
   P extends AppEventPayload,
   T extends AppEvent<P>,
 >(

@@ -9,12 +9,9 @@ function ReactQueryDevtoolsDialog() {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <SidebarMenuButton
-          tooltip="React Query Devtools"
-          className="cursor-pointer"
-        >
+        <SidebarMenuButton tooltip="React Query" className="cursor-pointer">
           <Bug className="size-6" />
-          <span>React Query Devtools</span>
+          <span>React Query</span>
         </SidebarMenuButton>
       </DialogTrigger>
       <DialogContent className="flex h-full w-full max-w-screen-md! items-center justify-center border-none bg-transparent px-0 py-10">

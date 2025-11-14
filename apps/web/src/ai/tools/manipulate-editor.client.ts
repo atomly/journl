@@ -46,6 +46,7 @@ export function useManipulateEditorTool() {
         const response = await aiExtension.callLLM({
           onBlockUpdate: handleBlockUpdate,
           userPrompt: toolCall.input.editorPrompt,
+          withDelays: false,
         });
 
         const stream = response?.llmResult.streamObjectResult;

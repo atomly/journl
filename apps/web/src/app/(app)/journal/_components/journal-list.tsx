@@ -104,6 +104,17 @@ export function JournalList({ ...rest }: JournalVirtualListProps) {
             </JournalEntryLink>
             <JournalEntryContent>
               <JournalEntryEditor
+                onFocusAction={() => {
+                  setView({
+                    focusedDate: entry.date,
+                    name: "journal-timeline",
+                  });
+                }}
+                onBlurAction={() => {
+                  setView({
+                    name: "journal-timeline",
+                  });
+                }}
                 onCreateAction={(newEntry) => {
                   queryClient.setQueryData(queryOptions.queryKey, (old) => ({
                     ...old,

@@ -19,10 +19,10 @@
     "@types/localtunnel": "~2.0.4",
     "@types/node": "~22.18.8",
     "concurrently": "~9.2.1",
-    "dotenv-cli": "~8.0.0",
+    "dotenv-cli": "~10.0.0",
     "express": "~5.1.0",
     "localtunnel": "~2.0.2",
     "tsx": "~4.20.6",
-    "zod": "~3.25.76"
+    "zod": "~4.1.11"
   }
 }

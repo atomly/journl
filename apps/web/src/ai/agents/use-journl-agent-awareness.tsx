@@ -48,7 +48,10 @@ export function JournlAgentAwarenessProvider({
 }: {
   children: React.ReactNode;
 }) {
-  const [_, setSelectedBlocks] = useState<BlockSelection[]>([]);
+  const [, setSelectedBlocks] = useState<BlockSelection[]>([]);
+  const [, setView] = useState<JournlAgentContext["view"]>({
+    name: "other",
+  });
   const ref = useRef<{
     view: JournlAgentContext["view"];
     editors: Map<string, JournlEditor>;
@@ -125,6 +128,7 @@ export function JournlAgentAwarenessProvider({
 
   const rememberView = useCallback((view: JournlAgentContext["view"]) => {
     ref.current.view = view;
+    setView(view);
   }, []);
 
   return (

@@ -15,7 +15,7 @@ import {
 } from "~/components/editor/block-editor-tools";
 import { useBlockEditor } from "~/components/editor/use-block-editor";
 import { PageCreatedEvent } from "~/events/page-created-event";
-import { useEventHandler } from "~/hooks/use-event-handler";
+import { useAppEventHandler } from "~/hooks/use-app-event-handler";
 import { useTRPC } from "~/trpc/react";
 
 const DEFAULT_DEBOUNCE_TIME = 150;
@@ -98,7 +98,7 @@ export function PageEditor({
     };
   }, [page.id, page.title, editor, rememberEditor, forgetEditor]);
 
-  useEventHandler(
+  useAppEventHandler(
     ({ payload }) => {
       void payload.chat.addToolResult({
         output: `Page ${payload.title} created successfully.`,

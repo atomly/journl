@@ -23,7 +23,13 @@ export function useBlockEditor({ initialBlocks }: UseBlockEditorOptions) {
       ...en,
       ai: aiEn,
     },
-    extensions: [createAIExtension({ model })],
+    extensions: [
+      createAIExtension({
+        // The `agentCursor.color` is the default across multiple BlockNote components, we're just setting the name.
+        agentCursor: { color: "#8bc6ff", name: "Journl" },
+        model,
+      }),
+    ],
     initialContent: initialBlocks,
     schema,
   });

@@ -19,7 +19,7 @@ export function ComposerContext({ className }: ComposerContextProps) {
         variant="outline"
         className={cn(
           className,
-          "!justify-start group/source relative max-w-60 gap-x-1 border border-primary py-1 text-left",
+          "!justify-start group/source relative max-w-50 gap-x-1 border border-primary py-1 text-left",
         )}
       >
         {view.name === "journal-entry" && (

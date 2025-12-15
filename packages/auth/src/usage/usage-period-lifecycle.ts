@@ -1,6 +1,17 @@
+import type { DbTransaction } from "@acme/db/client";
 import { db } from "@acme/db/client";
 import { Plan, type Subscription, UsagePeriod } from "@acme/db/schema";
 import { and, eq, gte, isNull } from "drizzle-orm";
+
+type DbInstance = typeof import("@acme/db/client").db | DbTransaction;
+
+function getPeriodConflictTarget() {
+  return [
+    UsagePeriod.user_id,
+    UsagePeriod.period_start,
+    UsagePeriod.period_end,
+  ];
+}
 
 function get30DayPeriod(startDate: Date = new Date()) {
   const periodStart = new Date(startDate);
@@ -10,17 +21,52 @@ function get30DayPeriod(startDate: Date = new Date()) {
   return { periodEnd, periodStart };
 }
 
-export async function createInitialUsagePeriodForUser(userId: string) {
+async function trimOverlappingFreePeriods({
+  db,
+  userId,
+  proPeriodStart,
+}: {
+  db: DbInstance;
+  userId: string;
+  proPeriodStart: Date;
+}) {
+  const overlappingPeriods = await db.query.UsagePeriod.findMany({
+    where: and(
+      eq(UsagePeriod.user_id, userId),
+      isNull(UsagePeriod.subscription_id),
+      gte(UsagePeriod.period_end, proPeriodStart.toISOString()),
+    ),
+  });
+
+  for (const period of overlappingPeriods) {
+    const newEndDate = new Date(proPeriodStart.getTime() - 1);
+    await db
+      .update(UsagePeriod)
+      .set({
+        period_end: newEndDate.toISOString(),
+      })
+      .where(eq(UsagePeriod.id, period.id));
+  }
+}
+
+export async function createFreeUsagePeriod({
+  db,
+  userId,
+  startDate,
+}: {
+  db: DbInstance;
+  userId: string;
+  startDate?: Date;
+}) {
   const freePlan = await db.query.Plan.findFirst({
     where: eq(Plan.name, "free"),
   });
 
   if (!freePlan) {
-    console.error("No free plan found, cannot create usage period for user");
-    return;
+    throw new Error("No free plan found");
   }
 
-  const { periodStart, periodEnd } = get30DayPeriod();
+  const { periodStart, periodEnd } = get30DayPeriod(startDate);
 
   await db
     .insert(UsagePeriod)
@@ -32,34 +78,27 @@ export async function createInitialUsagePeriodForUser(userId: string) {
       user_id: userId,
     })
     .onConflictDoNothing({
-      target: [
-        UsagePeriod.user_id,
-        UsagePeriod.period_start,
-        UsagePeriod.period_end,
-      ],
+      target: getPeriodConflictTarget(),
     });
 }
 
-export async function createUsagePeriodForSubscription(
-  subscription: Subscription,
-) {
-  if (!subscription.referenceId) {
-    console.error(
-      "Subscription missing referenceId (userId), cannot create usage period",
-    );
-    return;
-  }
-
-  if (!subscription.periodStart || !subscription.periodEnd) {
-    console.error(
-      "Subscription missing period dates, cannot create usage period",
-    );
-    return;
-  }
-
-  if (!subscription.planName) {
-    console.error("Subscription missing planName, cannot create usage period");
-    return;
+export async function createProUsagePeriod({
+  db,
+  subscription,
+  trimOverlapping = true,
+}: {
+  db: DbInstance;
+  subscription: Subscription;
+  trimOverlapping?: boolean;
+}) {
+  if (
+    !subscription.id ||
+    !subscription.referenceId ||
+    !subscription.periodStart ||
+    !subscription.periodEnd ||
+    !subscription.planName
+  ) {
+    throw new Error("Invalid subscription data");
   }
 
   const plan = await db.query.Plan.findFirst({
@@ -67,36 +106,17 @@ export async function createUsagePeriodForSubscription(
   });
 
   if (!plan) {
-    console.error(
-      `Plan ${subscription.planName} not found, cannot create usage period`,
-    );
-    return;
+    throw new Error(`Plan ${subscription.planName} not found`);
   }
 
-  // Handle free-to-pro upgrades: trim overlapping free periods
-  // Example: User on free (Jan 1-31), upgrades Jan 20
-  // Result: Free period (Jan 1-19), Pro period (Jan 20-Feb 20)
-  const overlappingPeriods = await db.query.UsagePeriod.findMany({
-    where: and(
-      eq(UsagePeriod.user_id, subscription.referenceId),
-      isNull(UsagePeriod.subscription_id),
-      gte(UsagePeriod.period_end, subscription.periodStart.toISOString()),
-    ),
-  });
-
-  // Trim each overlapping free period to end 1ms before pro period starts
-  // Preserves usage data and aggregates tied to the free period
-  for (const period of overlappingPeriods) {
-    const newEndDate = new Date(subscription.periodStart.getTime() - 1);
-    await db
-      .update(UsagePeriod)
-      .set({
-        period_end: newEndDate.toISOString(),
-      })
-      .where(eq(UsagePeriod.id, period.id));
+  if (trimOverlapping) {
+    await trimOverlappingFreePeriods({
+      db,
+      proPeriodStart: subscription.periodStart,
+      userId: subscription.referenceId,
+    });
   }
 
-  // Create new pro period linked to subscription
   await db
     .insert(UsagePeriod)
     .values({
@@ -107,10 +127,16 @@ export async function createUsagePeriodForSubscription(
       user_id: subscription.referenceId,
     })
     .onConflictDoNothing({
-      target: [
-        UsagePeriod.user_id,
-        UsagePeriod.period_start,
-        UsagePeriod.period_end,
-      ],
+      target: getPeriodConflictTarget(),
     });
+}
+
+export async function createInitialUsagePeriodForUser(userId: string) {
+  await createFreeUsagePeriod({ db, userId });
+}
+
+export async function createUsagePeriodForSubscription(
+  subscription: Subscription,
+) {
+  await createProUsagePeriod({ db, subscription, trimOverlapping: true });
 }

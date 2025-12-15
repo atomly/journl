@@ -7,10 +7,7 @@ import { oAuthProxy, organization } from "better-auth/plugins";
 import { eq } from "drizzle-orm";
 import { stripeClient } from "./stripe-client";
 import { handleStripeWebhookEvent } from "./stripe-webhooks";
-import {
-  createInitialUsagePeriodForUser,
-  createUsagePeriodForSubscription,
-} from "./usage/usage-period-lifecycle";
+import { createInitialUsagePeriodForUser } from "./usage/usage-period-lifecycle";
 
 export function initAuth(options: {
   appName: string;
@@ -119,5 +116,3 @@ export function initAuth(options: {
 
 export type Auth = ReturnType<typeof initAuth>;
 export type Session = Auth["$Infer"]["Session"];
-
-export { createInitialUsagePeriodForUser, createUsagePeriodForSubscription };

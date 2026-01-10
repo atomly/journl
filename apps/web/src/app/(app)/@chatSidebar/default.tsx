@@ -52,7 +52,9 @@ export default function ChatSidebar() {
                 <ComposerInput className="py-0" />
                 <div className="relative flex w-full flex-row items-center justify-between shadow-sm focus-within:border-ring/20">
                   <ComposerContext className="h-fit shrink-0 grow-0" />
-                  <ComposerAction />
+                  <div className="ml-auto">
+                    <ComposerAction />
+                  </div>
                 </div>
               </ComposerPrimitive.Root>
             </div>

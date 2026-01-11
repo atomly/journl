@@ -196,13 +196,13 @@ importers:
         version: 3.13.12(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
       '@trpc/client':
         specifier: ~11.4.0
-        version: 11.4.0(@trpc/server@11.4.0(typescript@5.9.3))(typescript@5.9.3)
+        version: 11.4.0(@trpc/server@11.8.1(typescript@5.9.3))(typescript@5.9.3)
       '@trpc/server':
-        specifier: ~11.4.0
-        version: 11.4.0(typescript@5.9.3)
+        specifier: ~11.8.0
+        version: 11.8.1(typescript@5.9.3)
       '@trpc/tanstack-react-query':
         specifier: ~11.4.0
-        version: 11.4.0(@tanstack/react-query@5.80.7(react@19.1.1))(@trpc/client@11.4.0(@trpc/server@11.4.0(typescript@5.9.3))(typescript@5.9.3))(@trpc/server@11.4.0(typescript@5.9.3))(react-dom@19.1.1(react@19.1.1))(react@19.1.1)(typescript@5.9.3)
+        version: 11.4.0(@tanstack/react-query@5.80.7(react@19.1.1))(@trpc/client@11.4.0(@trpc/server@11.8.1(typescript@5.9.3))(typescript@5.9.3))(@trpc/server@11.8.1(typescript@5.9.3))(react-dom@19.1.1(react@19.1.1))(react@19.1.1)(typescript@5.9.3)
       ai:
         specifier: ~5.0.49
         version: 5.0.50(zod@3.25.76)
@@ -331,8 +331,8 @@ importers:
         specifier: ~0.13.8
         version: 0.13.8(arktype@2.1.20)(typescript@5.9.3)(valibot@1.0.0-beta.15(typescript@5.9.3))(zod@3.25.76)
       '@trpc/server':
-        specifier: ~11.4.0
-        version: 11.4.0(typescript@5.9.3)
+        specifier: ~11.8.0
+        version: 11.8.1(typescript@5.9.3)
       ai:
         specifier: ~5.0.49
         version: 5.0.50(zod@3.25.76)
@@ -3405,8 +3405,8 @@ packages:
       '@trpc/server': 11.4.0
       typescript: '>=5.7.2'
 
-  '@trpc/server@11.4.0':
-    resolution: {integrity: sha512-ubE5LgMQuVH5PKcaFq0JJaHbAT3bBV8m1rdlLYEDjJG85zGrYak+6YkXIzUct/LYYXNg/FgyGrqOTM2FyzAlhQ==}
+  '@trpc/server@11.8.1':
+    resolution: {integrity: sha512-P4rzZRpEL7zDFgjxK65IdyH0e41FMFfTkQkuq0BA5tKcr7E6v9/v38DEklCpoDN6sPiB1Sigy/PUEzHENhswDA==}
     peerDependencies:
       typescript: '>=5.7.2'
 
@@ -5460,6 +5460,7 @@ packages:
   next@15.4.7:
     resolution: {integrity: sha512-OcqRugwF7n7mC8OSYjvsZhhG1AYSvulor1EIUsIkbbEbf1qoE5EbH36Swj8WhF4cHqmDgkiam3z1c1W0J1Wifg==}
     engines: {node: ^18.18.0 || ^19.8.0 || >= 20.0.0}
+    deprecated: This version has a security vulnerability. Please upgrade to a patched version. See https://nextjs.org/blog/CVE-2025-66478 for more details.
     hasBin: true
     peerDependencies:
       '@opentelemetry/api': ^1.1.0
@@ -6782,6 +6783,7 @@ packages:
   whatwg-encoding@3.1.1:
     resolution: {integrity: sha512-6qN4hJdMwfYBtE3YBTTHhoeuUrDBPZmbQaxWAqSALV/MeEnR5z1xd8UKud2RAkFoPkmB+hli1TZSnyi84xz1vQ==}
     engines: {node: '>=18'}
+    deprecated: Use @exodus/bytes instead for a more spec-conformant and faster implementation
 
   whatwg-mimetype@4.0.0:
     resolution: {integrity: sha512-QaKxh0eNIi2mE9p2vEdzfagOKHCcj1pJ56EEHGQOVxp8r9/iszLUUV7v89x9O1p/T+NlTM5W7jW6+cz4Fq1YVg==}
@@ -10139,20 +10141,20 @@ snapshots:
       - typescript
       - uuidv7
 
-  '@trpc/client@11.4.0(@trpc/server@11.4.0(typescript@5.9.3))(typescript@5.9.3)':
+  '@trpc/client@11.4.0(@trpc/server@11.8.1(typescript@5.9.3))(typescript@5.9.3)':
     dependencies:
-      '@trpc/server': 11.4.0(typescript@5.9.3)
+      '@trpc/server': 11.8.1(typescript@5.9.3)
       typescript: 5.9.3
 
-  '@trpc/server@11.4.0(typescript@5.9.3)':
+  '@trpc/server@11.8.1(typescript@5.9.3)':
     dependencies:
       typescript: 5.9.3
 
-  '@trpc/tanstack-react-query@11.4.0(@tanstack/react-query@5.80.7(react@19.1.1))(@trpc/client@11.4.0(@trpc/server@11.4.0(typescript@5.9.3))(typescript@5.9.3))(@trpc/server@11.4.0(typescript@5.9.3))(react-dom@19.1.1(react@19.1.1))(react@19.1.1)(typescript@5.9.3)':
+  '@trpc/tanstack-react-query@11.4.0(@tanstack/react-query@5.80.7(react@19.1.1))(@trpc/client@11.4.0(@trpc/server@11.8.1(typescript@5.9.3))(typescript@5.9.3))(@trpc/server@11.8.1(typescript@5.9.3))(react-dom@19.1.1(react@19.1.1))(react@19.1.1)(typescript@5.9.3)':
     dependencies:
       '@tanstack/react-query': 5.80.7(react@19.1.1)
-      '@trpc/client': 11.4.0(@trpc/server@11.4.0(typescript@5.9.3))(typescript@5.9.3)
-      '@trpc/server': 11.4.0(typescript@5.9.3)
+      '@trpc/client': 11.4.0(@trpc/server@11.8.1(typescript@5.9.3))(typescript@5.9.3)
+      '@trpc/server': 11.8.1(typescript@5.9.3)
       react: 19.1.1
       react-dom: 19.1.1(react@19.1.1)
       typescript: 5.9.3

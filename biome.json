@@ -38,7 +38,8 @@
       "correctness": {
         "noNestedComponentDefinitions": "off",
         "noUnusedImports": "error",
-        "noUnusedVariables": "error"
+        "noUnusedVariables": "error",
+        "useUniqueElementIds": "off"
       },
       "nursery": {
         "useSortedClasses": {

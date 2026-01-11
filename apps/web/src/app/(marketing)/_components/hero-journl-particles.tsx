@@ -21,6 +21,7 @@ export function HeroJournlParticles({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const mousePositionRef = useRef({ x: 0, y: 0 });
   const isTouchingRef = useRef(false);
+  const isPointerActiveRef = useRef(false);
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
@@ -29,6 +30,12 @@ export function HeroJournlParticles({
 
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
+
+    const setMouseToCenter = () => {
+      if (!canvas) return;
+      const rect = canvas.getBoundingClientRect();
+      mousePositionRef.current = { x: rect.width / 2, y: rect.height / 2 };
+    };
 
     const updateCanvasSize = () => {
       if (wrapperRef.current) {
@@ -43,9 +50,10 @@ export function HeroJournlParticles({
         canvas.style.width = `${rect.width}px`;
         canvas.style.height = `${rect.height}px`;
 
-        // Scale the drawing context so everything draws at the correct size
-        ctx.scale(dpr, dpr);
+        // Reset transforms so scaling stays consistent across resizes.
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       }
+      setMouseToCenter();
       setIsMobile(window.innerWidth < 768);
     };
 
@@ -81,7 +89,7 @@ export function HeroJournlParticles({
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
       const fontSize = isMobile ? 90 : 120;
-      ctx.font = `bold ${fontSize}px Arial`;
+      ctx.font = `700 ${fontSize}px "Plus Jakarta Sans", sans-serif`;
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
       ctx.fillText(PARTICLES_TEXT, displayWidth / 2, displayHeight / 2);
@@ -169,7 +177,7 @@ export function HeroJournlParticles({
 
         if (
           distance < maxDistance &&
-          (isTouchingRef.current || !("ontouchstart" in window))
+          (isTouchingRef.current || isPointerActiveRef.current)
         ) {
           const force = (maxDistance - distance) / maxDistance;
           const angle = Math.atan2(dy, dx);
@@ -225,6 +233,7 @@ export function HeroJournlParticles({
 
     const handleMove = (x: number, y: number) => {
       mousePositionRef.current = { x, y };
+      isPointerActiveRef.current = true;
     };
 
     const handleMouseMove = (e: MouseEvent) => {
@@ -245,17 +254,18 @@ export function HeroJournlParticles({
 
     const handleTouchStart = () => {
       isTouchingRef.current = true;
+      isPointerActiveRef.current = true;
     };
 
     const handleTouchEnd = () => {
       isTouchingRef.current = false;
-      mousePositionRef.current = { x: 0, y: 0 };
+      isPointerActiveRef.current = false;
+      setMouseToCenter();
     };
 
     const handleMouseLeave = () => {
-      if (!("ontouchstart" in window)) {
-        mousePositionRef.current = { x: 0, y: 0 };
-      }
+      isPointerActiveRef.current = false;
+      setMouseToCenter();
     };
 
     window.addEventListener("resize", handleResize);

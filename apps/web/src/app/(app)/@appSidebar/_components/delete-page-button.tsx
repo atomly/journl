@@ -130,6 +130,7 @@ export function DeletePageButton({ page, className }: DeletePageButtonProps) {
               Cancel
             </Button>
             <Button
+              autoFocus
               tabIndex={0}
               variant="destructive"
               onClick={confirmDelete}

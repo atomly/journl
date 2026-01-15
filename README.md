@@ -6,6 +6,8 @@ when it’s easy to revisit, easy to continue, and able to surface patterns over
 time. The primary product lives in `apps/web`, and most contributors will work
 there.
 
+<img width="2970" height="4310" alt="image" src="https://github.com/user-attachments/assets/907215de-34d7-4f49-be4a-72febdd55f95" />
+
 ## Product Overview
 
 Journl helps people capture daily entries and use guidance to deepen their

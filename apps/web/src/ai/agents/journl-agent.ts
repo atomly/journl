@@ -31,7 +31,7 @@ Do not reproduce song lyrics or any other copyrighted material, even if asked.
 # User State (deterministic, read-only)
 
 ${
-  context.view.name === "journal-timeline"
+  context.view.name === "journal"
     ? `- Currently at the journal timeline ${context.view.focusedDate ? `and engaged with the entry of the date ${context.view.focusedDate}` : ""}.`
     : context.view.name === "journal-entry"
       ? `- Currently at the journal entry of date ${context.view.date}.`
@@ -150,7 +150,7 @@ const zJournlRuntimeContext: z.ZodType<JournlAgentContext> = z.object({
   view: z.union([
     z.object({
       focusedDate: z.string().optional(),
-      name: z.literal("journal-timeline"),
+      name: z.literal("journal"),
     }),
     z.object({
       date: z.string(),

@@ -1,5 +1,15 @@
 import { blocknoteBlocks } from "@acme/blocknote/server";
-import { and, between, cosineDistance, desc, eq, gt, sql } from "@acme/db";
+import {
+  and,
+  between,
+  cosineDistance,
+  desc,
+  eq,
+  gt,
+  lt,
+  lte,
+  sql,
+} from "@acme/db";
 import {
   Document,
   DocumentEmbedding,
@@ -16,6 +26,23 @@ import {
   zBlockTransactions,
 } from "../shared/block-transaction.js";
 import { protectedProcedure } from "../trpc.js";
+
+type BlockNoteJournalEntry = JournalEntry & {
+  blocks: ReturnType<typeof blocknoteBlocks>;
+};
+
+type BlockNoteJournalEntries = ({ date: string } | Exclude<BlockNoteJournalEntry, undefined>)[];
+
+function formatDateKey(date: Date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function getServerTodayKey() {
+  return formatDateKey(new Date());
+}
 
 export const journalRouter = {
   getBetween: protectedProcedure
@@ -88,6 +115,74 @@ export const journalRouter = {
         });
       }
     }),
+  getEntries: protectedProcedure
+    .input(
+      z.object({
+        cursor: z
+          .string()
+          .nullable()
+          .default(null)
+          .describe("The cursor to start the search from, null is newest"),
+        limit: z
+          .number()
+          .min(1)
+          .max(30)
+          .default(10)
+          .describe("The number of entries to return per page"),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      try {
+        const todayKey = getServerTodayKey();
+
+        const results = await ctx.db.query.JournalEntry.findMany({
+          limit: input.limit + 1,
+          orderBy: desc(JournalEntry.date),
+          where: and(
+            eq(JournalEntry.user_id, ctx.session.user.id),
+            input.cursor
+              ? lt(JournalEntry.date, input.cursor)
+              : lte(JournalEntry.date, todayKey),
+          ),
+          with: {
+            block_edges: true,
+            block_nodes: true,
+          },
+        });
+
+        const hasMore = results.length > input.limit;
+        const pageResults = hasMore ? results.slice(0, input.limit) : results;
+
+        const timeline: BlockNoteJournalEntries = pageResults.map(
+          ({ block_nodes, block_edges, ...entry }) => ({
+            ...entry,
+            blocks: blocknoteBlocks(block_nodes, block_edges),
+          }),
+        );
+
+        if (!input.cursor && todayKey) {
+          const hasToday = timeline.some((entry) => entry.date === todayKey);
+          if (!hasToday) {
+            timeline.unshift({ date: todayKey });
+          }
+        }
+
+        const nextPage = hasMore
+          ? (pageResults[pageResults.length - 1]?.date ?? null)
+          : null;
+
+        return {
+          nextPage,
+          timeline,
+        };
+      } catch (error) {
+        console.error("Database error in journal.getEntries:", error);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to fetch journal entries",
+        });
+      }
+    }),
   getRelevantEntries: protectedProcedure
     .input(
       z.object({
@@ -155,17 +250,22 @@ export const journalRouter = {
     )
     .query(async ({ ctx, input }) => {
       try {
+        const startDate = input.cursor ? new Date(input.cursor) : new Date();
+        startDate.setHours(0, 0, 0, 0);
+
         // Given a limit of 7 days, 1 page will be equivalent to 7 days going backward from today
-        const from = new Date(input.cursor);
+        const from = new Date(startDate);
         const to = new Date(from);
         to.setDate(to.getDate() - (input.limit - 1)); // Subtract (limit - 1) to get exactly 'limit' days
         to.setHours(0, 0, 0, 0); // Start of day
+        const fromKey = formatDateKey(from);
+        const toKey = formatDateKey(to);
 
         const results = await ctx.db.query.JournalEntry.findMany({
           orderBy: JournalEntry.date,
           where: and(
             eq(JournalEntry.user_id, ctx.session.user.id),
-            between(JournalEntry.date, to.toISOString(), from.toISOString()),
+            between(JournalEntry.date, toKey, fromKey),
           ),
           with: {
             block_edges: true,
@@ -175,9 +275,8 @@ export const journalRouter = {
 
         const entriesByDate = new Map(
           results.map(({ block_nodes, block_edges, ...entry }) => {
-            const dateKey = new Date(entry.date).toISOString().split("T")[0];
             return [
-              dateKey,
+              entry.date,
               {
                 ...entry,
                 blocks: blocknoteBlocks(block_nodes, block_edges),
@@ -188,15 +287,12 @@ export const journalRouter = {
 
         // Generate all dates in the range and fill missing days with placeholders
         // Start from the newest date and work backwards for descending order
-        const timeline: (
-          | { date: string }
-          | Exclude<ReturnType<typeof entriesByDate.get>, undefined>
-        )[] = [];
+        const timeline: BlockNoteJournalEntries = [];
         const currentDate = new Date(from);
         const endDate = new Date(to);
 
         while (currentDate >= endDate) {
-          const dateKey = currentDate.toISOString().split("T")[0];
+          const dateKey = formatDateKey(currentDate);
 
           if (!dateKey) continue;
 

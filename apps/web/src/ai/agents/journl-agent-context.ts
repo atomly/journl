@@ -21,7 +21,7 @@ export type JournlAgentContext = {
   };
   view:
     | {
-        name: "journal-timeline";
+        name: "journal";
         /**
          * The date the user is focused on that the Journl agent will be aware of.
          */

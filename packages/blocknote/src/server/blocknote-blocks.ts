@@ -23,9 +23,6 @@ export function blocknoteBlocks(
   /** Maps block IDs to their corresponding block data. */
   const blockMap = new Map(blocks.map((block) => [block.id, block]));
 
-  console.debug("Raw blocks:", blocks.length);
-  console.debug("Raw edges:", edges.length);
-
   /** Tracks sibling relationships between blocks (e.g., `from_id` -> `to_id`). */
   const siblingsMap = new Map<string, string>(
     edges.map((edge) => [edge.from_id, edge.to_id]),
@@ -33,9 +30,6 @@ export function blocknoteBlocks(
 
   /** Tracks parent-child relationships between blocks (e.g., `parent_id` -> `child_id`). */
   const childrenMap = new Map<string, Set<string>>();
-
-  console.debug("Children map size:", childrenMap.size);
-  console.debug("Sibling map size:", siblingsMap.size);
 
   // Build parent-child relationships from parent_id
   for (const block of blocks) {
@@ -50,8 +44,6 @@ export function blocknoteBlocks(
 
   // Find root blocks (blocks with null parent_id)
   const rootBlocks = blocks.filter((block) => block.parent_id === null);
-
-  console.debug("Root blocks count:", rootBlocks.length);
 
   if (rootBlocks.length === 0) {
     return undefined;
@@ -94,10 +86,6 @@ export function blocknoteBlocks(
       return blockIds;
     }
 
-    console.debug(
-      `Found ${possibleHeads.length} possible heads out of ${blockIds.length} blocks`,
-    );
-
     let head: string | null = null;
 
     // If we have exactly one non-target, that's our head
@@ -106,7 +94,6 @@ export function blocknoteBlocks(
     } else if (possibleHeads.length > 1) {
       // Multiple possible heads - pick the first one
       head = possibleHeads[0];
-      console.debug("Multiple possible heads, using first");
     } else if (blockIds[0]) {
       // This shouldn't happen in a proper linked list, but fallback to first block
       head = blockIds[0];
@@ -138,9 +125,6 @@ export function blocknoteBlocks(
         `Found ${remaining.length} remaining blocks that weren't in the linked list`,
       );
     }
-    console.debug(
-      `Ordered ${blockIds.length} siblings -> ${finalResult.length} result`,
-    );
 
     return finalResult;
   }
@@ -170,10 +154,6 @@ export function blocknoteBlocks(
     // Order children using sibling linked lists
     const orderedChildrenIds = orderSiblings(childrenIds);
 
-    console.debug(
-      `Building block with ${childrenIds.size} children -> ${orderedChildrenIds.length} ordered`,
-    );
-
     // Recursively build children (BFS)
     const children = orderedChildrenIds.map((childId) =>
       buildDocumentBranch(childId),
@@ -196,8 +176,6 @@ export function blocknoteBlocks(
   // Order root blocks using sibling linked lists
   const rootBlockIds = new Set(rootBlocks.map((block) => block.id));
   const orderedRootIds = orderSiblings(rootBlockIds);
-
-  console.debug("Final root order count:", orderedRootIds.length);
 
   // Build the tree starting from ordered root blocks
   const [root, ...rest] = orderedRootIds.map((rootId) =>

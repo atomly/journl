@@ -6,7 +6,7 @@ when it’s easy to revisit, easy to continue, and able to surface patterns over
 time. The primary product lives in `apps/web`, and most contributors will work
 there.
 
-<img width="2970" height="1310" alt="image" src="https://github.com/user-attachments/assets/907215de-34d7-4f49-be4a-72febdd55f95" />
+<img width="1424" height="548" alt="image" src="https://github.com/user-attachments/assets/5a990ee4-9db5-4405-a3ec-4a157600cdb6" />
 
 ## Product Overview
 

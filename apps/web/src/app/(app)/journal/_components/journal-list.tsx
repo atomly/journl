@@ -1,12 +1,16 @@
 "use client";
 
-import type { TimelineEntry } from "@acme/api";
+import type { JournalListEntry } from "@acme/api";
 import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo } from "react";
 import { Virtuoso } from "react-virtuoso";
 import { useDebouncedCallback } from "use-debounce";
 import { useJournlAgentAwareness } from "~/ai/agents/use-journl-agent-awareness";
-import { infiniteJournalEntriesQueryOptions } from "~/app/api/trpc/options/journal-entries-query-options";
+import {
+  getInfiniteEntriesQueryOptions,
+  getInfiniteJournalEntriesQueryOptions,
+} from "~/app/api/trpc/options/journal-entries-query-options";
+import { useAppPreferences } from "~/components/preferences/app-preferences-provider";
 import { useTRPC } from "~/trpc/react";
 import {
   JournalEntryContent,
@@ -24,20 +28,33 @@ type JournalVirtualListProps = Omit<
   "data" | "endReached" | "increaseViewportBy" | "itemContent" | "components"
 >;
 
-export function JournalList({ ...rest }: JournalVirtualListProps) {
-  const trpc = useTRPC();
-  const queryClient = useQueryClient();
-  const queryOptions = trpc.journal.getTimeline.infiniteQueryOptions(
-    infiniteJournalEntriesQueryOptions,
-  );
-  const { status, data, error, fetchNextPage, hasNextPage } = useInfiniteQuery({
-    ...queryOptions,
-    gcTime: 0,
-    getNextPageParam: ({ nextPage }) => nextPage,
-    initialPageParam: Date.now(),
-  });
+type JournalListError = { message?: string } | null;
+
+type JournalListContentProps = JournalVirtualListProps & {
+  status: "pending" | "error" | "success";
+  data:
+    | {
+        pages: Array<{ timeline: JournalListEntry[] }>;
+      }
+    | undefined;
+  error: JournalListError;
+  fetchNextPage: () => Promise<unknown>;
+  hasNextPage: boolean;
+  onCreateAction: (newEntry: JournalListEntry) => void;
+};
+
+function JournalListContent({
+  status,
+  data,
+  error,
+  fetchNextPage,
+  hasNextPage,
+  onCreateAction,
+  ...rest
+}: JournalListContentProps) {
   const debouncedFetchNextPage = useDebouncedCallback(fetchNextPage, 300);
   const { rememberView: setView } = useJournlAgentAwareness();
+  const hasMore = hasNextPage;
 
   const entries = useMemo(
     () =>
@@ -51,14 +68,14 @@ export function JournalList({ ...rest }: JournalVirtualListProps) {
           }
           return acc;
         },
-        [] as (TimelineEntry & { pageIndex: number })[],
+        [] as (JournalListEntry & { pageIndex: number })[],
       ) ?? [],
     [data],
   );
 
   useEffect(() => {
     setView({
-      name: "journal-timeline",
+      name: "journal",
     });
     return () => {
       setView({
@@ -94,7 +111,11 @@ export function JournalList({ ...rest }: JournalVirtualListProps) {
   return (
     <Virtuoso
       data={entries}
-      endReached={() => debouncedFetchNextPage()}
+      endReached={() => {
+        if (hasMore) {
+          debouncedFetchNextPage();
+        }
+      }}
       increaseViewportBy={200}
       itemContent={(_, entry) => (
         <JournalEntryProvider entry={entry}>
@@ -107,28 +128,18 @@ export function JournalList({ ...rest }: JournalVirtualListProps) {
                 onFocusAction={() => {
                   setView({
                     focusedDate: entry.date,
-                    name: "journal-timeline",
+                    name: "journal",
                   });
                 }}
-                onBlurAction={() => {
-                  setView({
-                    name: "journal-timeline",
-                  });
-                }}
-                onCreateAction={(newEntry) => {
-                  queryClient.setQueryData(queryOptions.queryKey, (old) => ({
-                    ...old,
-                    pageParams: [...(old?.pageParams ?? [])],
-                    pages: [...(old?.pages ?? [])].map((page) => {
-                      return {
-                        ...page,
-                        timeline: page.timeline.map((e) =>
-                          e.date === newEntry.date ? newEntry : e,
-                        ),
-                      };
-                    }),
-                  }));
-                }}
+                // TODO: Disabled this for now because when the user clicks outside the editor,
+                // the view is reset to the journal view. This is bad when the user clicks on
+                // the Journl chat resulting in a loss of contextual "relevance".
+                // onBlurAction={() => {
+                //   setView({
+                //     name: "journal",
+                //   });
+                // }}
+                onCreateAction={onCreateAction}
               />
             </JournalEntryContent>
           </JournalEntryWrapper>
@@ -138,11 +149,133 @@ export function JournalList({ ...rest }: JournalVirtualListProps) {
         Footer: () => (
           <JournalEntryLoader
             className="mx-auto mt-8 max-w-4xl px-13.5 pb-24"
-            hasNextPage={hasNextPage}
+            hasNextPage={hasMore}
           />
         ),
       }}
       {...rest}
     />
+  );
+}
+
+export function JournalTimeline({ ...rest }: JournalVirtualListProps) {
+  const trpc = useTRPC();
+  const queryClient = useQueryClient();
+  const queryOptions = trpc.journal.getTimeline.infiniteQueryOptions(
+    getInfiniteJournalEntriesQueryOptions(),
+  );
+  const { status, data, error, fetchNextPage, hasNextPage } = useInfiniteQuery({
+    ...queryOptions,
+    gcTime: 0,
+    getNextPageParam: ({ nextPage }) => nextPage ?? undefined,
+    initialPageParam: Date.now(),
+  });
+
+  return (
+    <JournalListContent
+      {...rest}
+      data={data}
+      error={error}
+      fetchNextPage={fetchNextPage}
+      hasNextPage={hasNextPage ?? false}
+      onCreateAction={(newEntry) => {
+        queryClient.setQueryData(queryOptions.queryKey, (old) => ({
+          ...old,
+          pageParams: [...(old?.pageParams ?? [])],
+          pages: [...(old?.pages ?? [])].map((page) => {
+            return {
+              ...page,
+              timeline: page.timeline.map((entry) =>
+                entry.date === newEntry.date ? newEntry : entry,
+              ),
+            };
+          }),
+        }));
+      }}
+      status={status}
+    />
+  );
+}
+
+export function JournalEntries({ ...rest }: JournalVirtualListProps) {
+  const trpc = useTRPC();
+  const queryClient = useQueryClient();
+  const queryOptions = trpc.journal.getEntries.infiniteQueryOptions(
+    getInfiniteEntriesQueryOptions(),
+  );
+  const { status, data, error, fetchNextPage, hasNextPage } = useInfiniteQuery({
+    ...queryOptions,
+    gcTime: 0,
+    getNextPageParam: ({ nextPage }) => nextPage ?? undefined,
+    initialPageParam: null,
+  });
+
+  return (
+    <JournalListContent
+      {...rest}
+      data={data}
+      error={error}
+      fetchNextPage={fetchNextPage}
+      hasNextPage={hasNextPage ?? false}
+      onCreateAction={(newEntry) => {
+        queryClient.setQueryData(queryOptions.queryKey, (old) => {
+          const pages = [...(old?.pages ?? [])];
+          if (pages.length === 0) {
+            return {
+              ...old,
+              pageParams: [...(old?.pageParams ?? [])],
+              pages,
+            };
+          }
+
+          let didReplace = false;
+          const updatedPages = pages.map((page) => ({
+            ...page,
+            timeline: page.timeline.map((entry) => {
+              if (entry.date === newEntry.date) {
+                didReplace = true;
+                return newEntry;
+              }
+              return entry;
+            }),
+          }));
+
+          if (!didReplace) {
+            const [firstPage, ...restPages] = updatedPages;
+            if (firstPage) {
+              return {
+                ...old,
+                pageParams: [...(old?.pageParams ?? [])],
+                pages: [
+                  {
+                    ...firstPage,
+                    timeline: [newEntry, ...firstPage.timeline],
+                  },
+                  ...restPages,
+                ],
+              };
+            }
+          }
+
+          return {
+            ...old,
+            pageParams: [...(old?.pageParams ?? [])],
+            pages: updatedPages,
+          };
+        });
+      }}
+      status={status}
+    />
+  );
+}
+
+export function JournalList({ ...rest }: JournalVirtualListProps) {
+  const { preferences } = useAppPreferences();
+  const isEntriesOnly = preferences.journalTimelineView === "entries";
+
+  return isEntriesOnly ? (
+    <JournalEntries {...rest} />
+  ) : (
+    <JournalTimeline {...rest} />
   );
 }

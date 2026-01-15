@@ -9,6 +9,12 @@ export type TimelineEntry = inferProcedureOutput<
   ApiRouter["journal"]["getTimeline"]
 >["timeline"][number];
 
+export type JournalEntry = inferProcedureOutput<
+  ApiRouter["journal"]["getEntries"]
+>["timeline"][number];
+
+export type JournalListEntry = TimelineEntry | JournalEntry;
+
 export type Subscription = inferProcedureOutput<
   ApiRouter["subscription"]["getSubscription"]
 >;
@@ -31,4 +37,8 @@ export type PaginatedPagesInput = inferProcedureInput<
 
 export type InfiniteJournalEntriesInput = inferProcedureInput<
   ApiRouter["journal"]["getTimeline"]
+>;
+
+export type InfiniteEntriesInput = inferProcedureInput<
+  ApiRouter["journal"]["getEntries"]
 >;

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Suspense } from "react";
+import { HeaderJournalViewToggle } from "~/app/(app)/@header/_components/header-journal-view-toggle";
 import { HeaderThemeToggle } from "~/app/(app)/@header/_components/header-theme-toggle";
 import { SidebarTrigger } from "~/components/ui/sidebar";
 import { HeaderCurrentDate } from "./_components/header-current-date";
@@ -22,6 +23,7 @@ export default function JournalHeader() {
             <Suspense>
               <HeaderSubscriptionButton />
             </Suspense>
+            <HeaderJournalViewToggle />
             <HeaderSearchButton>
               <HeaderSearchTrigger />
             </HeaderSearchButton>

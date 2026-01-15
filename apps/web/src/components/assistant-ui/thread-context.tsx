@@ -25,7 +25,7 @@ export function ComposerContext({ className }: ComposerContextProps) {
         {view.name === "journal-entry" && (
           <span className="truncate">Entry: {view.date}</span>
         )}
-        {view.name === "journal-timeline" && (
+        {view.name === "journal" && (
           <span className="truncate">
             {view.focusedDate ? `Entry: ${view.focusedDate}` : "Journal"}
           </span>

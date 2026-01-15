@@ -1,6 +1,6 @@
 "use client";
 
-import type { BlockTransaction, TimelineEntry } from "@acme/api";
+import type { BlockTransaction, JournalListEntry } from "@acme/api";
 import { useMutation } from "@tanstack/react-query";
 import Link from "next/link";
 import {
@@ -31,7 +31,7 @@ type JournalEntryContextValue = {
   documentId: string | null;
   date: string;
   formattedDate: string;
-  initialBlocks: Extract<TimelineEntry, { blocks: unknown }>["blocks"];
+  initialBlocks: Extract<JournalListEntry, { blocks?: unknown }>["blocks"];
   isToday: boolean;
 };
 
@@ -40,7 +40,7 @@ const JournalEntryContext = createContext<JournalEntryContextValue | undefined>(
 );
 
 type JournalEntryProviderProps = ComponentProps<"div"> & {
-  entry: TimelineEntry;
+  entry: JournalListEntry;
 };
 
 export function JournalEntryProvider({
@@ -155,7 +155,7 @@ export function JournalEntryContent({
 
 type JournalEntryEditorProps = {
   debounceTime?: number;
-  onCreateAction?: (newEntry: TimelineEntry) => void;
+  onCreateAction?: (newEntry: JournalListEntry) => void;
   onFocusAction?: () => void;
   onBlurAction?: () => void;
 };

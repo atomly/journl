@@ -1,6 +1,19 @@
-import type { InfiniteJournalEntriesInput } from "@acme/api";
+import type {
+  InfiniteEntriesInput,
+  InfiniteJournalEntriesInput,
+} from "@acme/api";
 
-export const infiniteJournalEntriesQueryOptions: InfiniteJournalEntriesInput = {
-  /* 7 days per page */
-  limit: 7,
-};
+const JOURNAL_TIMELINE_PAGE_SIZE = 7;
+const JOURNAL_ENTRIES_PAGE_SIZE = 10;
+
+export function getInfiniteJournalEntriesQueryOptions(): InfiniteJournalEntriesInput {
+  return {
+    limit: JOURNAL_TIMELINE_PAGE_SIZE,
+  };
+}
+
+export function getInfiniteEntriesQueryOptions(): InfiniteEntriesInput {
+  return {
+    limit: JOURNAL_ENTRIES_PAGE_SIZE,
+  };
+}

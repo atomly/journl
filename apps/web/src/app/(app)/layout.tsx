@@ -1,6 +1,7 @@
 import { withAuth } from "~/auth/guards";
 import { SidebarInset, SidebarProvider } from "~/components/ui/sidebar";
 import { Toaster } from "~/components/ui/toast";
+import { getAppPreferences } from "~/preferences/get-preferences";
 import ChatSidebarTrigger from "./@chatSidebar/_components/chat-sidebar-trigger";
 import "./globals.css";
 import { AppProviders } from "../_components/app-providers";
@@ -15,7 +16,7 @@ type AppLayoutProps = {
   subscriptionModal: React.ReactNode;
 };
 
-function AppLayout({
+async function AppLayout({
   children,
   appSidebar,
   chatDrawer,
@@ -23,8 +24,10 @@ function AppLayout({
   header,
   subscriptionModal,
 }: AppLayoutProps) {
+  const preferences = await getAppPreferences();
+
   return (
-    <AppProviders>
+    <AppProviders initialPreferences={preferences}>
       <SidebarProvider className="flex min-h-screen-safe flex-col">
         <div className="flex flex-1">
           <SidebarProvider>

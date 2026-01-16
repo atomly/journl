@@ -31,7 +31,10 @@ type BlockNoteJournalEntry = JournalEntry & {
   blocks: ReturnType<typeof blocknoteBlocks>;
 };
 
-type BlockNoteJournalEntries = ({ date: string } | Exclude<BlockNoteJournalEntry, undefined>)[];
+type BlockNoteJournalEntries = (
+  | { date: string }
+  | Exclude<BlockNoteJournalEntry, undefined>
+)[];
 
 function formatDateKey(date: Date) {
   const year = date.getFullYear();
@@ -108,7 +111,7 @@ export const journalRouter = {
         if (error instanceof TRPCError) {
           throw error;
         }
-        console.error("Database error in journal.byId:", error);
+        console.error("Database error in journal.getByDate:", error);
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "Failed to fetch journal entry",
@@ -322,7 +325,7 @@ export const journalRouter = {
           timeline,
         };
       } catch (error) {
-        console.error("Database error in journal.byPage:", error);
+        console.error("Database error in journal.getTimeline:", error);
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "Failed to fetch journal entries",
@@ -392,7 +395,7 @@ export const journalRouter = {
         if (error instanceof TRPCError) {
           throw error;
         }
-        console.error("Database error in journal.write:", error);
+        console.error("Database error in journal.saveTransactions:", error);
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "Failed to update journal entry",

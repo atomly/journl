@@ -62,7 +62,7 @@ export default function ChatDrawer() {
                 <ComposerPrimitive.Root className="relative flex w-full flex-col rounded-lg border bg-muted px-1 pt-2 shadow-sm focus-within:border-ring/20 [&_button]:self-end">
                   <ComposerSources />
                   <ComposerInput className="py-0" />
-                  <div className="relative flex w-full flex-row items-center justify-between shadow-sm focus-within:border-ring/20">
+                  <div className="relative flex w-full flex-row items-center justify-between focus-within:border-ring/20">
                     <ComposerContext className="h-fit shrink-0 grow-0" />
                     <div className="ml-auto">
                       <ComposerAction />

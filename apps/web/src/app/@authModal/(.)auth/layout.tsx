@@ -1,7 +1,6 @@
 import { AuthModal } from "~/components/auth/auth-modal";
 
 import "../../(dashboard)/globals.css";
-import Link from "next/link";
 import { BetterAuthProvider } from "~/components/auth/better-auth-provider";
 
 type AuthModalLayoutProps = {
@@ -12,7 +11,7 @@ export default async function AuthModalLayout({
   children,
 }: AuthModalLayoutProps) {
   return (
-    <BetterAuthProvider Link={Link}>
+    <BetterAuthProvider>
       <AuthModal>{children}</AuthModal>
     </BetterAuthProvider>
   );

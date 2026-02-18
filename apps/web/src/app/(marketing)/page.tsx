@@ -48,7 +48,7 @@ export default withoutAuth(function RootPage() {
   const year = new Date().getFullYear();
   return (
     <HydrateClient>
-      <div className="relative min-h-screen overflow-hidden bg-background text-foreground">
+      <div className="relative min-h-screen select-none overflow-hidden bg-background text-foreground">
         <HeroFloatingShapes />
         <div className="-z-10 pointer-events-none absolute inset-0">
           <div className="absolute inset-0 bg-[radial-gradient(1200px_600px_at_20%_-10%,rgba(255,255,255,0.08),transparent_60%),radial-gradient(900px_500px_at_80%_5%,rgba(255,255,255,0.06),transparent_55%)]" />

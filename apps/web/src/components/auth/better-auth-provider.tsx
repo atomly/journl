@@ -1,15 +1,19 @@
 "use client";
 import { AuthUIProvider } from "@daveyplate/better-auth-ui";
+import NextLink from "next/link";
 import { useRouter } from "next/navigation";
-import type { ComponentProps } from "react";
+import type { ComponentProps, ReactNode } from "react";
 import { authClient } from "~/auth/client";
 
-type AuthProviderProps = Pick<
-  ComponentProps<typeof AuthUIProvider>,
-  "children" | "Link"
->;
+type AuthProviderProps = {
+  children: ReactNode;
+  Link?: ComponentProps<typeof AuthUIProvider>["Link"];
+};
 
-export function BetterAuthProvider({ children, Link }: AuthProviderProps) {
+export function BetterAuthProvider({
+  children,
+  Link = NextLink,
+}: AuthProviderProps) {
   const router = useRouter();
   return (
     <AuthUIProvider

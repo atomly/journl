@@ -33,6 +33,8 @@ type JournalEntryContextValue = {
   formattedDate: string;
   initialBlocks: Extract<JournalListEntry, { blocks?: unknown }>["blocks"];
   isToday: boolean;
+  focusEditor?: () => void;
+  setFocusEditor: (callback: () => void) => void;
 };
 
 const JournalEntryContext = createContext<JournalEntryContextValue | undefined>(
@@ -49,6 +51,10 @@ export function JournalEntryProvider({
   entry,
   ...rest
 }: JournalEntryProviderProps) {
+  const [focusEditor, setFocusEditor] = useState<(() => void) | undefined>(
+    undefined,
+  );
+
   const value = useMemo(() => {
     const date = new Date(`${entry.date}T00:00:00`);
     const now = new Date();
@@ -60,11 +66,13 @@ export function JournalEntryProvider({
     return {
       date: entry.date,
       documentId: "document_id" in entry ? entry.document_id : null,
+      focusEditor,
       formattedDate,
       initialBlocks: "blocks" in entry ? entry.blocks : undefined,
       isToday,
+      setFocusEditor,
     };
-  }, [entry]);
+  }, [entry, focusEditor]);
 
   return (
     <JournalEntryContext.Provider value={value}>
@@ -88,22 +96,39 @@ function useJournalEntry() {
   return context;
 }
 
-type JournalEntryWrapperProps = ComponentProps<"div">;
+type JournalEntryWrapperProps = ComponentProps<"button">;
 
 export function JournalEntryWrapper({
   className,
   children,
   ...rest
 }: JournalEntryWrapperProps) {
-  const { isToday } = useJournalEntry();
+  const { isToday, focusEditor } = useJournalEntry();
+  function handleClick() {
+    focusEditor?.();
+  }
+
+  function handleKeyDown(e: React.KeyboardEvent) {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      focusEditor?.();
+    }
+  }
 
   return (
-    <div
-      className={cn(isToday && "min-h-96 md:min-h-124", className)}
+    <button
+      type="button"
+      className={cn(
+        "w-full cursor-text text-left",
+        isToday && "min-h-96 md:min-h-124",
+        className,
+      )}
+      onClick={handleClick}
+      onKeyDown={handleKeyDown}
       {...rest}
     >
       {children}
-    </div>
+    </button>
   );
 }
 
@@ -168,7 +193,7 @@ export function JournalEntryEditor({
 }: JournalEntryEditorProps) {
   const trpc = useTRPC();
   const pendingChangesRef = useRef<BlockTransaction[]>([]);
-  const { initialBlocks, documentId, date } = useJournalEntry();
+  const { initialBlocks, documentId, date, setFocusEditor } = useJournalEntry();
   const { rememberEditor, forgetEditor } = useJournlAgentAwareness();
   const editor = useBlockEditor({ initialBlocks });
   const [isOverlayOpen, setOverlayOpen] = useState(false);
@@ -222,6 +247,22 @@ export function JournalEntryEditor({
       forgetEditor(date);
     };
   }, [date, editor, rememberEditor, forgetEditor]);
+
+  useEffect(() => {
+    setFocusEditor(() => () => {
+      const blocks = editor.document;
+      if (blocks.length > 0) {
+        const lastBlock = blocks[blocks.length - 1];
+        if (lastBlock) {
+          editor.setTextCursorPosition(lastBlock, "end");
+        }
+      }
+      editor.focus();
+    });
+    return () => {
+      setFocusEditor(() => undefined);
+    };
+  }, [editor, setFocusEditor]);
 
   return (
     <>

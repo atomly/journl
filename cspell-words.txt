@@ -18,3 +18,7 @@ shadcn
 subrouters
 turbopack
 vaul
+triplit
+captchafox
+instantdb
+marsidev

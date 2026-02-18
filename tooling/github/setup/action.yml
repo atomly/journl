@@ -17,4 +17,4 @@ runs:
       run: pnpm install
 
     - shell: bash
-      run: pnpm dependencies:check
+      run: pnpm check:dependencies

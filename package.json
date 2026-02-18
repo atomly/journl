@@ -5,12 +5,11 @@
   "type": "module",
   "license": "MIT",
   "engines": {
-    "node": ">=22.20.0",
+    "node": ">=24.0.0 <25",
     "pnpm": ">=9.15.9"
   },
-  "packageManager": "pnpm@10.12.4",
+  "packageManager": "pnpm@10.29.3+sha512.498e1fb4cca5aa06c1dcf2611e6fafc50972ffe7189998c409e90de74566444298ffe43e6cd2acdc775ba1aa7cc5e092a8b7054c811ba8c5770f84693d33d2dc",
   "scripts": {
-    "auth:generate": "pnpm -F @acme/auth generate",
     "build": "turbo run build",
     "check": "turbo run check --continue -- --write --unsafe",
     "clean": "turbo run clean && git clean -xdf .turbo node_modules",
@@ -20,8 +19,6 @@
     "dependencies:check": "pnpm dlx sherif@latest -i ai@~4.3.19 -i @ai-sdk/openai@~1.3.22",
     "dev:next": "turbo watch dev -F @acme/nextjs...",
     "dev": "turbo watch dev --continue",
-    "postinstall": "pnpm dependencies:check",
-    "shadcn": "turbo run shadcn",
     "typecheck": "turbo run typecheck"
   },
   "devDependencies": {

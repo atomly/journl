@@ -25,5 +25,10 @@
     "@biomejs/biome": "~2.2.4",
     "@turbo/gen": "~2.5.8",
     "turbo": "~2.5.8"
+  },
+  "pnpm": {
+    "overrides": {
+      "@better-fetch/fetch": "1.1.18"
+    }
   }
 }

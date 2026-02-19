@@ -1,6 +1,6 @@
 # Journl
 
-Journl is a web-first journaling app that turns daily writing into structured
+Journl is an AI-driven journaling app that turns daily writing into structured
 reflection. It’s built around a simple principle: journaling is most useful
 when it’s easy to revisit, easy to continue, and able to surface patterns over
 time. The primary product lives in `apps/web`, and most contributors will work

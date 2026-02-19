@@ -113,9 +113,6 @@ importers:
       '@assistant-ui/react-markdown':
         specifier: ~0.12.3
         version: 0.12.3(@assistant-ui/react@0.12.10(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(use-sync-external-store@1.6.0(react@19.2.4)))(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
-      '@assistant-ui/styles':
-        specifier: ~0.3.7
-        version: 0.3.7
       '@blocknote/core':
         specifier: ~0.46.2
         version: 0.46.2(@types/hast@3.0.4)
@@ -221,6 +218,9 @@ importers:
       ai:
         specifier: ~6.0.90
         version: 6.0.90(zod@4.3.6)
+      better-auth:
+        specifier: 1.4.18
+        version: 1.4.18(drizzle-kit@0.31.9)(drizzle-orm@0.45.1(@libsql/client@0.15.15(bufferutil@4.1.0))(@opentelemetry/api@1.9.0)(@types/pg@8.11.6)(@vercel/postgres@0.10.0)(kysely@0.28.11))(next@16.1.6(@opentelemetry/api@1.9.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       better-call:
         specifier: 1.1.8
         version: 1.1.8(zod@4.3.6)
@@ -394,9 +394,6 @@ importers:
       '@t3-oss/env-nextjs':
         specifier: ~0.13.10
         version: 0.13.10(typescript@5.9.3)(zod@4.3.6)
-      better-auth:
-        specifier: 1.4.18
-        version: 1.4.18(drizzle-kit@0.31.9)(drizzle-orm@0.45.1(@libsql/client@0.15.15(bufferutil@4.1.0))(@opentelemetry/api@1.9.0)(@types/pg@8.11.6)(@vercel/postgres@0.10.0)(kysely@0.28.11))(next@16.1.6(@opentelemetry/api@1.9.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       zod:
         specifier: ~4.3.6
         version: 4.3.6
@@ -407,6 +404,9 @@ importers:
       '@types/react':
         specifier: ~19.2.14
         version: 19.2.14
+      better-auth:
+        specifier: 1.4.18
+        version: 1.4.18(drizzle-kit@0.31.9)(drizzle-orm@0.45.1(@libsql/client@0.15.15(bufferutil@4.1.0))(@opentelemetry/api@1.9.0)(@types/pg@8.11.6)(@vercel/postgres@0.10.0)(kysely@0.28.11))(next@16.1.6(@opentelemetry/api@1.9.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       better-call:
         specifier: 1.1.8
         version: 1.1.8(zod@4.3.6)
@@ -611,10 +611,6 @@ packages:
     peerDependenciesMeta:
       '@types/react':
         optional: true
-
-  '@assistant-ui/styles@0.3.7':
-    resolution: {integrity: sha512-+i/jdTj1cwD58QKtSMYGN3jss/wLFzTUs4dn2w5IcP0g5YIBkLzqF3drvNzs04InB+YUkPBxqNkYg80fx2zuBA==}
-    deprecated: Package no longer supported. Contact Support at https://www.npmjs.com/support for more info.
 
   '@assistant-ui/tap@0.4.6':
     resolution: {integrity: sha512-+EtOY78499gLatlQ7l2xOR/VSH93PpoZdNAB3jJhyc7/0i9sB1WeJ2cdwib3PYIwUNEKykgxuXr7AIlGf+7GDw==}
@@ -6233,8 +6229,6 @@ snapshots:
       use-effect-event: 2.0.3(react@19.2.4)
     optionalDependencies:
       '@types/react': 19.2.14
-
-  '@assistant-ui/styles@0.3.7': {}
 
   '@assistant-ui/tap@0.4.6(@types/react@19.2.14)(react@19.2.4)':
     optionalDependencies:

@@ -6,6 +6,8 @@ import { centsToDollars } from "~/lib/currency";
 import { api } from "~/trpc/server";
 import { SubscriptionView } from "./_components/subscription-view";
 
+export const dynamic = "force-dynamic";
+
 async function SubscriptionPage() {
   const subscription = await api.subscription.getSubscription();
 

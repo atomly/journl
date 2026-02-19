@@ -7,8 +7,6 @@ await jiti.import("./src/env");
 
 /** @type {import("next").NextConfig} */
 const config = {
-  /** We already do linting and typechecking as separate tasks in CI */
-  eslint: { ignoreDuringBuilds: true },
   /** BlockNote is not yet compatible with React 19 / Next 15 StrictMode. Disabling for now. */
   reactStrictMode: false,
   /** These packages won't be bundled in the server build */

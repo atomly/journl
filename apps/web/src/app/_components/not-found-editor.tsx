@@ -3,7 +3,12 @@
 import { useCreateBlockNote } from "@blocknote/react";
 import { BlockNoteView } from "@blocknote/shadcn";
 
-export function NotFoundEditor() {
+type NotFoundEditorProps = Pick<
+  React.ComponentProps<typeof BlockNoteView>,
+  "className"
+>;
+
+export function NotFoundEditor(props: NotFoundEditorProps) {
   // Creates a new editor instance.
   const editor = useCreateBlockNote({
     initialContent: [
@@ -13,20 +18,10 @@ export function NotFoundEditor() {
       },
       {
         content: "Page not found.",
-        props: {
-          textAlignment: "center",
-        },
-        type: "paragraph",
-      },
-      {
-        type: "paragraph",
-      },
-      {
-        content: "The path was linked, but the note was not.",
         type: "bulletListItem",
       },
       {
-        content: "Will investigate later... I hope.",
+        content: "Error: #404",
         type: "bulletListItem",
       },
       {
@@ -35,5 +30,5 @@ export function NotFoundEditor() {
     ],
   });
 
-  return <BlockNoteView autoFocus theme="light" editor={editor} />;
+  return <BlockNoteView autoFocus theme="light" editor={editor} {...props} />;
 }

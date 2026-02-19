@@ -12,7 +12,7 @@ export function useNavigateJournalEntryTool() {
     execute: (toolCall, chat) => {
       const entry = `/journal/${toolCall.input.date}`;
       router.push(entry);
-      void chat.addToolResult({
+      void chat.addToolOutput({
         output: `Navigating to the journal entry: ${entry}`,
         tool: toolCall.toolName,
         toolCallId: toolCall.toolCallId,

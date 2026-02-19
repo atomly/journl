@@ -28,7 +28,7 @@ export function useCreatePageTool() {
         {
           onError: (error) => {
             console.error("Failed to create page:", error);
-            void chat.addToolResult({
+            void chat.addToolOutput({
               output: `Failed to create page ${toolCall.input.title}`,
               tool: toolCall.toolName,
               toolCallId: toolCall.toolCallId,

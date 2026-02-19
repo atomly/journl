@@ -14,14 +14,14 @@
   "devDependencies": {
     "@acme/db": "workspace:*",
     "@acme/tsconfig": "workspace:*",
-    "@types/express": "~5.0.3",
+    "@types/express": "~5.0.6",
     "@types/localtunnel": "~2.0.4",
-    "@types/node": "~22.18.8",
+    "@types/node": "~25.2.3",
     "concurrently": "~9.2.1",
-    "dotenv-cli": "~8.0.0",
-    "express": "~5.2.0",
+    "dotenv-cli": "~11.0.0",
+    "express": "~5.2.1",
     "localtunnel": "~2.0.2",
-    "tsx": "~4.20.6",
-    "zod": "~3.25.76"
+    "tsx": "~4.21.0",
+    "zod": "~4.3.6"
   }
 }

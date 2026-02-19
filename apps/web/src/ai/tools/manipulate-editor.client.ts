@@ -1,13 +1,13 @@
 "use client";
 
-import { getAIExtension } from "@blocknote/xl-ai";
+import { AIExtension } from "@blocknote/xl-ai";
 import { useDrawer } from "~/components/ui/drawer";
-import { useJournlAgentAwareness } from "../agents/use-journl-agent-awareness";
+import { useJournlAgent } from "../agents/use-journl-agent";
 import { createClientTool } from "../utils/create-client-tool";
 import { zManipulateEditorInput } from "./manipulate-editor.schema";
 
 export function useManipulateEditorTool() {
-  const { getEditors } = useJournlAgentAwareness();
+  const { getEditors } = useJournlAgent();
   const { closeDrawer } = useDrawer();
   const tool = createClientTool({
     execute: async (toolCall, chat) => {
@@ -20,7 +20,7 @@ export function useManipulateEditorTool() {
               ({ editor, ...rest }) => rest,
             ),
           );
-          void chat.addToolResult({
+          void chat.addToolOutput({
             output: `Editor ${toolCall.input.targetEditor} was not found. Please call the tool again targeting one of the following editors: ${activeEditors}`,
             tool: toolCall.toolName,
             toolCallId: toolCall.toolCallId,
@@ -28,43 +28,54 @@ export function useManipulateEditorTool() {
           return;
         }
 
-        const aiExtension = getAIExtension(editor);
+        const aiExtension = editor.getExtension(AIExtension);
 
-        let hasScrolledAtLeastOnce = false;
-        function handleBlockUpdate(block: string) {
-          const blockElement = document.querySelector(`[data-id="${block}"]`);
-          if (
-            blockElement &&
-            !isElementPartiallyInViewport(blockElement) &&
-            !hasScrolledAtLeastOnce
-          ) {
-            blockElement.scrollIntoView({ behavior: "smooth" });
-            hasScrolledAtLeastOnce = true;
-          }
+        if (!aiExtension) {
+          void chat.addToolOutput({
+            output: `Editor ${toolCall.input.targetEditor} does not have the AI extension installed.`,
+            tool: toolCall.toolName,
+            toolCallId: toolCall.toolCallId,
+          });
+          return;
         }
 
-        const response = await aiExtension.callLLM({
-          onBlockUpdate: handleBlockUpdate,
-          userPrompt: toolCall.input.editorPrompt,
-          withDelays: false,
+        let hadChanges = false;
+
+        const cleanUpBeforeChange = editor.onChange((_, { getChanges }) => {
+          const changes = getChanges();
+
+          const [{ block } = {}] = changes;
+
+          if (!block) return;
+
+          hadChanges = true;
+
+          const blockElement = document.querySelector(
+            `[data-id="${block.id}"]`,
+          );
+          if (blockElement && !isElementPartiallyInViewport(blockElement)) {
+            blockElement.scrollIntoView({ behavior: "smooth" });
+            cleanUpBeforeChange();
+          }
         });
 
-        const stream = response?.llmResult.streamObjectResult;
-        const changes = await stream?.object;
+        await aiExtension.invokeAI({
+          userPrompt: toolCall.input.editorPrompt,
+        });
 
-        void chat.addToolResult({
-          output: changes
-            ? `The following changes were made: ${JSON.stringify(changes)}`
-            : "Something went wrong and no changes were made.",
+        void chat.addToolOutput({
+          output: "Writing into the journal...",
           tool: toolCall.toolName,
           toolCallId: toolCall.toolCallId,
         });
 
-        if (changes) {
+        cleanUpBeforeChange();
+
+        if (hadChanges) {
           closeDrawer();
         }
       } catch (error) {
-        void chat.addToolResult({
+        void chat.addToolOutput({
           output: `Error when calling the tool: ${error}`,
           tool: toolCall.toolName,
           toolCallId: toolCall.toolCallId,

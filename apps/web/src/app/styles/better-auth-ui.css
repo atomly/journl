@@ -1,4 +1,4 @@
-@source '../../../../../node_modules/@daveyplate/better-auth-ui';
+@source "../../../../../node_modules/@daveyplate/better-auth-ui";
 
 div[data-slot="card-content"]
   [data-orientation="horizontal"].data-\[orientation\=horizontal\]\:w-full {

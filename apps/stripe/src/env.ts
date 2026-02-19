@@ -13,7 +13,7 @@ export const env = createEnv({
    * This way you can ensure the app isn't built with invalid env vars.
    */
   server: {
-    STRIPE_WEBHOOK_PORT: z.string().transform(Number).default("3000"),
+    STRIPE_WEBHOOK_PORT: z.string().transform(Number).default(3000),
   },
   shared: {
     NODE_ENV: z

@@ -1,7 +1,7 @@
 "use client";
 
 import type { BlockPrimitive, schema } from "@acme/blocknote/schema";
-import { filterSuggestionItems } from "@blocknote/core";
+import { filterSuggestionItems } from "@blocknote/core/extensions";
 import {
   FormattingToolbar,
   FormattingToolbarController,
@@ -14,7 +14,7 @@ import {
 } from "@blocknote/react";
 import { AIToolbarButton, getAISlashMenuItems } from "@blocknote/xl-ai";
 import removeMarkdown from "remove-markdown";
-import { useJournlAgentAwareness } from "~/ai/agents/use-journl-agent-awareness";
+import { useJournlAgent } from "~/ai/agents/use-journl-agent";
 
 /**
  * The formatting toolbar with the AI option added.
@@ -24,8 +24,10 @@ import { useJournlAgentAwareness } from "~/ai/agents/use-journl-agent-awareness"
 export function BlockEditorFormattingToolbar() {
   return (
     <FormattingToolbarController
-      floatingOptions={{
-        strategy: "fixed",
+      floatingUIOptions={{
+        useFloatingOptions: {
+          strategy: "fixed",
+        },
       }}
       formattingToolbar={() => (
         <FormattingToolbar>
@@ -49,8 +51,10 @@ export function BlockEditorSlashMenu() {
   return (
     <SuggestionMenuController
       triggerCharacter="/"
-      floatingOptions={{
-        strategy: "fixed",
+      floatingUIOptions={{
+        useFloatingOptions: {
+          strategy: "fixed",
+        },
       }}
       getItems={async (query) =>
         filterSuggestionItems(
@@ -71,15 +75,14 @@ export function BlockEditorSlashMenu() {
 function AddBlockSelectionButton() {
   const editor = useBlockNoteEditor();
   const Components = useComponentsContext();
-  const { rememberSelection, getSelection, forgetSelection } =
-    useJournlAgentAwareness();
+  const { rememberSelection, getSelection, forgetSelection } = useJournlAgent();
 
   // Doesn't render unless a at least one block with inline content is selected.
   const blocks = useSelectedBlocks<
     typeof schema.blockSchema,
     typeof schema.inlineContentSchema,
     typeof schema.styleSchema
-  >();
+  >() as BlockPrimitive[];
 
   if (
     !Components ||

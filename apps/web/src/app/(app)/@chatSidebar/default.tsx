@@ -47,10 +47,10 @@ export default function ChatSidebar() {
 
             <div className="sticky bottom-0 mt-3 flex w-full max-w-[var(--thread-max-width)] flex-col items-center justify-end rounded-t-lg bg-sidebar pb-4">
               <ThreadScrollToBottom />
-              <ComposerPrimitive.Root className="relative flex w-full flex-col gap-y-2 rounded-lg border bg-muted px-1 pt-2 shadow-sm focus-within:border-ring/20 [&_button]:self-end">
+              <ComposerPrimitive.Root className="relative flex w-full flex-col gap-y-2 rounded-lg border bg-muted p-2 shadow-sm focus-within:border-ring/20 [&_button]:self-end">
                 <ComposerSources />
                 <ComposerInput className="py-0" />
-                <div className="relative flex w-full flex-row items-center justify-between focus-within:border-ring/20">
+                <div className="relative mt-2 flex w-full flex-row items-end justify-between focus-within:border-ring/20">
                   <ComposerContext className="h-fit shrink-0 grow-0" />
                   <div className="ml-auto">
                     <ComposerAction />

@@ -12,7 +12,7 @@ export function useNavigatePageTool() {
     execute: (toolCall, chat) => {
       const page = `/pages/${toolCall.input.id}`;
       router.push(page);
-      void chat.addToolResult({
+      void chat.addToolOutput({
         output: `Navigating to the page: ${page}`,
         tool: toolCall.toolName,
         toolCallId: toolCall.toolCallId,

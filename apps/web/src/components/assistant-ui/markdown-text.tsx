@@ -20,7 +20,6 @@ function MarkdownTextImpl() {
   return (
     <MarkdownTextPrimitive
       remarkPlugins={[remarkGfm]}
-      className="aui-md"
       components={defaultComponents}
     />
   );

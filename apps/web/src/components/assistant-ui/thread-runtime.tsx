@@ -1,28 +1,20 @@
 "use client";
 
+import { useChat } from "@ai-sdk/react";
 import {
   AssistantRuntimeProvider,
   WebSpeechSynthesisAdapter,
 } from "@assistant-ui/react";
 import { useAISDKRuntime } from "@assistant-ui/react-ai-sdk";
-import type { ChatInit, HttpChatTransportInitOptions, UIMessage } from "ai";
-import { useJournlAgent } from "~/ai/agents/use-journl-agent";
+import { useJournlChat } from "~/ai/agents/use-journl-chat";
 
-type ThreadRuntimeProps<Message extends UIMessage = UIMessage> = {
+type ThreadRuntimeProps = {
   children: React.ReactNode;
-} & Pick<ChatInit<Message>, "messages"> & {
-    transport: Pick<HttpChatTransportInitOptions<Message>, "api">;
-  };
+};
 
-export function ThreadRuntime({
-  children,
-  transport,
-  messages,
-}: ThreadRuntimeProps) {
-  const agent = useJournlAgent({
-    messages,
-    transport,
-  });
+export function ThreadRuntime({ children }: ThreadRuntimeProps) {
+  const { chat } = useJournlChat();
+  const agent = useChat({ chat });
   const runtime = useAISDKRuntime(agent, {
     adapters: {
       speech: new WebSpeechSynthesisAdapter(),

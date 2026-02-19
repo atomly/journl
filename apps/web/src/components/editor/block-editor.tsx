@@ -1,15 +1,56 @@
 "use client";
 
+import "@blocknote/core/fonts/inter.css";
+import "@blocknote/xl-ai/style.css";
 import type { BlockTransaction } from "@acme/api";
 import type { BlockPrimitive, EditorPrimitive } from "@acme/blocknote/schema";
 import type { Block, PartialBlock } from "@blocknote/core";
-import { BlockNoteView } from "@blocknote/mantine";
-import { AIMenuController, getAIExtension } from "@blocknote/xl-ai";
+// import { BlockNoteView } from "@blocknote/mantine";
+import { BlockNoteView } from "@blocknote/shadcn";
+import { AIExtension, AIMenuController } from "@blocknote/xl-ai";
 import { useTheme } from "next-themes";
 import { type ComponentProps, useEffect, useRef } from "react";
-import { useJournlAgentAwareness } from "~/ai/agents/use-journl-agent-awareness";
+import { useJournlAgent } from "~/ai/agents/use-journl-agent";
 import { env } from "~/env";
 import { DefaultMap } from "../../lib/default-map";
+
+// import "@blocknote/shadcn/style.css";
+import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
+import { Badge } from "../ui/badge";
+import { Button } from "../ui/button";
+import { Card, CardContent } from "../ui/card";
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuTrigger,
+} from "../ui/dropdown-menu";
+import { Form } from "../ui/form";
+import { Input } from "../ui/input";
+import { Label } from "../ui/label";
+import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../ui/select";
+import { Skeleton } from "../ui/skeleton";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
+import { Toggle } from "../ui/toggle";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "../ui/tooltip";
 
 type EditorPrimitiveOnChangeParams = Parameters<
   Parameters<EditorPrimitive["onChange"]>[0]
@@ -40,7 +81,7 @@ type EdgeTransactionMap = DefaultMap<
 
 type BlockEditorProps = Omit<
   ComponentProps<typeof BlockNoteView>,
-  "editor" | "theme" | "onChange"
+  "editor" | "theme" | "onChange" | "shadCNComponents"
 > & {
   /**
    * The editor to use.
@@ -72,7 +113,7 @@ export function BlockEditor({
   const { theme, systemTheme } = useTheme();
   const previousEditorRef = useRef<typeof editor.document>(editor.document);
   const { forgetEditorSelections, getSelections, forgetSelection } =
-    useJournlAgentAwareness();
+    useJournlAgent();
 
   // Remove block selections when the editor is unmounted.
   useEffect(() => {
@@ -302,6 +343,76 @@ export function BlockEditor({
       editor={editor}
       theme={resolvedTheme as "light" | "dark"}
       onChange={handleEditorChange}
+      shadCNComponents={{
+        // Pass modified ShadCN components from your project here.
+        // Otherwise, the default ShadCN components will be used.
+        Avatar: {
+          Avatar,
+          AvatarFallback,
+          AvatarImage,
+        },
+        Badge: {
+          Badge: Badge,
+        },
+        Button: {
+          Button: Button,
+        },
+        Card: {
+          Card: Card,
+          CardContent: CardContent,
+        },
+        DropdownMenu: {
+          DropdownMenu,
+          DropdownMenuCheckboxItem,
+          DropdownMenuContent,
+          DropdownMenuItem,
+          DropdownMenuLabel,
+          DropdownMenuSeparator,
+          DropdownMenuSub,
+          DropdownMenuSubContent,
+          DropdownMenuSubTrigger,
+          DropdownMenuTrigger,
+        },
+        Form: {
+          Form,
+        },
+        Input: {
+          Input: Input,
+        },
+        Label: {
+          Label: Label,
+        },
+        Popover: {
+          Popover: Popover,
+          PopoverContent: PopoverContent,
+          PopoverTrigger: PopoverTrigger,
+        },
+        Select: {
+          Select: Select,
+          SelectContent: SelectContent,
+          SelectItem: SelectItem,
+          SelectTrigger: SelectTrigger,
+          SelectValue: SelectValue,
+        },
+        Skeleton: {
+          Skeleton: Skeleton,
+        },
+        Tabs: {
+          Tabs: Tabs,
+          TabsContent: TabsContent,
+          TabsList: TabsList,
+          TabsTrigger: TabsTrigger,
+        },
+        Toggle: {
+          Toggle: Toggle,
+        },
+        Tooltip: {
+          Tooltip,
+          TooltipContent,
+          TooltipProvider,
+          TooltipTrigger,
+        },
+      }}
     >
       <AIMenuController />
       {children}
@@ -340,8 +451,8 @@ function getEditorBlocks(blocks: BlockPrimitive[], parent?: BlockPrimitive) {
 }
 
 function isAgenticEditorChange(editor: EditorPrimitive) {
-  const aiExtension = getAIExtension(editor);
-  const state = aiExtension.store.getState().aiMenuState;
+  const aiExtension = editor.getExtension(AIExtension);
+  const state = aiExtension?.store.state.aiMenuState;
 
   if (!state || typeof state !== "object") return false;
 

@@ -10,9 +10,9 @@ type PageEditor = {
 };
 
 /**
- * The context of the Journl agent.
+ * The stage of the Journl agent.
  */
-export type JournlAgentContext = {
+export type JournlAgentState = {
   activeEditors: (JournalEntryEditor | PageEditor)[];
   currentDate: string;
   highlightedText: string[];

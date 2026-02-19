@@ -39,16 +39,13 @@ export function useManipulateEditorTool() {
           return;
         }
 
-        let hadChanges = false;
+        let didChange = false;
 
         const cleanUpBeforeChange = editor.onChange((_, { getChanges }) => {
-          const changes = getChanges();
+          didChange = true;
 
-          const [{ block } = {}] = changes;
-
+          const [{ block } = {}] = getChanges();
           if (!block) return;
-
-          hadChanges = true;
 
           const blockElement = document.querySelector(
             `[data-id="${block.id}"]`,
@@ -71,7 +68,7 @@ export function useManipulateEditorTool() {
 
         cleanUpBeforeChange();
 
-        if (hadChanges) {
+        if (didChange) {
           closeDrawer();
         }
       } catch (error) {

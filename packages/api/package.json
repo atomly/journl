@@ -18,7 +18,6 @@
   },
   "peerDependencies": {
     "@blocknote/core": "~0.39.1",
-    "@blocknote/mantine": "~0.39.1",
     "@blocknote/react": "~0.39.1",
     "@blocknote/server-util": "~0.39.1",
     "@blocknote/xl-ai": "~0.39.1",

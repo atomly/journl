@@ -6,6 +6,7 @@
   "scripts": {
     "clean": "git clean -xdf .cache .turbo node_modules tsconfig.tsbuildinfo",
     "dev": "pnpm with-env sh -c 'stripe listen --forward-to localhost:$STRIPE_WEBHOOK_PORT/api/auth/stripe/webhook'",
+    "login": "stripe login",
     "typecheck": "tsc --noEmit",
     "with-env": "dotenv -e ../../.env --"
   },

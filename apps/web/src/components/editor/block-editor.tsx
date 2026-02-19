@@ -5,7 +5,6 @@ import "@blocknote/xl-ai/style.css";
 import type { BlockTransaction } from "@acme/api";
 import type { BlockPrimitive, EditorPrimitive } from "@acme/blocknote/schema";
 import type { Block, PartialBlock } from "@blocknote/core";
-// import { BlockNoteView } from "@blocknote/mantine";
 import { BlockNoteView } from "@blocknote/shadcn";
 import { AIExtension, AIMenuController } from "@blocknote/xl-ai";
 import { useTheme } from "next-themes";

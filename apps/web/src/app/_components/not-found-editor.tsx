@@ -1,7 +1,7 @@
 "use client";
 
-import { BlockNoteView } from "@blocknote/mantine";
 import { useCreateBlockNote } from "@blocknote/react";
+import { BlockNoteView } from "@blocknote/shadcn";
 
 export function NotFoundEditor() {
   // Creates a new editor instance.

@@ -34,7 +34,7 @@ async function handler(req: NextRequest) {
       const usage = await stream.usage;
 
       console.debug("[Usage] BlockNote", {
-        usage: totalUsage,
+        usage,
       });
 
       await api.usage.trackModelUsage({

@@ -24,7 +24,6 @@
   "devDependencies": {
     "@biomejs/biome": "~2.4.2",
     "@turbo/gen": "~2.8.9",
-    "knip": "^5.83.1",
     "turbo": "~2.8.9"
   },
   "pnpm": {

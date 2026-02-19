@@ -17,11 +17,9 @@
   },
   "peerDependencies": {
     "@blocknote/core": "~0.46.2",
-    "@blocknote/mantine": "~0.46.2",
     "@blocknote/react": "~0.46.2",
     "@blocknote/server-util": "~0.46.2",
     "@blocknote/xl-ai": "~0.46.2",
-    "@mantine/utils": ">=6.0.22 <7.0.0-0",
     "@tiptap/extensions": ">=3.19.0 <4.0.0-0"
   },
   "dependencies": {
@@ -33,7 +31,6 @@
   "devDependencies": {
     "@acme/tsconfig": "workspace:*",
     "@blocknote/core": "~0.46.2",
-    "@blocknote/mantine": "~0.46.2",
     "@blocknote/react": "~0.46.2",
     "@blocknote/server-util": "~0.46.2",
     "@blocknote/xl-ai": "~0.46.2",

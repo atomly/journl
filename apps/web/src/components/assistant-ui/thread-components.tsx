@@ -39,7 +39,7 @@ export function ThreadScrollToBottom({
         tooltip={tooltip}
         variant={variant}
         className={cn(
-          "-top-12 !size-10 !bg-background absolute rounded-full disabled:invisible",
+          "!size-10 !bg-background absolute -top-12 rounded-full disabled:invisible",
           className,
         )}
         {...props}
@@ -59,7 +59,7 @@ export function ComposerInput({
       rows={1}
       placeholder="Ask anything..."
       className={cn(
-        "max-h-40 flex-grow resize-none border-none px-2 py-4 text-md outline-none placeholder:text-muted-foreground focus:ring-0 disabled:cursor-not-allowed",
+        "max-h-40 flex-grow resize-none border-none py-4 text-md outline-none placeholder:text-muted-foreground focus:ring-0 disabled:cursor-not-allowed",
         className,
       )}
       {...rest}
@@ -75,7 +75,7 @@ export function ComposerAction() {
           <TooltipIconButton
             tooltip="Send"
             variant="default"
-            className="my-2.5 size-8 p-2 transition-opacity ease-in"
+            className="size-8 p-2 transition-opacity ease-in"
           >
             <SendHorizontalIcon />
           </TooltipIconButton>
@@ -86,7 +86,7 @@ export function ComposerAction() {
           <TooltipIconButton
             tooltip="Cancel"
             variant="default"
-            className="my-2.5 size-8 p-2 transition-opacity ease-in"
+            className="size-8 p-2 transition-opacity ease-in"
           >
             <Square />
           </TooltipIconButton>
@@ -115,7 +115,7 @@ export function UserMessage() {
         <MessagePrimitive.Content />
       </div>
 
-      <BranchPicker className="-mr-1 col-span-full col-start-1 row-start-3 justify-end" />
+      <BranchPicker className="col-span-full col-start-1 row-start-3 -mr-1 justify-end" />
     </MessagePrimitive.Root>
   );
 }
@@ -151,7 +151,7 @@ export function AssistantMessage() {
 
       <AssistantActionBar />
 
-      <BranchPicker className="-ml-2 col-start-2 row-start-2 mr-2" />
+      <BranchPicker className="col-start-2 row-start-2 mr-2 -ml-2" />
     </MessagePrimitive.Root>
   );
 }
@@ -162,7 +162,7 @@ function AssistantActionBar() {
       hideWhenRunning
       autohide="not-last"
       autohideFloat="single-branch"
-      className="-ml-1 col-start-3 row-start-2 flex gap-1 text-muted-foreground data-[floating]:absolute data-[floating]:rounded-md data-[floating]:border data-[floating]:bg-background data-[floating]:p-1 data-[floating]:shadow-sm"
+      className="col-start-3 row-start-2 -ml-1 flex gap-1 text-muted-foreground data-[floating]:absolute data-[floating]:rounded-md data-[floating]:border data-[floating]:bg-background data-[floating]:p-1 data-[floating]:shadow-sm"
     >
       <ActionBarPrimitive.Copy asChild>
         <TooltipIconButton tooltip="Copy">

@@ -5,7 +5,7 @@ import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo } from "react";
 import { Virtuoso } from "react-virtuoso";
 import { useDebouncedCallback } from "use-debounce";
-import { useJournlAgentAwareness } from "~/ai/agents/use-journl-agent-awareness";
+import { useJournlAgent } from "~/ai/agents/use-journl-agent";
 import {
   getInfiniteEntriesQueryOptions,
   getInfiniteJournalEntriesQueryOptions,
@@ -53,7 +53,7 @@ function JournalListContent({
   ...rest
 }: JournalListContentProps) {
   const debouncedFetchNextPage = useDebouncedCallback(fetchNextPage, 300);
-  const { rememberView: setView } = useJournlAgentAwareness();
+  const { rememberView: setView } = useJournlAgent();
   const hasMore = hasNextPage;
 
   const entries = useMemo(

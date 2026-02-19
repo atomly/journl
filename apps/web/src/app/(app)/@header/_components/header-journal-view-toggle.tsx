@@ -30,10 +30,7 @@ export function HeaderJournalViewToggle() {
       ) : (
         <CalendarDays className="size-3.5" />
       )}
-      <span className="@[360px]:inline hidden">
-        {isEntriesOnly ? "Entries" : "Timeline"}
-      </span>
-      <span className="@[360px]:hidden">{isEntriesOnly ? "List" : "Days"}</span>
+      <span>{isEntriesOnly ? "Entries" : "Timeline"}</span>
     </Button>
   );
 }

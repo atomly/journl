@@ -6,11 +6,11 @@ import { api } from "~/trpc/server";
 export const semanticJournalSearch = createTool({
   description:
     "Search the journal for entries that are semantically similar to a query",
-  execute: async ({ context }) => {
+  execute: async ({ limit, query, threshold }) => {
     const results = await api.journal.getRelevantEntries({
-      limit: context.limit,
-      query: context.query,
-      threshold: context.threshold,
+      limit: limit,
+      query: query,
+      threshold: threshold,
     });
 
     return results.map((result) => ({

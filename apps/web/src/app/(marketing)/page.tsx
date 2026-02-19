@@ -50,7 +50,7 @@ export default withoutAuth(function RootPage() {
     <HydrateClient>
       <div className="relative min-h-screen select-none overflow-hidden bg-background text-foreground">
         <HeroFloatingShapes />
-        <div className="-z-10 pointer-events-none absolute inset-0">
+        <div className="pointer-events-none absolute inset-0 -z-10">
           <div className="absolute inset-0 bg-[radial-gradient(1200px_600px_at_20%_-10%,rgba(255,255,255,0.08),transparent_60%),radial-gradient(900px_500px_at_80%_5%,rgba(255,255,255,0.06),transparent_55%)]" />
           <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(255,255,255,0.08)_1px,transparent_1px),linear-gradient(180deg,rgba(255,255,255,0.08)_1px,transparent_1px)] bg-[size:48px_48px] opacity-20 [mask-image:radial-gradient(70%_55%_at_50%_0%,black,transparent)]" />
         </div>
@@ -139,7 +139,7 @@ export default withoutAuth(function RootPage() {
             </div>
 
             <div className="fade-in slide-in-from-bottom-6 relative animate-in delay-150 duration-700">
-              <div className="-inset-6 absolute animate-[glow_8s_ease-in-out_infinite] rounded-[32px] bg-gradient-to-br from-primary/30 via-primary/10 to-transparent blur-2xl" />
+              <div className="absolute -inset-6 animate-[glow_8s_ease-in-out_infinite] rounded-[32px] bg-gradient-to-br from-primary/30 via-primary/10 to-transparent blur-2xl" />
               <div className="relative overflow-hidden rounded-[28px] border border-border bg-card/60 p-6 shadow-2xl backdrop-blur">
                 <HeroJournlParticles className="h-40 md:h-56" />
                 <div className="mt-6 space-y-4 text-foreground text-sm">

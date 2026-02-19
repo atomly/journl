@@ -13,7 +13,7 @@ import {
   useState,
 } from "react";
 import { useDebouncedCallback } from "use-debounce";
-import { useJournlAgentAwareness } from "~/ai/agents/use-journl-agent-awareness";
+import { useJournlAgent } from "~/ai/agents/use-journl-agent";
 import { BlockEditor } from "~/components/editor/block-editor";
 import { BlockEditorErrorOverlay } from "~/components/editor/block-editor-error-overlay";
 import {
@@ -33,8 +33,6 @@ type JournalEntryContextValue = {
   formattedDate: string;
   initialBlocks: Extract<JournalListEntry, { blocks?: unknown }>["blocks"];
   isToday: boolean;
-  focusEditor?: () => void;
-  setFocusEditor: (callback: () => void) => void;
 };
 
 const JournalEntryContext = createContext<JournalEntryContextValue | undefined>(
@@ -51,10 +49,6 @@ export function JournalEntryProvider({
   entry,
   ...rest
 }: JournalEntryProviderProps) {
-  const [focusEditor, setFocusEditor] = useState<(() => void) | undefined>(
-    undefined,
-  );
-
   const value = useMemo(() => {
     const date = new Date(`${entry.date}T00:00:00`);
     const now = new Date();
@@ -66,13 +60,11 @@ export function JournalEntryProvider({
     return {
       date: entry.date,
       documentId: "document_id" in entry ? entry.document_id : null,
-      focusEditor,
       formattedDate,
       initialBlocks: "blocks" in entry ? entry.blocks : undefined,
       isToday,
-      setFocusEditor,
     };
-  }, [entry, focusEditor]);
+  }, [entry]);
 
   return (
     <JournalEntryContext.Provider value={value}>
@@ -96,39 +88,22 @@ function useJournalEntry() {
   return context;
 }
 
-type JournalEntryWrapperProps = ComponentProps<"button">;
+type JournalEntryWrapperProps = ComponentProps<"div">;
 
 export function JournalEntryWrapper({
   className,
   children,
   ...rest
 }: JournalEntryWrapperProps) {
-  const { isToday, focusEditor } = useJournalEntry();
-  function handleClick() {
-    focusEditor?.();
-  }
-
-  function handleKeyDown(e: React.KeyboardEvent) {
-    if (e.key === "Enter" || e.key === " ") {
-      e.preventDefault();
-      focusEditor?.();
-    }
-  }
+  const { isToday } = useJournalEntry();
 
   return (
-    <button
-      type="button"
-      className={cn(
-        "w-full cursor-text text-left",
-        isToday && "min-h-96 md:min-h-124",
-        className,
-      )}
-      onClick={handleClick}
-      onKeyDown={handleKeyDown}
+    <div
+      className={cn(isToday && "min-h-96 md:min-h-124", className)}
       {...rest}
     >
       {children}
-    </button>
+    </div>
   );
 }
 
@@ -193,8 +168,8 @@ export function JournalEntryEditor({
 }: JournalEntryEditorProps) {
   const trpc = useTRPC();
   const pendingChangesRef = useRef<BlockTransaction[]>([]);
-  const { initialBlocks, documentId, date, setFocusEditor } = useJournalEntry();
-  const { rememberEditor, forgetEditor } = useJournlAgentAwareness();
+  const { initialBlocks, documentId, date } = useJournalEntry();
+  const { rememberEditor, forgetEditor } = useJournlAgent();
   const editor = useBlockEditor({ initialBlocks });
   const [isOverlayOpen, setOverlayOpen] = useState(false);
 
@@ -248,22 +223,6 @@ export function JournalEntryEditor({
     };
   }, [date, editor, rememberEditor, forgetEditor]);
 
-  useEffect(() => {
-    setFocusEditor(() => () => {
-      const blocks = editor.document;
-      if (blocks.length > 0) {
-        const lastBlock = blocks[blocks.length - 1];
-        if (lastBlock) {
-          editor.setTextCursorPosition(lastBlock, "end");
-        }
-      }
-      editor.focus();
-    });
-    return () => {
-      setFocusEditor(() => undefined);
-    };
-  }, [editor, setFocusEditor]);
-
   return (
     <>
       <BlockEditor
@@ -287,7 +246,7 @@ export function JournalEntryEditor({
 
 export function JournalEntryAgentView() {
   const { date } = useJournalEntry();
-  const { rememberView: setView } = useJournlAgentAwareness();
+  const { rememberView: setView } = useJournlAgent();
 
   useEffect(() => {
     setView({

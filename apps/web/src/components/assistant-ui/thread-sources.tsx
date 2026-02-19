@@ -3,8 +3,8 @@
 import { X } from "lucide-react";
 import {
   type BlockSelection,
-  useJournlAgentAwareness,
-} from "~/ai/agents/use-journl-agent-awareness";
+  useJournlAgent,
+} from "~/ai/agents/use-journl-agent";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
 import {
@@ -30,7 +30,7 @@ type ComposerContextProps = {
 const MAX_SOURCES = 3;
 
 export function ComposerSources({ className }: ComposerContextProps) {
-  const { getSelections, forgetSelection } = useJournlAgentAwareness();
+  const { getSelections, forgetSelection } = useJournlAgent();
 
   const sources: Source[] = getSelections().map((selection) => {
     const { blockIds, text } = selection;

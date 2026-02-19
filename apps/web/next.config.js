@@ -7,15 +7,14 @@ await jiti.import("./src/env");
 
 /** @type {import("next").NextConfig} */
 const config = {
-  /** We already do linting and typechecking as separate tasks in CI */
-  eslint: { ignoreDuringBuilds: true },
+  /** BlockNote is not yet compatible with React 19 / Next 15 StrictMode. Disabling for now. */
+  reactStrictMode: false,
   /** These packages won't be bundled in the server build */
   /** @see https://nextjs.org/docs/app/api-reference/config/next-config-js/serverExternalPackages */
   serverExternalPackages: [
     "@mastra/*",
     "@blocknote/server-util",
-    "@blocknote/react",
-    "@blocknote/core",
+    "better-auth",
   ],
   /** Enables hot reloading for local packages without a build step */
   transpilePackages: ["@acme/api", "@acme/auth", "@acme/db"],

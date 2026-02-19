@@ -41,7 +41,7 @@ export default function ChatDrawer() {
       <DrawerContent className="!h-full !max-h-[90dvh] z-4500">
         <DrawerTitle className="hidden">Journl</DrawerTitle>
         <div className="!h-full relative">
-          <DrawerDivider className="-translate-x-1/2 absolute top-0 left-1/2 z-4500" />
+          <DrawerDivider className="absolute top-0 left-1/2 z-4500 -translate-x-1/2" />
           <ThreadPrimitive.Root
             className="relative box-border flex h-full flex-col overflow-hidden bg-sidebar pt-6"
             style={{
@@ -59,10 +59,10 @@ export default function ChatDrawer() {
 
               <div className="sticky bottom-0 mt-3 flex w-full max-w-[var(--thread-max-width)] flex-col items-center justify-end rounded-t-lg bg-sidebar pb-4">
                 <ThreadScrollToBottom />
-                <ComposerPrimitive.Root className="relative flex w-full flex-col rounded-lg border bg-muted px-1 pt-2 shadow-sm focus-within:border-ring/20 [&_button]:self-end">
+                <ComposerPrimitive.Root className="relative flex w-full flex-col rounded-lg border bg-muted p-2 shadow-sm focus-within:border-ring/20 [&_button]:self-end">
                   <ComposerSources />
                   <ComposerInput className="py-0" />
-                  <div className="relative flex w-full flex-row items-center justify-between focus-within:border-ring/20">
+                  <div className="relative mt-2 flex w-full flex-row items-end justify-between focus-within:border-ring/20">
                     <ComposerContext className="h-fit shrink-0 grow-0" />
                     <div className="ml-auto">
                       <ComposerAction />

@@ -7,7 +7,6 @@ import {
   TooltipTrigger,
 } from "~/components/assistant-ui/tooltip";
 import { Button } from "~/components/ui/button";
-import { cn } from "~/components/utils";
 
 export type TooltipIconButtonProps = ComponentProps<typeof Button> & {
   tooltip: string;
@@ -18,22 +17,15 @@ export function TooltipIconButton({
   children,
   tooltip,
   side = "bottom",
-  className,
   ref,
   ...rest
 }: TooltipIconButtonProps) {
   return (
     <Tooltip>
       <TooltipTrigger asChild>
-        <Button
-          variant="ghost"
-          size="icon"
-          {...rest}
-          className={cn("aui-button-icon", className)}
-          ref={ref}
-        >
+        <Button variant="ghost" size="icon" {...rest} ref={ref}>
           {children}
-          <span className="aui-sr-only">{tooltip}</span>
+          <span className="sr-only">{tooltip}</span>
         </Button>
       </TooltipTrigger>
       <TooltipContent side={side}>{tooltip}</TooltipContent>

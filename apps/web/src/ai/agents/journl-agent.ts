@@ -1,5 +1,5 @@
 import { Agent } from "@mastra/core/agent";
-import { RuntimeContext } from "@mastra/core/runtime-context";
+import { RequestContext } from "@mastra/core/request-context";
 import { z } from "zod/v4";
 import { model } from "~/ai/providers/openai/text";
 import { env } from "~/env";
@@ -10,16 +10,20 @@ import { navigatePage } from "../tools/navigate-page";
 import { semanticJournalSearch } from "../tools/semantic-journal-search";
 import { semanticPageSearch } from "../tools/semantic-page-search";
 import { temporalJournalSearch } from "../tools/temporal-journal-search";
-import type { JournlAgentContext } from "./journl-agent-context";
+import type { JournlAgentState } from "./journl-agent-state";
 
 const AGENT_NAME = "Journl";
 
 export const journlAgent = new Agent({
   description: `${AGENT_NAME}, an AI companion for personal reflection, journaling, and knowledge discovery.`,
-  instructions: ({ runtimeContext }) => {
-    const context = getJournlRuntimeContext(runtimeContext);
+  id: "journl",
+  instructions: ({ requestContext }) => {
+    const context = getJournlRequestContext(requestContext);
+    if (!context) {
+      throw new Error("Missing Journl context");
+    }
     if (env.NODE_ENV === "development") {
-      console.debug("Journl context", context);
+      console.debug("JournlAgentContext", context);
     }
     return `You are ${AGENT_NAME}, an AI companion that helps users write, navigate, and manage their own notes.
 
@@ -128,7 +132,7 @@ Do not navigate to the page after creating it, it will be done automatically.
   },
 });
 
-const zJournlRuntimeContext: z.ZodType<JournlAgentContext> = z.object({
+const zJournlAgentState: z.ZodType<JournlAgentState> = z.object({
   activeEditors: z.array(
     z.union([
       z.object({
@@ -167,18 +171,21 @@ const zJournlRuntimeContext: z.ZodType<JournlAgentContext> = z.object({
   ]),
 });
 
-const AGENT_CONTEXT_KEY = "agent_journl_context";
+const REQUEST_CONTEXT_JOURNL_KEY = "journl_agent";
 
-export function setJournlRuntimeContext(context: JournlAgentContext) {
-  const runtimeContext = new RuntimeContext<{
-    [AGENT_CONTEXT_KEY]: JournlAgentContext;
+export function setJournlRequestContext(context: JournlAgentState) {
+  const requestContext = new RequestContext<{
+    [REQUEST_CONTEXT_JOURNL_KEY]: JournlAgentState;
   }>();
-  runtimeContext.set(AGENT_CONTEXT_KEY, zJournlRuntimeContext.parse(context));
-  return runtimeContext;
+  requestContext.set(
+    REQUEST_CONTEXT_JOURNL_KEY,
+    zJournlAgentState.parse(context),
+  );
+  return requestContext;
 }
 
-export function getJournlRuntimeContext(
-  runtimeContext: RuntimeContext<{ [AGENT_CONTEXT_KEY]: JournlAgentContext }>,
-) {
-  return runtimeContext.get(AGENT_CONTEXT_KEY);
+export function getJournlRequestContext(context?: RequestContext) {
+  return context?.get<typeof REQUEST_CONTEXT_JOURNL_KEY, JournlAgentState>(
+    REQUEST_CONTEXT_JOURNL_KEY,
+  );
 }

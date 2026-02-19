@@ -1,6 +1,6 @@
 "use client";
 
-import { useJournlAgentAwareness } from "~/ai/agents/use-journl-agent-awareness";
+import { useJournlAgent } from "~/ai/agents/use-journl-agent";
 import { Badge } from "../ui/badge";
 import { cn } from "../utils";
 
@@ -9,7 +9,7 @@ type ComposerContextProps = {
 };
 
 export function ComposerContext({ className }: ComposerContextProps) {
-  const { getView } = useJournlAgentAwareness();
+  const { getView } = useJournlAgent();
 
   const view = getView();
 

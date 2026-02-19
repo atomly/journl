@@ -1,7 +1,5 @@
-"use client";
-
 import type { ToolCall } from "@ai-sdk/provider-utils";
-import type { UIMessage, UseChatHelpers } from "@ai-sdk/react";
+import type { Chat as AISDKChat, UIMessage } from "@ai-sdk/react";
 import type { z } from "zod";
 
 export type ClientToolResult<Name extends string = string, Output = unknown> = {
@@ -10,10 +8,10 @@ export type ClientToolResult<Name extends string = string, Output = unknown> = {
   output: Output;
 };
 
-export type CreateClientToolParams<
+type CreateClientToolParams<
   Name extends string,
   Input,
-  Chat extends UseChatHelpers<UIMessage> = UseChatHelpers<UIMessage>,
+  Chat extends AISDKChat<UIMessage> = AISDKChat<UIMessage>,
 > = {
   name: Name;
   inputSchema: z.ZodSchema<Input>;
@@ -25,7 +23,7 @@ export type CreateClientToolParams<
 
 export type ClientTool<
   Name extends string,
-  Chat extends UseChatHelpers<UIMessage> = UseChatHelpers<UIMessage>,
+  Chat extends AISDKChat<UIMessage> = AISDKChat<UIMessage>,
 > = {
   name: Name;
   execute: (
@@ -59,7 +57,7 @@ function validateToolCall<Name extends string, Input>(
 export function createClientTool<
   Name extends string,
   Input,
-  Chat extends UseChatHelpers<UIMessage> = UseChatHelpers<UIMessage>,
+  Chat extends AISDKChat<UIMessage> = AISDKChat<UIMessage>,
 >({
   name,
   inputSchema,

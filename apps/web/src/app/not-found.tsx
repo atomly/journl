@@ -1,5 +1,3 @@
-"use client";
-
 import Link from "next/link";
 import { Button } from "~/components/ui/button";
 import "./styles/blocknote.css";
@@ -10,7 +8,9 @@ export default function NotFound() {
   return (
     <div className="flex min-h-svh w-full flex-col items-center justify-center gap-y-2 bg-amber-50 p-4">
       <Suspense>
-        <DynamicNotFoundEditor />
+        <div className="min-h-45">
+          <DynamicNotFoundEditor />
+        </div>
         <Link href="/">
           <Button>Go back to the home page</Button>
         </Link>

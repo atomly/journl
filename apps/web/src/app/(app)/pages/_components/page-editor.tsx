@@ -6,7 +6,7 @@ import type { PartialBlock } from "@blocknote/core";
 import { useMutation } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { useDebouncedCallback } from "use-debounce";
-import { useJournlAgentAwareness } from "~/ai/agents/use-journl-agent-awareness";
+import { useJournlAgent } from "~/ai/agents/use-journl-agent";
 import { BlockEditor } from "~/components/editor/block-editor";
 import { BlockEditorErrorOverlay } from "~/components/editor/block-editor-error-overlay";
 import {
@@ -33,8 +33,7 @@ export function PageEditor({
 }: PageEditorProps) {
   const trpc = useTRPC();
   const pendingChangesRef = useRef<BlockTransaction[]>([]);
-  const { rememberEditor, forgetEditor, rememberView } =
-    useJournlAgentAwareness();
+  const { rememberEditor, forgetEditor, rememberView } = useJournlAgent();
   const editor = useBlockEditor({ initialBlocks });
   const [isOverlayOpen, setOverlayOpen] = useState(false);
 
@@ -100,7 +99,7 @@ export function PageEditor({
 
   useAppEventHandler(
     ({ payload }) => {
-      void payload.chat.addToolResult({
+      void payload.chat.addToolOutput({
         output: `Page ${payload.title} created successfully.`,
         tool: payload.toolName,
         toolCallId: payload.toolCallId,

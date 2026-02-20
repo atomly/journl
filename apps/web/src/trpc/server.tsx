@@ -1,13 +1,11 @@
-import type { ApiRouter } from "@acme/api";
-import { apiRouter, createTRPCContext, embedderRouter } from "@acme/api";
 import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
 import type { ResolverDef, TRPCQueryOptions } from "@trpc/tanstack-react-query";
 import { createTRPCOptionsProxy } from "@trpc/tanstack-react-query";
 import { headers } from "next/headers";
 import { cache } from "react";
-
 import { auth } from "~/auth/server";
-import { startDocumentEmbeddingWorkflow } from "~/workflows/start-document-embedding-task";
+import type { ApiRouter } from "~/trpc";
+import { apiRouter, createTRPCContext, embedderRouter } from "~/trpc";
 import { createQueryClient } from "./query-client";
 
 /**
@@ -21,7 +19,6 @@ const createContext = cache(async () => {
   return createTRPCContext({
     auth,
     headers: heads,
-    startDocumentEmbeddingWorkflow,
   });
 });
 

@@ -1,9 +1,9 @@
 "use client";
 
-import type { ProPlan, Subscription } from "@acme/api";
 import { useMutation } from "@tanstack/react-query";
 import { usePathname, useRouter } from "next/navigation";
 import { toast } from "sonner";
+import type { ProPlan, Subscription } from "~/trpc";
 import { useTRPC } from "~/trpc/react";
 import { Button } from "../../../../components/ui/button";
 

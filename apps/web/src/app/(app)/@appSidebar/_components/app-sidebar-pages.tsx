@@ -1,6 +1,5 @@
 "use client";
 
-import type { PaginatedPagesInput } from "@acme/api";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { BookOpen, ChevronRight, Loader2 } from "lucide-react";
 import { useState } from "react";
@@ -15,6 +14,7 @@ import {
   SidebarMenuSub,
   useSidebar,
 } from "~/components/ui/sidebar";
+import type { PaginatedPagesInput } from "~/trpc";
 import { useTRPC } from "~/trpc/react";
 import { AppSidebarPageItem } from "./app-sidebar-page-item";
 import { AppSidebarPageItemSkeleton } from "./app-sidebar-page-item-skeleton";

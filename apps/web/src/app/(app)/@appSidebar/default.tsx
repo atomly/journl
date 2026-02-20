@@ -11,8 +11,8 @@ import {
 } from "~/components/ui/sidebar";
 import { Skeleton } from "~/components/ui/skeleton";
 import { env } from "~/env";
+import { infinitePagesQueryOptions } from "~/trpc/options/pages-query-options";
 import { prefetch, trpc } from "~/trpc/server";
-import { infinitePagesQueryOptions } from "../../api/trpc/options/pages-query-options";
 import { DynamicAppSidebarDevtools } from "./_components/app-sidebar-devtools.dynamic";
 import { AppSidebarNavigation } from "./_components/app-sidebar-main";
 import { AppSidebarPages } from "./_components/app-sidebar-pages";

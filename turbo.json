@@ -14,8 +14,7 @@
     "PUBLIC_WEB_URL",
     "STRIPE_SECRET_KEY",
     "STRIPE_WEBHOOK_PORT",
-    "STRIPE_WEBHOOK_SECRET",
-    "SUPABASE_SECRET"
+    "STRIPE_WEBHOOK_SECRET"
   ],
   "globalPassThroughEnv": [
     "NODE_ENV",

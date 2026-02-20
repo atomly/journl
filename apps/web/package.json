@@ -15,7 +15,6 @@
     "with-env": "dotenv -e ../../.env --"
   },
   "dependencies": {
-    "@acme/api": "workspace:*",
     "@acme/auth": "workspace:*",
     "@acme/blocknote": "workspace:*",
     "@acme/db": "workspace:*",

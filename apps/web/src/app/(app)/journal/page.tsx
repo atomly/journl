@@ -1,9 +1,9 @@
+import { withAuth } from "~/auth/guards";
+import { getAppPreferences } from "~/preferences/get-preferences";
 import {
   getInfiniteEntriesQueryOptions,
   getInfiniteJournalEntriesQueryOptions,
-} from "~/app/api/trpc/options/journal-entries-query-options";
-import { withAuth } from "~/auth/guards";
-import { getAppPreferences } from "~/preferences/get-preferences";
+} from "~/trpc/options/journal-entries-query-options";
 import { prefetch, trpc } from "~/trpc/server";
 import { JournalList } from "./_components/journal-list";
 

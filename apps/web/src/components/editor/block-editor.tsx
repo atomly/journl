@@ -2,7 +2,6 @@
 
 import "@blocknote/core/fonts/inter.css";
 import "@blocknote/xl-ai/style.css";
-import type { BlockTransaction } from "@acme/api";
 import type { BlockPrimitive, EditorPrimitive } from "@acme/blocknote/schema";
 import type { Block, PartialBlock } from "@blocknote/core";
 import { BlockNoteView } from "@blocknote/shadcn";
@@ -11,6 +10,7 @@ import { useTheme } from "next-themes";
 import { type ComponentProps, useEffect, useRef } from "react";
 import { useJournlAgent } from "~/ai/agents/use-journl-agent";
 import { env } from "~/env";
+import type { BlockTransaction } from "~/trpc";
 import { DefaultMap } from "../../lib/default-map";
 
 // import "@blocknote/shadcn/style.css";

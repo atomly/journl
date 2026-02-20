@@ -31,11 +31,16 @@ export type TRPCContext = {
   db: typeof db | Parameters<Parameters<typeof db.transaction>[0]>[0];
   session: Awaited<ReturnType<Auth["api"]["getSession"]>>;
   headers: Headers;
+  startDocumentEmbeddingTaskWorkflow?: (input: {
+    taskId: string;
+    taskUpdatedAt: string;
+  }) => Promise<void>;
 };
 
 export const createTRPCContext = async (opts: {
   headers: Headers;
   auth: Auth;
+  startDocumentEmbeddingTaskWorkflow?: TRPCContext["startDocumentEmbeddingTaskWorkflow"];
 }): Promise<TRPCContext> => {
   const authApi = opts.auth.api;
   const session = await authApi.getSession({
@@ -46,6 +51,7 @@ export const createTRPCContext = async (opts: {
     db,
     headers: opts.headers,
     session,
+    startDocumentEmbeddingTaskWorkflow: opts.startDocumentEmbeddingTaskWorkflow,
   };
 };
 /**

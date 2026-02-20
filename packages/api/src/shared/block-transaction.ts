@@ -107,7 +107,7 @@ export async function saveTransactions(
 
   // ! TODO: Optimize the way we are creating the document embedding task.
   // ! There are some changes we could potentially avoid triggering the document embedding task.
-  return await ctx.db
+  const [task] = await ctx.db
     .insert(DocumentEmbeddingTask)
     .values({
       document_id: input.document_id,
@@ -119,5 +119,32 @@ export async function saveTransactions(
       },
       target: [DocumentEmbeddingTask.document_id],
       targetWhere: sql`${DocumentEmbeddingTask.status} != 'completed'`,
+    })
+    .returning({
+      id: DocumentEmbeddingTask.id,
+      updatedAt: DocumentEmbeddingTask.updated_at,
     });
+
+  if (!task) {
+    throw new TRPCError({
+      code: "INTERNAL_SERVER_ERROR",
+      message: "Failed to create document embedding task",
+    });
+  }
+
+  if (ctx.startDocumentEmbeddingTaskWorkflow) {
+    try {
+      await ctx.startDocumentEmbeddingTaskWorkflow({
+        taskId: task.id,
+        taskUpdatedAt: task.updatedAt,
+      });
+    } catch (error) {
+      console.error("Failed to start document embedding workflow", {
+        error,
+        taskId: task.id,
+      });
+    }
+  }
+
+  return task;
 }

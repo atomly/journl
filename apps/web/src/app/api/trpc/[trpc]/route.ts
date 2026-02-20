@@ -3,6 +3,7 @@ import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
 import type { NextRequest } from "next/server";
 import { handler as corsHandler, setCorsHeaders } from "~/app/api/_cors/cors";
 import { auth } from "~/auth/server";
+import { startDocumentEmbeddingTaskWorkflow } from "~/workflows/start-document-embedding-task";
 
 async function handler(req: NextRequest) {
   const response = await fetchRequestHandler({
@@ -10,6 +11,7 @@ async function handler(req: NextRequest) {
       createTRPCContext({
         auth: auth,
         headers: req.headers,
+        startDocumentEmbeddingTaskWorkflow,
       }),
     endpoint: "/api/trpc",
     onError({ error, path }) {

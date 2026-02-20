@@ -7,6 +7,7 @@ import { headers } from "next/headers";
 import { cache } from "react";
 
 import { auth } from "~/auth/server";
+import { startDocumentEmbeddingTaskWorkflow } from "~/workflows/start-document-embedding-task";
 import { createQueryClient } from "./query-client";
 
 /**
@@ -20,6 +21,7 @@ const createContext = cache(async () => {
   return createTRPCContext({
     auth,
     headers: heads,
+    startDocumentEmbeddingTaskWorkflow,
   });
 });
 

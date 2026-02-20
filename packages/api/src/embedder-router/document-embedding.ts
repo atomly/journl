@@ -1,10 +1,7 @@
 import { eq } from "@acme/db";
-import {
-  DocumentEmbedding,
-  DocumentEmbeddingTask,
-  zInsertDocumentEmbedding,
-} from "@acme/db/schema";
+import { DocumentEmbedding, zInsertDocumentEmbedding } from "@acme/db/schema";
 import type { TRPCRouterRecord } from "@trpc/server";
+import { TRPCError } from "@trpc/server";
 import z from "zod/v4";
 import { publicProcedure } from "../trpc.js";
 
@@ -14,8 +11,6 @@ export const documentEmbeddingRouter = {
       z.object({
         document_id: z.string(),
         embeddings: z.array(zInsertDocumentEmbedding).min(1),
-        task_id: z.string(),
-        user_id: z.string(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -26,26 +21,14 @@ export const documentEmbeddingRouter = {
             .where(eq(DocumentEmbedding.document_id, input.document_id));
 
           await tx.insert(DocumentEmbedding).values(input.embeddings);
-
-          await tx
-            .update(DocumentEmbeddingTask)
-            .set({
-              status: "completed",
-            })
-            .where(eq(DocumentEmbeddingTask.id, input.task_id));
         });
       } catch (error) {
         console.error("Error embedding document 👀", error);
 
-        await ctx.db
-          .update(DocumentEmbeddingTask)
-          .set({
-            metadata: {
-              message: error instanceof Error ? error.message : "Unknown error",
-            },
-            status: "failed",
-          })
-          .where(eq(DocumentEmbeddingTask.id, input.task_id));
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to embed document",
+        });
       }
     }),
 } satisfies TRPCRouterRecord;

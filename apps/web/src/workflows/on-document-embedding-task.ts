@@ -1,10 +1,9 @@
 import { blocknoteBlocks, blocknoteMarkdown } from "@acme/blocknote/server";
-import { and, eq, sql } from "@acme/db";
+import { and, eq } from "@acme/db";
 import { db } from "@acme/db/client";
 import {
   Document,
   DocumentEmbedding,
-  DocumentEmbeddingTask,
   type zInsertDocumentEmbedding,
 } from "@acme/db/schema";
 import { type ChunkParams, MDocument } from "@mastra/rag";
@@ -19,7 +18,7 @@ import { onModelUsage } from "./on-model-usage";
 
 const EMBEDDING_DEBOUNCE_DELAY = "2m";
 const EMBEDDING_RETRY_DELAY = "5m";
-const MAX_TASK_RETRIES = 3;
+const MAX_EMBEDDING_RETRIES = 3;
 
 const CHUNK_PARAMS: ChunkParams = {
   strategy: "semantic-markdown",
@@ -32,171 +31,124 @@ const REMOVE_MARKDOWN_PARAMS: Parameters<typeof removeMarkdown>[1] = {
   useImgAltText: true,
 };
 
-const zDocumentEmbeddingTaskEvent = z.object({
-  taskId: z.uuid(),
-  taskUpdatedAt: z.string().min(1),
+const zDocumentEmbeddingEvent = z.object({
+  documentId: z.uuid(),
+  documentUpdatedAt: z.string().min(1),
+  userId: z.string().min(1),
 });
 
-type DocumentEmbeddingTaskEvent = z.infer<typeof zDocumentEmbeddingTaskEvent>;
+type DocumentEmbeddingEvent = z.infer<typeof zDocumentEmbeddingEvent>;
 
-type DocumentEmbeddingWorkflowResult = {
+type DocumentEmbeddingResult = {
+  documentId: string;
   reason?: string;
   status: "completed" | "skipped";
-  taskId: string;
 };
 
 export async function onDocumentEmbeddingTask(
-  event: DocumentEmbeddingTaskEvent,
-): Promise<DocumentEmbeddingWorkflowResult> {
+  event: DocumentEmbeddingEvent,
+): Promise<DocumentEmbeddingResult> {
   "use workflow";
 
-  const payload = await validateDocumentEmbeddingTaskEvent(event);
+  const payload = await validateDocumentEmbeddingEvent(event);
 
   await sleep(EMBEDDING_DEBOUNCE_DELAY);
 
-  while (true) {
-    const task = await prepareDocumentEmbeddingAttempt(payload);
+  let attempt = 0;
 
-    if (!task.shouldProcess) {
+  while (true) {
+    const documentState = await getDocumentEmbeddingState(payload);
+
+    if (!documentState.shouldProcess) {
       return {
-        reason: task.reason,
+        documentId: payload.documentId,
+        reason: documentState.reason,
         status: "skipped",
-        taskId: payload.taskId,
       };
     }
 
     try {
-      const embeddingResult = await embedDocumentForTask({
-        documentId: task.documentId,
-        taskId: payload.taskId,
-        userId: task.userId,
-      });
+      const embeddingResult = await embedDocument(documentState.document);
 
       return {
+        documentId: payload.documentId,
         reason: embeddingResult.reason,
         status: "completed",
-        taskId: payload.taskId,
       };
     } catch (error) {
-      const retryState = await markTaskFailure({
-        errorMessage: error instanceof Error ? error.message : "Unknown error",
-        taskId: payload.taskId,
-        taskUpdatedAt: payload.taskUpdatedAt,
-      });
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error";
 
-      if (!retryState.shouldRetry) {
-        throw new FatalError(retryState.reason);
+      if (attempt >= MAX_EMBEDDING_RETRIES) {
+        throw new FatalError(errorMessage);
       }
 
+      attempt += 1;
       await sleep(EMBEDDING_RETRY_DELAY);
     }
   }
 }
 
-async function validateDocumentEmbeddingTaskEvent(
-  event: DocumentEmbeddingTaskEvent,
-): Promise<DocumentEmbeddingTaskEvent> {
+async function validateDocumentEmbeddingEvent(
+  event: DocumentEmbeddingEvent,
+): Promise<DocumentEmbeddingEvent> {
   "use step";
 
-  return zDocumentEmbeddingTaskEvent.parse(event);
+  return zDocumentEmbeddingEvent.parse(event);
 }
 
-async function prepareDocumentEmbeddingAttempt(input: {
-  taskId: string;
-  taskUpdatedAt: string;
+async function getDocumentEmbeddingState(input: {
+  documentId: string;
+  documentUpdatedAt: string;
+  userId: string;
 }): Promise<
-  | { reason: string; shouldProcess: false }
-  | { documentId: string; shouldProcess: true; userId: string }
+  | {
+      reason: string;
+      shouldProcess: false;
+    }
+  | {
+      document: DocumentEmbeddingRecord;
+      shouldProcess: true;
+    }
 > {
   "use step";
 
-  const task = await db.query.DocumentEmbeddingTask.findFirst({
-    columns: {
-      document_id: true,
-      retries: true,
-      status: true,
-      updated_at: true,
-      user_id: true,
-    },
-    where: eq(DocumentEmbeddingTask.id, input.taskId),
-  });
-
-  if (!task) {
-    return {
-      reason: "Task no longer exists",
-      shouldProcess: false,
-    };
-  }
-
-  if (hasTaskBeenSuperseded(task.updated_at, input.taskUpdatedAt)) {
-    return {
-      reason: "Task was superseded by a newer update",
-      shouldProcess: false,
-    };
-  }
-
-  if (task.status === "completed") {
-    return {
-      reason: "Task already completed",
-      shouldProcess: false,
-    };
-  }
-
-  if (task.status === "ready") {
-    return {
-      reason: "Task is already being processed",
-      shouldProcess: false,
-    };
-  }
-
-  if (task.status === "failed" && task.retries >= MAX_TASK_RETRIES) {
-    return {
-      reason: "Task has exhausted retries",
-      shouldProcess: false,
-    };
-  }
-
-  await db
-    .update(DocumentEmbeddingTask)
-    .set({
-      status: "ready",
-    })
-    .where(eq(DocumentEmbeddingTask.id, input.taskId));
-
-  return {
-    documentId: task.document_id,
-    shouldProcess: true,
-    userId: task.user_id,
-  };
-}
-
-async function embedDocumentForTask(input: {
-  documentId: string;
-  taskId: string;
-  userId: string;
-}): Promise<{ reason?: string }> {
-  "use step";
-
-  const document = await db.query.Document.findFirst({
-    where: and(
-      eq(Document.id, input.documentId),
-      eq(Document.user_id, input.userId),
-    ),
-    with: {
-      block_edges: true,
-      block_nodes: true,
-    },
+  const document = await getDocumentEmbeddingRecord({
+    documentId: input.documentId,
+    userId: input.userId,
   });
 
   if (!document) {
-    throw new Error("Document not found");
+    return {
+      reason: "Document not found",
+      shouldProcess: false,
+    };
   }
+
+  if (hasDocumentBeenSuperseded(document.updated_at, input.documentUpdatedAt)) {
+    return {
+      reason: "Document has newer changes",
+      shouldProcess: false,
+    };
+  }
+
+  return {
+    document,
+    shouldProcess: true,
+  };
+}
+
+async function embedDocument(
+  document: DocumentEmbeddingRecord,
+): Promise<{ reason?: string }> {
+  "use step";
 
   const blocks = blocknoteBlocks(document.block_nodes, document.block_edges);
   const markdown = blocks ? await blocknoteMarkdown(blocks) : "";
 
   if (!removeMarkdown(markdown, REMOVE_MARKDOWN_PARAMS)) {
-    await markTaskCompleted(input.taskId, "The markdown is empty.");
+    await clearEmbeddings(document.id);
+
     return {
       reason: "The markdown is empty.",
     };
@@ -204,6 +156,14 @@ async function embedDocumentForTask(input: {
 
   const mDocument = MDocument.fromMarkdown(markdown);
   const chunks = await mDocument.chunk(CHUNK_PARAMS);
+
+  if (chunks.length === 0) {
+    await clearEmbeddings(document.id);
+
+    return {
+      reason: "No chunks were produced from markdown.",
+    };
+  }
 
   const { embeddings, usage } = await embedMany({
     maxRetries: 5,
@@ -216,7 +176,7 @@ async function embedDocumentForTask(input: {
       metrics: [{ quantity: usage.tokens, unit: "tokens" }],
       modelId: model.modelId,
       modelProvider: model.provider,
-      userId: input.userId,
+      userId: document.user_id,
     },
   ]);
 
@@ -252,10 +212,8 @@ async function embedDocumentForTask(input: {
   }
 
   if (insertions.length === 0) {
-    await markTaskCompleted(
-      input.taskId,
-      "No insertions were made because the document was empty.",
-    );
+    await clearEmbeddings(document.id);
+
     return {
       reason: "No insertions were made because the document was empty.",
     };
@@ -264,108 +222,51 @@ async function embedDocumentForTask(input: {
   await db.transaction(async (tx) => {
     await tx
       .delete(DocumentEmbedding)
-      .where(eq(DocumentEmbedding.document_id, input.documentId));
+      .where(eq(DocumentEmbedding.document_id, document.id));
 
     await tx.insert(DocumentEmbedding).values(insertions);
-
-    await tx
-      .update(DocumentEmbeddingTask)
-      .set({
-        status: "completed",
-      })
-      .where(eq(DocumentEmbeddingTask.id, input.taskId));
   });
 
   return {};
 }
-embedDocumentForTask.maxRetries = 0;
+embedDocument.maxRetries = 0;
 
-async function markTaskFailure(input: {
-  errorMessage: string;
-  taskId: string;
-  taskUpdatedAt: string;
-}): Promise<{ reason: string; shouldRetry: boolean }> {
-  "use step";
-
-  const task = await db.query.DocumentEmbeddingTask.findFirst({
-    columns: {
-      retries: true,
-      updated_at: true,
-    },
-    where: eq(DocumentEmbeddingTask.id, input.taskId),
-  });
-
-  if (!task) {
-    return {
-      reason: input.errorMessage,
-      shouldRetry: false,
-    };
-  }
-
-  if (hasTaskBeenSuperseded(task.updated_at, input.taskUpdatedAt)) {
-    return {
-      reason: "Task was superseded by a newer update",
-      shouldRetry: false,
-    };
-  }
-
-  if (task.retries < MAX_TASK_RETRIES) {
-    await db
-      .update(DocumentEmbeddingTask)
-      .set({
-        metadata: {
-          message: input.errorMessage,
-        },
-        retries: sql`${DocumentEmbeddingTask.retries} + 1`,
-        status: "debounced",
-      })
-      .where(eq(DocumentEmbeddingTask.id, input.taskId));
-
-    return {
-      reason: input.errorMessage,
-      shouldRetry: true,
-    };
-  }
-
+async function clearEmbeddings(documentId: string) {
   await db
-    .update(DocumentEmbeddingTask)
-    .set({
-      metadata: {
-        message: input.errorMessage,
-      },
-      status: "failed",
-    })
-    .where(eq(DocumentEmbeddingTask.id, input.taskId));
-
-  return {
-    reason: input.errorMessage,
-    shouldRetry: false,
-  };
-}
-markTaskFailure.maxRetries = 0;
-
-async function markTaskCompleted(taskId: string, message: string) {
-  await db
-    .update(DocumentEmbeddingTask)
-    .set({
-      metadata: {
-        message,
-      },
-      status: "completed",
-    })
-    .where(eq(DocumentEmbeddingTask.id, taskId));
+    .delete(DocumentEmbedding)
+    .where(eq(DocumentEmbedding.document_id, documentId));
 }
 
-function hasTaskBeenSuperseded(
+function hasDocumentBeenSuperseded(
   currentUpdatedAt: string,
-  taskUpdatedAt: string,
+  expectedUpdatedAt: string,
 ) {
   const current = Date.parse(currentUpdatedAt);
-  const expected = Date.parse(taskUpdatedAt);
+  const expected = Date.parse(expectedUpdatedAt);
 
   if (Number.isNaN(current) || Number.isNaN(expected)) {
-    return currentUpdatedAt !== taskUpdatedAt;
+    return currentUpdatedAt !== expectedUpdatedAt;
   }
 
   return current > expected;
 }
+
+async function getDocumentEmbeddingRecord(input: {
+  documentId: string;
+  userId: string;
+}) {
+  return await db.query.Document.findFirst({
+    where: and(
+      eq(Document.id, input.documentId),
+      eq(Document.user_id, input.userId),
+    ),
+    with: {
+      block_edges: true,
+      block_nodes: true,
+    },
+  });
+}
+
+type DocumentEmbeddingRecord = NonNullable<
+  Awaited<ReturnType<typeof getDocumentEmbeddingRecord>>
+>;

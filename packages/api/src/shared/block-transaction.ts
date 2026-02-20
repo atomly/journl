@@ -2,7 +2,7 @@ import { and, eq, sql } from "@acme/db";
 import {
   BlockEdge,
   BlockNode,
-  DocumentEmbeddingTask,
+  Document,
   zInsertBlockEdge,
   zInsertBlockNode,
 } from "@acme/db/schema";
@@ -105,46 +105,44 @@ export async function saveTransactions(
     }
   }
 
-  // ! TODO: Optimize the way we are creating the document embedding task.
-  // ! There are some changes we could potentially avoid triggering the document embedding task.
-  const [task] = await ctx.db
-    .insert(DocumentEmbeddingTask)
-    .values({
-      document_id: input.document_id,
-      user_id: ctx.session.user.id,
+  // ! TODO: Avoid triggering embedding workflow for non-semantic document edits.
+  const [document] = await ctx.db
+    .update(Document)
+    .set({
+      updated_at: sql`now()`,
     })
-    .onConflictDoUpdate({
-      set: {
-        status: "debounced",
-      },
-      target: [DocumentEmbeddingTask.document_id],
-      targetWhere: sql`${DocumentEmbeddingTask.status} != 'completed'`,
-    })
+    .where(
+      and(
+        eq(Document.id, input.document_id),
+        eq(Document.user_id, ctx.session.user.id),
+      ),
+    )
     .returning({
-      id: DocumentEmbeddingTask.id,
-      updatedAt: DocumentEmbeddingTask.updated_at,
+      id: Document.id,
+      updatedAt: Document.updated_at,
     });
 
-  if (!task) {
+  if (!document) {
     throw new TRPCError({
-      code: "INTERNAL_SERVER_ERROR",
-      message: "Failed to create document embedding task",
+      code: "NOT_FOUND",
+      message: "Document not found",
     });
   }
 
-  if (ctx.startDocumentEmbeddingTaskWorkflow) {
+  if (ctx.startDocumentEmbeddingWorkflow) {
     try {
-      await ctx.startDocumentEmbeddingTaskWorkflow({
-        taskId: task.id,
-        taskUpdatedAt: task.updatedAt,
+      await ctx.startDocumentEmbeddingWorkflow({
+        documentId: document.id,
+        documentUpdatedAt: document.updatedAt,
+        userId: ctx.session.user.id,
       });
     } catch (error) {
       console.error("Failed to start document embedding workflow", {
+        documentId: document.id,
         error,
-        taskId: task.id,
       });
     }
   }
 
-  return task;
+  return document;
 }

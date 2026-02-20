@@ -1,10 +1,4 @@
-import { dirname, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
-import { createJiti } from "jiti";
 import { afterEach, expect, test, vi } from "vitest";
-
-const testDir = dirname(fileURLToPath(import.meta.url));
-const envModulePath = resolve(testDir, "../src/env.ts");
 
 afterEach(() => {
   vi.unstubAllEnvs();
@@ -26,6 +20,5 @@ test("validates app env schema with mocked variables", async () => {
   vi.stubEnv("PUBLIC_WEB_URL", "https://example.com");
   vi.stubEnv("SUPABASE_SECRET", "test-supabase-secret");
 
-  const jiti = createJiti(import.meta.url);
-  await expect(jiti.import(envModulePath)).resolves.toBeDefined();
+  await expect(import("../src/env.ts")).resolves.toBeDefined();
 });

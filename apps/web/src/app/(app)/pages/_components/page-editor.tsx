@@ -1,6 +1,5 @@
 "use client";
 
-import type { BlockTransaction } from "@acme/api";
 import type { Page } from "@acme/db/schema";
 import type { PartialBlock } from "@blocknote/core";
 import { useMutation } from "@tanstack/react-query";
@@ -16,6 +15,7 @@ import {
 import { useBlockEditor } from "~/components/editor/use-block-editor";
 import { PageCreatedEvent } from "~/events/page-created-event";
 import { useAppEventHandler } from "~/hooks/use-app-event-handler";
+import type { BlockTransaction } from "~/trpc";
 import { useTRPC } from "~/trpc/react";
 
 const DEFAULT_DEBOUNCE_TIME = 150;

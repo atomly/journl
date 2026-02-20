@@ -28,7 +28,6 @@ export const env = createEnv({
     OPENAI_API_URL: z.string().url().default("https://api.openai.com/v1/"),
     POSTGRES_URL: z.string().url(),
     PUBLIC_WEB_URL: z.string().url(),
-    SUPABASE_SECRET: z.string(),
   },
   shared: {
     NODE_ENV: z

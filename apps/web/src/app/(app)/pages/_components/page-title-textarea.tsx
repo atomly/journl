@@ -6,8 +6,8 @@ import { useState } from "react";
 import { useDebouncedCallback } from "use-debounce";
 import { FullHeightTextarea } from "~/components/ui/full-height-textarea";
 import { cn } from "~/components/utils";
+import { infinitePagesQueryOptions } from "~/trpc/options/pages-query-options";
 import { useTRPC } from "~/trpc/react";
-import { infinitePagesQueryOptions } from "../../../api/trpc/options/pages-query-options";
 
 const DEFAULT_PLACEHOLDER = "New page";
 const DEFAULT_DEBOUNCE_TIME = 150;

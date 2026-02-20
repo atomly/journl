@@ -5,11 +5,10 @@ import {
 } from "@blocknote/xl-ai";
 import { convertToModelMessages, streamText } from "ai";
 import { after, type NextRequest } from "next/server";
-import { start } from "workflow/api";
 import { model } from "~/ai/providers/openai/text";
 import { handler as corsHandler } from "~/app/api/_cors/cors";
 import { getSession } from "~/auth/server";
-import { onModelUsage } from "~/workflows/on-model-usage";
+import { startModelUsage } from "~/workflows/model-usage";
 
 async function handler(req: NextRequest) {
   const session = await getSession();
@@ -38,27 +37,25 @@ async function handler(req: NextRequest) {
         usage,
       });
 
-      await start(onModelUsage, [
-        {
-          metrics: [
-            {
-              quantity: usage.inputTokens || 0,
-              unit: "input_tokens",
-            },
-            {
-              quantity: usage.outputTokens || 0,
-              unit: "output_tokens",
-            },
-            {
-              quantity: usage.reasoningTokens || 0,
-              unit: "reasoning_tokens",
-            },
-          ],
-          modelId: model.modelId,
-          modelProvider: model.provider,
-          userId: session.user.id,
-        },
-      ]);
+      await startModelUsage({
+        metrics: [
+          {
+            quantity: usage.inputTokens || 0,
+            unit: "input_tokens",
+          },
+          {
+            quantity: usage.outputTokens || 0,
+            unit: "output_tokens",
+          },
+          {
+            quantity: usage.reasoningTokens || 0,
+            unit: "reasoning_tokens",
+          },
+        ],
+        modelId: model.modelId,
+        modelProvider: model.provider,
+        userId: session.user.id,
+      });
     } catch (error) {
       console.error("[usage tracking] error:", error);
     }

@@ -14,8 +14,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "~/components/ui/dialog";
+import { infinitePagesQueryOptions } from "~/trpc/options/pages-query-options";
 import { useTRPC } from "~/trpc/react";
-import { infinitePagesQueryOptions } from "../../../api/trpc/options/pages-query-options";
 
 interface DeletePageButtonProps {
   page: Page;

@@ -46,11 +46,11 @@ export const DocumentEmbedding = pgTable(
     // Resource protection constraints
     check(
       "chunk_markdown_text_length",
-      sql`length(${t.chunk_markdown_text}) <= ${JSONB_LIMITS.CHUNK_TEXT}`,
+      sql`length(${t.chunk_markdown_text}) <= ${sql.raw(String(JSONB_LIMITS.CHUNK_TEXT))}`,
     ),
     check(
       "chunk_raw_text_length",
-      sql`length(${t.chunk_raw_text}) <= ${JSONB_LIMITS.CHUNK_TEXT}`,
+      sql`length(${t.chunk_raw_text}) <= ${sql.raw(String(JSONB_LIMITS.CHUNK_TEXT))}`,
     ),
   ],
 );

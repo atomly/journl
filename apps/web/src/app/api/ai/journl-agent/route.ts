@@ -1,12 +1,11 @@
 import { handleChatStream } from "@mastra/ai-sdk";
 import { Mastra } from "@mastra/core";
 import { createUIMessageStreamResponse } from "ai";
-import { start } from "workflow/api";
 import { journlAgent, setJournlRequestContext } from "~/ai/agents/journl-agent";
 import type { JournlAgentState } from "~/ai/agents/journl-agent-state";
 import { handler as corsHandler } from "~/app/api/_cors/cors";
 import { getSession } from "~/auth/server";
-import { onModelUsage } from "~/workflows/on-model-usage";
+import { startModelUsage } from "~/workflows/model-usage";
 
 export const maxDuration = 30; // Allow streaming responses up to 30 seconds
 
@@ -45,27 +44,25 @@ async function handler(req: Request) {
               usage: totalUsage,
             });
 
-            await start(onModelUsage, [
-              {
-                metrics: [
-                  {
-                    quantity: totalUsage.inputTokens || 0,
-                    unit: "input_tokens",
-                  },
-                  {
-                    quantity: totalUsage.outputTokens || 0,
-                    unit: "output_tokens",
-                  },
-                  {
-                    quantity: totalUsage.reasoningTokens || 0,
-                    unit: "reasoning_tokens",
-                  },
-                ],
-                modelId,
-                modelProvider: provider,
-                userId: session.user.id,
-              },
-            ]);
+            await startModelUsage({
+              metrics: [
+                {
+                  quantity: totalUsage.inputTokens || 0,
+                  unit: "input_tokens",
+                },
+                {
+                  quantity: totalUsage.outputTokens || 0,
+                  unit: "output_tokens",
+                },
+                {
+                  quantity: totalUsage.reasoningTokens || 0,
+                  unit: "reasoning_tokens",
+                },
+              ],
+              modelId,
+              modelProvider: provider,
+              userId: session.user.id,
+            });
           } catch (error) {
             console.error("[usage tracking] error:", error);
           }

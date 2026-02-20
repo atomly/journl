@@ -50,7 +50,7 @@ export const BlockNode = pgTable(
     // Resource protection constraint for JSONB data
     check(
       "block_data_size",
-      sql`length(${t.data}::text) <= ${JSONB_LIMITS.BLOCK_DATA}`,
+      sql`length(${t.data}::text) <= ${sql.raw(String(JSONB_LIMITS.BLOCK_DATA))}`,
     ),
   ],
 );

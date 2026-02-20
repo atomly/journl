@@ -1,4 +1,3 @@
-import type { Subscription } from "@acme/api";
 import {
   Ban,
   Calendar,
@@ -13,6 +12,7 @@ import { Badge } from "~/components/ui/badge";
 import { Card, CardContent, CardHeader } from "~/components/ui/card";
 import { cn } from "~/lib/cn";
 import { centsToDollars } from "~/lib/currency";
+import type { Subscription } from "~/trpc";
 import { SubscriptionManageButton } from "./subscription-manage-button";
 
 type SubscriptionInfoProps = {

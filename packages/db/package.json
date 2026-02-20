@@ -15,6 +15,10 @@
     "./schema": {
       "types": "./src/schema.ts",
       "default": "./dist/schema.js"
+    },
+    "./utils": {
+      "types": "./src/utils/index.ts",
+      "default": "./dist/utils/index.js"
     }
   },
   "scripts": {

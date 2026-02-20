@@ -7,9 +7,11 @@ import { type ChunkParams, MDocument } from "@mastra/rag";
 import { embedMany } from "ai";
 import { NextResponse } from "next/server";
 import removeMarkdown from "remove-markdown";
+import { start } from "workflow/api";
 import type { z } from "zod/v4";
 import { model } from "~/ai/providers/openai/embedding";
-import { api, embedder } from "~/trpc/server";
+import { embedder } from "~/trpc/server";
+import { onModelUsage } from "~/workflows/on-model-usage";
 import { handler } from "../_lib/webhook-handler";
 
 const CHUNK_PARAMS: ChunkParams = {
@@ -120,16 +122,14 @@ export const POST = handler(zDocumentEmbeddingTask, async (payload) => {
       values: chunks.map((chunk) => chunk.text),
     });
 
-    await api.usage.trackModelUsage({
-      metadata: {
-        document_id: document.id,
-        model_version: model.specificationVersion,
+    await start(onModelUsage, [
+      {
+        metrics: [{ quantity: usage.tokens, unit: "tokens" }],
+        modelId: model.modelId,
+        modelProvider: model.provider,
+        userId: document.user_id,
       },
-      metrics: [{ quantity: usage.tokens, unit: "tokens" }],
-      model_id: model.modelId,
-      model_provider: model.provider,
-      user_id: document.user_id,
-    });
+    ]);
 
     const insertions: z.infer<typeof zInsertDocumentEmbedding>[] = [];
 

@@ -5,13 +5,19 @@
     "paths": {
       "~/*": ["./src/*"]
     },
-    "incremental": false
+    "incremental": false,
+    /* Enables helpful hints for the Workflow SDK */
+    "plugins": [
+      {
+        "name": "workflow"
+      }
+    ]
   },
   "include": [
     "**/*.ts",
     "**/*.tsx",
     "next-env.d.ts",
-    "next.config.js",
+    "next.config.mts",
     ".next/types/**/*.ts"
   ],
   "exclude": ["node_modules"]

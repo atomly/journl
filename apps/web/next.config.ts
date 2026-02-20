@@ -1,12 +1,7 @@
-import { createJiti } from "jiti";
+import type { NextConfig } from "next";
+import { withWorkflow } from "workflow/next";
 
-const jiti = createJiti(import.meta.url);
-
-// Import env files to validate at build time. Use jiti so we can load .ts files in here.
-await jiti.import("./src/env");
-
-/** @type {import("next").NextConfig} */
-const config = {
+const config: NextConfig = {
   /** BlockNote is not yet compatible with React 19 / Next 15 StrictMode. Disabling for now. */
   reactStrictMode: false,
   /** These packages won't be bundled in the server build */
@@ -21,4 +16,4 @@ const config = {
   typescript: { ignoreBuildErrors: true },
 };
 
-export default config;
+export default withWorkflow(config);

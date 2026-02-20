@@ -4,8 +4,8 @@
 
 This is a pnpm/Turbo monorepo. Top-level workspace configuration lives in `pnpm-workspace.yaml` and `turbo.json`.
 - `apps/web`: Next.js app and UI runtime.
-- `apps/localtunnel`, `apps/stripe`, `apps/drizzle-studio`: local dev utilities and integrations.
-- `packages/api`, `packages/auth`, `packages/db`, `packages/blocknote`: shared TypeScript packages used across apps.
+- `apps/stripe`, `apps/drizzle-studio`: local dev utilities and integrations.
+- `packages/auth`, `packages/db`, `packages/blocknote`: shared TypeScript packages used across apps.
 - `tooling/*`: shared configs (e.g., tsconfig).
 
 ## Build, Test, and Development Commands

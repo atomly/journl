@@ -1,16 +1,16 @@
 "use client";
 
-import type { JournalListEntry } from "@acme/api";
 import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo } from "react";
 import { Virtuoso } from "react-virtuoso";
 import { useDebouncedCallback } from "use-debounce";
 import { useJournlAgent } from "~/ai/agents/use-journl-agent";
+import { useAppPreferences } from "~/components/preferences/app-preferences-provider";
+import type { JournalListEntry } from "~/trpc";
 import {
   getInfiniteEntriesQueryOptions,
   getInfiniteJournalEntriesQueryOptions,
-} from "~/app/api/trpc/options/journal-entries-query-options";
-import { useAppPreferences } from "~/components/preferences/app-preferences-provider";
+} from "~/trpc/options/journal-entries-query-options";
 import { useTRPC } from "~/trpc/react";
 import {
   JournalEntryContent,

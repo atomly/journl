@@ -1,6 +1,5 @@
 "use client";
 
-import type { BlockTransaction, JournalListEntry } from "@acme/api";
 import { useMutation } from "@tanstack/react-query";
 import Link from "next/link";
 import {
@@ -23,6 +22,7 @@ import {
 import { useBlockEditor } from "~/components/editor/use-block-editor";
 import { cn } from "~/components/utils";
 import { formatDate } from "~/lib/format-date";
+import type { BlockTransaction, JournalListEntry } from "~/trpc";
 import { useTRPC } from "~/trpc/react";
 
 const DEFAULT_DEBOUNCE_TIME = 150;

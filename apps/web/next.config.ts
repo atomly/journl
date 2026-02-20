@@ -12,7 +12,7 @@ const config: NextConfig = {
     "better-auth",
   ],
   /** Enables hot reloading for local packages without a build step */
-  transpilePackages: ["@acme/api", "@acme/auth", "@acme/db"],
+  transpilePackages: ["@acme/auth", "@acme/db"],
   typescript: { ignoreBuildErrors: true },
 };
 

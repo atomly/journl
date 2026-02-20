@@ -1,7 +1,7 @@
-import type { Subscription } from "@acme/api";
 import { CreditCard } from "lucide-react";
 import Link from "next/link";
 import { DropdownMenuItem } from "~/components/ui/dropdown-menu";
+import type { Subscription } from "~/trpc";
 
 type AppSidebarManageSubscriptionProps = {
   subscription: Subscription;

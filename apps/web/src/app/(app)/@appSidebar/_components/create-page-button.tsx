@@ -9,8 +9,8 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
 } from "~/components/ui/sidebar";
+import { infinitePagesQueryOptions } from "~/trpc/options/pages-query-options";
 import { useTRPC } from "~/trpc/react";
-import { infinitePagesQueryOptions } from "../../../api/trpc/options/pages-query-options";
 
 type CreatePageButtonProps = {
   className?: string;

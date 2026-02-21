@@ -3,7 +3,7 @@
 import { SignedIn, SignedOut } from "@daveyplate/better-auth-ui";
 import { ArrowLeft, LogOut } from "lucide-react";
 import Link from "next/link";
-import { signOutAction } from "~/auth/sign-out.action";
+import { signOutAction } from "~/app/_actions/sign-out.action";
 import { Button } from "~/components/ui/button";
 
 import {

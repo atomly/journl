@@ -17,7 +17,7 @@
     "clean": "turbo run clean && git clean -xdf .turbo node_modules",
     "db:push": "turbo -F @acme/db push",
     "db:studio": "turbo -F @acme/db studio",
-    "dev": "turbo run dev",
+    "dev": "turbo watch dev --continue",
     "typecheck": "turbo run typecheck"
   },
   "devDependencies": {

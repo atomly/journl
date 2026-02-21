@@ -1,7 +1,7 @@
 import { sql } from "drizzle-orm";
 import { decimal, index, pgTable, unique, varchar } from "drizzle-orm/pg-core";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
-import { TEXT_LIMITS } from "../constants/resource-limits.js";
+import { TEXT_LIMITS } from "../constants/resource-limits.ts";
 
 export const ModelPricing = pgTable(
   "model_pricing",

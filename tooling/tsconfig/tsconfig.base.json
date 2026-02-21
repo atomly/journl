@@ -18,6 +18,7 @@
     "noUncheckedIndexedAccess": true, // Require explicit checks for array/object access
 
     /* Build Options: Control TypeScript compilation output */
+    "allowImportingTsExtensions": true, // Allow explicit .ts extensions in imports
     "declaration": true, // Generate .d.ts declaration files
     "declarationMap": true, // Generate sourcemaps for declaration files
     "incremental": false // Disable incremental compilation for consistent builds

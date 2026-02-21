@@ -1,8 +1,8 @@
 import { sql } from "drizzle-orm";
 import { decimal, index, pgTable, text, unique } from "drizzle-orm/pg-core";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
-import { user } from "../auth/user.schema.js";
-import { UsagePeriod } from "./usage-period.schema.js";
+import { user } from "../auth/user.schema.ts";
+import { UsagePeriod } from "./usage-period.schema.ts";
 
 export const UsageAggregate = pgTable(
   "usage_aggregate",

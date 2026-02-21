@@ -9,11 +9,11 @@ import {
 } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
-import { user } from "../auth/user.schema.js";
-import { JSONB_LIMITS } from "../constants/resource-limits.js";
-import { Document } from "./document.schema.js";
-import { JournalEntry } from "./journal-entry.schema.js";
-import { Page } from "./page.schema.js";
+import { user } from "../auth/user.schema.ts";
+import { JSONB_LIMITS } from "../constants/resource-limits.ts";
+import { Document } from "./document.schema.ts";
+import { JournalEntry } from "./journal-entry.schema.ts";
+import { Page } from "./page.schema.ts";
 
 export const BlockNode = pgTable(
   "block_node",

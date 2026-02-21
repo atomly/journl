@@ -1,4 +1,4 @@
-import { withAuth } from "~/auth/guards";
+import { withAuth } from "~/app/_guards/page-guards";
 import { SidebarInset, SidebarProvider } from "~/components/ui/sidebar";
 import { Toaster } from "~/components/ui/toast";
 import { getAppPreferences } from "~/preferences/get-preferences";

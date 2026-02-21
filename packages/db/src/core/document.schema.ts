@@ -1,8 +1,8 @@
 import { relations, sql } from "drizzle-orm";
 import { pgTable, text } from "drizzle-orm/pg-core";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
-import { user } from "../auth/user.schema.js";
-import { BlockEdge, BlockNode } from "./block-node.schema.js";
+import { user } from "../auth/user.schema.ts";
+import { BlockEdge, BlockNode } from "./block-node.schema.ts";
 
 export const Document = pgTable("document", (t) => ({
   id: t.uuid().notNull().primaryKey().defaultRandom(),

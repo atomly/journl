@@ -9,8 +9,8 @@ import {
   timestamp,
   varchar,
 } from "drizzle-orm/pg-core";
-import { TEXT_LIMITS } from "../constants/resource-limits.js";
-import { Price } from "./price.schema.js";
+import { TEXT_LIMITS } from "../constants/resource-limits.ts";
+import { Price } from "./price.schema.ts";
 
 export const Plan = pgTable(
   "plan",

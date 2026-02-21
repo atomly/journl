@@ -30,7 +30,7 @@
       "outputs": [".cache/tsbuildinfo.json", "dist/**"]
     },
     "check": {
-      "dependsOn": ["^topo", "^build"],
+      "dependsOn": ["^topo"],
       "outputLogs": "new-only"
     },
     "clean": {
@@ -38,7 +38,6 @@
     },
     "dev": {
       "cache": false,
-      "dependsOn": ["^build"],
       "persistent": true
     },
     "push": {
@@ -57,7 +56,7 @@
       "dependsOn": ["^topo"]
     },
     "typecheck": {
-      "dependsOn": ["^topo", "^build"]
+      "dependsOn": ["^topo"]
     }
   },
   "ui": "tui"

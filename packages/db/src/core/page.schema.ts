@@ -2,10 +2,10 @@ import { relations, sql } from "drizzle-orm";
 import { index, pgTable, text, varchar } from "drizzle-orm/pg-core";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { z } from "zod/v4";
-import { user } from "../auth/user.schema.js";
-import { TEXT_LIMITS } from "../constants/resource-limits.js";
-import { BlockEdge, BlockNode } from "./block-node.schema.js";
-import { Document } from "./document.schema.js";
+import { user } from "../auth/user.schema.ts";
+import { TEXT_LIMITS } from "../constants/resource-limits.ts";
+import { BlockEdge, BlockNode } from "./block-node.schema.ts";
+import { Document } from "./document.schema.ts";
 
 export const Page = pgTable(
   "page",

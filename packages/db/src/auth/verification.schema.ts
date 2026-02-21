@@ -1,5 +1,5 @@
 import { pgTable, text, timestamp, varchar } from "drizzle-orm/pg-core";
-import { TEXT_LIMITS } from "../constants/resource-limits.js";
+import { TEXT_LIMITS } from "../constants/resource-limits.ts";
 
 export const verification = pgTable("verification", {
   id: text("id").primaryKey(),

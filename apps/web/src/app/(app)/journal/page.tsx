@@ -1,4 +1,4 @@
-import { withAuth } from "~/auth/guards";
+import { withAuth } from "~/app/_guards/page-guards";
 import { getAppPreferences } from "~/preferences/get-preferences";
 import {
   getInfiniteEntriesQueryOptions,

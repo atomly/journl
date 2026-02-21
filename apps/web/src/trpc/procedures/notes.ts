@@ -4,7 +4,7 @@ import { openai } from "@ai-sdk/openai";
 import { TRPCError, type TRPCRouterRecord } from "@trpc/server";
 import { embed } from "ai";
 import { z } from "zod/v4";
-import { protectedProcedure } from "../trpc";
+import { protectedProcedure, usageGuard } from "../trpc";
 
 type Note =
   | {
@@ -28,6 +28,7 @@ type Note =
 
 export const notesRouter = {
   getSimilarNotes: protectedProcedure
+    .use(usageGuard)
     .input(
       z.object({
         limit: z.number().min(1).max(20).default(5),

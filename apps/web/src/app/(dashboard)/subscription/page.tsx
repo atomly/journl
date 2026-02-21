@@ -1,6 +1,6 @@
 import { CreditCard, Shield } from "lucide-react";
 import { redirect } from "next/navigation";
-import { withAuth } from "~/auth/guards";
+import { withAuth } from "~/app/_guards/page-guards";
 import { Card, CardContent } from "~/components/ui/card";
 import { centsToDollars } from "~/lib/currency";
 import { api } from "~/trpc/server";

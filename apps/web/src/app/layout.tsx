@@ -1,27 +1,27 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { cn } from "~/lib/cn";
+import { getPublicWebUrl } from "~/lib/public-web-url";
 
 import "~/app/globals.css";
 
 import { AuthModalProvider } from "~/components/auth/auth-modal-provider";
-import { env } from "~/env";
 import { BetterAuthProvider } from "../components/auth/better-auth-provider";
 
+const publicWebUrl = getPublicWebUrl();
+
 export const metadata: Metadata = {
-  description: "Simple monorepo for web apps",
-  metadataBase: new URL(
-    env.VERCEL_ENV === "production"
-      ? "https://acme.app"
-      : "http://localhost:3000",
-  ),
+  description:
+    "Journl helps you capture thoughts, reflect with AI guidance, and turn daily notes into momentum.",
+  metadataBase: new URL(publicWebUrl),
   openGraph: {
-    description: "Simple monorepo for web apps",
+    description:
+      "Journl helps you capture thoughts, reflect with AI guidance, and turn daily notes into momentum.",
     siteName: "Journl",
-    title: "Journl",
-    url: "https://acme.app",
+    title: "Journl: Your mind, organized",
+    url: publicWebUrl,
   },
-  title: "Journl",
+  title: "Journl: Your mind, organized",
   twitter: {
     card: "summary_large_image",
     creator: "@journl",

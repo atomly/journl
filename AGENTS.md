@@ -36,7 +36,6 @@ App-specific scripts live in each package `package.json` (for example `apps/web/
 There is no single workspace-wide test command today.
 
 - Treat `pnpm typecheck` and `pnpm check` as required quality gates.
-- When adding tests, add a package-local `test` script and document how to run it.
 
 ## Commit & Pull Request Guidelines
 

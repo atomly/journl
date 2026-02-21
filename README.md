@@ -1,84 +1,72 @@
-# Journl
+<div align="center">
+  <img src="docs/images/website-preview.png" alt="Website Preview" width="720" />
+  <h1><a href="https://journl-snowy.vercel.app/">Journl</a></h1>
+</div>
 
-Journl is an AI-driven journaling app that turns daily writing into structured
-reflection. It’s built around a simple principle: journaling is most useful
-when it’s easy to revisit, easy to continue, and able to surface patterns over
-time. The primary product lives in `apps/web`, and most contributors will work
-there.
+<p align="center">
+  <a href="https://www.robertmolina.dev/">
+    <img src="https://img.shields.io/badge/Website-robertmolina.dev-111111?logo=vercel&logoColor=white" alt="https://journl-snowy.vercel.app/" />
+  </a>
+</p>
 
-<img width="1424" height="548" alt="image" src="https://github.com/user-attachments/assets/5a990ee4-9db5-4405-a3ec-4a157600cdb6" />
+Open-source AI-driven journaling app that turns daily writing into structured reflection.
 
-## Product Overview
+---
 
-Journl helps people capture daily entries and use guidance to deepen their
-reflection. The core experience is centered on:
+## Repository Structure
 
-- **Date-based entries** so returning to past writing is predictable.
-- **Guided prompts and contextual assistance** so users aren’t left staring at
-  a blank page.
-- **An embedded assistant surface** that stays alongside the editor rather than
-  pulling users into a separate workflow.
+This is a monorepo powered by [Turborepo](https://turborepo.dev/) and
+[pnpm](https://pnpm.io/).
 
-## Design Principles
+- Workspace layout is defined in [`pnpm-workspace.yaml`](./pnpm-workspace.yaml).
+- Shared task pipeline and env wiring live in [`turbo.json`](./turbo.json).
 
-- **The editor is the product**: navigation, account flows, and assistance stay
-  out of the way of writing.
-- **Guidance over automation**: AI is used to prompt and clarify, not to
-  replace the writer.
-- **Predictable organization**: date-first navigation keeps the mental model
-  simple.
-- **UI clarity**: assistant and editor coexist without crowding each other.
+---
 
-## Where to Start
+## What Lives Here
 
-- `apps/web/src/app/(marketing)`: public-facing overview and positioning.
-- `apps/web/src/app/(app)`: authenticated journaling experience.
-- `apps/web/src/app/(app)/journal`: date-based entry views and editor.
-- `apps/web/src/app/(app)/@chatDrawer` and `apps/web/src/app/(app)/@chatSidebar`:
-  assistant surfaces embedded in the journaling UI.
+- **Web app:** [`apps/web`](./apps/web), including marketing pages,
+  authenticated journaling views, API routes, and editor UI.
+- **Shared packages:** [`packages`](./packages) for auth, database access,
+  usage domain logic, and BlockNote integration.
+- **Local dev utilities:** [`apps/drizzle-studio`](./apps/drizzle-studio) and
+  [`apps/stripe`](./apps/stripe).
+- **Agents & Contributor guidance:** [`AGENTS.md`](./AGENTS.md).
 
-## Repository Layout (High Level)
+---
 
-This is a pnpm/Turbo monorepo:
+## Architecture Entry Points
 
-- `apps/web`: Next.js UI runtime and marketing pages.
-- `packages/*`: shared TypeScript packages for API, auth, and data access.
-- `apps/*` (others): locasl dev utilities and integrations.
+Use these paths as the fastest way to understand the product and core systems.
 
-## Setup & Run
+- **App surfaces:** [`apps/web/src/app`](./apps/web/src/app)
+- **Journal experience:** `apps/web/src/app/(app)/journal`
+- **API routes:** [`apps/web/src/app/api`](./apps/web/src/app/api)
+- **Editor integration:** [`apps/web/src/components/editor`](./apps/web/src/components/editor)
+- **AI/workflow logic:** [`apps/web/src/ai`](./apps/web/src/ai) and [`apps/web/src/workflows`](./apps/web/src/workflows)
+- **Auth and usage guards:** [`apps/web/src/auth`](./apps/web/src/auth) and [`apps/web/src/usage`](./apps/web/src/usage)
+- **DB schema and usage domain:** [`packages/db/src/schema.ts`](./packages/db/src/schema.ts) and [`packages/db/src/usage`](./packages/db/src/usage)
 
-1) Install toolchain dependencies:
-   - **Node.js**: use a version that satisfies the `engines` field in
-     `package.json`.
-   - **pnpm**: use the repo’s configured version (`packageManager` in
-     `package.json`).
+---
 
-2) Install workspace dependencies from the repo root:
+## Development Workflow
 
-    ```bash
-    pnpm install
-    ```
+Use the scripts in [`package.json`](./package.json) as the canonical source for
+day-to-day commands.
 
-3) Configure environment variables:
+- Install dependencies: `pnpm install`
+- Start development tasks: `pnpm dev`
+- Run quality gates: `pnpm check` and `pnpm typecheck`
+- Build the workspace: `pnpm build`
 
-   - Create a `.env` at the repo root.
-   - Populate variables needed for database, auth, and Stripe integrations.
-     (Turbo scripts reference `dotenv -e ../../.env`.)
+Environment variables are loaded from a root `.env` file. See
+[`turbo.json`](./turbo.json) for shared env names used by tasks.
 
-4) Run the app:
+For database workflows, use root scripts (`pnpm db:push`, `pnpm db:studio`) or
+the dedicated utility app in [`apps/drizzle-studio`](./apps/drizzle-studio).
 
-   - `pnpm dev` starts all tasks via Turbo.
-   - `pnpm dev:next` runs only the Next.js app (`apps/web`).
+---
 
-5) (Optional) Database tooling:
+## License
 
-   - `pnpm db:push` applies Drizzle migrations.
-   - `pnpm db:studio` opens Drizzle Studio.
-
-## Common Scripts
-
-- `pnpm build`: build all apps/packages.
-- `pnpm check`: run Biome checks with write/unsafe.
-- `pnpm typecheck`: run TypeScript type checks.
-
-See `AGENTS.md` for contributor standards and the full command list.
+This project is licensed under the MIT License. See [`LICENSE`](./LICENSE).

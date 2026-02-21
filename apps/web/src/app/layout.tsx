@@ -9,19 +9,17 @@ import { env } from "~/env";
 import { BetterAuthProvider } from "../components/auth/better-auth-provider";
 
 export const metadata: Metadata = {
-  description: "Simple monorepo for web apps",
-  metadataBase: new URL(
-    env.VERCEL_ENV === "production"
-      ? "https://acme.app"
-      : "http://localhost:3000",
-  ),
+  description:
+    "Journl helps you capture thoughts, reflect with AI guidance, and turn daily notes into momentum.",
+  metadataBase: new URL(env.PUBLIC_WEB_URL),
   openGraph: {
-    description: "Simple monorepo for web apps",
+    description:
+      "Journl helps you capture thoughts, reflect with AI guidance, and turn daily notes into momentum.",
     siteName: "Journl",
-    title: "Journl",
-    url: "https://acme.app",
+    title: "Journl: Your mind, organized",
+    url: env.PUBLIC_WEB_URL,
   },
-  title: "Journl",
+  title: "Journl: Your mind, organized",
   twitter: {
     card: "summary_large_image",
     creator: "@journl",

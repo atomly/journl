@@ -11,31 +11,54 @@ import type { Metadata, Viewport } from "next";
 import Link from "next/link";
 import { withoutAuth } from "~/app/_guards/page-guards";
 import { Separator } from "~/components/ui/separator";
+import { env } from "~/env";
 import { HydrateClient } from "~/trpc/server";
 import { HeroCtaButton } from "./_components/hero-cta-button";
-import { HeroFloatingShapes } from "./_components/hero-floating-shapes";
 import { HeroJournlParticles } from "./_components/hero-journl-particles";
 import "./globals.css";
 
 export const metadata: Metadata = {
+  alternates: {
+    canonical: "/",
+  },
   description:
-    "Journl is an AI that helps you write better, think clearer, and grow faster. Experience structured journaling and AI-powered insights.",
+    "Journl helps you capture thoughts, reflect with AI guidance, and turn daily notes into momentum.",
+  keywords: [
+    "journaling app",
+    "ai journal",
+    "guided reflection",
+    "personal growth",
+    "daily writing",
+  ],
+  metadataBase: new URL(env.PUBLIC_WEB_URL),
   openGraph: {
     description:
-      "Journl is an AI that helps you write better, think clearer, and grow faster. Experience structured journaling and AI-powered insights.",
+      "Capture thoughts, get guided reflections, and spot patterns over time with Journl.",
     images: [
       {
-        alt: "Journl: Your mind, organized",
+        alt: "Journl",
         height: 630,
         url: "/acme-icon.svg",
         width: 1200,
       },
     ],
+    siteName: "Journl",
     title: "Journl: Your mind, organized",
     type: "website",
-    url: "https://journlapp.com/",
+    url: env.PUBLIC_WEB_URL,
+  },
+  robots: {
+    follow: true,
+    index: true,
   },
   title: "Journl: Your mind, organized",
+  twitter: {
+    card: "summary_large_image",
+    description:
+      "Capture thoughts, get guided reflections, and spot patterns over time with Journl.",
+    images: ["/acme-icon.svg"],
+    title: "Journl: Your mind, organized",
+  },
 };
 
 export const viewport: Viewport = {
@@ -49,7 +72,6 @@ export default withoutAuth(function RootPage() {
   return (
     <HydrateClient>
       <div className="relative min-h-screen select-none overflow-hidden bg-background text-foreground">
-        <HeroFloatingShapes />
         <div className="pointer-events-none absolute inset-0 -z-10">
           <div className="absolute inset-0 bg-[radial-gradient(1200px_600px_at_20%_-10%,rgba(255,255,255,0.08),transparent_60%),radial-gradient(900px_500px_at_80%_5%,rgba(255,255,255,0.06),transparent_55%)]" />
           <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(255,255,255,0.08)_1px,transparent_1px),linear-gradient(180deg,rgba(255,255,255,0.08)_1px,transparent_1px)] bg-[size:48px_48px] opacity-20 [mask-image:radial-gradient(70%_55%_at_50%_0%,black,transparent)]" />
@@ -276,7 +298,7 @@ export default withoutAuth(function RootPage() {
               narrative, surface what matters, and keep you moving forward.
             </p>
             <HeroCtaButton
-              className="group bg-primary text-primary-foreground hover:bg-primary/90 sm:w-52"
+              className="marketing-cta-animated-border group bg-primary text-primary-foreground hover:bg-primary/90 sm:w-52"
               authCancelUrl={AUTH_CANCEL_URL}
             >
               <Link href="/auth/sign-up">

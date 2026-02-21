@@ -11,11 +11,13 @@ import type { Metadata, Viewport } from "next";
 import Link from "next/link";
 import { withoutAuth } from "~/app/_guards/page-guards";
 import { Separator } from "~/components/ui/separator";
-import { env } from "~/env";
+import { getPublicWebUrl } from "~/lib/public-web-url";
 import { HydrateClient } from "~/trpc/server";
 import { HeroCtaButton } from "./_components/hero-cta-button";
 import { HeroJournlParticles } from "./_components/hero-journl-particles";
 import "./globals.css";
+
+const publicWebUrl = getPublicWebUrl();
 
 export const metadata: Metadata = {
   alternates: {
@@ -30,7 +32,7 @@ export const metadata: Metadata = {
     "personal growth",
     "daily writing",
   ],
-  metadataBase: new URL(env.PUBLIC_WEB_URL),
+  metadataBase: new URL(publicWebUrl),
   openGraph: {
     description:
       "Capture thoughts, get guided reflections, and spot patterns over time with Journl.",
@@ -45,7 +47,7 @@ export const metadata: Metadata = {
     siteName: "Journl",
     title: "Journl: Your mind, organized",
     type: "website",
-    url: env.PUBLIC_WEB_URL,
+    url: publicWebUrl,
   },
   robots: {
     follow: true,

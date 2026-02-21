@@ -1,8 +1,8 @@
 import type { MetadataRoute } from "next";
-import { env } from "~/env";
+import { getPublicWebUrl } from "~/lib/public-web-url";
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = env.PUBLIC_WEB_URL.replace(/\/$/, "");
+  const baseUrl = getPublicWebUrl().replace(/\/$/, "");
   const now = new Date();
 
   return [

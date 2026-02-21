@@ -1,23 +1,25 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { cn } from "~/lib/cn";
+import { getPublicWebUrl } from "~/lib/public-web-url";
 
 import "~/app/globals.css";
 
 import { AuthModalProvider } from "~/components/auth/auth-modal-provider";
-import { env } from "~/env";
 import { BetterAuthProvider } from "../components/auth/better-auth-provider";
+
+const publicWebUrl = getPublicWebUrl();
 
 export const metadata: Metadata = {
   description:
     "Journl helps you capture thoughts, reflect with AI guidance, and turn daily notes into momentum.",
-  metadataBase: new URL(env.PUBLIC_WEB_URL),
+  metadataBase: new URL(publicWebUrl),
   openGraph: {
     description:
       "Journl helps you capture thoughts, reflect with AI guidance, and turn daily notes into momentum.",
     siteName: "Journl",
     title: "Journl: Your mind, organized",
-    url: env.PUBLIC_WEB_URL,
+    url: publicWebUrl,
   },
   title: "Journl: Your mind, organized",
   twitter: {

@@ -1,13 +1,15 @@
 import type { MetadataRoute } from "next";
-import { env } from "~/env";
+import { getPublicWebUrl } from "~/lib/public-web-url";
 
 export default function robots(): MetadataRoute.Robots {
+  const publicWebUrl = getPublicWebUrl();
+
   return {
-    host: env.PUBLIC_WEB_URL,
+    host: publicWebUrl,
     rules: {
       allow: "/",
       userAgent: "*",
     },
-    sitemap: `${env.PUBLIC_WEB_URL}/sitemap.xml`,
+    sitemap: `${publicWebUrl}/sitemap.xml`,
   };
 }

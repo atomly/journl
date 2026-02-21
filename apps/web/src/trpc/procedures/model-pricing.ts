@@ -2,7 +2,7 @@ import { and, desc, eq, lte } from "@acme/db";
 import { ModelPricing, zInsertModelPricing } from "@acme/db/schema";
 import { TRPCError, type TRPCRouterRecord } from "@trpc/server";
 import { z } from "zod/v4";
-import { publicProcedure } from "../trpc";
+import { protectedProcedure, publicProcedure } from "../trpc";
 
 export const modelPricingRouter = {
   getAllPricingForModel: publicProcedure
@@ -68,33 +68,13 @@ export const modelPricingRouter = {
       }
     }),
 
-  upsertPricing: publicProcedure
+  upsertPricing: protectedProcedure
     .input(zInsertModelPricing)
-    .mutation(async ({ ctx, input }) => {
-      try {
-        const [pricing] = await ctx.db
-          .insert(ModelPricing)
-          .values(input)
-          .onConflictDoUpdate({
-            set: {
-              price_per_unit: input.price_per_unit,
-            },
-            target: [
-              ModelPricing.model_id,
-              ModelPricing.model_provider,
-              ModelPricing.unit_type,
-              ModelPricing.effective_date,
-            ],
-          })
-          .returning();
-
-        return pricing;
-      } catch (error) {
-        console.error("Database error in modelPricing.upsertPricing:", error);
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to upsert pricing",
-        });
-      }
+    .mutation(async () => {
+      // Intentionally disabled until we add an authenticated admin-only pricing flow.
+      throw new TRPCError({
+        code: "METHOD_NOT_SUPPORTED",
+        message: "modelPricing.upsertPricing is not implemented yet",
+      });
     }),
 } satisfies TRPCRouterRecord;

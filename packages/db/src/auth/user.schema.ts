@@ -5,7 +5,7 @@ import {
   timestamp,
   varchar,
 } from "drizzle-orm/pg-core";
-import { TEXT_LIMITS } from "../constants/resource-limits.js";
+import { TEXT_LIMITS } from "../constants/resource-limits.ts";
 
 export const user = pgTable("user", {
   id: text("id").primaryKey(),

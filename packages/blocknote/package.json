@@ -9,10 +9,9 @@
     "./schema": "./src/blocknote-schema.ts"
   },
   "scripts": {
-    "build": "tsc",
     "check": "biome check",
     "clean": "git clean -xdf .cache .turbo dist node_modules",
-    "dev": "pnpm build --watch",
+    "dev": "pnpm typecheck --watch",
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },
   "peerDependencies": {

@@ -2,9 +2,9 @@ import { relations, sql } from "drizzle-orm";
 import { index, pgTable, text, unique } from "drizzle-orm/pg-core";
 import { createSelectSchema } from "drizzle-zod";
 import z from "zod/v4";
-import { user } from "../auth/user.schema.js";
-import { BlockEdge, BlockNode } from "./block-node.schema.js";
-import { Document } from "./document.schema.js";
+import { user } from "../auth/user.schema.ts";
+import { BlockEdge, BlockNode } from "./block-node.schema.ts";
+import { Document } from "./document.schema.ts";
 
 export const JournalEntry = pgTable(
   "journal_entry",

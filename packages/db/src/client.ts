@@ -4,7 +4,7 @@ import type { PgTransaction } from "drizzle-orm/pg-core";
 import type { VercelPgQueryResultHKT } from "drizzle-orm/vercel-postgres";
 import { drizzle } from "drizzle-orm/vercel-postgres";
 
-import * as schema from "./schema.js";
+import * as schema from "./schema.ts";
 
 export const db = drizzle({
   casing: "snake_case",

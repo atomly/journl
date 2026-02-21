@@ -12,6 +12,7 @@ import { db } from "@acme/db/client";
 import { initTRPC, TRPCError } from "@trpc/server";
 import superjson from "superjson";
 import { ZodError, z } from "zod/v4";
+import { checkUsageQuota } from "~/usage/guards";
 
 /**
  * 1. CONTEXT
@@ -134,3 +135,25 @@ export const protectedProcedure = t.procedure
       },
     });
   });
+
+/**
+ * Usage middleware for user quota enforcement.
+ */
+export const usageGuard = t.middleware(async ({ ctx, next }) => {
+  if (!ctx.session?.user) {
+    throw new TRPCError({ code: "UNAUTHORIZED" });
+  }
+
+  await checkUsageQuota({
+    db: ctx.db,
+    onUsageLimitExceeded: () => {
+      throw new TRPCError({
+        code: "TOO_MANY_REQUESTS",
+        message: "AI usage quota exceeded for current period",
+      });
+    },
+    userId: ctx.session.user.id,
+  });
+
+  return next();
+});

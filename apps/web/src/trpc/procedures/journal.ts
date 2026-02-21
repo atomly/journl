@@ -25,7 +25,7 @@ import {
   saveTransactions,
   zBlockTransactions,
 } from "../shared/block-transaction";
-import { protectedProcedure } from "../trpc";
+import { protectedProcedure, usageGuard } from "../trpc";
 
 type BlockNoteJournalEntry = JournalEntry & {
   blocks: ReturnType<typeof blocknoteBlocks>;
@@ -187,6 +187,7 @@ export const journalRouter = {
       }
     }),
   getRelevantEntries: protectedProcedure
+    .use(usageGuard)
     .input(
       z.object({
         limit: z.number().min(1).max(20).default(5),

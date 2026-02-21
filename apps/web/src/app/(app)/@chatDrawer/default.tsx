@@ -38,9 +38,9 @@ export default function ChatDrawer() {
           </div>
         </div>
       </DrawerTrigger>
-      <DrawerContent className="!h-full !max-h-[90dvh] z-4500">
+      <DrawerContent className="z-4500 h-full! max-h-[90dvh]!">
         <DrawerTitle className="hidden">Journl</DrawerTitle>
-        <div className="!h-full relative">
+        <div className="relative h-full!">
           <DrawerDivider className="absolute top-0 left-1/2 z-4500 -translate-x-1/2" />
           <ThreadPrimitive.Root
             className="relative box-border flex h-full flex-col overflow-hidden bg-sidebar pt-6"
@@ -54,10 +54,10 @@ export default function ChatDrawer() {
               <ThreadMessages />
 
               <ThreadPrimitive.If empty={false}>
-                <div className="min-h-8 flex-grow" />
+                <div className="min-h-8 grow" />
               </ThreadPrimitive.If>
 
-              <div className="sticky bottom-0 mt-3 flex w-full max-w-[var(--thread-max-width)] flex-col items-center justify-end rounded-t-lg bg-sidebar pb-4">
+              <div className="sticky bottom-0 mt-3 flex w-full max-w-(--thread-max-width) flex-col items-center justify-end rounded-t-lg bg-sidebar pb-4">
                 <ThreadScrollToBottom />
                 <ComposerPrimitive.Root className="relative flex w-full flex-col rounded-lg border bg-muted p-2 shadow-sm focus-within:border-ring/20 [&_button]:self-end">
                   <ComposerSources />

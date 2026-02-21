@@ -1,8 +1,7 @@
 {
   "extends": "@acme/tsconfig/tsconfig.nodejs.json",
   "compilerOptions": {
-    "noEmit": false,
-    "outDir": "./dist",
+    "noEmit": true,
     "rootDir": "./src",
     "module": "ES2022",
     "moduleResolution": "bundler",

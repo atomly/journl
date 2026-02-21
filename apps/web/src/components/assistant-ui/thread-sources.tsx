@@ -45,13 +45,15 @@ export function ComposerSources({ className }: ComposerContextProps) {
   const badges = sources.slice(0, MAX_SOURCES);
   const dropdown = sources.slice(MAX_SOURCES);
 
+  if (!badges.length) return null;
+
   return (
     <div className={cn("flex flex-wrap gap-1", className)}>
       {badges.map((source) => {
         return (
           <Badge
             variant="outline"
-            className="!justify-start group/source relative max-w-30 gap-x-1 py-1 text-left"
+            className="!justify-start group/source relative max-w-30 gap-x-1 border border-primary/40 py-1 text-left"
             key={source.id}
           >
             {/* Text content with ellipsis */}

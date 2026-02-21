@@ -42,10 +42,10 @@ export default function ChatSidebar() {
             <ThreadMessages />
 
             <ThreadPrimitive.If empty={false}>
-              <div className="min-h-8 flex-grow" />
+              <div className="min-h-8 grow" />
             </ThreadPrimitive.If>
 
-            <div className="sticky bottom-0 mt-3 flex w-full max-w-[var(--thread-max-width)] flex-col items-center justify-end rounded-t-lg bg-sidebar pb-4">
+            <div className="sticky bottom-0 mt-3 flex w-full max-w-(--thread-max-width) flex-col items-center justify-end rounded-t-lg bg-sidebar pb-4">
               <ThreadScrollToBottom />
               <ComposerPrimitive.Root className="relative flex w-full flex-col gap-y-2 rounded-lg border bg-muted p-2 shadow-sm focus-within:border-ring/20 [&_button]:self-end">
                 <ComposerSources />

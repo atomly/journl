@@ -1,18 +1,8 @@
 import { and, desc, eq, lte, sql } from "@acme/db";
-import { type DbTransaction, db } from "@acme/db/client";
-import {
-  ModelPricing,
-  Plan,
-  type Subscription as SubscriptionRecord,
-  UsageAggregate,
-  UsagePeriod,
-} from "@acme/db/schema";
-import {
-  calculate30DayPeriod,
-  findActiveSubscription,
-  getUsagePeriodConflictTarget,
-} from "@acme/db/utils";
-import { gte, inArray } from "drizzle-orm";
+import { db } from "@acme/db/client";
+import { ModelPricing, UsageAggregate } from "@acme/db/schema";
+import { ensureUsagePeriodAtDate } from "@acme/db/usage";
+import { inArray } from "drizzle-orm";
 import { FatalError } from "workflow";
 import { start } from "workflow/api";
 import { z } from "zod/v4";
@@ -86,51 +76,14 @@ async function resolveUsagePeriod(input: {
   "use step";
 
   return await createTransaction(async (tx) => {
-    const existingPeriod = await tx.query.UsagePeriod.findFirst({
-      columns: {
-        id: true,
-      },
-      orderBy: (fields, { desc: orderDesc }) => [
-        orderDesc(fields.subscription_id),
-        orderDesc(fields.created_at),
-      ],
-      where: and(
-        eq(UsagePeriod.user_id, input.userId),
-        lte(UsagePeriod.period_start, input.eventDate),
-        gte(UsagePeriod.period_end, input.eventDate),
-      ),
-    });
-
-    if (existingPeriod) {
-      return {
-        usagePeriodId: existingPeriod.id,
-      };
-    }
-
-    const activeSubscription = await findActiveSubscription(tx, input.userId);
-
-    const eventTimestamp = new Date(input.eventDate).getTime();
-
-    if (activeSubscription?.periodStart && activeSubscription.periodEnd) {
-      const subscriptionStart = activeSubscription.periodStart.getTime();
-      const subscriptionEnd = activeSubscription.periodEnd.getTime();
-
-      if (
-        eventTimestamp >= subscriptionStart &&
-        eventTimestamp <= subscriptionEnd
-      ) {
-        return {
-          usagePeriodId: await createProUsagePeriod(tx, activeSubscription),
-        };
-      }
-    }
+    const period = await ensureUsagePeriodAtDate(
+      tx,
+      input.userId,
+      input.eventDate,
+    );
 
     return {
-      usagePeriodId: await createFreeUsagePeriod(
-        tx,
-        input.userId,
-        input.eventDate,
-      ),
+      usagePeriodId: period.id,
     };
   });
 }
@@ -235,127 +188,3 @@ async function increaseUsageAggregate(input: {
   };
 }
 increaseUsageAggregate.maxRetries = 5;
-
-async function createFreeUsagePeriod(
-  tx: DbTransaction,
-  userId: string,
-  eventDate: string,
-): Promise<string> {
-  const freePlan = await tx.query.Plan.findFirst({
-    columns: {
-      id: true,
-    },
-    where: eq(Plan.name, "free"),
-  });
-
-  if (!freePlan) {
-    throw new FatalError("No free plan found");
-  }
-
-  const { end: periodEnd, start: periodStart } = calculate30DayPeriod(
-    new Date(eventDate),
-  );
-
-  const inserted = await tx
-    .insert(UsagePeriod)
-    .values({
-      period_end: periodEnd,
-      period_start: periodStart,
-      plan_id: freePlan.id,
-      subscription_id: null,
-      user_id: userId,
-    })
-    .onConflictDoNothing({
-      target: getUsagePeriodConflictTarget(),
-    })
-    .returning({
-      id: UsagePeriod.id,
-    });
-
-  if (inserted[0]) {
-    return inserted[0].id;
-  }
-
-  const existing = await tx.query.UsagePeriod.findFirst({
-    columns: {
-      id: true,
-    },
-    where: and(
-      eq(UsagePeriod.user_id, userId),
-      eq(UsagePeriod.period_start, periodStart),
-      eq(UsagePeriod.period_end, periodEnd),
-    ),
-  });
-
-  if (!existing) {
-    throw new FatalError("Failed to create free usage period");
-  }
-
-  return existing.id;
-}
-
-async function createProUsagePeriod(
-  tx: DbTransaction,
-  subscription: SubscriptionRecord,
-): Promise<string> {
-  if (
-    !subscription.id ||
-    !subscription.referenceId ||
-    !subscription.periodStart ||
-    !subscription.periodEnd ||
-    !subscription.planName
-  ) {
-    throw new FatalError("Invalid subscription data");
-  }
-
-  const plan = await tx.query.Plan.findFirst({
-    columns: {
-      id: true,
-    },
-    where: eq(Plan.name, subscription.planName),
-  });
-
-  if (!plan) {
-    throw new FatalError(`Plan ${subscription.planName} not found`);
-  }
-
-  const periodStart = subscription.periodStart.toISOString();
-  const periodEnd = subscription.periodEnd.toISOString();
-
-  const inserted = await tx
-    .insert(UsagePeriod)
-    .values({
-      period_end: periodEnd,
-      period_start: periodStart,
-      plan_id: plan.id,
-      subscription_id: subscription.id,
-      user_id: subscription.referenceId,
-    })
-    .onConflictDoNothing({
-      target: getUsagePeriodConflictTarget(),
-    })
-    .returning({
-      id: UsagePeriod.id,
-    });
-
-  if (inserted[0]) {
-    return inserted[0].id;
-  }
-
-  const existing = await tx.query.UsagePeriod.findFirst({
-    columns: {
-      id: true,
-    },
-    where: and(
-      eq(UsagePeriod.user_id, subscription.referenceId),
-      eq(UsagePeriod.period_start, periodStart),
-      eq(UsagePeriod.period_end, periodEnd),
-    ),
-  });
-
-  if (!existing) {
-    throw new FatalError("Failed to create pro usage period");
-  }
-
-  return existing.id;
-}

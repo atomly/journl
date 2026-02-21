@@ -4,29 +4,17 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": {
-      "types": "./src/index.ts",
-      "default": "./dist/index.js"
-    },
-    "./client": {
-      "types": "./src/client.ts",
-      "default": "./dist/client.js"
-    },
-    "./schema": {
-      "types": "./src/schema.ts",
-      "default": "./dist/schema.js"
-    },
-    "./utils": {
-      "types": "./src/utils/index.ts",
-      "default": "./dist/utils/index.js"
-    }
+    ".": "./src/index.ts",
+    "./client": "./src/client.ts",
+    "./schema": "./src/schema.ts",
+    "./utils": "./src/utils/index.ts",
+    "./usage": "./src/usage/index.ts"
   },
   "scripts": {
-    "build": "tsc",
     "check": "biome check",
     "clean": "git clean -xdf .cache .turbo dist node_modules",
-    "dev": "pnpm build --watch",
-    "prepush": "pnpm build",
+    "dev": "pnpm typecheck --watch",
+    "prepush": "pnpm typecheck",
     "push": "pnpm with-env drizzle-kit push",
     "studio": "pnpm with-env drizzle-kit studio",
     "typecheck": "tsc --noEmit --emitDeclarationOnly false",
@@ -42,6 +30,7 @@
     "@acme/tsconfig": "workspace:*",
     "dotenv-cli": "~11.0.0",
     "drizzle-kit": "~0.31.9",
+    "pg": "^8.16.3",
     "stripe": "~20.3.1",
     "typescript": "~5.9.3"
   }

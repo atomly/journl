@@ -1,6 +1,6 @@
 import { pgTable, text, timestamp, varchar } from "drizzle-orm/pg-core";
-import { TEXT_LIMITS } from "../constants/resource-limits.js";
-import { user } from "./user.schema.js";
+import { TEXT_LIMITS } from "../constants/resource-limits.ts";
+import { user } from "./user.schema.ts";
 
 export const organization = pgTable("organization", {
   id: text("id").primaryKey(),

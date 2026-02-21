@@ -23,3 +23,5 @@ captchafox
 instantdb
 marsidev
 trpc
+lucide
+offcanvas

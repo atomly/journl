@@ -8,9 +8,9 @@ import {
   timestamp,
   varchar,
 } from "drizzle-orm/pg-core";
-import { TEXT_LIMITS } from "../constants/resource-limits.js";
-import { user } from "../schema.js";
-import { Plan } from "./plan.schema.js";
+import { TEXT_LIMITS } from "../constants/resource-limits.ts";
+import { user } from "../schema.ts";
+import { Plan } from "./plan.schema.ts";
 
 export const Subscription = pgTable(
   "subscription",

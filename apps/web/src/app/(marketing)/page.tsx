@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 import type { Metadata, Viewport } from "next";
 import Link from "next/link";
-import { withoutAuth } from "~/auth/guards";
+import { withoutAuth } from "~/app/_guards/page-guards";
 import { Separator } from "~/components/ui/separator";
 import { HydrateClient } from "~/trpc/server";
 import { HeroCtaButton } from "./_components/hero-cta-button";

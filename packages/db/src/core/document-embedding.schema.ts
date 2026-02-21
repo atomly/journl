@@ -1,9 +1,9 @@
 import { sql } from "drizzle-orm";
 import { check, index, pgTable, text, vector } from "drizzle-orm/pg-core";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
-import { user } from "../auth/user.schema.js";
-import { JSONB_LIMITS } from "../constants/resource-limits.js";
-import { Document } from "./document.schema.js";
+import { user } from "../auth/user.schema.ts";
+import { JSONB_LIMITS } from "../constants/resource-limits.ts";
+import { Document } from "./document.schema.ts";
 
 const VECTOR_DIMENSIONS = 1536;
 

@@ -1,10 +1,10 @@
 import { relations, sql } from "drizzle-orm";
 import { index, pgTable, text, unique } from "drizzle-orm/pg-core";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
-import { user } from "../auth/user.schema.js";
-import { Plan } from "../billing/plan.schema.js";
-import { Subscription } from "../billing/subscription.schema.js";
-import { UsageAggregate } from "./usage-aggregate.schema.js";
+import { user } from "../auth/user.schema.ts";
+import { Plan } from "../billing/plan.schema.ts";
+import { Subscription } from "../billing/subscription.schema.ts";
+import { UsageAggregate } from "./usage-aggregate.schema.ts";
 
 export const UsagePeriod = pgTable(
   "usage_period",

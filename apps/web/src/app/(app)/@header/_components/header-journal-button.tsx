@@ -6,7 +6,6 @@ import { usePathname } from "next/navigation";
 import { useAppPreferences } from "~/components/preferences/app-preferences-provider";
 import { Button } from "~/components/ui/button";
 import { useIsMobile } from "~/hooks/use-mobile";
-import { cn } from "~/lib/cn";
 
 export function HeaderJournalButton() {
   const today = new Date();
@@ -41,10 +40,7 @@ function HeaderJournalViewToggle() {
       variant="outline"
       size="sm"
       aria-pressed={isEntriesOnly}
-      className={cn(
-        "h-8 gap-1.5 px-2.5 font-medium text-xs",
-        isEntriesOnly && "bg-accent text-accent-foreground",
-      )}
+      className="h-8 gap-1.5 px-2.5 font-medium text-xs"
       onClick={() =>
         updatePreferences({
           journalTimelineView: isEntriesOnly ? "timeline" : "entries",

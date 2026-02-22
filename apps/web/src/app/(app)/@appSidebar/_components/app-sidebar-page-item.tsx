@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
+  useSidebar,
 } from "~/components/ui/sidebar";
 import { cn } from "~/lib/cn";
 import { DeletePageButton } from "./delete-page-button";
@@ -20,8 +21,14 @@ export function AppSidebarPageItem({
   className,
 }: AppSidebarPageItemProps) {
   const pathname = usePathname();
+  const { isMobile, setOpenMobile } = useSidebar();
 
   const isActive = pathname.includes(page?.id ?? "");
+  const handlePageNavigationClick = () => {
+    if (isMobile) {
+      setOpenMobile(false);
+    }
+  };
 
   return (
     <SidebarMenuSubItem
@@ -38,6 +45,7 @@ export function AppSidebarPageItem({
         >
           <Link
             href={`/pages/${page?.id}`}
+            onClick={handlePageNavigationClick}
             className="line-clamp-1 min-w-0 flex-1 truncate hover:underline"
           >
             {page?.title || "New page"}

@@ -178,25 +178,30 @@ export const pagesRouter = {
 
         const embeddingSimilarity = sql<number>`1 - (${cosineDistance(DocumentEmbedding.vector, embedding)})`;
 
-        const results = await ctx.db
+        const distinctMatches = ctx.db
           .selectDistinctOn([DocumentEmbedding.document_id], {
-            embedding: DocumentEmbedding,
-            page: Page,
-            similarity: embeddingSimilarity,
+            chunk_markdown_text: DocumentEmbedding.chunk_markdown_text,
+            page_id: Page.id,
+            page_title: Page.title,
+            similarity: embeddingSimilarity.as("similarity"),
           })
           .from(DocumentEmbedding)
-          .where(
-            and(
-              eq(DocumentEmbedding.user_id, ctx.session.user.id),
-              gt(embeddingSimilarity, input.threshold),
-            ),
-          )
+          .where(eq(DocumentEmbedding.user_id, ctx.session.user.id))
           .innerJoin(Page, eq(DocumentEmbedding.document_id, Page.document_id))
-          .orderBy(DocumentEmbedding.document_id, desc(embeddingSimilarity));
+          .orderBy(DocumentEmbedding.document_id, desc(embeddingSimilarity))
+          .as("distinct_page_matches");
 
-        results.sort((a, b) => {
-          return b.similarity - a.similarity;
-        });
+        const results = await ctx.db
+          .select({
+            chunk_markdown_text: distinctMatches.chunk_markdown_text,
+            page_id: distinctMatches.page_id,
+            page_title: distinctMatches.page_title,
+            similarity: distinctMatches.similarity,
+          })
+          .from(distinctMatches)
+          .where(gt(distinctMatches.similarity, input.threshold))
+          .orderBy(desc(distinctMatches.similarity))
+          .limit(input.limit);
 
         return results;
       } catch (error) {

@@ -1,6 +1,5 @@
 import { blocknoteMarkdown } from "@acme/blocknote/server";
 import { createTool } from "@mastra/core/tools";
-import { MDocument } from "@mastra/rag";
 import { z } from "zod";
 import { env } from "~/env";
 import { api } from "~/trpc/server";
@@ -18,9 +17,8 @@ export const temporalJournalSearch = createTool({
         const markdown = result.blocks
           ? await blocknoteMarkdown(result.blocks)
           : "";
-        const mDocument = MDocument.fromMarkdown(markdown);
         return {
-          content: mDocument.getText().join("\n"),
+          content: markdown,
           date: result.date,
           id: result.id,
           link: `${env.PUBLIC_WEB_URL}/journal/${result.date}`,

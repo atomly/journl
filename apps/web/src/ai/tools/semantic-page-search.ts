@@ -14,10 +14,10 @@ export const semanticPageSearch = createTool({
     });
 
     return result.map((result) => ({
-      content: result.embedding.chunk_markdown_text,
-      link: `${env.PUBLIC_WEB_URL}/pages/${result.page.id}`,
-      page_id: result.page.id,
-      page_title: result.page.title,
+      content: result.chunk_markdown_text,
+      link: `${env.PUBLIC_WEB_URL}/pages/${result.page_id}`,
+      page_id: result.page_id,
+      page_title: result.page_title,
       similarity: result.similarity,
     }));
   },

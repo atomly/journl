@@ -10,6 +10,9 @@ import { startModelUsage } from "~/workflows/model-usage";
 
 export const maxDuration = 30; // Allow streaming responses up to 30 seconds
 
+const JOURNL_AGENT_MAX_STEPS = 5;
+const JOURNL_AGENT_TOOL_CALL_CONCURRENCY = 4;
+
 const mastra = new Mastra({
   agents: {
     journlAgent,
@@ -26,6 +29,7 @@ const handler = withAuthGuard(
           agentId: journlAgent.id,
           mastra,
           params: {
+            maxSteps: JOURNL_AGENT_MAX_STEPS,
             messages,
             onFinish: async ({ totalUsage, model }) => {
               try {
@@ -71,6 +75,7 @@ const handler = withAuthGuard(
                 name: user.name,
               },
             } satisfies JournlAgentState),
+            toolCallConcurrency: JOURNL_AGENT_TOOL_CALL_CONCURRENCY,
           },
         });
 

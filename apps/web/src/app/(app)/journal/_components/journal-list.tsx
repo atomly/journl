@@ -14,12 +14,12 @@ import {
 import { useTRPC } from "~/trpc/react";
 import {
   JournalEntryContent,
-  JournalEntryEditor,
   JournalEntryHeader,
   JournalEntryLink,
   JournalEntryProvider,
   JournalEntryWrapper,
 } from "./journal-entry-editor";
+import { DynamicJournalEntryEditor } from "./journal-entry-editor.dynamic";
 import { JournalEntryLoader } from "./journal-entry-loader";
 import { JournalListSkeleton } from "./journal-list-skeleton";
 
@@ -124,23 +124,7 @@ function JournalListContent({
               <JournalEntryHeader className="px-13.5" />
             </JournalEntryLink>
             <JournalEntryContent>
-              <JournalEntryEditor
-                onFocusAction={() => {
-                  setView({
-                    focusedDate: entry.date,
-                    name: "journal",
-                  });
-                }}
-                // TODO: Disabled this for now because when the user clicks outside the editor,
-                // the view is reset to the journal view. This is bad when the user clicks on
-                // the Journl chat resulting in a loss of contextual "relevance".
-                // onBlurAction={() => {
-                //   setView({
-                //     name: "journal",
-                //   });
-                // }}
-                onCreateAction={onCreateAction}
-              />
+              <DynamicJournalEntryEditor onCreateAction={onCreateAction} />
             </JournalEntryContent>
           </JournalEntryWrapper>
         </JournalEntryProvider>

@@ -1,13 +1,19 @@
 "use client";
 
 import { CalendarDays, List } from "lucide-react";
+import { usePathname } from "next/navigation";
 import { useAppPreferences } from "~/components/preferences/app-preferences-provider";
 import { Button } from "~/components/ui/button";
 import { cn } from "~/lib/cn";
 
 export function HeaderJournalViewToggle() {
+  const pathname = usePathname();
   const { preferences, updatePreferences } = useAppPreferences();
   const isEntriesOnly = preferences.journalTimelineView === "entries";
+
+  if (pathname !== "/journal") {
+    return null;
+  }
 
   return (
     <Button

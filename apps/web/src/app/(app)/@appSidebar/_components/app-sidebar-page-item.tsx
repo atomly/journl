@@ -25,12 +25,9 @@ export function AppSidebarPageItem({
 
   return (
     <SidebarMenuSubItem key={page?.id} className={className}>
-      <SidebarMenuSubButton asChild>
+      <SidebarMenuSubButton asChild isActive={isActive}>
         <div
-          className={cn(
-            "group/page-item flex items-center justify-between",
-            isActive && "bg-muted",
-          )}
+          className={cn("group/page-item flex items-center justify-between")}
         >
           <Link
             href={`/pages/${page?.id}`}

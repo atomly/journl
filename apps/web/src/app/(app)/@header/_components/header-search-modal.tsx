@@ -168,7 +168,7 @@ export function HeaderSearchButton({
                             </>
                           ) : (
                             <>
-                              <div className="text-muted-foreground text-sm">
+                              <div className="font-medium text-sm">
                                 {new Date(note.date).toLocaleDateString()}
                               </div>
                               <div className="line-clamp-2 text-muted-foreground text-sm">

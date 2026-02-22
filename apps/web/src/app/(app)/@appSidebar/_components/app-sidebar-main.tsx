@@ -43,7 +43,11 @@ export function AppSidebarNavigation({ items }: AppSidebarNavigationProps) {
           <SidebarMenuButton
             tooltip={item.title}
             asChild
-            className={cn(isActive(item.url) && "bg-muted")}
+            isActive={isActive(item.url)}
+            className={cn(
+              "border border-transparent",
+              isActive(item.url) && "border-sidebar-primary/50",
+            )}
           >
             <Link href={item.url}>
               {item.icon && item.icon}

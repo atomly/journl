@@ -36,7 +36,7 @@ Do not reproduce song lyrics or any other copyrighted material, even if asked.
 
 ${
   context.view.name === "journal"
-    ? `- Currently at the journal timeline ${context.view.focusedDate ? `and engaged with the entry of the date ${context.view.focusedDate}` : ""}.`
+    ? "- Currently at the journal timeline."
     : context.view.name === "journal-entry"
       ? `- Currently at the journal entry of date ${context.view.date}.`
       : context.view.name === "page"
@@ -153,7 +153,6 @@ const zJournlAgentState: z.ZodType<JournlAgentState> = z.object({
   }),
   view: z.union([
     z.object({
-      focusedDate: z.string().optional(),
       name: z.literal("journal"),
     }),
     z.object({

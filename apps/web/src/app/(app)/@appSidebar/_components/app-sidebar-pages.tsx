@@ -2,6 +2,7 @@
 
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { BookOpen, ChevronRight, Loader2 } from "lucide-react";
+import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { Virtuoso } from "react-virtuoso";
 import {
@@ -33,7 +34,9 @@ export const AppSidebarPages = ({
   defaultOpen = true,
 }: AppSidebarPagesProps) => {
   const trpc = useTRPC();
+  const pathname = usePathname();
   const { state, setOpen } = useSidebar();
+  const isPagesRoute = pathname.startsWith("/pages");
   const queryOptions = trpc.pages.getPaginated.infiniteQueryOptions(
     infinitePagesQueryOptions,
   );
@@ -69,7 +72,8 @@ export const AppSidebarPages = ({
     >
       <CollapsibleTrigger asChild>
         <SidebarMenuButton
-          className="min-h-8"
+          isActive={isPagesRoute}
+          className="min-h-8 text-foreground!"
           tooltip="Pages"
           onClick={handlePagesClick}
         >

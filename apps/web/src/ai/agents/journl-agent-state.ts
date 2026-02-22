@@ -22,10 +22,6 @@ export type JournlAgentState = {
   view:
     | {
         name: "journal";
-        /**
-         * The date the user is focused on that the Journl agent will be aware of.
-         */
-        focusedDate?: string;
       }
     | {
         name: "journal-entry";

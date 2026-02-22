@@ -15,6 +15,7 @@ import {
   SidebarMenuSub,
   useSidebar,
 } from "~/components/ui/sidebar";
+import { cn } from "~/lib/cn";
 import type { PaginatedPagesInput } from "~/trpc";
 import { useTRPC } from "~/trpc/react";
 import { AppSidebarPageItem } from "./app-sidebar-page-item";
@@ -73,7 +74,10 @@ export const AppSidebarPages = ({
       <CollapsibleTrigger asChild>
         <SidebarMenuButton
           isActive={isPagesRoute}
-          className="min-h-8 text-foreground!"
+          className={cn(
+            "min-h-8 border border-transparent text-foreground!",
+            isPagesRoute && "border-sidebar-primary/50",
+          )}
           tooltip="Pages"
           onClick={handlePagesClick}
         >
@@ -99,7 +103,7 @@ export const AppSidebarPages = ({
             itemContent={(_, page) => (
               <AppSidebarPageItem
                 page={page}
-                className="ml-3.5 border-sidebar-border border-l ps-2.5 pb-1"
+                className="ml-3.5 py-0.5 ps-2.5"
               />
             )}
             endReached={() => {

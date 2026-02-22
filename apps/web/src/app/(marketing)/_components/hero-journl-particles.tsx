@@ -1,7 +1,7 @@
 "use client";
 
 import { type CanvasHTMLAttributes, useEffect, useRef, useState } from "react";
-import { cn } from "~/components/utils";
+import { cn } from "~/lib/cn";
 
 const HOVER_COLOR = "#FFFFFF";
 const FILL_COLOR = "#FFFFFF";

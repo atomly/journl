@@ -8,7 +8,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "~/components/ui/sidebar";
-import { cn } from "~/components/utils";
+import { cn } from "~/lib/cn";
 
 type AppSidebarNavigationLink = {
   title: string;
@@ -45,7 +45,7 @@ export function AppSidebarNavigation({ items }: AppSidebarNavigationProps) {
             asChild
             isActive={isActive(item.url)}
             className={cn(
-              "border border-transparent",
+              "border border-transparent text-foreground!",
               isActive(item.url) && "border-sidebar-primary/50",
             )}
           >

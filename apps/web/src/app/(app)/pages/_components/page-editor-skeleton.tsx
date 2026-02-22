@@ -1,5 +1,5 @@
 import { Skeleton } from "~/components/ui/skeleton";
-import { cn } from "~/components/utils";
+import { cn } from "~/lib/cn";
 
 type PageEditorSkeletonProps = Omit<React.ComponentProps<"div">, "children">;
 

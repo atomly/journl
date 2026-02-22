@@ -7,7 +7,7 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
 } from "~/components/ui/sidebar";
-import { cn } from "~/components/utils";
+import { cn } from "~/lib/cn";
 import { DeletePageButton } from "./delete-page-button";
 
 type AppSidebarPageItemProps = {
@@ -24,7 +24,14 @@ export function AppSidebarPageItem({
   const isActive = pathname.includes(page?.id ?? "");
 
   return (
-    <SidebarMenuSubItem key={page?.id} className={className}>
+    <SidebarMenuSubItem
+      key={page?.id}
+      className={cn(
+        "border-sidebar-border border-l",
+        isActive && "border-sidebar-primary",
+        className,
+      )}
+    >
       <SidebarMenuSubButton asChild isActive={isActive}>
         <div
           className={cn("group/page-item flex items-center justify-between")}

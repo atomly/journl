@@ -5,7 +5,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { useDebouncedCallback } from "use-debounce";
 import { FullHeightTextarea } from "~/components/ui/full-height-textarea";
-import { cn } from "~/components/utils";
+import { cn } from "~/lib/cn";
 import { infinitePagesQueryOptions } from "~/trpc/options/pages-query-options";
 import { useTRPC } from "~/trpc/react";
 

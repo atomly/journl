@@ -30,6 +30,7 @@ App-specific scripts live in each package `package.json` (for example `apps/web/
 - Lint/format: Biome (`biome.json`), run `pnpm check` before PRs.
 - TypeScript is the default language across apps/packages.
 - Package naming uses the `@acme/*` workspace scope.
+- Do not add backwards-compatible alias exports (for example `export const oldName = newName`) unless explicitly requested; update call sites to use the canonical export directly.
 
 ## Testing Guidelines
 

@@ -5,7 +5,7 @@ import {
 } from "@blocknote/xl-ai";
 import { convertToModelMessages, streamText } from "ai";
 import { after, type NextRequest } from "next/server";
-import { model } from "~/ai/providers/openai/text";
+import { miniModel } from "~/ai/providers/openai/text";
 import { handler as corsHandler } from "~/app/api/_cors/cors";
 import { withAuthGuard } from "~/auth/guards";
 import { withUsageGuard } from "~/usage/guards";
@@ -20,7 +20,7 @@ const handler = withAuthGuard(
         messages: await convertToModelMessages(
           injectDocumentStateMessages(messages),
         ),
-        model, // see https://ai-sdk.dev/docs/foundations/providers-and-models
+        model: miniModel, // see https://ai-sdk.dev/docs/foundations/providers-and-models
         system: aiDocumentFormats.html.systemPrompt,
         toolChoice: "required",
         tools: toolDefinitionsToToolSet(toolDefinitions),
@@ -49,8 +49,8 @@ const handler = withAuthGuard(
                 unit: "reasoning_tokens",
               },
             ],
-            modelId: model.modelId,
-            modelProvider: model.provider,
+            modelId: miniModel.modelId,
+            modelProvider: miniModel.provider,
             userId: user.id,
           });
         } catch (error) {

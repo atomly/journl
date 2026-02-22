@@ -1,7 +1,7 @@
 import { Agent } from "@mastra/core/agent";
 import { RequestContext } from "@mastra/core/request-context";
 import { z } from "zod/v4";
-import { model } from "~/ai/providers/openai/text";
+import { miniModel, nanoModel } from "~/ai/providers/openai/text";
 import { env } from "~/env";
 import { createPage } from "../tools/create-page";
 import { manipulateEditor } from "../tools/manipulate-editor";
@@ -14,18 +14,15 @@ import type { JournlAgentState } from "./journl-agent-state";
 
 const AGENT_NAME = "Journl";
 
-export const journlAgent = new Agent({
-  description: `${AGENT_NAME}, an AI companion for personal reflection, journaling, and knowledge discovery.`,
-  id: "journl",
-  instructions: ({ requestContext }) => {
-    const context = getJournlRequestContext(requestContext);
-    if (!context) {
-      throw new Error("Missing Journl context");
-    }
-    if (env.NODE_ENV === "development") {
-      console.debug("JournlAgentContext", context);
-    }
-    return `You are ${AGENT_NAME}, an AI companion that helps users write, navigate, and manage their own notes.
+function instructions({ requestContext }: { requestContext?: RequestContext }) {
+  const context = getJournlRequestContext(requestContext);
+  if (!context) {
+    throw new Error("Missing Journl context");
+  }
+  if (env.NODE_ENV === "development") {
+    console.debug("JournlAgentContext", context);
+  }
+  return `You are ${AGENT_NAME}, an AI companion that helps users write, navigate, and manage their own notes.
 
 Current date: ${context.currentDate}
 User's name: ${context.user.name}
@@ -128,18 +125,34 @@ Do not navigate to the page after creating it, it will be done automatically.
 - Complete tasks immediately. Take obvious next steps. Prefer direct tool actions over explanatory prose.
 - Mirror user's tone but avoid corporate filler. Be concise and high-signal.
 - Operate only on existing content; never fabricate. Prefer partial completion over clarifying questions when scope is large.`;
-  },
-  model,
+}
+
+const tools = {
+  createPage,
+  manipulateEditor,
+  navigateJournalEntry,
+  navigatePage,
+  semanticJournalSearch,
+  semanticPageSearch,
+  temporalJournalSearch,
+};
+
+export const journlMini = new Agent({
+  description: `${AGENT_NAME}, an AI companion for personal reflection, journaling, and knowledge discovery.`,
+  id: "journl-mini",
+  instructions,
+  model: miniModel,
   name: AGENT_NAME,
-  tools: {
-    createPage,
-    manipulateEditor,
-    navigateJournalEntry,
-    navigatePage,
-    semanticJournalSearch,
-    semanticPageSearch,
-    temporalJournalSearch,
-  },
+  tools,
+});
+
+export const journlNano = new Agent({
+  description: `${AGENT_NAME}, an AI companion for personal reflection, journaling, and knowledge discovery. Optimized for fast retrieval and navigation tasks.`,
+  id: "journl-nano",
+  instructions,
+  model: nanoModel,
+  name: AGENT_NAME,
+  tools,
 });
 
 const zJournlAgentState: z.ZodType<JournlAgentState> = z.object({

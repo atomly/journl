@@ -1,7 +1,15 @@
 import { handleChatStream } from "@mastra/ai-sdk";
 import { Mastra } from "@mastra/core";
 import { createUIMessageStreamResponse } from "ai";
-import { journlAgent, setJournlRequestContext } from "~/ai/agents/journl-agent";
+import {
+  journlMini,
+  journlNano,
+  setJournlRequestContext,
+} from "~/ai/agents/journl-agent";
+import {
+  getLastUserMessage,
+  inferUserIntent,
+} from "~/ai/agents/journl-agent-intent";
 import type { JournlAgentState } from "~/ai/agents/journl-agent-state";
 import { handler as corsHandler } from "~/app/api/_cors/cors";
 import { withAuthGuard } from "~/auth/guards";
@@ -15,7 +23,8 @@ const JOURNL_AGENT_TOOL_CALL_CONCURRENCY = 4;
 
 const mastra = new Mastra({
   agents: {
-    journlAgent,
+    journlMini,
+    journlNano,
   },
 });
 
@@ -25,8 +34,11 @@ const handler = withAuthGuard(
       try {
         const { messages, ...rest } = await req.json();
 
+        const intent = inferUserIntent(getLastUserMessage(messages));
+        const agentId = intent === "search" ? journlNano.id : journlMini.id;
+
         const stream = await handleChatStream({
-          agentId: journlAgent.id,
+          agentId,
           mastra,
           params: {
             maxSteps: JOURNL_AGENT_MAX_STEPS,
@@ -36,10 +48,17 @@ const handler = withAuthGuard(
                 let { provider, modelId } = model ?? {};
 
                 if (!provider || !modelId) {
-                  const modelData = await journlAgent.getModel();
-                  provider = modelData.provider;
-                  modelId = modelData.modelId;
+                  const selectedAgent =
+                    agentId === journlNano.id ? journlNano : journlMini;
+                  const modelData = await selectedAgent.getModel();
+                  provider = provider ?? modelData.provider;
+                  modelId = modelId ?? modelData.modelId;
                 }
+
+                provider = provider ?? "openai.responses";
+                modelId =
+                  modelId ??
+                  (agentId === journlNano.id ? "gpt-5-nano" : "gpt-5-mini");
 
                 console.debug("[Usage] JournlAgent", {
                   usage: totalUsage,

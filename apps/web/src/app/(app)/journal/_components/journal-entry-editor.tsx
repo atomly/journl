@@ -20,7 +20,7 @@ import {
   BlockEditorSlashMenu,
 } from "~/components/editor/block-editor-tools";
 import { useBlockEditor } from "~/components/editor/use-block-editor";
-import { cn } from "~/components/utils";
+import { cn } from "~/lib/cn";
 import { formatDate } from "~/lib/format-date";
 import type { BlockTransaction, JournalListEntry } from "~/trpc";
 import { useTRPC } from "~/trpc/react";

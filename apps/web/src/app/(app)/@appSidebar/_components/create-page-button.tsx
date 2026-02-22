@@ -8,6 +8,7 @@ import { Button } from "~/components/ui/button";
 import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
+  useSidebar,
 } from "~/components/ui/sidebar";
 import { infinitePagesQueryOptions } from "~/trpc/options/pages-query-options";
 import { useTRPC } from "~/trpc/react";
@@ -21,6 +22,7 @@ export function CreatePageButton({ className }: CreatePageButtonProps) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const [isPending, startTransition] = useTransition();
+  const { isMobile, setOpenMobile } = useSidebar();
 
   const { mutate: createPage, isPending: isCreating } = useMutation(
     trpc.pages.create.mutationOptions({}),
@@ -69,6 +71,9 @@ export function CreatePageButton({ className }: CreatePageButtonProps) {
             );
 
             // Navigate to the new page immediately
+            if (isMobile) {
+              setOpenMobile(false);
+            }
             router.push(`/pages/${newPage.id}`);
           },
         },

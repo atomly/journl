@@ -7,8 +7,9 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  useSidebar,
 } from "~/components/ui/sidebar";
-import { cn } from "~/components/utils";
+import { cn } from "~/lib/cn";
 
 type AppSidebarNavigationLink = {
   title: string;
@@ -33,8 +34,14 @@ type AppSidebarNavigationProps = {
 
 export function AppSidebarNavigation({ items }: AppSidebarNavigationProps) {
   const pathname = usePathname();
+  const { isMobile, setOpenMobile } = useSidebar();
 
   const isActive = (url: string) => pathname === url;
+  const handleNavigationClick = () => {
+    if (isMobile) {
+      setOpenMobile(false);
+    }
+  };
 
   return (
     <SidebarMenu>
@@ -45,11 +52,11 @@ export function AppSidebarNavigation({ items }: AppSidebarNavigationProps) {
             asChild
             isActive={isActive(item.url)}
             className={cn(
-              "border border-transparent",
+              "border border-transparent text-foreground!",
               isActive(item.url) && "border-sidebar-primary/50",
             )}
           >
-            <Link href={item.url}>
+            <Link href={item.url} onClick={handleNavigationClick}>
               {item.icon && item.icon}
               <span>{item.title}</span>
             </Link>

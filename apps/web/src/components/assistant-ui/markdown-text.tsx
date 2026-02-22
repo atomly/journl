@@ -14,7 +14,7 @@ import { memo, useState } from "react";
 import remarkGfm from "remark-gfm";
 
 import { TooltipIconButton } from "~/components/assistant-ui/tooltip-icon-button";
-import { cn } from "~/components/utils";
+import { cn } from "~/lib/cn";
 
 function MarkdownTextImpl() {
   return (

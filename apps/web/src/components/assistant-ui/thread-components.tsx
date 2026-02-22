@@ -21,7 +21,7 @@ import type { ComponentProps } from "react";
 import { MarkdownText } from "~/components/assistant-ui/markdown-text";
 import { TooltipIconButton } from "~/components/assistant-ui/tooltip-icon-button";
 import { Button } from "~/components/ui/button";
-import { cn } from "~/components/utils";
+import { cn } from "~/lib/cn";
 
 type ThreadScrollToBottomProps = Partial<
   ComponentProps<typeof TooltipIconButton>

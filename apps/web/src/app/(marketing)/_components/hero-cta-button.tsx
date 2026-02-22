@@ -3,7 +3,7 @@
 import type { ComponentProps } from "react";
 import { useAuthModal } from "~/components/auth/auth-modal-provider";
 import { Button } from "~/components/ui/button";
-import { cn } from "~/components/utils";
+import { cn } from "~/lib/cn";
 
 type HeroCtaButtonProps = ComponentProps<typeof Button> & {
   authCancelUrl: string;

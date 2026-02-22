@@ -27,7 +27,8 @@ import { cn } from "~/lib/cn";
 
 const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7;
 const SIDEBAR_COOKIE_NAME = "sidebar:state";
-const SIDEBAR_KEYBOARD_SHORTCUT = "b";
+const SIDEBAR_KEYBOARD_SHORTCUT_OPTION_S = "KeyS";
+const SIDEBAR_KEYBOARD_SHORTCUT_CTRL_SHIFT_B = "KeyB";
 const SIDEBAR_MIN_WIDTH = "14rem";
 const SIDEBAR_WIDTH = "14rem";
 const SIDEBAR_WIDTH_ICON = "3rem";
@@ -105,10 +106,33 @@ function SidebarProvider({
   // Adds a keyboard shortcut to toggle the sidebar.
   React.useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (
-        event.key === SIDEBAR_KEYBOARD_SHORTCUT &&
-        (event.metaKey || event.ctrlKey)
-      ) {
+      const target = event.target;
+      const isEditableTarget =
+        target instanceof HTMLElement &&
+        (target.isContentEditable ||
+          ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName) ||
+          target.closest("[contenteditable='true']") !== null ||
+          target.closest("[role='textbox']") !== null);
+
+      if (event.defaultPrevented || isEditableTarget) {
+        return;
+      }
+
+      const isOptionSShortcut =
+        event.code === SIDEBAR_KEYBOARD_SHORTCUT_OPTION_S &&
+        event.altKey &&
+        !event.metaKey &&
+        !event.ctrlKey &&
+        !event.shiftKey;
+
+      const isCtrlShiftBShortcut =
+        event.code === SIDEBAR_KEYBOARD_SHORTCUT_CTRL_SHIFT_B &&
+        event.ctrlKey &&
+        event.shiftKey &&
+        !event.metaKey &&
+        !event.altKey;
+
+      if (isOptionSShortcut || isCtrlShiftBShortcut) {
         event.preventDefault();
         toggleSidebar();
       }

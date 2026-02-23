@@ -110,7 +110,7 @@ function DrawerDivider({ className, ...props }: DrawerDividerProps) {
       className={cn("flex flex-col items-center py-2", className)}
       {...props}
     >
-      <div className="hidden h-2 w-[100px] shrink-0 rounded-full bg-muted group-data-[vaul-drawer-direction=bottom]/drawer-content:block" />
+      <div className="h-2 w-[100px] shrink-0 rounded-full bg-sidebar-border group-data-[vaul-drawer-direction=bottom]/drawer-content:block" />
     </div>
   );
 }

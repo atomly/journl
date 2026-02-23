@@ -25,3 +25,4 @@ marsidev
 trpc
 lucide
 offcanvas
+minmax

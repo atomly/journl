@@ -26,7 +26,7 @@ export default async function Page({
             id: page.id,
             title: page.title,
           }}
-          className="mb-4 px-13 py-0"
+          className="mb-4 px-8 py-0"
         />
         <Suspense fallback={<PageEditorSkeleton />}>
           <DynamicPageEditor

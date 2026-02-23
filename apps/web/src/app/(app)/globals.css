@@ -123,6 +123,11 @@ The rest of the components are set by the Tailwind CSS classes, or by our editor
   z-index: 4000 !important;
 }
 
+/* Reducing the default editor padding to 12px (from 54px). */
+div.tiptap {
+  padding-inline: 16px;
+}
+
 /* Hide the editor's AI suggestion menu key shortcut elements on mobile */
 @media (max-width: 768px) {
   div#bn-suggestion-menu > div[role="option"] > div[data-position="right"] {

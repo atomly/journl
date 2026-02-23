@@ -82,7 +82,7 @@ export function StickyHeader({ className, ...props }: StickyHeaderProps) {
         "z-4500",
         {
           "-translate-y-[calc(100%+2rem)]": isMobile && isHidden,
-          "fixed top-0 right-0 left-0 mx-2 mt-2 h-12 transform-gpu transition-transform duration-200 ease-out will-change-transform":
+          "fixed top-0 right-0 left-0 mx-4 mt-2 h-12 transform-gpu transition-transform duration-200 ease-out will-change-transform":
             isMobile,
           "sticky top-0 m-2 h-12": !isMobile,
           "translate-y-0": isMobile && !isHidden,

@@ -29,7 +29,7 @@ export function BlockEditorFormattingToolbar() {
 
   if (isMobile) {
     return (
-      <div className="sticky top-0 z-30 rounded-lg bg-background px-12 shadow-sm">
+      <div className="sticky top-0 z-30 rounded-lg bg-background px-4 pt-2 shadow-sm">
         {toolbar}
       </div>
     );

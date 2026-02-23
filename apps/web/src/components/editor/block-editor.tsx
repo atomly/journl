@@ -50,6 +50,11 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "../ui/tooltip";
+import { cn } from "../utils";
+import {
+  BlockEditorFormattingToolbar,
+  BlockEditorSlashMenu,
+} from "./block-editor-tools";
 
 type EditorPrimitiveOnChangeParams = Parameters<
   Parameters<EditorPrimitive["onChange"]>[0]
@@ -102,6 +107,7 @@ type BlockEditorProps = Omit<
 };
 
 export function BlockEditor({
+  className,
   editor,
   initialBlocks,
   onChange,
@@ -339,6 +345,7 @@ export function BlockEditor({
   return (
     <BlockNoteView
       {...rest}
+      className={cn("flex flex-col-reverse gap-y-4", className)}
       editor={editor}
       theme={resolvedTheme as "light" | "dark"}
       onChange={handleEditorChange}
@@ -414,6 +421,8 @@ export function BlockEditor({
       }}
     >
       <AIMenuController />
+      <BlockEditorFormattingToolbar />
+      <BlockEditorSlashMenu />
       {children}
     </BlockNoteView>
   );

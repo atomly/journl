@@ -1,5 +1,5 @@
 import { ComposerPrimitive, ThreadPrimitive } from "@assistant-ui/react";
-import { SendHorizontalIcon } from "lucide-react";
+import { Sparkles } from "lucide-react";
 import {
   ComposerAction,
   ComposerInput,
@@ -9,7 +9,7 @@ import { ComposerContext } from "~/components/assistant-ui/thread-context";
 import { ThreadMessages } from "~/components/assistant-ui/thread-messages";
 import { ComposerSources } from "~/components/assistant-ui/thread-sources";
 import { ThreadWelcome } from "~/components/assistant-ui/thread-welcome";
-import { TooltipIconButton } from "~/components/assistant-ui/tooltip-icon-button";
+import { Button } from "~/components/ui/button";
 
 import {
   Drawer,
@@ -23,20 +23,13 @@ export default function ChatDrawer() {
   return (
     <Drawer>
       <DrawerTrigger asChild>
-        <div className="p-2 md:hidden">
-          <div className="flex w-full flex-row items-center justify-between rounded-lg border bg-sidebar px-2.5 py-4">
-            <div className="w-full cursor-text px-2 text-muted-foreground text-sm">
-              Ask anything...
-            </div>
-            <TooltipIconButton
-              tooltip="Send"
-              variant="default"
-              className="size-8 p-2 transition-opacity ease-in"
-            >
-              <SendHorizontalIcon className="size-4" />
-            </TooltipIconButton>
-          </div>
-        </div>
+        <Button
+          size="icon"
+          className="fixed right-2 bottom-2 flex size-10 cursor-pointer rounded-full border md:hidden"
+        >
+          <Sparkles className="size-6" />
+          <span className="sr-only">Toggle Chat Drawer</span>
+        </Button>
       </DrawerTrigger>
       <DrawerContent className="z-4500 h-full! max-h-[90dvh]!">
         <DrawerTitle className="hidden">Journl</DrawerTitle>

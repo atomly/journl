@@ -5,6 +5,7 @@ import { useEffect, useMemo } from "react";
 import { Virtuoso } from "react-virtuoso";
 import { useDebouncedCallback } from "use-debounce";
 import { useJournlAgent } from "~/ai/agents/use-journl-agent";
+import { useAppLayout } from "~/app/_components/app-layout-provider";
 import { useAppPreferences } from "~/components/preferences/app-preferences-provider";
 import type { JournalListEntry } from "~/trpc";
 import {
@@ -54,6 +55,7 @@ function JournalListContent({
 }: JournalListContentProps) {
   const debouncedFetchNextPage = useDebouncedCallback(fetchNextPage, 300);
   const { rememberView: setView } = useJournlAgent();
+  const { scrollElement } = useAppLayout();
   const hasMore = hasNextPage;
 
   const entries = useMemo(
@@ -110,6 +112,7 @@ function JournalListContent({
 
   return (
     <Virtuoso
+      customScrollParent={scrollElement ?? undefined}
       data={entries}
       endReached={() => {
         if (hasMore) {

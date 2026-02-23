@@ -1,5 +1,5 @@
 import { PageSkeleton } from "../_components/page-skeleton";
 
 export default function Loading() {
-  return <PageSkeleton className="mx-auto max-w-5xl px-13.5 pt-8 pb-20" />;
+  return <PageSkeleton className="mx-auto max-w-5xl pt-8 pb-20" />;
 }

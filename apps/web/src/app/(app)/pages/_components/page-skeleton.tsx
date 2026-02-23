@@ -8,10 +8,10 @@ export function PageSkeleton({ className, ...rest }: PageSkeletonProps) {
   return (
     <div className={cn("flex flex-col gap-4", className)} {...rest}>
       {/* Title skeleton */}
-      <Skeleton className="mb-6 h-12 w-3/5" />
+      <Skeleton className="mb-6 h-12 w-3/5 px-4" />
 
       {/* Content skeleton */}
-      <div className="space-y-3">
+      <div className="space-y-3 px-13.5">
         <div className="flex flex-col gap-4">
           {/* Title skeleton */}
           <Skeleton className="h-6 w-2/3" />

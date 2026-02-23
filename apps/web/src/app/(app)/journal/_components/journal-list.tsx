@@ -88,7 +88,7 @@ function JournalListContent({
 
   if (status === "pending") {
     return (
-      <div className="mx-auto max-w-4xl px-13.5 pt-8">
+      <div className="mx-auto max-w-4xl pt-8">
         <JournalListSkeleton className="mx-auto flex flex-1 flex-col" />
       </div>
     );
@@ -124,7 +124,7 @@ function JournalListContent({
         <JournalEntryProvider entry={entry}>
           <JournalEntryWrapper className="mx-auto max-w-4xl border-b pt-8 pb-20">
             <JournalEntryLink>
-              <JournalEntryHeader className="px-13.5" />
+              <JournalEntryHeader className="px-8" />
             </JournalEntryLink>
             <JournalEntryContent>
               <DynamicJournalEntryEditor onCreateAction={onCreateAction} />
@@ -135,7 +135,7 @@ function JournalListContent({
       components={{
         Footer: () => (
           <JournalEntryLoader
-            className="mx-auto mt-8 max-w-4xl px-13.5 pb-24"
+            className="mx-auto mt-8 max-w-4xl px-8 pb-24"
             hasNextPage={hasMore}
           />
         ),

@@ -21,9 +21,9 @@
     "typecheck": "turbo run typecheck"
   },
   "devDependencies": {
-    "@biomejs/biome": "~2.4.2",
-    "@turbo/gen": "~2.8.9",
-    "turbo": "~2.8.9"
+    "@biomejs/biome": "~2.4.4",
+    "@turbo/gen": "~2.8.10",
+    "turbo": "~2.8.10"
   },
   "pnpm": {
     "peerDependencyRules": {

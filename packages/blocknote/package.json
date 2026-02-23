@@ -23,8 +23,8 @@
   },
   "dependencies": {
     "@acme/db": "workspace:*",
-    "@ai-sdk/openai": "~3.0.29",
-    "ai": "~6.0.90",
+    "@ai-sdk/openai": "~3.0.30",
+    "ai": "~6.0.97",
     "zod": "~4.3.6"
   },
   "devDependencies": {
@@ -33,7 +33,7 @@
     "@blocknote/react": "~0.46.2",
     "@blocknote/server-util": "~0.46.2",
     "@blocknote/xl-ai": "~0.46.2",
-    "@tiptap/extensions": "3.19.0",
+    "@tiptap/extensions": "3.20.0",
     "typescript": "~5.9.3"
   }
 }

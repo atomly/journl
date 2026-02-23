@@ -29,6 +29,53 @@
   }
 }
 
+@keyframes assistant-thinking-wave {
+  0% {
+    background-position: 200% 50%;
+  }
+
+  100% {
+    background-position: -200% 50%;
+  }
+}
+
+.assistant-thinking-wave {
+  color: var(--foreground);
+}
+
+@supports ((-webkit-background-clip: text) or (background-clip: text)) {
+  .assistant-thinking-wave {
+    background-image: linear-gradient(
+      110deg,
+      rgba(82, 82, 91, 0.6) 20%,
+      rgba(39, 39, 42, 0.98) 45%,
+      rgba(82, 82, 91, 0.6) 70%
+    );
+    background-size: 220% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: assistant-thinking-wave 1.6s linear infinite;
+  }
+
+  .dark .assistant-thinking-wave {
+    background-image: linear-gradient(
+      110deg,
+      rgba(161, 161, 170, 0.5) 20%,
+      rgba(250, 250, 250, 0.96) 45%,
+      rgba(161, 161, 170, 0.5) 70%
+    );
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .assistant-thinking-wave {
+    animation: none;
+    background-image: none;
+    color: inherit;
+  }
+}
+
 /*
 Z-Index Hierarchy
 
@@ -42,7 +89,7 @@ The rest of the components are set by the Tailwind CSS classes, or by our editor
 - Header Search Modal and Overlay (`z-index`: 5000)
 - Tooltips/Popover (`z-index`: 4500)
 - Auth Settings Dropdown (`z-index`: 4500)
-- Drawer (with its overlay and drag handles) (`z-index`: 4500)
+- Drawer & DrawerTrigger (with its overlay and drag handles) (`z-index`: 4500)
 - Mobile Sidebar (`z-index`: 4500)
 - Editor Options/Drag Handle (`z-index`: 4000)
 - Editor Options/Drag Handle Menu (`z-index`: 4000)
@@ -74,6 +121,13 @@ The rest of the components are set by the Tailwind CSS classes, or by our editor
 /* Ensure the editor options menu appears above the sidebar */
 .bn-container > div[data-floating-ui-focusable] {
   z-index: 4000 !important;
+}
+
+/* Hide the editor's AI suggestion menu key shortcut elements on mobile */
+@media (max-width: 768px) {
+  div#bn-suggestion-menu > div[role="option"] > div[data-position="right"] {
+    display: none;
+  }
 }
 
 /* Tanstack Query Devtools */

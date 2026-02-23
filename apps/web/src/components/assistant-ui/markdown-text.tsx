@@ -15,6 +15,7 @@ import remarkGfm from "remark-gfm";
 
 import { TooltipIconButton } from "~/components/assistant-ui/tooltip-icon-button";
 import { cn } from "~/lib/cn";
+import { useDrawer } from "../ui/drawer";
 
 function MarkdownTextImpl() {
   return (
@@ -65,7 +66,9 @@ function useCopyToClipboard({
 }
 
 const defaultComponents = memoizeMarkdownComponents({
-  a: ({ className, href, ...props }) => {
+  a: ({ className, href, onClick, ...props }) => {
+    const { closeDrawer } = useDrawer();
+
     const isExternal =
       href &&
       !href.startsWith(window.location.origin) &&
@@ -88,6 +91,12 @@ const defaultComponents = memoizeMarkdownComponents({
       );
     }
 
+    function handleOnClick(event: React.MouseEvent<HTMLAnchorElement>) {
+      onClick?.(event);
+      if (event.defaultPrevented) return;
+      closeDrawer();
+    }
+
     return (
       <Link
         className={cn(
@@ -95,6 +104,7 @@ const defaultComponents = memoizeMarkdownComponents({
           className,
         )}
         href={href || "#"}
+        onClick={handleOnClick}
         {...props}
       />
     );

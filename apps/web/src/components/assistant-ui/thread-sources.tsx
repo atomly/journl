@@ -53,7 +53,7 @@ export function ComposerSources({ className }: ComposerContextProps) {
         return (
           <Badge
             variant="outline"
-            className="!justify-start group/source relative max-w-30 gap-x-1 border border-primary/40 py-1 text-left"
+            className="!justify-start group/source relative mb-2 max-w-30 gap-x-1 border border-primary/40 py-1 text-left"
             key={source.id}
           >
             {/* Text content with ellipsis */}

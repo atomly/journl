@@ -18,12 +18,10 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "~/components/ui/drawer";
-import { CloseDrawerOnNavigation } from "./_components/close-drawer-on-navigation";
 
 export default function ChatDrawer() {
   return (
     <Drawer>
-      <CloseDrawerOnNavigation />
       <DrawerTrigger asChild>
         <Button
           size="icon"

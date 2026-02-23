@@ -12,8 +12,15 @@ import {
 
 export { ThemeProvider } from "next-themes";
 
+type Theme = "light" | "dark" | "system";
+
 export function HeaderThemeToggle() {
   const { setTheme } = useTheme();
+
+  function startThemeViewTransition(theme: Theme) {
+    if (!document.startViewTransition) return setTheme(theme);
+    return document.startViewTransition(() => setTheme(theme));
+  }
 
   return (
     <DropdownMenu modal={false}>
@@ -25,13 +32,13 @@ export function HeaderThemeToggle() {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <DropdownMenuItem onClick={() => setTheme("light")}>
+        <DropdownMenuItem onClick={() => startThemeViewTransition("light")}>
           Light
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => setTheme("dark")}>
+        <DropdownMenuItem onClick={() => startThemeViewTransition("dark")}>
           Dark
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => setTheme("system")}>
+        <DropdownMenuItem onClick={() => startThemeViewTransition("system")}>
           System
         </DropdownMenuItem>
       </DropdownMenuContent>

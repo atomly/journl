@@ -1,5 +1,34 @@
 @import "../styles/blocknote.css";
 
+/* Theme toggle animations. */
+::view-transition-group(root) {
+  animation-timing-function: var(--expo-out);
+}
+
+::view-transition-new(root) {
+  clip-path: circle(0 at 100% 0%);
+  animation: reveal 0.66s;
+  animation-fill-mode: both;
+}
+
+::view-transition-old(root),
+.dark::view-transition-old(root) {
+  animation: none;
+  animation-fill-mode: both;
+  z-index: -1;
+}
+
+.dark::view-transition-new(root) {
+  animation: reveal 0.66s;
+  animation-fill-mode: both;
+}
+
+@keyframes reveal {
+  to {
+    clip-path: circle(200vmax at 100% 0%);
+  }
+}
+
 /*
 Z-Index Hierarchy
 

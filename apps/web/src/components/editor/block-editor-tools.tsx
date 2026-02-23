@@ -15,13 +15,26 @@ import {
 import { AIToolbarButton, getAISlashMenuItems } from "@blocknote/xl-ai";
 import removeMarkdown from "remove-markdown";
 import { useJournlAgent } from "~/ai/agents/use-journl-agent";
+import { useIsMobile } from "~/hooks/use-mobile";
 
-/**
- * The formatting toolbar with the AI option added.
- *
- * @returns The formatting toolbar.
- */
 export function BlockEditorFormattingToolbar() {
+  const isMobile = useIsMobile();
+  const toolbar = (
+    <FormattingToolbar>
+      <AIToolbarButton />
+      <AddBlockSelectionButton />
+      {...getFormattingToolbarItems()}
+    </FormattingToolbar>
+  );
+
+  if (isMobile) {
+    return (
+      <div className="sticky top-0 z-30 rounded-lg bg-background px-12 shadow-sm">
+        {toolbar}
+      </div>
+    );
+  }
+
   return (
     <FormattingToolbarController
       floatingUIOptions={{
@@ -29,13 +42,7 @@ export function BlockEditorFormattingToolbar() {
           strategy: "fixed",
         },
       }}
-      formattingToolbar={() => (
-        <FormattingToolbar>
-          <AIToolbarButton />
-          <AddBlockSelectionButton />
-          {...getFormattingToolbarItems()}
-        </FormattingToolbar>
-      )}
+      formattingToolbar={() => toolbar}
     />
   );
 }

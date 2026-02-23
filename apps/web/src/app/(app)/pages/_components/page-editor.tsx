@@ -8,10 +8,6 @@ import { useDebouncedCallback } from "use-debounce";
 import { useJournlAgent } from "~/ai/agents/use-journl-agent";
 import { BlockEditor } from "~/components/editor/block-editor";
 import { BlockEditorErrorOverlay } from "~/components/editor/block-editor-error-overlay";
-import {
-  BlockEditorFormattingToolbar,
-  BlockEditorSlashMenu,
-} from "~/components/editor/block-editor-tools";
 import { useBlockEditor } from "~/components/editor/use-block-editor";
 import { PageCreatedEvent } from "~/events/page-created-event";
 import { useAppEventHandler } from "~/hooks/use-app-event-handler";
@@ -118,10 +114,7 @@ export function PageEditor({
         formattingToolbar={false}
         // Disabling the default because we're using a slash menu with the AI option.
         slashMenu={false}
-      >
-        <BlockEditorFormattingToolbar />
-        <BlockEditorSlashMenu />
-      </BlockEditor>
+      />
       <BlockEditorErrorOverlay isOpen={isOverlayOpen} />
     </>
   );

@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  Open-source AI-driven journaling app that turns daily writing into structured reflection.
+  Open source AI-driven journaling app that turns daily writing into structured reflection.
 </p>
 
 ---

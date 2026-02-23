@@ -18,7 +18,7 @@ export function JournalEntrySkeleton({
   return (
     <div className={cn("space-y-6", className)} {...rest}>
       {/* Date header */}
-      {hasHeader && <Skeleton className="h-12 w-40 px-4" />}
+      {hasHeader && <Skeleton className="mx-8 h-12 w-40" />}
 
       {/* Content */}
       <div className="space-y-2 px-13.5">

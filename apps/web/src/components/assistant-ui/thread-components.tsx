@@ -167,9 +167,10 @@ export function AssistantMessage() {
 }
 
 function AssistantText() {
-  const hasToolCalls = useAuiState((s) =>
-    s.message.parts.some((part) => part.type === "tool-call"),
-  );
+  const hasToolCalls = useAuiState((s) => {
+    const parts = s.message.parts as ReadonlyArray<{ type?: string }>;
+    return parts.some((part) => part.type === "tool-call");
+  });
 
   return (
     <>
@@ -187,8 +188,8 @@ function AssistantText() {
 
 function AssistantThinking() {
   const collapsed = useAuiState((s) => s.chainOfThought.collapsed);
-  const isRunning = useAuiState(
-    (s) => s.chainOfThought.status.type === "running",
+  const isThinking = useAuiState(
+    (s) => s.chainOfThought.status.type !== "complete",
   );
   const partsLength = useAuiState((s) => s.chainOfThought.parts.length);
   const latestPart = useAuiState(
@@ -203,20 +204,29 @@ function AssistantThinking() {
     <ChainOfThoughtPrimitive.Root className="mb-3 overflow-hidden rounded-lg border border-border/70 bg-muted/30">
       <div className="px-3 py-2">
         <ChainOfThoughtPrimitive.AccordionTrigger className="flex w-full items-center gap-2 text-left">
-          <span
-            className={cn(
-              "inline-block size-2 rounded-full",
-              isRunning ? "animate-pulse bg-primary" : "bg-muted-foreground",
-            )}
-          />
-          <span
-            className={cn(
-              "font-medium text-sm",
-              isRunning && "assistant-thinking-wave",
-            )}
-          >
-            Thinking
-          </span>
+          <MessagePrimitive.If assistant last>
+            <ThreadPrimitive.If running>
+              <span className="inline-block size-2 animate-pulse rounded-full bg-primary" />
+            </ThreadPrimitive.If>
+            <ThreadPrimitive.If running={false}>
+              <span className="inline-block size-2 rounded-full bg-muted-foreground" />
+            </ThreadPrimitive.If>
+
+            <ThreadPrimitive.If running>
+              <span className="assistant-thinking-wave font-medium text-sm">
+                Thinking
+              </span>
+            </ThreadPrimitive.If>
+            <ThreadPrimitive.If running={false}>
+              <span className="font-medium text-sm">Thinking</span>
+            </ThreadPrimitive.If>
+          </MessagePrimitive.If>
+
+          <MessagePrimitive.If assistant last={false}>
+            <span className="inline-block size-2 rounded-full bg-muted-foreground" />
+            <span className="font-medium text-sm">Thinking</span>
+          </MessagePrimitive.If>
+
           <span className="ml-auto text-muted-foreground text-xs">
             {collapsed ? "Show" : "Hide"}
           </span>
@@ -227,7 +237,7 @@ function AssistantThinking() {
         <p
           className={cn(
             "px-7 pb-3 text-muted-foreground text-sm",
-            isRunning && "assistant-thinking-wave",
+            isThinking && "assistant-thinking-wave",
           )}
         >
           {summarizeThoughtPart(latestPart)}
@@ -260,15 +270,15 @@ function ThoughtStep({ children }: { children?: ReactNode }) {
 }
 
 function ThoughtReasoning({ text }: ReasoningMessagePartProps) {
-  const isRunning = useAuiState(
-    (s) => s.chainOfThought.status.type === "running",
+  const isThinking = useAuiState(
+    (s) => s.chainOfThought.status.type !== "complete",
   );
   const normalized = text.replace(/\s+/g, " ").trim();
   return (
     <p
       className={cn(
         "text-sm leading-6",
-        isRunning && "assistant-thinking-wave",
+        isThinking && "assistant-thinking-wave",
       )}
     >
       {normalized}
@@ -294,7 +304,7 @@ function ThoughtTool({
         <span
           className={cn(
             "font-medium text-sm",
-            status.type === "running" && "assistant-thinking-wave",
+            status.type !== "complete" && "assistant-thinking-wave",
           )}
         >
           {actionLabel}

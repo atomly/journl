@@ -31,7 +31,7 @@
 
 @keyframes assistant-thinking-wave {
   0% {
-    background-position: 200% 50%;
+    background-position: 0% 50%;
   }
 
   100% {
@@ -51,11 +51,12 @@
       rgba(39, 39, 42, 0.98) 45%,
       rgba(82, 82, 91, 0.6) 70%
     );
-    background-size: 220% 100%;
+    background-size: 200% 100%;
+    background-position: 0% 50%;
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
-    animation: assistant-thinking-wave 1.6s linear infinite;
+    animation: assistant-thinking-wave 2.4s linear infinite;
   }
 
   .dark .assistant-thinking-wave {

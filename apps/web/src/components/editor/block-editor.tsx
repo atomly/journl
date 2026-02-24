@@ -1,7 +1,5 @@
 "use client";
 
-import "@blocknote/core/fonts/inter.css";
-import "@blocknote/xl-ai/style.css";
 import type { BlockPrimitive, EditorPrimitive } from "@acme/blocknote/schema";
 import type { Block, PartialBlock } from "@blocknote/core";
 import { BlockNoteView } from "@blocknote/shadcn";
@@ -13,7 +11,6 @@ import { env } from "~/env";
 import type { BlockTransaction } from "~/trpc";
 import { DefaultMap } from "../../lib/default-map";
 
-// import "@blocknote/shadcn/style.css";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";

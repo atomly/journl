@@ -9,7 +9,11 @@ const baseUrl =
     ? `https://${env.VERCEL_PROJECT_PRODUCTION_URL}`
     : env.VERCEL_ENV === "preview"
       ? `https://${env.VERCEL_URL}`
-      : "http://localhost:3000";
+      : env.PUBLIC_WEB_URL;
+
+const productionUrl = env.VERCEL_PROJECT_PRODUCTION_URL
+  ? `https://${env.VERCEL_PROJECT_PRODUCTION_URL}`
+  : env.PUBLIC_WEB_URL;
 
 export const auth = initAuth({
   appName: "Journl",
@@ -18,7 +22,7 @@ export const auth = initAuth({
   githubClientSecret: env.AUTH_GITHUB_SECRET,
   googleClientId: env.AUTH_GOOGLE_ID,
   googleClientSecret: env.AUTH_GOOGLE_SECRET,
-  productionUrl: baseUrl,
+  productionUrl,
   secret: env.AUTH_SECRET,
   stripeSecretKey: env.STRIPE_SECRET_KEY,
   stripeWebhookSecret: env.STRIPE_WEBHOOK_SECRET,

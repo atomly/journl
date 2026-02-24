@@ -189,7 +189,7 @@ function AssistantText() {
 function AssistantThinking() {
   const collapsed = useAuiState((s) => s.chainOfThought.collapsed);
   const isThinking = useAuiState(
-    (s) => s.chainOfThought.status.type !== "complete",
+    (s) => s.chainOfThought.status.type === "running",
   );
   const partsLength = useAuiState((s) => s.chainOfThought.parts.length);
   const latestPart = useAuiState(
@@ -218,13 +218,13 @@ function AssistantThinking() {
               </span>
             </ThreadPrimitive.If>
             <ThreadPrimitive.If running={false}>
-              <span className="font-medium text-sm">Thinking</span>
+              <span className="font-medium text-sm">Results</span>
             </ThreadPrimitive.If>
           </MessagePrimitive.If>
 
           <MessagePrimitive.If assistant last={false}>
             <span className="inline-block size-2 rounded-full bg-muted-foreground" />
-            <span className="font-medium text-sm">Thinking</span>
+            <span className="font-medium text-sm">Results</span>
           </MessagePrimitive.If>
 
           <span className="ml-auto text-muted-foreground text-xs">
@@ -271,7 +271,7 @@ function ThoughtStep({ children }: { children?: ReactNode }) {
 
 function ThoughtReasoning({ text }: ReasoningMessagePartProps) {
   const isThinking = useAuiState(
-    (s) => s.chainOfThought.status.type !== "complete",
+    (s) => s.chainOfThought.status.type === "running",
   );
   const normalized = text.replace(/\s+/g, " ").trim();
   return (
@@ -304,7 +304,7 @@ function ThoughtTool({
         <span
           className={cn(
             "font-medium text-sm",
-            status.type !== "complete" && "assistant-thinking-wave",
+            status.type === "running" && "assistant-thinking-wave",
           )}
         >
           {actionLabel}

@@ -10,6 +10,12 @@
   --bn-colors-editor-background: transparent;
 }
 
+/* Improve placeholder readability in light mode */
+.bn-container[data-color-scheme]:not([data-color-scheme="dark"])
+.bn-inline-content:has(> .ProseMirror-trailingBreak):before {
+  color: var(--muted-foreground);
+}
+
 /* Remove nested block border */
 .bn-block-group .bn-block:not(:has(.bn-toggle-wrapper))
   .bn-block-group

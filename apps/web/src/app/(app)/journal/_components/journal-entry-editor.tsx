@@ -161,7 +161,7 @@ export function JournalEntryEditor({
   const trpc = useTRPC();
   const pendingChangesRef = useRef<BlockTransaction[]>([]);
   const { initialBlocks, documentId, date } = useJournalEntry();
-  const { rememberEditor, forgetEditor } = useJournlAgent();
+  const { setEditor, unsetEditor } = useJournlAgent();
   const editor = useBlockEditor({ initialBlocks });
   const [isOverlayOpen, setOverlayOpen] = useState(false);
 
@@ -209,11 +209,11 @@ export function JournalEntryEditor({
   }
 
   useEffect(() => {
-    rememberEditor({ date, editor, type: "journal-entry" });
+    setEditor({ date, editor, type: "journal-entry" });
     return () => {
-      forgetEditor(date);
+      unsetEditor(date);
     };
-  }, [date, editor, rememberEditor, forgetEditor]);
+  }, [date, editor, setEditor, unsetEditor]);
 
   return (
     <>
@@ -233,7 +233,7 @@ export function JournalEntryEditor({
 
 export function JournalEntryAgentView() {
   const { date } = useJournalEntry();
-  const { rememberView: setView } = useJournlAgent();
+  const { setView } = useJournlAgent();
 
   useEffect(() => {
     setView({

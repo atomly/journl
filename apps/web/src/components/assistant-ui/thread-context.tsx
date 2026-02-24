@@ -1,35 +1,68 @@
 "use client";
 
+import type { JournlReasoning } from "~/ai/agents/journl-agent-reasoning";
 import { useJournlAgent } from "~/ai/agents/use-journl-agent";
-import { Badge } from "../ui/badge";
-import { cn } from "../utils";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../ui/select";
 
-type ComposerContextProps = {
-  className?: string;
-};
+const REASONING_MODES = ["instant", "thinking"] satisfies JournlReasoning[];
 
-export function ComposerContext({ className }: ComposerContextProps) {
+const REASONING_MODE_LABELS = {
+  instant: "Instant",
+  thinking: "Thinking",
+} as const;
+
+export function ComposerReasoning() {
+  const { getReasoning, setReasoning } = useJournlAgent();
+
+  function handleReasoningModeChange(value: JournlReasoning) {
+    setReasoning(value);
+  }
+
+  return (
+    <Select value={getReasoning()} onValueChange={handleReasoningModeChange}>
+      <SelectTrigger
+        size="sm"
+        aria-label="Reasoning mode"
+        className="h-8 w-22 border-primary/70 bg-background! px-2 text-foreground text-xs shadow-none hover:border-primary! focus-visible:ring-0 [&_svg]:text-foreground!"
+      >
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent>
+        {REASONING_MODES.map((reasoning) => (
+          <SelectItem key={reasoning} value={reasoning}>
+            {REASONING_MODE_LABELS[reasoning]}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  );
+}
+
+export function ComposerView() {
   const { getView } = useJournlAgent();
 
   const view = getView();
 
+  const activeViewLabel =
+    view.name === "journal-entry"
+      ? `Entry: ${view.date}`
+      : view.name === "journal"
+        ? "Journal"
+        : view.name === "page"
+          ? `Page: ${view.title}`
+          : null;
+
+  if (!activeViewLabel) return null;
+
   return (
-    view.name !== "other" && (
-      <Badge
-        variant="outline"
-        className={cn(
-          className,
-          "!justify-start group/source relative max-w-50 gap-x-1 border border-primary py-1 text-left",
-        )}
-      >
-        {view.name === "journal-entry" && (
-          <span className="truncate">Entry: {view.date}</span>
-        )}
-        {view.name === "journal" && <span className="truncate">Journal</span>}
-        {view.name === "page" && (
-          <span className="truncate">Page: {view.title}</span>
-        )}
-      </Badge>
-    )
+    <div className="min-w-0 max-w-36 rounded-md border border-primary/70 bg-background/80 px-3 py-1.5 text-foreground text-xs">
+      <p className="truncate">{activeViewLabel}</p>
+    </div>
   );
 }

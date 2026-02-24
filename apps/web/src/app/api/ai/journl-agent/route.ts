@@ -10,6 +10,10 @@ import {
   getLastUserMessage,
   inferUserIntent,
 } from "~/ai/agents/journl-agent-intent";
+import {
+  getGPTReasoningEffort,
+  parseJournlAgentReasoning,
+} from "~/ai/agents/journl-agent-reasoning";
 import type { JournlAgentState } from "~/ai/agents/journl-agent-state";
 import { handler as corsHandler } from "~/app/api/_cors/cors";
 import { withAuthGuard } from "~/auth/guards";
@@ -34,31 +38,19 @@ const handler = withAuthGuard(
       try {
         const { messages, ...rest } = await req.json();
 
+        const reasoning = parseJournlAgentReasoning(rest.context?.reasoning);
         const intent = inferUserIntent(getLastUserMessage(messages));
-        const agentId = intent === "search" ? journlNano.id : journlMini.id;
+        const journlAgent = intent === "search" ? journlNano : journlMini;
 
         const stream = await handleChatStream({
-          agentId,
+          agentId: journlAgent.id,
           mastra,
           params: {
             maxSteps: JOURNL_AGENT_MAX_STEPS,
             messages,
-            onFinish: async ({ totalUsage, model }) => {
+            onFinish: async ({ totalUsage }) => {
               try {
-                let { provider, modelId } = model ?? {};
-
-                if (!provider || !modelId) {
-                  const selectedAgent =
-                    agentId === journlNano.id ? journlNano : journlMini;
-                  const modelData = await selectedAgent.getModel();
-                  provider = provider ?? modelData.provider;
-                  modelId = modelId ?? modelData.modelId;
-                }
-
-                provider = provider ?? "openai.responses";
-                modelId =
-                  modelId ??
-                  (agentId === journlNano.id ? "gpt-5-nano" : "gpt-5-mini");
+                const { provider, modelId } = await journlAgent.getModel();
 
                 console.debug("[Usage] JournlAgent", {
                   usage: totalUsage,
@@ -86,6 +78,11 @@ const handler = withAuthGuard(
               } catch (error) {
                 console.error("[usage tracking] error:", error);
               }
+            },
+            providerOptions: {
+              openai: {
+                reasoningEffort: getGPTReasoningEffort(reasoning),
+              },
             },
             requestContext: setJournlRequestContext({
               ...rest.context,

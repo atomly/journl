@@ -30,7 +30,7 @@ type ComposerContextProps = {
 const MAX_SOURCES = 3;
 
 export function ComposerSources({ className }: ComposerContextProps) {
-  const { getSelections, forgetSelection } = useJournlAgent();
+  const { getSelections, unsetSelection } = useJournlAgent();
 
   const sources: Source[] = getSelections().map((selection) => {
     const { blockIds, text } = selection;
@@ -53,7 +53,7 @@ export function ComposerSources({ className }: ComposerContextProps) {
         return (
           <Badge
             variant="outline"
-            className="!justify-start group/source relative mb-2 max-w-30 gap-x-1 border border-primary/40 py-1 text-left"
+            className="!justify-start group/source relative max-w-44 gap-x-1.5 border-sidebar-border/80 bg-muted/95 py-1.5 pr-6 text-left text-xs"
             key={source.id}
           >
             {/* Text content with ellipsis */}
@@ -62,11 +62,11 @@ export function ComposerSources({ className }: ComposerContextProps) {
             <Button
               size="icon"
               variant="outline"
-              onClick={() => forgetSelection(source.selection)}
-              className="!bg-accent !text-accent-foreground !p-2 absolute right-1 bottom-1/2 flex size-3 translate-y-1/2 border-0 opacity-0 transition-opacity group-hover/source:opacity-100"
+              onClick={() => unsetSelection(source.selection)}
+              className="!bg-transparent !p-0 absolute top-1.5 right-1.5 flex size-4 border-0 text-muted-foreground opacity-0 transition-opacity group-hover/source:opacity-100"
               aria-label="Remove selection"
             >
-              <X className="size-4" />
+              <X className="size-3" />
             </Button>
           </Badge>
         );
@@ -77,7 +77,7 @@ export function ComposerSources({ className }: ComposerContextProps) {
             <Button
               variant="outline"
               size="icon"
-              className="h-6.5 w-auto rounded-md px-2 py-1 text-xs"
+              className="h-6.5 w-auto rounded-md border-sidebar-border/80 bg-muted/95 px-2 py-1 text-xs"
             >
               +{dropdown.length}
             </Button>
@@ -96,7 +96,7 @@ export function ComposerSources({ className }: ComposerContextProps) {
                   >
                     <Button
                       variant="outline"
-                      onClick={() => forgetSelection(source.selection)}
+                      onClick={() => unsetSelection(source.selection)}
                       aria-label="Remove selection"
                     >
                       <span className="truncate">{source.displayText}</span>

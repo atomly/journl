@@ -29,7 +29,7 @@ export function PageEditor({
 }: PageEditorProps) {
   const trpc = useTRPC();
   const pendingChangesRef = useRef<BlockTransaction[]>([]);
-  const { rememberEditor, forgetEditor, rememberView } = useJournlAgent();
+  const { setEditor, unsetEditor, setView } = useJournlAgent();
   const editor = useBlockEditor({ initialBlocks });
   const [isOverlayOpen, setOverlayOpen] = useState(false);
 
@@ -74,24 +74,24 @@ export function PageEditor({
   }
 
   useEffect(() => {
-    rememberView({
+    setView({
       id: page.id,
       name: "page",
       title: page.title,
     });
     return () => {
-      rememberView({
+      setView({
         name: "other",
       });
     };
-  }, [page.id, page.title, rememberView]);
+  }, [page.id, page.title, setView]);
 
   useEffect(() => {
-    rememberEditor({ editor, id: page.id, title: page.title, type: "page" });
+    setEditor({ editor, id: page.id, title: page.title, type: "page" });
     return () => {
-      forgetEditor(page.id);
+      unsetEditor(page.id);
     };
-  }, [page.id, page.title, editor, rememberEditor, forgetEditor]);
+  }, [page.id, page.title, editor, setEditor, unsetEditor]);
 
   useAppEventHandler(
     ({ payload }) => {

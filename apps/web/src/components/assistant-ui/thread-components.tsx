@@ -13,13 +13,13 @@ import {
 } from "@assistant-ui/react";
 import {
   ArrowDownIcon,
+  ArrowUpIcon,
   CheckIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
   CopyIcon,
   PencilIcon,
   RefreshCwIcon,
-  SendHorizontalIcon,
   Square,
 } from "lucide-react";
 import type { ComponentProps, ReactNode } from "react";
@@ -64,7 +64,7 @@ export function ComposerInput({
       rows={1}
       placeholder="Ask anything..."
       className={cn(
-        "max-h-40 grow resize-none border-none py-4 text-md outline-none placeholder:text-muted-foreground focus:ring-0 disabled:cursor-not-allowed",
+        "max-h-40 grow resize-none border-none text-md outline-none placeholder:text-muted-foreground focus:ring-0 disabled:cursor-not-allowed",
         className,
       )}
       {...rest}
@@ -72,17 +72,27 @@ export function ComposerInput({
   );
 }
 
-export function ComposerAction() {
+type ComposerActionProps = {
+  className?: string;
+  tooltip?: string;
+  variant?: ComponentProps<typeof TooltipIconButton>["variant"];
+};
+
+export function ComposerAction({
+  className,
+  tooltip = "Send",
+  variant = "default",
+}: ComposerActionProps) {
   return (
     <>
       <ThreadPrimitive.If running={false}>
         <ComposerPrimitive.Send asChild>
           <TooltipIconButton
-            tooltip="Send"
-            variant="default"
-            className="size-8 p-2 transition-opacity ease-in"
+            tooltip={tooltip}
+            variant={variant}
+            className={cn("size-8 p-2 transition-opacity ease-in", className)}
           >
-            <SendHorizontalIcon />
+            <ArrowUpIcon className="size-4 text-foreground!" />
           </TooltipIconButton>
         </ComposerPrimitive.Send>
       </ThreadPrimitive.If>
@@ -90,10 +100,10 @@ export function ComposerAction() {
         <ComposerPrimitive.Cancel asChild>
           <TooltipIconButton
             tooltip="Cancel"
-            variant="default"
-            className="size-8 p-2 transition-opacity ease-in"
+            variant={variant}
+            className={cn("size-8 p-2 transition-opacity ease-in", className)}
           >
-            <Square />
+            <Square className="text-foreground!" />
           </TooltipIconButton>
         </ComposerPrimitive.Cancel>
       </ThreadPrimitive.If>
@@ -201,7 +211,7 @@ function AssistantThinking() {
   }
 
   return (
-    <ChainOfThoughtPrimitive.Root className="mb-3 overflow-hidden rounded-lg border border-border/70 bg-muted/30">
+    <ChainOfThoughtPrimitive.Root className="mb-6.5 overflow-hidden rounded-lg border border-border/70 bg-muted/30">
       <div className="px-3 py-2">
         <ChainOfThoughtPrimitive.AccordionTrigger className="flex w-full items-center gap-2 text-left">
           <MessagePrimitive.If assistant last>

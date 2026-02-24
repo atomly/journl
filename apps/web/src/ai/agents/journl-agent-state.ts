@@ -1,3 +1,5 @@
+import type { JournlReasoning } from "./journl-agent-reasoning";
+
 type JournalEntryEditor = {
   date: string;
   type: "journal-entry";
@@ -19,6 +21,7 @@ export type JournlAgentState = {
   user: {
     name: string;
   };
+  reasoning: JournlReasoning;
   view:
     | {
         name: "journal";

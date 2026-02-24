@@ -10,6 +10,7 @@ import { navigatePage } from "../tools/navigate-page";
 import { semanticJournalSearch } from "../tools/semantic-journal-search";
 import { semanticPageSearch } from "../tools/semantic-page-search";
 import { temporalJournalSearch } from "../tools/temporal-journal-search";
+import { zJournlAgentReasoning } from "./journl-agent-reasoning";
 import type { JournlAgentState } from "./journl-agent-state";
 
 const AGENT_NAME = "Journl";
@@ -28,6 +29,7 @@ Current date: ${context.currentDate}
 User's name: ${context.user.name}
 
 Do not reproduce song lyrics or any other copyrighted material, even if asked.
+${context.reasoning === "instant" ? "Before answering, quickly check whether a tool would improve accuracy (especially for recent, uncertain, or user-specific facts). If yes, use the tool instead of guessing." : ""}
 
 # User State (deterministic, read-only)
 
@@ -171,6 +173,7 @@ const zJournlAgentState: z.ZodType<JournlAgentState> = z.object({
   ),
   currentDate: z.string(),
   highlightedText: z.array(z.string()),
+  reasoning: zJournlAgentReasoning,
   user: z.object({
     name: z.string(),
   }),

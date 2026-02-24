@@ -54,7 +54,7 @@ function JournalListContent({
   ...rest
 }: JournalListContentProps) {
   const debouncedFetchNextPage = useDebouncedCallback(fetchNextPage, 300);
-  const { rememberView: setView } = useJournlAgent();
+  const { setView } = useJournlAgent();
   const { scrollElement } = useAppLayout();
   const hasMore = hasNextPage;
 

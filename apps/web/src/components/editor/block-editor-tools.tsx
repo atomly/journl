@@ -82,7 +82,7 @@ export function BlockEditorSlashMenu() {
 function AddBlockSelectionButton() {
   const editor = useBlockNoteEditor();
   const Components = useComponentsContext();
-  const { rememberSelection, getSelection, forgetSelection } = useJournlAgent();
+  const { setSelection, getSelection, unsetSelection } = useJournlAgent();
 
   // Doesn't render unless a at least one block with inline content is selected.
   const blocks = useSelectedBlocks<
@@ -106,7 +106,7 @@ function AddBlockSelectionButton() {
   function onClick() {
     if (!selection) {
       const markdown = selectionMarkdown(blocks);
-      rememberSelection({
+      setSelection({
         blockIds: new Set(blocks.map((block) => block.id)),
         blocks,
         editor,
@@ -114,7 +114,7 @@ function AddBlockSelectionButton() {
         text: removeMarkdown(markdown).trim(),
       });
     } else {
-      forgetSelection(selection);
+      unsetSelection(selection);
     }
   }
 

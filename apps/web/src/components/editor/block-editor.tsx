@@ -114,15 +114,15 @@ export function BlockEditor({
 }: BlockEditorProps) {
   const { theme, systemTheme } = useTheme();
   const previousEditorRef = useRef<typeof editor.document>(editor.document);
-  const { forgetEditorSelections, getSelections, forgetSelection } =
+  const { unsetEditorSelections, getSelections, unsetSelection } =
     useJournlAgent();
 
   // Remove block selections when the editor is unmounted.
   useEffect(() => {
     return () => {
-      forgetEditorSelections(editor);
+      unsetEditorSelections(editor);
     };
-  }, [forgetEditorSelections, editor]);
+  }, [unsetEditorSelections, editor]);
 
   /**
    * Change handler for the editor.
@@ -330,7 +330,7 @@ export function BlockEditor({
         deletedBlockIds.has(b),
       );
       if (isDeleted) {
-        forgetSelection(selection);
+        unsetSelection(selection);
       }
     }
 

@@ -21,18 +21,20 @@ type JournlEditor = JournlAgentState["activeEditors"][number] & {
 };
 
 const JournlAgentContext = createContext<{
-  forgetEditor: (id: string) => void;
-  forgetEditorSelections: (editor: EditorPrimitive) => void;
-  forgetSelection: (selection: BlockSelection) => void;
+  unsetEditor: (id: string) => void;
+  unsetEditorSelections: (editor: EditorPrimitive) => void;
+  unsetSelection: (selection: BlockSelection) => void;
   getEditors: () => Map<string, JournlEditor>;
   getSelection: (
     selection: Pick<BlockSelection, "editor" | "blockIds">,
   ) => BlockSelection | undefined;
   getSelections: () => BlockSelection[];
+  getReasoning: () => JournlAgentState["reasoning"];
   getView: () => JournlAgentState["view"];
-  rememberEditor: (activeEditor: JournlEditor) => void;
-  rememberSelection: (selection: BlockSelection) => void;
-  rememberView: (view: JournlAgentState["view"]) => void;
+  setEditor: (activeEditor: JournlEditor) => void;
+  setReasoning: (reasoning: JournlAgentState["reasoning"]) => void;
+  setSelection: (selection: BlockSelection) => void;
+  setView: (view: JournlAgentState["view"]) => void;
 } | null>(null);
 
 type JournlAgentAwarenessProviderProps = {
@@ -50,37 +52,40 @@ type JournlAgentAwarenessProviderProps = {
 export function JournlAgentProvider({
   children,
 }: JournlAgentAwarenessProviderProps) {
-  const [, setSelectedBlocks] = useState<BlockSelection[]>([]);
-  const [, setView] = useState<JournlAgentState["view"]>({
+  const [, _setReasoning] = useState<JournlAgentState["reasoning"]>("instant");
+  const [, _setSelectedBlocks] = useState<BlockSelection[]>([]);
+  const [, _setView] = useState<JournlAgentState["view"]>({
     name: "other",
   });
 
   const ref = useRef<{
-    view: JournlAgentState["view"];
     editors: Map<string, JournlEditor>;
+    reasoning: JournlAgentState["reasoning"];
     selectedBlocks: BlockSelection[];
+    view: JournlAgentState["view"];
   }>({
     editors: new Map(),
+    reasoning: "instant",
     selectedBlocks: [],
     view: {
       name: "other",
     },
   });
 
-  const forgetEditor = useCallback((id: string) => {
+  const unsetEditor = useCallback((id: string) => {
     ref.current.editors.delete(id);
   }, []);
 
-  const forgetEditorSelections = useCallback((editor: EditorPrimitive) => {
-    setSelectedBlocks((prev) => {
+  const unsetEditorSelections = useCallback((editor: EditorPrimitive) => {
+    _setSelectedBlocks((prev) => {
       const newSelectedBlocks = prev.filter((s) => s.editor !== editor);
       ref.current.selectedBlocks = newSelectedBlocks;
       return newSelectedBlocks;
     });
   }, []);
 
-  const forgetSelection = useCallback((selection: BlockSelection) => {
-    setSelectedBlocks((prev) => {
+  const unsetSelection = useCallback((selection: BlockSelection) => {
+    _setSelectedBlocks((prev) => {
       const newSelectedBlocks = prev.filter((s) => s !== selection);
       ref.current.selectedBlocks = newSelectedBlocks;
       return newSelectedBlocks;
@@ -89,6 +94,10 @@ export function JournlAgentProvider({
 
   const getEditors = useCallback(() => {
     return ref.current.editors;
+  }, []);
+
+  const getReasoning = useCallback(() => {
+    return ref.current.reasoning;
   }, []);
 
   const getSelection = useCallback(
@@ -110,7 +119,7 @@ export function JournlAgentProvider({
     return ref.current.view;
   }, []);
 
-  const rememberEditor = useCallback((activeEditor: JournlEditor) => {
+  const setEditor = useCallback((activeEditor: JournlEditor) => {
     const id =
       activeEditor.type === "journal-entry"
         ? activeEditor.date
@@ -121,32 +130,42 @@ export function JournlAgentProvider({
     });
   }, []);
 
-  const rememberSelection = useCallback((selection: BlockSelection) => {
-    setSelectedBlocks((prev) => {
+  const setSelection = useCallback((selection: BlockSelection) => {
+    _setSelectedBlocks((prev) => {
       const newSelectedBlocks = [...prev, selection];
       ref.current.selectedBlocks = newSelectedBlocks;
       return newSelectedBlocks;
     });
   }, []);
 
-  const rememberView = useCallback((view: JournlAgentState["view"]) => {
+  const setReasoning = useCallback(
+    (reasoning: JournlAgentState["reasoning"]) => {
+      ref.current.reasoning = reasoning;
+      _setReasoning(reasoning);
+    },
+    [],
+  );
+
+  const setView = useCallback((view: JournlAgentState["view"]) => {
     ref.current.view = view;
-    setView(view);
+    _setView(view);
   }, []);
 
   return (
     <JournlAgentContext.Provider
       value={{
-        forgetEditor,
-        forgetEditorSelections,
-        forgetSelection,
         getEditors,
+        getReasoning,
         getSelection,
         getSelections,
         getView,
-        rememberEditor,
-        rememberSelection,
-        rememberView,
+        setEditor,
+        setReasoning,
+        setSelection,
+        setView: setView,
+        unsetEditor,
+        unsetEditorSelections,
+        unsetSelection,
       }}
     >
       {children}

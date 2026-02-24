@@ -31,7 +31,7 @@ export function JournlChatProvider({
   transport,
   messages,
 }: JournlChatProviderProps) {
-  const { getSelections, getEditors, getView } = useJournlAgent();
+  const { getSelections, getEditors, getView, getReasoning } = useJournlAgent();
 
   const createPage = useCreatePageTool();
   const navigateJournalEntry = useNavigateJournalEntryTool();
@@ -76,6 +76,7 @@ export function JournlChatProvider({
                 ),
                 currentDate: new Date().toLocaleString(),
                 highlightedText: selections.map((selection) => selection.text),
+                reasoning: getReasoning(),
                 view,
               } satisfies Omit<JournlAgentState, "user">,
               messageId,

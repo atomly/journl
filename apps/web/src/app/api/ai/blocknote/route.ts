@@ -20,7 +20,13 @@ const handler = withAuthGuard(
         messages: await convertToModelMessages(
           injectDocumentStateMessages(messages),
         ),
-        model: miniModel, // see https://ai-sdk.dev/docs/foundations/providers-and-models
+        model: miniModel,
+        providerOptions: {
+          openai: {
+            // TODO: Integrate and map the JournlReasoning here.
+            reasoningEffort: "minimal",
+          },
+        },
         system: aiDocumentFormats.html.systemPrompt,
         toolChoice: "required",
         tools: toolDefinitionsToToolSet(toolDefinitions),

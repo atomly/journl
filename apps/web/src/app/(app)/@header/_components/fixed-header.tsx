@@ -10,7 +10,7 @@ type StickyHeaderProps = React.ComponentProps<"header">;
 const SHOW_AT_SCROLL_TOP = 12;
 const MIN_SCROLL_DELTA = SHOW_AT_SCROLL_TOP * 12;
 
-export function StickyHeader({ className, ...props }: StickyHeaderProps) {
+export function FixedHeader({ className, ...props }: StickyHeaderProps) {
   const isMobile = useIsMobile();
   const { scrollElement } = useAppLayout();
   const [isHidden, setIsHidden] = useState(false);
@@ -79,12 +79,12 @@ export function StickyHeader({ className, ...props }: StickyHeaderProps) {
   return (
     <header
       className={cn(
-        "z-4500",
+        "z-4500 mx-8 mt-2 h-12 md:m-2",
         {
           "-translate-y-[calc(100%+2rem)]": isMobile && isHidden,
-          "fixed top-0 right-0 left-0 mx-8 mt-2 h-12 transform-gpu transition-transform duration-200 ease-out will-change-transform":
+          "fixed top-0 right-0 left-0 transform-gpu transition-transform duration-200 ease-out will-change-transform":
             isMobile,
-          "sticky top-0 m-2 h-12": !isMobile,
+          "sticky top-0": !isMobile,
           "translate-y-0": isMobile && !isHidden,
         },
         className,

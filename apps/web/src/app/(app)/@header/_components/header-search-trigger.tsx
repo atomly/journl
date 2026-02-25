@@ -10,7 +10,7 @@ export function HeaderSearchTrigger({
     <Button
       variant="outline"
       className={cn(
-        "relative h-8 @[280px]:w-full w-8 @[280px]:max-w-48 @[280px]:justify-start justify-center overflow-hidden bg-muted/50 font-normal text-foreground text-sm shadow-none",
+        "relative h-8 @[280px]:w-full w-8 @[280px]:max-w-48 @[280px]:justify-start justify-center overflow-hidden bg-background font-normal text-foreground text-sm shadow-none",
         className,
       )}
       {...props}

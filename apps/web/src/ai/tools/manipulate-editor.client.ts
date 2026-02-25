@@ -1,14 +1,12 @@
 "use client";
 
 import { AIExtension } from "@blocknote/xl-ai";
-import { useDrawer } from "~/components/ui/drawer";
 import { useJournlAgent } from "../agents/use-journl-agent";
 import { createClientTool } from "../utils/create-client-tool";
 import { zManipulateEditorInput } from "./manipulate-editor.schema";
 
 export function useManipulateEditorTool() {
   const { getEditors } = useJournlAgent();
-  const { closeDrawer } = useDrawer();
   const tool = createClientTool({
     execute: async (toolCall, chat) => {
       try {
@@ -35,11 +33,7 @@ export function useManipulateEditorTool() {
           return;
         }
 
-        let didChange = false;
-
         const cleanUpBeforeChange = editor.onChange((_, { getChanges }) => {
-          didChange = true;
-
           const [{ block } = {}] = getChanges();
           if (!block) return;
 
@@ -63,10 +57,6 @@ export function useManipulateEditorTool() {
         });
 
         cleanUpBeforeChange();
-
-        if (didChange) {
-          closeDrawer();
-        }
       } catch (error) {
         void chat.addToolOutput({
           output: `Error when calling the tool: ${error}`,

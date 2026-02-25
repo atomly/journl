@@ -1,10 +1,18 @@
 import { Agent } from "@mastra/core/agent";
 import { RequestContext } from "@mastra/core/request-context";
+import { Memory } from "@mastra/memory";
+import type { User } from "better-auth";
 import { z } from "zod/v4";
 import { miniModel, nanoModel } from "~/ai/providers/openai/text";
 import { env } from "~/env";
+import {
+  journlMastraStore,
+  journlMastraVector,
+} from "../mastra/postgres-store";
+import { model as embedder } from "../providers/openai/embedding";
 import { createPage } from "../tools/create-page";
 import { manipulateEditor } from "../tools/manipulate-editor";
+import { zTargetEditor } from "../tools/manipulate-editor.schema";
 import { navigateJournalEntry } from "../tools/navigate-journal-entry";
 import { navigatePage } from "../tools/navigate-page";
 import { semanticJournalSearch } from "../tools/semantic-journal-search";
@@ -13,7 +21,27 @@ import { temporalJournalSearch } from "../tools/temporal-journal-search";
 import { zJournlAgentReasoning } from "./journl-agent-reasoning";
 import type { JournlAgentState } from "./journl-agent-state";
 
-const AGENT_NAME = "Journl";
+const JOURNL_AGENT_NAME = "Journl";
+const JOURNL_AGENT_THREAD_PREFIX = "journl";
+const JOURNL_MEMORY_LAST_MESSAGES = 30;
+const JOURNL_REQUEST_CONTEXT_KEY = "journl_agent";
+const JOURNL_SEMANTIC_SEARCH_RANGE = 2;
+const JOURNL_SEMANTIC_SEARCH_SCOPE = "thread";
+const JOURNL_SEMANTIC_TOP_K = 3;
+
+const journlMemory = new Memory({
+  embedder,
+  options: {
+    lastMessages: JOURNL_MEMORY_LAST_MESSAGES,
+    semanticRecall: {
+      messageRange: JOURNL_SEMANTIC_SEARCH_RANGE,
+      scope: JOURNL_SEMANTIC_SEARCH_SCOPE,
+      topK: JOURNL_SEMANTIC_TOP_K,
+    },
+  },
+  storage: journlMastraStore,
+  vector: journlMastraVector,
+});
 
 function instructions({ requestContext }: { requestContext?: RequestContext }) {
   const context = getJournlRequestContext(requestContext);
@@ -23,7 +51,7 @@ function instructions({ requestContext }: { requestContext?: RequestContext }) {
   if (env.NODE_ENV === "development") {
     console.debug("JournlAgentContext", context);
   }
-  return `You are ${AGENT_NAME}, an AI companion that helps users write, navigate, and manage their own notes.
+  return `You are ${JOURNL_AGENT_NAME}, an AI companion that helps users write, navigate, and manage their own notes.
 
 Current date: ${context.currentDate}
 User's name: ${context.user.name}
@@ -44,13 +72,7 @@ ${
 }
 ${
   context.activeEditors.length > 0
-    ? `- ${context.activeEditors.length > 1 ? `There are ${context.activeEditors.length} active editors` : "There is one active editor"}: ${context.activeEditors
-        .map((editor) =>
-          editor.type === "journal-entry"
-            ? `journal-entry:${editor.date}`
-            : `page:${editor.id} (${editor.title})`,
-        )
-        .join(", ")}`
+    ? `- ${context.activeEditors.length > 1 ? `There are ${context.activeEditors.length} active editors` : "There is one active editor"}: ${context.activeEditors.join(", ")}`
     : ""
 }
 ${
@@ -69,8 +91,9 @@ Modify the content of the target editor.
 
 **Important**: The target editor has to be the ID of one of the active editors, if you don't know which to use, do not call this tool and ask the user to clarify instead.
 
-- Treat the editor as an agent that will be manipulating the editor client-side.
+- An agent will be manipulating the editor client-side.
 - As such, the \`editorPrompt\` for the \`manipulateEditor\` tool must include as much detail as possible.
+- The \`targetEditor\` value must be in the correct format.
 - Do not generate markdown, the editor will handle the formatting.
 - Do not add titles to the pages because they are handled separately from the editor.
 - **No fabrication**. Never invent prior notes, pages, links, or other content.
@@ -139,38 +162,28 @@ const tools = {
   temporalJournalSearch,
 };
 
-export const journlMini = new Agent({
-  description: `${AGENT_NAME}, an AI companion for personal reflection, journaling, and knowledge discovery.`,
-  id: "journl-mini",
+export const journlNano = new Agent({
+  description: `${JOURNL_AGENT_NAME}, an AI companion for personal reflection, journaling, and knowledge discovery. Optimized for fast retrieval and navigation tasks.`,
+  id: "journl-nano",
   instructions,
-  model: miniModel,
-  name: AGENT_NAME,
+  memory: journlMemory,
+  model: nanoModel,
+  name: JOURNL_AGENT_NAME,
   tools,
 });
 
-export const journlNano = new Agent({
-  description: `${AGENT_NAME}, an AI companion for personal reflection, journaling, and knowledge discovery. Optimized for fast retrieval and navigation tasks.`,
-  id: "journl-nano",
+export const journlMini = new Agent({
+  description: `${JOURNL_AGENT_NAME}, an AI companion for personal reflection, journaling, and knowledge discovery.`,
+  id: "journl-mini",
   instructions,
-  model: nanoModel,
-  name: AGENT_NAME,
+  memory: journlMemory,
+  model: miniModel,
+  name: JOURNL_AGENT_NAME,
   tools,
 });
 
 const zJournlAgentState: z.ZodType<JournlAgentState> = z.object({
-  activeEditors: z.array(
-    z.union([
-      z.object({
-        date: z.string(),
-        type: z.literal("journal-entry"),
-      }),
-      z.object({
-        id: z.string(),
-        title: z.string(),
-        type: z.literal("page"),
-      }),
-    ]),
-  ),
+  activeEditors: z.array(zTargetEditor),
   currentDate: z.string(),
   highlightedText: z.array(z.string()),
   reasoning: zJournlAgentReasoning,
@@ -196,21 +209,23 @@ const zJournlAgentState: z.ZodType<JournlAgentState> = z.object({
   ]),
 });
 
-const REQUEST_CONTEXT_JOURNL_KEY = "journl_agent";
-
 export function setJournlRequestContext(context: JournlAgentState) {
   const requestContext = new RequestContext<{
-    [REQUEST_CONTEXT_JOURNL_KEY]: JournlAgentState;
+    [JOURNL_REQUEST_CONTEXT_KEY]: JournlAgentState;
   }>();
   requestContext.set(
-    REQUEST_CONTEXT_JOURNL_KEY,
+    JOURNL_REQUEST_CONTEXT_KEY,
     zJournlAgentState.parse(context),
   );
   return requestContext;
 }
 
 export function getJournlRequestContext(context?: RequestContext) {
-  return context?.get<typeof REQUEST_CONTEXT_JOURNL_KEY, JournlAgentState>(
-    REQUEST_CONTEXT_JOURNL_KEY,
+  return context?.get<typeof JOURNL_REQUEST_CONTEXT_KEY, JournlAgentState>(
+    JOURNL_REQUEST_CONTEXT_KEY,
   );
+}
+
+export function getJournlUserThread(user: User) {
+  return `${JOURNL_AGENT_THREAD_PREFIX}:${user.id}`;
 }

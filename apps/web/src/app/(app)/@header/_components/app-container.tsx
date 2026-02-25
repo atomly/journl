@@ -25,7 +25,7 @@ export function AppContainer({ children, ...props }: AppContainerProps) {
 
   return (
     <div ref={handleRef} {...props}>
-      {isMobile && <div className="h-14 shrink-0" />}
+      {isMobile && <div className="-z-1000 h-14 shrink-0" />}
       {children}
     </div>
   );

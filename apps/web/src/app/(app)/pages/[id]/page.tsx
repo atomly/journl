@@ -19,7 +19,7 @@ export default async function Page({
   }
 
   return (
-    <div className="mx-auto flex min-h-full max-w-5xl flex-col gap-4 pt-8 pb-20">
+    <div className="mx-auto flex min-h-full max-w-5xl flex-col gap-4 pt-8 pb-52">
       <div className="min-h-0 flex-1">
         <PageTitleTextarea
           page={{

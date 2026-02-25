@@ -117,7 +117,7 @@ export function UserMessage() {
       <ActionBarPrimitive.Root
         hideWhenRunning
         autohide="not-last"
-        className="col-start-1 row-start-2 mt-2.5 mr-3 flex flex-col items-end"
+        className="col-start-1 row-start-2 mt-1.5 mr-3 flex flex-col items-end"
       >
         <ActionBarPrimitive.Edit asChild>
           <TooltipIconButton tooltip="Edit">
@@ -211,7 +211,7 @@ function AssistantThinking() {
   }
 
   return (
-    <ChainOfThoughtPrimitive.Root className="mb-6.5 overflow-hidden rounded-lg border border-border/70 bg-muted/30">
+    <ChainOfThoughtPrimitive.Root className="mb-6.5 overflow-hidden rounded-lg border border-border/70 bg-background">
       <div className="px-3 py-2">
         <ChainOfThoughtPrimitive.AccordionTrigger className="flex w-full items-center gap-2 text-left">
           <MessagePrimitive.If assistant last>
@@ -254,7 +254,7 @@ function AssistantThinking() {
         </p>
       ) : (
         <div className="px-3 pb-3">
-          <div className="space-y-3 border-border/60 border-l pl-3">
+          <div className="space-y-3 pl-3">
             <ChainOfThoughtPrimitive.Parts
               components={{
                 Layout: ThoughtStep,
@@ -273,7 +273,13 @@ function AssistantThinking() {
 
 function ThoughtStep({ children }: { children?: ReactNode }) {
   return (
-    <div className="relative pl-3 before:absolute before:top-2 before:-left-4 before:size-2 before:rounded-full before:bg-border">
+    <div
+      className={cn(
+        "relative pl-3",
+        "before:absolute before:top-0 before:-left-3 before:size-2 before:rounded-full before:bg-sidebar-border",
+        "-after:translate-y-1/2 after:absolute after:top-0 after:-left-[0.525rem] after:my-4 after:size-px after:h-[calc(100%-1.5rem)] after:bg-sidebar-border",
+      )}
+    >
       {children}
     </div>
   );
@@ -309,7 +315,7 @@ function ThoughtTool({
   const resultTags = extractToolResultTags(result);
 
   return (
-    <div className="rounded-lg border border-border/70 bg-background/60 p-3">
+    <div className="rounded-lg p-3">
       <div className="flex items-center justify-between gap-2">
         <span
           className={cn(

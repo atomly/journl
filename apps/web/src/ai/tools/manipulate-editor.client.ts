@@ -15,11 +15,7 @@ export function useManipulateEditorTool() {
         const editor = getEditors().get(toolCall.input.targetEditor)?.editor;
 
         if (!editor) {
-          const activeEditors = JSON.stringify(
-            Array.from(getEditors().values()).map(
-              ({ editor, ...rest }) => rest,
-            ),
-          );
+          const activeEditors = JSON.stringify(Array.from(getEditors().keys()));
           void chat.addToolOutput({
             output: `Editor ${toolCall.input.targetEditor} was not found. Please call the tool again targeting one of the following editors: ${activeEditors}`,
             tool: toolCall.toolName,

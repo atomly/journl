@@ -68,12 +68,11 @@ export function JournlChatProvider({
         prepareSendMessagesRequest: ({ id, messages, trigger, messageId }) => {
           const selections = getSelections();
           const view = getView();
+
           return {
             body: {
               context: {
-                activeEditors: Array.from(getEditors().entries()).map(
-                  ([_, { editor, ...rest }]) => rest,
-                ),
+                activeEditors: Array.from(getEditors().keys()),
                 currentDate: new Date().toLocaleString(),
                 highlightedText: selections.map((selection) => selection.text),
                 reasoning: getReasoning(),

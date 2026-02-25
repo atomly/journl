@@ -55,7 +55,7 @@ export default function ChatDrawer() {
                 <ComposerPrimitive.Root className="relative flex w-full flex-col rounded-lg border border-sidebar-border/80 bg-muted/45 shadow-sm focus-within:border-ring/20">
                   <div className="relative gap-y-2 rounded-tl-lg rounded-tr-lg bg-background pt-2">
                     <ComposerSources className="px-2" />
-                    <ComposerInput className="min-h-24 w-full px-3 py-2 text-sm" />
+                    <ComposerInput className="min-h-24 w-full px-3 py-2" />
                   </div>
 
                   <div className="flex min-w-0 flex-row justify-between border-sidebar-border/70 border-t p-2">

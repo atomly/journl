@@ -1,10 +1,24 @@
+import { LibSQLStore, LibSQLVector } from "@mastra/libsql";
 import { PgVector, PostgresStore } from "@mastra/pg";
 import { env } from "~/env";
 
-type JournlMastraStore = PostgresStore;
+type JournlMastraStore = LibSQLStore | PostgresStore;
 
 function createMastraStore(): JournlMastraStore {
   const connectionString = env.POSTGRES_URL;
+
+  if (!connectionString) {
+    if (env.NODE_ENV !== "production") {
+      console.warn(
+        "[mastra] POSTGRES_URL is missing; falling back to in-memory storage.",
+      );
+    }
+
+    return new LibSQLStore({
+      id: "journl-mastra-libsql-fallback",
+      url: ":memory:",
+    });
+  }
 
   return new PostgresStore({
     connectionString,
@@ -14,8 +28,23 @@ function createMastraStore(): JournlMastraStore {
 
 export const journlMastraStore = createMastraStore();
 
-function createMastraVector(): PgVector {
+type JournlMastraVector = LibSQLVector | PgVector;
+
+function createMastraVector(): JournlMastraVector {
   const connectionString = env.POSTGRES_URL;
+
+  if (!connectionString) {
+    if (env.NODE_ENV !== "production") {
+      console.warn(
+        "[mastra] POSTGRES_URL is missing; falling back to in-memory storage.",
+      );
+    }
+
+    return new LibSQLVector({
+      id: "journl-mastra-libsql-fallback",
+      url: ":memory:",
+    });
+  }
 
   return new PgVector({
     connectionString,

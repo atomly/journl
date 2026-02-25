@@ -1,15 +1,14 @@
 import type { JournlReasoning } from "./journl-agent-reasoning";
 
-type JournalEntryEditor = {
-  date: string;
-  type: "journal-entry";
-};
+/**
+ * JournalEntryEditor ID in the format of: `journal-entry:{DATE}`.
+ */
+type JournalEntryEditor = `journal-entry:${string}`;
 
-type PageEditor = {
-  id: string;
-  title: string;
-  type: "page";
-};
+/**
+ * PageEditor ID in the format of: `page:{ID}`.
+ */
+type PageEditor = `page:${string}`;
 
 /**
  * The stage of the Journl agent.

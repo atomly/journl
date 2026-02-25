@@ -209,9 +209,10 @@ export function JournalEntryEditor({
   }
 
   useEffect(() => {
-    setEditor({ date, editor, type: "journal-entry" });
+    const id = `journal-entry:${date}` as const;
+    setEditor({ editor, id });
     return () => {
-      unsetEditor(date);
+      unsetEditor(id);
     };
   }, [date, editor, setEditor, unsetEditor]);
 

@@ -87,11 +87,12 @@ export function PageEditor({
   }, [page.id, page.title, setView]);
 
   useEffect(() => {
-    setEditor({ editor, id: page.id, title: page.title, type: "page" });
+    const id = `page:${page.id}` as const;
+    setEditor({ editor, id });
     return () => {
-      unsetEditor(page.id);
+      unsetEditor(id);
     };
-  }, [page.id, page.title, editor, setEditor, unsetEditor]);
+  }, [page.id, editor, setEditor, unsetEditor]);
 
   useAppEventHandler(
     ({ payload }) => {

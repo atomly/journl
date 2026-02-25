@@ -39,6 +39,7 @@
     "@mastra/libsql": "~1.5.0",
     "@mastra/loggers": "1.0.2",
     "@mastra/memory": "~1.4.0",
+    "@mastra/pg": "~1.5.0",
     "@mastra/rag": "~2.1.0",
     "@radix-ui/react-avatar": "~1.1.11",
     "@radix-ui/react-collapsible": "~1.1.12",

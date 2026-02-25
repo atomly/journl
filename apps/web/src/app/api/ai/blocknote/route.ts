@@ -23,8 +23,12 @@ const handler = withAuthGuard(
         model: miniModel,
         providerOptions: {
           openai: {
+            include: ["reasoning.encrypted_content"],
             // TODO: Integrate and map the JournlReasoning here.
-            reasoningEffort: "minimal",
+            reasoningEffort: "low",
+            // When using OpenAI, the `store` has to be turned off to avoid this
+            // issue with Mastra's message history: https://github.com/vercel/ai/issues/7099#issuecomment-3567630392
+            store: false,
           },
         },
         system: aiDocumentFormats.html.systemPrompt,

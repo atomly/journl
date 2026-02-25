@@ -16,15 +16,16 @@ export type BlockSelection = {
   text: string;
 };
 
-type JournlEditor = JournlAgentState["activeEditors"][number] & {
+type JournlEditor = {
+  id: JournlAgentState["activeEditors"][number];
   editor: EditorPrimitive;
 };
 
 const JournlAgentContext = createContext<{
-  unsetEditor: (id: string) => void;
+  unsetEditor: (id: JournlEditor["id"]) => void;
   unsetEditorSelections: (editor: EditorPrimitive) => void;
   unsetSelection: (selection: BlockSelection) => void;
-  getEditors: () => Map<string, JournlEditor>;
+  getEditors: () => Map<JournlEditor["id"], JournlEditor>;
   getSelection: (
     selection: Pick<BlockSelection, "editor" | "blockIds">,
   ) => BlockSelection | undefined;
@@ -59,7 +60,7 @@ export function JournlAgentProvider({
   });
 
   const ref = useRef<{
-    editors: Map<string, JournlEditor>;
+    editors: Map<JournlEditor["id"], JournlEditor>;
     reasoning: JournlAgentState["reasoning"];
     selectedBlocks: BlockSelection[];
     view: JournlAgentState["view"];
@@ -72,7 +73,7 @@ export function JournlAgentProvider({
     },
   });
 
-  const unsetEditor = useCallback((id: string) => {
+  const unsetEditor = useCallback((id: JournlEditor["id"]) => {
     ref.current.editors.delete(id);
   }, []);
 
@@ -120,14 +121,7 @@ export function JournlAgentProvider({
   }, []);
 
   const setEditor = useCallback((activeEditor: JournlEditor) => {
-    const id =
-      activeEditor.type === "journal-entry"
-        ? activeEditor.date
-        : activeEditor.id;
-    ref.current.editors.set(id, {
-      ...activeEditor,
-      editor: activeEditor.editor,
-    });
+    ref.current.editors.set(activeEditor.id, activeEditor);
   }, []);
 
   const setSelection = useCallback((selection: BlockSelection) => {

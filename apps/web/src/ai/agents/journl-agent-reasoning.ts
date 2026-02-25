@@ -8,14 +8,14 @@ export function parseJournlAgentReasoning(value: unknown) {
   return zJournlAgentReasoning.parse(value);
 }
 
-export type GPTReasoningEffort = "minimal" | "medium";
+export type GPTReasoningEffort = "minimal" | "low" | "medium";
 
 export function getGPTReasoningEffort(
   mode: JournlReasoning,
 ): GPTReasoningEffort {
   switch (mode) {
     case "instant":
-      return "minimal";
+      return "low";
     case "thinking":
       return "medium";
     default:

@@ -14,7 +14,7 @@ function ReactQueryDevtoolsDialog() {
           <span>React Query</span>
         </SidebarMenuButton>
       </DialogTrigger>
-      <DialogContent className="flex h-full w-full max-w-screen-md! items-center justify-center border-none bg-transparent px-0 py-10">
+      <DialogContent className="flex h-full w-full max-w-3xl! items-center justify-center border-none bg-transparent px-0 py-10">
         <ReactQueryDevtoolsPanel
           style={{
             backgroundColor: "transparent",

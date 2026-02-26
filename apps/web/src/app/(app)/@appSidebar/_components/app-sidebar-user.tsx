@@ -42,12 +42,12 @@ export async function AppSidebarUser() {
                 {user.image ? (
                   <AvatarImage src={user.image} alt={user.name} />
                 ) : (
-                  <AppSidebarUserInformation />
+                  <AppSidebarUserInformation name={user.name} />
                 )}
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight">
-                <AppSidebarUsername />
-                <AppSidebarUserEmail />
+                <AppSidebarUsername name={user.name} />
+                <AppSidebarUserEmail email={user.email} />
               </div>
               <ChevronsUpDown className="ml-auto size-4" />
             </SidebarMenuButton>
@@ -64,12 +64,12 @@ export async function AppSidebarUser() {
                   {user.image ? (
                     <AvatarImage src={user.image} alt={user.name} />
                   ) : (
-                    <AppSidebarUserInformation />
+                    <AppSidebarUserInformation name={user.name} />
                   )}
                 </Avatar>
                 <div className="grid flex-1 text-left text-sm leading-tight">
-                  <AppSidebarUsername />
-                  <AppSidebarUserEmail />
+                  <AppSidebarUsername name={user.name} />
+                  <AppSidebarUserEmail email={user.email} />
                 </div>
               </div>
             </DropdownMenuLabel>

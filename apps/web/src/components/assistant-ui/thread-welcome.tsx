@@ -4,8 +4,8 @@ import { getUser, type User } from "~/auth/server";
 export function ThreadWelcome() {
   return (
     <ThreadPrimitive.Empty>
-      <div className="flex w-full max-w-[var(--thread-max-width)] flex-grow flex-col">
-        <div className="flex w-full flex-grow flex-col items-center justify-center">
+      <div className="flex w-full max-w-(--thread-max-width) grow flex-col">
+        <div className="flex w-full grow flex-col items-center justify-center">
           <ThreadWelcomeMessage />
         </div>
       </div>
@@ -13,7 +13,14 @@ export function ThreadWelcome() {
   );
 }
 
-function getRandomMessage(user: User) {
+async function ThreadWelcomeMessage() {
+  const user = await getUser();
+  return (
+    <p className="mt-4 text-center font-medium">{getWelcomeMessage(user)}</p>
+  );
+}
+
+function getWelcomeMessage(user: User) {
   const withName = [
     `What did you get done today, ${user.name}?`,
     `What went well today, ${user.name}?`,
@@ -41,16 +48,18 @@ function getRandomMessage(user: User) {
     "What's new?",
   ];
 
-  // Use name 70% of the time, skip it 30% for variety
-  const useNamedMessage = Math.random() > 0.3;
-  const messagePool = useNamedMessage ? withName : withoutName;
+  const shouldUseName = getStableMessageIndex(user.id, 10) < 7;
+  const messagePool = shouldUseName ? withName : withoutName;
 
-  return messagePool[Math.floor(Math.random() * messagePool.length)];
+  return messagePool[getStableMessageIndex(user.id, messagePool.length)];
 }
 
-async function ThreadWelcomeMessage() {
-  const user = await getUser();
-  return (
-    <p className="mt-4 text-center font-medium">{getRandomMessage(user)}</p>
-  );
+function getStableMessageIndex(seed: string, max: number) {
+  let hash = 0;
+
+  for (const char of seed) {
+    hash = (hash * 31 + char.charCodeAt(0)) >>> 0;
+  }
+
+  return hash % max;
 }

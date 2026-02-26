@@ -66,7 +66,7 @@ export const subscriptionRouter = {
     });
   }),
   getSubscription: protectedProcedure.query(async ({ ctx }) => {
-    const subscription = await getActiveSubscription({ ctx });
+    const subscription = await getActiveSubscription({ ctx }).catch(() => null);
 
     if (!subscription?.plan) {
       return null;

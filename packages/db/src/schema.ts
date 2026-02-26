@@ -9,6 +9,7 @@ export * from "./billing/subscription.schema.ts";
 export * from "./core/block-node.schema.ts";
 export * from "./core/document.schema.ts";
 export * from "./core/document-embedding.schema.ts";
+export * from "./core/folder.schema.ts";
 export * from "./core/journal-entry.schema.ts";
 export * from "./core/page.schema.ts";
 export * from "./usage/model-pricing.schema.ts";

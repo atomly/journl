@@ -2,7 +2,7 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
-import { infinitePagesQueryOptions } from "~/trpc/options/pages-query-options";
+import { getInfinitePagesQueryOptions } from "~/trpc/options/pages-query-options";
 import { useTRPC } from "~/trpc/react";
 import { useAppEventEmitter } from "../../components/events/app-event-context";
 import { PageCreatedEvent } from "../../events/page-created-event";
@@ -38,7 +38,7 @@ export function useCreatePageTool() {
             // Optimistically update the pages list
             queryClient.setQueryData(
               trpc.pages.getPaginated.infiniteQueryOptions(
-                infinitePagesQueryOptions,
+                getInfinitePagesQueryOptions(null),
               ).queryKey,
               (old) => {
                 if (!old)

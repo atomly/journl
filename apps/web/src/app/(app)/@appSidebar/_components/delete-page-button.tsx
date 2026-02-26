@@ -16,7 +16,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "~/components/ui/dialog";
-import { infinitePagesQueryOptions } from "~/trpc/options/pages-query-options";
+import { getInfinitePagesQueryOptions } from "~/trpc/options/pages-query-options";
 import { useTRPC } from "~/trpc/react";
 
 type DeletePageDialogProps = {
@@ -110,7 +110,7 @@ export function DeletePageDialog({
 
             queryClient.setQueryData(
               trpc.pages.getPaginated.infiniteQueryOptions(
-                infinitePagesQueryOptions,
+                getInfinitePagesQueryOptions(page.folder_id ?? null),
               ).queryKey,
               (old) => {
                 if (!old) {
@@ -151,6 +151,7 @@ export function DeletePageDialog({
     router,
     setDialogOpen,
     trpc.pages,
+    page.folder_id,
   ]);
 
   return (

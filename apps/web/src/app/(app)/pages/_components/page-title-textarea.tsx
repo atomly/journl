@@ -6,14 +6,14 @@ import { useState } from "react";
 import { useDebouncedCallback } from "use-debounce";
 import { FullHeightTextarea } from "~/components/ui/full-height-textarea";
 import { cn } from "~/lib/cn";
-import { infinitePagesQueryOptions } from "~/trpc/options/pages-query-options";
+import { getInfinitePagesQueryOptions } from "~/trpc/options/pages-query-options";
 import { useTRPC } from "~/trpc/react";
 
 const DEFAULT_PLACEHOLDER = "New page";
 const DEFAULT_DEBOUNCE_TIME = 150;
 
 type PageEditorTitleProps = {
-  page: Pick<Page, "id" | "title">;
+  page: Pick<Page, "folder_id" | "id" | "title">;
   placeholder?: string;
   className?: string;
   debounceTime?: number;
@@ -55,8 +55,9 @@ export function PageTitleTextarea({
 
     // Update the pages.getPaginated query cache from sidebar
     queryClient.setQueryData(
-      trpc.pages.getPaginated.infiniteQueryOptions(infinitePagesQueryOptions)
-        .queryKey,
+      trpc.pages.getPaginated.infiniteQueryOptions(
+        getInfinitePagesQueryOptions(page.folder_id ?? null),
+      ).queryKey,
       (old) => {
         if (!old) return old;
         const pages = old.pages.map((p) => ({

@@ -11,6 +11,7 @@ import {
 } from "~/components/ui/sidebar";
 import { Skeleton } from "~/components/ui/skeleton";
 import { env } from "~/env";
+import { infiniteFoldersQueryOptions } from "~/trpc/options/folders-query-options";
 import { infinitePagesQueryOptions } from "~/trpc/options/pages-query-options";
 import { prefetch, trpc } from "~/trpc/server";
 import { DynamicAppSidebarDevtools } from "./_components/app-sidebar-devtools.dynamic";
@@ -31,6 +32,9 @@ const navigationItems = [
 
 export default function AppSidebar() {
   prefetch(
+    trpc.folders.getPaginated.infiniteQueryOptions(infiniteFoldersQueryOptions),
+  );
+  prefetch(
     trpc.pages.getPaginated.infiniteQueryOptions(infinitePagesQueryOptions),
   );
   return (
@@ -47,9 +51,7 @@ export default function AppSidebar() {
           <SidebarGroupLabel>Navigation</SidebarGroupLabel>
           <AppSidebarNavigation items={navigationItems} />
           <Suspense fallback={<AppSidebarPagesSkeleton />}>
-            <AppSidebarPages
-              infinitePagesQueryOptions={infinitePagesQueryOptions}
-            />
+            <AppSidebarPages />
           </Suspense>
         </SidebarGroup>
       </SidebarContent>

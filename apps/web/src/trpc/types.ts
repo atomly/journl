@@ -35,6 +35,10 @@ export type PaginatedPagesInput = inferProcedureInput<
   ApiRouter["pages"]["getPaginated"]
 >;
 
+export type PaginatedFoldersInput = inferProcedureInput<
+  ApiRouter["folders"]["getPaginated"]
+>;
+
 export type InfiniteJournalEntriesInput = inferProcedureInput<
   ApiRouter["journal"]["getTimeline"]
 >;

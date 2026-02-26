@@ -1,72 +1,68 @@
 "use client";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Plus } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { FolderPlus } from "lucide-react";
 import { useTransition } from "react";
 import { Button } from "~/components/ui/button";
 import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
-  useSidebar,
 } from "~/components/ui/sidebar";
-import { getInfinitePagesQueryOptions } from "~/trpc/options/pages-query-options";
+import { getInfiniteFoldersQueryOptions } from "~/trpc/options/folders-query-options";
 import { useTRPC } from "~/trpc/react";
 
-type CreatePageButtonProps = {
+type CreateFolderButtonProps = {
   className?: string;
-  folderId?: string | null;
+  parentFolderId?: string | null;
 };
 
-export function CreatePageButton({
+export function CreateFolderButton({
   className,
-  folderId,
-}: CreatePageButtonProps) {
-  const router = useRouter();
+  parentFolderId,
+}: CreateFolderButtonProps) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const [isPending, startTransition] = useTransition();
-  const { isMobile, setOpenMobile } = useSidebar();
-
-  const { mutate: createPage, isPending: isCreating } = useMutation(
-    trpc.pages.create.mutationOptions({}),
+  const { mutate: createFolder, isPending: isCreating } = useMutation(
+    trpc.folders.create.mutationOptions({}),
   );
 
-  const handleCreatePage = () => {
+  const handleCreateFolder = () => {
     startTransition(() => {
-      createPage(
+      createFolder(
         {
-          folder_id: folderId,
-          title: "",
+          name: "New folder",
+          parent_folder_id: parentFolderId ?? null,
         },
         {
           onError: (error) => {
-            console.error("Failed to create page:", error);
+            console.error("Failed to create folder:", error);
           },
-          onSuccess: (newPage) => {
-            // Optimistically update the pages list
+          onSuccess: (newFolder) => {
             queryClient.setQueryData(
-              trpc.pages.getPaginated.infiniteQueryOptions(
-                getInfinitePagesQueryOptions(folderId ?? null),
+              trpc.folders.getPaginated.infiniteQueryOptions(
+                getInfiniteFoldersQueryOptions(parentFolderId ?? null),
               ).queryKey,
               (old) => {
-                if (!old)
+                if (!old) {
                   return {
                     pageParams: [],
                     pages: [
                       {
-                        items: [newPage],
+                        items: [newFolder],
                         nextCursor: undefined,
                       },
                     ],
                   };
+                }
+
                 const [first, ...rest] = old.pages;
                 return {
                   ...old,
                   pages: [
                     {
                       ...first,
-                      items: [newPage, ...(first?.items ?? [])],
+                      items: [newFolder, ...(first?.items ?? [])],
                       nextCursor: first?.nextCursor,
                     },
                     ...rest,
@@ -74,12 +70,6 @@ export function CreatePageButton({
                 };
               },
             );
-
-            // Navigate to the new page immediately
-            if (isMobile) {
-              setOpenMobile(false);
-            }
-            router.push(`/pages/${newPage.id}`);
           },
         },
       );
@@ -94,11 +84,11 @@ export function CreatePageButton({
         <Button
           variant="ghost"
           className="w-full flex-row items-center justify-center border-2 border-sidebar-border border-dashed px-0!"
-          onClick={handleCreatePage}
+          onClick={handleCreateFolder}
           disabled={showLoading}
         >
-          <Plus className="-ms-4 size-4" />
-          <span>{showLoading ? "Creating..." : "New page"}</span>
+          <FolderPlus className="-ms-4 size-4" />
+          <span>{showLoading ? "Creating..." : "New folder"}</span>
         </Button>
       </SidebarMenuSubButton>
     </SidebarMenuSubItem>

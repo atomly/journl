@@ -8,6 +8,7 @@ type SwipeActionContextValue = {
   actionWidth: number;
   contentElementRef: React.RefObject<HTMLDivElement | null>;
   disabled: boolean;
+  handlePointerCancel: () => void;
   handlePointerDown: (event: React.PointerEvent<HTMLDivElement>) => void;
   handlePointerMove: (event: React.PointerEvent<HTMLDivElement>) => void;
   handlePointerUp: () => void;
@@ -210,6 +211,12 @@ function SwipeAction({
     settleThreshold,
   ]);
 
+  const handlePointerCancel = React.useCallback(() => {
+    const dragState = dragStateRef.current;
+    setOffset(dragState.startOffset);
+    resetDragState();
+  }, [resetDragState]);
+
   const handleClickCapture = React.useCallback(
     (event: React.MouseEvent<HTMLDivElement>) => {
       const target = event.target;
@@ -250,6 +257,7 @@ function SwipeAction({
       actionWidth,
       contentElementRef,
       disabled,
+      handlePointerCancel,
       handlePointerDown,
       handlePointerMove,
       handlePointerUp,
@@ -259,6 +267,7 @@ function SwipeAction({
     [
       actionWidth,
       disabled,
+      handlePointerCancel,
       handlePointerDown,
       handlePointerMove,
       handlePointerUp,
@@ -332,6 +341,7 @@ function SwipeActionContent({
   const {
     contentElementRef,
     disabled,
+    handlePointerCancel,
     handlePointerDown,
     handlePointerMove,
     handlePointerUp,
@@ -366,7 +376,7 @@ function SwipeActionContent({
         onPointerUp?.(event);
       }}
       onPointerCancel={(event) => {
-        handlePointerUp();
+        handlePointerCancel();
         onPointerCancel?.(event);
       }}
       style={{

@@ -5,7 +5,8 @@ import { env } from "~/env";
 import { api } from "~/trpc/server";
 
 export const temporalJournalSearch = createTool({
-  description: "Search the journal for entries between two dates",
+  description:
+    "Search journal entries between two dates. Use for date-range requests (last week/month/quarter, between two dates) and single-day lookups by setting from and to to the same date.",
   execute: async ({ from, to }) => {
     const results = await api.journal.getBetween({
       from: from,

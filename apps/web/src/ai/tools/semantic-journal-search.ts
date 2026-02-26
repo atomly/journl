@@ -5,7 +5,7 @@ import { api } from "~/trpc/server";
 
 export const semanticJournalSearch = createTool({
   description:
-    "Search the journal for entries that are semantically similar to a query",
+    "Semantic search over journal entries by topic, theme, emotion, or intent. Use for requests like finding when the user talked about something, spotting patterns over time, or retrieving related reflections.",
   execute: async ({ limit, query, threshold }) => {
     const results = await api.journal.getRelevantEntries({
       limit: limit,

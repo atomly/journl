@@ -4,6 +4,7 @@ import type { Page } from "@acme/db/schema";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Loader2, Trash2 } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
+import type { ComponentProps, ReactNode } from "react";
 import { useState, useTransition } from "react";
 import { Button } from "~/components/ui/button";
 import {
@@ -20,9 +21,18 @@ import { useTRPC } from "~/trpc/react";
 interface DeletePageButtonProps {
   page: Page;
   className?: string;
+  children?: ReactNode;
+  size?: ComponentProps<typeof Button>["size"];
+  variant?: ComponentProps<typeof Button>["variant"];
 }
 
-export function DeletePageButton({ page, className }: DeletePageButtonProps) {
+export function DeletePageButton({
+  page,
+  className,
+  children,
+  size = "sm",
+  variant = "ghost",
+}: DeletePageButtonProps) {
   const pathname = usePathname();
   const router = useRouter();
   const trpc = useTRPC();
@@ -103,12 +113,17 @@ export function DeletePageButton({ page, className }: DeletePageButtonProps) {
           e.stopPropagation();
           handleDelete();
         }}
-        variant="ghost"
-        size="sm"
+        aria-label="Delete page"
+        variant={variant}
+        size={size}
         className={className}
         disabled={showLoading}
       >
-        {showLoading ? <Loader2 className="animate-spin" /> : <Trash2 />}
+        {showLoading ? (
+          <Loader2 className="animate-spin" />
+        ) : (
+          (children ?? <Trash2 />)
+        )}
       </Button>
 
       {/* Delete Confirmation Dialog */}

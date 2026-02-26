@@ -8,6 +8,7 @@ import {
   SidebarMenuSubItem,
   useSidebar,
 } from "~/components/ui/sidebar";
+import { SwipeAction } from "~/components/ui/swipe-action";
 import { cn } from "~/lib/cn";
 import { DeletePageButton } from "./delete-page-button";
 
@@ -39,25 +40,50 @@ export function AppSidebarPageItem({
         className,
       )}
     >
-      <SidebarMenuSubButton asChild isActive={isActive}>
-        <div
-          className={cn("group/page-item flex items-center justify-between")}
-        >
-          <Link
-            href={`/pages/${page?.id}`}
-            onClick={handlePageNavigationClick}
-            className="line-clamp-1 min-w-0 flex-1 truncate hover:underline"
-          >
-            {page?.title || "New page"}
-          </Link>
-          {!!page && (
+      {isMobile ? (
+        <SwipeAction
+          action={
             <DeletePageButton
-              className="!text-destructive !bg-transparent !pr-0 hidden group-hover/page-item:block"
               page={page}
-            />
-          )}
-        </div>
-      </SidebarMenuSubButton>
+              variant="destructive"
+              className="h-7 w-full rounded-none px-3 text-xs"
+            >
+              Delete
+            </DeletePageButton>
+          }
+          contentClassName="rounded-md"
+        >
+          <SidebarMenuSubButton asChild isActive={isActive}>
+            <Link
+              href={`/pages/${page?.id}`}
+              onClick={handlePageNavigationClick}
+              className="line-clamp-1 min-w-0 flex-1 truncate hover:underline"
+            >
+              {page?.title || "New page"}
+            </Link>
+          </SidebarMenuSubButton>
+        </SwipeAction>
+      ) : (
+        <SidebarMenuSubButton asChild isActive={isActive}>
+          <div
+            className={cn("group/page-item flex items-center justify-between")}
+          >
+            <Link
+              href={`/pages/${page?.id}`}
+              onClick={handlePageNavigationClick}
+              className="line-clamp-1 min-w-0 flex-1 truncate hover:underline"
+            >
+              {page?.title || "New page"}
+            </Link>
+            {!!page && (
+              <DeletePageButton
+                className="hidden bg-transparent! pr-0! text-destructive! group-hover/page-item:block"
+                page={page}
+              />
+            )}
+          </div>
+        </SidebarMenuSubButton>
+      )}
     </SidebarMenuSubItem>
   );
 }

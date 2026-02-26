@@ -4,8 +4,14 @@ import { env } from "~/env";
 import { api } from "~/trpc/server";
 
 export const semanticPageSearch = createTool({
-  description:
-    "Semantic search over pages. Use when the user asks to find notes on a topic, summarize or synthesize material, or pull related notes across pages. Returns multiple relevant results from different pages that should be analyzed and synthesized.",
+  description: `Semantic search over pages.
+
+Use when the user asks to:
+- find notes on a topic
+- summarize or synthesize material
+- pull related notes across pages
+
+Returns multiple relevant results from different pages that should be analyzed and synthesized.`,
   execute: async ({ limit, query, threshold }) => {
     const result = await api.pages.getRelevantPages({
       limit: limit,

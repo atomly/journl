@@ -11,40 +11,42 @@ import { useIsMobile } from "~/hooks/use-mobile";
 export function HeaderJournalButton() {
   const isMobile = useIsMobile();
   const pathname = usePathname();
-  const [today, setToday] = useState(() => new Date());
+  const [today, setToday] = useState<Date | null>(null);
 
   useEffect(() => {
-    const dayMs = 24 * 60 * 60 * 1000;
-    let intervalId: number | undefined;
+    let timeoutId: number;
 
-    function updateToday() {
+    function scheduleNextMidnightTick() {
+      const now = new Date();
+      const nextMidnight = new Date(now);
+      nextMidnight.setHours(24, 0, 0, 0);
+
+      timeoutId = window.setTimeout(() => {
+        setToday(new Date());
+        scheduleNextMidnightTick();
+      }, nextMidnight.getTime() - now.getTime());
+    }
+
+    function initializeDate() {
       setToday(new Date());
     }
 
-    const now = new Date();
-    const nextMidnight = new Date(now);
-    nextMidnight.setHours(24, 0, 0, 0);
-
-    const timeoutId = window.setTimeout(() => {
-      updateToday();
-      intervalId = window.setInterval(updateToday, dayMs);
-    }, nextMidnight.getTime() - now.getTime());
+    initializeDate();
+    scheduleNextMidnightTick();
 
     return () => {
       window.clearTimeout(timeoutId);
-
-      if (intervalId !== undefined) {
-        window.clearInterval(intervalId);
-      }
     };
   }, []);
 
-  const formattedDate = today.toLocaleDateString("en-US", {
-    day: isMobile ? "2-digit" : "numeric",
-    month: "long",
-    weekday: isMobile ? undefined : "long",
-    year: "numeric",
-  });
+  const formattedDate = today
+    ? today.toLocaleDateString("en-US", {
+        day: isMobile ? "2-digit" : "numeric",
+        month: "long",
+        weekday: isMobile ? undefined : "long",
+        year: "numeric",
+      })
+    : "Journal";
 
   if (pathname === "/journal") return <HeaderJournalViewToggle />;
 

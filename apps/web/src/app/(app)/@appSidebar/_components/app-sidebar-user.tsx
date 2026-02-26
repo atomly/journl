@@ -33,7 +33,7 @@ export async function AppSidebarUser() {
     <SidebarMenu>
       <SidebarMenuItem>
         <DropdownMenu>
-          <DropdownMenuTrigger asChild>
+          <DropdownMenuTrigger asChild id="app-sidebar-user-menu-trigger">
             <SidebarMenuButton
               size="lg"
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
@@ -42,12 +42,12 @@ export async function AppSidebarUser() {
                 {user.image ? (
                   <AvatarImage src={user.image} alt={user.name} />
                 ) : (
-                  <AppSidebarUserInformation />
+                  <AppSidebarUserInformation name={user.name} />
                 )}
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight">
-                <AppSidebarUsername />
-                <AppSidebarUserEmail />
+                <AppSidebarUsername name={user.name} />
+                <AppSidebarUserEmail email={user.email} />
               </div>
               <ChevronsUpDown className="ml-auto size-4" />
             </SidebarMenuButton>
@@ -64,12 +64,12 @@ export async function AppSidebarUser() {
                   {user.image ? (
                     <AvatarImage src={user.image} alt={user.name} />
                   ) : (
-                    <AppSidebarUserInformation />
+                    <AppSidebarUserInformation name={user.name} />
                   )}
                 </Avatar>
                 <div className="grid flex-1 text-left text-sm leading-tight">
-                  <AppSidebarUsername />
-                  <AppSidebarUserEmail />
+                  <AppSidebarUsername name={user.name} />
+                  <AppSidebarUserEmail email={user.email} />
                 </div>
               </div>
             </DropdownMenuLabel>

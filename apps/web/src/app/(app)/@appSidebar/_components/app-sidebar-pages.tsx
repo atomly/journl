@@ -29,6 +29,10 @@ type AppSidebarPagesProps = {
 
 const APPROXIMATE_ITEM_HEIGHT = 28;
 const VIEWPORT_INCREASE_FACTOR = 5;
+const APP_SIDEBAR_PAGES_COLLAPSIBLE_CONTENT_ID =
+  "app-sidebar-pages-collapsible-content";
+const APP_SIDEBAR_PAGES_COLLAPSIBLE_TRIGGER_ID =
+  "app-sidebar-pages-collapsible-trigger";
 
 export const AppSidebarPages = ({
   infinitePagesQueryOptions,
@@ -71,7 +75,7 @@ export const AppSidebarPages = ({
       onOpenChange={setIsOpen}
       className="group/collapsible flex min-h-0 flex-1 flex-col"
     >
-      <CollapsibleTrigger asChild>
+      <CollapsibleTrigger asChild id={APP_SIDEBAR_PAGES_COLLAPSIBLE_TRIGGER_ID}>
         <SidebarMenuButton
           isActive={isPagesRoute}
           className={cn(
@@ -91,7 +95,10 @@ export const AppSidebarPages = ({
         </SidebarMenuButton>
       </CollapsibleTrigger>
 
-      <CollapsibleContent className="flex h-full min-h-0 flex-col">
+      <CollapsibleContent
+        id={APP_SIDEBAR_PAGES_COLLAPSIBLE_CONTENT_ID}
+        className="flex h-full min-h-0 flex-col"
+      >
         <SidebarMenuSub className="mx-0 mr-0 flex-1 gap-0 overflow-scroll border-none px-0">
           <CreatePageButton className="ml-3.5 border-sidebar-border border-l py-2 ps-2.5" />
           <Virtuoso

@@ -66,7 +66,17 @@ export const subscriptionRouter = {
     });
   }),
   getSubscription: protectedProcedure.query(async ({ ctx }) => {
-    const subscription = await getActiveSubscription({ ctx });
+    let subscription = null;
+
+    try {
+      subscription = await getActiveSubscription({ ctx });
+    } catch (error) {
+      console.error("Failed to load active subscription", {
+        error,
+        userId: ctx.session.user.id,
+      });
+      return null;
+    }
 
     if (!subscription?.plan) {
       return null;

@@ -113,7 +113,7 @@ export function ComposerAction({
 
 export function UserMessage() {
   return (
-    <MessagePrimitive.Root className="grid w-full max-w-(--thread-max-width) auto-rows-auto grid-cols-[minmax(72px,1fr)_auto] gap-y-2 py-4 [&:where(>*)]:col-start-2">
+    <MessagePrimitive.Root className="grid w-full max-w-(--thread-max-width) auto-rows-auto grid-cols-[minmax(72px,1fr)_auto] gap-y-2 pb-4 [&:where(>*)]:col-start-2">
       <ActionBarPrimitive.Root
         hideWhenRunning
         autohide="not-last"
@@ -126,7 +126,7 @@ export function UserMessage() {
         </ActionBarPrimitive.Edit>
       </ActionBarPrimitive.Root>
 
-      <div className="wrap-break-word col-start-2 row-start-2 max-w-[calc(var(--thread-max-width)*0.9)] rounded-3xl bg-muted px-5 py-2.5 text-foreground">
+      <div className="wrap-break-word col-start-2 row-start-2 max-w-[calc(var(--thread-max-width)*0.9)] rounded-3xl bg-background px-5 py-2.5 text-foreground">
         <MessagePrimitive.Content />
       </div>
 
@@ -137,7 +137,7 @@ export function UserMessage() {
 
 export function EditComposer() {
   return (
-    <ComposerPrimitive.Root className="my-4 flex w-full max-w-(--thread-max-width) flex-col gap-2 rounded-xl bg-muted">
+    <ComposerPrimitive.Root className="my-4 flex w-full max-w-(--thread-max-width) flex-col gap-2 rounded-xl bg-background">
       <ComposerPrimitive.Input className="flex h-8 w-full resize-none bg-transparent p-4 pb-0 text-foreground outline-none" />
 
       <div className="mx-3 mb-3 flex items-center justify-center gap-2 self-end">
@@ -154,7 +154,7 @@ export function EditComposer() {
 
 export function AssistantMessage() {
   return (
-    <MessagePrimitive.Root className="relative grid w-full max-w-(--thread-max-width) grid-cols-[auto_auto_1fr] grid-rows-[auto_1fr]">
+    <MessagePrimitive.Root className="relative grid w-full max-w-(--thread-max-width) grid-cols-[auto_auto_1fr] grid-rows-[auto_1fr] pb-10">
       <div className="wrap-break-word col-span-2 col-start-2 row-start-1 max-w-[calc(var(--thread-max-width)*0.9)] text-foreground leading-7">
         <MessagePrimitive.Content
           components={{
@@ -211,15 +211,12 @@ function AssistantThinking() {
   }
 
   return (
-    <ChainOfThoughtPrimitive.Root className="mb-6.5 overflow-hidden rounded-lg border border-border/70 bg-background">
-      <div className="px-3 py-2">
+    <ChainOfThoughtPrimitive.Root className="mt-3 mb-8 overflow-hidden rounded-lg border border-border/70 bg-background">
+      <div className="p-4">
         <ChainOfThoughtPrimitive.AccordionTrigger className="flex w-full items-center gap-2 text-left">
           <MessagePrimitive.If assistant last>
             <ThreadPrimitive.If running>
               <span className="inline-block size-2 animate-pulse rounded-full bg-primary" />
-            </ThreadPrimitive.If>
-            <ThreadPrimitive.If running={false}>
-              <span className="inline-block size-2 rounded-full bg-muted-foreground" />
             </ThreadPrimitive.If>
 
             <ThreadPrimitive.If running>
@@ -233,7 +230,6 @@ function AssistantThinking() {
           </MessagePrimitive.If>
 
           <MessagePrimitive.If assistant last={false}>
-            <span className="inline-block size-2 rounded-full bg-muted-foreground" />
             <span className="font-medium text-sm">Results</span>
           </MessagePrimitive.If>
 
@@ -246,7 +242,7 @@ function AssistantThinking() {
       {collapsed ? (
         <p
           className={cn(
-            "px-7 pb-3 text-muted-foreground text-sm",
+            "px-4 pb-3 text-muted-foreground text-sm",
             isThinking && "assistant-thinking-wave",
           )}
         >
@@ -276,8 +272,8 @@ function ThoughtStep({ children }: { children?: ReactNode }) {
     <div
       className={cn(
         "relative pl-3",
-        "before:absolute before:top-0 before:-left-3 before:size-2 before:rounded-full before:bg-sidebar-border",
-        "-after:translate-y-1/2 after:absolute after:top-0 after:-left-[0.525rem] after:my-4 after:size-px after:h-[calc(100%-1.5rem)] after:bg-sidebar-border",
+        "before:absolute before:top-0 before:-left-2 before:size-2 before:rounded-full before:bg-sidebar-border",
+        "-after:translate-y-1/2 after:absolute after:top-0 after:-left-[0.275rem] after:my-4 after:size-px after:h-[calc(100%-1.5rem)] after:bg-sidebar-border",
       )}
     >
       {children}
@@ -315,8 +311,8 @@ function ThoughtTool({
   const resultTags = extractToolResultTags(result);
 
   return (
-    <div className="rounded-lg p-3">
-      <div className="flex items-center justify-between gap-2">
+    <div className="rounded-lg pr-3 pb-3 pl-1">
+      <div className="flex items-start justify-between gap-4">
         <span
           className={cn(
             "font-medium text-sm",
@@ -355,7 +351,7 @@ function AssistantActionBar() {
       hideWhenRunning
       autohide="not-last"
       autohideFloat="single-branch"
-      className="col-start-3 row-start-2 -ml-1 flex gap-1 text-muted-foreground data-floating:absolute data-floating:rounded-md data-floating:border data-floating:bg-background data-floating:p-1 data-floating:shadow-sm"
+      className="col-start-3 row-start-2 -ml-1 flex gap-1 text-muted-foreground data-floating:absolute data-floating:rounded-md data-floating:border data-floating:bg-background data-floating:shadow-sm"
     >
       <ActionBarPrimitive.Copy asChild>
         <TooltipIconButton tooltip="Copy">

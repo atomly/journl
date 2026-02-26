@@ -11,25 +11,49 @@ import { useIsMobile } from "~/hooks/use-mobile";
 export function HeaderJournalButton() {
   const isMobile = useIsMobile();
   const pathname = usePathname();
-  const [formattedDate, setFormattedDate] = useState<string | null>(null);
+  const [today, setToday] = useState<Date | null>(null);
 
   useEffect(() => {
-    setFormattedDate(
-      new Date().toLocaleDateString("en-US", {
+    let timeoutId: number;
+
+    function scheduleNextMidnightTick() {
+      const now = new Date();
+      const nextMidnight = new Date(now);
+      nextMidnight.setHours(24, 0, 0, 0);
+
+      timeoutId = window.setTimeout(() => {
+        setToday(new Date());
+        scheduleNextMidnightTick();
+      }, nextMidnight.getTime() - now.getTime());
+    }
+
+    function initializeDate() {
+      setToday(new Date());
+    }
+
+    initializeDate();
+    scheduleNextMidnightTick();
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, []);
+
+  const formattedDate = today
+    ? today.toLocaleDateString("en-US", {
         day: isMobile ? "2-digit" : "numeric",
         month: "long",
         weekday: isMobile ? undefined : "long",
         year: "numeric",
-      }),
-    );
-  }, [isMobile]);
+      })
+    : "Journal";
 
   if (pathname === "/journal") return <HeaderJournalViewToggle />;
 
   return (
     <div className="min-w-0">
       <Link href="/journal">
-        <div className="truncate text-sm">{formattedDate ?? "Journal"}</div>
+        <div className="truncate text-sm">{formattedDate}</div>
       </Link>
     </div>
   );

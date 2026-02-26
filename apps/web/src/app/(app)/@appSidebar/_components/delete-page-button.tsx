@@ -5,7 +5,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Loader2, Trash2 } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import type { ComponentProps, ReactNode } from "react";
-import { forwardRef, useState, useTransition } from "react";
+import { useCallback, useMemo, useState, useTransition } from "react";
 import { Button } from "~/components/ui/button";
 import {
   Dialog,
@@ -14,43 +14,88 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  DialogTrigger,
 } from "~/components/ui/dialog";
 import { infinitePagesQueryOptions } from "~/trpc/options/pages-query-options";
 import { useTRPC } from "~/trpc/react";
 
-interface DeletePageButtonProps {
+type DeletePageDialogProps = {
   page: Page;
-  className?: string;
-  children?: ReactNode;
-  size?: ComponentProps<typeof Button>["size"];
-  variant?: ComponentProps<typeof Button>["variant"];
+  children: ReactNode;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+};
+
+type DeletePageDialogTriggerProps = ComponentProps<typeof DialogTrigger>;
+
+type DeletePageButtonProps = ComponentProps<typeof Button>;
+
+export function DeletePageButton({
+  className,
+  children,
+  size = "sm",
+  variant = "ghost",
+  onClick,
+  ...props
+}: DeletePageButtonProps) {
+  return (
+    <Button
+      aria-label="Delete page"
+      variant={variant}
+      size={size}
+      className={className}
+      onClick={(event) => {
+        event.stopPropagation();
+        onClick?.(event);
+      }}
+      {...props}
+    >
+      {children ?? <Trash2 />}
+    </Button>
+  );
 }
 
-export const DeletePageButton = forwardRef<
-  HTMLButtonElement,
-  DeletePageButtonProps
->(function DeletePageButton(
-  { page, className, children, size = "sm", variant = "ghost" },
-  ref,
-) {
+export function DeletePageDialogTrigger(props: DeletePageDialogTriggerProps) {
+  return <DialogTrigger {...props} />;
+}
+
+export function DeletePageDialog({
+  page,
+  children,
+  open,
+  onOpenChange,
+}: DeletePageDialogProps) {
   const pathname = usePathname();
   const router = useRouter();
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const [isPending, startTransition] = useTransition();
-
-  // Dialog state
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [uncontrolledOpen, setUncontrolledOpen] = useState(false);
 
   const { mutate: deletePage, isPending: isDeleting } = useMutation(
     trpc.document.delete.mutationOptions({}),
   );
 
-  const handleDelete = () => {
-    setIsDeleteDialogOpen(true);
-  };
+  const isControlled = open !== undefined;
+  const isDialogOpen = isControlled ? open : uncontrolledOpen;
 
-  const confirmDelete = () => {
+  const setDialogOpen = useCallback(
+    (nextOpen: boolean) => {
+      if (!isControlled) {
+        setUncontrolledOpen(nextOpen);
+      }
+
+      onOpenChange?.(nextOpen);
+    },
+    [isControlled, onOpenChange],
+  );
+
+  const showLoading = useMemo(
+    () => isPending || isDeleting,
+    [isDeleting, isPending],
+  );
+
+  const confirmDelete = useCallback(() => {
     startTransition(() => {
       deletePage(
         { id: page.document_id },
@@ -59,104 +104,97 @@ export const DeletePageButton = forwardRef<
             console.error("Failed to delete page:", error);
           },
           onSuccess: () => {
-            // Only navigate away if we're currently on the deleted page
             if (pathname === `/pages/${page.id}`) {
               router.push("/journal");
             }
 
-            // Optimistically update the pages list
             queryClient.setQueryData(
               trpc.pages.getPaginated.infiniteQueryOptions(
                 infinitePagesQueryOptions,
               ).queryKey,
               (old) => {
-                if (!old) return old;
+                if (!old) {
+                  return old;
+                }
+
                 return {
                   ...old,
                   pages: old.pages.map((p) => ({
                     ...p,
-                    items: p.items.filter((p) => p.id !== page.id),
+                    items: p.items.filter(
+                      (currentPage) => currentPage.id !== page.id,
+                    ),
                   })),
                 };
               },
             );
 
-            // Remove the specific page from cache
             queryClient.removeQueries({
               queryKey: trpc.pages.getById.queryKey({ id: page.id }),
             });
 
-            // Cancel any in-flight queries for this page
             queryClient.cancelQueries({
               queryKey: trpc.pages.getById.queryKey({ id: page.id }),
             });
 
-            // Close the dialog after successful deletion
-            setIsDeleteDialogOpen(false);
+            setDialogOpen(false);
           },
         },
       );
     });
-  };
-
-  const cancelDelete = () => {
-    setIsDeleteDialogOpen(false);
-  };
-
-  const showLoading = isPending || isDeleting;
+  }, [
+    deletePage,
+    page.document_id,
+    page.id,
+    pathname,
+    queryClient,
+    router,
+    setDialogOpen,
+    trpc.pages,
+  ]);
 
   return (
-    <>
-      <Button
-        ref={ref}
-        onClick={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          handleDelete();
-        }}
-        aria-label="Delete page"
-        variant={variant}
-        size={size}
-        className={className}
-        disabled={showLoading}
-      >
-        {showLoading ? (
-          <Loader2 className="animate-spin" />
-        ) : (
-          (children ?? <Trash2 />)
-        )}
-      </Button>
+    <Dialog open={isDialogOpen} onOpenChange={setDialogOpen}>
+      {children}
 
-      {/* Delete Confirmation Dialog */}
-      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Delete Page</DialogTitle>
-            <DialogDescription>
-              Are you sure you want to delete "{page.title}"? This action cannot
-              be undone.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={cancelDelete}
-              disabled={showLoading}
-            >
-              Cancel
-            </Button>
-            <Button
-              autoFocus
-              tabIndex={0}
-              variant="destructive"
-              onClick={confirmDelete}
-              disabled={showLoading}
-            >
-              {showLoading ? "Deleting..." : "Delete"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Delete Page</DialogTitle>
+          <DialogDescription>
+            Are you sure you want to delete{" "}
+            {page.title ? `"${page.title}"` : "this page"}? This action cannot
+            be undone.
+          </DialogDescription>
+        </DialogHeader>
+
+        <DialogFooter>
+          <Button
+            variant="outline"
+            onClick={() => {
+              setDialogOpen(false);
+            }}
+            disabled={showLoading}
+          >
+            Cancel
+          </Button>
+          <Button
+            autoFocus
+            tabIndex={0}
+            variant="destructive"
+            onClick={confirmDelete}
+            disabled={showLoading}
+          >
+            {showLoading ? (
+              <>
+                <Loader2 className="animate-spin" />
+                Deleting...
+              </>
+            ) : (
+              "Delete"
+            )}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
-});
+}

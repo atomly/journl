@@ -5,7 +5,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Loader2, Trash2 } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import type { ComponentProps, ReactNode } from "react";
-import { useState, useTransition } from "react";
+import { forwardRef, useState, useTransition } from "react";
 import { Button } from "~/components/ui/button";
 import {
   Dialog,
@@ -26,13 +26,13 @@ interface DeletePageButtonProps {
   variant?: ComponentProps<typeof Button>["variant"];
 }
 
-export function DeletePageButton({
-  page,
-  className,
-  children,
-  size = "sm",
-  variant = "ghost",
-}: DeletePageButtonProps) {
+export const DeletePageButton = forwardRef<
+  HTMLButtonElement,
+  DeletePageButtonProps
+>(function DeletePageButton(
+  { page, className, children, size = "sm", variant = "ghost" },
+  ref,
+) {
   const pathname = usePathname();
   const router = useRouter();
   const trpc = useTRPC();
@@ -108,6 +108,7 @@ export function DeletePageButton({
   return (
     <>
       <Button
+        ref={ref}
         onClick={(e) => {
           e.preventDefault();
           e.stopPropagation();
@@ -158,4 +159,4 @@ export function DeletePageButton({
       </Dialog>
     </>
   );
-}
+});

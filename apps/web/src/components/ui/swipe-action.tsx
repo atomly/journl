@@ -10,6 +10,8 @@ type SwipeActionProps = {
   className?: string;
   contentClassName?: string;
   disabled?: boolean;
+  fullSwipeThresholdRatio?: number;
+  onFullSwipe?: () => void;
   onOpenChange?: (open: boolean) => void;
   openThreshold?: number;
 };
@@ -24,17 +26,21 @@ export function SwipeAction({
   className,
   contentClassName,
   disabled = false,
+  fullSwipeThresholdRatio = 0.82,
+  onFullSwipe,
   onOpenChange,
   openThreshold,
 }: SwipeActionProps) {
   const [offset, setOffset] = React.useState(0);
   const [isDragging, setIsDragging] = React.useState(false);
+  const rootElementRef = React.useRef<HTMLDivElement>(null);
   const actionElementRef = React.useRef<HTMLDivElement>(null);
   const contentElementRef = React.useRef<HTMLDivElement>(null);
   const dragStateRef = React.useRef({
     hasLockedDirection: false,
     isHorizontalDrag: false,
     isPointerDown: false,
+    maxSwipeOffset: actionWidth,
     startOffset: 0,
     startX: 0,
     startY: 0,
@@ -63,12 +69,13 @@ export function SwipeAction({
       hasLockedDirection: false,
       isHorizontalDrag: false,
       isPointerDown: false,
+      maxSwipeOffset: actionWidth,
       startOffset: 0,
       startX: 0,
       startY: 0,
     };
     setIsDragging(false);
-  }, []);
+  }, [actionWidth]);
 
   const handlePointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
     if (disabled || event.button !== 0) {
@@ -79,6 +86,7 @@ export function SwipeAction({
       hasLockedDirection: false,
       isHorizontalDrag: false,
       isPointerDown: true,
+      maxSwipeOffset: rootElementRef.current?.clientWidth ?? actionWidth,
       startOffset: offset,
       startX: event.clientX,
       startY: event.clientY,
@@ -127,13 +135,30 @@ export function SwipeAction({
     }
 
     const nextOffset = Math.min(
-      maxOffset,
+      dragState.maxSwipeOffset,
       Math.max(0, dragState.startOffset + deltaX),
     );
     setOffset(nextOffset);
   };
 
   const handlePointerUp = () => {
+    const dragState = dragStateRef.current;
+
+    if (!dragState.isPointerDown && !isDragging) {
+      return;
+    }
+
+    const fullSwipeThreshold =
+      dragState.maxSwipeOffset * fullSwipeThresholdRatio;
+
+    if (onFullSwipe && offset >= fullSwipeThreshold) {
+      suppressClickRef.current = true;
+      setOpen(false);
+      onFullSwipe();
+      resetDragState();
+      return;
+    }
+
     const isOpen = offset > settleThreshold;
     setOpen(isOpen);
     resetDragState();
@@ -168,13 +193,14 @@ export function SwipeAction({
 
   return (
     <div
+      ref={rootElementRef}
       className={cn("relative overflow-hidden rounded-md", className)}
       onClickCapture={handleClickCapture}
     >
       <div
         ref={actionElementRef}
-        className="absolute inset-y-0 right-0 flex items-stretch"
-        style={{ width: actionWidth }}
+        className="absolute inset-y-0 right-0 flex items-stretch justify-end overflow-hidden"
+        style={{ width: Math.max(actionWidth, offset) }}
       >
         {action}
       </div>

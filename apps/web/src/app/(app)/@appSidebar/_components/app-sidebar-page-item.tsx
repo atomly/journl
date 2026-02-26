@@ -3,6 +3,7 @@
 import type { Page } from "@acme/db/schema";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useRef } from "react";
 import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
@@ -23,6 +24,7 @@ export function AppSidebarPageItem({
 }: AppSidebarPageItemProps) {
   const pathname = usePathname();
   const { isMobile, setOpenMobile } = useSidebar();
+  const deleteButtonRef = useRef<HTMLButtonElement>(null);
 
   const isActive = pathname.includes(page?.id ?? "");
   const handlePageNavigationClick = () => {
@@ -42,8 +44,12 @@ export function AppSidebarPageItem({
     >
       {isMobile ? (
         <SwipeAction
+          onFullSwipe={() => {
+            deleteButtonRef.current?.click();
+          }}
           action={
             <DeletePageButton
+              ref={deleteButtonRef}
               page={page}
               variant="destructive"
               className="h-7 w-full rounded-none px-3 text-xs"

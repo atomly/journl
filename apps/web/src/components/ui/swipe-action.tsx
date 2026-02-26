@@ -165,6 +165,17 @@ export function SwipeAction({
   };
 
   const handleClickCapture = (event: React.MouseEvent<HTMLDivElement>) => {
+    const target = event.target;
+    if (!(target instanceof Node)) {
+      return;
+    }
+
+    const clickedAction = actionElementRef.current?.contains(target) ?? false;
+
+    if (clickedAction) {
+      return;
+    }
+
     if (suppressClickRef.current) {
       suppressClickRef.current = false;
       event.preventDefault();
@@ -176,12 +187,6 @@ export function SwipeAction({
       return;
     }
 
-    const target = event.target;
-    if (!(target instanceof Node)) {
-      return;
-    }
-
-    const clickedAction = actionElementRef.current?.contains(target) ?? false;
     const clickedContent = contentElementRef.current?.contains(target) ?? false;
 
     if (clickedContent && !clickedAction) {

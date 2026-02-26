@@ -79,7 +79,7 @@ export function FixedHeader({ className, ...props }: StickyHeaderProps) {
   return (
     <header
       className={cn(
-        "z-4500 mx-8 mt-2 h-12 md:m-2",
+        "z-4500 mx-6 mt-2 h-12 md:m-2",
         {
           "-translate-y-[calc(100%+2rem)]": isMobile && isHidden,
           "fixed top-0 right-0 left-0 transform-gpu transition-transform duration-200 ease-out will-change-transform":

@@ -20,24 +20,19 @@ import { AppSidebarPagesSkeleton } from "./_components/app-sidebar-pages-skeleto
 import { AppSidebarUser } from "./_components/app-sidebar-user";
 import { AppSidebarUserSkeleton } from "./_components/app-sidebar-user-skeleton";
 
-async function SuspendedAppSidebarPages() {
+const navigationItems = [
+  {
+    icon: <Calendar />,
+    isActive: true,
+    title: "Journal",
+    url: "/journal",
+  },
+] satisfies ComponentProps<typeof AppSidebarNavigation>["items"];
+
+export default function AppSidebar() {
   prefetch(
     trpc.pages.getPaginated.infiniteQueryOptions(infinitePagesQueryOptions),
   );
-  return (
-    <AppSidebarPages infinitePagesQueryOptions={infinitePagesQueryOptions} />
-  );
-}
-
-export default function AppSidebar() {
-  const navigationItems = [
-    {
-      icon: <Calendar />,
-      isActive: true,
-      title: "Journal",
-      url: "/journal",
-    },
-  ] satisfies ComponentProps<typeof AppSidebarNavigation>["items"];
   return (
     <Sidebar collapsible="icon" variant="floating">
       <SidebarHeader>
@@ -52,7 +47,9 @@ export default function AppSidebar() {
           <SidebarGroupLabel>Navigation</SidebarGroupLabel>
           <AppSidebarNavigation items={navigationItems} />
           <Suspense fallback={<AppSidebarPagesSkeleton />}>
-            <SuspendedAppSidebarPages />
+            <AppSidebarPages
+              infinitePagesQueryOptions={infinitePagesQueryOptions}
+            />
           </Suspense>
         </SidebarGroup>
       </SidebarContent>

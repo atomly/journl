@@ -1,4 +1,3 @@
-import { openai } from "@ai-sdk/openai";
 import { Agent } from "@mastra/core/agent";
 import { RequestContext } from "@mastra/core/request-context";
 import { Memory } from "@mastra/memory";
@@ -161,8 +160,6 @@ const tools = {
   semanticJournalSearch,
   semanticPageSearch,
   temporalJournalSearch,
-  // TODO: Track usage somehow, we gotta track this tool.
-  webSearch: openai.tools.webSearch(),
 };
 
 export const journlNano = new Agent({

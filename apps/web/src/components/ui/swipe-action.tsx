@@ -57,7 +57,7 @@ function SwipeAction({
   children,
   className,
   disabled = false,
-  fullSwipeThresholdRatio = 0.82,
+  fullSwipeThresholdRatio = 0.68,
   onClickCapture,
   onFullSwipe,
   onOpenChange,

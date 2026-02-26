@@ -6,6 +6,7 @@
   "exports": {
     ".": "./src/index.ts",
     "./client": "./src/client.ts",
+    "./env": "./src/env.ts",
     "./schema": "./src/schema.ts",
     "./utils": "./src/utils/index.ts",
     "./usage": "./src/usage/index.ts"
@@ -21,9 +22,10 @@
     "with-env": "dotenv -e ../../.env --"
   },
   "dependencies": {
-    "@vercel/postgres": "~0.10.0",
+    "@t3-oss/env-nextjs": "~0.13.10",
     "drizzle-orm": "~0.45.1",
     "drizzle-zod": "~0.8.3",
+    "postgres": "~3.4.7",
     "zod": "~4.3.6"
   },
   "devDependencies": {

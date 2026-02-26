@@ -3,7 +3,7 @@ import { z } from "zod";
 import { zNavigatePageInput } from "./navigate-page.schema";
 
 export const navigatePage = createTool({
-  description: `Open a specific page by UUID.
+  description: `Open a specific page by UUID only.
 
 Use when the user asks to open or go to a specific page and the page UUID is known.
 

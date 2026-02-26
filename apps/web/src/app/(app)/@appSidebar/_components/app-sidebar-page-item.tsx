@@ -3,13 +3,23 @@
 import type { Page } from "@acme/db/schema";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useState } from "react";
 import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
   useSidebar,
 } from "~/components/ui/sidebar";
+import {
+  SwipeAction,
+  SwipeActionContent,
+  SwipeActionReveal,
+} from "~/components/ui/swipe-action";
 import { cn } from "~/lib/cn";
-import { DeletePageButton } from "./delete-page-button";
+import {
+  DeletePageButton,
+  DeletePageDialog,
+  DeletePageDialogTrigger,
+} from "./delete-page-button";
 
 type AppSidebarPageItemProps = {
   page: Page;
@@ -22,6 +32,7 @@ export function AppSidebarPageItem({
 }: AppSidebarPageItemProps) {
   const pathname = usePathname();
   const { isMobile, setOpenMobile } = useSidebar();
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   const isActive = pathname.includes(page?.id ?? "");
   const handlePageNavigationClick = () => {
@@ -39,25 +50,60 @@ export function AppSidebarPageItem({
         className,
       )}
     >
-      <SidebarMenuSubButton asChild isActive={isActive}>
-        <div
-          className={cn("group/page-item flex items-center justify-between")}
+      <DeletePageDialog
+        page={page}
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+      >
+        <SwipeAction
+          className="rounded-md md:hidden"
+          onFullSwipe={() => {
+            setIsDeleteDialogOpen(true);
+          }}
         >
-          <Link
-            href={`/pages/${page?.id}`}
-            onClick={handlePageNavigationClick}
-            className="line-clamp-1 min-w-0 flex-1 truncate hover:underline"
-          >
-            {page?.title || "New page"}
-          </Link>
-          {!!page && (
-            <DeletePageButton
-              className="hidden bg-transparent! pr-0! text-destructive! group-hover/page-item:block"
-              page={page}
-            />
-          )}
-        </div>
-      </SidebarMenuSubButton>
+          <SwipeActionReveal className="-ml-px">
+            <DeletePageDialogTrigger asChild>
+              <DeletePageButton
+                variant="destructive"
+                className="h-7 w-full rounded-none px-3 text-xs"
+              >
+                Delete
+              </DeletePageButton>
+            </DeletePageDialogTrigger>
+          </SwipeActionReveal>
+          <SwipeActionContent className="group/swipe-content rounded-md">
+            <SidebarMenuSubButton
+              asChild
+              isActive={isActive}
+              className="group-data-[state=open]/swipe-content:rounded-r-none"
+            >
+              <Link
+                href={`/pages/${page?.id}`}
+                onClick={handlePageNavigationClick}
+                className="line-clamp-1 min-w-0 flex-1 truncate hover:underline"
+              >
+                {page?.title || "New page"}
+              </Link>
+            </SidebarMenuSubButton>
+          </SwipeActionContent>
+        </SwipeAction>
+        <SidebarMenuSubButton asChild isActive={isActive}>
+          <div className="group/page-item hidden items-center justify-between md:flex">
+            <Link
+              href={`/pages/${page?.id}`}
+              onClick={handlePageNavigationClick}
+              className="line-clamp-1 min-w-0 flex-1 truncate hover:underline"
+            >
+              {page?.title || "New page"}
+            </Link>
+            {!!page && (
+              <DeletePageDialogTrigger asChild>
+                <DeletePageButton className="hidden bg-transparent! pr-0! text-destructive! group-hover/page-item:block" />
+              </DeletePageDialogTrigger>
+            )}
+          </div>
+        </SidebarMenuSubButton>
+      </DeletePageDialog>
     </SidebarMenuSubItem>
   );
 }

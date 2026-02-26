@@ -52,7 +52,7 @@ export function AppSidebarPageItem({
           </Link>
           {!!page && (
             <DeletePageButton
-              className="!text-destructive !bg-transparent !pr-0 hidden group-hover/page-item:block"
+              className="hidden bg-transparent! pr-0! text-destructive! group-hover/page-item:block"
               page={page}
             />
           )}

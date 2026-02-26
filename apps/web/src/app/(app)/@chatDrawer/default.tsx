@@ -19,15 +19,11 @@ import {
   DrawerTrigger,
 } from "~/components/ui/drawer";
 
-const CHAT_DRAWER_CONTENT_ID = "chat-drawer-content";
-const CHAT_DRAWER_TRIGGER_ID = "chat-drawer-trigger";
-
 export default function ChatDrawer() {
   return (
     <Drawer>
-      <DrawerTrigger asChild id={CHAT_DRAWER_TRIGGER_ID}>
+      <DrawerTrigger asChild>
         <Button
-          aria-controls={CHAT_DRAWER_CONTENT_ID}
           size="icon"
           className="fixed right-2 bottom-2 z-4500 flex size-10 cursor-pointer rounded-full border md:hidden"
         >
@@ -35,10 +31,7 @@ export default function ChatDrawer() {
           <span className="sr-only">Toggle Chat Drawer</span>
         </Button>
       </DrawerTrigger>
-      <DrawerContent
-        id={CHAT_DRAWER_CONTENT_ID}
-        className="z-4500 h-full! max-h-[82.5dvh]!"
-      >
+      <DrawerContent className="z-4500 h-full! max-h-[82.5dvh]!">
         <DrawerTitle className="hidden">Journl</DrawerTitle>
         <div className="relative h-full! border-sidebar-border border-t">
           <DrawerDivider className="absolute top-0 left-1/2 z-4500 -translate-x-1/2" />

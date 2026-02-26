@@ -11,10 +11,6 @@ import {
 } from "../ui/select";
 
 const REASONING_MODES = ["instant", "thinking"] satisfies JournlReasoning[];
-const COMPOSER_REASONING_SELECT_CONTENT_ID =
-  "composer-reasoning-select-content";
-const COMPOSER_REASONING_SELECT_TRIGGER_ID =
-  "composer-reasoning-select-trigger";
 
 const REASONING_MODE_LABELS = {
   instant: "Instant",
@@ -31,15 +27,13 @@ export function ComposerReasoning() {
   return (
     <Select value={getReasoning()} onValueChange={handleReasoningModeChange}>
       <SelectTrigger
-        id={COMPOSER_REASONING_SELECT_TRIGGER_ID}
-        aria-controls={COMPOSER_REASONING_SELECT_CONTENT_ID}
         size="sm"
         aria-label="Reasoning mode"
         className="h-8 w-22 border-primary/70 bg-background! px-2 text-foreground text-xs shadow-none hover:border-primary! focus-visible:ring-0 [&_svg]:text-foreground!"
       >
         <SelectValue />
       </SelectTrigger>
-      <SelectContent id={COMPOSER_REASONING_SELECT_CONTENT_ID}>
+      <SelectContent>
         {REASONING_MODES.map((reasoning) => (
           <SelectItem key={reasoning} value={reasoning}>
             {REASONING_MODE_LABELS[reasoning]}

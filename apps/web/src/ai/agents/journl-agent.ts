@@ -161,8 +161,6 @@ const tools = {
   semanticJournalSearch,
   semanticPageSearch,
   temporalJournalSearch,
-  // TODO: Track usage somehow, we gotta track this tool.
-  webSearch: openai.tools.webSearch(),
 };
 
 export const journlNano = new Agent({

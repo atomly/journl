@@ -99,7 +99,7 @@ export function HeaderSearchButton({
             </DialogTitle>
             <div className="flex w-full items-center gap-x-2 rounded-lg border-2 bg-muted px-2 [&>div]:w-full [&>div]:px-0">
               <CommandInput
-                className="flex h-10 w-full rounded-md border-0 bg-transparent outline-none placeholder:text-muted-foreground focus-visible:ring-0 disabled:cursor-not-allowed disabled:opacity-50"
+                className="flex h-10 w-full rounded-md border-0 bg-transparent outline-none placeholder:text-accent-foreground/80 focus-visible:ring-0 disabled:cursor-not-allowed disabled:opacity-50"
                 placeholder="Search notes..."
                 autoComplete="off"
                 autoCorrect="off"
@@ -119,13 +119,13 @@ export function HeaderSearchButton({
                     <Skeleton className="h-10 w-full" />
                   </div>
                 ) : !notes ? (
-                  <span className="text-muted-foreground text-sm">
+                  <span className="text-accent-foreground/80 text-sm">
                     {isError
                       ? "Something went wrong. Please try again later."
                       : "Write something to search."}
                   </span>
                 ) : (
-                  <span className="text-muted-foreground text-sm">
+                  <span className="text-accent-foreground/80 text-sm">
                     No results found.
                   </span>
                 )}
@@ -156,12 +156,12 @@ export function HeaderSearchButton({
                                   {note.header}
                                 </HighlightedText>
                               </div>
-                              <div className="line-clamp-2 text-muted-foreground text-sm">
+                              <div className="line-clamp-2 text-accent-foreground/80 text-sm">
                                 <HighlightedText query={query} maxLength={120}>
                                   {note.content}
                                 </HighlightedText>
                               </div>
-                              <div className="text-muted-foreground text-xs">
+                              <div className="text-accent-foreground/80 text-xs">
                                 Last updated{" "}
                                 {new Date(note.updated_at).toLocaleDateString()}
                               </div>
@@ -171,7 +171,7 @@ export function HeaderSearchButton({
                               <div className="font-medium text-sm">
                                 {new Date(note.date).toLocaleDateString()}
                               </div>
-                              <div className="line-clamp-2 text-muted-foreground text-sm">
+                              <div className="line-clamp-2 text-accent-foreground/80 text-sm">
                                 <HighlightedText query={query} maxLength={120}>
                                   {note.content}
                                 </HighlightedText>
@@ -204,23 +204,23 @@ export function HeaderSearchButton({
           ) : (
             <>
               <div className="flex items-center justify-center gap-x-1.5 py-1">
-                <kbd className="flex h-5 select-none items-center rounded border bg-background px-1.5 font-medium font-mono text-lg text-muted-foreground">
+                <kbd className="flex h-5 select-none items-center rounded border bg-background px-1.5 font-medium font-mono text-accent-foreground/80 text-lg">
                   ⏎
                 </kbd>
-                <span className="text-muted-foreground text-sm">
+                <span className="text-accent-foreground/80 text-sm">
                   Go to your note
                 </span>
               </div>
               <div className="flex-1" />
               <div className="flex items-center justify-center gap-x-1.5 py-1">
-                <span className="text-muted-foreground text-sm">
+                <span className="text-accent-foreground/80 text-sm">
                   To navigate
                 </span>
                 <div className="flex items-center gap-x-0.5">
-                  <kbd className="flex h-5 select-none items-center rounded border bg-background px-1.5 font-medium font-mono text-lg text-muted-foreground">
+                  <kbd className="flex h-5 select-none items-center rounded border bg-background px-1.5 font-medium font-mono text-accent-foreground/80 text-lg">
                     ↑
                   </kbd>
-                  <kbd className="flex h-5 select-none items-center rounded border bg-background px-1.5 font-medium font-mono text-lg text-muted-foreground">
+                  <kbd className="flex h-5 select-none items-center rounded border bg-background px-1.5 font-medium font-mono text-accent-foreground/80 text-lg">
                     ↓
                   </kbd>
                 </div>

@@ -1,8 +1,8 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { createClientTool } from "../utils/create-client-tool";
-import { zNavigateJournalEntryInput } from "./navigate-journal-entry.schema";
+import { createClientTool } from "../../utils/create-client-tool";
+import { zNavigateJournalEntryInput } from "./schema";
 
 export function useNavigateJournalEntryTool() {
   const router = useRouter();

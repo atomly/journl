@@ -1,8 +1,8 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { createClientTool } from "../utils/create-client-tool";
-import { zNavigatePageInput } from "./navigate-page.schema";
+import { createClientTool } from "../../utils/create-client-tool";
+import { zNavigatePageInput } from "./schema";
 
 export function useNavigatePageTool() {
   const router = useRouter();

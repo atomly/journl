@@ -4,7 +4,7 @@ import { Toaster } from "~/components/ui/toast";
 import { getAppPreferences } from "~/preferences/get-preferences";
 import { AppLayoutProvider } from "../_components/app-layout-provider";
 import ChatSidebarTrigger from "./@chatSidebar/_components/chat-sidebar-trigger";
-import "./globals.css";
+import "./styles.css";
 import { AppProviders } from "../_components/app-providers";
 import { AppContainer } from "./@header/_components/app-container";
 
@@ -45,7 +45,7 @@ async function AppLayout({
             </SidebarInset>
           </SidebarProvider>
           {chatSidebar}
-          <ChatSidebarTrigger />
+          <ChatSidebarTrigger className="fixed right-2 bottom-2 z-4500 hidden md:flex" />
         </div>
       </SidebarProvider>
       {subscriptionModal}

@@ -41,13 +41,19 @@ export const AppSidebarPages = ({
   const queryOptions = trpc.pages.getPaginated.infiniteQueryOptions(
     infinitePagesQueryOptions,
   );
-  const { status, data, fetchNextPage, hasNextPage, isFetchingNextPage } =
-    useInfiniteQuery({
-      ...queryOptions,
-      getNextPageParam: ({ nextCursor }) => {
-        return nextCursor;
-      },
-    });
+  const {
+    status,
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading,
+  } = useInfiniteQuery({
+    ...queryOptions,
+    getNextPageParam: ({ nextCursor }) => {
+      return nextCursor;
+    },
+  });
 
   const pages = data?.pages?.flatMap((page) => page.items) ?? [];
 
@@ -81,7 +87,7 @@ export const AppSidebarPages = ({
           tooltip="Pages"
           onClick={handlePagesClick}
         >
-          {isFetchingNextPage ? (
+          {isLoading ? (
             <Loader2 className="size-3 animate-spin" />
           ) : (
             <BookOpen />

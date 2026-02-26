@@ -5,17 +5,16 @@ import {
   LineChart,
   PenLine,
   ShieldCheck,
-  Sparkles,
 } from "lucide-react";
 import type { Metadata, Viewport } from "next";
 import Link from "next/link";
+import { RiSparkling2Fill } from "react-icons/ri";
 import { withoutAuth } from "~/app/_guards/page-guards";
 import { Separator } from "~/components/ui/separator";
 import { getPublicWebUrl } from "~/lib/public-web-url";
 import { HydrateClient } from "~/trpc/server";
 import { HeroCtaButton } from "./_components/hero-cta-button";
 import { HeroJournlParticles } from "./_components/hero-journl-particles";
-import "./globals.css";
 
 const publicWebUrl = getPublicWebUrl();
 
@@ -114,7 +113,7 @@ export default withoutAuth(function RootPage() {
           <section className="grid gap-12 md:items-center lg:grid-cols-[1.1fr_0.9fr]">
             <div className="fade-in slide-in-from-bottom-4 animate-in space-y-8 duration-700">
               <div className="inline-flex items-center gap-2 rounded-full border border-border bg-card/60 px-4 py-2 text-muted-foreground text-xs uppercase tracking-[0.3em]">
-                <Sparkles className="h-4 w-4 text-primary" />
+                <RiSparkling2Fill className="h-4 w-4 text-primary" />
                 Journaling, reimagined
               </div>
               <div className="space-y-6">

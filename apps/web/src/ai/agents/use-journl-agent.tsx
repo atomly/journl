@@ -29,7 +29,8 @@ const JournlAgentContext = createContext<{
   getSelection: (
     selection: Pick<BlockSelection, "editor" | "blockIds">,
   ) => BlockSelection | undefined;
-  getSelections: () => BlockSelection[];
+  getAllSelections: () => BlockSelection[];
+  getEditorSelections: (editor: EditorPrimitive) => BlockSelection[];
   getReasoning: () => JournlAgentState["reasoning"];
   getView: () => JournlAgentState["view"];
   setEditor: (activeEditor: JournlEditor) => void;
@@ -112,8 +113,12 @@ export function JournlAgentProvider({
     [],
   );
 
-  const getSelections = useCallback(() => {
+  const getAllSelections = useCallback(() => {
     return ref.current.selectedBlocks;
+  }, []);
+
+  const getEditorSelections = useCallback((editor: EditorPrimitive) => {
+    return ref.current.selectedBlocks.filter((s) => s.editor === editor);
   }, []);
 
   const getView = useCallback(() => {
@@ -148,10 +153,11 @@ export function JournlAgentProvider({
   return (
     <JournlAgentContext.Provider
       value={{
+        getAllSelections,
+        getEditorSelections,
         getEditors,
         getReasoning,
         getSelection,
-        getSelections,
         getView,
         setEditor,
         setReasoning,

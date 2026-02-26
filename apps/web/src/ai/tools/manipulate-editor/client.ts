@@ -1,14 +1,18 @@
 "use client";
 
 import { AIExtension } from "@blocknote/xl-ai";
-import { useJournlAgent } from "../agents/use-journl-agent";
-import { createClientTool } from "../utils/create-client-tool";
-import { zManipulateEditorInput } from "./manipulate-editor.schema";
+import { useDrawer } from "~/components/ui/drawer";
+import { useJournlAgent } from "../../agents/use-journl-agent";
+import { createClientTool } from "../../utils/create-client-tool";
+import { zManipulateEditorInput } from "./schema";
 
 export function useManipulateEditorTool() {
-  const { getEditors } = useJournlAgent();
+  const { getEditors, getEditorSelections } = useJournlAgent();
+  const { closeDrawer } = useDrawer();
   const tool = createClientTool({
     execute: async (toolCall, chat) => {
+      let cleanUpBeforeChange: (() => void) | undefined;
+
       try {
         const editor = getEditors().get(toolCall.input.targetEditor)?.editor;
 
@@ -33,7 +37,11 @@ export function useManipulateEditorTool() {
           return;
         }
 
-        const cleanUpBeforeChange = editor.onChange((_, { getChanges }) => {
+        closeDrawer();
+
+        cleanUpBeforeChange = editor.onChange((_, { getChanges }) => {
+          closeDrawer();
+
           const [{ block } = {}] = getChanges();
           if (!block) return;
 
@@ -42,27 +50,45 @@ export function useManipulateEditorTool() {
           );
           if (blockElement && !isElementPartiallyInViewport(blockElement)) {
             blockElement.scrollIntoView({ behavior: "smooth" });
-            cleanUpBeforeChange();
+            cleanUpBeforeChange?.();
           }
         });
 
+        // Open the AI menu if it's closed to let the user accept or reject the changes.
+        const blockId = resolveAIMenuBlockId(editor);
+        const aiMenuState = aiExtension.store.state.aiMenuState;
+        const hasActiveAIMenuAnchor =
+          aiMenuState !== "closed" &&
+          document.querySelector(
+            `[data-node-type="blockContainer"][data-id="${aiMenuState.blockId}"]`,
+          );
+
+        if (blockId && !hasActiveAIMenuAnchor) {
+          editor.focus();
+          editor.setTextCursorPosition(blockId, "end");
+          aiExtension.openAIMenuAtBlock(blockId);
+        }
+
         await aiExtension.invokeAI({
+          deleteEmptyCursorBlock: false,
           userPrompt: toolCall.input.editorPrompt,
+          useSelection: getEditorSelections(editor).length > 0,
         });
 
         void chat.addToolOutput({
-          output: "Writing into the journal...",
+          output:
+            "Draft ready in the editor. Please accept or reject the suggested changes.",
           tool: toolCall.toolName,
           toolCallId: toolCall.toolCallId,
         });
-
-        cleanUpBeforeChange();
       } catch (error) {
         void chat.addToolOutput({
           output: `Error when calling the tool: ${error}`,
           tool: toolCall.toolName,
           toolCallId: toolCall.toolCallId,
         });
+      } finally {
+        cleanUpBeforeChange?.();
       }
     },
     inputSchema: zManipulateEditorInput,
@@ -86,4 +112,28 @@ function isElementPartiallyInViewport(element: Element) {
     rect.left < viewportWidth &&
     rect.right > 0
   );
+}
+
+function resolveAIMenuBlockId(editor: {
+  focus?: () => void;
+  getTextCursorPosition?: () => { block?: { id?: string } };
+  getSelection?: () => { blocks?: Array<{ id?: string }> } | undefined;
+  setTextCursorPosition?: (
+    blockId: string,
+    placement?: "start" | "end",
+  ) => void;
+  document?: Array<{ id?: string }>;
+}) {
+  const selection = editor.getSelection?.();
+  const selectedLastBlock = selection?.blocks?.at(-1)?.id;
+  if (selectedLastBlock) {
+    return selectedLastBlock;
+  }
+
+  const cursorBlockId = editor.getTextCursorPosition?.().block?.id;
+  if (cursorBlockId) {
+    return cursorBlockId;
+  }
+
+  return editor.document?.[0]?.id;
 }

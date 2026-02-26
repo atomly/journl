@@ -1,6 +1,6 @@
 import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
-import { zNavigateJournalEntryInput } from "./navigate-journal-entry.schema";
+import { zNavigateJournalEntryInput } from "./schema";
 
 export const navigateJournalEntry = createTool({
   description: `Open a journal entry by date (YYYY-MM-DD).

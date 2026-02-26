@@ -1,5 +1,6 @@
 import { ThemeProvider } from "next-themes";
 import { TRPCReactProvider } from "~/trpc/react";
+import "./styles.css";
 
 type AppLayoutProps = {
   children: React.ReactNode;

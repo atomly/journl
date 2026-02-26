@@ -29,3 +29,40 @@
   margin-right: 0.7rem;
   margin-top: 0.34375rem;
 }
+
+/* AI suggestion combobox only (scoped by the AI menu id) */
+.bn-combobox:has(input[name="ai-prompt"]) > .bn-combobox-input {
+  min-height: 44px;
+  padding: 0px 12px;
+}
+
+.bn-combobox:has(input[name="ai-prompt"])
+  > .bn-combobox-input
+  input[name="ai-prompt"] {
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  padding-left: 4px;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.bn-combobox:has(input[name="ai-prompt"]) > .bn-combobox-input:focus-within {
+  border-color: hsl(var(--ring));
+  box-shadow: 0 0 0 3px hsl(var(--ring) / 0.45);
+}
+
+.bn-combobox:has(input[name="ai-prompt"]) > .bn-combobox-input,
+.bn-combobox:has(input[name="ai-prompt"]) > .bn-combobox-input:focus,
+.bn-combobox:has(input[name="ai-prompt"]) > .bn-combobox-input:focus-visible,
+.bn-combobox:has(input[name="ai-prompt"])
+  > .bn-combobox-input
+  input[name="ai-prompt"]:active {
+  outline: none;
+  --tw-ring-shadow: 0 0 transparent;
+  --tw-ring-offset-shadow: 0 0 transparent;
+  --tw-shadow: 0 0 transparent;
+  --tw-shadow-colored: 0 0 transparent;
+}

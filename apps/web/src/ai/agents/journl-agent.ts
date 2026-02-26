@@ -10,11 +10,13 @@ import {
   journlMastraVector,
 } from "../mastra/postgres-store";
 import { model as embedder } from "../providers/openai/embedding";
-import { createPage } from "../tools/create-page";
-import { manipulateEditor } from "../tools/manipulate-editor";
-import { zTargetEditor } from "../tools/manipulate-editor.schema";
-import { navigateJournalEntry } from "../tools/navigate-journal-entry";
-import { navigatePage } from "../tools/navigate-page";
+import { applyEditorChanges } from "../tools/apply-editor-changes/tool";
+import { createPage } from "../tools/create-page/tool";
+import { zTargetEditor } from "../tools/manipulate-editor/schema";
+import { manipulateEditor } from "../tools/manipulate-editor/tool";
+import { navigateJournalEntry } from "../tools/navigate-journal-entry/tool";
+import { navigatePage } from "../tools/navigate-page/tool";
+import { rejectEditorChanges } from "../tools/reject-editor-changes/tool";
 import { semanticJournalSearch } from "../tools/semantic-journal-search";
 import { semanticPageSearch } from "../tools/semantic-page-search";
 import { temporalJournalSearch } from "../tools/temporal-journal-search";
@@ -93,10 +95,12 @@ ${
 }
 
 const tools = {
+  applyEditorChanges,
   createPage,
   manipulateEditor,
   navigateJournalEntry,
   navigatePage,
+  rejectEditorChanges,
   semanticJournalSearch,
   semanticPageSearch,
   temporalJournalSearch,

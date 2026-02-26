@@ -1,7 +1,7 @@
 "use client";
 
 import type { BlockPrimitive, EditorPrimitive } from "@acme/blocknote/schema";
-import type { Block, PartialBlock } from "@blocknote/core";
+import type { Block } from "@blocknote/core";
 import { BlockNoteView } from "@blocknote/shadcn";
 import { AIExtension, AIMenuController } from "@blocknote/xl-ai";
 import { useTheme } from "next-themes";
@@ -49,8 +49,9 @@ import {
 } from "../ui/tooltip";
 import { cn } from "../utils";
 import {
-  BlockEditorFormattingToolbar,
+  BlockEditorFloatingToolbar,
   BlockEditorSlashMenu,
+  BlockEditorStickyToolbar,
 } from "./block-editor-tools";
 
 type EditorPrimitiveOnChangeParams = Parameters<
@@ -89,11 +90,6 @@ type BlockEditorProps = Omit<
    */
   editor: EditorPrimitive;
   /**
-   * The initial blocks to render in the editor.
-   * @note The initial blocks must be a non-empty array.
-   */
-  initialBlocks?: [PartialBlock, ...PartialBlock[]] | undefined;
-  /**
    * The function to call when the editor changes.
    */
   onChange?: (transactions: BlockTransaction[]) => void;
@@ -106,7 +102,6 @@ type BlockEditorProps = Omit<
 export function BlockEditor({
   className,
   editor,
-  initialBlocks,
   onChange,
   children,
   debug = env.NODE_ENV === "development",
@@ -114,8 +109,11 @@ export function BlockEditor({
 }: BlockEditorProps) {
   const { theme, systemTheme } = useTheme();
   const previousEditorRef = useRef<typeof editor.document>(editor.document);
-  const { unsetEditorSelections, getSelections, unsetSelection } =
-    useJournlAgent();
+  const {
+    unsetEditorSelections,
+    getAllSelections: getSelections,
+    unsetSelection,
+  } = useJournlAgent();
 
   // Remove block selections when the editor is unmounted.
   useEffect(() => {
@@ -342,7 +340,7 @@ export function BlockEditor({
   return (
     <BlockNoteView
       {...rest}
-      className={cn("flex flex-col-reverse gap-y-4", className)}
+      className={cn("flex flex-col-reverse gap-y-6 md:gap-y-8", className)}
       editor={editor}
       theme={resolvedTheme as "light" | "dark"}
       onChange={handleEditorChange}
@@ -417,10 +415,11 @@ export function BlockEditor({
         },
       }}
     >
-      <AIMenuController />
-      <BlockEditorFormattingToolbar />
-      <BlockEditorSlashMenu />
       {children}
+      <BlockEditorFloatingToolbar />
+      <BlockEditorStickyToolbar />
+      <BlockEditorSlashMenu />
+      <AIMenuController />
     </BlockNoteView>
   );
 }

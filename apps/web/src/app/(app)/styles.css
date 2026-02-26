@@ -120,11 +120,6 @@ The rest of the components are set by the Tailwind CSS classes, or by our editor
   z-index: 4500;
 }
 
-/* Sets the z-index of the sidebar and its overlay */
-[data-slot="sidebar"] {
-  z-index: 4500;
-}
-
 [data-slot="sheet-overlay"] {
   z-index: 4500;
 }
@@ -139,8 +134,14 @@ The rest of the components are set by the Tailwind CSS classes, or by our editor
   z-index: 4000 !important;
 }
 
-/* Hide the editor's AI suggestion menu key shortcut elements on mobile */
+/* On mobile... */
 @media (max-width: 768px) {
+  /* Sets the z-index of the sidebar and its overlay */
+  [data-slot="sidebar"] {
+    z-index: 4500;
+  }
+
+  /* Hide the editor's AI suggestion menu key shortcut elements */
   div#bn-suggestion-menu > div[role="option"] > div[data-position="right"] {
     display: none;
   }

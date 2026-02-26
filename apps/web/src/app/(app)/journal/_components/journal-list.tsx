@@ -14,7 +14,6 @@ import {
 } from "~/trpc/options/journal-entries-query-options";
 import { useTRPC } from "~/trpc/react";
 import {
-  JournalEntryContent,
   JournalEntryHeader,
   JournalEntryLink,
   JournalEntryProvider,
@@ -96,7 +95,7 @@ function JournalListContent({
 
   if (status === "error") {
     return (
-      <div className="mx-auto flex h-full max-w-4xl flex-1 flex-col items-center justify-center gap-y-8 text-center">
+      <div className="mx-auto flex h-full max-w-4xl flex-1 flex-col items-center justify-center gap-y-6 text-center md:gap-y-8">
         <div>
           <div>Sorry, something went wrong.</div>
           <div>Please try again.</div>
@@ -123,12 +122,11 @@ function JournalListContent({
       itemContent={(_, entry) => (
         <JournalEntryProvider entry={entry}>
           <JournalEntryWrapper className="mx-auto max-w-4xl border-b pt-8 pb-20">
-            <JournalEntryLink>
-              <JournalEntryHeader className="px-8" />
-            </JournalEntryLink>
-            <JournalEntryContent>
-              <DynamicJournalEntryEditor onCreateAction={onCreateAction} />
-            </JournalEntryContent>
+            <DynamicJournalEntryEditor onCreateAction={onCreateAction}>
+              <JournalEntryLink>
+                <JournalEntryHeader className="px-8" />
+              </JournalEntryLink>
+            </DynamicJournalEntryEditor>
           </JournalEntryWrapper>
         </JournalEntryProvider>
       )}

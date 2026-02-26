@@ -1,6 +1,6 @@
 import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
-import { zNavigatePageInput } from "./navigate-page.schema";
+import { zNavigatePageInput } from "./schema";
 
 export const navigatePage = createTool({
   description: `Open a specific page by UUID only.

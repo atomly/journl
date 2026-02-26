@@ -1,6 +1,6 @@
 import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
-import { zCreatePageInput } from "./create-page.schema";
+import { zCreatePageInput } from "./schema";
 
 export const createPage = createTool({
   description: `Create a new page with the given title.

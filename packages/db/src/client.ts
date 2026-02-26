@@ -1,19 +1,28 @@
-import { sql } from "@vercel/postgres";
-import type { ExtractTablesWithRelations } from "drizzle-orm";
-import type { PgTransaction } from "drizzle-orm/pg-core";
-import type { VercelPgQueryResultHKT } from "drizzle-orm/vercel-postgres";
-import { drizzle } from "drizzle-orm/vercel-postgres";
+import { drizzle } from "drizzle-orm/postgres-js";
+import postgres from "postgres";
 
+import { dbEnv } from "./env.ts";
 import * as schema from "./schema.ts";
 
-export const db = drizzle({
+type PostgresClient = ReturnType<typeof postgres>;
+
+function createPostgresClient(): PostgresClient {
+  const connectionString = dbEnv().POSTGRES_URL;
+
+  return postgres(connectionString, {
+    connect_timeout: 10,
+    idle_timeout: 20,
+    max: 1,
+    prepare: false,
+    ssl: "require",
+  });
+}
+
+const client = createPostgresClient();
+
+export const db = drizzle(client, {
   casing: "snake_case",
-  client: sql,
   schema,
 });
 
-export type DbTransaction = PgTransaction<
-  VercelPgQueryResultHKT,
-  typeof schema,
-  ExtractTablesWithRelations<typeof schema>
->;
+export type DbTransaction = Parameters<Parameters<typeof db.transaction>[0]>[0];

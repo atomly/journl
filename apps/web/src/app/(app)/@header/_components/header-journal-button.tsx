@@ -17,9 +17,9 @@ export function HeaderJournalButton() {
     const dayMs = 24 * 60 * 60 * 1000;
     let intervalId: number | undefined;
 
-    const updateToday = () => {
+    function updateToday() {
       setToday(new Date());
-    };
+    }
 
     const now = new Date();
     const nextMidnight = new Date(now);

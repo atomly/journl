@@ -4,16 +4,22 @@ import { getJournlRequestContext } from "../agents/journl-agent";
 import { zManipulateEditorInput } from "./manipulate-editor.schema";
 
 export const manipulateEditor = createTool({
-  description: `Modify the content of a currently active editor.
+  description: `Modify the content of the target editor.
 
-Use this when the user wants to write, insert, capture, format, structure, replace, or transform editor content. This is a client-side editor action, so provide a detailed editorPrompt with all needed instructions.
+Use when the user wants to write, add, insert, capture, log, note, format, structure, replace, or transform editor content.
+
+Important:
+- targetEditor must be the ID of one of the active editors and must match the expected format.
+- If you do not know which active editor to use, do not call this tool and ask the user to clarify.
+- This is a client-side editor action, so the editorPrompt must include as much detail as possible.
 
 Rules:
-- targetEditor must be one of the active editor IDs and must match the expected format.
 - Do not use for pure recall or analysis of prior notes; use search tools instead.
 - Do not add page titles in editor content; titles are managed separately.
 - Do not fabricate prior notes, pages, links, or any content not found in user data.
-- Do not generate markdown explicitly; the editor handles formatting.`,
+- Do not generate markdown explicitly; the editor handles formatting.
+
+After a successful call, avoid telling the user that changes were made. At most, briefly summarize the result.`,
   execute: async ({ targetEditor }, { requestContext }) => {
     const context = getJournlRequestContext(requestContext);
     if (!context?.activeEditors.length) {

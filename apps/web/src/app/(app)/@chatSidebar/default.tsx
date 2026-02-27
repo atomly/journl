@@ -54,7 +54,7 @@ export default function ChatSidebar() {
                 </div>
 
                 <div className="flex min-w-0 flex-row justify-between border-sidebar-border/70 border-t p-2">
-                  <ComposerReasoning />
+                  <ComposerReasoning idPrefix="chat-sidebar-reasoning" />
                   <ComposerAction
                     tooltip="Send message"
                     variant="outline"

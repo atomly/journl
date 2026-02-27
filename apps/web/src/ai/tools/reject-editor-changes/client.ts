@@ -2,7 +2,7 @@
 
 import { useJournlAgent } from "../../agents/use-journl-agent";
 import { createClientTool } from "../../utils/create-client-tool";
-import { resolveEditorAndAIExtension } from "../editor-changes/client-utils";
+import { getAIExtension, getEditor } from "../common/blocknote-utils";
 import { zEditorChangesInput } from "../editor-changes/schema";
 
 export function useRejectEditorChangesTool() {
@@ -11,19 +11,8 @@ export function useRejectEditorChangesTool() {
   const tool = createClientTool({
     execute: async (toolCall, chat) => {
       try {
-        const resolved = resolveEditorAndAIExtension({
-          chat,
-          getEditors,
-          targetEditor: toolCall.input.targetEditor,
-          toolCallId: toolCall.toolCallId,
-          toolName: toolCall.toolName,
-        });
-
-        if (!resolved) {
-          return;
-        }
-
-        const { aiExtension } = resolved;
+        const editor = getEditor(toolCall.input.targetEditor)(getEditors);
+        const aiExtension = getAIExtension(editor);
 
         const aiMenuState = aiExtension.store.state.aiMenuState;
         if (

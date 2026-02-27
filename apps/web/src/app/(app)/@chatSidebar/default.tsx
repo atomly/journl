@@ -2,6 +2,7 @@ import { ComposerPrimitive, ThreadPrimitive } from "@assistant-ui/react";
 import {
   ComposerAction,
   ComposerInput,
+  ComposerQuotaNotice,
   ThreadScrollToBottom,
 } from "~/components/assistant-ui/thread-components";
 import { ComposerReasoning } from "~/components/assistant-ui/thread-context";
@@ -50,6 +51,7 @@ export default function ChatSidebar() {
               <ComposerPrimitive.Root className="relative flex w-full flex-col rounded-lg border border-sidebar-border/80 bg-muted/45 focus-within:border-ring/20">
                 <div className="relative gap-y-2 rounded-tl-lg rounded-tr-lg bg-background pt-2">
                   <ComposerSources className="px-2" />
+                  <ComposerQuotaNotice />
                   <ComposerInput className="min-h-24 w-full px-3 py-2" />
                 </div>
 

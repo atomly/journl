@@ -2,6 +2,7 @@
 
 import type { JournlReasoning } from "~/ai/agents/journl-agent-reasoning";
 import { useJournlAgent } from "~/ai/agents/use-journl-agent";
+import { useThreadChatError } from "~/components/assistant-ui/thread-runtime";
 import {
   Select,
   SelectContent,
@@ -19,13 +20,18 @@ const REASONING_MODE_LABELS = {
 
 export function ComposerReasoning() {
   const { getReasoning, setReasoning } = useJournlAgent();
+  const { usageQuotaExceeded } = useThreadChatError();
 
   function handleReasoningModeChange(value: JournlReasoning) {
     setReasoning(value);
   }
 
   return (
-    <Select value={getReasoning()} onValueChange={handleReasoningModeChange}>
+    <Select
+      disabled={Boolean(usageQuotaExceeded)}
+      value={getReasoning()}
+      onValueChange={handleReasoningModeChange}
+    >
       <SelectTrigger
         size="sm"
         aria-label="Reasoning mode"

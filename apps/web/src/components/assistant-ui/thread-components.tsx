@@ -1,3 +1,5 @@
+"use client";
+
 import {
   ActionBarPrimitive,
   BranchPickerPrimitive,
@@ -24,6 +26,7 @@ import {
 } from "lucide-react";
 import type { ComponentProps, ReactNode } from "react";
 import { MarkdownText } from "~/components/assistant-ui/markdown-text";
+import { useThreadChatError } from "~/components/assistant-ui/thread-runtime";
 import { TooltipIconButton } from "~/components/assistant-ui/tooltip-icon-button";
 import { Button } from "~/components/ui/button";
 import { cn } from "~/lib/cn";
@@ -57,12 +60,21 @@ export function ThreadScrollToBottom({
 
 export function ComposerInput({
   className,
+  placeholder = "Ask anything...",
   ...rest
 }: ComponentProps<typeof ComposerPrimitive.Input>) {
+  const { usageQuotaExceeded } = useThreadChatError();
+  const isUsageQuotaExceeded = Boolean(usageQuotaExceeded);
+
   return (
     <ComposerPrimitive.Input
       rows={1}
-      placeholder="Ask anything..."
+      disabled={isUsageQuotaExceeded || rest.disabled}
+      placeholder={
+        isUsageQuotaExceeded
+          ? "Usage limit reached. Upgrade to continue."
+          : placeholder
+      }
       className={cn(
         "max-h-40 grow resize-none border-none text-md outline-none placeholder:text-muted-foreground focus:ring-0 disabled:cursor-not-allowed",
         className,
@@ -83,12 +95,16 @@ export function ComposerAction({
   tooltip = "Send",
   variant = "default",
 }: ComposerActionProps) {
+  const { usageQuotaExceeded } = useThreadChatError();
+  const isUsageQuotaExceeded = Boolean(usageQuotaExceeded);
+
   return (
     <>
       <ThreadPrimitive.If running={false}>
         <ComposerPrimitive.Send asChild>
           <TooltipIconButton
-            tooltip={tooltip}
+            disabled={isUsageQuotaExceeded}
+            tooltip={isUsageQuotaExceeded ? "Usage limit reached" : tooltip}
             variant={variant}
             className={cn("size-8 p-2 transition-opacity ease-in", className)}
           >
@@ -108,6 +124,30 @@ export function ComposerAction({
         </ComposerPrimitive.Cancel>
       </ThreadPrimitive.If>
     </>
+  );
+}
+
+export function ComposerQuotaNotice() {
+  const { usageQuotaExceeded } = useThreadChatError();
+
+  if (!usageQuotaExceeded) {
+    return null;
+  }
+
+  const { usage } = usageQuotaExceeded;
+  const planLabel = usage.subscriptionType === "pro" ? "Pro" : "Free";
+
+  return (
+    <div className="mx-2 mb-2 rounded-md border border-amber-500/50 bg-amber-50 px-3 py-2 dark:border-amber-800/80 dark:bg-amber-950/20">
+      <p className="font-medium text-amber-900 text-xs dark:text-amber-200">
+        AI usage limit reached
+      </p>
+      <p className="text-amber-900/90 text-xs dark:text-amber-100/90">
+        {planLabel} plan usage {formatUsd(usage.currentUsageUsd)} of{" "}
+        {formatUsd(usage.quotaUsd)} is fully used. Upgrade or wait for the next
+        reset.
+      </p>
+    </div>
   );
 }
 
@@ -567,4 +607,13 @@ function truncate(value: string, limit: number) {
   } catch {
     return value;
   }
+}
+
+function formatUsd(value: number) {
+  return new Intl.NumberFormat("en-US", {
+    currency: "USD",
+    maximumFractionDigits: 3,
+    minimumFractionDigits: 2,
+    style: "currency",
+  }).format(value);
 }

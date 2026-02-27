@@ -16,6 +16,7 @@ import { prefetch, trpc } from "~/trpc/server";
 import { DynamicAppSidebarDevtools } from "./_components/app-sidebar-devtools.dynamic";
 import { AppSidebarNavigation } from "./_components/app-sidebar-main";
 import { AppSidebarPages } from "./_components/app-sidebar-pages";
+import { AppSidebarPagesSkeleton } from "./_components/app-sidebar-pages-skeleton";
 import { AppSidebarUser } from "./_components/app-sidebar-user";
 import { AppSidebarUserSkeleton } from "./_components/app-sidebar-user-skeleton";
 
@@ -45,9 +46,11 @@ export default function AppSidebar() {
         <SidebarGroup className="flex min-h-0 flex-1 flex-col gap-y-1">
           <SidebarGroupLabel>Navigation</SidebarGroupLabel>
           <AppSidebarNavigation items={navigationItems} />
-          <AppSidebarPages
-            infinitePagesQueryOptions={infinitePagesQueryOptions}
-          />
+          <Suspense fallback={<AppSidebarPagesSkeleton />}>
+            <AppSidebarPages
+              infinitePagesQueryOptions={infinitePagesQueryOptions}
+            />
+          </Suspense>
         </SidebarGroup>
       </SidebarContent>
       {env.NODE_ENV === "development" && (

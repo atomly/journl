@@ -5,7 +5,11 @@ import {
   ComposerQuotaNotice,
   ThreadScrollToBottom,
 } from "~/components/assistant-ui/thread-components";
-import { ComposerReasoning } from "~/components/assistant-ui/thread-context";
+import {
+  ComposerReasoning,
+  ComposerReasoningContent,
+  ComposerReasoningTrigger,
+} from "~/components/assistant-ui/thread-context";
 import { ThreadMessages } from "~/components/assistant-ui/thread-messages";
 import { ComposerSources } from "~/components/assistant-ui/thread-sources";
 import { ThreadWelcome } from "~/components/assistant-ui/thread-welcome";
@@ -18,6 +22,7 @@ import {
 import { ChatDrawerTrigger } from "./_components/chat-drawer-trigger";
 
 const CHAT_DRAWER_CONTENT_ID = "chat-drawer-content";
+const CHAT_DRAWER_REASONING_CONTENT_ID = "chat-drawer-reasoning-select-content";
 
 export default function ChatDrawer() {
   return (
@@ -58,7 +63,14 @@ export default function ChatDrawer() {
                   </div>
 
                   <div className="flex min-w-0 flex-row justify-between border-sidebar-border/70 border-t p-2">
-                    <ComposerReasoning idPrefix="chat-drawer-reasoning" />
+                    <ComposerReasoning>
+                      <ComposerReasoningTrigger
+                        aria-controls={CHAT_DRAWER_REASONING_CONTENT_ID}
+                      />
+                      <ComposerReasoningContent
+                        id={CHAT_DRAWER_REASONING_CONTENT_ID}
+                      />
+                    </ComposerReasoning>
                     <ComposerAction
                       tooltip="Send message"
                       variant="outline"

@@ -1,8 +1,10 @@
 "use client";
 
+import type { ComponentProps, ReactNode } from "react";
 import type { JournlReasoning } from "~/ai/agents/journl-agent-reasoning";
 import { useJournlAgent } from "~/ai/agents/use-journl-agent";
 import { useThreadChatError } from "~/components/assistant-ui/thread-runtime";
+import { cn } from "~/lib/cn";
 import {
   Select,
   SelectContent,
@@ -18,19 +20,23 @@ const REASONING_MODE_LABELS = {
   thinking: "Thinking",
 } as const;
 
+const COMPOSER_REASONING_TRIGGER_CLASSNAME =
+  "h-8 w-22 border-primary/70 bg-background! px-2 text-foreground text-xs shadow-none hover:border-primary! focus-visible:ring-0 [&_svg]:text-foreground!";
+
 type ComposerReasoningProps = {
-  idPrefix?: string;
+  children: ReactNode;
 };
 
-export function ComposerReasoning({
-  idPrefix = "composer-reasoning",
-}: ComposerReasoningProps) {
+export function ComposerReasoning({ children }: ComposerReasoningProps) {
   const { getReasoning, setReasoning } = useJournlAgent();
   const { usageQuotaExceeded } = useThreadChatError();
-  const selectContentId = `${idPrefix}-select-content`;
 
-  function handleReasoningModeChange(value: JournlReasoning) {
-    setReasoning(value);
+  function handleReasoningModeChange(value: string) {
+    if (!REASONING_MODES.includes(value as JournlReasoning)) {
+      return;
+    }
+
+    setReasoning(value as JournlReasoning);
   }
 
   return (
@@ -39,22 +45,47 @@ export function ComposerReasoning({
       value={getReasoning()}
       onValueChange={handleReasoningModeChange}
     >
-      <SelectTrigger
-        size="sm"
-        aria-label="Reasoning mode"
-        aria-controls={selectContentId}
-        className="h-8 w-22 border-primary/70 bg-background! px-2 text-foreground text-xs shadow-none hover:border-primary! focus-visible:ring-0 [&_svg]:text-foreground!"
-      >
-        <SelectValue />
-      </SelectTrigger>
-      <SelectContent id={selectContentId}>
-        {REASONING_MODES.map((reasoning) => (
+      {children}
+    </Select>
+  );
+}
+
+type ComposerReasoningTriggerProps = ComponentProps<typeof SelectTrigger>;
+
+export function ComposerReasoningTrigger({
+  className,
+  children,
+  size = "sm",
+  "aria-label": ariaLabel = "Reasoning mode",
+  ...props
+}: ComposerReasoningTriggerProps) {
+  return (
+    <SelectTrigger
+      size={size}
+      aria-label={ariaLabel}
+      className={cn(COMPOSER_REASONING_TRIGGER_CLASSNAME, className)}
+      {...props}
+    >
+      {children ?? <SelectValue />}
+    </SelectTrigger>
+  );
+}
+
+type ComposerReasoningContentProps = ComponentProps<typeof SelectContent>;
+
+export function ComposerReasoningContent({
+  children,
+  ...props
+}: ComposerReasoningContentProps) {
+  return (
+    <SelectContent {...props}>
+      {children ??
+        REASONING_MODES.map((reasoning) => (
           <SelectItem key={reasoning} value={reasoning}>
             {REASONING_MODE_LABELS[reasoning]}
           </SelectItem>
         ))}
-      </SelectContent>
-    </Select>
+    </SelectContent>
   );
 }
 

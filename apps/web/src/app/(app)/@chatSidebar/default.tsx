@@ -4,7 +4,11 @@ import {
   ComposerInput,
   ThreadScrollToBottom,
 } from "~/components/assistant-ui/thread-components";
-import { ComposerReasoning } from "~/components/assistant-ui/thread-context";
+import {
+  ComposerReasoning,
+  ComposerReasoningContent,
+  ComposerReasoningTrigger,
+} from "~/components/assistant-ui/thread-context";
 import { ThreadMessages } from "~/components/assistant-ui/thread-messages";
 import { ComposerSources } from "~/components/assistant-ui/thread-sources";
 import { ThreadWelcome } from "~/components/assistant-ui/thread-welcome";
@@ -15,6 +19,8 @@ const CHAT_SIDEBAR_MIN_WIDTH = "20rem";
 const CHAT_SIDEBAR_WIDTH_MAX = "50rem";
 const CHAT_THREAD_MIN_WIDTH = "18rem"; // Leave 2rem for the padding.
 const CHAT_THREAD_MAX_WIDTH = "50rem";
+const CHAT_SIDEBAR_REASONING_CONTENT_ID =
+  "chat-sidebar-reasoning-select-content";
 
 export default function ChatSidebar() {
   return (
@@ -54,7 +60,14 @@ export default function ChatSidebar() {
                 </div>
 
                 <div className="flex min-w-0 flex-row justify-between border-sidebar-border/70 border-t p-2">
-                  <ComposerReasoning idPrefix="chat-sidebar-reasoning" />
+                  <ComposerReasoning>
+                    <ComposerReasoningTrigger
+                      aria-controls={CHAT_SIDEBAR_REASONING_CONTENT_ID}
+                    />
+                    <ComposerReasoningContent
+                      id={CHAT_SIDEBAR_REASONING_CONTENT_ID}
+                    />
+                  </ComposerReasoning>
                   <ComposerAction
                     tooltip="Send message"
                     variant="outline"

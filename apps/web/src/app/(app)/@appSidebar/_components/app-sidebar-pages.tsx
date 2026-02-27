@@ -87,7 +87,7 @@ export const AppSidebarPages = ({
           tooltip="Pages"
           onClick={handlePagesClick}
         >
-          {isLoading ? (
+          {isLoading || isFetchingNextPage ? (
             <Loader2 className="size-3 animate-spin" />
           ) : (
             <BookOpen />

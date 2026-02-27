@@ -19,9 +19,6 @@ const REASONING_MODE_LABELS = {
   thinking: "Thinking",
 } as const;
 
-const COMPOSER_REASONING_TRIGGER_CLASSNAME =
-  "h-8 w-22 border-primary/70 bg-background! px-2 text-foreground text-xs shadow-none hover:border-primary! focus-visible:ring-0 [&_svg]:text-foreground!";
-
 type ComposerReasoningProps = {
   children: ReactNode;
 };
@@ -44,11 +41,13 @@ export function ComposerReasoning({ children }: ComposerReasoningProps) {
   );
 }
 
-type ComposerReasoningTriggerProps = ComponentProps<typeof SelectTrigger>;
+type ComposerReasoningTriggerProps = Omit<
+  ComponentProps<typeof SelectTrigger>,
+  "children"
+>;
 
 export function ComposerReasoningTrigger({
   className,
-  children,
   size = "sm",
   "aria-label": ariaLabel = "Reasoning mode",
   ...props
@@ -57,28 +56,30 @@ export function ComposerReasoningTrigger({
     <SelectTrigger
       size={size}
       aria-label={ariaLabel}
-      className={cn(COMPOSER_REASONING_TRIGGER_CLASSNAME, className)}
+      className={cn(
+        "h-8 w-22 border-primary/70 bg-background! px-2 text-foreground text-xs shadow-none hover:border-primary! focus-visible:ring-0 [&_svg]:text-foreground!",
+        className,
+      )}
       {...props}
     >
-      {children ?? <SelectValue />}
+      <SelectValue />
     </SelectTrigger>
   );
 }
 
-type ComposerReasoningContentProps = ComponentProps<typeof SelectContent>;
+type ComposerReasoningContentProps = Omit<
+  ComponentProps<typeof SelectContent>,
+  "children"
+>;
 
-export function ComposerReasoningContent({
-  children,
-  ...props
-}: ComposerReasoningContentProps) {
+export function ComposerReasoningContent(props: ComposerReasoningContentProps) {
   return (
     <SelectContent {...props}>
-      {children ??
-        REASONING_MODES.map((reasoning) => (
-          <SelectItem key={reasoning} value={reasoning}>
-            {REASONING_MODE_LABELS[reasoning]}
-          </SelectItem>
-        ))}
+      {REASONING_MODES.map((reasoning) => (
+        <SelectItem key={reasoning} value={reasoning}>
+          {REASONING_MODE_LABELS[reasoning]}
+        </SelectItem>
+      ))}
     </SelectContent>
   );
 }

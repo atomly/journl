@@ -1,6 +1,6 @@
 "use client";
 
-import { Sparkles } from "lucide-react";
+import { RiSparkling2Fill } from "react-icons/ri";
 import { useChatNudge } from "~/components/assistant-ui/use-chat-nudge";
 import { Button } from "~/components/ui/button";
 import { DrawerTrigger, useDrawer } from "~/components/ui/drawer";
@@ -32,7 +32,7 @@ export function ChatDrawerTrigger({
         )}
         {...props}
       >
-        <Sparkles className="size-6" />
+        <RiSparkling2Fill className="size-6" />
         {hasUnreadAssistantMessages ? (
           <span className="absolute -top-1 -right-1 inline-flex min-h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 font-semibold text-[0.625rem] text-primary-foreground leading-none">
             {unreadAssistantMessagesLabel}

@@ -6,7 +6,7 @@ import { AppLayoutProvider } from "../_components/app-layout-provider";
 import ChatSidebarTrigger from "./@chatSidebar/_components/chat-sidebar-trigger";
 import "./styles.css";
 import { AppProviders } from "../_components/app-providers";
-import { AppContainer } from "./@header/_components/app-container";
+import { AppContainer } from "./_components/app-container";
 
 type AppLayoutProps = {
   children: React.ReactNode;

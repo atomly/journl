@@ -1,6 +1,5 @@
 "use client";
 
-import type React from "react";
 import { useEffect, useRef, useState } from "react";
 import { useIsMobile } from "~/hooks/use-mobile";
 import { cn } from "~/lib/cn";

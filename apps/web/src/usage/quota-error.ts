@@ -34,7 +34,7 @@ export function parseUsageQuotaExceededPayload(
     return null;
   }
 
-  const usage = isUsageQuota(payload.usage) ? payload.usage : null;
+  const usage = parseUsageQuota(payload.usage);
   if (!usage) {
     return null;
   }
@@ -176,17 +176,40 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
 }
 
-function isUsageQuota(value: unknown): value is UsageQuota {
+function parseUsageQuota(value: unknown): UsageQuota | null {
   if (!isRecord(value)) {
-    return false;
+    return null;
   }
 
-  return (
-    typeof value.canUse === "boolean" &&
-    typeof value.currentUsageUsd === "number" &&
-    typeof value.quotaUsd === "number" &&
-    typeof value.remainingQuotaUsd === "number" &&
-    (value.subscriptionType === "free" || value.subscriptionType === "pro") &&
-    (typeof value.usagePeriodId === "string" || value.usagePeriodId === null)
-  );
+  const canUse = value.canUse;
+  const currentUsageUsd = value.currentUsageUsd;
+  const quotaUsd = value.quotaUsd;
+  const remainingQuotaUsd = value.remainingQuotaUsd;
+  const subscriptionType = value.subscriptionType;
+  const usagePeriodId = value.usagePeriodId;
+  const periodEnd = value.periodEnd;
+
+  if (
+    typeof canUse !== "boolean" ||
+    typeof currentUsageUsd !== "number" ||
+    typeof quotaUsd !== "number" ||
+    typeof remainingQuotaUsd !== "number" ||
+    (subscriptionType !== "free" && subscriptionType !== "pro") ||
+    (typeof usagePeriodId !== "string" && usagePeriodId !== null) ||
+    (typeof periodEnd !== "string" &&
+      periodEnd !== null &&
+      typeof periodEnd !== "undefined")
+  ) {
+    return null;
+  }
+
+  return {
+    canUse,
+    currentUsageUsd,
+    periodEnd: periodEnd ?? null,
+    quotaUsd,
+    remainingQuotaUsd,
+    subscriptionType,
+    usagePeriodId,
+  };
 }

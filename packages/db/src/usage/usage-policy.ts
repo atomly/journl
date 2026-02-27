@@ -5,10 +5,12 @@ export type UsageQuota = {
   remainingQuotaUsd: number;
   subscriptionType: "free" | "pro";
   usagePeriodId: string | null;
+  periodEnd: string | null;
 };
 
 export type UsageQuotaPeriodSnapshot = {
   id: string | null;
+  period_end?: string | null;
   plan: {
     quota: number;
   } | null;
@@ -50,6 +52,7 @@ export function getPeriodUsageQuota(
   return {
     canUse: currentUsageUsd < quotaUsd,
     currentUsageUsd,
+    periodEnd: period.period_end ?? null,
     quotaUsd,
     remainingQuotaUsd,
     subscriptionType: period.subscription ? "pro" : "free",

@@ -1,7 +1,8 @@
 "use client";
 
 import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
-import React, { useEffect, useMemo } from "react";
+import type React from "react";
+import { useEffect, useMemo } from "react";
 import { Virtuoso } from "react-virtuoso";
 import { useDebouncedCallback } from "use-debounce";
 import { useJournlAgent } from "~/ai/agents/use-journl-agent";
@@ -247,13 +248,11 @@ function VirtualizedJournalList({
       itemContent={(_, entry) => (
         <JournalEntryProvider entry={entry}>
           <JournalEntryWrapper className="mx-auto max-w-4xl border-b pt-8 pb-20">
-            <React.Suspense>
-              <DynamicJournalEntryEditor onCreateAction={onCreateAction}>
-                <JournalEntryLink>
-                  <JournalEntryHeader className="px-8" />
-                </JournalEntryLink>
-              </DynamicJournalEntryEditor>
-            </React.Suspense>
+            <DynamicJournalEntryEditor onCreateAction={onCreateAction}>
+              <JournalEntryLink>
+                <JournalEntryHeader className="px-8" />
+              </JournalEntryLink>
+            </DynamicJournalEntryEditor>
           </JournalEntryWrapper>
         </JournalEntryProvider>
       )}

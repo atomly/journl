@@ -1,7 +1,9 @@
 "use client";
 
+import type { ComponentProps, ReactNode } from "react";
 import type { JournlReasoning } from "~/ai/agents/journl-agent-reasoning";
 import { useJournlAgent } from "~/ai/agents/use-journl-agent";
+import { cn } from "~/lib/cn";
 import {
   Select,
   SelectContent,
@@ -17,30 +19,68 @@ const REASONING_MODE_LABELS = {
   thinking: "Thinking",
 } as const;
 
-export function ComposerReasoning() {
+type ComposerReasoningProps = {
+  children: ReactNode;
+};
+
+export function ComposerReasoning({ children }: ComposerReasoningProps) {
   const { getReasoning, setReasoning } = useJournlAgent();
 
-  function handleReasoningModeChange(value: JournlReasoning) {
-    setReasoning(value);
+  function handleReasoningModeChange(value: string) {
+    if (!REASONING_MODES.includes(value as JournlReasoning)) {
+      return;
+    }
+
+    setReasoning(value as JournlReasoning);
   }
 
   return (
     <Select value={getReasoning()} onValueChange={handleReasoningModeChange}>
-      <SelectTrigger
-        size="sm"
-        aria-label="Reasoning mode"
-        className="h-8 w-22 border-primary/70 bg-background! px-2 text-foreground text-xs shadow-none hover:border-primary! focus-visible:ring-0 [&_svg]:text-foreground!"
-      >
-        <SelectValue />
-      </SelectTrigger>
-      <SelectContent>
-        {REASONING_MODES.map((reasoning) => (
-          <SelectItem key={reasoning} value={reasoning}>
-            {REASONING_MODE_LABELS[reasoning]}
-          </SelectItem>
-        ))}
-      </SelectContent>
+      {children}
     </Select>
+  );
+}
+
+type ComposerReasoningTriggerProps = Omit<
+  ComponentProps<typeof SelectTrigger>,
+  "children"
+>;
+
+export function ComposerReasoningTrigger({
+  className,
+  size = "sm",
+  "aria-label": ariaLabel = "Reasoning mode",
+  ...props
+}: ComposerReasoningTriggerProps) {
+  return (
+    <SelectTrigger
+      size={size}
+      aria-label={ariaLabel}
+      className={cn(
+        "h-8 w-22 border-primary/70 bg-background! px-2 text-foreground text-xs shadow-none hover:border-primary! focus-visible:ring-0 [&_svg]:text-foreground!",
+        className,
+      )}
+      {...props}
+    >
+      <SelectValue />
+    </SelectTrigger>
+  );
+}
+
+type ComposerReasoningContentProps = Omit<
+  ComponentProps<typeof SelectContent>,
+  "children"
+>;
+
+export function ComposerReasoningContent(props: ComposerReasoningContentProps) {
+  return (
+    <SelectContent {...props}>
+      {REASONING_MODES.map((reasoning) => (
+        <SelectItem key={reasoning} value={reasoning}>
+          {REASONING_MODE_LABELS[reasoning]}
+        </SelectItem>
+      ))}
+    </SelectContent>
   );
 }
 

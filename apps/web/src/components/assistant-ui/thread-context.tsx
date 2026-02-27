@@ -18,9 +18,16 @@ const REASONING_MODE_LABELS = {
   thinking: "Thinking",
 } as const;
 
-export function ComposerReasoning() {
+type ComposerReasoningProps = {
+  idPrefix?: string;
+};
+
+export function ComposerReasoning({
+  idPrefix = "composer-reasoning",
+}: ComposerReasoningProps) {
   const { getReasoning, setReasoning } = useJournlAgent();
   const { usageQuotaExceeded } = useThreadChatError();
+  const selectContentId = `${idPrefix}-select-content`;
 
   function handleReasoningModeChange(value: JournlReasoning) {
     setReasoning(value);
@@ -35,11 +42,12 @@ export function ComposerReasoning() {
       <SelectTrigger
         size="sm"
         aria-label="Reasoning mode"
+        aria-controls={selectContentId}
         className="h-8 w-22 border-primary/70 bg-background! px-2 text-foreground text-xs shadow-none hover:border-primary! focus-visible:ring-0 [&_svg]:text-foreground!"
       >
         <SelectValue />
       </SelectTrigger>
-      <SelectContent>
+      <SelectContent id={selectContentId}>
         {REASONING_MODES.map((reasoning) => (
           <SelectItem key={reasoning} value={reasoning}>
             {REASONING_MODE_LABELS[reasoning]}

@@ -53,7 +53,10 @@ export function BlockEditorStickyToolbar() {
   const isMobile = useIsMobile();
 
   return (
-    <div className="sticky top-0 z-4000 rounded-lg px-6 pt-2 shadow-sm md:hidden md:px-2">
+    <div
+      className="sticky z-4000 rounded-lg px-6 pt-2 shadow-sm md:hidden md:px-2"
+      style={{ top: "var(--app-visual-viewport-offset-top, 0px)" }}
+    >
       <FormattingToolbar>
         {isMobile && (
           <>

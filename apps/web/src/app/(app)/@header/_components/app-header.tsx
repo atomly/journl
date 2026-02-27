@@ -11,7 +11,7 @@ type StickyHeaderProps = React.ComponentProps<"header">;
 const SHOW_AT_SCROLL_TOP = 12;
 const MIN_SCROLL_DELTA = SHOW_AT_SCROLL_TOP * 3;
 
-export function FixedHeader({ className, ...props }: StickyHeaderProps) {
+export function AppHeader({ className, ...props }: StickyHeaderProps) {
   const isMobile = useIsMobile();
   const { scrollElement } = useAppLayout();
   const [isHidden, setIsHidden] = useState(false);
@@ -79,16 +79,18 @@ export function FixedHeader({ className, ...props }: StickyHeaderProps) {
 
   return (
     <>
-      <div aria-hidden className="h-14 shrink-0 md:hidden" />
+      <div
+        aria-hidden
+        className={cn(
+          "shrink-0 overflow-hidden transition-[height] duration-200 ease-out md:hidden",
+          isHidden ? "h-0" : "h-14",
+        )}
+      />
       <header
         className={cn(
-          "z-4500 mx-6 mt-2 h-12 md:m-2",
+          "fixed top-0 right-0 left-0 z-4500 mx-6 mt-2 h-12 transform-gpu transition-transform duration-200 ease-out will-change-transform md:sticky md:top-0 md:right-auto md:left-auto md:m-2",
           {
-            "-translate-y-[calc(100%+2rem)]": isMobile && isHidden,
-            "fixed top-0 right-0 left-0 transform-gpu transition-transform duration-200 ease-out will-change-transform":
-              isMobile,
-            "sticky top-0": !isMobile,
-            "translate-y-0": isMobile && !isHidden,
+            "-translate-y-[calc(100%+2rem)] md:translate-y-0": isHidden,
           },
           className,
         )}

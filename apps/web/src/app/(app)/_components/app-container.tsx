@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect } from "react";
-import { useAppLayout } from "../../../_components/app-layout-provider";
+import { useAppLayout } from "../../_components/app-layout-provider";
 
 type AppContainerProps = React.ComponentProps<"div">;
 

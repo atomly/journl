@@ -4,12 +4,10 @@ import { useChat } from "@ai-sdk/react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useJournlChat } from "~/ai/agents/use-journl-chat";
 
-const MAX_UNREAD_ASSISTANT_MESSAGES = 9;
-
-export function useChatNudge(isChatOpen: boolean) {
+export function useChatUnread(isChatOpen: boolean) {
   const { chat } = useJournlChat();
   const { messages } = useChat({ chat });
-  const [unreadAssistantMessages, setUnreadAssistantMessages] = useState(0);
+  const [hasUnreadMessages, setHasUnreadMessages] = useState(false);
   const hasInitialized = useRef(false);
   const lastSeenAssistantMessageId = useRef<string | undefined>(undefined);
 
@@ -36,7 +34,7 @@ export function useChatNudge(isChatOpen: boolean) {
 
     if (isChatOpen) {
       lastSeenAssistantMessageId.current = latestAssistantMessageId;
-      setUnreadAssistantMessages(0);
+      setHasUnreadMessages(false);
       return;
     }
 
@@ -45,17 +43,8 @@ export function useChatNudge(isChatOpen: boolean) {
     }
 
     lastSeenAssistantMessageId.current = latestAssistantMessageId;
-    setUnreadAssistantMessages((current) =>
-      Math.min(current + 1, MAX_UNREAD_ASSISTANT_MESSAGES),
-    );
+    setHasUnreadMessages(true);
   }, [isChatOpen, latestAssistantMessageId]);
 
-  return {
-    hasUnreadAssistantMessages: unreadAssistantMessages > 0,
-    unreadAssistantMessages,
-    unreadAssistantMessagesLabel:
-      unreadAssistantMessages >= MAX_UNREAD_ASSISTANT_MESSAGES
-        ? `${MAX_UNREAD_ASSISTANT_MESSAGES}+`
-        : String(unreadAssistantMessages),
-  };
+  return { hasUnreadMessages };
 }

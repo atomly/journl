@@ -1,7 +1,11 @@
 "use client";
 
 import { RiSparkling2Fill } from "react-icons/ri";
-import { useChatNudge } from "~/components/assistant-ui/use-chat-nudge";
+import {
+  ChatUnreadA11yHint,
+  ChatUnreadBadge,
+} from "~/components/assistant-ui/chat-unread-badge";
+import { useChatUnread } from "~/components/assistant-ui/use-chat-unread";
 import { Button } from "~/components/ui/button";
 import { useSidebar } from "~/components/ui/sidebar";
 import {
@@ -21,11 +25,7 @@ export default function ChatSidebarTrigger({
   ...props
 }: ChatSidebarTriggerProps) {
   const { toggleSidebar, open } = useSidebar();
-  const {
-    hasUnreadAssistantMessages,
-    unreadAssistantMessages,
-    unreadAssistantMessagesLabel,
-  } = useChatNudge(open);
+  const { hasUnreadMessages } = useChatUnread(open);
 
   if (open) return null;
 
@@ -39,23 +39,18 @@ export default function ChatSidebarTrigger({
           size="icon"
           className={cn(
             "relative size-10 cursor-pointer rounded-full border",
+            hasUnreadMessages ? "animate-chat-trigger-wiggle" : undefined,
             className,
           )}
           {...props}
         >
           <RiSparkling2Fill className="size-6" />
-          {hasUnreadAssistantMessages ? (
-            <span className="absolute -top-1 -right-1 inline-flex min-h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 font-semibold text-[0.625rem] text-primary-foreground leading-none">
-              {unreadAssistantMessagesLabel}
-            </span>
-          ) : null}
+          <ChatUnreadBadge
+            hasUnreadMessages={hasUnreadMessages}
+            className="bg-destructive"
+          />
           <span className="sr-only">Toggle Chat Sidebar</span>
-          {hasUnreadAssistantMessages ? (
-            <span className="sr-only">
-              {unreadAssistantMessages} unread assistant
-              {unreadAssistantMessages > 1 ? " messages" : " message"}
-            </span>
-          ) : null}
+          <ChatUnreadA11yHint hasUnreadMessages={hasUnreadMessages} />
         </Button>
       </TooltipTrigger>
       <TooltipContent className="font-bold" side="top" align="center">

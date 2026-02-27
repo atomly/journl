@@ -1,5 +1,87 @@
 @import "../styles/blocknote.css";
 
+/* App animations. */
+@keyframes animate-text-shimmer {
+  0% {
+    background-position: 0% 50%;
+  }
+
+  100% {
+    background-position: -200% 50%;
+  }
+}
+
+@keyframes animate-chat-trigger-wiggle {
+  0%,
+  72%,
+  100% {
+    transform: rotate(0deg);
+  }
+
+  76% {
+    transform: rotate(-8deg);
+  }
+
+  82% {
+    transform: rotate(8deg);
+  }
+
+  88% {
+    transform: rotate(-5deg);
+  }
+
+  94% {
+    transform: rotate(5deg);
+  }
+}
+
+.animate-chat-trigger-wiggle {
+  animation: animate-chat-trigger-wiggle 2.8s ease-in-out infinite;
+  transform-origin: 50% 70%;
+}
+
+.animate-text-shimmer {
+  color: var(--foreground);
+}
+
+@supports ((-webkit-background-clip: text) or (background-clip: text)) {
+  .animate-text-shimmer {
+    background-image: linear-gradient(
+      110deg,
+      rgba(82, 82, 91, 0.6) 20%,
+      rgba(39, 39, 42, 0.98) 45%,
+      rgba(82, 82, 91, 0.6) 70%
+    );
+    background-size: 200% 100%;
+    background-position: 0% 50%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: animate-text-shimmer 2.4s linear infinite;
+  }
+
+  .dark .animate-text-shimmer {
+    background-image: linear-gradient(
+      110deg,
+      rgba(161, 161, 170, 0.5) 20%,
+      rgba(250, 250, 250, 0.96) 45%,
+      rgba(161, 161, 170, 0.5) 70%
+    );
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-chat-trigger-wiggle {
+    animation: none;
+  }
+
+  .animate-text-shimmer {
+    animation: none;
+    background-image: none;
+    color: inherit;
+  }
+}
+
 /* Theme toggle animations. */
 ::view-transition-group(root) {
   animation-timing-function: var(--expo-out);
@@ -26,54 +108,6 @@
 @keyframes reveal {
   to {
     clip-path: circle(200vmax at 100% 0%);
-  }
-}
-
-@keyframes assistant-thinking-wave {
-  0% {
-    background-position: 0% 50%;
-  }
-
-  100% {
-    background-position: -200% 50%;
-  }
-}
-
-.assistant-thinking-wave {
-  color: var(--foreground);
-}
-
-@supports ((-webkit-background-clip: text) or (background-clip: text)) {
-  .assistant-thinking-wave {
-    background-image: linear-gradient(
-      110deg,
-      rgba(82, 82, 91, 0.6) 20%,
-      rgba(39, 39, 42, 0.98) 45%,
-      rgba(82, 82, 91, 0.6) 70%
-    );
-    background-size: 200% 100%;
-    background-position: 0% 50%;
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-    animation: assistant-thinking-wave 2.4s linear infinite;
-  }
-
-  .dark .assistant-thinking-wave {
-    background-image: linear-gradient(
-      110deg,
-      rgba(161, 161, 170, 0.5) 20%,
-      rgba(250, 250, 250, 0.96) 45%,
-      rgba(161, 161, 170, 0.5) 70%
-    );
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .assistant-thinking-wave {
-    animation: none;
-    background-image: none;
-    color: inherit;
   }
 }
 

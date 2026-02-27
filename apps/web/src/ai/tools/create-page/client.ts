@@ -2,12 +2,12 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
+import { useAppEventEmitter } from "~/components/events/app-event-context";
+import { PageCreatedEvent } from "~/events/page-created-event";
 import { infinitePagesQueryOptions } from "~/trpc/options/pages-query-options";
 import { useTRPC } from "~/trpc/react";
-import { useAppEventEmitter } from "../../components/events/app-event-context";
-import { PageCreatedEvent } from "../../events/page-created-event";
-import { createClientTool } from "../utils/create-client-tool";
-import { zCreatePageInput } from "./create-page.schema";
+import { createClientTool } from "../../utils/create-client-tool";
+import { zCreatePageInput } from "./schema";
 
 export function useCreatePageTool() {
   const router = useRouter();

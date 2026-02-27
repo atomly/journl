@@ -17,8 +17,13 @@ export function JournalEntrySkeleton({
 }: JournalEntrySkeletonProps) {
   return (
     <div className={cn("space-y-6", className)} {...rest}>
+      {/* Formatting toolbar */}
+      <div className="mx-8 block md:hidden">
+        {<Skeleton className="mt-2 h-11.5 w-full" />}
+      </div>
+
       {/* Date header */}
-      {hasHeader && <Skeleton className="mx-8 h-12 w-40" />}
+      {hasHeader && <Skeleton className="mx-8 h-9 w-40" />}
 
       {/* Content */}
       <div className="space-y-2 px-13.5">

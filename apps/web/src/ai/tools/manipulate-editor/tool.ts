@@ -1,7 +1,6 @@
 import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
-import { getJournlRequestContext } from "../agents/journl-agent";
-import { zManipulateEditorInput } from "./manipulate-editor.schema";
+import { zManipulateEditorInput } from "./schema";
 
 export const manipulateEditor = createTool({
   description: `Modify the content of the target editor.
@@ -11,7 +10,7 @@ Use when the user wants to write, add, insert, capture, log, note, format, struc
 Important:
 - targetEditor must be the ID of one of the active editors and must match the expected format.
 - If you do not know which active editor to use, do not call this tool and ask the user to clarify.
-- This is a client-side editor action, so the editorPrompt must include as much detail as possible.
+- This is a client-side editor action, so the editorPrompt should include as much detail as possible.
 
 Rules:
 - Do not use for pure recall or analysis of prior notes; use search tools instead.
@@ -20,20 +19,6 @@ Rules:
 - Do not generate markdown explicitly; the editor handles formatting.
 
 After a successful call, avoid telling the user that changes were made. At most, briefly summarize the result.`,
-  execute: async ({ targetEditor }, { requestContext }) => {
-    const context = getJournlRequestContext(requestContext);
-    if (!context?.activeEditors.length) {
-      throw new Error("There are no active editors to manipulate.");
-    }
-    const editor = context.activeEditors.some(
-      (editor) => editor === targetEditor,
-    );
-    if (!editor) {
-      throw new Error(
-        `Editor with ID ${targetEditor} not found, the available editors are: ${JSON.stringify(context.activeEditors)}`,
-      );
-    }
-  },
   id: "manipulate-editor",
   inputSchema: zManipulateEditorInput,
   outputSchema: z.void(),

@@ -5,9 +5,9 @@ import { cn } from "~/lib/cn";
 import { Textarea } from "./textarea";
 
 /**
- * A textarea that automatically adjusts its height to fit the content.
+ * A textarea that expands to fit content as you type.
  */
-export function FullHeightTextarea({
+export function ExpandingTextarea({
   className,
   ref,
   onChange,
@@ -19,20 +19,15 @@ export function FullHeightTextarea({
     const textarea = textareaRef.current;
     if (!textarea) return;
 
-    // Store the current scroll position
-    const scrollPos = textarea.scrollTop;
-
     // Reset height to auto to get the correct scrollHeight
     textarea.style.height = "auto";
+    textarea.style.overflowY = "hidden";
 
     // Get the scroll height and add a small padding
     const scrollHeight = textarea.scrollHeight;
 
     // Set the new height
     textarea.style.height = `${scrollHeight}px`;
-
-    // Restore the scroll position
-    textarea.scrollTop = scrollPos;
   }, []);
 
   useEffect(() => {
@@ -54,9 +49,8 @@ export function FullHeightTextarea({
   return (
     <Textarea
       className={cn(
-        "flex min-h-fit-content w-full resize-none transition-all duration-100",
+        "flex min-h-fit! w-full resize-none overflow-y-hidden transition-all duration-100",
         className,
-        "overflow-y-hidden",
       )}
       ref={(element) => {
         // Handle both forwardRef and internal ref

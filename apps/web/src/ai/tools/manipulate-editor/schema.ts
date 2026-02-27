@@ -1,5 +1,5 @@
 import { z } from "zod";
-import type { JournlAgentState } from "../agents/journl-agent-state";
+import type { JournlAgentState } from "../../agents/journl-agent-state";
 
 const JOURNAL_ENTRY_ID_PATTERN = /^journal-entry:\d{4}-\d{2}-\d{2}$/;
 const PAGE_ID_PATTERN = /^page:.+$/;

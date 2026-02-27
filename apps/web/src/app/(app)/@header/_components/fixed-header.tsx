@@ -8,7 +8,7 @@ import { useAppLayout } from "../../../_components/app-layout-provider";
 type StickyHeaderProps = React.ComponentProps<"header">;
 
 const SHOW_AT_SCROLL_TOP = 12;
-const MIN_SCROLL_DELTA = SHOW_AT_SCROLL_TOP * 12;
+const MIN_SCROLL_DELTA = SHOW_AT_SCROLL_TOP * 3;
 
 export function FixedHeader({ className, ...props }: StickyHeaderProps) {
   const isMobile = useIsMobile();

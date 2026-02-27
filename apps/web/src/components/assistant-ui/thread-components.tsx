@@ -220,7 +220,7 @@ function AssistantThinking() {
             </ThreadPrimitive.If>
 
             <ThreadPrimitive.If running>
-              <span className="assistant-thinking-wave font-medium text-sm">
+              <span className="animate-text-shimmer font-medium text-sm">
                 Thinking
               </span>
             </ThreadPrimitive.If>
@@ -243,7 +243,7 @@ function AssistantThinking() {
         <p
           className={cn(
             "px-4 pb-3 text-muted-foreground text-sm",
-            isThinking && "assistant-thinking-wave",
+            isThinking && "animate-text-shimmer",
           )}
         >
           {summarizeThoughtPart(latestPart)}
@@ -288,10 +288,7 @@ function ThoughtReasoning({ text }: ReasoningMessagePartProps) {
   const normalized = text.replace(/\s+/g, " ").trim();
   return (
     <p
-      className={cn(
-        "text-sm leading-6",
-        isThinking && "assistant-thinking-wave",
-      )}
+      className={cn("text-sm leading-6", isThinking && "animate-text-shimmer")}
     >
       {normalized}
     </p>
@@ -316,7 +313,7 @@ function ThoughtTool({
         <span
           className={cn(
             "font-medium text-sm",
-            status.type === "running" && "assistant-thinking-wave",
+            status.type === "running" && "animate-text-shimmer",
           )}
         >
           {actionLabel}

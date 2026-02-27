@@ -4,13 +4,14 @@ import type { Page } from "@acme/db/schema";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { useDebouncedCallback } from "use-debounce";
-import { FullHeightTextarea } from "~/components/ui/full-height-textarea";
+import { ExpandingTextarea } from "~/components/ui/expanding-textarea";
 import { cn } from "~/lib/cn";
 import { infinitePagesQueryOptions } from "~/trpc/options/pages-query-options";
 import { useTRPC } from "~/trpc/react";
 
 const DEFAULT_PLACEHOLDER = "New page";
 const DEFAULT_DEBOUNCE_TIME = 150;
+const MAX_TITLE_LENGTH = 100;
 
 type PageEditorTitleProps = {
   page: Pick<Page, "id" | "title">;
@@ -101,14 +102,16 @@ export function PageTitleTextarea({
   }
 
   return (
-    <FullHeightTextarea
+    <ExpandingTextarea
       ref={ref}
       value={title}
+      rows={1}
+      maxLength={MAX_TITLE_LENGTH}
       onChange={handleChange}
       onKeyDown={handleKeyDown}
       placeholder={placeholder}
       className={cn(
-        "!bg-transparent !h-auto !outline-none !ring-0 !text-3xl !border-none !font-bold md:!text-4xl lg:!text-5xl shadow-none placeholder:text-muted-foreground/60",
+        "border-none! bg-transparent! font-bold! text-3xl! shadow-none outline-none! ring-0! placeholder:text-muted-foreground/60 md:text-4xl! lg:text-5xl!",
         className,
       )}
       {...rest}

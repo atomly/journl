@@ -8,10 +8,12 @@ import {
 } from "ai";
 import { createContext, useContext, useState } from "react";
 import { env } from "~/env";
-import { useCreatePageTool } from "../tools/create-page.client";
-import { useManipulateEditorTool } from "../tools/manipulate-editor.client";
-import { useNavigateJournalEntryTool } from "../tools/navigate-journal-entry.client";
-import { useNavigatePageTool } from "../tools/navigate-page.client";
+import { useApplyEditorChangesTool } from "../tools/apply-editor-changes/client";
+import { useCreatePageTool } from "../tools/create-page/client";
+import { useManipulateEditorTool } from "../tools/manipulate-editor/client";
+import { useNavigateJournalEntryTool } from "../tools/navigate-journal-entry/client";
+import { useNavigatePageTool } from "../tools/navigate-page/client";
+import { useRejectEditorChangesTool } from "../tools/reject-editor-changes/client";
 import type { ClientTool } from "../utils/create-client-tool";
 import type { JournlAgentState } from "./journl-agent-state";
 import { useJournlAgent } from "./use-journl-agent";
@@ -31,19 +33,28 @@ export function JournlChatProvider({
   transport,
   messages,
 }: JournlChatProviderProps) {
-  const { getSelections, getEditors, getView, getReasoning } = useJournlAgent();
+  const {
+    getSelections: getAllSelections,
+    getEditors,
+    getView,
+    getReasoning,
+  } = useJournlAgent();
 
   const createPage = useCreatePageTool();
+  const applyEditorChanges = useApplyEditorChangesTool();
   const navigateJournalEntry = useNavigateJournalEntryTool();
   const navigatePage = useNavigatePageTool();
   const manipulateEditor = useManipulateEditorTool();
+  const rejectEditorChanges = useRejectEditorChangesTool();
 
   const [chat] = useState(() => {
     const tools = new Map<string, ClientTool<string, Chat<UIMessage>>>([
       [createPage.name, createPage],
+      [applyEditorChanges.name, applyEditorChanges],
       [navigateJournalEntry.name, navigateJournalEntry],
       [navigatePage.name, navigatePage],
       [manipulateEditor.name, manipulateEditor],
+      [rejectEditorChanges.name, rejectEditorChanges],
     ]);
 
     return new Chat({
@@ -66,7 +77,7 @@ export function JournlChatProvider({
       transport: new DefaultChatTransport({
         ...transport,
         prepareSendMessagesRequest: ({ id, messages, trigger, messageId }) => {
-          const selections = getSelections();
+          const selections = getAllSelections();
           const view = getView();
 
           return {

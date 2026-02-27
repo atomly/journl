@@ -207,7 +207,7 @@ const inter = Inter({ subsets: ['latin'] }) // Creates new instance each time!
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
 
 // Bad: Using @import in CSS (blocks rendering)
-/* globals.css */
+/* styles.css */
 @import url('https://fonts.googleapis.com/css2?family=Inter');
 
 // Good: Use next/font (self-hosted, no network request)

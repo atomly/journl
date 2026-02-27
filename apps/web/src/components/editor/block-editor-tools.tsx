@@ -1,7 +1,10 @@
 "use client";
 
 import type { BlockPrimitive, schema } from "@acme/blocknote/schema";
-import { filterSuggestionItems } from "@blocknote/core/extensions";
+import {
+  FormattingToolbarExtension,
+  filterSuggestionItems,
+} from "@blocknote/core/extensions";
 import {
   FormattingToolbar,
   FormattingToolbarController,
@@ -10,30 +13,23 @@ import {
   SuggestionMenuController,
   useBlockNoteEditor,
   useComponentsContext,
+  useExtension,
   useSelectedBlocks,
 } from "@blocknote/react";
-import { AIToolbarButton, getAISlashMenuItems } from "@blocknote/xl-ai";
+import {
+  AIExtension,
+  getAISlashMenuItems,
+  useAIDictionary,
+} from "@blocknote/xl-ai";
+import { RiSparkling2Fill } from "react-icons/ri";
 import removeMarkdown from "remove-markdown";
 import { useJournlAgent } from "~/ai/agents/use-journl-agent";
 import { useIsMobile } from "~/hooks/use-mobile";
 
-export function BlockEditorFormattingToolbar() {
+export function BlockEditorFloatingToolbar() {
   const isMobile = useIsMobile();
-  const toolbar = (
-    <FormattingToolbar>
-      <AIToolbarButton />
-      <AddBlockSelectionButton />
-      {...getFormattingToolbarItems()}
-    </FormattingToolbar>
-  );
 
-  if (isMobile) {
-    return (
-      <div className="sticky top-0 z-4000 rounded-lg bg-background px-6 pt-2 shadow-sm">
-        {toolbar}
-      </div>
-    );
-  }
+  if (isMobile) return null;
 
   return (
     <FormattingToolbarController
@@ -42,7 +38,70 @@ export function BlockEditorFormattingToolbar() {
           strategy: "fixed",
         },
       }}
-      formattingToolbar={() => toolbar}
+      formattingToolbar={() => (
+        <FormattingToolbar>
+          <BlockEditorAIButton />
+          <BlockEditorSelectionButton />
+          {getFormattingToolbarItems()}
+        </FormattingToolbar>
+      )}
+    />
+  );
+}
+
+export function BlockEditorStickyToolbar() {
+  const isMobile = useIsMobile();
+
+  return (
+    <div className="sticky top-0 z-4000 rounded-lg bg-background px-6 pt-2 shadow-sm md:hidden md:px-2">
+      <FormattingToolbar>
+        {isMobile && (
+          <>
+            <BlockEditorAIButton />
+            <BlockEditorSelectionButton />
+          </>
+        )}
+        {getFormattingToolbarItems()}
+      </FormattingToolbar>
+    </div>
+  );
+}
+
+function BlockEditorAIButton() {
+  const dict = useAIDictionary();
+  const Components = useComponentsContext();
+  const editor = useBlockNoteEditor();
+  const ai = useExtension(AIExtension);
+  const formattingToolbar = useExtension(FormattingToolbarExtension);
+
+  if (!Components || !editor.isEditable) {
+    return null;
+  }
+
+  function handleClick() {
+    const selection = editor.getSelection();
+    const selectedBlockId = selection?.blocks.at(-1)?.id;
+    const cursorBlockId = editor.getTextCursorPosition().block.id;
+    const fallbackBlockId = editor.document.at(-1)?.id;
+    const blockId = selectedBlockId || cursorBlockId || fallbackBlockId;
+
+    if (!blockId) {
+      return;
+    }
+
+    editor.focus();
+    editor.setTextCursorPosition(blockId, "end");
+    ai.openAIMenuAtBlock(blockId);
+    formattingToolbar.store.setState(false);
+  }
+
+  return (
+    <Components.Generic.Toolbar.Button
+      className="bn-button"
+      label={dict.formatting_toolbar.ai.tooltip}
+      mainTooltip={dict.formatting_toolbar.ai.tooltip}
+      icon={<RiSparkling2Fill />}
+      onClick={handleClick}
     />
   );
 }
@@ -79,7 +138,7 @@ export function BlockEditorSlashMenu() {
 /**
  * Button to add a block selection.
  */
-function AddBlockSelectionButton() {
+function BlockEditorSelectionButton() {
   const editor = useBlockNoteEditor();
   const Components = useComponentsContext();
   const { setSelection, getSelection, unsetSelection } = useJournlAgent();

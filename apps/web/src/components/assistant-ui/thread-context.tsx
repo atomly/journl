@@ -27,7 +27,6 @@ type ComposerReasoningProps = {
 export function ComposerReasoning({ children }: ComposerReasoningProps) {
   const { getReasoning, setReasoning } = useJournlAgent();
   const { usageQuotaExceeded } = useThreadChatError();
-
   function handleReasoningModeChange(value: string) {
     if (!REASONING_MODES.includes(value as JournlReasoning)) {
       return;

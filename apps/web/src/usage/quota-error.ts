@@ -1,7 +1,11 @@
 import type { UsageQuota } from "@acme/db/usage";
 
 export const USAGE_QUOTA_EXCEEDED_CODE = "USAGE_QUOTA_EXCEEDED" as const;
-export const USAGE_QUOTA_EXCEEDED_MESSAGE = "Usage quota exceeded";
+export const USAGE_QUOTA_EXCEEDED_ERROR = "Usage quota exceeded";
+export const USAGE_QUOTA_EXCEEDED_MESSAGE =
+  "You've reached your AI usage limit for this period. Upgrade to continue or wait for the next reset.";
+export const CHAT_GENERIC_ERROR_MESSAGE =
+  "Something went wrong. Please try again.";
 
 export type UsageQuotaExceededPayload = {
   code: typeof USAGE_QUOTA_EXCEEDED_CODE;
@@ -15,7 +19,7 @@ export function buildUsageQuotaExceededPayload(
 ): UsageQuotaExceededPayload {
   return {
     code: USAGE_QUOTA_EXCEEDED_CODE,
-    error: USAGE_QUOTA_EXCEEDED_MESSAGE,
+    error: USAGE_QUOTA_EXCEEDED_ERROR,
     message: USAGE_QUOTA_EXCEEDED_MESSAGE,
     usage,
   };
@@ -43,7 +47,7 @@ export function parseUsageQuotaExceededPayload(
         : null;
 
   const isQuotaExceededError =
-    code === USAGE_QUOTA_EXCEEDED_CODE || code === USAGE_QUOTA_EXCEEDED_MESSAGE;
+    code === USAGE_QUOTA_EXCEEDED_CODE || code === USAGE_QUOTA_EXCEEDED_ERROR;
 
   if (!isQuotaExceededError) {
     return null;
@@ -54,13 +58,51 @@ export function parseUsageQuotaExceededPayload(
     error:
       typeof payload.error === "string"
         ? payload.error
-        : USAGE_QUOTA_EXCEEDED_MESSAGE,
+        : USAGE_QUOTA_EXCEEDED_ERROR,
     message:
       typeof payload.message === "string"
         ? payload.message
         : USAGE_QUOTA_EXCEEDED_MESSAGE,
     usage,
   };
+}
+
+export function getHumanReadableChatError(input: unknown): string {
+  const quotaError = parseUsageQuotaExceededPayload(input);
+
+  if (quotaError) {
+    return quotaError.message;
+  }
+
+  const payload = parsePayloadCandidate(input);
+
+  if (payload) {
+    if (payload.code === "UNAUTHORIZED") {
+      return "Your session expired. Please sign in again.";
+    }
+
+    if (payload.code === "TOO_MANY_REQUESTS") {
+      return "Too many requests right now. Please wait a moment and try again.";
+    }
+
+    if (typeof payload.message === "string") {
+      return humanizeErrorMessage(payload.message);
+    }
+
+    if (typeof payload.error === "string") {
+      return humanizeErrorMessage(payload.error);
+    }
+  }
+
+  if (input instanceof Error) {
+    return humanizeErrorMessage(input.message);
+  }
+
+  if (typeof input === "string") {
+    return humanizeErrorMessage(input);
+  }
+
+  return CHAT_GENERIC_ERROR_MESSAGE;
 }
 
 function parsePayloadCandidate(input: unknown): Record<string, unknown> | null {
@@ -90,6 +132,44 @@ function parseJSONString(value: string): Record<string, unknown> | null {
   } catch {
     return null;
   }
+}
+
+function humanizeErrorMessage(value: string): string {
+  const normalized = value.trim();
+
+  if (!normalized) {
+    return CHAT_GENERIC_ERROR_MESSAGE;
+  }
+
+  const parsed = parseJSONString(normalized);
+
+  if (parsed) {
+    if (typeof parsed.message === "string") {
+      return humanizeErrorMessage(parsed.message);
+    }
+
+    if (typeof parsed.error === "string") {
+      return humanizeErrorMessage(parsed.error);
+    }
+  }
+
+  if (normalized === USAGE_QUOTA_EXCEEDED_ERROR) {
+    return USAGE_QUOTA_EXCEEDED_MESSAGE;
+  }
+
+  if (normalized === "Internal Server Error") {
+    return "Something went wrong on our side. Please try again.";
+  }
+
+  if (normalized === "Unauthorized") {
+    return "Your session expired. Please sign in again.";
+  }
+
+  if (normalized.includes("Failed to fetch")) {
+    return "We couldn't reach the server. Check your connection and try again.";
+  }
+
+  return normalized;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

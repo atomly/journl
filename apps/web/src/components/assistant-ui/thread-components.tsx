@@ -30,6 +30,7 @@ import { useThreadChatError } from "~/components/assistant-ui/thread-runtime";
 import { TooltipIconButton } from "~/components/assistant-ui/tooltip-icon-button";
 import { Button } from "~/components/ui/button";
 import { cn } from "~/lib/cn";
+import { getHumanReadableChatError } from "~/usage/quota-error";
 
 type ThreadScrollToBottomProps = Partial<
   ComponentProps<typeof TooltipIconButton>
@@ -72,7 +73,7 @@ export function ComposerInput({
       disabled={isUsageQuotaExceeded || rest.disabled}
       placeholder={
         isUsageQuotaExceeded
-          ? "Usage limit reached. Upgrade to continue."
+          ? "You've reached your AI limit. Upgrade to continue."
           : placeholder
       }
       className={cn(
@@ -127,7 +128,11 @@ export function ComposerAction({
   );
 }
 
-export function ComposerQuotaNotice() {
+type ComposerQuotaNoticeProps = {
+  className?: string;
+};
+
+export function ComposerQuotaNotice({ className }: ComposerQuotaNoticeProps) {
   const { usageQuotaExceeded } = useThreadChatError();
 
   if (!usageQuotaExceeded) {
@@ -138,7 +143,12 @@ export function ComposerQuotaNotice() {
   const planLabel = usage.subscriptionType === "pro" ? "Pro" : "Free";
 
   return (
-    <div className="mx-2 mb-2 rounded-md border border-amber-500/50 bg-amber-50 px-3 py-2 dark:border-amber-800/80 dark:bg-amber-950/20">
+    <div
+      className={cn(
+        "mx-2 rounded-md border border-amber-500/50 bg-amber-50 px-3 py-2 dark:border-amber-800/80 dark:bg-amber-950/20",
+        className,
+      )}
+    >
       <p className="font-medium text-amber-900 text-xs dark:text-amber-200">
         AI usage limit reached
       </p>
@@ -204,7 +214,9 @@ export function AssistantMessage() {
         />
         <MessagePrimitive.Error>
           <ErrorPrimitive.Root className="mt-2 rounded-md border border-destructive bg-destructive/10 p-3 text-destructive text-sm dark:bg-destructive/5 dark:text-red-200">
-            <ErrorPrimitive.Message className="line-clamp-2" />
+            <ErrorPrimitive.Message className="line-clamp-3">
+              <AssistantErrorMessage />
+            </ErrorPrimitive.Message>
           </ErrorPrimitive.Root>
         </MessagePrimitive.Error>
       </div>
@@ -214,6 +226,21 @@ export function AssistantMessage() {
       <BranchPicker className="col-start-2 row-start-2 mr-2 -ml-2" />
     </MessagePrimitive.Root>
   );
+}
+
+function AssistantErrorMessage() {
+  const error = useAuiState((s) =>
+    s.message.status?.type === "incomplete" &&
+    s.message.status.reason === "error"
+      ? s.message.status.error
+      : undefined,
+  );
+
+  if (error === undefined) {
+    return null;
+  }
+
+  return getHumanReadableChatError(error);
 }
 
 function AssistantText() {

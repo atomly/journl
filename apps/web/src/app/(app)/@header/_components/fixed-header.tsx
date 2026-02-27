@@ -78,19 +78,22 @@ export function FixedHeader({ className, ...props }: StickyHeaderProps) {
   }, [isMobile, scrollElement]);
 
   return (
-    <header
-      className={cn(
-        "z-4500 mx-6 mt-2 h-12 md:m-2",
-        {
-          "-translate-y-[calc(100%+2rem)]": isMobile && isHidden,
-          "fixed top-0 right-0 left-0 transform-gpu transition-transform duration-200 ease-out will-change-transform":
-            isMobile,
-          "sticky top-0": !isMobile,
-          "translate-y-0": isMobile && !isHidden,
-        },
-        className,
-      )}
-      {...props}
-    />
+    <>
+      <div aria-hidden className="h-14 shrink-0 md:hidden" />
+      <header
+        className={cn(
+          "z-4500 mx-6 mt-2 h-12 md:m-2",
+          {
+            "-translate-y-[calc(100%+2rem)]": isMobile && isHidden,
+            "fixed top-0 right-0 left-0 transform-gpu transition-transform duration-200 ease-out will-change-transform":
+              isMobile,
+            "sticky top-0": !isMobile,
+            "translate-y-0": isMobile && !isHidden,
+          },
+          className,
+        )}
+        {...props}
+      />
+    </>
   );
 }

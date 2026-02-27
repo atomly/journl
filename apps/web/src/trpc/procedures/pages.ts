@@ -29,6 +29,10 @@ import {
   zBlockTransactions,
 } from "../shared/block-transaction";
 import { protectedProcedure, usageGuard } from "../trpc";
+import {
+  getPageFolderFilter,
+  normalizePageFolderId,
+} from "./pages-root-semantics";
 
 const CURSOR_SEPARATOR = "|";
 
@@ -55,10 +59,12 @@ export const pagesRouter = {
     .mutation(async ({ ctx, input }) => {
       return await ctx.db.transaction(async (tx) => {
         try {
-          if (input.folder_id) {
+          const normalizedFolderId = normalizePageFolderId(input.folder_id);
+
+          if (normalizedFolderId) {
             const folder = await tx.query.Folder.findFirst({
               where: and(
-                eq(Folder.id, input.folder_id),
+                eq(Folder.id, normalizedFolderId),
                 eq(Folder.user_id, ctx.session.user.id),
               ),
             });
@@ -90,6 +96,7 @@ export const pagesRouter = {
             .values({
               ...input,
               document_id: document.id,
+              folder_id: normalizedFolderId,
               user_id: ctx.session.user.id,
             })
             .returning();
@@ -177,15 +184,16 @@ export const pagesRouter = {
     )
     .query(async ({ ctx, input }) => {
       try {
-        const { limit, cursor, direction, folder_id } = input;
+        const { limit, cursor, direction } = input;
         const decodedCursor = decodeCursor(cursor);
+        const folderFilter = getPageFolderFilter(input.folder_id);
 
         const folderCondition =
-          folder_id === undefined
+          folderFilter.kind === "unscoped"
             ? undefined
-            : folder_id === null
+            : folderFilter.kind === "root"
               ? isNull(Page.folder_id)
-              : eq(Page.folder_id, folder_id);
+              : eq(Page.folder_id, folderFilter.folderId);
 
         const cursorCondition = cursor
           ? decodedCursor?.id

@@ -3,6 +3,7 @@
 import type { Folder } from "@acme/db/schema";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { FolderOpen, Loader2, Trash2 } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
 import type { ComponentProps, ReactNode } from "react";
 import { useCallback, useMemo, useState, useTransition } from "react";
 import { Button } from "~/components/ui/button";
@@ -105,6 +106,8 @@ export function DeleteFolderDialog({
   open,
   onOpenChange,
 }: DeleteFolderDialogProps) {
+  const pathname = usePathname();
+  const router = useRouter();
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const [isPending, startTransition] = useTransition();
@@ -154,6 +157,7 @@ export function DeleteFolderDialog({
     () => isPending || isDeleting,
     [isDeleting, isPending],
   );
+  const folderDetailsPath = `/pages/folders/${folder.id}`;
 
   const confirmDelete = useCallback(() => {
     startTransition(() => {
@@ -173,17 +177,29 @@ export function DeleteFolderDialog({
             console.error("Failed to delete folder:", error);
           },
           onSuccess: async () => {
-            await queryClient.invalidateQueries();
+            if (pathname === folderDetailsPath) {
+              setDialogOpen(false);
+              router.push("/journal");
+              void queryClient.invalidateQueries({
+                refetchType: "none",
+              });
+              return;
+            }
+
             setDialogOpen(false);
+            await queryClient.invalidateQueries();
           },
         },
       );
     });
   }, [
     deleteFolder,
+    folderDetailsPath,
     folder.id,
     moveToFolderId,
+    pathname,
     queryClient,
+    router,
     setDialogOpen,
     strategy,
   ]);

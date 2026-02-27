@@ -17,6 +17,7 @@ import {
   DialogTrigger,
 } from "~/components/ui/dialog";
 import { getInfinitePagesQueryOptions } from "~/trpc/options/pages-query-options";
+import { getInfiniteSidebarTreeQueryOptions } from "~/trpc/options/sidebar-tree-query-options";
 import { useTRPC } from "~/trpc/react";
 
 type DeletePageDialogProps = {
@@ -78,6 +79,8 @@ export function DeletePageDialog({
 
   const isControlled = open !== undefined;
   const isDialogOpen = isControlled ? open : uncontrolledOpen;
+  const nestedFolderPagesQueryFilter =
+    trpc.folders.getNestedPagesPaginated.infiniteQueryFilter();
 
   const setDialogOpen = useCallback(
     (nextOpen: boolean) => {
@@ -129,6 +132,28 @@ export function DeletePageDialog({
               },
             );
 
+            queryClient.setQueryData(
+              trpc.folders.getTreePaginated.infiniteQueryOptions(
+                getInfiniteSidebarTreeQueryOptions(page.folder_id ?? null),
+              ).queryKey,
+              (old) => {
+                if (!old) {
+                  return old;
+                }
+
+                return {
+                  ...old,
+                  pages: old.pages.map((treePage) => ({
+                    ...treePage,
+                    items: treePage.items.filter(
+                      (item) =>
+                        !(item.kind === "page" && item.page.id === page.id),
+                    ),
+                  })),
+                };
+              },
+            );
+
             queryClient.removeQueries({
               queryKey: trpc.pages.getById.queryKey({ id: page.id }),
             });
@@ -137,6 +162,7 @@ export function DeletePageDialog({
               queryKey: trpc.pages.getById.queryKey({ id: page.id }),
             });
 
+            void queryClient.invalidateQueries(nestedFolderPagesQueryFilter);
             setDialogOpen(false);
           },
         },
@@ -147,9 +173,11 @@ export function DeletePageDialog({
     page.document_id,
     page.id,
     pathname,
+    nestedFolderPagesQueryFilter,
     queryClient,
     router,
     setDialogOpen,
+    trpc.folders,
     trpc.pages,
     page.folder_id,
   ]);

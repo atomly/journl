@@ -1,11 +1,19 @@
 import type { PaginatedPagesInput } from "~/trpc";
 
 export function getInfinitePagesQueryOptions(
-  folderId?: string | null,
+  folderId: string | null,
 ): PaginatedPagesInput {
   return {
     direction: "forward",
-    ...(folderId !== undefined ? { folder_id: folderId } : {}),
+    folder_id: folderId,
+    /* 10 (journl) pages per page */
+    limit: 10,
+  };
+}
+
+export function getUnscopedInfinitePagesQueryOptions(): PaginatedPagesInput {
+  return {
+    direction: "forward",
     /* 10 (journl) pages per page */
     limit: 10,
   };

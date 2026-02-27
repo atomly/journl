@@ -2,15 +2,10 @@
 
 import type { Folder } from "@acme/db/schema";
 import { useInfiniteQuery } from "@tanstack/react-query";
-import {
-  BookOpen,
-  ChevronRight,
-  Folder as FolderIcon,
-  Loader2,
-} from "lucide-react";
+import { BookOpen, ChevronRight, Folder as FolderIcon } from "lucide-react";
+import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
-import { Button } from "~/components/ui/button";
+import { useEffect, useRef, useState } from "react";
 import {
   Collapsible,
   CollapsibleContent,
@@ -24,18 +19,11 @@ import {
   useSidebar,
 } from "~/components/ui/sidebar";
 import { cn } from "~/lib/cn";
-import { getInfiniteFoldersQueryOptions } from "~/trpc/options/folders-query-options";
-import { getInfinitePagesQueryOptions } from "~/trpc/options/pages-query-options";
+import { getInfiniteSidebarTreeQueryOptions } from "~/trpc/options/sidebar-tree-query-options";
 import { useTRPC } from "~/trpc/react";
 import { AppSidebarPageItem } from "./app-sidebar-page-item";
 import { AppSidebarPageItemSkeleton } from "./app-sidebar-page-item-skeleton";
-import { CreateFolderButton } from "./create-folder-button";
-import { CreatePageButton } from "./create-page-button";
-import {
-  DeleteFolderButton,
-  DeleteFolderDialog,
-  DeleteFolderDialogTrigger,
-} from "./delete-folder-button";
+import { AppSidebarTreeActions } from "./app-sidebar-tree-actions";
 
 type AppSidebarPagesProps = {
   defaultOpen?: boolean;
@@ -45,43 +33,16 @@ type SidebarTreeProps = {
   parentFolderId: string | null;
 };
 
-type SidebarLoadMoreButtonProps = {
-  className?: string;
-  disabled: boolean;
-  isLoading: boolean;
-  label: string;
-  onClick: () => void;
-};
-
 const DEFAULT_TREE_ITEM_CLASSNAME =
   "ml-3.5 border-sidebar-border border-l py-0.5 ps-2.5";
-
-function SidebarLoadMoreButton({
-  className,
-  disabled,
-  isLoading,
-  label,
-  onClick,
-}: SidebarLoadMoreButtonProps) {
-  return (
-    <SidebarMenuSubItem className={className}>
-      <SidebarMenuSubButton asChild>
-        <Button
-          variant="ghost"
-          className="w-full justify-start px-1.5 text-xs"
-          onClick={onClick}
-          disabled={disabled}
-        >
-          {isLoading ? <Loader2 className="size-3 animate-spin" /> : null}
-          <span>{label}</span>
-        </Button>
-      </SidebarMenuSubButton>
-    </SidebarMenuSubItem>
-  );
-}
+const INFINITE_SCROLL_ROOT_MARGIN = "120px 0px";
 
 function AppSidebarFolderItem({ folder }: { folder: Folder }) {
+  const pathname = usePathname();
+  const { isMobile, setOpenMobile } = useSidebar();
   const [isOpen, setIsOpen] = useState(false);
+  const folderHref = `/pages/folders/${folder.id}`;
+  const isActive = pathname === folderHref;
 
   return (
     <Collapsible
@@ -91,32 +52,64 @@ function AppSidebarFolderItem({ folder }: { folder: Folder }) {
     >
       <SidebarMenuSubItem
         key={folder.id}
-        className={cn("group/folder-item", DEFAULT_TREE_ITEM_CLASSNAME)}
+        className={cn(
+          "group/folder-item group/tree-row",
+          isActive && "border-sidebar-primary",
+          DEFAULT_TREE_ITEM_CLASSNAME,
+        )}
       >
-        <DeleteFolderDialog folder={folder}>
-          <div className="flex min-w-0 items-center gap-1">
-            <CollapsibleTrigger asChild>
-              <SidebarMenuSubButton asChild className="flex-1">
-                <button
-                  type="button"
-                  className="flex w-full items-center gap-2"
-                >
-                  <ChevronRight className="size-3 transition-transform duration-200 group-data-[state=open]/folder-collapsible:rotate-90" />
-                  <FolderIcon className="size-3.5 shrink-0" />
-                  <span className="line-clamp-1 min-w-0 flex-1 truncate text-left">
-                    {folder.name || "New folder"}
-                  </span>
-                </button>
-              </SidebarMenuSubButton>
-            </CollapsibleTrigger>
-            <DeleteFolderDialogTrigger asChild>
-              <DeleteFolderButton className="hidden bg-transparent! pr-0! text-destructive! group-hover/folder-item:block" />
-            </DeleteFolderDialogTrigger>
+        <div className="group/folder-navigation relative flex min-w-0 items-center gap-1">
+          <CollapsibleTrigger asChild>
+            <button
+              type="button"
+              className="flex h-7 w-5 shrink-0 items-center justify-center rounded-sm text-sidebar-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+              aria-label={isOpen ? "Collapse folder" : "Expand folder"}
+            >
+              <ChevronRight className="size-3 transition-transform duration-200 group-data-[state=open]/folder-collapsible:rotate-90" />
+            </button>
+          </CollapsibleTrigger>
+
+          <SidebarMenuSubButton
+            asChild
+            isActive={isActive}
+            className="w-full pr-8"
+          >
+            <Link
+              href={folderHref}
+              onClick={() => {
+                if (isMobile) {
+                  setOpenMobile(false);
+                }
+              }}
+              className="flex w-full min-w-0 items-center gap-2"
+            >
+              <FolderIcon className="size-3.5 shrink-0" />
+              <span className="line-clamp-1 min-w-0 flex-1 truncate text-left">
+                {folder.name || "New folder"}
+              </span>
+            </Link>
+          </SidebarMenuSubButton>
+
+          <div className="absolute inset-y-0 right-0 flex items-center">
+            <AppSidebarTreeActions
+              kind="folder"
+              folder={folder}
+              parentFolderId={folder.id}
+              onCreateStart={() => {
+                setIsOpen(true);
+              }}
+              onCreateSuccess={() => {
+                setIsOpen(true);
+              }}
+            />
           </div>
-          <CollapsibleContent className="pt-1">
+        </div>
+
+        <CollapsibleContent className="pt-1">
+          <SidebarMenuSub className="mx-0 mr-0 gap-0 border-none px-0">
             <SidebarTree parentFolderId={folder.id} />
-          </CollapsibleContent>
-        </DeleteFolderDialog>
+          </SidebarMenuSub>
+        </CollapsibleContent>
       </SidebarMenuSubItem>
     </Collapsible>
   );
@@ -124,96 +117,84 @@ function AppSidebarFolderItem({ folder }: { folder: Folder }) {
 
 function SidebarTree({ parentFolderId }: SidebarTreeProps) {
   const trpc = useTRPC();
-  const foldersQueryOptions = trpc.folders.getPaginated.infiniteQueryOptions(
-    getInfiniteFoldersQueryOptions(parentFolderId),
+  const loadMoreRef = useRef<HTMLDivElement | null>(null);
+  const queryOptions = trpc.folders.getTreePaginated.infiniteQueryOptions(
+    getInfiniteSidebarTreeQueryOptions(parentFolderId),
   );
-  const pagesQueryOptions = trpc.pages.getPaginated.infiniteQueryOptions(
-    getInfinitePagesQueryOptions(parentFolderId),
-  );
+  const { data, status, fetchNextPage, hasNextPage, isFetchingNextPage } =
+    useInfiniteQuery({
+      ...queryOptions,
+      getNextPageParam: ({ nextCursor }) => {
+        return nextCursor;
+      },
+    });
 
-  const {
-    data: foldersData,
-    status: foldersStatus,
-    fetchNextPage: fetchNextFolderPage,
-    hasNextPage: hasNextFolderPage,
-    isFetchingNextPage: isFetchingNextFolderPage,
-  } = useInfiniteQuery({
-    ...foldersQueryOptions,
-    getNextPageParam: ({ nextCursor }) => {
-      return nextCursor;
-    },
-  });
+  const items = data?.pages?.flatMap((page) => page.items) ?? [];
 
-  const {
-    data: pagesData,
-    status: pagesStatus,
-    fetchNextPage: fetchNextPagePage,
-    hasNextPage: hasNextPagePage,
-    isFetchingNextPage: isFetchingNextPagePage,
-  } = useInfiniteQuery({
-    ...pagesQueryOptions,
-    getNextPageParam: ({ nextCursor }) => {
-      return nextCursor;
-    },
-  });
+  useEffect(() => {
+    if (!hasNextPage || isFetchingNextPage) {
+      return;
+    }
 
-  const folders = foldersData?.pages?.flatMap((page) => page.items) ?? [];
-  const pages = pagesData?.pages?.flatMap((page) => page.items) ?? [];
-  const shouldShowInitialSkeleton =
-    folders.length === 0 &&
-    pages.length === 0 &&
-    (foldersStatus === "pending" || pagesStatus === "pending");
+    if (typeof IntersectionObserver === "undefined") {
+      return;
+    }
+
+    const target = loadMoreRef.current;
+    if (!target) {
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry?.isIntersecting) {
+          void fetchNextPage();
+        }
+      },
+      {
+        rootMargin: INFINITE_SCROLL_ROOT_MARGIN,
+      },
+    );
+
+    observer.observe(target);
+    return () => {
+      observer.disconnect();
+    };
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
+
+  const shouldShowInitialSkeleton = items.length === 0 && status === "pending";
 
   return (
     <>
-      <CreateFolderButton
-        parentFolderId={parentFolderId}
-        className={cn(DEFAULT_TREE_ITEM_CLASSNAME, "py-2")}
-      />
-      <CreatePageButton
-        folderId={parentFolderId}
-        className={cn(DEFAULT_TREE_ITEM_CLASSNAME, "py-2")}
-      />
-
       {shouldShowInitialSkeleton ? (
         <AppSidebarPageItemSkeleton className={DEFAULT_TREE_ITEM_CLASSNAME} />
       ) : null}
 
-      {folders.map((folder) => (
-        <AppSidebarFolderItem key={folder.id} folder={folder} />
-      ))}
+      {items.map((item) =>
+        item.kind === "folder" ? (
+          <AppSidebarFolderItem
+            key={`folder-${item.folder.id}`}
+            folder={item.folder}
+          />
+        ) : (
+          <AppSidebarPageItem
+            key={`page-${item.page.id}`}
+            page={item.page}
+            className={DEFAULT_TREE_ITEM_CLASSNAME}
+          />
+        ),
+      )}
 
-      {hasNextFolderPage ? (
-        <SidebarLoadMoreButton
-          className={DEFAULT_TREE_ITEM_CLASSNAME}
-          disabled={isFetchingNextFolderPage}
-          isLoading={isFetchingNextFolderPage}
-          label="Load more folders"
-          onClick={() => {
-            void fetchNextFolderPage();
-          }}
-        />
+      {isFetchingNextPage ? (
+        <AppSidebarPageItemSkeleton className={DEFAULT_TREE_ITEM_CLASSNAME} />
       ) : null}
 
-      {pages.map((page) => (
-        <AppSidebarPageItem
-          key={page.id}
-          page={page}
-          className={DEFAULT_TREE_ITEM_CLASSNAME}
-        />
-      ))}
-
-      {hasNextPagePage ? (
-        <SidebarLoadMoreButton
-          className={DEFAULT_TREE_ITEM_CLASSNAME}
-          disabled={isFetchingNextPagePage}
-          isLoading={isFetchingNextPagePage}
-          label="Load more pages"
-          onClick={() => {
-            void fetchNextPagePage();
-          }}
-        />
-      ) : null}
+      <SidebarMenuSubItem
+        className={cn(DEFAULT_TREE_ITEM_CLASSNAME, "py-0")}
+        aria-hidden
+      >
+        <div ref={loadMoreRef} className="h-px w-full" />
+      </SidebarMenuSubItem>
     </>
   );
 }
@@ -244,21 +225,37 @@ export const AppSidebarPages = ({
       onOpenChange={setIsOpen}
       className="group/collapsible flex min-h-0 flex-1 flex-col"
     >
-      <CollapsibleTrigger asChild>
-        <SidebarMenuButton
-          isActive={isPagesRoute}
-          className={cn(
-            "min-h-8 border border-transparent text-foreground!",
-            isPagesRoute && "border-sidebar-primary/50",
-          )}
-          tooltip="Pages"
-          onClick={handlePagesClick}
-        >
-          <BookOpen />
-          <span>Pages</span>
-          <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
-        </SidebarMenuButton>
-      </CollapsibleTrigger>
+      <div className="group/tree-row relative">
+        <CollapsibleTrigger asChild>
+          <SidebarMenuButton
+            isActive={isPagesRoute}
+            className={cn(
+              "min-h-8 border border-transparent pr-2 text-foreground!",
+              isPagesRoute && "border-sidebar-primary/50",
+            )}
+            tooltip="Pages"
+            onClick={handlePagesClick}
+          >
+            <BookOpen />
+            <span>Pages</span>
+            <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+          </SidebarMenuButton>
+        </CollapsibleTrigger>
+        <AppSidebarTreeActions
+          className="right-8"
+          kind="root"
+          parentFolderId={null}
+          onCreateStart={() => {
+            if (state === "collapsed") {
+              setOpen(true);
+            }
+            setIsOpen(true);
+          }}
+          onCreateSuccess={() => {
+            setIsOpen(true);
+          }}
+        />
+      </div>
 
       <CollapsibleContent className="flex h-full min-h-0 flex-col">
         <SidebarMenuSub className="mx-0 mr-0 flex-1 gap-0 overflow-scroll border-none px-0">

@@ -98,7 +98,7 @@ export function AppSidebarPageItem({
             </Link>
             {!!page && (
               <DeletePageDialogTrigger asChild>
-                <DeletePageButton className="hidden bg-transparent! pr-0! text-destructive! group-hover/page-item:block" />
+                <DeletePageButton className="pointer-events-none invisible bg-transparent! pr-0! text-destructive! opacity-0 transition-opacity group-focus-within/page-item:pointer-events-auto group-focus-within/page-item:visible group-focus-within/page-item:opacity-100 group-hover/page-item:pointer-events-auto group-hover/page-item:visible group-hover/page-item:opacity-100" />
               </DeletePageDialogTrigger>
             )}
           </div>

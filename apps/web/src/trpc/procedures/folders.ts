@@ -2,8 +2,14 @@ import { and, desc, eq, isNull, lt, lte, or } from "@acme/db";
 import { Folder, Page, zInsertFolder } from "@acme/db/schema";
 import type { TRPCRouterRecord } from "@trpc/server";
 import { TRPCError } from "@trpc/server";
+import { inArray } from "drizzle-orm";
 import { z } from "zod/v4";
 import { protectedProcedure, type TRPCContext } from "../trpc";
+import {
+  decodeSidebarTreeCursor,
+  encodeSidebarTreeCursor,
+  sortSidebarTreePositions,
+} from "./sidebar-tree-pagination";
 
 const CURSOR_SEPARATOR = "|";
 
@@ -76,6 +82,40 @@ async function isDescendantOfFolder({
   }
 
   return false;
+}
+
+function getDescendantFolderIds(
+  allFolders: Array<
+    Pick<(typeof Folder)["$inferSelect"], "id" | "parent_folder_id">
+  >,
+  folderId: string,
+) {
+  const childrenByParent = new Map<string, string[]>();
+
+  for (const folder of allFolders) {
+    if (!folder.parent_folder_id) {
+      continue;
+    }
+
+    const children = childrenByParent.get(folder.parent_folder_id) ?? [];
+    children.push(folder.id);
+    childrenByParent.set(folder.parent_folder_id, children);
+  }
+
+  const descendants = new Set<string>([folderId]);
+  const queue = [...(childrenByParent.get(folderId) ?? [])];
+
+  while (queue.length > 0) {
+    const currentId = queue.shift();
+    if (!currentId || descendants.has(currentId)) {
+      continue;
+    }
+
+    descendants.add(currentId);
+    queue.push(...(childrenByParent.get(currentId) ?? []));
+  }
+
+  return [...descendants];
 }
 
 export const foldersRouter = {
@@ -265,6 +305,27 @@ export const foldersRouter = {
         });
       }
     }),
+  getById: protectedProcedure
+    .input(
+      z.object({
+        id: z.uuid(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      try {
+        return await getFolderById({
+          db: ctx.db,
+          id: input.id,
+          userId: ctx.session.user.id,
+        });
+      } catch (error) {
+        console.error("Database error in folders.getById:", error);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to fetch folder",
+        });
+      }
+    }),
   getByUser: protectedProcedure.query(async ({ ctx }) => {
     try {
       return await ctx.db
@@ -280,6 +341,93 @@ export const foldersRouter = {
       });
     }
   }),
+  getNestedPagesPaginated: protectedProcedure
+    .input(
+      z.object({
+        cursor: z.string().optional(),
+        folder_id: z.uuid(),
+        limit: z.number().min(1).max(50).default(20),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      try {
+        const folder = await getFolderById({
+          db: ctx.db,
+          id: input.folder_id,
+          userId: ctx.session.user.id,
+        });
+
+        if (!folder) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Folder not found",
+          });
+        }
+
+        const decodedCursor = decodeCursor(input.cursor);
+        const cursorCondition = decodedCursor
+          ? decodedCursor.id
+            ? or(
+                lt(Page.updated_at, decodedCursor.updatedAt),
+                and(
+                  eq(Page.updated_at, decodedCursor.updatedAt),
+                  lt(Page.id, decodedCursor.id),
+                ),
+              )
+            : lte(Page.updated_at, decodedCursor.updatedAt)
+          : undefined;
+
+        const folders = await ctx.db
+          .select({
+            id: Folder.id,
+            parent_folder_id: Folder.parent_folder_id,
+          })
+          .from(Folder)
+          .where(eq(Folder.user_id, ctx.session.user.id));
+
+        const nestedFolderIds = getDescendantFolderIds(
+          folders,
+          input.folder_id,
+        );
+
+        const pages = await ctx.db
+          .select()
+          .from(Page)
+          .where(
+            and(
+              eq(Page.user_id, ctx.session.user.id),
+              inArray(Page.folder_id, nestedFolderIds),
+              cursorCondition,
+            ),
+          )
+          .orderBy(desc(Page.updated_at), desc(Page.id))
+          .limit(input.limit + 1);
+
+        const hasNextPage = pages.length > input.limit;
+        const items = hasNextPage ? pages.slice(0, input.limit) : pages;
+        const lastItem = hasNextPage ? items.at(-1) : undefined;
+
+        return {
+          items,
+          nextCursor: lastItem
+            ? encodeCursor(lastItem.updated_at, lastItem.id)
+            : undefined,
+        };
+      } catch (error) {
+        if (error instanceof TRPCError) {
+          throw error;
+        }
+
+        console.error(
+          "Database error in folders.getNestedPagesPaginated:",
+          error,
+        );
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to fetch nested folder pages",
+        });
+      }
+    }),
   getPaginated: protectedProcedure
     .input(
       z.object({
@@ -335,6 +483,124 @@ export const foldersRouter = {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "Failed to fetch folders",
+        });
+      }
+    }),
+  getTreePaginated: protectedProcedure
+    .input(
+      z.object({
+        cursor: z.string().optional(),
+        limit: z.number().min(1).max(50).default(10),
+        parent_folder_id: z.uuid().nullable().default(null),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      try {
+        const { cursor, limit, parent_folder_id } = input;
+        const decodedCursor = decodeSidebarTreeCursor(cursor);
+
+        const folderCursorCondition = decodedCursor
+          ? decodedCursor.kind === "folder"
+            ? or(
+                lt(Folder.updated_at, decodedCursor.updatedAt),
+                and(
+                  eq(Folder.updated_at, decodedCursor.updatedAt),
+                  lt(Folder.id, decodedCursor.id),
+                ),
+              )
+            : lt(Folder.updated_at, decodedCursor.updatedAt)
+          : undefined;
+
+        const pageCursorCondition = decodedCursor
+          ? decodedCursor.kind === "folder"
+            ? lte(Page.updated_at, decodedCursor.updatedAt)
+            : or(
+                lt(Page.updated_at, decodedCursor.updatedAt),
+                and(
+                  eq(Page.updated_at, decodedCursor.updatedAt),
+                  lt(Page.id, decodedCursor.id),
+                ),
+              )
+          : undefined;
+
+        const [folders, pages] = await Promise.all([
+          ctx.db
+            .select()
+            .from(Folder)
+            .where(
+              and(
+                eq(Folder.user_id, ctx.session.user.id),
+                parent_folder_id === null
+                  ? isNull(Folder.parent_folder_id)
+                  : eq(Folder.parent_folder_id, parent_folder_id),
+                folderCursorCondition,
+              ),
+            )
+            .orderBy(desc(Folder.updated_at), desc(Folder.id))
+            .limit(limit + 1),
+          ctx.db
+            .select()
+            .from(Page)
+            .where(
+              and(
+                eq(Page.user_id, ctx.session.user.id),
+                parent_folder_id === null
+                  ? isNull(Page.folder_id)
+                  : eq(Page.folder_id, parent_folder_id),
+                pageCursorCondition,
+              ),
+            )
+            .orderBy(desc(Page.updated_at), desc(Page.id))
+            .limit(limit + 1),
+        ]);
+
+        const mixedItems = sortSidebarTreePositions([
+          ...folders.map((folder) => ({
+            folder,
+            id: folder.id,
+            kind: "folder" as const,
+            updatedAt: folder.updated_at,
+          })),
+          ...pages.map((page) => ({
+            id: page.id,
+            kind: "page" as const,
+            page,
+            updatedAt: page.updated_at,
+          })),
+        ]);
+
+        const hasNextPage =
+          mixedItems.length > limit ||
+          folders.length > limit ||
+          pages.length > limit;
+        const items = hasNextPage ? mixedItems.slice(0, limit) : mixedItems;
+        const lastItem = hasNextPage ? items.at(-1) : undefined;
+
+        return {
+          items: items.map((item) =>
+            item.kind === "folder"
+              ? {
+                  folder: item.folder,
+                  kind: "folder" as const,
+                }
+              : {
+                  kind: "page" as const,
+                  page: item.page,
+                },
+          ),
+          nextCursor: lastItem
+            ? encodeSidebarTreeCursor({
+                id: lastItem.id,
+                kind: lastItem.kind,
+                updatedAt: lastItem.updatedAt,
+              })
+            : undefined,
+        };
+      } catch (error) {
+        console.error("Database error in folders.getTreePaginated:", error);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to fetch sidebar tree",
         });
       }
     }),
@@ -433,7 +699,7 @@ export const foldersRouter = {
     .input(
       z.object({
         id: z.uuid(),
-        name: z.string().min(1).max(500),
+        name: z.string().max(500),
       }),
     )
     .mutation(async ({ ctx, input }) => {

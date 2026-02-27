@@ -3,6 +3,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { getInfinitePagesQueryOptions } from "~/trpc/options/pages-query-options";
+import { getInfiniteSidebarTreeQueryOptions } from "~/trpc/options/sidebar-tree-query-options";
 import { useTRPC } from "~/trpc/react";
 import { useAppEventEmitter } from "../../components/events/app-event-context";
 import { PageCreatedEvent } from "../../events/page-created-event";
@@ -58,6 +59,39 @@ export function useCreatePageTool() {
                     {
                       ...first,
                       items: [newPage, ...(first?.items ?? [])],
+                      nextCursor: first?.nextCursor,
+                    },
+                    ...rest,
+                  ],
+                };
+              },
+            );
+
+            queryClient.setQueryData(
+              trpc.folders.getTreePaginated.infiniteQueryOptions(
+                getInfiniteSidebarTreeQueryOptions(null),
+              ).queryKey,
+              (old) => {
+                if (!old)
+                  return {
+                    pageParams: [],
+                    pages: [
+                      {
+                        items: [{ kind: "page" as const, page: newPage }],
+                        nextCursor: undefined,
+                      },
+                    ],
+                  };
+                const [first, ...rest] = old.pages;
+                return {
+                  ...old,
+                  pages: [
+                    {
+                      ...first,
+                      items: [
+                        { kind: "page" as const, page: newPage },
+                        ...(first?.items ?? []),
+                      ],
                       nextCursor: first?.nextCursor,
                     },
                     ...rest,

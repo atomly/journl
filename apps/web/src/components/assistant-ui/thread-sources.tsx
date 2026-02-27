@@ -30,7 +30,7 @@ type ComposerContextProps = {
 const MAX_SOURCES = 3;
 
 export function ComposerSources({ className }: ComposerContextProps) {
-  const { getAllSelections: getSelections, unsetSelection } = useJournlAgent();
+  const { getSelections, unsetSelection } = useJournlAgent();
 
   const sources: Source[] = getSelections().map((selection) => {
     const { blockIds, text } = selection;

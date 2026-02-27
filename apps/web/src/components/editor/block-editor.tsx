@@ -109,11 +109,8 @@ export function BlockEditor({
 }: BlockEditorProps) {
   const { theme, systemTheme } = useTheme();
   const previousEditorRef = useRef<typeof editor.document>(editor.document);
-  const {
-    unsetEditorSelections,
-    getAllSelections: getSelections,
-    unsetSelection,
-  } = useJournlAgent();
+  const { unsetEditorSelections, getSelections, unsetSelection } =
+    useJournlAgent();
 
   // Remove block selections when the editor is unmounted.
   useEffect(() => {

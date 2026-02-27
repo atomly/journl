@@ -33,8 +33,12 @@ export function JournlChatProvider({
   transport,
   messages,
 }: JournlChatProviderProps) {
-  const { getAllSelections, getEditors, getView, getReasoning } =
-    useJournlAgent();
+  const {
+    getSelections: getAllSelections,
+    getEditors,
+    getView,
+    getReasoning,
+  } = useJournlAgent();
 
   const createPage = useCreatePageTool();
   const applyEditorChanges = useApplyEditorChangesTool();

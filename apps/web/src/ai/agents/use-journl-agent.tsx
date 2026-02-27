@@ -29,7 +29,7 @@ const JournlAgentContext = createContext<{
   getSelection: (
     selection: Pick<BlockSelection, "editor" | "blockIds">,
   ) => BlockSelection | undefined;
-  getAllSelections: () => BlockSelection[];
+  getSelections: () => BlockSelection[];
   getEditorSelections: (editor: EditorPrimitive) => BlockSelection[];
   getReasoning: () => JournlAgentState["reasoning"];
   getView: () => JournlAgentState["view"];
@@ -153,11 +153,11 @@ export function JournlAgentProvider({
   return (
     <JournlAgentContext.Provider
       value={{
-        getAllSelections,
         getEditorSelections,
         getEditors,
         getReasoning,
         getSelection,
+        getSelections: getAllSelections,
         getView,
         setEditor,
         setReasoning,

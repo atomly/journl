@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect } from "react";
+import { useIsMobile } from "~/hooks/use-mobile";
 import { useAppLayout } from "../../_components/app-layout-provider";
 
 type AppContainerProps = React.ComponentProps<"div">;
@@ -20,6 +21,7 @@ function clearVisualViewportOffsetTop() {
 
 export function AppContainer({ children, ...props }: AppContainerProps) {
   const { setScrollElement } = useAppLayout();
+  const isMobile = useIsMobile();
 
   const handleRef = useCallback(
     (node: HTMLDivElement | null) => {

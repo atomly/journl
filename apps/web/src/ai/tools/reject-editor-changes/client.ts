@@ -1,8 +1,8 @@
 "use client";
 
-import { AIExtension } from "@blocknote/xl-ai";
 import { useJournlAgent } from "../../agents/use-journl-agent";
 import { createClientTool } from "../../utils/create-client-tool";
+import { resolveEditorAndAIExtension } from "../editor-changes/client-utils";
 import { zEditorChangesInput } from "../editor-changes/schema";
 
 export function useRejectEditorChangesTool() {
@@ -11,28 +11,19 @@ export function useRejectEditorChangesTool() {
   const tool = createClientTool({
     execute: async (toolCall, chat) => {
       try {
-        const editor = getEditors().get(toolCall.input.targetEditor)?.editor;
+        const resolved = resolveEditorAndAIExtension({
+          chat,
+          getEditors,
+          targetEditor: toolCall.input.targetEditor,
+          toolCallId: toolCall.toolCallId,
+          toolName: toolCall.toolName,
+        });
 
-        if (!editor) {
-          const activeEditors = JSON.stringify(Array.from(getEditors().keys()));
-          void chat.addToolOutput({
-            output: `Editor ${toolCall.input.targetEditor} was not found. Please call the tool again targeting one of the following editors: ${activeEditors}`,
-            tool: toolCall.toolName,
-            toolCallId: toolCall.toolCallId,
-          });
+        if (!resolved) {
           return;
         }
 
-        const aiExtension = editor.getExtension(AIExtension);
-
-        if (!aiExtension) {
-          void chat.addToolOutput({
-            output: `Editor ${toolCall.input.targetEditor} does not have the AI extension installed.`,
-            tool: toolCall.toolName,
-            toolCallId: toolCall.toolCallId,
-          });
-          return;
-        }
+        const { aiExtension } = resolved;
 
         const aiMenuState = aiExtension.store.state.aiMenuState;
         if (

@@ -1,9 +1,13 @@
 "use client";
 
-import { AIExtension } from "@blocknote/xl-ai";
 import { useDrawer } from "~/components/ui/drawer";
 import { useJournlAgent } from "../../agents/use-journl-agent";
 import { createClientTool } from "../../utils/create-client-tool";
+import { resolveEditorAndAIExtension } from "../editor-changes/client-utils";
+import {
+  isElementPartiallyInViewport,
+  resolveAIMenuBlockId,
+} from "./client-utils";
 import { zManipulateEditorInput } from "./schema";
 
 export function useManipulateEditorTool() {
@@ -14,28 +18,19 @@ export function useManipulateEditorTool() {
       let cleanUpBeforeChange: (() => void) | undefined;
 
       try {
-        const editor = getEditors().get(toolCall.input.targetEditor)?.editor;
+        const resolved = resolveEditorAndAIExtension({
+          chat,
+          getEditors,
+          targetEditor: toolCall.input.targetEditor,
+          toolCallId: toolCall.toolCallId,
+          toolName: toolCall.toolName,
+        });
 
-        if (!editor) {
-          const activeEditors = JSON.stringify(Array.from(getEditors().keys()));
-          void chat.addToolOutput({
-            output: `Editor ${toolCall.input.targetEditor} was not found. Please call the tool again targeting one of the following editors: ${activeEditors}`,
-            tool: toolCall.toolName,
-            toolCallId: toolCall.toolCallId,
-          });
+        if (!resolved) {
           return;
         }
 
-        const aiExtension = editor.getExtension(AIExtension);
-
-        if (!aiExtension) {
-          void chat.addToolOutput({
-            output: `Editor ${toolCall.input.targetEditor} does not have the AI extension installed.`,
-            tool: toolCall.toolName,
-            toolCallId: toolCall.toolCallId,
-          });
-          return;
-        }
+        const { aiExtension, editor } = resolved;
 
         closeDrawer();
 
@@ -95,45 +90,4 @@ export function useManipulateEditorTool() {
     name: "manipulateEditor",
   });
   return tool;
-}
-
-/**
- * Checks if an element is in the viewport.
- */
-function isElementPartiallyInViewport(element: Element) {
-  const rect = element.getBoundingClientRect();
-  const viewportHeight =
-    window.innerHeight || document.documentElement.clientHeight;
-  const viewportWidth =
-    window.innerWidth || document.documentElement.clientWidth;
-  return (
-    rect.top < viewportHeight &&
-    rect.bottom > 0 &&
-    rect.left < viewportWidth &&
-    rect.right > 0
-  );
-}
-
-function resolveAIMenuBlockId(editor: {
-  focus?: () => void;
-  getTextCursorPosition?: () => { block?: { id?: string } };
-  getSelection?: () => { blocks?: Array<{ id?: string }> } | undefined;
-  setTextCursorPosition?: (
-    blockId: string,
-    placement?: "start" | "end",
-  ) => void;
-  document?: Array<{ id?: string }>;
-}) {
-  const selection = editor.getSelection?.();
-  const selectedLastBlock = selection?.blocks?.at(-1)?.id;
-  if (selectedLastBlock) {
-    return selectedLastBlock;
-  }
-
-  const cursorBlockId = editor.getTextCursorPosition?.().block?.id;
-  if (cursorBlockId) {
-    return cursorBlockId;
-  }
-
-  return editor.document?.[0]?.id;
 }

@@ -26,7 +26,7 @@ import {
 } from "lucide-react";
 import type { ComponentProps, ReactNode } from "react";
 import { MarkdownText } from "~/components/assistant-ui/markdown-text";
-import { useThreadChatError } from "~/components/assistant-ui/thread-runtime";
+import { useThreadRuntime } from "~/components/assistant-ui/thread-runtime";
 import { TooltipIconButton } from "~/components/assistant-ui/tooltip-icon-button";
 import { Button } from "~/components/ui/button";
 import { cn } from "~/lib/cn";
@@ -64,8 +64,8 @@ export function ComposerInput({
   placeholder = "Ask anything...",
   ...rest
 }: ComponentProps<typeof ComposerPrimitive.Input>) {
-  const { usageQuotaExceeded } = useThreadChatError();
-  const isUsageQuotaExceeded = Boolean(usageQuotaExceeded);
+  const { exceeded } = useThreadRuntime();
+  const isUsageQuotaExceeded = Boolean(exceeded);
 
   return (
     <ComposerPrimitive.Input
@@ -96,8 +96,8 @@ export function ComposerAction({
   tooltip = "Send",
   variant = "default",
 }: ComposerActionProps) {
-  const { usageQuotaExceeded } = useThreadChatError();
-  const isUsageQuotaExceeded = Boolean(usageQuotaExceeded);
+  const { exceeded } = useThreadRuntime();
+  const isUsageQuotaExceeded = Boolean(exceeded);
 
   return (
     <>
@@ -131,16 +131,16 @@ export function ComposerAction({
 type ComposerQuotaNoticeProps = {
   className?: string;
 };
-
 export function ComposerQuotaNotice({ className }: ComposerQuotaNoticeProps) {
-  const { usageQuotaExceeded } = useThreadChatError();
+  const { exceeded } = useThreadRuntime();
 
-  if (!usageQuotaExceeded) {
+  if (!exceeded) {
     return null;
   }
 
-  const { usage } = usageQuotaExceeded;
+  const { usage } = exceeded;
   const planLabel = usage.subscriptionType === "pro" ? "Pro" : "Free";
+  const resetAt = formatDate(usage.periodEnd);
 
   return (
     <div
@@ -153,9 +153,9 @@ export function ComposerQuotaNotice({ className }: ComposerQuotaNoticeProps) {
         AI usage limit reached
       </p>
       <p className="text-amber-900/90 text-xs dark:text-amber-100/90">
-        {planLabel} plan usage {formatUsd(usage.currentUsageUsd)} of{" "}
-        {formatUsd(usage.quotaUsd)} is fully used. Upgrade or wait for the next
-        reset.
+        You’ve used all of your {planLabel} plan usage.{" "}
+        {usage.subscriptionType === "free" ? "Upgrade now or wait" : "Wait"}{" "}
+        until your next {resetAt ? `reset on ${resetAt}` : "reset"}.
       </p>
     </div>
   );
@@ -636,11 +636,14 @@ function truncate(value: string, limit: number) {
   }
 }
 
-function formatUsd(value: number) {
-  return new Intl.NumberFormat("en-US", {
-    currency: "USD",
-    maximumFractionDigits: 3,
-    minimumFractionDigits: 2,
-    style: "currency",
-  }).format(value);
+function formatDate(date: string | null) {
+  if (!date) {
+    return undefined;
+  }
+
+  return new Intl.DateTimeFormat("en-US", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  }).format(new Date(date));
 }

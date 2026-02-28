@@ -14,6 +14,7 @@ export function initAuth(options: {
   appName: string;
   baseUrl: string;
   productionUrl: string;
+  trustedOrigins?: string[];
   secret: string | undefined;
   googleClientId: string;
   googleClientSecret: string;
@@ -124,6 +125,7 @@ export function initAuth(options: {
         redirectURI: `${options.productionUrl}/api/auth/callback/google`,
       },
     },
+    trustedOrigins: options.trustedOrigins,
   } satisfies BetterAuthOptions;
 
   return betterAuth(config);

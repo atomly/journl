@@ -1,6 +1,7 @@
 "use client";
 
 import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
+import type React from "react";
 import { useEffect, useMemo } from "react";
 import { Virtuoso } from "react-virtuoso";
 import { useDebouncedCallback } from "use-debounce";
@@ -20,42 +21,167 @@ import {
   JournalEntryWrapper,
 } from "./journal-entry-editor";
 import { DynamicJournalEntryEditor } from "./journal-entry-editor.dynamic";
-import { JournalEntryLoader } from "./journal-entry-loader";
+import { JournalEntrySkeleton } from "./journal-entry-skeleton";
 import { JournalListSkeleton } from "./journal-list-skeleton";
 
-type JournalVirtualListProps = Omit<
+type JournalListProps = Omit<
   React.ComponentProps<typeof Virtuoso>,
   "data" | "endReached" | "increaseViewportBy" | "itemContent" | "components"
 >;
 
-type JournalListError = { message?: string } | null;
+export function JournalList(props: JournalListProps) {
+  const { preferences } = useAppPreferences();
+  const isEntriesOnly = preferences.journalTimelineView === "entries";
 
-type JournalListContentProps = JournalVirtualListProps & {
+  return isEntriesOnly ? (
+    <JournalEntries {...props} />
+  ) : (
+    <JournalTimeline {...props} />
+  );
+}
+
+export function JournalEntries(props: JournalListProps) {
+  const trpc = useTRPC();
+  const queryClient = useQueryClient();
+  const queryOptions = trpc.journal.getEntries.infiniteQueryOptions(
+    getInfiniteEntriesQueryOptions(),
+  );
+  const { status, data, error, fetchNextPage, hasNextPage, isFetching } =
+    useInfiniteQuery({
+      ...queryOptions,
+      gcTime: 0,
+      getNextPageParam: ({ nextPage }) => nextPage ?? undefined,
+      initialPageParam: null,
+    });
+
+  return (
+    <VirtualizedJournalList
+      {...props}
+      data={data}
+      error={error}
+      fetchNextPage={fetchNextPage}
+      hasNextPage={hasNextPage ?? false}
+      isFetching={isFetching}
+      onCreateAction={(newEntry) => {
+        queryClient.setQueryData(queryOptions.queryKey, (old) => {
+          const pages = [...(old?.pages ?? [])];
+          if (pages.length === 0) {
+            return {
+              ...old,
+              pageParams: [...(old?.pageParams ?? [])],
+              pages,
+            };
+          }
+
+          let didReplace = false;
+          const updatedPages = pages.map((page) => ({
+            ...page,
+            timeline: page.timeline.map((entry) => {
+              if (entry.date === newEntry.date) {
+                didReplace = true;
+                return newEntry;
+              }
+              return entry;
+            }),
+          }));
+
+          if (!didReplace) {
+            const [firstPage, ...restPages] = updatedPages;
+            if (firstPage) {
+              return {
+                ...old,
+                pageParams: [...(old?.pageParams ?? [])],
+                pages: [
+                  {
+                    ...firstPage,
+                    timeline: [newEntry, ...firstPage.timeline],
+                  },
+                  ...restPages,
+                ],
+              };
+            }
+          }
+
+          return {
+            ...old,
+            pageParams: [...(old?.pageParams ?? [])],
+            pages: updatedPages,
+          };
+        });
+      }}
+      status={status}
+    />
+  );
+}
+
+export function JournalTimeline(props: JournalListProps) {
+  const trpc = useTRPC();
+  const queryClient = useQueryClient();
+  const queryOptions = trpc.journal.getTimeline.infiniteQueryOptions(
+    getInfiniteJournalEntriesQueryOptions(),
+  );
+  const { status, data, error, fetchNextPage, hasNextPage, isFetching } =
+    useInfiniteQuery({
+      ...queryOptions,
+      gcTime: 0,
+      getNextPageParam: ({ nextPage }) => nextPage ?? undefined,
+      initialPageParam: Date.now(),
+    });
+
+  return (
+    <VirtualizedJournalList
+      {...props}
+      data={data}
+      error={error}
+      fetchNextPage={fetchNextPage}
+      hasNextPage={hasNextPage ?? false}
+      isFetching={isFetching}
+      onCreateAction={(newEntry) => {
+        queryClient.setQueryData(queryOptions.queryKey, (old) => ({
+          ...old,
+          pageParams: [...(old?.pageParams ?? [])],
+          pages: [...(old?.pages ?? [])].map((page) => {
+            return {
+              ...page,
+              timeline: page.timeline.map((entry) =>
+                entry.date === newEntry.date ? newEntry : entry,
+              ),
+            };
+          }),
+        }));
+      }}
+      status={status}
+    />
+  );
+}
+
+type VirtualizedJournalListProps = JournalListProps & {
   status: "pending" | "error" | "success";
   data:
     | {
         pages: Array<{ timeline: JournalListEntry[] }>;
       }
     | undefined;
-  error: JournalListError;
+  error: { message?: string } | null;
   fetchNextPage: () => Promise<unknown>;
   hasNextPage: boolean;
+  isFetching: boolean;
   onCreateAction: (newEntry: JournalListEntry) => void;
 };
 
-function JournalListContent({
+function VirtualizedJournalList({
   status,
   data,
   error,
   fetchNextPage,
   hasNextPage,
+  isFetching,
   onCreateAction,
   ...rest
-}: JournalListContentProps) {
+}: VirtualizedJournalListProps) {
   const debouncedFetchNextPage = useDebouncedCallback(fetchNextPage, 300);
   const { setView } = useJournlAgent();
   const { scrollElement } = useAppLayout();
-  const hasMore = hasNextPage;
 
   const entries = useMemo(
     () =>
@@ -114,7 +240,7 @@ function JournalListContent({
       customScrollParent={scrollElement ?? undefined}
       data={entries}
       endReached={() => {
-        if (hasMore) {
+        if (hasNextPage) {
           debouncedFetchNextPage();
         }
       }}
@@ -132,9 +258,10 @@ function JournalListContent({
       )}
       components={{
         Footer: () => (
-          <JournalEntryLoader
-            className="mx-auto mt-8 max-w-4xl px-8 pb-24"
-            hasNextPage={hasMore}
+          <JournalListFooter
+            className="mx-auto mt-8 max-w-4xl pb-24"
+            hasNextPage={hasNextPage}
+            isFetching={isFetching}
           />
         ),
       }}
@@ -143,124 +270,27 @@ function JournalListContent({
   );
 }
 
-export function JournalTimeline({ ...rest }: JournalVirtualListProps) {
-  const trpc = useTRPC();
-  const queryClient = useQueryClient();
-  const queryOptions = trpc.journal.getTimeline.infiniteQueryOptions(
-    getInfiniteJournalEntriesQueryOptions(),
-  );
-  const { status, data, error, fetchNextPage, hasNextPage } = useInfiniteQuery({
-    ...queryOptions,
-    gcTime: 0,
-    getNextPageParam: ({ nextPage }) => nextPage ?? undefined,
-    initialPageParam: Date.now(),
-  });
+type JournalListFooterProps = Omit<React.ComponentProps<"div">, "children"> & {
+  hasNextPage: boolean;
+  isFetching: boolean;
+};
+
+function JournalListFooter({
+  hasNextPage,
+  isFetching,
+  ...rest
+}: JournalListFooterProps) {
+  if (isFetching && hasNextPage) {
+    return <JournalEntrySkeleton hasContent {...rest} />;
+  }
+
+  if (hasNextPage) return null;
 
   return (
-    <JournalListContent
-      {...rest}
-      data={data}
-      error={error}
-      fetchNextPage={fetchNextPage}
-      hasNextPage={hasNextPage ?? false}
-      onCreateAction={(newEntry) => {
-        queryClient.setQueryData(queryOptions.queryKey, (old) => ({
-          ...old,
-          pageParams: [...(old?.pageParams ?? [])],
-          pages: [...(old?.pages ?? [])].map((page) => {
-            return {
-              ...page,
-              timeline: page.timeline.map((entry) =>
-                entry.date === newEntry.date ? newEntry : entry,
-              ),
-            };
-          }),
-        }));
-      }}
-      status={status}
-    />
-  );
-}
-
-export function JournalEntries({ ...rest }: JournalVirtualListProps) {
-  const trpc = useTRPC();
-  const queryClient = useQueryClient();
-  const queryOptions = trpc.journal.getEntries.infiniteQueryOptions(
-    getInfiniteEntriesQueryOptions(),
-  );
-  const { status, data, error, fetchNextPage, hasNextPage } = useInfiniteQuery({
-    ...queryOptions,
-    gcTime: 0,
-    getNextPageParam: ({ nextPage }) => nextPage ?? undefined,
-    initialPageParam: null,
-  });
-
-  return (
-    <JournalListContent
-      {...rest}
-      data={data}
-      error={error}
-      fetchNextPage={fetchNextPage}
-      hasNextPage={hasNextPage ?? false}
-      onCreateAction={(newEntry) => {
-        queryClient.setQueryData(queryOptions.queryKey, (old) => {
-          const pages = [...(old?.pages ?? [])];
-          if (pages.length === 0) {
-            return {
-              ...old,
-              pageParams: [...(old?.pageParams ?? [])],
-              pages,
-            };
-          }
-
-          let didReplace = false;
-          const updatedPages = pages.map((page) => ({
-            ...page,
-            timeline: page.timeline.map((entry) => {
-              if (entry.date === newEntry.date) {
-                didReplace = true;
-                return newEntry;
-              }
-              return entry;
-            }),
-          }));
-
-          if (!didReplace) {
-            const [firstPage, ...restPages] = updatedPages;
-            if (firstPage) {
-              return {
-                ...old,
-                pageParams: [...(old?.pageParams ?? [])],
-                pages: [
-                  {
-                    ...firstPage,
-                    timeline: [newEntry, ...firstPage.timeline],
-                  },
-                  ...restPages,
-                ],
-              };
-            }
-          }
-
-          return {
-            ...old,
-            pageParams: [...(old?.pageParams ?? [])],
-            pages: updatedPages,
-          };
-        });
-      }}
-      status={status}
-    />
-  );
-}
-
-export function JournalList({ ...rest }: JournalVirtualListProps) {
-  const { preferences } = useAppPreferences();
-  const isEntriesOnly = preferences.journalTimelineView === "entries";
-
-  return isEntriesOnly ? (
-    <JournalEntries {...rest} />
-  ) : (
-    <JournalTimeline {...rest} />
+    <div {...rest}>
+      <div className="flex h-full items-center justify-center text-muted-foreground text-sm">
+        There are no more entries to load
+      </div>
+    </div>
   );
 }

@@ -1,4 +1,5 @@
 import { AuthView as PrimitiveAuthView } from "@daveyplate/better-auth-ui";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 
 const AUTH_VIEWS = new Set(["sign-in", "sign-up"]);
@@ -8,6 +9,9 @@ export async function AuthView({ pathname }: { pathname: string }) {
     redirect("/");
   }
 
+  if (pathname === "sign-in") redirect("/auth/sign-up");
+  if (pathname === "sign-up") redirect("/auth/sign-up");
+
   return (
     <PrimitiveAuthView
       pathname={pathname}
@@ -15,6 +19,16 @@ export async function AuthView({ pathname }: { pathname: string }) {
       classNames={{
         base: "bg-transparent border-none",
       }}
+      cardFooter={
+        pathname === "sign-in" ? (
+          <p className="w-full text-center text-muted-foreground text-sm">
+            Don&apos;t have an account?{" "}
+            <Link className="text-foreground underline" href="/invite">
+              Sign up instead
+            </Link>
+          </p>
+        ) : null
+      }
     />
   );
 }

@@ -1,3 +1,5 @@
+"use client";
+
 import {
   ActionBarPrimitive,
   BranchPickerPrimitive,
@@ -24,9 +26,11 @@ import {
 } from "lucide-react";
 import type { ComponentProps, ReactNode } from "react";
 import { MarkdownText } from "~/components/assistant-ui/markdown-text";
+import { useThreadRuntime } from "~/components/assistant-ui/thread-runtime";
 import { TooltipIconButton } from "~/components/assistant-ui/tooltip-icon-button";
 import { Button } from "~/components/ui/button";
 import { cn } from "~/lib/cn";
+import { getHumanReadableChatError } from "~/usage/quota-error";
 
 type ThreadScrollToBottomProps = Partial<
   ComponentProps<typeof TooltipIconButton>
@@ -57,12 +61,21 @@ export function ThreadScrollToBottom({
 
 export function ComposerInput({
   className,
+  placeholder = "Ask anything...",
   ...rest
 }: ComponentProps<typeof ComposerPrimitive.Input>) {
+  const { exceeded } = useThreadRuntime();
+  const isUsageQuotaExceeded = Boolean(exceeded);
+
   return (
     <ComposerPrimitive.Input
       rows={1}
-      placeholder="Ask anything..."
+      disabled={isUsageQuotaExceeded || rest.disabled}
+      placeholder={
+        isUsageQuotaExceeded
+          ? "You've reached your AI limit. Upgrade to continue."
+          : placeholder
+      }
       className={cn(
         "max-h-40 grow resize-none border-none text-md outline-none placeholder:text-muted-foreground focus:ring-0 disabled:cursor-not-allowed",
         className,
@@ -83,12 +96,16 @@ export function ComposerAction({
   tooltip = "Send",
   variant = "default",
 }: ComposerActionProps) {
+  const { exceeded } = useThreadRuntime();
+  const isUsageQuotaExceeded = Boolean(exceeded);
+
   return (
     <>
       <ThreadPrimitive.If running={false}>
         <ComposerPrimitive.Send asChild>
           <TooltipIconButton
-            tooltip={tooltip}
+            disabled={isUsageQuotaExceeded}
+            tooltip={isUsageQuotaExceeded ? "Usage limit reached" : tooltip}
             variant={variant}
             className={cn("size-8 p-2 transition-opacity ease-in", className)}
           >
@@ -108,6 +125,39 @@ export function ComposerAction({
         </ComposerPrimitive.Cancel>
       </ThreadPrimitive.If>
     </>
+  );
+}
+
+type ComposerQuotaNoticeProps = {
+  className?: string;
+};
+export function ComposerQuotaNotice({ className }: ComposerQuotaNoticeProps) {
+  const { exceeded } = useThreadRuntime();
+
+  if (!exceeded) {
+    return null;
+  }
+
+  const { usage } = exceeded;
+  const planLabel = usage.subscriptionType === "pro" ? "Pro" : "Free";
+  const resetAt = formatDate(usage.periodEnd);
+
+  return (
+    <div
+      className={cn(
+        "mx-2 rounded-md border border-amber-500/50 bg-amber-50 px-3 py-2 dark:border-amber-800/80 dark:bg-amber-950/20",
+        className,
+      )}
+    >
+      <p className="font-medium text-amber-900 text-xs dark:text-amber-200">
+        AI usage limit reached
+      </p>
+      <p className="text-amber-900/90 text-xs dark:text-amber-100/90">
+        You’ve used all of your {planLabel} plan usage.{" "}
+        {usage.subscriptionType === "free" ? "Upgrade now or wait" : "Wait"}{" "}
+        until your next {resetAt ? `reset on ${resetAt}` : "reset"}.
+      </p>
+    </div>
   );
 }
 
@@ -164,7 +214,9 @@ export function AssistantMessage() {
         />
         <MessagePrimitive.Error>
           <ErrorPrimitive.Root className="mt-2 rounded-md border border-destructive bg-destructive/10 p-3 text-destructive text-sm dark:bg-destructive/5 dark:text-red-200">
-            <ErrorPrimitive.Message className="line-clamp-2" />
+            <ErrorPrimitive.Message className="line-clamp-3">
+              <AssistantErrorMessage />
+            </ErrorPrimitive.Message>
           </ErrorPrimitive.Root>
         </MessagePrimitive.Error>
       </div>
@@ -174,6 +226,21 @@ export function AssistantMessage() {
       <BranchPicker className="col-start-2 row-start-2 mr-2 -ml-2" />
     </MessagePrimitive.Root>
   );
+}
+
+function AssistantErrorMessage() {
+  const error = useAuiState((s) =>
+    s.message.status?.type === "incomplete" &&
+    s.message.status.reason === "error"
+      ? s.message.status.error
+      : undefined,
+  );
+
+  if (error === undefined) {
+    return null;
+  }
+
+  return getHumanReadableChatError(error);
 }
 
 function AssistantText() {
@@ -567,4 +634,16 @@ function truncate(value: string, limit: number) {
   } catch {
     return value;
   }
+}
+
+function formatDate(date: string | null) {
+  if (!date) {
+    return undefined;
+  }
+
+  return new Intl.DateTimeFormat("en-US", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  }).format(new Date(date));
 }

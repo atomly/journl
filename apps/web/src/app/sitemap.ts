@@ -22,7 +22,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: "monthly",
       lastModified: now,
       priority: 0.7,
-      url: `${baseUrl}/auth/sign-up`,
+      url: `${baseUrl}/invite`,
     },
   ];
 }

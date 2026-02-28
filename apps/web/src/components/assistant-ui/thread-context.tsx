@@ -3,6 +3,7 @@
 import type { ComponentProps, ReactNode } from "react";
 import type { JournlReasoning } from "~/ai/agents/journl-agent-reasoning";
 import { useJournlAgent } from "~/ai/agents/use-journl-agent";
+import { useThreadRuntime } from "~/components/assistant-ui/thread-runtime";
 import { cn } from "~/lib/cn";
 import {
   Select,
@@ -25,7 +26,7 @@ type ComposerReasoningProps = {
 
 export function ComposerReasoning({ children }: ComposerReasoningProps) {
   const { getReasoning, setReasoning } = useJournlAgent();
-
+  const { exceeded } = useThreadRuntime();
   function handleReasoningModeChange(value: string) {
     if (!REASONING_MODES.includes(value as JournlReasoning)) {
       return;
@@ -35,7 +36,11 @@ export function ComposerReasoning({ children }: ComposerReasoningProps) {
   }
 
   return (
-    <Select value={getReasoning()} onValueChange={handleReasoningModeChange}>
+    <Select
+      disabled={Boolean(exceeded)}
+      value={getReasoning()}
+      onValueChange={handleReasoningModeChange}
+    >
       {children}
     </Select>
   );

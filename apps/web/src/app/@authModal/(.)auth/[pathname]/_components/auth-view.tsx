@@ -1,48 +1,34 @@
 import { AuthView as PrimitiveAuthView } from "@daveyplate/better-auth-ui";
+import Link from "next/link";
 import { redirect } from "next/navigation";
-import { InviteCodeForm } from "~/components/auth/invite-code-form";
 
 const AUTH_VIEWS = new Set(["sign-in", "sign-up"]);
 
-function hasInviteCode(inviteCode?: string) {
-  return !!inviteCode?.trim();
-}
-
-export async function AuthView({
-  pathname,
-  inviteCode,
-}: {
-  pathname: string;
-  inviteCode?: string;
-}) {
+export async function AuthView({ pathname }: { pathname: string }) {
   if (!AUTH_VIEWS.has(pathname)) {
     redirect("/");
   }
 
-  if (pathname === "sign-up" && !hasInviteCode(inviteCode)) {
-    redirect("/auth/sign-in");
-  }
+  if (pathname === "sign-in") redirect("/auth/sign-up");
+  if (pathname === "sign-up") redirect("/auth/sign-up");
 
   return (
-    <div className="flex w-full flex-col gap-4">
-      {pathname === "sign-in" ? (
-        <div className="rounded-xl border bg-card/70 p-4 text-card-foreground shadow-sm">
-          <p className="font-medium text-sm">Have an invite code?</p>
-          <InviteCodeForm
-            buttonLabel="Continue"
-            className="mt-2"
-            helperText="Invite codes are required for new accounts."
-          />
-        </div>
-      ) : null}
-
-      <PrimitiveAuthView
-        pathname={pathname}
-        className="z-10 w-full flex-col gap-6 rounded-xl border bg-card py-6 text-card-foreground shadow-sm"
-        classNames={{
-          base: "bg-transparent border-none",
-        }}
-      />
-    </div>
+    <PrimitiveAuthView
+      pathname={pathname}
+      className="z-10 w-full flex-col gap-6 rounded-xl border bg-card py-6 text-card-foreground shadow-sm"
+      classNames={{
+        base: "bg-transparent border-none",
+      }}
+      cardFooter={
+        pathname === "sign-in" ? (
+          <p className="w-full text-center text-muted-foreground text-sm">
+            Don&apos;t have an account?{" "}
+            <Link className="text-foreground underline" href="/invite">
+              Sign up instead
+            </Link>
+          </p>
+        ) : null
+      }
+    />
   );
 }

@@ -1,14 +1,6 @@
-import { authViewPaths } from "@daveyplate/better-auth-ui/server";
 import { withoutAuth } from "~/app/_guards/page-guards";
-import { AuthView } from "./_components/auth-view";
-
-export function generateStaticParams() {
-  return Object.values(authViewPaths).map((pathname) => ({ pathname }));
-}
-
-function getSingleSearchParam(value?: string | string[]) {
-  return Array.isArray(value) ? value[0] : value;
-}
+import { AuthView, IDENTITY_VIEWS } from "~/components/auth/auth-view";
+import { parseInviteCodeString } from "~/components/auth/invite-code";
 
 async function AuthPage({
   params,
@@ -21,7 +13,11 @@ async function AuthPage({
   const { invite } = await searchParams;
 
   return (
-    <AuthView pathname={pathname} inviteCode={getSingleSearchParam(invite)} />
+    <AuthView
+      className={IDENTITY_VIEWS.has(pathname) ? "max-w-lg" : undefined}
+      pathname={pathname}
+      inviteCode={parseInviteCodeString(invite)}
+    />
   );
 }
 

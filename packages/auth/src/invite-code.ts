@@ -80,7 +80,6 @@ async function resolveInviteCode(context: HookContext): Promise<string | null> {
 
 export async function enforceInviteCodeForSignUp(options: {
   context: HookContext;
-  userId?: string;
 }) {
   const path = getContextPath(options.context);
 
@@ -96,14 +95,12 @@ export async function enforceInviteCodeForSignUp(options: {
     });
   }
 
-  const now = new Date();
   const [consumedInviteCode] = await db
     .update(inviteCode)
     .set({
-      consumedAt: sql`case when ${inviteCode.usedCount} + 1 >= ${inviteCode.maxUses} then ${now} else ${inviteCode.consumedAt} end`,
-      lastUsedAt: now,
-      lastUsedByUserId: options.userId ?? null,
-      updatedAt: now,
+      consumedAt: sql`case when ${inviteCode.usedCount} + 1 >= ${inviteCode.maxUses} then now() else ${inviteCode.consumedAt} end`,
+      lastUsedAt: sql`now()`,
+      updatedAt: sql`now()`,
       usedCount: sql`${inviteCode.usedCount} + 1`,
     })
     .where(
@@ -111,7 +108,7 @@ export async function enforceInviteCodeForSignUp(options: {
         eq(inviteCode.code, code),
         eq(inviteCode.disabled, false),
         lt(inviteCode.usedCount, inviteCode.maxUses),
-        or(isNull(inviteCode.expiresAt), gt(inviteCode.expiresAt, now)),
+        or(isNull(inviteCode.expiresAt), gt(inviteCode.expiresAt, sql`now()`)),
       ),
     )
     .returning({

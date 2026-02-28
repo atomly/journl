@@ -18,5 +18,11 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.7,
       url: `${baseUrl}/auth/sign-in`,
     },
+    {
+      changeFrequency: "monthly",
+      lastModified: now,
+      priority: 0.7,
+      url: `${baseUrl}/invite`,
+    },
   ];
 }

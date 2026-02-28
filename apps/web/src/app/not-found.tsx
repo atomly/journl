@@ -17,7 +17,7 @@ export default function NotFound() {
         <div className="flex items-center gap-x-1">
           <span className="text-muted-foreground text-sm">No account?</span>
           <Button className="p-0 text-blue-600" variant="link" asChild>
-            <a href="/auth/sign-in">Use an invite</a>
+            <a href="/invite">Use an invite</a>
           </Button>{" "}
         </div>
       </Suspense>

@@ -37,10 +37,9 @@ export function initAuth(options: {
     databaseHooks: {
       user: {
         create: {
-          before: async (user, context) => {
+          before: async (_user, context) => {
             await enforceInviteCodeForSignUp({
               context,
-              userId: typeof user.id === "string" ? user.id : undefined,
             });
           },
         },

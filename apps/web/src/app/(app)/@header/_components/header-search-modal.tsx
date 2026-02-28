@@ -103,7 +103,7 @@ export function HeaderSearchButton({
             </DialogTitle>
             <div className="flex w-full items-center gap-x-2 rounded-lg border-2 bg-muted px-2 [&>div]:w-full [&>div]:px-0">
               <CommandInput
-                className="flex h-10 w-full rounded-md border-0 bg-transparent outline-none placeholder:text-accent-foreground/80 focus-visible:ring-0 disabled:cursor-not-allowed disabled:opacity-50"
+                className="flex h-10 w-full rounded-md border-0 bg-transparent text-md outline-none placeholder:text-accent-foreground/80 focus-visible:ring-0 disabled:cursor-not-allowed disabled:opacity-50"
                 placeholder="Search notes..."
                 autoComplete="off"
                 autoCorrect="off"

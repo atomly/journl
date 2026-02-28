@@ -17,38 +17,37 @@ type ThreadRuntimeProps = {
   children: React.ReactNode;
 };
 
-type ThreadChatErrorState = {
-  usageQuotaExceeded: UsageQuotaExceededPayload | null;
+type ThreadRuntimeContextState = {
+  exceeded: UsageQuotaExceededPayload | null;
 };
 
-const ThreadChatErrorContext = createContext<ThreadChatErrorState>({
-  usageQuotaExceeded: null,
+const ThreadRuntimeContext = createContext<ThreadRuntimeContextState>({
+  exceeded: null,
 });
 
 export function ThreadRuntime({ children }: ThreadRuntimeProps) {
   const { chat } = useJournlChat();
   const agent = useChat({ chat });
-  const usageQuotaExceeded = parseUsageQuotaExceededPayload(agent.error);
   const runtime = useAISDKRuntime(agent, {
     adapters: {
       speech: new WebSpeechSynthesisAdapter(),
     },
   });
 
-  const chatErrorState = useMemo(
-    () => ({ usageQuotaExceeded }),
-    [usageQuotaExceeded],
+  const value = useMemo(
+    () => ({ exceeded: parseUsageQuotaExceededPayload(agent.error) }),
+    [agent.error],
   );
 
   return (
-    <ThreadChatErrorContext.Provider value={chatErrorState}>
+    <ThreadRuntimeContext.Provider value={value}>
       <AssistantRuntimeProvider runtime={runtime}>
         {children}
       </AssistantRuntimeProvider>
-    </ThreadChatErrorContext.Provider>
+    </ThreadRuntimeContext.Provider>
   );
 }
 
-export function useThreadChatError() {
-  return useContext(ThreadChatErrorContext);
+export function useThreadRuntime() {
+  return useContext(ThreadRuntimeContext);
 }

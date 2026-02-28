@@ -22,15 +22,6 @@ export type UsageQuotaPeriodSnapshot = {
   } | null;
 };
 
-function parseUsageCost(totalCost: string | null): number {
-  if (!totalCost) {
-    return 0;
-  }
-
-  const parsed = Number.parseFloat(totalCost);
-  return Number.isFinite(parsed) ? parsed : 0;
-}
-
 /**
  * Pure quota policy mapping.
  *
@@ -58,4 +49,13 @@ export function getPeriodUsageQuota(
     subscriptionType: period.subscription ? "pro" : "free",
     usagePeriodId: period.id,
   };
+}
+
+function parseUsageCost(totalCost: string | null): number {
+  if (!totalCost) {
+    return 0;
+  }
+
+  const parsed = Number.parseFloat(totalCost);
+  return Number.isFinite(parsed) ? parsed : 0;
 }

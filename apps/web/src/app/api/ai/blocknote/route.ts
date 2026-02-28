@@ -5,7 +5,7 @@ import {
 } from "@blocknote/xl-ai";
 import { convertToModelMessages, streamText } from "ai";
 import { after, type NextRequest } from "next/server";
-import { buildJournlEditorSystemPrompt } from "~/ai/prompts/editor-system-prompt";
+import { getEditorAgentPrompt } from "~/ai/agents/editor-agent";
 import { miniModel } from "~/ai/providers/openai/text";
 import { handler as corsHandler } from "~/app/api/_cors/cors";
 import { withAuthGuard } from "~/auth/guards";
@@ -33,9 +33,7 @@ const handler = withAuthGuard(
             store: false,
           },
         },
-        system: buildJournlEditorSystemPrompt(
-          aiDocumentFormats.html.systemPrompt,
-        ),
+        system: getEditorAgentPrompt(aiDocumentFormats.html.systemPrompt),
         toolChoice: "required",
         tools: toolDefinitionsToToolSet(toolDefinitions),
       });

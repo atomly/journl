@@ -19,27 +19,17 @@ export default async function FolderDetailsPage({
   return (
     <div className="mx-auto flex min-h-full max-w-5xl flex-col gap-8 px-8 pt-8 pb-20">
       <section className="space-y-2">
-        <h1 className="font-medium text-muted-foreground text-sm">Title</h1>
+        <div className="flex items-center justify-between gap-4">
+          <h1 className="font-medium text-muted-foreground text-sm">Title</h1>
+          <FolderDeleteAction folder={folder} />
+        </div>
         <FolderTitleInput
           folder={{
             id: folder.id,
             name: folder.name,
-            parent_folder_id: folder.parent_folder_id,
+            parent_node_id: folder.parent_node_id,
           }}
         />
-      </section>
-
-      <section className="space-y-2">
-        <h2 className="font-semibold text-base">Folder actions</h2>
-        <FolderDeleteAction folder={folder} />
-      </section>
-
-      <section className="rounded-lg border border-dashed p-4">
-        <h2 className="font-semibold text-base">AI Rules (coming soon)</h2>
-        <p className="text-muted-foreground text-sm">
-          This area is reserved for future agent rules and folder-level AI
-          behavior.
-        </p>
       </section>
 
       <FolderNestedPagesList rootFolderId={folder.id} />

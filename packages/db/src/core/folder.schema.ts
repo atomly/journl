@@ -1,12 +1,5 @@
 import { relations, sql } from "drizzle-orm";
-import {
-  check,
-  foreignKey,
-  index,
-  pgTable,
-  text,
-  varchar,
-} from "drizzle-orm/pg-core";
+import { index, pgTable, text, varchar } from "drizzle-orm/pg-core";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 import { user } from "../auth/user.schema.ts";
@@ -19,7 +12,6 @@ export const Folder = pgTable(
     user_id: text()
       .notNull()
       .references(() => user.id, { onDelete: "cascade" }),
-    parent_folder_id: t.uuid(),
     name: varchar("name", { length: TEXT_LIMITS.PAGE_TITLE }).notNull(),
     created_at: t
       .timestamp({ mode: "string", withTimezone: true })
@@ -32,21 +24,6 @@ export const Folder = pgTable(
       .$onUpdateFn(() => sql`now()`),
   }),
   (t) => [
-    /**
-     * We have to write self-references in here, otherwise drizzle runs into TypeScript errors.
-     * @see {@link https://github.com/drizzle-team/drizzle-orm/issues/4308 | [BUG]: Self referencing Foreign Key causes any type}
-     */
-    foreignKey({
-      columns: [t.parent_folder_id],
-      foreignColumns: [t.id],
-    }).onDelete("cascade"),
-    check("folder_no_self_parent", sql`${t.id} <> ${t.parent_folder_id}`),
-    index("folder_user_id_parent_folder_id_updated_at_desc_id_desc_index").on(
-      t.user_id,
-      t.parent_folder_id,
-      t.updated_at.desc(),
-      t.id.desc(),
-    ),
     index("folder_user_id_updated_at_desc_id_desc_index").on(
       t.user_id,
       t.updated_at.desc(),
@@ -55,18 +32,14 @@ export const Folder = pgTable(
   ],
 );
 
-export const FolderRelations = relations(Folder, ({ one, many }) => ({
-  children: many(Folder, {
-    relationName: "folder_parent_child_relation",
-  }),
-  parent: one(Folder, {
-    fields: [Folder.parent_folder_id],
-    references: [Folder.id],
-    relationName: "folder_parent_child_relation",
-  }),
-}));
+export const FolderRelations = relations(Folder, () => ({}));
 
-export type Folder = typeof Folder.$inferSelect;
+type FolderRow = typeof Folder.$inferSelect;
+export type Folder = FolderRow & {
+  edge_id?: string | null;
+  node_id?: string | null;
+  parent_node_id?: string | null;
+};
 
 export const zInsertFolder = createInsertSchema(Folder, {
   name: z.string().max(TEXT_LIMITS.PAGE_TITLE),

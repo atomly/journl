@@ -6,7 +6,6 @@ import { useState } from "react";
 import { useDebouncedCallback } from "use-debounce";
 import { FullHeightTextarea } from "~/components/ui/full-height-textarea";
 import { cn } from "~/lib/cn";
-import { getInfinitePagesQueryOptions } from "~/trpc/options/pages-query-options";
 import { getInfiniteSidebarTreeQueryOptions } from "~/trpc/options/sidebar-tree-query-options";
 import { useTRPC } from "~/trpc/react";
 
@@ -22,7 +21,7 @@ type NestedFolderPagesInfiniteData = {
 };
 
 type PageEditorTitleProps = {
-  page: Pick<Page, "folder_id" | "id" | "title">;
+  page: Pick<Page, "id" | "parent_node_id" | "title">;
   placeholder?: string;
   className?: string;
   debounceTime?: number;
@@ -47,7 +46,7 @@ export function PageTitleTextarea({
   );
   const [title, setTitle] = useState(page.title);
   const nestedFolderPagesQueryFilter =
-    trpc.folders.getNestedPagesPaginated.infiniteQueryFilter();
+    trpc.tree.getNestedPagesPaginated.infiniteQueryFilter();
 
   // Debounced API call for page title updates
   const debouncedUpdate = useDebouncedCallback((newTitle: string) => {
@@ -64,29 +63,9 @@ export function PageTitleTextarea({
       },
     );
 
-    // Update the pages.getPaginated query cache from sidebar
     queryClient.setQueryData(
-      trpc.pages.getPaginated.infiniteQueryOptions(
-        getInfinitePagesQueryOptions(page.folder_id ?? null),
-      ).queryKey,
-      (old) => {
-        if (!old) return old;
-        const pages = old.pages.map((p) => ({
-          ...p,
-          items: p.items.map((item) =>
-            item.id === page.id ? { ...item, title: newTitle } : item,
-          ),
-        }));
-        return {
-          ...old,
-          pages,
-        };
-      },
-    );
-
-    queryClient.setQueryData(
-      trpc.folders.getTreePaginated.infiniteQueryOptions(
-        getInfiniteSidebarTreeQueryOptions(page.folder_id ?? null),
+      trpc.tree.getChildrenPaginated.infiniteQueryOptions(
+        getInfiniteSidebarTreeQueryOptions(page.parent_node_id ?? null),
       ).queryKey,
       (old) => {
         if (!old) return old;

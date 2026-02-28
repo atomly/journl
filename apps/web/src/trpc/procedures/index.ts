@@ -7,6 +7,7 @@ import { modelPricingRouter } from "./model-pricing";
 import { notesRouter } from "./notes";
 import { pagesRouter } from "./pages";
 import { subscriptionRouter } from "./subscription";
+import { treeRouter } from "./tree";
 import { usageRouter } from "./usage";
 
 export const apiRouter = createTRPCRouter({
@@ -18,6 +19,7 @@ export const apiRouter = createTRPCRouter({
   notes: notesRouter,
   pages: pagesRouter,
   subscription: subscriptionRouter,
+  tree: treeRouter,
   usage: usageRouter,
 });
 

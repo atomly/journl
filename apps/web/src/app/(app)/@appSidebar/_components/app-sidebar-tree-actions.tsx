@@ -14,8 +14,6 @@ import {
 } from "~/components/ui/dropdown-menu";
 import { useSidebar } from "~/components/ui/sidebar";
 import { cn } from "~/lib/cn";
-import { getInfiniteFoldersQueryOptions } from "~/trpc/options/folders-query-options";
-import { getInfinitePagesQueryOptions } from "~/trpc/options/pages-query-options";
 import { getInfiniteSidebarTreeQueryOptions } from "~/trpc/options/sidebar-tree-query-options";
 import { useTRPC } from "~/trpc/react";
 import { DeleteFolderDialog } from "./delete-folder-button";
@@ -26,7 +24,8 @@ type AppSidebarTreeActionsProps = {
   kind: "folder" | "root";
   onCreateStart?: () => void;
   onCreateSuccess?: () => void;
-  parentFolderId: string | null;
+  parentNodeId: string | null;
+  triggerVariant?: "inline" | "sidebar";
 };
 
 export function AppSidebarTreeActions({
@@ -35,7 +34,8 @@ export function AppSidebarTreeActions({
   kind,
   onCreateStart,
   onCreateSuccess,
-  parentFolderId,
+  parentNodeId,
+  triggerVariant = "sidebar",
 }: AppSidebarTreeActionsProps) {
   const router = useRouter();
   const trpc = useTRPC();
@@ -45,13 +45,13 @@ export function AppSidebarTreeActions({
   const { isMobile, setOpenMobile } = useSidebar();
 
   const { mutate: createFolder, isPending: isCreatingFolder } = useMutation(
-    trpc.folders.create.mutationOptions({}),
+    trpc.tree.createFolder.mutationOptions({}),
   );
   const { mutate: createPage, isPending: isCreatingPage } = useMutation(
-    trpc.pages.create.mutationOptions({}),
+    trpc.tree.createPage.mutationOptions({}),
   );
   const nestedFolderPagesQueryFilter =
-    trpc.folders.getNestedPagesPaginated.infiniteQueryFilter();
+    trpc.tree.getNestedPagesPaginated.infiniteQueryFilter();
 
   const showLoading = isPending || isCreatingFolder || isCreatingPage;
 
@@ -61,8 +61,10 @@ export function AppSidebarTreeActions({
     startTransition(() => {
       createFolder(
         {
+          destination: {
+            parent_node_id: parentNodeId,
+          },
           name: "New folder",
-          parent_folder_id: parentFolderId,
         },
         {
           onError: (error) => {
@@ -70,8 +72,8 @@ export function AppSidebarTreeActions({
           },
           onSuccess: (newFolder) => {
             queryClient.setQueryData(
-              trpc.folders.getPaginated.infiniteQueryOptions(
-                getInfiniteFoldersQueryOptions(parentFolderId),
+              trpc.tree.getChildrenPaginated.infiniteQueryOptions(
+                getInfiniteSidebarTreeQueryOptions(parentNodeId),
               ).queryKey,
               (old) => {
                 if (!old) {
@@ -101,41 +103,6 @@ export function AppSidebarTreeActions({
               },
             );
 
-            queryClient.setQueryData(
-              trpc.folders.getTreePaginated.infiniteQueryOptions(
-                getInfiniteSidebarTreeQueryOptions(parentFolderId),
-              ).queryKey,
-              (old) => {
-                if (!old) {
-                  return {
-                    pageParams: [],
-                    pages: [
-                      {
-                        items: [{ folder: newFolder, kind: "folder" as const }],
-                        nextCursor: undefined,
-                      },
-                    ],
-                  };
-                }
-
-                const [first, ...rest] = old.pages;
-                return {
-                  ...old,
-                  pages: [
-                    {
-                      ...first,
-                      items: [
-                        { folder: newFolder, kind: "folder" as const },
-                        ...(first?.items ?? []),
-                      ],
-                      nextCursor: first?.nextCursor,
-                    },
-                    ...rest,
-                  ],
-                };
-              },
-            );
-
             onCreateSuccess?.();
           },
         },
@@ -149,7 +116,9 @@ export function AppSidebarTreeActions({
     startTransition(() => {
       createPage(
         {
-          folder_id: parentFolderId,
+          destination: {
+            parent_node_id: parentNodeId,
+          },
           title: "",
         },
         {
@@ -158,8 +127,8 @@ export function AppSidebarTreeActions({
           },
           onSuccess: (newPage) => {
             queryClient.setQueryData(
-              trpc.pages.getPaginated.infiniteQueryOptions(
-                getInfinitePagesQueryOptions(parentFolderId),
+              trpc.tree.getChildrenPaginated.infiniteQueryOptions(
+                getInfiniteSidebarTreeQueryOptions(parentNodeId),
               ).queryKey,
               (old) => {
                 if (!old) {
@@ -189,41 +158,6 @@ export function AppSidebarTreeActions({
               },
             );
 
-            queryClient.setQueryData(
-              trpc.folders.getTreePaginated.infiniteQueryOptions(
-                getInfiniteSidebarTreeQueryOptions(parentFolderId),
-              ).queryKey,
-              (old) => {
-                if (!old) {
-                  return {
-                    pageParams: [],
-                    pages: [
-                      {
-                        items: [{ kind: "page" as const, page: newPage }],
-                        nextCursor: undefined,
-                      },
-                    ],
-                  };
-                }
-
-                const [first, ...rest] = old.pages;
-                return {
-                  ...old,
-                  pages: [
-                    {
-                      ...first,
-                      items: [
-                        { kind: "page" as const, page: newPage },
-                        ...(first?.items ?? []),
-                      ],
-                      nextCursor: first?.nextCursor,
-                    },
-                    ...rest,
-                  ],
-                };
-              },
-            );
-
             onCreateSuccess?.();
             void queryClient.invalidateQueries(nestedFolderPagesQueryFilter);
 
@@ -231,7 +165,7 @@ export function AppSidebarTreeActions({
               setOpenMobile(false);
             }
 
-            router.push(`/pages/${newPage.id}`);
+            router.push(`/pages/${newPage.page.id}`);
           },
         },
       );
@@ -246,7 +180,9 @@ export function AppSidebarTreeActions({
           variant="ghost"
           size="sm"
           className={cn(
-            "absolute top-1/2 right-1.5 z-10 h-6 w-6 -translate-y-1/2 rounded-sm p-0 text-sidebar-foreground transition-opacity hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:bg-sidebar-accent focus-visible:text-sidebar-accent-foreground group-data-[collapsible=icon]:hidden md:pointer-events-none md:opacity-0 md:group-hover/tree-row:pointer-events-auto md:group-hover/tree-row:opacity-100 md:group-focus-within/tree-row:pointer-events-auto md:group-focus-within/tree-row:opacity-100",
+            triggerVariant === "sidebar"
+              ? "absolute top-1/2 right-1.5 z-10 h-6 w-6 -translate-y-1/2 rounded-sm p-0 text-sidebar-foreground transition-opacity hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:bg-sidebar-accent focus-visible:text-sidebar-accent-foreground group-data-[collapsible=icon]:hidden md:pointer-events-none md:opacity-0 md:group-hover/tree-row:pointer-events-auto md:group-hover/tree-row:opacity-100 md:group-focus-within/tree-row:pointer-events-auto md:group-focus-within/tree-row:opacity-100"
+              : "h-8 w-8 rounded-md p-0",
             className,
           )}
           onClick={(event) => {

@@ -12,6 +12,8 @@ export * from "./core/document-embedding.schema.ts";
 export * from "./core/folder.schema.ts";
 export * from "./core/journal-entry.schema.ts";
 export * from "./core/page.schema.ts";
+export * from "./core/tree-edge.schema.ts";
+export * from "./core/tree-node.schema.ts";
 export * from "./usage/model-pricing.schema.ts";
 export * from "./usage/usage-aggregate.schema.ts";
 export * from "./usage/usage-period.schema.ts";

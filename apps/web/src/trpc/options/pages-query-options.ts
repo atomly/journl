@@ -1,11 +1,10 @@
 import type { PaginatedPagesInput } from "~/trpc";
 
 export function getInfinitePagesQueryOptions(
-  folderId: string | null,
+  _parentNodeId?: string | null,
 ): PaginatedPagesInput {
   return {
     direction: "forward",
-    folder_id: folderId,
     /* 10 (journl) pages per page */
     limit: 10,
   };
@@ -19,4 +18,4 @@ export function getUnscopedInfinitePagesQueryOptions(): PaginatedPagesInput {
   };
 }
 
-export const infinitePagesQueryOptions = getInfinitePagesQueryOptions(null);
+export const infinitePagesQueryOptions = getInfinitePagesQueryOptions();

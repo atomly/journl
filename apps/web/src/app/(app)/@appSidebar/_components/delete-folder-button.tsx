@@ -40,35 +40,6 @@ const ROOT_FOLDER_OPTION = "__root__";
 
 type DeleteStrategy = "delete_all" | "move";
 
-function getDescendantFolderIds(allFolders: Folder[], folderId: string) {
-  const childrenByParent = new Map<string, string[]>();
-
-  for (const folder of allFolders) {
-    if (!folder.parent_folder_id) {
-      continue;
-    }
-
-    const currentChildren = childrenByParent.get(folder.parent_folder_id) ?? [];
-    currentChildren.push(folder.id);
-    childrenByParent.set(folder.parent_folder_id, currentChildren);
-  }
-
-  const descendants = new Set<string>();
-  const queue = [...(childrenByParent.get(folderId) ?? [])];
-
-  while (queue.length > 0) {
-    const currentId = queue.shift();
-    if (!currentId || descendants.has(currentId)) {
-      continue;
-    }
-
-    descendants.add(currentId);
-    queue.push(...(childrenByParent.get(currentId) ?? []));
-  }
-
-  return descendants;
-}
-
 export function DeleteFolderButton({
   className,
   children,
@@ -119,7 +90,7 @@ export function DeleteFolderDialog({
   );
 
   const { mutate: deleteFolder, isPending: isDeleting } = useMutation(
-    trpc.folders.delete.mutationOptions({}),
+    trpc.tree.deleteFolder.mutationOptions({}),
   );
 
   const isControlled = open !== undefined;
@@ -141,17 +112,11 @@ export function DeleteFolderDialog({
     [isControlled, onOpenChange],
   );
 
-  const invalidDestinationIds = useMemo(() => {
-    const descendants = getDescendantFolderIds(folders, folder.id);
-    descendants.add(folder.id);
-    return descendants;
-  }, [folder.id, folders]);
-
   const destinationFolders = useMemo(() => {
     return folders.filter((currentFolder) => {
-      return !invalidDestinationIds.has(currentFolder.id);
+      return currentFolder.id !== folder.id;
     });
-  }, [folders, invalidDestinationIds]);
+  }, [folders, folder.id]);
 
   const showLoading = useMemo(
     () => isPending || isDeleting,
@@ -163,12 +128,13 @@ export function DeleteFolderDialog({
     startTransition(() => {
       deleteFolder(
         {
-          id: folder.id,
-          move_to_folder_id:
+          folder_id: folder.id,
+          move_to_parent_node_id:
             strategy === "move"
               ? moveToFolderId === ROOT_FOLDER_OPTION
                 ? null
-                : moveToFolderId
+                : (folders.find((item) => item.id === moveToFolderId)
+                    ?.node_id ?? null)
               : undefined,
           strategy,
         },
@@ -196,6 +162,7 @@ export function DeleteFolderDialog({
     deleteFolder,
     folderDetailsPath,
     folder.id,
+    folders,
     moveToFolderId,
     pathname,
     queryClient,

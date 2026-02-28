@@ -16,7 +16,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "~/components/ui/dialog";
-import { getInfinitePagesQueryOptions } from "~/trpc/options/pages-query-options";
 import { getInfiniteSidebarTreeQueryOptions } from "~/trpc/options/sidebar-tree-query-options";
 import { useTRPC } from "~/trpc/react";
 
@@ -80,7 +79,7 @@ export function DeletePageDialog({
   const isControlled = open !== undefined;
   const isDialogOpen = isControlled ? open : uncontrolledOpen;
   const nestedFolderPagesQueryFilter =
-    trpc.folders.getNestedPagesPaginated.infiniteQueryFilter();
+    trpc.tree.getNestedPagesPaginated.infiniteQueryFilter();
 
   const setDialogOpen = useCallback(
     (nextOpen: boolean) => {
@@ -112,29 +111,8 @@ export function DeletePageDialog({
             }
 
             queryClient.setQueryData(
-              trpc.pages.getPaginated.infiniteQueryOptions(
-                getInfinitePagesQueryOptions(page.folder_id ?? null),
-              ).queryKey,
-              (old) => {
-                if (!old) {
-                  return old;
-                }
-
-                return {
-                  ...old,
-                  pages: old.pages.map((p) => ({
-                    ...p,
-                    items: p.items.filter(
-                      (currentPage) => currentPage.id !== page.id,
-                    ),
-                  })),
-                };
-              },
-            );
-
-            queryClient.setQueryData(
-              trpc.folders.getTreePaginated.infiniteQueryOptions(
-                getInfiniteSidebarTreeQueryOptions(page.folder_id ?? null),
+              trpc.tree.getChildrenPaginated.infiniteQueryOptions(
+                getInfiniteSidebarTreeQueryOptions(page.parent_node_id ?? null),
               ).queryKey,
               (old) => {
                 if (!old) {
@@ -177,9 +155,9 @@ export function DeletePageDialog({
     queryClient,
     router,
     setDialogOpen,
-    trpc.folders,
+    trpc.tree,
     trpc.pages,
-    page.folder_id,
+    page.parent_node_id,
   ]);
 
   return (

@@ -16,7 +16,7 @@
     "clean": "git clean -xdf .cache .turbo dist node_modules",
     "dev": "pnpm typecheck --watch",
     "prepush": "pnpm typecheck",
-    "push": "pnpm with-env drizzle-kit push",
+    "push": "pnpm with-env drizzle-kit push && pnpm with-env node ./scripts/apply-tree-triggers.mjs",
     "studio": "pnpm with-env drizzle-kit studio",
     "typecheck": "tsc --noEmit --emitDeclarationOnly false",
     "with-env": "dotenv -e ../../.env --"

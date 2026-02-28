@@ -23,8 +23,8 @@ export default async function Page({
       <div className="min-h-0 flex-1">
         <PageTitleTextarea
           page={{
-            folder_id: page.folder_id,
             id: page.id,
+            parent_node_id: page.parent_node_id,
             title: page.title,
           }}
           className="mb-4 px-8 py-0"

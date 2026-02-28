@@ -12,7 +12,7 @@ const DEFAULT_PLACEHOLDER = "New folder";
 const DEFAULT_DEBOUNCE_TIME = 150;
 
 type FolderTitleInputProps = {
-  folder: Pick<Folder, "id" | "name" | "parent_folder_id">;
+  folder: Pick<Folder, "id" | "name" | "parent_node_id">;
   debounceTime?: number;
   placeholder?: string;
 };
@@ -59,8 +59,8 @@ export function FolderTitleInput({
     );
 
     queryClient.setQueryData(
-      trpc.folders.getTreePaginated.infiniteQueryOptions(
-        getInfiniteSidebarTreeQueryOptions(folder.parent_folder_id ?? null),
+      trpc.tree.getChildrenPaginated.infiniteQueryOptions(
+        getInfiniteSidebarTreeQueryOptions(folder.parent_node_id ?? null),
       ).queryKey,
       (old) => {
         if (!old) {
@@ -102,10 +102,8 @@ export function FolderTitleInput({
             queryKey: trpc.folders.getByUser.queryOptions().queryKey,
           });
           void queryClient.invalidateQueries({
-            queryKey: trpc.folders.getTreePaginated.infiniteQueryOptions(
-              getInfiniteSidebarTreeQueryOptions(
-                folder.parent_folder_id ?? null,
-              ),
+            queryKey: trpc.tree.getChildrenPaginated.infiniteQueryOptions(
+              getInfiniteSidebarTreeQueryOptions(folder.parent_node_id ?? null),
             ).queryKey,
           });
         },

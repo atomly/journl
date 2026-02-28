@@ -3,6 +3,7 @@
 import type { Page } from "@acme/db/schema";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import type { CSSProperties, HTMLAttributes, MouseEventHandler } from "react";
 import { useState } from "react";
 import {
   SidebarMenuSubButton,
@@ -24,11 +25,21 @@ import {
 type AppSidebarPageItemProps = {
   page: Page;
   className?: string;
+  dragActivatorProps?: HTMLAttributes<HTMLDivElement>;
+  isDragging?: boolean;
+  itemRef?: (node: HTMLLIElement | null) => void;
+  itemStyle?: CSSProperties;
+  onItemClickCapture?: MouseEventHandler<HTMLLIElement>;
 };
 
 export function AppSidebarPageItem({
   page,
   className,
+  dragActivatorProps,
+  isDragging = false,
+  itemRef,
+  itemStyle,
+  onItemClickCapture,
 }: AppSidebarPageItemProps) {
   const pathname = usePathname();
   const { isMobile, setOpenMobile } = useSidebar();
@@ -43,9 +54,13 @@ export function AppSidebarPageItem({
 
   return (
     <SidebarMenuSubItem
+      ref={itemRef}
       key={page?.id}
+      style={itemStyle}
+      onClickCapture={onItemClickCapture}
       className={cn(
         "border-sidebar-border border-l",
+        isDragging && "opacity-60",
         isActive && "border-sidebar-primary",
         className,
       )}
@@ -88,7 +103,10 @@ export function AppSidebarPageItem({
           </SwipeActionContent>
         </SwipeAction>
         <SidebarMenuSubButton asChild isActive={isActive}>
-          <div className="group/page-item hidden items-center justify-between md:flex">
+          <div
+            {...dragActivatorProps}
+            className="group/page-item hidden items-center justify-between md:flex"
+          >
             <Link
               href={`/pages/${page?.id}`}
               onClick={handlePageNavigationClick}

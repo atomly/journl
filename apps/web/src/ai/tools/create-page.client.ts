@@ -2,7 +2,6 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
-import { getInfinitePagesQueryOptions } from "~/trpc/options/pages-query-options";
 import { getInfiniteSidebarTreeQueryOptions } from "~/trpc/options/sidebar-tree-query-options";
 import { useTRPC } from "~/trpc/react";
 import { useAppEventEmitter } from "../../components/events/app-event-context";
@@ -17,13 +16,16 @@ export function useCreatePageTool() {
   const eventEmitter = useAppEventEmitter();
 
   const { mutate: createPage } = useMutation(
-    trpc.pages.create.mutationOptions({}),
+    trpc.tree.createPage.mutationOptions({}),
   );
 
   const tool = createClientTool({
     execute: async (toolCall, chat) => {
       createPage(
         {
+          destination: {
+            parent_node_id: null,
+          },
           title: toolCall.input.title,
         },
         {
@@ -36,10 +38,9 @@ export function useCreatePageTool() {
             });
           },
           onSuccess: (newPage) => {
-            // Optimistically update the pages list
             queryClient.setQueryData(
-              trpc.pages.getPaginated.infiniteQueryOptions(
-                getInfinitePagesQueryOptions(null),
+              trpc.tree.getChildrenPaginated.infiniteQueryOptions(
+                getInfiniteSidebarTreeQueryOptions(null),
               ).queryKey,
               (old) => {
                 if (!old)
@@ -67,50 +68,17 @@ export function useCreatePageTool() {
               },
             );
 
-            queryClient.setQueryData(
-              trpc.folders.getTreePaginated.infiniteQueryOptions(
-                getInfiniteSidebarTreeQueryOptions(null),
-              ).queryKey,
-              (old) => {
-                if (!old)
-                  return {
-                    pageParams: [],
-                    pages: [
-                      {
-                        items: [{ kind: "page" as const, page: newPage }],
-                        nextCursor: undefined,
-                      },
-                    ],
-                  };
-                const [first, ...rest] = old.pages;
-                return {
-                  ...old,
-                  pages: [
-                    {
-                      ...first,
-                      items: [
-                        { kind: "page" as const, page: newPage },
-                        ...(first?.items ?? []),
-                      ],
-                      nextCursor: first?.nextCursor,
-                    },
-                    ...rest,
-                  ],
-                };
-              },
-            );
-
             eventEmitter.buffer(
               new PageCreatedEvent({
                 chat,
-                id: newPage.id,
+                id: newPage.page.id,
                 title: toolCall.input.title,
                 toolCallId: toolCall.toolCallId,
                 toolName: toolCall.toolName,
               }),
             );
 
-            router.push(`/pages/${newPage.id}`);
+            router.push(`/pages/${newPage.page.id}`);
           },
         },
       );

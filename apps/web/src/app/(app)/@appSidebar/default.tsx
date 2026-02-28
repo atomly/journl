@@ -31,7 +31,7 @@ const navigationItems = [
 
 export default function AppSidebar() {
   prefetch(
-    trpc.folders.getTreePaginated.infiniteQueryOptions(
+    trpc.tree.getChildrenPaginated.infiniteQueryOptions(
       infiniteSidebarTreeQueryOptions,
     ),
   );

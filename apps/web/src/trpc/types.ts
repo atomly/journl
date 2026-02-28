@@ -35,16 +35,12 @@ export type PaginatedPagesInput = inferProcedureInput<
   ApiRouter["pages"]["getPaginated"]
 >;
 
-export type PaginatedFoldersInput = inferProcedureInput<
-  ApiRouter["folders"]["getPaginated"]
->;
-
-export type PaginatedSidebarTreeInput = inferProcedureInput<
-  ApiRouter["folders"]["getTreePaginated"]
+export type PaginatedTreeChildrenInput = inferProcedureInput<
+  ApiRouter["tree"]["getChildrenPaginated"]
 >;
 
 export type PaginatedNestedFolderPagesInput = inferProcedureInput<
-  ApiRouter["folders"]["getNestedPagesPaginated"]
+  ApiRouter["tree"]["getNestedPagesPaginated"]
 >;
 
 export type InfiniteJournalEntriesInput = inferProcedureInput<

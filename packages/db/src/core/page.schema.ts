@@ -6,7 +6,6 @@ import { user } from "../auth/user.schema.ts";
 import { TEXT_LIMITS } from "../constants/resource-limits.ts";
 import { BlockEdge, BlockNode } from "./block-node.schema.ts";
 import { Document } from "./document.schema.ts";
-import { Folder } from "./folder.schema.ts";
 
 export const Page = pgTable(
   "page",
@@ -19,7 +18,6 @@ export const Page = pgTable(
       .uuid()
       .notNull()
       .references(() => Document.id, { onDelete: "cascade" }),
-    folder_id: t.uuid().references(() => Folder.id, { onDelete: "cascade" }),
     title: varchar("title", { length: TEXT_LIMITS.PAGE_TITLE }).notNull(),
     created_at: t
       .timestamp({ mode: "string", withTimezone: true })
@@ -36,25 +34,20 @@ export const Page = pgTable(
       t.user_id,
       t.updated_at.desc(),
     ),
-    index("page_user_id_folder_id_updated_at_desc_id_desc_index").on(
-      t.user_id,
-      t.folder_id,
-      t.updated_at.desc(),
-      t.id.desc(),
-    ),
   ],
 );
 
-export const PageRelations = relations(Page, ({ one, many }) => ({
+export const PageRelations = relations(Page, ({ many }) => ({
   block_nodes: many(BlockNode),
   block_edges: many(BlockEdge),
-  folder: one(Folder, {
-    fields: [Page.folder_id],
-    references: [Folder.id],
-  }),
 }));
 
-export type Page = typeof Page.$inferSelect;
+type PageRow = typeof Page.$inferSelect;
+export type Page = PageRow & {
+  edge_id?: string | null;
+  node_id?: string | null;
+  parent_node_id?: string | null;
+};
 
 export const zInsertPage = createInsertSchema(Page, {
   title: z.string().max(TEXT_LIMITS.PAGE_TITLE),

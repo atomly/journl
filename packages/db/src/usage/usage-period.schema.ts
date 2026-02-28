@@ -12,7 +12,7 @@ export const UsagePeriod = pgTable(
     id: t.uuid().notNull().primaryKey().defaultRandom(),
     user_id: text()
       .notNull()
-      .references(() => user.id),
+      .references(() => user.id, { onDelete: "cascade" }),
     plan_id: text().references(() => Plan.id),
     subscription_id: text().references(() => Subscription.id),
     period_start: t.timestamp({ mode: "string", withTimezone: true }).notNull(),

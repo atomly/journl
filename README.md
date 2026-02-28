@@ -5,7 +5,7 @@
 
 <p align="center">
   <a href="https://journl-snowy.vercel.app/">
-    <img src="https://img.shields.io/badge/Website-robertmolina.dev-111111?logo=vercel&logoColor=white" alt="https://journl-snowy.vercel.app/" />
+    <img src="https://img.shields.io/badge/Website-journl-111111?logo=vercel&logoColor=white" alt="https://journl-snowy.vercel.app/" />
   </a>
 </p>
 

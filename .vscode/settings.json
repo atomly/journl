@@ -38,7 +38,7 @@
   "markdownlint.config": {
     "MD033": false // allow inline HTML
   },
-  "tailwindCSS.experimental.configFile": "./apps/web/src/app/globals.css",
+  "tailwindCSS.experimental.configFile": "./apps/web/src/app/styles.css",
   "typescript.tsdk": "node_modules/typescript/lib",
   "yaml.schemas": {
     "https://json.schemastore.org/github-issue-config.json": ".github/ISSUE_TEMPLATE/config.yml"

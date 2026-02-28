@@ -13,6 +13,7 @@ import {
 export { ThemeProvider } from "next-themes";
 
 type Theme = "light" | "dark" | "system";
+const HEADER_THEME_MENU_TRIGGER_ID = "header-theme-menu-trigger";
 
 export function HeaderThemeToggle() {
   const { setTheme } = useTheme();
@@ -24,14 +25,17 @@ export function HeaderThemeToggle() {
 
   return (
     <DropdownMenu modal={false}>
-      <DropdownMenuTrigger asChild>
+      <DropdownMenuTrigger asChild id={HEADER_THEME_MENU_TRIGGER_ID}>
         <Button className="size-8" variant="outline" size="icon" type="button">
           <Sun className="size-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
           <Moon className="absolute size-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
           <span className="sr-only">Toggle theme</span>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
+      <DropdownMenuContent
+        align="end"
+        aria-labelledby={HEADER_THEME_MENU_TRIGGER_ID}
+      >
         <DropdownMenuItem onClick={() => startThemeViewTransition("light")}>
           Light
         </DropdownMenuItem>

@@ -10,11 +10,13 @@ import {
   journlMastraVector,
 } from "../mastra/postgres-store";
 import { model as embedder } from "../providers/openai/embedding";
-import { createPage } from "../tools/create-page";
-import { manipulateEditor } from "../tools/manipulate-editor";
-import { zTargetEditor } from "../tools/manipulate-editor.schema";
-import { navigateJournalEntry } from "../tools/navigate-journal-entry";
-import { navigatePage } from "../tools/navigate-page";
+import { applyEditorChanges } from "../tools/apply-editor-changes/tool";
+import { createPage } from "../tools/create-page/tool";
+import { zTargetEditor } from "../tools/manipulate-editor/schema";
+import { manipulateEditor } from "../tools/manipulate-editor/tool";
+import { navigateJournalEntry } from "../tools/navigate-journal-entry/tool";
+import { navigatePage } from "../tools/navigate-page/tool";
+import { rejectEditorChanges } from "../tools/reject-editor-changes/tool";
 import { semanticJournalSearch } from "../tools/semantic-journal-search";
 import { semanticPageSearch } from "../tools/semantic-page-search";
 import { temporalJournalSearch } from "../tools/temporal-journal-search";
@@ -81,82 +83,25 @@ ${
     : ""
 }
 
-# Tools
-
-Always try to call tools in parallel whenever possible.
-
-## \`manipulateEditor\`
-
-Modify the content of the target editor.
-
-**Important**: The target editor has to be the ID of one of the active editors, if you don't know which to use, do not call this tool and ask the user to clarify instead.
-
-- An agent will be manipulating the editor client-side.
-- As such, the \`editorPrompt\` for the \`manipulateEditor\` tool must include as much detail as possible.
-- The \`targetEditor\` value must be in the correct format.
-- Do not generate markdown, the editor will handle the formatting.
-- Do not add titles to the pages because they are handled separately from the editor.
-- **No fabrication**. Never invent prior notes, pages, links, or other content.
-
-After a successful call to the \`manipulateEditor\` tool, avoid telling the user that the changes were made. At most, summarize the changes in a few words.
-
-Use when:
-- The user wants to write/add/insert/capture/log/note content.
-- The user asks to format/structure existing text (headings, lists, checklists, quotes, code).
-- The user asks to replace/transform the current selection/highlight.
-
-Do not use when:
-- The user only wants recall/analysis of prior content (use search tools instead).
-
-## \`semanticJournalSearch\`
-
-Semantic search over journal entries (daily notes). The user says or implies "find when I talked about X / patterns in Y / times I felt Z" or requests to search for a specific topic/theme/emotion.
-
-## \`semanticPageSearch\`
-
-Semantic search over pages. The user says or implies "find my notes on X / summarize/synthesize Y / pull my notes on Z across pages" or requests to search for a specific topic/theme/emotion.
-
-## \`temporalJournalSearch\`
-
-Searches for journal entries between two dates (for example: the user says or implies "show me last week/month/quarter entries", "show me entries between 2025-06-02 and 2025-06-08").
-
-Can also be used to search for a single-day. When the user asks what a specific entry (for example: "today's/yesterday's entry", "october 1st's entry", "the note of 2025-06-02", or similar) says/reads, set the start date and end date to the same date.
-
-Use when the user says or implies "show me last week/month/quarter", "what does <date> say" and compose with semantic searches when helpful.
-
-## \`navigateJournalEntry\`
-
-Open a specific journal entry by date. The user says or implies "open/go to today/yesterday/2025-06-02/last Monday" or requests to navigate to a specific date. Do not use when the target is a named page.
-
-## \`navigatePage\`
-
-Open a specific page by **UUID only**. The user says or implies "open/go to <page UUID>" or requests to navigate to a specific page. Do not use when the target is a journal entry.
-
-If you don't know the UUID of the page, use the \`semanticPageSearch\` tool to find it before using this tool.
-
-## \`createPage\`
-
-Create a new page with the given title, infer the title from the user's prompt and clarify if it's not clear. Use when the user says or implies "create/new/add a page".
-
-Do not navigate to the page after creating it, it will be done automatically.
-
----
-
 # Global Behavior Meta
 
 - **Important**: If user refers to current editors ("today's note", "the page"), simply read the content of the active editor(s) for context. Don't ask for information you can already access.
 - When referencing returned pages or journal entries, prefer markdown links using the tool-provided link field using this format for page and entries respectively: [Title](url) / [YYYY-MM-DD](url).
 - Avoid exposing raw UUIDs in user-facing responses unless the user explicitly asks for the ID.
+- Call independent tools in parallel whenever possible.
 - Complete tasks immediately. Take obvious next steps. Prefer direct tool actions over explanatory prose.
 - Mirror user's tone but avoid corporate filler. Be concise and high-signal.
-- Operate only on existing content; never fabricate. Prefer partial completion over clarifying questions when scope is large.`;
+- Operate only on existing content; never fabricate. Prefer partial completion over clarifying questions when scope is large.
+- When asked about what you can do, respond to the user in natural language.`;
 }
 
 const tools = {
+  applyEditorChanges,
   createPage,
   manipulateEditor,
   navigateJournalEntry,
   navigatePage,
+  rejectEditorChanges,
   semanticJournalSearch,
   semanticPageSearch,
   temporalJournalSearch,

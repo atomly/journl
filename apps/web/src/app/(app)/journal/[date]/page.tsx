@@ -3,7 +3,6 @@ import { Suspense } from "react";
 import { api } from "~/trpc/server";
 import {
   JournalEntryAgentView,
-  JournalEntryContent,
   JournalEntryHeader,
   JournalEntryLink,
   JournalEntryProvider,
@@ -19,21 +18,17 @@ export default async function Page({
 }) {
   const { date } = await params;
   return (
-    <Suspense fallback={<JournalEntryFallback date={date} />}>
+    <Suspense fallback={<JournalEntryFallback />}>
       <SuspendedJournalEntry date={date} />
     </Suspense>
   );
 }
 
-function JournalEntryFallback({ date }: { date: string }) {
+function JournalEntryFallback() {
   return (
-    <JournalEntryProvider
-      className="mx-auto min-h-full max-w-5xl px-8 py-8"
-      entry={{ date }}
-    >
-      <JournalEntryHeader className="mb-6" />
-      <JournalEntrySkeleton hasHeader={false} hasContent />
-    </JournalEntryProvider>
+    <div className="mx-auto max-w-5xl pt-8 pb-20">
+      <JournalEntrySkeleton hasContent />
+    </div>
   );
 }
 
@@ -47,14 +42,13 @@ async function SuspendedJournalEntry({ date }: { date: string }) {
   return (
     <JournalEntryProvider entry={entry}>
       <JournalEntryWrapper className="mx-auto max-w-5xl pt-8 pb-20">
-        <JournalEntryLink>
-          <JournalEntryHeader className="px-8" />
-        </JournalEntryLink>
-        <JournalEntryContent>
-          <Suspense fallback={<JournalEntrySkeleton hasContent />}>
-            <DynamicJournalEntryEditor />
-          </Suspense>
-        </JournalEntryContent>
+        <Suspense fallback={<JournalEntrySkeleton hasContent />}>
+          <DynamicJournalEntryEditor>
+            <JournalEntryLink>
+              <JournalEntryHeader className="px-8" />
+            </JournalEntryLink>
+          </DynamicJournalEntryEditor>
+        </Suspense>
       </JournalEntryWrapper>
       <JournalEntryAgentView />
     </JournalEntryProvider>

@@ -16,10 +16,16 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import {
   useInfiniteQuery,
+  useIsFetching,
   useMutation,
   useQueryClient,
 } from "@tanstack/react-query";
-import { BookOpen, ChevronRight, Folder as FolderIcon } from "lucide-react";
+import {
+  BookOpen,
+  ChevronRight,
+  Folder as FolderIcon,
+  Loader2,
+} from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Fragment, useCallback, useEffect, useRef, useState } from "react";
@@ -111,6 +117,7 @@ const DROP_ZONE_CLASSNAME = "h-1 rounded-sm transition-colors";
 const INFINITE_SCROLL_ROOT_MARGIN = "120px 0px";
 const DRAG_CLICK_SUPPRESSION_MS = 200;
 const ROOT_PARENT_KEY = "root";
+const APP_SIDEBAR_PAGES_CONTENT_ID = "app-sidebar-pages-content";
 
 function encodeParentKey(parentNodeId: string | null) {
   return parentNodeId ?? ROOT_PARENT_KEY;
@@ -600,6 +607,12 @@ export const AppSidebarPages = ({
   );
   const hoverFolderIdRef = useRef<string | null>(null);
   const recentDragUntilRef = useRef(0);
+  const rootTreeQueryKey = trpc.tree.getChildrenPaginated.infiniteQueryOptions(
+    getInfiniteSidebarTreeQueryOptions(null),
+  ).queryKey;
+  const isRootFetching = useIsFetching({
+    queryKey: rootTreeQueryKey,
+  });
 
   const { mutate: moveItem } = useMutation(
     trpc.tree.moveItem.mutationOptions({}),
@@ -797,7 +810,10 @@ export const AppSidebarPages = ({
       className="group/collapsible flex min-h-0 flex-1 flex-col"
     >
       <div className="group/tree-row relative">
-        <CollapsibleTrigger asChild>
+        <CollapsibleTrigger
+          asChild
+          aria-controls={APP_SIDEBAR_PAGES_CONTENT_ID}
+        >
           <SidebarMenuButton
             isActive={isPagesRoute}
             className={cn(
@@ -807,7 +823,11 @@ export const AppSidebarPages = ({
             tooltip="Pages"
             onClick={handlePagesClick}
           >
-            <BookOpen />
+            {isRootFetching > 0 ? (
+              <Loader2 className="size-3 animate-spin" />
+            ) : (
+              <BookOpen />
+            )}
             <span>Pages</span>
             <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
           </SidebarMenuButton>
@@ -828,7 +848,10 @@ export const AppSidebarPages = ({
         />
       </div>
 
-      <CollapsibleContent className="flex h-full min-h-0 flex-col">
+      <CollapsibleContent
+        id={APP_SIDEBAR_PAGES_CONTENT_ID}
+        className="flex h-full min-h-0 flex-col"
+      >
         <DndContext
           onDragCancel={handleDragCancel}
           onDragEnd={handleDragEnd}

@@ -2,6 +2,7 @@ import { createTRPCRouter } from "../trpc";
 import { authRouter } from "./auth";
 import { documentRouter } from "./document";
 import { foldersRouter } from "./folders";
+import { inviteRouter } from "./invite";
 import { journalRouter } from "./journal";
 import { modelPricingRouter } from "./model-pricing";
 import { notesRouter } from "./notes";
@@ -14,6 +15,7 @@ export const apiRouter = createTRPCRouter({
   auth: authRouter,
   document: documentRouter,
   folders: foldersRouter,
+  invite: inviteRouter,
   journal: journalRouter,
   modelPricing: modelPricingRouter,
   notes: notesRouter,

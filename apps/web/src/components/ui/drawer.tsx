@@ -178,7 +178,11 @@ function useDrawer() {
     context.setOpen(true);
   }, [context.setOpen]);
 
-  return { closeDrawer, openDrawer };
+  return {
+    closeDrawer,
+    isOpen: Boolean(context.open),
+    openDrawer,
+  };
 }
 
 export {

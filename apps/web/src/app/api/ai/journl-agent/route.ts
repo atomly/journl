@@ -20,6 +20,7 @@ import { journlMastraStore } from "~/ai/mastra/postgres-store";
 import { handler as corsHandler } from "~/app/api/_cors/cors";
 import { withAuthGuard } from "~/auth/guards";
 import { withUsageGuard } from "~/usage/guards";
+import { buildUsageQuotaExceededPayload } from "~/usage/quota-error";
 import { startModelUsage } from "~/workflows/model-usage";
 
 export const maxDuration = 30; // Allow streaming responses up to 30 seconds
@@ -114,13 +115,9 @@ const handler = withAuthGuard(
     },
     {
       onUsageLimitExceeded: (error) =>
-        Response.json(
-          {
-            error: "Usage quota exceeded",
-            usage: error.status,
-          },
-          { status: 429 },
-        ),
+        Response.json(buildUsageQuotaExceededPayload(error.status), {
+          status: 429,
+        }),
     },
   ),
   {

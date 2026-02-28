@@ -10,11 +10,11 @@ export const UsageAggregate = pgTable(
     id: t.uuid().notNull().primaryKey().defaultRandom(),
     user_id: text()
       .notNull()
-      .references(() => user.id),
+      .references(() => user.id, { onDelete: "cascade" }),
     usage_period_id: t
       .uuid()
       .notNull()
-      .references(() => UsagePeriod.id),
+      .references(() => UsagePeriod.id, { onDelete: "cascade" }),
 
     // Aggregated cost for the entire period
     total_cost: decimal("total_cost", { precision: 10, scale: 6 })

@@ -3,7 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { cn } from "~/lib/cn";
 import { getPublicWebUrl } from "~/lib/public-web-url";
 
-import "~/app/globals.css";
+import "~/app/styles.css";
 
 import { AuthModalProvider } from "~/components/auth/auth-modal-provider";
 import { BetterAuthProvider } from "../components/auth/better-auth-provider";

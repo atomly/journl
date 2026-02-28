@@ -1,6 +1,6 @@
 import { AuthModal } from "~/components/auth/auth-modal";
 
-import "../../(dashboard)/globals.css";
+import "../../(dashboard)/styles.css";
 import { BetterAuthProvider } from "~/components/auth/better-auth-provider";
 
 type AuthModalLayoutProps = {

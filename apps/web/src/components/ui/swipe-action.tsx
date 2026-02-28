@@ -8,10 +8,10 @@ type SwipeActionContextValue = {
   actionWidth: number;
   contentElementRef: React.RefObject<HTMLDivElement | null>;
   disabled: boolean;
-  handlePointerCancel: () => void;
+  handlePointerCancel: (event: React.PointerEvent<HTMLDivElement>) => void;
   handlePointerDown: (event: React.PointerEvent<HTMLDivElement>) => void;
   handlePointerMove: (event: React.PointerEvent<HTMLDivElement>) => void;
-  handlePointerUp: () => void;
+  handlePointerUp: (event: React.PointerEvent<HTMLDivElement>) => void;
   isDragging: boolean;
   offset: number;
 };
@@ -72,9 +72,11 @@ function SwipeAction({
   const contentElementRef = React.useRef<HTMLDivElement>(null);
   const dragStateRef = React.useRef({
     hasLockedDirection: false,
+    hasPointerCapture: false,
     isHorizontalDrag: false,
     isPointerDown: false,
     maxSwipeOffset: actionWidth,
+    pointerId: -1,
     startOffset: 0,
     startX: 0,
     startY: 0,
@@ -100,9 +102,11 @@ function SwipeAction({
   const resetDragState = React.useCallback(() => {
     dragStateRef.current = {
       hasLockedDirection: false,
+      hasPointerCapture: false,
       isHorizontalDrag: false,
       isPointerDown: false,
       maxSwipeOffset: actionWidth,
+      pointerId: -1,
       startOffset: 0,
       startX: 0,
       startY: 0,
@@ -118,15 +122,15 @@ function SwipeAction({
 
       dragStateRef.current = {
         hasLockedDirection: false,
+        hasPointerCapture: false,
         isHorizontalDrag: false,
         isPointerDown: true,
         maxSwipeOffset: rootElementRef.current?.clientWidth ?? actionWidth,
+        pointerId: event.pointerId,
         startOffset: offset,
         startX: event.clientX,
         startY: event.clientY,
       };
-
-      contentElementRef.current?.setPointerCapture(event.pointerId);
     },
     [actionWidth, disabled, offset],
   );
@@ -136,6 +140,10 @@ function SwipeAction({
       const dragState = dragStateRef.current;
 
       if (!dragState.isPointerDown || disabled) {
+        return;
+      }
+
+      if (event.pointerId !== dragState.pointerId) {
         return;
       }
 
@@ -165,6 +173,11 @@ function SwipeAction({
         return;
       }
 
+      if (!dragState.hasPointerCapture) {
+        contentElementRef.current?.setPointerCapture(event.pointerId);
+        dragState.hasPointerCapture = true;
+      }
+
       event.preventDefault();
       setIsDragging(true);
 
@@ -181,41 +194,64 @@ function SwipeAction({
     [disabled, resetDragState],
   );
 
-  const handlePointerUp = React.useCallback(() => {
-    const dragState = dragStateRef.current;
+  const handlePointerUp = React.useCallback(
+    (event: React.PointerEvent<HTMLDivElement>) => {
+      const dragState = dragStateRef.current;
 
-    if (!dragState.isPointerDown && !isDragging) {
-      return;
-    }
+      if (event.pointerId !== dragState.pointerId) {
+        return;
+      }
 
-    const fullSwipeThreshold =
-      dragState.maxSwipeOffset * fullSwipeThresholdRatio;
+      if (dragState.hasPointerCapture) {
+        contentElementRef.current?.releasePointerCapture(event.pointerId);
+      }
 
-    if (onFullSwipe && offset >= fullSwipeThreshold) {
-      suppressClickRef.current = true;
-      setOpen(false);
-      onFullSwipe();
+      if (!dragState.isPointerDown && !isDragging) {
+        return;
+      }
+
+      const fullSwipeThreshold =
+        dragState.maxSwipeOffset * fullSwipeThresholdRatio;
+
+      if (onFullSwipe && offset >= fullSwipeThreshold) {
+        suppressClickRef.current = true;
+        setOpen(false);
+        onFullSwipe();
+        resetDragState();
+        return;
+      }
+
+      setOpen(offset > settleThreshold);
       resetDragState();
-      return;
-    }
+    },
+    [
+      fullSwipeThresholdRatio,
+      isDragging,
+      offset,
+      onFullSwipe,
+      resetDragState,
+      setOpen,
+      settleThreshold,
+    ],
+  );
 
-    setOpen(offset > settleThreshold);
-    resetDragState();
-  }, [
-    fullSwipeThresholdRatio,
-    isDragging,
-    offset,
-    onFullSwipe,
-    resetDragState,
-    setOpen,
-    settleThreshold,
-  ]);
+  const handlePointerCancel = React.useCallback(
+    (event: React.PointerEvent<HTMLDivElement>) => {
+      const dragState = dragStateRef.current;
 
-  const handlePointerCancel = React.useCallback(() => {
-    const dragState = dragStateRef.current;
-    setOffset(dragState.startOffset);
-    resetDragState();
-  }, [resetDragState]);
+      if (event.pointerId !== dragState.pointerId) {
+        return;
+      }
+
+      if (dragState.hasPointerCapture) {
+        contentElementRef.current?.releasePointerCapture(event.pointerId);
+      }
+
+      setOffset(dragState.startOffset);
+      resetDragState();
+    },
+    [resetDragState],
+  );
 
   const handleClickCapture = React.useCallback(
     (event: React.MouseEvent<HTMLDivElement>) => {
@@ -372,11 +408,11 @@ function SwipeActionContent({
         onPointerMove?.(event);
       }}
       onPointerUp={(event) => {
-        handlePointerUp();
+        handlePointerUp(event);
         onPointerUp?.(event);
       }}
       onPointerCancel={(event) => {
-        handlePointerCancel();
+        handlePointerCancel(event);
         onPointerCancel?.(event);
       }}
       style={{

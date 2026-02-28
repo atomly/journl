@@ -5,6 +5,8 @@ export function authEnv() {
   return createEnv({
     experimental__runtimeEnv: {},
     server: {
+      AUTH_DEV_ORIGINS: z.string().optional(),
+      AUTH_DEV_PROXY_URL: z.url().optional(),
       AUTH_GITHUB_ID: z.string().min(1),
       AUTH_GITHUB_SECRET: z.string().min(1),
       AUTH_GOOGLE_ID: z.string().min(1),

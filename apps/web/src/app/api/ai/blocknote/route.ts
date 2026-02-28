@@ -5,10 +5,12 @@ import {
 } from "@blocknote/xl-ai";
 import { convertToModelMessages, streamText } from "ai";
 import { after, type NextRequest } from "next/server";
+import { buildJournlEditorSystemPrompt } from "~/ai/prompts/editor-system-prompt";
 import { miniModel } from "~/ai/providers/openai/text";
 import { handler as corsHandler } from "~/app/api/_cors/cors";
 import { withAuthGuard } from "~/auth/guards";
 import { withUsageGuard } from "~/usage/guards";
+import { buildUsageQuotaExceededPayload } from "~/usage/quota-error";
 import { startModelUsage } from "~/workflows/model-usage";
 
 const handler = withAuthGuard(
@@ -31,7 +33,9 @@ const handler = withAuthGuard(
             store: false,
           },
         },
-        system: aiDocumentFormats.html.systemPrompt,
+        system: buildJournlEditorSystemPrompt(
+          aiDocumentFormats.html.systemPrompt,
+        ),
         toolChoice: "required",
         tools: toolDefinitionsToToolSet(toolDefinitions),
       });
@@ -72,13 +76,9 @@ const handler = withAuthGuard(
     },
     {
       onUsageLimitExceeded: (error) =>
-        Response.json(
-          {
-            error: "Usage quota exceeded",
-            usage: error.status,
-          },
-          { status: 429 },
-        ),
+        Response.json(buildUsageQuotaExceededPayload(error.status), {
+          status: 429,
+        }),
     },
   ),
   {

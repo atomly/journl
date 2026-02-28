@@ -4,9 +4,9 @@ import { Toaster } from "~/components/ui/toast";
 import { getAppPreferences } from "~/preferences/get-preferences";
 import { AppLayoutProvider } from "../_components/app-layout-provider";
 import ChatSidebarTrigger from "./@chatSidebar/_components/chat-sidebar-trigger";
-import "./globals.css";
+import "./styles.css";
 import { AppProviders } from "../_components/app-providers";
-import { AppContainer } from "./@header/_components/app-container";
+import { AppContainer } from "./_components/app-container";
 
 type AppLayoutProps = {
   children: React.ReactNode;
@@ -34,7 +34,7 @@ async function AppLayout({
         <div className="flex flex-1">
           <SidebarProvider>
             {appSidebar}
-            <SidebarInset className="flex max-h-svh min-w-sm flex-col">
+            <SidebarInset className="flex max-h-dvh min-w-sm flex-col gap-y-2">
               <AppLayoutProvider>
                 {header}
                 <AppContainer className="min-w-54 flex-1 overflow-auto">
@@ -45,7 +45,7 @@ async function AppLayout({
             </SidebarInset>
           </SidebarProvider>
           {chatSidebar}
-          <ChatSidebarTrigger />
+          <ChatSidebarTrigger className="fixed right-2 bottom-2 z-4500 hidden md:flex" />
         </div>
       </SidebarProvider>
       {subscriptionModal}

@@ -1,5 +1,6 @@
 "use client";
 
+import type { PartialBlock } from "@blocknote/core";
 import { useMutation } from "@tanstack/react-query";
 import Link from "next/link";
 import {
@@ -27,7 +28,7 @@ type JournalEntryContextValue = {
   documentId: string | null;
   date: string;
   formattedDate: string;
-  initialBlocks: Extract<JournalListEntry, { blocks?: unknown }>["blocks"];
+  initialBlocks: [PartialBlock, ...PartialBlock[]] | undefined;
   isToday: boolean;
 };
 
@@ -127,7 +128,7 @@ export function JournalEntryHeader({
   const { formattedDate, isToday } = useJournalEntry();
 
   return (
-    <div className={cn("mb-6", className)} {...rest}>
+    <div className={className} {...rest}>
       <h2 className="font-semibold text-3xl text-muted-foreground md:text-4xl lg:text-5xl">
         {isToday && !forceDate ? "Today" : formattedDate}
       </h2>
@@ -135,21 +136,10 @@ export function JournalEntryHeader({
   );
 }
 
-type JournalEntryContentProps = ComponentProps<"div">;
-
-export function JournalEntryContent({
-  className,
-  children,
-  ...rest
-}: JournalEntryContentProps) {
-  return (
-    <div className={cn("flex items-start gap-2", className)} {...rest}>
-      <div className="min-w-0 flex-1">{children}</div>
-    </div>
-  );
-}
-
-type JournalEntryEditorProps = {
+type JournalEntryEditorProps = Omit<
+  React.ComponentProps<typeof BlockEditor>,
+  "editor" | "onChange" | "formattingToolbar" | "slashMenu"
+> & {
   debounceTime?: number;
   onCreateAction?: (newEntry: JournalListEntry) => void;
 };
@@ -157,6 +147,7 @@ type JournalEntryEditorProps = {
 export function JournalEntryEditor({
   debounceTime = DEFAULT_DEBOUNCE_TIME,
   onCreateAction,
+  ...rest
 }: JournalEntryEditorProps) {
   const trpc = useTRPC();
   const pendingChangesRef = useRef<BlockTransaction[]>([]);
@@ -220,12 +211,12 @@ export function JournalEntryEditor({
     <>
       <BlockEditor
         editor={editor}
-        initialBlocks={initialBlocks}
         onChange={handleEditorChange}
         // Disabling the default because we're using a formatting toolbar with the AI option.
         formattingToolbar={false}
         // Disabling the default because we're using a slash menu with the AI option.
         slashMenu={false}
+        {...rest}
       />
       <BlockEditorErrorOverlay isOpen={isOverlayOpen} />
     </>

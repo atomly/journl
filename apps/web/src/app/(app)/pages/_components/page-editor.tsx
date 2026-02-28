@@ -16,7 +16,10 @@ import { useTRPC } from "~/trpc/react";
 
 const DEFAULT_DEBOUNCE_TIME = 150;
 
-type PageEditorProps = {
+type PageEditorProps = Omit<
+  React.ComponentProps<typeof BlockEditor>,
+  "editor" | "onChange" | "formattingToolbar" | "slashMenu"
+> & {
   page: Pick<Page, "id" | "title" | "document_id">;
   initialBlocks: [PartialBlock, ...PartialBlock[]] | undefined;
   debounceTime?: number;
@@ -26,6 +29,7 @@ export function PageEditor({
   page,
   initialBlocks,
   debounceTime = DEFAULT_DEBOUNCE_TIME,
+  ...rest
 }: PageEditorProps) {
   const trpc = useTRPC();
   const pendingChangesRef = useRef<BlockTransaction[]>([]);
@@ -109,12 +113,12 @@ export function PageEditor({
     <>
       <BlockEditor
         editor={editor}
-        initialBlocks={initialBlocks}
         onChange={handleEditorChange}
         // Disabling the default because we're using a formatting toolbar with the AI option.
         formattingToolbar={false}
         // Disabling the default because we're using a slash menu with the AI option.
         slashMenu={false}
+        {...rest}
       />
       <BlockEditorErrorOverlay isOpen={isOverlayOpen} />
     </>

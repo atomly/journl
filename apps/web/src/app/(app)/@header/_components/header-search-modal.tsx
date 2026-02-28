@@ -32,6 +32,7 @@ const MIN_QUERY_LENGTH = 2;
 const DEFAULT_THRESHOLD = 0.25;
 const DEFAULT_LIMIT = 10;
 const DEFAULT_DEBOUNCE_TIME = 150;
+const HEADER_SEARCH_DIALOG_CONTENT_ID = "header-search-dialog-content";
 
 type HeaderSearchButtonProps = React.ComponentProps<typeof Dialog> & {
   children: React.ReactNode;
@@ -86,8 +87,11 @@ export function HeaderSearchButton({
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen} {...rest}>
-      <DialogTrigger asChild>{children}</DialogTrigger>
+      <DialogTrigger asChild aria-controls={HEADER_SEARCH_DIALOG_CONTENT_ID}>
+        {children}
+      </DialogTrigger>
       <DialogContent
+        id={HEADER_SEARCH_DIALOG_CONTENT_ID}
         className="gap-0 rounded-2xl border-4 border-muted bg-sidebar p-0"
         data-state="open"
         showCloseButton={false}

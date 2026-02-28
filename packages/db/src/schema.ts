@@ -1,4 +1,5 @@
 export * from "./auth/account.schema.ts";
+export * from "./auth/invite-code.schema.ts";
 export * from "./auth/organization.schema.ts";
 export * from "./auth/session.schema.ts";
 export * from "./auth/user.schema.ts";

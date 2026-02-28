@@ -12,6 +12,7 @@ type AuthModalProps = {
 
 const screenReaderContent: Record<string, string> = {
   default: "Authentication page",
+  invite: "Enter invite code",
   security: "Update your security settings",
   settings: "Change your account settings",
   "sign-in": "Sign in to your account",
@@ -29,7 +30,7 @@ export function AuthModal({ children }: AuthModalProps) {
   const { cancelUrl } = useAuthModal();
   return (
     <Dialog
-      open={pathname.startsWith("/auth")}
+      open={pathname.startsWith("/auth") || pathname.startsWith("/invite")}
       onOpenChange={(open) => {
         if (!open) {
           router.replace(
@@ -41,7 +42,7 @@ export function AuthModal({ children }: AuthModalProps) {
       <DialogTitle className="sr-only">
         {getScreenReaderContent(pathname)}
       </DialogTitle>
-      <DialogContent className="flex w-full items-center justify-center border">
+      <DialogContent className="flex w-full max-w-lg items-center justify-center border">
         {children}
       </DialogContent>
     </Dialog>

@@ -1,7 +1,6 @@
 import { ComposerPrimitive, ThreadPrimitive } from "@assistant-ui/react";
 import {
   ComposerAction,
-  ComposerInput,
   ThreadScrollToBottom,
 } from "~/components/assistant-ui/thread-components";
 import {
@@ -18,6 +17,7 @@ import {
   DrawerDivider,
   DrawerTitle,
 } from "~/components/ui/drawer";
+import { ChatDrawerComposerInput } from "./_components/chat-drawer-composer-input";
 import { ChatDrawerTrigger } from "./_components/chat-drawer-trigger";
 
 const CHAT_DRAWER_CONTENT_ID = "chat-drawer-content";
@@ -25,14 +25,14 @@ const CHAT_DRAWER_REASONING_CONTENT_ID = "chat-drawer-reasoning-select-content";
 
 export default function ChatDrawer() {
   return (
-    <Drawer>
+    <Drawer repositionInputs>
       <ChatDrawerTrigger
         aria-controls={CHAT_DRAWER_CONTENT_ID}
         className="fixed right-2 bottom-2 z-4500 flex md:hidden"
       />
       <DrawerContent
         id={CHAT_DRAWER_CONTENT_ID}
-        className="z-4500 h-full! max-h-[82.5dvh]!"
+        className="z-4500 h-full! max-h-[82.5dvh]! transition-[bottom] duration-200 ease-out motion-reduce:transition-none"
       >
         <DrawerTitle className="hidden">Journl</DrawerTitle>
         <div className="relative h-full! border-sidebar-border border-t">
@@ -57,7 +57,7 @@ export default function ChatDrawer() {
                 <ComposerPrimitive.Root className="relative flex w-full flex-col rounded-lg border border-sidebar-border/80 bg-muted/45 focus-within:border-ring/20">
                   <div className="relative gap-y-2 rounded-tl-lg rounded-tr-lg bg-background pt-2">
                     <ComposerSources className="px-2" />
-                    <ComposerInput autoFocus className="w-full px-3 py-2" />
+                    <ChatDrawerComposerInput className="w-full px-3 py-2" />
                   </div>
 
                   <div className="flex min-w-0 flex-row justify-between border-sidebar-border/70 border-t p-2">

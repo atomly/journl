@@ -141,6 +141,7 @@ export function ComposerQuotaNotice({ className }: ComposerQuotaNoticeProps) {
 
   const { usage } = usageQuotaExceeded;
   const planLabel = usage.subscriptionType === "pro" ? "Pro" : "Free";
+  const resetAt = formatDate(usage.periodEnd);
 
   return (
     <div
@@ -153,9 +154,9 @@ export function ComposerQuotaNotice({ className }: ComposerQuotaNoticeProps) {
         AI usage limit reached
       </p>
       <p className="text-amber-900/90 text-xs dark:text-amber-100/90">
-        {planLabel} plan usage {formatUsd(usage.currentUsageUsd)} of{" "}
-        {formatUsd(usage.quotaUsd)} is fully used. Upgrade or wait for the next
-        reset.
+        You’ve used all of your {planLabel} plan usage.{" "}
+        {usage.subscriptionType === "free" ? "Upgrade now or wait" : "Wait"}{" "}
+        until your next {resetAt ? `reset on ${resetAt}` : "reset"}
       </p>
     </div>
   );
@@ -636,11 +637,14 @@ function truncate(value: string, limit: number) {
   }
 }
 
-function formatUsd(value: number) {
-  return new Intl.NumberFormat("en-US", {
-    currency: "USD",
-    maximumFractionDigits: 3,
-    minimumFractionDigits: 2,
-    style: "currency",
-  }).format(value);
+function formatDate(date: string | null) {
+  if (!date) {
+    return undefined;
+  }
+
+  return new Intl.DateTimeFormat("en-US", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  }).format(new Date(date));
 }

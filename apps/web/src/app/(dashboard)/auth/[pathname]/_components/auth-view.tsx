@@ -3,9 +3,23 @@ import { redirect } from "next/navigation";
 
 const AUTH_VIEWS = new Set(["sign-in", "sign-up"]);
 
-export async function AuthView({ pathname }: { pathname: string }) {
+function hasInviteCode(inviteCode?: string) {
+  return !!inviteCode?.trim();
+}
+
+export async function AuthView({
+  pathname,
+  inviteCode,
+}: {
+  pathname: string;
+  inviteCode?: string;
+}) {
   if (!AUTH_VIEWS.has(pathname)) {
     redirect("/");
+  }
+
+  if (pathname === "sign-up" && !hasInviteCode(inviteCode)) {
+    redirect("/auth/sign-in");
   }
 
   return (

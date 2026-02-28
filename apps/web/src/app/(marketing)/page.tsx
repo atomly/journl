@@ -10,6 +10,7 @@ import type { Metadata, Viewport } from "next";
 import Link from "next/link";
 import { RiSparkling2Fill } from "react-icons/ri";
 import { withoutAuth } from "~/app/_guards/page-guards";
+import { InviteCodeForm } from "~/components/auth/invite-code-form";
 import { Separator } from "~/components/ui/separator";
 import { getPublicWebUrl } from "~/lib/public-web-url";
 import { HydrateClient } from "~/trpc/server";
@@ -144,6 +145,20 @@ export default withoutAuth(function RootPage() {
                     <span className="font-semibold">Sign in</span>
                   </Link>
                 </HeroCtaButton>
+              </div>
+              <div className="rounded-2xl border border-border bg-card/55 p-4 backdrop-blur">
+                <p className="font-medium text-foreground text-sm">
+                  Got an invite code?
+                </p>
+                <p className="mt-1 text-muted-foreground text-xs">
+                  Paste it to open the invite-only sign-up flow.
+                </p>
+                <InviteCodeForm
+                  buttonLabel="Open sign up"
+                  className="mt-3"
+                  helperText="Codes are single-use by default."
+                  inputPlaceholder="Paste your invite code"
+                />
               </div>
               <div className="grid gap-4 text-muted-foreground text-sm sm:grid-cols-3">
                 <div className="flex items-center gap-2">

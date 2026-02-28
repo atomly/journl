@@ -1,3 +1,4 @@
+import { openai } from "@ai-sdk/openai";
 import { Agent } from "@mastra/core/agent";
 import { RequestContext } from "@mastra/core/request-context";
 import { Memory } from "@mastra/memory";
@@ -51,7 +52,7 @@ function prompt({ requestContext }: { requestContext?: RequestContext }) {
     throw new Error("Missing Journl context");
   }
   if (env.NODE_ENV === "development") {
-    console.debug("JournlAgentContext", context);
+    console.debug("[JournlAgentContext]", context);
   }
   return `# System Prompt
 
@@ -96,6 +97,8 @@ ${
 - Complete tasks immediately. Take obvious next steps. Prefer direct tool actions over explanatory prose.
 - Mirror user's tone but avoid corporate filler. Be concise and high-signal.
 - Operate only on existing content; never fabricate. Prefer partial completion over clarifying questions when scope is large.
+- For facts that are likely outside the user's notes (news, current events, live facts), use webSearch and cite sources.
+- Prefer semantic/temporal journl tools for the user's personal content; use webSearch for public-web knowledge.
 - When asked about what you can do, respond to the user in natural language.`;
 }
 
@@ -109,6 +112,7 @@ const tools = {
   semanticJournalSearch,
   semanticPageSearch,
   temporalJournalSearch,
+  webSearch: openai.tools.webSearch(),
 };
 
 export const journlNano = new Agent({

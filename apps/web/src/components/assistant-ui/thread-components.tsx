@@ -155,7 +155,7 @@ export function ComposerQuotaNotice({ className }: ComposerQuotaNoticeProps) {
       <p className="text-amber-900/90 text-xs dark:text-amber-100/90">
         You’ve used all of your {planLabel} plan usage.{" "}
         {usage.subscriptionType === "free" ? "Upgrade now or wait" : "Wait"}{" "}
-        until your next {resetAt ? `reset on ${resetAt}` : "reset"}
+        until your next {resetAt ? `reset on ${resetAt}` : "reset"}.
       </p>
     </div>
   );

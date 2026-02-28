@@ -102,7 +102,7 @@ export default withoutAuth(function RootPage() {
             </Link>
             <Link
               className="rounded-full border border-border bg-card/60 px-4 py-2 text-foreground transition hover:border-primary/60"
-              href="/auth/sign-up"
+              href="/invite"
             >
               Get started
             </Link>
@@ -117,10 +117,10 @@ export default withoutAuth(function RootPage() {
                 Journaling, reimagined
               </div>
               <div className="space-y-6">
-                <h1 className="font-serif text-5xl leading-tight md:text-7xl">
+                <h1 className="text-5xl leading-tight md:text-7xl">
                   Your mind, made personal.
                 </h1>
-                <p className="max-w-xl text-lg text-muted-foreground">
+                <p className="max-w-xl text-foreground/85 text-lg">
                   Journl turns daily notes into structured reflections, smart
                   prompts, and trend-aware insights, so you see patterns instead
                   of scattered pages.
@@ -131,7 +131,7 @@ export default withoutAuth(function RootPage() {
                   className="group h-12 w-full bg-primary text-primary-foreground hover:bg-primary/90"
                   authCancelUrl={AUTH_CANCEL_URL}
                 >
-                  <Link href="/auth/sign-up">
+                  <Link href="/invite">
                     <span className="font-semibold">Start writing</span>
                     <ArrowRight className="ml-2 h-5 w-5 transition-transform duration-200 group-hover:translate-x-1" />
                   </Link>
@@ -145,7 +145,7 @@ export default withoutAuth(function RootPage() {
                   </Link>
                 </HeroCtaButton>
               </div>
-              <div className="grid gap-4 text-muted-foreground text-sm sm:grid-cols-3">
+              <div className="grid gap-4 text-foreground/85 text-sm sm:grid-cols-3">
                 <div className="flex items-center gap-2">
                   <PenLine className="h-4 w-4 text-primary" />
                   Structured prompts
@@ -167,18 +167,14 @@ export default withoutAuth(function RootPage() {
                 <HeroJournlParticles className="h-40 md:h-56" />
                 <div className="mt-6 space-y-4 text-foreground text-sm">
                   <div className="rounded-2xl border border-border bg-background/40 p-4">
-                    <p className="text-primary text-xs uppercase tracking-[0.2em]">
-                      Today
-                    </p>
+                    <p className="text-primary text-xs uppercase">Today</p>
                     <p className="mt-2 text-base text-foreground">
                       "I felt scattered this morning, but the walk reset my
                       focus."
                     </p>
                   </div>
                   <div className="rounded-2xl border border-border bg-card/50 p-4">
-                    <p className="text-primary text-xs uppercase tracking-[0.2em]">
-                      Insight
-                    </p>
+                    <p className="text-primary text-xs uppercase">Insight</p>
                     <p className="mt-2 text-muted-foreground">
                       Small check-ins surface focus shifts. Capture one next
                       step to keep momentum later today.
@@ -192,14 +188,12 @@ export default withoutAuth(function RootPage() {
           <section id="features" className="space-y-10">
             <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
               <div className="space-y-3">
-                <p className="text-primary text-xs uppercase tracking-[0.3em]">
-                  Why Journl
-                </p>
-                <h2 className="font-serif text-3xl md:text-4xl">
+                <p className="text-primary text-xs uppercase">Why Journl</p>
+                <h2 className="text-3xl md:text-4xl">
                   A notebook that actually talks back.
                 </h2>
               </div>
-              <p className="max-w-md text-muted-foreground">
+              <p className="max-w-md text-foreground/85">
                 Capture quick thoughts, then let Journl surface what matters
                 with AI-guided structure, summaries, and timely nudges.
               </p>
@@ -230,7 +224,7 @@ export default withoutAuth(function RootPage() {
                     <Icon className="h-5 w-5 text-primary" />
                   </div>
                   <h3 className="mt-6 font-semibold text-lg">{title}</h3>
-                  <p className="mt-3 text-muted-foreground text-sm">{copy}</p>
+                  <p className="mt-3 text-foreground/80 text-sm">{copy}</p>
                 </div>
               ))}
             </div>
@@ -241,18 +235,16 @@ export default withoutAuth(function RootPage() {
             className="grid gap-10 rounded-[32px] border border-border bg-gradient-to-br from-card/80 via-background to-card/60 p-8 md:grid-cols-[1.1fr_0.9fr] md:p-12"
           >
             <div className="space-y-6">
-              <p className="text-primary text-xs uppercase tracking-[0.3em]">
-                Workflow
-              </p>
-              <h2 className="font-serif text-3xl md:text-4xl">
+              <p className="text-primary text-xs uppercase">Workflow</p>
+              <h2 className="text-3xl md:text-4xl">
                 The daily ritual, supercharged.
               </h2>
-              <p className="text-muted-foreground">
+              <p className="text-foreground/85">
                 Journl keeps the cadence simple: jot, reflect, and connect the
                 dots.
               </p>
             </div>
-            <div className="space-y-6 text-muted-foreground text-sm">
+            <div className="space-y-6 text-foreground/85 text-sm">
               {[
                 {
                   description:
@@ -281,7 +273,7 @@ export default withoutAuth(function RootPage() {
                     <h3 className="font-semibold text-foreground">
                       {step.title}
                     </h3>
-                    <p className="mt-1 text-muted-foreground">
+                    <p className="mt-1 text-foreground/75">
                       {step.description}
                     </p>
                   </div>
@@ -290,11 +282,11 @@ export default withoutAuth(function RootPage() {
             </div>
           </section>
 
-          <section className="flex flex-col items-center gap-6 rounded-[32px] border border-border bg-card/60 px-6 py-12 text-center">
-            <h2 className="font-serif text-3xl md:text-4xl">
+          <section className="flex flex-col items-center gap-6 rounded-4xl border border-border bg-card/60 px-6 py-12 text-center">
+            <h2 className="text-3xl md:text-4xl">
               Ready to turn thoughts into momentum?
             </h2>
-            <p className="max-w-2xl text-muted-foreground">
+            <p className="max-w-2xl text-foreground/85">
               Start with a single entry and watch Journl organize your
               narrative, surface what matters, and keep you moving forward.
             </p>
@@ -302,7 +294,7 @@ export default withoutAuth(function RootPage() {
               className="marketing-cta-animated-border group bg-primary text-primary-foreground hover:bg-primary/90 sm:w-52"
               authCancelUrl={AUTH_CANCEL_URL}
             >
-              <Link href="/auth/sign-up">
+              <Link href="/invite">
                 <span className="font-semibold">Start writing</span>
                 <ArrowRight className="ml-2 h-5 w-5 transition-transform duration-200 group-hover:translate-x-1" />
               </Link>
@@ -327,10 +319,7 @@ export default withoutAuth(function RootPage() {
               >
                 Sign in
               </Link>
-              <Link
-                className="transition hover:text-foreground"
-                href="/auth/sign-up"
-              >
+              <Link className="transition hover:text-foreground" href="/invite">
                 Start writing
               </Link>
             </div>

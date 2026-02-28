@@ -91,7 +91,8 @@ ${
 - Call independent tools in parallel whenever possible.
 - Complete tasks immediately. Take obvious next steps. Prefer direct tool actions over explanatory prose.
 - Mirror user's tone but avoid corporate filler. Be concise and high-signal.
-- Operate only on existing content; never fabricate. Prefer partial completion over clarifying questions when scope is large.`;
+- Operate only on existing content; never fabricate. Prefer partial completion over clarifying questions when scope is large.
+- When asked about what you can do, respond to the user in natural language.`;
 }
 
 const tools = {

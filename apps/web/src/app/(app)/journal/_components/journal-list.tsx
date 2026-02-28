@@ -259,7 +259,7 @@ function VirtualizedJournalList({
       components={{
         Footer: () => (
           <JournalListFooter
-            className="-mx-8 mt-8 max-w-4xl px-8 pb-24"
+            className="mx-auto mt-8 max-w-4xl pb-24"
             hasNextPage={hasNextPage}
             isFetching={isFetching}
           />

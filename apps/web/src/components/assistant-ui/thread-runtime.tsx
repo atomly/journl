@@ -17,12 +17,12 @@ type ThreadRuntimeProps = {
   children: React.ReactNode;
 };
 
-type ThreadUsageState = {
-  usageQuotaExceeded: UsageQuotaExceededPayload | null;
+type ThreadRuntimeContextState = {
+  exceeded: UsageQuotaExceededPayload | null;
 };
 
-const ThreadUsageContext = createContext<ThreadUsageState>({
-  usageQuotaExceeded: null,
+const ThreadRuntimeContext = createContext<ThreadRuntimeContextState>({
+  exceeded: null,
 });
 
 export function ThreadRuntime({ children }: ThreadRuntimeProps) {
@@ -35,19 +35,19 @@ export function ThreadRuntime({ children }: ThreadRuntimeProps) {
   });
 
   const value = useMemo(
-    () => ({ usageQuotaExceeded: parseUsageQuotaExceededPayload(agent.error) }),
+    () => ({ exceeded: parseUsageQuotaExceededPayload(agent.error) }),
     [agent.error],
   );
 
   return (
-    <ThreadUsageContext.Provider value={value}>
+    <ThreadRuntimeContext.Provider value={value}>
       <AssistantRuntimeProvider runtime={runtime}>
         {children}
       </AssistantRuntimeProvider>
-    </ThreadUsageContext.Provider>
+    </ThreadRuntimeContext.Provider>
   );
 }
 
-export function useThreadUsage() {
-  return useContext(ThreadUsageContext);
+export function useThreadRuntime() {
+  return useContext(ThreadRuntimeContext);
 }

@@ -34,7 +34,7 @@ async function AppLayout({
         <div className="flex flex-1">
           <SidebarProvider>
             {appSidebar}
-            <SidebarInset className="flex max-h-svh min-w-sm flex-col">
+            <SidebarInset className="flex max-h-dvh min-w-sm flex-col gap-y-2">
               <AppLayoutProvider>
                 {header}
                 <AppContainer className="min-w-54 flex-1 overflow-auto">

@@ -26,7 +26,7 @@ import {
 } from "lucide-react";
 import type { ComponentProps, ReactNode } from "react";
 import { MarkdownText } from "~/components/assistant-ui/markdown-text";
-import { useThreadUsage } from "~/components/assistant-ui/thread-runtime";
+import { useThreadRuntime } from "~/components/assistant-ui/thread-runtime";
 import { TooltipIconButton } from "~/components/assistant-ui/tooltip-icon-button";
 import { Button } from "~/components/ui/button";
 import { cn } from "~/lib/cn";
@@ -64,8 +64,8 @@ export function ComposerInput({
   placeholder = "Ask anything...",
   ...rest
 }: ComponentProps<typeof ComposerPrimitive.Input>) {
-  const { usageQuotaExceeded } = useThreadUsage();
-  const isUsageQuotaExceeded = Boolean(usageQuotaExceeded);
+  const { exceeded } = useThreadRuntime();
+  const isUsageQuotaExceeded = Boolean(exceeded);
 
   return (
     <ComposerPrimitive.Input
@@ -96,8 +96,8 @@ export function ComposerAction({
   tooltip = "Send",
   variant = "default",
 }: ComposerActionProps) {
-  const { usageQuotaExceeded } = useThreadUsage();
-  const isUsageQuotaExceeded = Boolean(usageQuotaExceeded);
+  const { exceeded } = useThreadRuntime();
+  const isUsageQuotaExceeded = Boolean(exceeded);
 
   return (
     <>
@@ -131,15 +131,14 @@ export function ComposerAction({
 type ComposerQuotaNoticeProps = {
   className?: string;
 };
-
 export function ComposerQuotaNotice({ className }: ComposerQuotaNoticeProps) {
-  const { usageQuotaExceeded } = useThreadUsage();
+  const { exceeded } = useThreadRuntime();
 
-  if (!usageQuotaExceeded) {
+  if (!exceeded) {
     return null;
   }
 
-  const { usage } = usageQuotaExceeded;
+  const { usage } = exceeded;
   const planLabel = usage.subscriptionType === "pro" ? "Pro" : "Free";
   const resetAt = formatDate(usage.periodEnd);
 
@@ -156,7 +155,7 @@ export function ComposerQuotaNotice({ className }: ComposerQuotaNoticeProps) {
       <p className="text-amber-900/90 text-xs dark:text-amber-100/90">
         You’ve used all of your {planLabel} plan usage.{" "}
         {usage.subscriptionType === "free" ? "Upgrade now or wait" : "Wait"}{" "}
-        until your next {resetAt ? `reset on ${resetAt}` : "reset"}
+        until your next {resetAt ? `reset on ${resetAt}` : "reset"}.
       </p>
     </div>
   );

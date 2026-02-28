@@ -102,7 +102,7 @@ export default withoutAuth(function RootPage() {
             </Link>
             <Link
               className="rounded-full border border-border bg-card/60 px-4 py-2 text-foreground transition hover:border-primary/60"
-              href="/auth/sign-up"
+              href="/auth/sign-in"
             >
               Get started
             </Link>
@@ -131,7 +131,7 @@ export default withoutAuth(function RootPage() {
                   className="group h-12 w-full bg-primary text-primary-foreground hover:bg-primary/90"
                   authCancelUrl={AUTH_CANCEL_URL}
                 >
-                  <Link href="/auth/sign-up">
+                  <Link href="/auth/sign-in">
                     <span className="font-semibold">Start writing</span>
                     <ArrowRight className="ml-2 h-5 w-5 transition-transform duration-200 group-hover:translate-x-1" />
                   </Link>
@@ -302,7 +302,7 @@ export default withoutAuth(function RootPage() {
               className="marketing-cta-animated-border group bg-primary text-primary-foreground hover:bg-primary/90 sm:w-52"
               authCancelUrl={AUTH_CANCEL_URL}
             >
-              <Link href="/auth/sign-up">
+              <Link href="/auth/sign-in">
                 <span className="font-semibold">Start writing</span>
                 <ArrowRight className="ml-2 h-5 w-5 transition-transform duration-200 group-hover:translate-x-1" />
               </Link>
@@ -329,7 +329,7 @@ export default withoutAuth(function RootPage() {
               </Link>
               <Link
                 className="transition hover:text-foreground"
-                href="/auth/sign-up"
+                href="/auth/sign-in"
               >
                 Start writing
               </Link>

@@ -5,6 +5,7 @@ import { type BetterAuthOptions, betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { oAuthProxy, organization } from "better-auth/plugins";
 import { eq } from "drizzle-orm";
+import { enforceInviteCodeForSignUp } from "./invite-code";
 import { stripeClient } from "./stripe-client";
 import { handleStripeWebhookEvent } from "./stripe-webhooks";
 import { createInitialUsagePeriodForUser } from "./usage/usage-period-lifecycle";
@@ -33,7 +34,20 @@ export function initAuth(options: {
     database: drizzleAdapter(db, {
       provider: "pg",
     }),
+    databaseHooks: {
+      user: {
+        create: {
+          before: async (user, context) => {
+            await enforceInviteCodeForSignUp({
+              context,
+              userId: typeof user.id === "string" ? user.id : undefined,
+            });
+          },
+        },
+      },
+    },
     emailAndPassword: {
+      disableSignUp: true,
       enabled: true,
     },
     plugins: [
@@ -101,11 +115,13 @@ export function initAuth(options: {
       github: {
         clientId: options.githubClientId,
         clientSecret: options.githubClientSecret,
+        disableImplicitSignUp: true,
         redirectURI: `${options.productionUrl}/api/auth/callback/github`,
       },
       google: {
         clientId: options.googleClientId,
         clientSecret: options.googleClientSecret,
+        disableImplicitSignUp: true,
         redirectURI: `${options.productionUrl}/api/auth/callback/google`,
       },
     },

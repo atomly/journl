@@ -6,9 +6,23 @@ export function generateStaticParams() {
   return Object.values(authViewPaths).map((pathname) => ({ pathname }));
 }
 
-async function AuthPage({ params }: { params: Promise<{ pathname: string }> }) {
+function getSingleSearchParam(value?: string | string[]) {
+  return Array.isArray(value) ? value[0] : value;
+}
+
+async function AuthPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ pathname: string }>;
+  searchParams: Promise<{ invite?: string | string[] }>;
+}) {
   const { pathname } = await params;
-  return <AuthView pathname={pathname} />;
+  const { invite } = await searchParams;
+
+  return (
+    <AuthView pathname={pathname} inviteCode={getSingleSearchParam(invite)} />
+  );
 }
 
 export default withoutAuth(AuthPage, {

@@ -5,10 +5,12 @@ export type UsageQuota = {
   remainingQuotaUsd: number;
   subscriptionType: "free" | "pro";
   usagePeriodId: string | null;
+  periodEnd: string | null;
 };
 
 export type UsageQuotaPeriodSnapshot = {
   id: string | null;
+  period_end?: string | null;
   plan: {
     quota: number;
   } | null;
@@ -19,15 +21,6 @@ export type UsageQuotaPeriodSnapshot = {
     total_cost: string | null;
   } | null;
 };
-
-function parseUsageCost(totalCost: string | null): number {
-  if (!totalCost) {
-    return 0;
-  }
-
-  const parsed = Number.parseFloat(totalCost);
-  return Number.isFinite(parsed) ? parsed : 0;
-}
 
 /**
  * Pure quota policy mapping.
@@ -50,9 +43,19 @@ export function getPeriodUsageQuota(
   return {
     canUse: currentUsageUsd < quotaUsd,
     currentUsageUsd,
+    periodEnd: period.period_end ?? null,
     quotaUsd,
     remainingQuotaUsd,
     subscriptionType: period.subscription ? "pro" : "free",
     usagePeriodId: period.id,
   };
+}
+
+function parseUsageCost(totalCost: string | null): number {
+  if (!totalCost) {
+    return 0;
+  }
+
+  const parsed = Number.parseFloat(totalCost);
+  return Number.isFinite(parsed) ? parsed : 0;
 }

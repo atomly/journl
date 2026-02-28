@@ -2,6 +2,7 @@ import { ComposerPrimitive, ThreadPrimitive } from "@assistant-ui/react";
 import {
   ComposerAction,
   ComposerInput,
+  ComposerQuotaNotice,
   ThreadScrollToBottom,
 } from "~/components/assistant-ui/thread-components";
 import {
@@ -55,8 +56,9 @@ export default function ChatDrawer() {
               <div className="sticky bottom-0 mt-3 flex w-full max-w-(--thread-max-width) flex-col items-center justify-end rounded-t-lg bg-sidebar pb-4">
                 <ThreadScrollToBottom />
                 <ComposerPrimitive.Root className="relative flex w-full flex-col rounded-lg border border-sidebar-border/80 bg-muted/45 focus-within:border-ring/20">
-                  <div className="relative gap-y-2 rounded-tl-lg rounded-tr-lg bg-background pt-2">
+                  <div className="relative space-y-2 rounded-tl-lg rounded-tr-lg bg-background pt-2">
                     <ComposerSources className="px-2" />
+                    <ComposerQuotaNotice />
                     <ComposerInput autoFocus className="w-full px-3 py-2" />
                   </div>
 

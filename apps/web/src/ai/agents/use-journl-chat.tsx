@@ -61,7 +61,7 @@ export function JournlChatProvider({
       messages,
       onToolCall: async ({ toolCall }) => {
         if (env.NODE_ENV === "development") {
-          console.debug("toolCall 👀", toolCall);
+          console.debug("[onToolCall]", toolCall);
         }
         // Check if it's a dynamic tool first for proper type narrowing
         if (toolCall.dynamic) {

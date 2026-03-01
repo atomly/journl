@@ -12,6 +12,7 @@ import { db } from "@acme/db/client";
 import { initTRPC, TRPCError } from "@trpc/server";
 import superjson from "superjson";
 import { ZodError, z } from "zod/v4";
+import { env } from "~/env";
 import { checkUsageQuota } from "~/usage/guards";
 
 /**
@@ -99,8 +100,10 @@ const timingMiddleware = t.middleware(async ({ next, path }) => {
 
   const result = await next();
 
-  const end = Date.now();
-  console.debug(`[TRPC] ${path} took ${end - start}ms to execute`);
+  if (env.NODE_ENV === "development") {
+    const end = Date.now();
+    console.debug(`[TRPC] ${path} took ${end - start}ms to execute`);
+  }
 
   return result;
 });

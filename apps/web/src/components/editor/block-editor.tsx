@@ -289,7 +289,7 @@ export function BlockEditor({
 
     // Leaving this here for debugging purposes because this logic is the wild west.
     if (debug) {
-      console.debug("[BlockEditor] transactions 👀", {
+      console.debug("[BlockEditor] transactions", {
         transactions: transactions.map((t) =>
           t.type === "block_remove" || t.type === "block_upsert"
             ? {

@@ -15,6 +15,7 @@ Important:
   - intent.mode = "replace": provide exact body content in intent.content to write deterministically.
   - intent.mode = "transform": request AI-driven drafting/rewrite based on editorPrompt.
   - intent.mode = "transform" defaults to scope="document"; set scope="selection" only when user explicitly wants selected blocks edited.
+  - Always pass intent as a structured tool argument. Do not JSON-encode the whole input inside editorPrompt.
 
 Rules:
 - Do not use for pure recall or analysis of prior notes; use search tools instead.

@@ -24,6 +24,15 @@ type ChatMessage = {
   }>;
 };
 
+type IntentSource = "input-intent" | "embedded-editorPrompt" | "default";
+
+type NormalizedManipulateEditorInput = {
+  targetEditor: ManipulateEditorInput["targetEditor"];
+  editorPrompt: string;
+  intent?: ManipulateEditorInput["intent"];
+  intentSource: IntentSource;
+};
+
 type ResolvedEditorIntent =
   | {
       mode: "replace";
@@ -46,10 +55,11 @@ export function useManipulateEditorTool() {
       let cleanUpBeforeChange: (() => void) | undefined;
 
       try {
-        const editor = getEditor(toolCall.input.targetEditor)(getEditors);
-        const intent = resolveEditorIntent(
+        const normalizedInput = normalizeManipulateEditorInput(
           toolCall.input as ManipulateEditorInput,
         );
+        const editor = getEditor(normalizedInput.targetEditor)(getEditors);
+        const intent = resolveEditorIntent(normalizedInput);
 
         if (intent.mode === "replace") {
           closeDrawer();
@@ -60,6 +70,9 @@ export function useManipulateEditorTool() {
 
           void chat.addToolOutput({
             output: {
+              diagnostics: {
+                intentSource: normalizedInput.intentSource,
+              },
               message:
                 "Applied deterministic editor replacement from provided content.",
               mode: "replace",
@@ -75,7 +88,7 @@ export function useManipulateEditorTool() {
         const aiExtension = getAIExtension(editor);
         const { prompt: editorPrompt, usedConversationContext } =
           buildEditorPrompt(
-            toolCall.input.editorPrompt,
+            normalizedInput.editorPrompt,
             chat.messages as ChatMessage[],
           );
         const selectionCount = getEditorSelections(editor).length;
@@ -107,6 +120,7 @@ export function useManipulateEditorTool() {
           void chat.addToolOutput({
             output: {
               diagnostics: {
+                intentSource: normalizedInput.intentSource,
                 promptChars: editorPrompt.length,
                 scope: intent.scope,
                 selectionCount,
@@ -130,6 +144,7 @@ export function useManipulateEditorTool() {
             output: {
               diagnostics: {
                 aiState: aiMenuState.status,
+                intentSource: normalizedInput.intentSource,
                 promptChars: editorPrompt.length,
                 scope: intent.scope,
                 selectionCount,
@@ -152,6 +167,7 @@ export function useManipulateEditorTool() {
             output: {
               diagnostics: {
                 aiState: aiMenuState.status,
+                intentSource: normalizedInput.intentSource,
                 promptChars: editorPrompt.length,
                 scope: intent.scope,
                 selectionCount,
@@ -173,6 +189,7 @@ export function useManipulateEditorTool() {
           output: {
             diagnostics: {
               aiState: aiMenuState.status,
+              intentSource: normalizedInput.intentSource,
               promptChars: editorPrompt.length,
               scope: intent.scope,
               selectionCount,
@@ -209,7 +226,7 @@ export function useManipulateEditorTool() {
 }
 
 function resolveEditorIntent(
-  input: ManipulateEditorInput,
+  input: NormalizedManipulateEditorInput,
 ): ResolvedEditorIntent {
   if (typeof input.intent === "string") {
     return {
@@ -449,6 +466,111 @@ function toErrorMessage(error: unknown) {
   } catch {
     return String(error);
   }
+}
+
+function normalizeManipulateEditorInput(
+  input: ManipulateEditorInput,
+): NormalizedManipulateEditorInput {
+  if (input.intent !== undefined) {
+    return {
+      ...input,
+      intentSource: "input-intent",
+    };
+  }
+
+  const embedded = tryParseEmbeddedInputFromEditorPrompt(input.editorPrompt);
+  if (embedded?.intent !== undefined) {
+    return {
+      editorPrompt: embedded.editorPrompt ?? input.editorPrompt,
+      intent: embedded.intent,
+      intentSource: "embedded-editorPrompt",
+      targetEditor: input.targetEditor,
+    };
+  }
+
+  return {
+    ...input,
+    intentSource: "default",
+  };
+}
+
+function tryParseEmbeddedInputFromEditorPrompt(editorPrompt: string) {
+  const trimmed = editorPrompt.trim();
+  if (!trimmed.startsWith("{") || !trimmed.endsWith("}")) {
+    return;
+  }
+
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(trimmed);
+  } catch {
+    return;
+  }
+
+  if (!isRecord(parsed)) {
+    return;
+  }
+
+  const intent =
+    parseIntentValue(parsed.intent) ||
+    parseIntentValue(parsed.mode ? parsed : undefined);
+
+  if (!intent) {
+    return;
+  }
+
+  const normalizedPrompt =
+    typeof parsed.editorPrompt === "string"
+      ? parsed.editorPrompt
+      : typeof parsed.prompt === "string"
+        ? parsed.prompt
+        : undefined;
+
+  return {
+    editorPrompt: normalizedPrompt,
+    intent,
+  };
+}
+
+function parseIntentValue(
+  value: unknown,
+): ManipulateEditorInput["intent"] | undefined {
+  if (value === "transform" || value === "replace") {
+    return value;
+  }
+
+  if (!isRecord(value) || typeof value.mode !== "string") {
+    return;
+  }
+
+  if (value.mode === "transform") {
+    return {
+      mode: "transform",
+      operation:
+        typeof value.operation === "string" ? value.operation : undefined,
+      scope:
+        value.scope === "document" || value.scope === "selection"
+          ? value.scope
+          : undefined,
+    };
+  }
+
+  if (value.mode === "replace") {
+    if (typeof value.content !== "string" || value.content.length === 0) {
+      return;
+    }
+
+    return {
+      content: value.content,
+      format:
+        value.format === "markdown" || value.format === "plain-text"
+          ? value.format
+          : undefined,
+      mode: "replace",
+    };
+  }
+
+  return;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

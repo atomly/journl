@@ -25,6 +25,12 @@ export const zEditorIntent = z
         .describe(
           "Optional short operation label, for example `rewrite`, `expand`, or `restructure`.",
         ),
+      scope: z
+        .enum(["document", "selection"])
+        .optional()
+        .describe(
+          "Target scope for transform edits. Defaults to `document` to avoid accidental selection-only rewrites.",
+        ),
     }),
     z.object({
       content: z

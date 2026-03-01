@@ -14,6 +14,7 @@ Important:
 - Use the V2 intent contract when possible:
   - intent.mode = "replace": provide exact body content in intent.content to write deterministically.
   - intent.mode = "transform": request AI-driven drafting/rewrite based on editorPrompt.
+  - intent.mode = "transform" defaults to scope="document"; set scope="selection" only when user explicitly wants selected blocks edited.
 
 Rules:
 - Do not use for pure recall or analysis of prior notes; use search tools instead.

@@ -32,6 +32,7 @@ type ResolvedEditorIntent =
     }
   | {
       mode: "transform";
+      scope: "document" | "selection";
     };
 
 const MAX_CONTEXT_MESSAGES = 6;
@@ -77,6 +78,11 @@ export function useManipulateEditorTool() {
             toolCall.input.editorPrompt,
             chat.messages as ChatMessage[],
           );
+        const selectionCount = getEditorSelections(editor).length;
+        const useSelection =
+          intent.mode === "transform" &&
+          intent.scope === "selection" &&
+          selectionCount > 0;
 
         closeDrawer();
 
@@ -91,7 +97,7 @@ export function useManipulateEditorTool() {
         await aiExtension.invokeAI({
           deleteEmptyCursorBlock: false,
           userPrompt: editorPrompt,
-          useSelection: getEditorSelections(editor).length > 0,
+          useSelection,
         });
 
         const aiMenuState = aiExtension.store.state.aiMenuState;
@@ -102,7 +108,10 @@ export function useManipulateEditorTool() {
             output: {
               diagnostics: {
                 promptChars: editorPrompt.length,
+                scope: intent.scope,
+                selectionCount,
                 usedConversationContext,
+                useSelection,
               },
               message:
                 "Editor AI request finished without a reviewable draft. Retry with a more explicit prompt or use intent.mode=replace.",
@@ -122,7 +131,10 @@ export function useManipulateEditorTool() {
               diagnostics: {
                 aiState: aiMenuState.status,
                 promptChars: editorPrompt.length,
+                scope: intent.scope,
+                selectionCount,
                 usedConversationContext,
+                useSelection,
               },
               message: `Editor AI failed before producing a complete draft: ${toErrorMessage(aiMenuState.error)}`,
               mode: "transform",
@@ -141,7 +153,10 @@ export function useManipulateEditorTool() {
               diagnostics: {
                 aiState: aiMenuState.status,
                 promptChars: editorPrompt.length,
+                scope: intent.scope,
+                selectionCount,
                 usedConversationContext,
+                useSelection,
               },
               message: `Editor AI finished with unexpected state \`${aiMenuState.status}\` and did not produce a reviewable draft.`,
               mode: "transform",
@@ -159,7 +174,10 @@ export function useManipulateEditorTool() {
             diagnostics: {
               aiState: aiMenuState.status,
               promptChars: editorPrompt.length,
+              scope: intent.scope,
+              selectionCount,
               usedConversationContext,
+              useSelection,
             },
             message:
               "Draft ready in the editor. Please accept or reject the suggested changes.",
@@ -196,6 +214,14 @@ function resolveEditorIntent(
   if (typeof input.intent === "string") {
     return {
       mode: "transform",
+      scope: "document",
+    };
+  }
+
+  if (input.intent?.mode === "transform") {
+    return {
+      mode: "transform",
+      scope: input.intent.scope ?? "document",
     };
   }
 
@@ -209,6 +235,7 @@ function resolveEditorIntent(
 
   return {
     mode: "transform",
+    scope: "document",
   };
 }
 
@@ -330,6 +357,8 @@ function buildEditorPrompt(editorPrompt: string, messages: ChatMessage[]) {
   return {
     prompt: [
       "Use this conversation context for grounding and user intent. Keep the document self-contained and avoid process notes unless explicitly requested.",
+      "If the user asks for a standalone page or full rewrite, provide full body content rather than short edit notes.",
+      "Do not output labels like `Edit:` or change-log style notes unless the user explicitly asks for them.",
       "<conversation_context>",
       conversationContext,
       "</conversation_context>",

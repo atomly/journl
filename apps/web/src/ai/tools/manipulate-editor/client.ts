@@ -193,6 +193,12 @@ export function useManipulateEditorTool() {
 function resolveEditorIntent(
   input: ManipulateEditorInput,
 ): ResolvedEditorIntent {
+  if (typeof input.intent === "string") {
+    return {
+      mode: "transform",
+    };
+  }
+
   if (input.intent?.mode === "replace") {
     return {
       content: input.intent.content,

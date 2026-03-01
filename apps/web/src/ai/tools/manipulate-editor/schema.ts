@@ -50,9 +50,15 @@ export const zEditorIntent = z
     "V2 editor intent contract. Prefer `replace` when you already have exact body content in the conversation.",
   );
 
+export const zLegacyEditorIntent = z
+  .enum(["transform", "replace"])
+  .describe(
+    'Legacy shorthand for intent. `transform` is equivalent to `{ mode: "transform" }`. `replace` is accepted for compatibility and treated as transform unless full replace payload is provided.',
+  );
+
 export const zManipulateEditorInput = z.object({
   intent: z
-    .optional(zEditorIntent)
+    .optional(z.union([zEditorIntent, zLegacyEditorIntent]))
     .describe(
       "Optional V2 editor intent contract. If omitted, defaults to AI transform mode using `editorPrompt`.",
     ),

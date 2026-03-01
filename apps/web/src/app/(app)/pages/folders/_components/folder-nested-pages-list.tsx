@@ -19,15 +19,22 @@ import {
   useMutation,
   useQueryClient,
 } from "@tanstack/react-query";
-import { ChevronRight, FileText, Folder as FolderIcon } from "lucide-react";
+import {
+  ChevronRight,
+  FileText,
+  Folder as FolderIcon,
+  Pencil,
+} from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Fragment, useCallback, useEffect, useRef, useState } from "react";
+import { Button } from "~/components/ui/button";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from "~/components/ui/collapsible";
+import { Input } from "~/components/ui/input";
 import { useSidebar } from "~/components/ui/sidebar";
 import { Skeleton } from "~/components/ui/skeleton";
 import { cn } from "~/lib/cn";
@@ -37,10 +44,16 @@ import {
   restoreQueries,
   snapshotQueries,
   updateNode,
+  updatePageTitleInNestedPages,
 } from "~/trpc/cache/tree-cache";
 import { getInfiniteSidebarTreeQueryOptions } from "~/trpc/options/sidebar-tree-query-options";
 import { useTRPC } from "~/trpc/react";
 import { AppSidebarTreeActions } from "../../../@appSidebar/_components/app-sidebar-tree-actions";
+import {
+  DeleteFolderButton,
+  DeleteFolderDialog,
+  DeleteFolderDialogTrigger,
+} from "../../../@appSidebar/_components/delete-folder-button";
 import {
   DeletePageButton,
   DeletePageDialog,
@@ -54,6 +67,8 @@ const DROP_ZONE_CLASSNAME = "h-1 rounded-sm transition-colors";
 const INFINITE_SCROLL_ROOT_MARGIN = "120px 0px";
 const DRAG_CLICK_SUPPRESSION_MS = 200;
 const ROOT_PARENT_KEY = "root";
+const MAX_PAGE_TITLE_LENGTH = 500;
+const MAX_FOLDER_TITLE_LENGTH = 500;
 const PAGE_DATE_FORMATTER = new Intl.DateTimeFormat(undefined, {
   day: "numeric",
   month: "numeric",
@@ -98,6 +113,7 @@ type MoveMutationContext = {
 
 type TreeLevelProps = {
   activeDragId: string | null;
+  itemIndentClassName: string;
   isDnDEnabled: boolean;
   onFolderInsideHover: (folderNodeId: string) => void;
   openFolders: Record<string, boolean>;
@@ -223,10 +239,12 @@ function parseDropTarget(id: unknown): DropTarget | null {
 function FolderTreeDropZone({
   className,
   dropId,
+  itemIndentClassName,
   isDnDEnabled,
 }: {
   className?: string;
   dropId: string;
+  itemIndentClassName: string;
   isDnDEnabled: boolean;
 }) {
   const { isOver, setNodeRef } = useDroppable({
@@ -238,7 +256,7 @@ function FolderTreeDropZone({
   }
 
   return (
-    <div className={cn(TREE_ITEM_INDENT_CLASSNAME, "py-0", className)}>
+    <div className={cn(itemIndentClassName, "py-0", className)}>
       <div
         ref={setNodeRef}
         className={cn(
@@ -254,17 +272,25 @@ function FolderTreeDropZone({
 function DraggablePageRow({
   activeDragId,
   isDnDEnabled,
+  itemIndentClassName,
   page,
   parentNodeId,
   shouldSuppressClick,
 }: {
   activeDragId: string | null;
   isDnDEnabled: boolean;
+  itemIndentClassName: string;
   page: TreePage;
   parentNodeId: string | null;
   shouldSuppressClick: () => boolean;
 }) {
+  const trpc = useTRPC();
+  const queryClient = useQueryClient();
   const pathname = usePathname();
+  const { isMobile } = useSidebar();
+  const [isEditing, setIsEditing] = useState(false);
+  const [draftTitle, setDraftTitle] = useState(page.title);
+  const shouldSkipBlurCommitRef = useRef(false);
   const itemRef: FolderTreeItemRef = {
     kind: "page",
     nodeId: page.node_id,
@@ -272,18 +298,98 @@ function DraggablePageRow({
   const draggableId = getDragId(itemRef);
   const pageHref = `/pages/${page.id}`;
   const isActive = pathname === pageHref;
+  const treeQueryFilter = trpc.tree.getChildrenPaginated.infiniteQueryFilter();
+  const nestedFolderPagesQueryFilter =
+    trpc.tree.getNestedPagesPaginated.infiniteQueryFilter();
+  const { mutate: updatePageTitle } = useMutation(
+    trpc.pages.updateTitle.mutationOptions({}),
+  );
   const { attributes, listeners, setNodeRef, transform } = useDraggable({
     data: {
       item: itemRef,
       parentNodeId,
     } satisfies FolderTreeDragData,
-    disabled: !isDnDEnabled,
+    disabled: !isDnDEnabled || isEditing,
     id: draggableId,
   });
 
+  useEffect(() => {
+    setDraftTitle(page.title);
+  }, [page.title]);
+
+  const commitTitle = useCallback(
+    (nextTitle: string) => {
+      if (nextTitle === page.title) {
+        return;
+      }
+
+      queryClient.setQueryData(
+        trpc.pages.getById.queryOptions({ id: page.id }).queryKey,
+        (old) => {
+          if (!old) {
+            return old;
+          }
+
+          return {
+            ...old,
+            title: nextTitle,
+            updated_at: new Date().toISOString(),
+          };
+        },
+      );
+
+      updateNode({
+        nodeId: page.node_id,
+        queryClient,
+        queryFilter: treeQueryFilter,
+        updater: (item) =>
+          item.kind === "page"
+            ? {
+                ...item,
+                page: {
+                  ...item.page,
+                  title: nextTitle,
+                },
+              }
+            : item,
+      });
+
+      updatePageTitleInNestedPages({
+        pageId: page.id,
+        queryClient,
+        queryFilter: nestedFolderPagesQueryFilter,
+        title: nextTitle,
+      });
+
+      updatePageTitle(
+        { id: page.id, title: nextTitle },
+        {
+          onError: () => {
+            void queryClient.invalidateQueries({
+              queryKey: trpc.pages.getById.queryOptions({ id: page.id })
+                .queryKey,
+            });
+            void queryClient.invalidateQueries(treeQueryFilter);
+            void queryClient.invalidateQueries(nestedFolderPagesQueryFilter);
+          },
+        },
+      );
+    },
+    [
+      nestedFolderPagesQueryFilter,
+      page.id,
+      page.node_id,
+      page.title,
+      queryClient,
+      treeQueryFilter,
+      trpc.pages.getById,
+      updatePageTitle,
+    ],
+  );
+
   return (
     <DeletePageDialog page={page}>
-      <div className={cn(TREE_ITEM_INDENT_CLASSNAME, "py-0")}>
+      <div className={cn(itemIndentClassName, "py-0")}>
         <div
           ref={setNodeRef}
           className={cn(
@@ -300,6 +406,10 @@ function DraggablePageRow({
               : undefined
           }
           onClickCapture={(event) => {
+            if (isEditing) {
+              return;
+            }
+
             if (!shouldSuppressClick()) {
               return;
             }
@@ -307,29 +417,103 @@ function DraggablePageRow({
             event.preventDefault();
             event.stopPropagation();
           }}
-          {...(isDnDEnabled
+          {...(isDnDEnabled && !isEditing
             ? {
                 ...attributes,
                 ...listeners,
               }
             : undefined)}
         >
-          <Link
-            href={pageHref}
-            className="flex min-w-0 flex-1 items-center justify-between gap-2"
+          {isEditing ? (
+            <div className="flex min-w-0 flex-1 items-center justify-between gap-2">
+              <span className="flex min-w-0 flex-1 items-center gap-2.5">
+                <span className="inline-flex size-6 shrink-0 items-center justify-center rounded-md border bg-background">
+                  <FileText className="size-3 text-muted-foreground" />
+                </span>
+                <Input
+                  autoFocus
+                  maxLength={MAX_PAGE_TITLE_LENGTH}
+                  value={draftTitle}
+                  onBlur={() => {
+                    if (shouldSkipBlurCommitRef.current) {
+                      shouldSkipBlurCommitRef.current = false;
+                      return;
+                    }
+
+                    setIsEditing(false);
+                    commitTitle(draftTitle);
+                  }}
+                  onChange={(event) => {
+                    setDraftTitle(event.target.value);
+                  }}
+                  onFocus={(event) => {
+                    event.currentTarget.select();
+                  }}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter") {
+                      event.preventDefault();
+                      event.currentTarget.blur();
+                    }
+
+                    if (event.key === "Escape") {
+                      event.preventDefault();
+                      shouldSkipBlurCommitRef.current = true;
+                      setDraftTitle(page.title);
+                      setIsEditing(false);
+                    }
+                  }}
+                  onPointerDown={(event) => {
+                    event.stopPropagation();
+                  }}
+                  placeholder="New page"
+                  className="h-8"
+                />
+              </span>
+              <span className="shrink-0 text-muted-foreground text-xs">
+                {PAGE_DATE_FORMATTER.format(new Date(page.updated_at))}
+              </span>
+            </div>
+          ) : (
+            <Link
+              href={pageHref}
+              className="flex min-w-0 flex-1 items-center justify-between gap-2"
+            >
+              <span className="flex min-w-0 items-center gap-2.5">
+                <span className="inline-flex size-6 shrink-0 items-center justify-center rounded-md border bg-background">
+                  <FileText className="size-3 text-muted-foreground" />
+                </span>
+                <span className="truncate font-medium">
+                  {page.title || "New page"}
+                </span>
+              </span>
+              <span className="shrink-0 text-muted-foreground text-xs">
+                {PAGE_DATE_FORMATTER.format(new Date(page.updated_at))}
+              </span>
+            </Link>
+          )}
+
+          <Button
+            type="button"
+            aria-label="Rename page"
+            variant="ghost"
+            size="icon"
+            className={cn(
+              "h-8 w-8 rounded-md bg-transparent! p-0 text-muted-foreground",
+              !isMobile &&
+                "pointer-events-none invisible opacity-0 transition-opacity group-focus-within/tree-row:pointer-events-auto group-focus-within/tree-row:visible group-focus-within/tree-row:opacity-100 group-hover/tree-row:pointer-events-auto group-hover/tree-row:visible group-hover/tree-row:opacity-100",
+            )}
+            onPointerDown={(event) => {
+              event.stopPropagation();
+            }}
+            onClick={(event) => {
+              event.preventDefault();
+              event.stopPropagation();
+              setDraftTitle(page.title);
+              setIsEditing(true);
+            }}
           >
-            <span className="flex min-w-0 items-center gap-2.5">
-              <span className="inline-flex size-6 shrink-0 items-center justify-center rounded-md border bg-background">
-                <FileText className="size-3 text-muted-foreground" />
-              </span>
-              <span className="truncate font-medium">
-                {page.title || "New page"}
-              </span>
-            </span>
-            <span className="shrink-0 text-muted-foreground text-xs">
-              {PAGE_DATE_FORMATTER.format(new Date(page.updated_at))}
-            </span>
-          </Link>
+            <Pencil className="size-3.5" />
+          </Button>
 
           <DeletePageDialogTrigger asChild>
             <DeletePageButton className="pointer-events-none invisible bg-transparent! pr-0! text-destructive! opacity-0 transition-opacity group-focus-within/tree-row:pointer-events-auto group-focus-within/tree-row:visible group-focus-within/tree-row:opacity-100 group-hover/tree-row:pointer-events-auto group-hover/tree-row:visible group-hover/tree-row:opacity-100" />
@@ -344,6 +528,7 @@ function DraggableFolderRow({
   activeDragId,
   folder,
   isDnDEnabled,
+  itemIndentClassName,
   onFolderInsideHover,
   openFolders,
   parentNodeId,
@@ -353,13 +538,20 @@ function DraggableFolderRow({
   activeDragId: string | null;
   folder: TreeFolder;
   isDnDEnabled: boolean;
+  itemIndentClassName: string;
   onFolderInsideHover: (folderNodeId: string) => void;
   openFolders: Record<string, boolean>;
   parentNodeId: string | null;
   setFolderOpen: (folderNodeId: string, open: boolean) => void;
   shouldSuppressClick: () => boolean;
 }) {
+  const trpc = useTRPC();
+  const queryClient = useQueryClient();
   const pathname = usePathname();
+  const { isMobile } = useSidebar();
+  const [isEditing, setIsEditing] = useState(false);
+  const [draftName, setDraftName] = useState(folder.name);
+  const shouldSkipBlurCommitRef = useRef(false);
   const itemRef: FolderTreeItemRef = {
     kind: "folder",
     nodeId: folder.node_id,
@@ -373,7 +565,7 @@ function DraggableFolderRow({
       item: itemRef,
       parentNodeId,
     } satisfies FolderTreeDragData,
-    disabled: !isDnDEnabled,
+    disabled: !isDnDEnabled || isEditing,
     id: draggableId,
   });
   const insideDropId = getInsideDropId(folder.node_id);
@@ -388,111 +580,291 @@ function DraggableFolderRow({
     }
   }, [folder.node_id, isOverInside, onFolderInsideHover]);
 
-  return (
-    <Collapsible
-      open={isOpen}
-      onOpenChange={(open) => {
-        setFolderOpen(folder.node_id, open);
-      }}
-      className="group/folder-collapsible"
-    >
-      <div className={cn(TREE_ITEM_INDENT_CLASSNAME, "py-0")}>
-        <div
-          ref={setNodeRef}
-          className={cn(
-            TREE_ROW_CLASSNAME,
-            "group/folder-item",
-            isActive && "bg-primary/5 ring-1 ring-primary/20",
-            activeDragId === draggableId && "opacity-60",
-          )}
-          style={
-            transform
-              ? {
-                  transform: CSS.Translate.toString(transform),
-                }
-              : undefined
+  useEffect(() => {
+    setDraftName(folder.name);
+  }, [folder.name]);
+
+  const treeQueryFilter = trpc.tree.getChildrenPaginated.infiniteQueryFilter();
+  const { mutate: renameFolder } = useMutation(
+    trpc.folders.rename.mutationOptions({}),
+  );
+
+  const commitFolderName = useCallback(
+    (nextName: string) => {
+      if (nextName === folder.name) {
+        return;
+      }
+
+      queryClient.setQueryData(
+        trpc.folders.getById.queryOptions({ id: folder.id }).queryKey,
+        (old) => {
+          if (!old) {
+            return old;
           }
-          onClickCapture={(event) => {
-            if (!shouldSuppressClick()) {
-              return;
-            }
 
-            event.preventDefault();
-            event.stopPropagation();
-          }}
-        >
+          return {
+            ...old,
+            name: nextName,
+            updated_at: new Date().toISOString(),
+          };
+        },
+      );
+
+      queryClient.setQueryData(
+        trpc.folders.getByUser.queryOptions().queryKey,
+        (old) => {
+          if (!old) {
+            return old;
+          }
+
+          return old.map((item) =>
+            item.id === folder.id ? { ...item, name: nextName } : item,
+          );
+        },
+      );
+
+      updateNode({
+        nodeId: folder.node_id,
+        queryClient,
+        queryFilter: treeQueryFilter,
+        updater: (item) =>
+          item.kind === "folder"
+            ? {
+                ...item,
+                folder: {
+                  ...item.folder,
+                  name: nextName,
+                },
+              }
+            : item,
+      });
+
+      renameFolder(
+        {
+          id: folder.id,
+          name: nextName,
+        },
+        {
+          onError: () => {
+            void queryClient.invalidateQueries({
+              queryKey: trpc.folders.getById.queryOptions({ id: folder.id })
+                .queryKey,
+            });
+            void queryClient.invalidateQueries({
+              queryKey: trpc.folders.getByUser.queryOptions().queryKey,
+            });
+            void queryClient.invalidateQueries(treeQueryFilter);
+          },
+        },
+      );
+    },
+    [
+      folder.id,
+      folder.name,
+      folder.node_id,
+      queryClient,
+      renameFolder,
+      treeQueryFilter,
+      trpc.folders.getById,
+      trpc.folders.getByUser,
+    ],
+  );
+
+  return (
+    <DeleteFolderDialog folder={folder}>
+      <Collapsible
+        open={isOpen}
+        onOpenChange={(open) => {
+          setFolderOpen(folder.node_id, open);
+        }}
+        className="group/folder-collapsible"
+      >
+        <div className={cn(itemIndentClassName, "py-0")}>
           <div
-            {...(isDnDEnabled
-              ? {
-                  ...attributes,
-                  ...listeners,
-                }
-              : undefined)}
-            ref={setInsideDropNodeRef}
+            ref={setNodeRef}
             className={cn(
-              "relative flex min-w-0 flex-1 items-center gap-1.5 rounded-md pr-7",
-              isOverInside && isDnDEnabled && "bg-primary/10",
+              TREE_ROW_CLASSNAME,
+              "group/folder-item",
+              isActive && "bg-primary/5 ring-1 ring-primary/20",
+              activeDragId === draggableId && "opacity-60",
             )}
+            style={
+              transform
+                ? {
+                    transform: CSS.Translate.toString(transform),
+                  }
+                : undefined
+            }
+            onClickCapture={(event) => {
+              if (isEditing) {
+                return;
+              }
+
+              if (!shouldSuppressClick()) {
+                return;
+              }
+
+              event.preventDefault();
+              event.stopPropagation();
+            }}
           >
-            <CollapsibleTrigger asChild>
-              <button
-                type="button"
-                className="flex h-6 w-5 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-                aria-label={isOpen ? "Collapse folder" : "Expand folder"}
-              >
-                <ChevronRight className="size-3 transition-transform duration-200 group-data-[state=open]/folder-collapsible:rotate-90" />
-              </button>
-            </CollapsibleTrigger>
-
-            <Link
-              href={folderHref}
-              className="flex w-full min-w-0 items-center gap-2"
+            <div
+              {...(isDnDEnabled && !isEditing
+                ? {
+                    ...attributes,
+                    ...listeners,
+                  }
+                : undefined)}
+              ref={setInsideDropNodeRef}
+              className={cn(
+                "flex min-w-0 flex-1 items-center gap-1.5 rounded-md",
+                isOverInside && isDnDEnabled && "bg-primary/10",
+              )}
             >
-              <span className="inline-flex size-6 shrink-0 items-center justify-center rounded-md border bg-background">
-                <FolderIcon className="size-3 text-primary" />
-              </span>
-              <span className="line-clamp-1 min-w-0 flex-1 truncate text-left font-medium">
-                {folder.name || "New folder"}
-              </span>
-            </Link>
+              <CollapsibleTrigger asChild>
+                <button
+                  type="button"
+                  className="flex h-6 w-5 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                  aria-label={isOpen ? "Collapse folder" : "Expand folder"}
+                >
+                  <ChevronRight className="size-3 transition-transform duration-200 group-data-[state=open]/folder-collapsible:rotate-90" />
+                </button>
+              </CollapsibleTrigger>
 
-            <div className="absolute inset-y-0 right-0 flex items-center">
-              <AppSidebarTreeActions
-                kind="folder"
-                folder={folder}
-                parentNodeId={folder.node_id}
-                triggerVariant="inline"
-                onCreateStart={() => {
-                  setFolderOpen(folder.node_id, true);
-                }}
-                onCreateSuccess={() => {
-                  setFolderOpen(folder.node_id, true);
-                }}
-              />
+              {isEditing ? (
+                <span className="flex min-w-0 flex-1 items-center gap-2">
+                  <span className="inline-flex size-6 shrink-0 items-center justify-center rounded-md border bg-background">
+                    <FolderIcon className="size-3 text-primary" />
+                  </span>
+                  <Input
+                    autoFocus
+                    maxLength={MAX_FOLDER_TITLE_LENGTH}
+                    value={draftName}
+                    onBlur={() => {
+                      if (shouldSkipBlurCommitRef.current) {
+                        shouldSkipBlurCommitRef.current = false;
+                        return;
+                      }
+
+                      setIsEditing(false);
+                      commitFolderName(draftName);
+                    }}
+                    onChange={(event) => {
+                      setDraftName(event.target.value);
+                    }}
+                    onFocus={(event) => {
+                      event.currentTarget.select();
+                    }}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter") {
+                        event.preventDefault();
+                        event.currentTarget.blur();
+                      }
+
+                      if (event.key === "Escape") {
+                        event.preventDefault();
+                        shouldSkipBlurCommitRef.current = true;
+                        setDraftName(folder.name);
+                        setIsEditing(false);
+                      }
+                    }}
+                    onPointerDown={(event) => {
+                      event.stopPropagation();
+                    }}
+                    placeholder="New folder"
+                    className="h-8"
+                  />
+                </span>
+              ) : (
+                <Link
+                  href={folderHref}
+                  className="flex w-full min-w-0 items-center gap-2"
+                >
+                  <span className="inline-flex size-6 shrink-0 items-center justify-center rounded-md border bg-background">
+                    <FolderIcon className="size-3 text-primary" />
+                  </span>
+                  <span className="line-clamp-1 min-w-0 flex-1 truncate text-left font-medium">
+                    {folder.name || "New folder"}
+                  </span>
+                </Link>
+              )}
+
+              <div className="ml-1 flex shrink-0 items-center gap-0.5">
+                <Button
+                  type="button"
+                  aria-label="Rename folder"
+                  variant="ghost"
+                  size="icon"
+                  className={cn(
+                    "h-8 w-8 rounded-md bg-transparent! p-0 text-muted-foreground",
+                    !isMobile &&
+                      "pointer-events-none invisible opacity-0 transition-opacity group-focus-within/folder-item:pointer-events-auto group-focus-within/folder-item:visible group-focus-within/folder-item:opacity-100 group-hover/folder-item:pointer-events-auto group-hover/folder-item:visible group-hover/folder-item:opacity-100",
+                  )}
+                  onPointerDown={(event) => {
+                    event.stopPropagation();
+                  }}
+                  onClick={(event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    setDraftName(folder.name);
+                    setIsEditing(true);
+                  }}
+                >
+                  <Pencil className="size-3.5" />
+                </Button>
+
+                <DeleteFolderDialogTrigger asChild>
+                  <DeleteFolderButton
+                    className={cn(
+                      "h-8 w-8 rounded-md bg-transparent! p-0 text-destructive!",
+                      !isMobile &&
+                        "pointer-events-none invisible opacity-0 transition-opacity group-focus-within/folder-item:pointer-events-auto group-focus-within/folder-item:visible group-focus-within/folder-item:opacity-100 group-hover/folder-item:pointer-events-auto group-hover/folder-item:visible group-hover/folder-item:opacity-100",
+                    )}
+                    onPointerDown={(event) => {
+                      event.stopPropagation();
+                    }}
+                  />
+                </DeleteFolderDialogTrigger>
+
+                <AppSidebarTreeActions
+                  kind="folder"
+                  folder={folder}
+                  parentNodeId={folder.node_id}
+                  triggerVariant="inline"
+                  onCreateStart={() => {
+                    setFolderOpen(folder.node_id, true);
+                  }}
+                  onCreateSuccess={() => {
+                    setFolderOpen(folder.node_id, true);
+                  }}
+                />
+              </div>
             </div>
           </div>
-        </div>
 
-        <CollapsibleContent className="mt-0.5">
-          <div className="space-y-0.5">
-            <FolderTreeLevel
-              activeDragId={activeDragId}
-              isDnDEnabled={isDnDEnabled}
-              onFolderInsideHover={onFolderInsideHover}
-              openFolders={openFolders}
-              parentNodeId={folder.node_id}
-              setFolderOpen={setFolderOpen}
-              shouldSuppressClick={shouldSuppressClick}
-            />
-          </div>
-        </CollapsibleContent>
-      </div>
-    </Collapsible>
+          <CollapsibleContent className="mt-0.5">
+            <div className="space-y-0.5">
+              <FolderTreeLevel
+                activeDragId={activeDragId}
+                itemIndentClassName={TREE_ITEM_INDENT_CLASSNAME}
+                isDnDEnabled={isDnDEnabled}
+                onFolderInsideHover={onFolderInsideHover}
+                openFolders={openFolders}
+                parentNodeId={folder.node_id}
+                setFolderOpen={setFolderOpen}
+                shouldSuppressClick={shouldSuppressClick}
+              />
+            </div>
+          </CollapsibleContent>
+        </div>
+      </Collapsible>
+    </DeleteFolderDialog>
   );
 }
 
 function FolderTreeLevel({
   activeDragId,
+  itemIndentClassName,
   isDnDEnabled,
   onFolderInsideHover,
   openFolders,
@@ -552,7 +924,7 @@ function FolderTreeLevel({
   return (
     <>
       {shouldShowInitialSkeleton ? (
-        <div className={cn(TREE_ITEM_INDENT_CLASSNAME, "py-0")}>
+        <div className={cn(itemIndentClassName, "py-0")}>
           <Skeleton className="h-9 w-full rounded-lg" />
         </div>
       ) : null}
@@ -560,6 +932,7 @@ function FolderTreeLevel({
       {items.length === 0 && !shouldShowInitialSkeleton ? (
         <FolderTreeDropZone
           dropId={getParentDropId(parentNodeId)}
+          itemIndentClassName={itemIndentClassName}
           isDnDEnabled={isDnDEnabled}
         />
       ) : null}
@@ -572,6 +945,7 @@ function FolderTreeLevel({
                 anchorEdgeId: item.edge_id,
                 parentNodeId,
               })}
+              itemIndentClassName={itemIndentClassName}
               isDnDEnabled={isDnDEnabled}
             />
 
@@ -580,6 +954,7 @@ function FolderTreeLevel({
                 activeDragId={activeDragId}
                 folder={item.folder}
                 isDnDEnabled={isDnDEnabled}
+                itemIndentClassName={itemIndentClassName}
                 onFolderInsideHover={onFolderInsideHover}
                 openFolders={openFolders}
                 parentNodeId={parentNodeId}
@@ -590,6 +965,7 @@ function FolderTreeLevel({
               <DraggablePageRow
                 activeDragId={activeDragId}
                 isDnDEnabled={isDnDEnabled}
+                itemIndentClassName={itemIndentClassName}
                 page={item.page}
                 parentNodeId={parentNodeId}
                 shouldSuppressClick={shouldSuppressClick}
@@ -601,6 +977,7 @@ function FolderTreeLevel({
                 anchorEdgeId: item.edge_id,
                 parentNodeId,
               })}
+              itemIndentClassName={itemIndentClassName}
               isDnDEnabled={isDnDEnabled}
             />
           </Fragment>
@@ -608,12 +985,12 @@ function FolderTreeLevel({
       })}
 
       {isFetchingNextPage ? (
-        <div className={cn(TREE_ITEM_INDENT_CLASSNAME, "py-0")}>
+        <div className={cn(itemIndentClassName, "py-0")}>
           <Skeleton className="h-9 w-full rounded-lg" />
         </div>
       ) : null}
 
-      <div className={cn(TREE_ITEM_INDENT_CLASSNAME, "py-0")} aria-hidden>
+      <div className={cn(itemIndentClassName, "py-0")} aria-hidden>
         <div ref={loadMoreRef} className="h-px w-full" />
       </div>
     </>
@@ -889,6 +1266,7 @@ export function FolderNestedPagesList({
           <div className="space-y-0.5">
             <FolderTreeLevel
               activeDragId={activeDragId}
+              itemIndentClassName=""
               isDnDEnabled={isDnDEnabled}
               onFolderInsideHover={handleFolderInsideHover}
               openFolders={openFolders}

@@ -18,13 +18,56 @@ import { startModelUsage } from "~/workflows/model-usage";
 const handler = withAuthGuard(
   withUsageGuard(
     async ({ user }, req: NextRequest) => {
-      const { messages, toolDefinitions } = await req.json();
+      const requestId = crypto.randomUUID();
+      const startedAt = Date.now();
+      const payload = (await req.json()) as {
+        messages?: unknown;
+        toolDefinitions?: unknown;
+      };
+
+      if (
+        !Array.isArray(payload.messages) ||
+        !isRecord(payload.toolDefinitions)
+      ) {
+        return Response.json(
+          {
+            error: "Invalid BlockNote AI payload.",
+            requestId,
+          },
+          {
+            status: 400,
+          },
+        );
+      }
+
+      const messages = payload.messages as Parameters<
+        typeof injectDocumentStateMessages
+      >[0];
+      const toolDefinitions = payload.toolDefinitions as Parameters<
+        typeof toolDefinitionsToToolSet
+      >[0];
+
+      if (env.NODE_ENV === "development") {
+        console.debug("[BlockNoteAI][request]", {
+          hasDocumentState: hasDocumentStateMessage(messages),
+          messageCount: messages.length,
+          requestId,
+          toolDefinitionCount: Object.keys(toolDefinitions).length,
+          userId: user.id,
+        });
+      }
 
       const stream = streamText({
         messages: await convertToModelMessages(
           injectDocumentStateMessages(messages),
         ),
         model: miniModel,
+        onError: ({ error }) => {
+          console.error("[BlockNoteAI][stream-error]", {
+            error,
+            requestId,
+          });
+        },
         providerOptions: {
           openai: {
             include: ["reasoning.encrypted_content"],
@@ -43,9 +86,12 @@ const handler = withAuthGuard(
       after(async () => {
         try {
           const usage = await stream.usage;
+          const durationMs = Date.now() - startedAt;
 
           if (env.NODE_ENV === "development") {
             console.debug("[Usage] BlockNote", {
+              durationMs,
+              requestId,
               usage,
             });
           }
@@ -74,7 +120,10 @@ const handler = withAuthGuard(
         }
       });
 
-      return stream.toUIMessageStreamResponse();
+      const response = stream.toUIMessageStreamResponse();
+      response.headers.set("X-BlockNote-Request-ID", requestId);
+
+      return response;
     },
     {
       onUsageLimitExceeded: (error) =>
@@ -89,3 +138,22 @@ const handler = withAuthGuard(
 );
 
 export { handler as POST, corsHandler as OPTIONS };
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
+}
+
+function hasDocumentStateMessage(messages: unknown[]) {
+  return messages.some((message) => {
+    if (!isRecord(message)) {
+      return false;
+    }
+
+    const metadata = message.metadata;
+    if (!isRecord(metadata)) {
+      return false;
+    }
+
+    return "documentState" in metadata;
+  });
+}

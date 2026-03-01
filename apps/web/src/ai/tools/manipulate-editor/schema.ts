@@ -15,11 +15,51 @@ export const zTargetEditor = z
     "The target editor to manipulate. Format: `journal-entry:{YYYY-MM-DD}` or `page:{ID}`.",
   );
 
+export const zEditorIntent = z
+  .discriminatedUnion("mode", [
+    z.object({
+      mode: z.literal("transform").describe("Use BlockNote AI to draft edits."),
+      operation: z
+        .string()
+        .optional()
+        .describe(
+          "Optional short operation label, for example `rewrite`, `expand`, or `restructure`.",
+        ),
+    }),
+    z.object({
+      content: z
+        .string()
+        .min(1)
+        .describe(
+          "Exact body content to write to the editor. Keep it title-free because page titles are managed separately.",
+        ),
+      format: z
+        .enum(["markdown", "plain-text"])
+        .optional()
+        .describe(
+          "Formatting of `content`. Defaults to `markdown` when omitted.",
+        ),
+      mode: z
+        .literal("replace")
+        .describe(
+          "Bypass BlockNote AI and replace the editor body deterministically with `content`.",
+        ),
+    }),
+  ])
+  .describe(
+    "V2 editor intent contract. Prefer `replace` when you already have exact body content in the conversation.",
+  );
+
 export const zManipulateEditorInput = z.object({
+  intent: z
+    .optional(zEditorIntent)
+    .describe(
+      "Optional V2 editor intent contract. If omitted, defaults to AI transform mode using `editorPrompt`.",
+    ),
   targetEditor: zTargetEditor,
   editorPrompt: z
     .string()
     .describe(
-      "The prompt to pass to the editor's agent. It is better to provide as much detail as possible.",
+      "Instruction for editor changes. For `intent.mode=replace`, this is still required and should explain source and constraints.",
     ),
 });

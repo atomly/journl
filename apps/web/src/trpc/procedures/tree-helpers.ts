@@ -1,4 +1,4 @@
-import { and, eq, isNull } from "@acme/db";
+import { and, eq, isNull, ne } from "@acme/db";
 import { TreeEdge, TreeNode } from "@acme/db/schema";
 import { TRPCError } from "@trpc/server";
 import type { TRPCContext } from "../trpc";
@@ -46,10 +46,12 @@ async function getEdgeById({
 
 async function findHeadEdge({
   db,
+  excludeEdgeId,
   parentNodeId,
   userId,
 }: {
   db: Db;
+  excludeEdgeId?: string;
   parentNodeId: string | null;
   userId: string;
 }) {
@@ -63,6 +65,7 @@ async function findHeadEdge({
       parentNodeId === null
         ? isNull(TreeEdge.parent_node_id)
         : eq(TreeEdge.parent_node_id, parentNodeId),
+      excludeEdgeId ? ne(TreeEdge.id, excludeEdgeId) : undefined,
     ),
   });
 }
@@ -161,6 +164,52 @@ async function writeEdgePlacement({
   return insertedEdge;
 }
 
+async function ensureEdgeRecord({
+  db,
+  edgeId,
+  nodeId,
+  parentNodeId,
+  userId,
+}: {
+  db: Db;
+  edgeId?: string;
+  nodeId: string;
+  parentNodeId: string | null;
+  userId: string;
+}) {
+  if (edgeId) {
+    // For moved edges, set parent_node_id early so the BEFORE trigger
+    // accepts sibling link updates (it validates matching parent_node_id).
+    await db
+      .update(TreeEdge)
+      .set({ parent_node_id: parentNodeId })
+      .where(and(eq(TreeEdge.id, edgeId), eq(TreeEdge.user_id, userId)));
+    return edgeId;
+  }
+
+  const [insertedEdge] = await db
+    .insert(TreeEdge)
+    .values({
+      next_edge_id: null,
+      node_id: nodeId,
+      parent_node_id: parentNodeId,
+      prev_edge_id: null,
+      user_id: userId,
+    })
+    .returning({
+      id: TreeEdge.id,
+    });
+
+  if (!insertedEdge) {
+    throw new TRPCError({
+      code: "INTERNAL_SERVER_ERROR",
+      message: "Failed to initialize tree edge",
+    });
+  }
+
+  return insertedEdge.id;
+}
+
 export async function insertEdgeAtPosition({
   anchorEdgeId,
   db,
@@ -183,21 +232,19 @@ export async function insertEdgeAtPosition({
     parentNodeId,
     userId,
   });
+  const placingEdgeId = await ensureEdgeRecord({
+    db,
+    edgeId,
+    nodeId,
+    parentNodeId,
+    userId,
+  });
 
   if (!anchorEdgeId) {
     const headEdge = await findHeadEdge({
       db,
+      excludeEdgeId: placingEdgeId,
       parentNodeId,
-      userId,
-    });
-
-    const placedEdge = await writeEdgePlacement({
-      db,
-      edgeId,
-      nextEdgeId: headEdge?.id ?? null,
-      nodeId,
-      parentNodeId,
-      prevEdgeId: null,
       userId,
     });
 
@@ -205,12 +252,20 @@ export async function insertEdgeAtPosition({
       await db
         .update(TreeEdge)
         .set({
-          prev_edge_id: placedEdge.id,
+          prev_edge_id: placingEdgeId,
         })
         .where(and(eq(TreeEdge.id, headEdge.id), eq(TreeEdge.user_id, userId)));
     }
 
-    return placedEdge;
+    return await writeEdgePlacement({
+      db,
+      edgeId: placingEdgeId,
+      nextEdgeId: headEdge?.id ?? null,
+      nodeId,
+      parentNodeId,
+      prevEdgeId: null,
+      userId,
+    });
   }
 
   const anchorEdge = await getEdgeById({
@@ -241,28 +296,11 @@ export async function insertEdgeAtPosition({
   }
 
   if (position === "before") {
-    const placedEdge = await writeEdgePlacement({
-      db,
-      edgeId,
-      nextEdgeId: anchorEdge.id,
-      nodeId,
-      parentNodeId,
-      prevEdgeId: anchorEdge.prev_edge_id ?? null,
-      userId,
-    });
-
-    await db
-      .update(TreeEdge)
-      .set({
-        prev_edge_id: placedEdge.id,
-      })
-      .where(and(eq(TreeEdge.id, anchorEdge.id), eq(TreeEdge.user_id, userId)));
-
     if (anchorEdge.prev_edge_id) {
       await db
         .update(TreeEdge)
         .set({
-          next_edge_id: placedEdge.id,
+          next_edge_id: placingEdgeId,
         })
         .where(
           and(
@@ -272,31 +310,29 @@ export async function insertEdgeAtPosition({
         );
     }
 
-    return placedEdge;
+    await db
+      .update(TreeEdge)
+      .set({
+        prev_edge_id: placingEdgeId,
+      })
+      .where(and(eq(TreeEdge.id, anchorEdge.id), eq(TreeEdge.user_id, userId)));
+
+    return await writeEdgePlacement({
+      db,
+      edgeId: placingEdgeId,
+      nextEdgeId: anchorEdge.id,
+      nodeId,
+      parentNodeId,
+      prevEdgeId: anchorEdge.prev_edge_id ?? null,
+      userId,
+    });
   }
-
-  const placedEdge = await writeEdgePlacement({
-    db,
-    edgeId,
-    nextEdgeId: anchorEdge.next_edge_id ?? null,
-    nodeId,
-    parentNodeId,
-    prevEdgeId: anchorEdge.id,
-    userId,
-  });
-
-  await db
-    .update(TreeEdge)
-    .set({
-      next_edge_id: placedEdge.id,
-    })
-    .where(and(eq(TreeEdge.id, anchorEdge.id), eq(TreeEdge.user_id, userId)));
 
   if (anchorEdge.next_edge_id) {
     await db
       .update(TreeEdge)
       .set({
-        prev_edge_id: placedEdge.id,
+        prev_edge_id: placingEdgeId,
       })
       .where(
         and(
@@ -306,7 +342,22 @@ export async function insertEdgeAtPosition({
       );
   }
 
-  return placedEdge;
+  await db
+    .update(TreeEdge)
+    .set({
+      next_edge_id: placingEdgeId,
+    })
+    .where(and(eq(TreeEdge.id, anchorEdge.id), eq(TreeEdge.user_id, userId)));
+
+  return await writeEdgePlacement({
+    db,
+    edgeId: placingEdgeId,
+    nextEdgeId: anchorEdge.next_edge_id ?? null,
+    nodeId,
+    parentNodeId,
+    prevEdgeId: anchorEdge.id,
+    userId,
+  });
 }
 
 export async function detachEdge({
@@ -331,6 +382,15 @@ export async function detachEdge({
     });
   }
 
+  await db
+    .update(TreeEdge)
+    .set({
+      next_edge_id: null,
+      parent_node_id: null,
+      prev_edge_id: null,
+    })
+    .where(and(eq(TreeEdge.id, edgeId), eq(TreeEdge.user_id, userId)));
+
   if (edge.prev_edge_id) {
     await db
       .update(TreeEdge)
@@ -353,14 +413,25 @@ export async function detachEdge({
       );
   }
 
+  // Steps 4-5: Clean up any remaining stale references to the detached edge.
+  // In clean data these match zero rows. With bidirectional inconsistencies,
+  // they prevent cascading self-reference / unique constraint violations during moveItem.
+
+  // Step 4: Null out stale next_edge_id pointing to detached edge
   await db
     .update(TreeEdge)
-    .set({
-      next_edge_id: null,
-      parent_node_id: null,
-      prev_edge_id: null,
-    })
-    .where(and(eq(TreeEdge.id, edgeId), eq(TreeEdge.user_id, userId)));
+    .set({ next_edge_id: null })
+    .where(
+      and(eq(TreeEdge.next_edge_id, edgeId), eq(TreeEdge.user_id, userId)),
+    );
+
+  // Step 5: Null out stale prev_edge_id pointing to detached edge
+  await db
+    .update(TreeEdge)
+    .set({ prev_edge_id: null })
+    .where(
+      and(eq(TreeEdge.prev_edge_id, edgeId), eq(TreeEdge.user_id, userId)),
+    );
 
   return edge;
 }
@@ -470,6 +541,42 @@ export async function moveNode({
     existingEdge.parent_node_id === destination.parent_node_id;
   if (isNoopMove) {
     return existingEdge;
+  }
+
+  if (destination.anchor_edge_id) {
+    const anchorEdge = await getEdgeById({
+      db,
+      edgeId: destination.anchor_edge_id,
+      userId,
+    });
+
+    if (!anchorEdge) {
+      throw new TRPCError({
+        code: "NOT_FOUND",
+        message: "Anchor edge not found",
+      });
+    }
+
+    if (
+      anchorEdge.parent_node_id === destination.parent_node_id &&
+      existingEdge.parent_node_id === destination.parent_node_id
+    ) {
+      if (
+        destination.position === "before" &&
+        (existingEdge.next_edge_id === anchorEdge.id ||
+          existingEdge.id === anchorEdge.id)
+      ) {
+        return existingEdge;
+      }
+
+      if (
+        destination.position === "after" &&
+        (existingEdge.prev_edge_id === anchorEdge.id ||
+          existingEdge.id === anchorEdge.id)
+      ) {
+        return existingEdge;
+      }
+    }
   }
 
   await detachEdge({

@@ -5,7 +5,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Loader2, Trash2 } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import type { ComponentProps, ReactNode } from "react";
-import { useCallback, useMemo, useState, useTransition } from "react";
+import { useCallback, useMemo, useRef, useState, useTransition } from "react";
 import { Button } from "~/components/ui/button";
 import {
   Dialog,
@@ -16,7 +16,14 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "~/components/ui/dialog";
-import { getInfiniteSidebarTreeQueryOptions } from "~/trpc/options/sidebar-tree-query-options";
+import {
+  type QuerySnapshot,
+  removeNode,
+  removePageFromNestedPages,
+  restoreQueries,
+  snapshotQueries,
+  snapshotQuery,
+} from "~/trpc/cache/tree-cache";
 import { useTRPC } from "~/trpc/react";
 
 type DeletePageDialogProps = {
@@ -29,6 +36,12 @@ type DeletePageDialogProps = {
 type DeletePageDialogTriggerProps = ComponentProps<typeof DialogTrigger>;
 
 type DeletePageButtonProps = ComponentProps<typeof Button>;
+
+type DeletePageMutationContext = {
+  pageSnapshot: QuerySnapshot;
+  nestedSnapshots: QuerySnapshot[];
+  treeSnapshots: QuerySnapshot[];
+};
 
 export function DeletePageButton({
   className,
@@ -71,15 +84,81 @@ export function DeletePageDialog({
   const queryClient = useQueryClient();
   const [isPending, startTransition] = useTransition();
   const [uncontrolledOpen, setUncontrolledOpen] = useState(false);
+  const deletePageContextRef = useRef<DeletePageMutationContext | null>(null);
+  const treeQueryFilter = trpc.tree.getChildrenPaginated.infiniteQueryFilter();
+  const nestedFolderPagesQueryFilter =
+    trpc.tree.getNestedPagesPaginated.infiniteQueryFilter();
+  const pageQueryKey = trpc.pages.getById.queryKey({ id: page.id });
 
   const { mutate: deletePage, isPending: isDeleting } = useMutation(
-    trpc.document.delete.mutationOptions({}),
+    trpc.document.delete.mutationOptions({
+      onError: (error) => {
+        const context = deletePageContextRef.current;
+        if (context) {
+          restoreQueries({
+            queryClient,
+            snapshots: context.treeSnapshots,
+          });
+          restoreQueries({
+            queryClient,
+            snapshots: context.nestedSnapshots,
+          });
+          restoreQueries({
+            queryClient,
+            snapshots: [context.pageSnapshot],
+          });
+        }
+        deletePageContextRef.current = null;
+
+        console.error("Failed to delete page:", error);
+      },
+      onMutate: async () => {
+        await Promise.all([
+          queryClient.cancelQueries(treeQueryFilter),
+          queryClient.cancelQueries(nestedFolderPagesQueryFilter),
+          queryClient.cancelQueries({ queryKey: pageQueryKey }),
+        ]);
+
+        const treeSnapshots = snapshotQueries({
+          queryClient,
+          queryFilter: treeQueryFilter,
+        });
+        const nestedSnapshots = snapshotQueries({
+          queryClient,
+          queryFilter: nestedFolderPagesQueryFilter,
+        });
+        const pageSnapshot = snapshotQuery({
+          queryClient,
+          queryKey: pageQueryKey,
+        });
+
+        if (page.node_id) {
+          removeNode({
+            nodeId: page.node_id,
+            queryClient,
+            queryFilter: treeQueryFilter,
+          });
+        }
+
+        removePageFromNestedPages({
+          pageId: page.id,
+          queryClient,
+          queryFilter: nestedFolderPagesQueryFilter,
+        });
+
+        queryClient.removeQueries({ exact: true, queryKey: pageQueryKey });
+
+        deletePageContextRef.current = {
+          nestedSnapshots,
+          pageSnapshot,
+          treeSnapshots,
+        };
+      },
+    }),
   );
 
   const isControlled = open !== undefined;
   const isDialogOpen = isControlled ? open : uncontrolledOpen;
-  const nestedFolderPagesQueryFilter =
-    trpc.tree.getNestedPagesPaginated.infiniteQueryFilter();
 
   const setDialogOpen = useCallback(
     (nextOpen: boolean) => {
@@ -102,63 +181,19 @@ export function DeletePageDialog({
       deletePage(
         { id: page.document_id },
         {
-          onError: (error) => {
-            console.error("Failed to delete page:", error);
-          },
           onSuccess: () => {
+            deletePageContextRef.current = null;
+
             if (pathname === `/pages/${page.id}`) {
               router.push("/journal");
             }
 
-            queryClient.setQueryData(
-              trpc.tree.getChildrenPaginated.infiniteQueryOptions(
-                getInfiniteSidebarTreeQueryOptions(page.parent_node_id ?? null),
-              ).queryKey,
-              (old) => {
-                if (!old) {
-                  return old;
-                }
-
-                return {
-                  ...old,
-                  pages: old.pages.map((treePage) => ({
-                    ...treePage,
-                    items: treePage.items.filter(
-                      (item) =>
-                        !(item.kind === "page" && item.page.id === page.id),
-                    ),
-                  })),
-                };
-              },
-            );
-
-            queryClient.removeQueries({
-              queryKey: trpc.pages.getById.queryKey({ id: page.id }),
-            });
-
-            queryClient.cancelQueries({
-              queryKey: trpc.pages.getById.queryKey({ id: page.id }),
-            });
-
-            void queryClient.invalidateQueries(nestedFolderPagesQueryFilter);
             setDialogOpen(false);
           },
         },
       );
     });
-  }, [
-    deletePage,
-    page.document_id,
-    page.id,
-    pathname,
-    nestedFolderPagesQueryFilter,
-    queryClient,
-    router,
-    setDialogOpen,
-    trpc.tree,
-    trpc.pages,
-    page.parent_node_id,
-  ]);
+  }, [deletePage, page.document_id, page.id, pathname, router, setDialogOpen]);
 
   return (
     <Dialog open={isDialogOpen} onOpenChange={setDialogOpen}>

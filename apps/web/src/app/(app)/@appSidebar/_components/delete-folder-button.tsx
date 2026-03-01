@@ -5,7 +5,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { FolderOpen, Loader2, Trash2 } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import type { ComponentProps, ReactNode } from "react";
-import { useCallback, useMemo, useState, useTransition } from "react";
+import { useCallback, useMemo, useRef, useState, useTransition } from "react";
 import { Button } from "~/components/ui/button";
 import {
   Dialog,
@@ -23,6 +23,21 @@ import {
   SelectTrigger,
   SelectValue,
 } from "~/components/ui/select";
+import {
+  collectDescendantNodeIds,
+  getLoadedTreeItems,
+  type NestedPagesInfiniteData,
+  prependItems,
+  type QuerySnapshot,
+  removeNode,
+  restoreQueries,
+  seedEmptyContainer,
+  setNodeParent,
+  snapshotQueries,
+  snapshotQuery,
+  type TreeChildrenInfiniteData,
+} from "~/trpc/cache/tree-cache";
+import { getInfiniteSidebarTreeQueryOptions } from "~/trpc/options/sidebar-tree-query-options";
 import { useTRPC } from "~/trpc/react";
 
 type DeleteFolderDialogProps = {
@@ -39,6 +54,13 @@ type DeleteFolderButtonProps = ComponentProps<typeof Button>;
 const ROOT_FOLDER_OPTION = "__root__";
 
 type DeleteStrategy = "delete_all" | "move";
+
+type DeleteFolderMutationContext = {
+  folderByIdSnapshot: QuerySnapshot;
+  foldersByUserSnapshot: QuerySnapshot;
+  nestedSnapshots: QuerySnapshot[];
+  treeSnapshots: QuerySnapshot[];
+};
 
 export function DeleteFolderButton({
   className,
@@ -83,14 +105,252 @@ export function DeleteFolderDialog({
   const queryClient = useQueryClient();
   const [isPending, startTransition] = useTransition();
   const [uncontrolledOpen, setUncontrolledOpen] = useState(false);
+  const deleteFolderContextRef = useRef<DeleteFolderMutationContext | null>(
+    null,
+  );
   const [strategy, setStrategy] = useState<DeleteStrategy>("delete_all");
   const [moveToFolderId, setMoveToFolderId] = useState(ROOT_FOLDER_OPTION);
   const { data: folders = [] } = useQuery(
     trpc.folders.getByUser.queryOptions(),
   );
+  const treeQueryFilter = trpc.tree.getChildrenPaginated.infiniteQueryFilter();
+  const nestedFolderPagesQueryFilter =
+    trpc.tree.getNestedPagesPaginated.infiniteQueryFilter();
+  const foldersByUserQueryKey = trpc.folders.getByUser.queryOptions().queryKey;
+  const folderByIdQueryKey = trpc.folders.getById.queryOptions({
+    id: folder.id,
+  }).queryKey;
+
+  const getContainerQueryKey = (targetParentNodeId: string | null) => {
+    return trpc.tree.getChildrenPaginated.infiniteQueryOptions(
+      getInfiniteSidebarTreeQueryOptions(targetParentNodeId),
+    ).queryKey;
+  };
 
   const { mutate: deleteFolder, isPending: isDeleting } = useMutation(
-    trpc.tree.deleteFolder.mutationOptions({}),
+    trpc.tree.deleteFolder.mutationOptions({
+      onError: (error) => {
+        const context = deleteFolderContextRef.current;
+        if (context) {
+          restoreQueries({
+            queryClient,
+            snapshots: context.treeSnapshots,
+          });
+          restoreQueries({
+            queryClient,
+            snapshots: context.nestedSnapshots,
+          });
+          restoreQueries({
+            queryClient,
+            snapshots: [
+              context.foldersByUserSnapshot,
+              context.folderByIdSnapshot,
+            ],
+          });
+        }
+        deleteFolderContextRef.current = null;
+
+        console.error("Failed to delete folder:", error);
+      },
+      onMutate: async (variables) => {
+        await Promise.all([
+          queryClient.cancelQueries(treeQueryFilter),
+          queryClient.cancelQueries(nestedFolderPagesQueryFilter),
+          queryClient.cancelQueries({ queryKey: foldersByUserQueryKey }),
+          queryClient.cancelQueries({ queryKey: folderByIdQueryKey }),
+        ]);
+
+        const treeSnapshots = snapshotQueries({
+          queryClient,
+          queryFilter: treeQueryFilter,
+        });
+        const nestedSnapshots = snapshotQueries({
+          queryClient,
+          queryFilter: nestedFolderPagesQueryFilter,
+        });
+        const foldersByUserSnapshot = snapshotQuery({
+          queryClient,
+          queryKey: foldersByUserQueryKey,
+        });
+        const folderByIdSnapshot = snapshotQuery({
+          queryClient,
+          queryKey: folderByIdQueryKey,
+        });
+
+        const folderNodeId = folder.node_id ?? null;
+
+        if (!folderNodeId) {
+          queryClient.setQueryData(
+            foldersByUserQueryKey,
+            (old) =>
+              old?.filter((currentFolder) => currentFolder.id !== folder.id) ??
+              old,
+          );
+
+          queryClient.removeQueries({
+            exact: true,
+            queryKey: folderByIdQueryKey,
+          });
+
+          deleteFolderContextRef.current = {
+            folderByIdSnapshot,
+            foldersByUserSnapshot,
+            nestedSnapshots,
+            treeSnapshots,
+          };
+          return;
+        }
+
+        const loadedTreeItems = getLoadedTreeItems({
+          queryClient,
+          queryFilter: treeQueryFilter,
+        });
+
+        if (variables.strategy === "delete_all") {
+          const descendantNodeIds = collectDescendantNodeIds({
+            items: loadedTreeItems,
+            rootNodeId: folderNodeId,
+          });
+
+          const folderIdsToRemove = new Set<string>([folder.id]);
+          for (const item of loadedTreeItems) {
+            if (item.kind === "folder" && descendantNodeIds.has(item.node_id)) {
+              folderIdsToRemove.add(item.folder.id);
+            }
+          }
+
+          for (const nodeId of descendantNodeIds) {
+            removeNode({
+              nodeId,
+              queryClient,
+              queryFilter: treeQueryFilter,
+            });
+
+            queryClient.removeQueries({
+              exact: true,
+              queryKey: getContainerQueryKey(nodeId),
+            });
+          }
+
+          queryClient.setQueriesData(
+            nestedFolderPagesQueryFilter,
+            (old: NestedPagesInfiniteData | undefined) => {
+              if (!old) {
+                return old;
+              }
+
+              return {
+                ...old,
+                pages: old.pages.map((page) => ({
+                  ...page,
+                  items: page.items.filter((item) => {
+                    if (!item.parent_node_id) {
+                      return true;
+                    }
+
+                    return !descendantNodeIds.has(item.parent_node_id);
+                  }),
+                })),
+              };
+            },
+          );
+
+          queryClient.setQueryData(
+            foldersByUserQueryKey,
+            (old) =>
+              old?.filter(
+                (currentFolder) => !folderIdsToRemove.has(currentFolder.id),
+              ) ?? old,
+          );
+        }
+
+        if (variables.strategy === "move") {
+          const destinationParentNodeId =
+            variables.move_to_parent_node_id ?? null;
+          const sourceChildrenQueryKey = getContainerQueryKey(folderNodeId);
+
+          const sourceChildren =
+            queryClient
+              .getQueryData<TreeChildrenInfiniteData>(sourceChildrenQueryKey)
+              ?.pages.flatMap((page) => page.items) ?? [];
+
+          removeNode({
+            nodeId: folderNodeId,
+            queryClient,
+            queryFilter: treeQueryFilter,
+          });
+
+          for (const child of sourceChildren) {
+            removeNode({
+              nodeId: child.node_id,
+              queryClient,
+              queryFilter: treeQueryFilter,
+            });
+          }
+
+          prependItems({
+            items: sourceChildren.map((child) =>
+              setNodeParent({
+                item: child,
+                parentNodeId: destinationParentNodeId,
+              }),
+            ),
+            queryClient,
+            queryKey: getContainerQueryKey(destinationParentNodeId),
+          });
+
+          seedEmptyContainer({
+            queryClient,
+            queryKey: sourceChildrenQueryKey,
+          });
+
+          queryClient.setQueriesData(
+            nestedFolderPagesQueryFilter,
+            (old: NestedPagesInfiniteData | undefined) => {
+              if (!old) {
+                return old;
+              }
+
+              return {
+                ...old,
+                pages: old.pages.map((page) => ({
+                  ...page,
+                  items: page.items.map((item) => {
+                    if (item.parent_node_id !== folderNodeId) {
+                      return item;
+                    }
+
+                    return {
+                      ...item,
+                      parent_node_id: destinationParentNodeId,
+                    };
+                  }),
+                })),
+              };
+            },
+          );
+
+          queryClient.setQueryData(
+            foldersByUserQueryKey,
+            (old) =>
+              old?.filter((currentFolder) => currentFolder.id !== folder.id) ??
+              old,
+          );
+        }
+
+        queryClient.removeQueries({
+          exact: true,
+          queryKey: folderByIdQueryKey,
+        });
+
+        deleteFolderContextRef.current = {
+          folderByIdSnapshot,
+          foldersByUserSnapshot,
+          nestedSnapshots,
+          treeSnapshots,
+        };
+      },
+    }),
   );
 
   const isControlled = open !== undefined;
@@ -139,21 +399,16 @@ export function DeleteFolderDialog({
           strategy,
         },
         {
-          onError: (error) => {
-            console.error("Failed to delete folder:", error);
-          },
-          onSuccess: async () => {
+          onSuccess: () => {
+            deleteFolderContextRef.current = null;
+
             if (pathname === folderDetailsPath) {
               setDialogOpen(false);
               router.push("/journal");
-              void queryClient.invalidateQueries({
-                refetchType: "none",
-              });
               return;
             }
 
             setDialogOpen(false);
-            await queryClient.invalidateQueries();
           },
         },
       );
@@ -165,7 +420,6 @@ export function DeleteFolderDialog({
     folders,
     moveToFolderId,
     pathname,
-    queryClient,
     router,
     setDialogOpen,
     strategy,

@@ -8,6 +8,7 @@ import {
   type DragOverEvent,
   type DragStartEvent,
   MouseSensor,
+  pointerWithin,
   useDraggable,
   useDroppable,
   useSensor,
@@ -42,6 +43,13 @@ import {
   useSidebar,
 } from "~/components/ui/sidebar";
 import { cn } from "~/lib/cn";
+import {
+  moveNode as moveTreeNode,
+  type QuerySnapshot,
+  restoreQueries,
+  snapshotQueries,
+  updateNode,
+} from "~/trpc/cache/tree-cache";
 import { getInfiniteSidebarTreeQueryOptions } from "~/trpc/options/sidebar-tree-query-options";
 import { useTRPC } from "~/trpc/react";
 import { AppSidebarPageItem } from "./app-sidebar-page-item";
@@ -50,6 +58,10 @@ import { AppSidebarTreeActions } from "./app-sidebar-tree-actions";
 
 type AppSidebarPagesProps = {
   defaultOpen?: boolean;
+};
+
+type MoveMutationContext = {
+  treeSnapshots: QuerySnapshot[];
 };
 
 type TreeFolder = Folder & {
@@ -606,7 +618,14 @@ export const AppSidebarPages = ({
     null,
   );
   const hoverFolderIdRef = useRef<string | null>(null);
+  const moveMutationContextRef = useRef<MoveMutationContext | null>(null);
   const recentDragUntilRef = useRef(0);
+  const treeQueryFilter = trpc.tree.getChildrenPaginated.infiniteQueryFilter();
+  const getContainerQueryKey = (targetParentNodeId: string | null) => {
+    return trpc.tree.getChildrenPaginated.infiniteQueryOptions(
+      getInfiniteSidebarTreeQueryOptions(targetParentNodeId),
+    ).queryKey;
+  };
   const rootTreeQueryKey = trpc.tree.getChildrenPaginated.infiniteQueryOptions(
     getInfiniteSidebarTreeQueryOptions(null),
   ).queryKey;
@@ -615,7 +634,70 @@ export const AppSidebarPages = ({
   });
 
   const { mutate: moveItem } = useMutation(
-    trpc.tree.moveItem.mutationOptions({}),
+    trpc.tree.moveItem.mutationOptions({
+      onError: () => {
+        const context = moveMutationContextRef.current;
+        if (!context) {
+          return;
+        }
+
+        restoreQueries({
+          queryClient,
+          snapshots: context.treeSnapshots,
+        });
+        moveMutationContextRef.current = null;
+      },
+      onMutate: async (variables) => {
+        await queryClient.cancelQueries(treeQueryFilter);
+
+        const treeSnapshots = snapshotQueries({
+          queryClient,
+          queryFilter: treeQueryFilter,
+        });
+
+        moveTreeNode({
+          destination: variables.destination,
+          getContainerQueryKey,
+          nodeId: variables.node_id,
+          queryClient,
+          queryFilter: treeQueryFilter,
+        });
+
+        moveMutationContextRef.current = {
+          treeSnapshots,
+        };
+      },
+      onSuccess: (result) => {
+        updateNode({
+          nodeId: result.node_id,
+          queryClient,
+          queryFilter: treeQueryFilter,
+          updater: (item) =>
+            item.kind === "folder"
+              ? {
+                  ...item,
+                  edge_id: result.edge_id,
+                  folder: {
+                    ...item.folder,
+                    edge_id: result.edge_id,
+                    parent_node_id: result.parent_node_id,
+                  },
+                  parent_node_id: result.parent_node_id,
+                }
+              : {
+                  ...item,
+                  edge_id: result.edge_id,
+                  page: {
+                    ...item.page,
+                    edge_id: result.edge_id,
+                    parent_node_id: result.parent_node_id,
+                  },
+                  parent_node_id: result.parent_node_id,
+                },
+        });
+        moveMutationContextRef.current = null;
+      },
+    }),
   );
 
   const clearHoverExpandTimeout = useCallback(() => {
@@ -710,7 +792,7 @@ export const AppSidebarPages = ({
       hoverFolderIdRef.current = folderNodeId;
       hoverExpandTimeoutRef.current = setTimeout(() => {
         setFolderOpen(folderNodeId, true);
-      }, 350);
+      }, 700);
     },
     [clearHoverExpandTimeout, isDnDEnabled, openFolders, setFolderOpen],
   );
@@ -776,31 +858,12 @@ export const AppSidebarPages = ({
         return;
       }
 
-      moveItem(
-        {
-          destination,
-          node_id: activeData.item.nodeId,
-        },
-        {
-          onSettled: () => {
-            void queryClient.invalidateQueries(
-              trpc.tree.getChildrenPaginated.infiniteQueryFilter(),
-            );
-            void queryClient.invalidateQueries(
-              trpc.tree.getNestedPagesPaginated.infiniteQueryFilter(),
-            );
-          },
-        },
-      );
+      moveItem({
+        destination,
+        node_id: activeData.item.nodeId,
+      });
     },
-    [
-      clearHoverExpandTimeout,
-      isDnDEnabled,
-      markRecentDrag,
-      moveItem,
-      queryClient,
-      trpc.tree,
-    ],
+    [clearHoverExpandTimeout, isDnDEnabled, markRecentDrag, moveItem],
   );
 
   return (
@@ -853,6 +916,7 @@ export const AppSidebarPages = ({
         className="flex h-full min-h-0 flex-col"
       >
         <DndContext
+          collisionDetection={pointerWithin}
           onDragCancel={handleDragCancel}
           onDragEnd={handleDragEnd}
           onDragOver={handleDragOver}

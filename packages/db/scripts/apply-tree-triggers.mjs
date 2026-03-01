@@ -136,32 +136,43 @@ returns trigger
 language plpgsql
 as $$
 declare
+  current_row tree_edge%rowtype;
   prev_next_edge_id uuid;
   next_prev_edge_id uuid;
 begin
-  if new.prev_edge_id is not null then
+  -- Re-read the row to get the final committed state.
+  -- Deferred triggers capture NEW at statement time, which may be stale
+  -- when the same row is updated by both detach and insert in moveNode.
+  select * into current_row from tree_edge where id = new.id;
+
+  -- Row was deleted during transaction (e.g. cascade); nothing to validate.
+  if current_row.id is null then
+    return null;
+  end if;
+
+  if current_row.prev_edge_id is not null then
     select e.next_edge_id
       into prev_next_edge_id
     from tree_edge e
-    where e.id = new.prev_edge_id;
+    where e.id = current_row.prev_edge_id;
 
-    if prev_next_edge_id is distinct from new.id then
+    if prev_next_edge_id is distinct from current_row.id then
       raise exception 'tree_edge: prev edge does not point back via next_edge_id';
     end if;
   end if;
 
-  if new.next_edge_id is not null then
+  if current_row.next_edge_id is not null then
     select e.prev_edge_id
       into next_prev_edge_id
     from tree_edge e
-    where e.id = new.next_edge_id;
+    where e.id = current_row.next_edge_id;
 
-    if next_prev_edge_id is distinct from new.id then
+    if next_prev_edge_id is distinct from current_row.id then
       raise exception 'tree_edge: next edge does not point back via prev_edge_id';
     end if;
   end if;
 
-  return new;
+  return null;
 end;
 $$;
 

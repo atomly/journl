@@ -662,14 +662,35 @@ export const treeRouter = {
         position: input.destination.position,
       };
 
-      const edge = await ctx.db.transaction(async (tx) => {
-        return await moveNode({
-          db: tx,
-          destination,
-          nodeId: input.node_id,
-          userId: ctx.session.user.id,
-        });
-      });
+      const edge = await (async () => {
+        try {
+          return await ctx.db.transaction(async (tx) => {
+            return await moveNode({
+              db: tx,
+              destination,
+              nodeId: input.node_id,
+              userId: ctx.session.user.id,
+            });
+          });
+        } catch (error) {
+          const dbErrorCode =
+            typeof error === "object" &&
+            error !== null &&
+            "code" in error &&
+            typeof error.code === "string"
+              ? error.code
+              : null;
+
+          if (dbErrorCode === "23505") {
+            throw new TRPCError({
+              code: "BAD_REQUEST",
+              message: "Invalid move destination",
+            });
+          }
+
+          throw error;
+        }
+      })();
 
       return {
         edge_id: edge.id,

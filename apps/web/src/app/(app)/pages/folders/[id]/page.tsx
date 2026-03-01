@@ -27,12 +27,13 @@ export default async function FolderDetailsPage({
           folder={{
             id: folder.id,
             name: folder.name,
+            node_id: folder.node_id,
             parent_node_id: folder.parent_node_id,
           }}
         />
       </section>
 
-      <FolderNestedPagesList rootFolderId={folder.id} />
+      <FolderNestedPagesList rootParentNodeId={folder.node_id ?? null} />
     </div>
   );
 }

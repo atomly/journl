@@ -4,7 +4,7 @@ import type { Folder } from "@acme/db/schema";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { FilePlus2, FolderPlus, Plus, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import { Button } from "~/components/ui/button";
 import {
   DropdownMenu,
@@ -14,6 +14,16 @@ import {
 } from "~/components/ui/dropdown-menu";
 import { useSidebar } from "~/components/ui/sidebar";
 import { cn } from "~/lib/cn";
+import {
+  findNodeInQueries,
+  insertItem,
+  type QuerySnapshot,
+  restoreQueries,
+  seedEmptyContainer,
+  snapshotQueries,
+  type TreeItem,
+  updateNode,
+} from "~/trpc/cache/tree-cache";
 import { getInfiniteSidebarTreeQueryOptions } from "~/trpc/options/sidebar-tree-query-options";
 import { useTRPC } from "~/trpc/react";
 import { DeleteFolderDialog } from "./delete-folder-button";
@@ -26,6 +36,11 @@ type AppSidebarTreeActionsProps = {
   onCreateSuccess?: () => void;
   parentNodeId: string | null;
   triggerVariant?: "inline" | "sidebar";
+};
+
+type CreateMutationContext = {
+  optimisticNodeId: string;
+  treeSnapshots: QuerySnapshot[];
 };
 
 export function AppSidebarTreeActions({
@@ -42,16 +57,209 @@ export function AppSidebarTreeActions({
   const queryClient = useQueryClient();
   const [isPending, startTransition] = useTransition();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const createFolderContextRef = useRef<CreateMutationContext | null>(null);
+  const createPageContextRef = useRef<CreateMutationContext | null>(null);
   const { isMobile, setOpenMobile } = useSidebar();
+  const treeQueryFilter = trpc.tree.getChildrenPaginated.infiniteQueryFilter();
+
+  const getContainerQueryKey = (targetParentNodeId: string | null) => {
+    return trpc.tree.getChildrenPaginated.infiniteQueryOptions(
+      getInfiniteSidebarTreeQueryOptions(targetParentNodeId),
+    ).queryKey;
+  };
 
   const { mutate: createFolder, isPending: isCreatingFolder } = useMutation(
-    trpc.tree.createFolder.mutationOptions({}),
+    trpc.tree.createFolder.mutationOptions({
+      onError: (error) => {
+        const context = createFolderContextRef.current;
+        if (context) {
+          restoreQueries({
+            queryClient,
+            snapshots: context.treeSnapshots,
+          });
+        }
+        createFolderContextRef.current = null;
+
+        console.error("Failed to create folder:", error);
+      },
+      onMutate: async (variables) => {
+        await queryClient.cancelQueries(treeQueryFilter);
+
+        const treeSnapshots = snapshotQueries({
+          queryClient,
+          queryFilter: treeQueryFilter,
+        });
+
+        const optimisticNodeId = crypto.randomUUID();
+        const optimisticEdgeId = crypto.randomUUID();
+        const optimisticFolderId = crypto.randomUUID();
+        const now = new Date().toISOString();
+        const parentId = variables.destination.parent_node_id;
+
+        const optimisticItem = {
+          edge_id: optimisticEdgeId,
+          folder: {
+            created_at: now,
+            edge_id: optimisticEdgeId,
+            id: optimisticFolderId,
+            name: variables.name,
+            node_id: optimisticNodeId,
+            parent_node_id: parentId,
+            updated_at: now,
+            user_id: "",
+          },
+          kind: "folder",
+          node_id: optimisticNodeId,
+          parent_node_id: parentId,
+        } satisfies TreeItem;
+
+        insertItem({
+          anchorEdgeId: variables.destination.anchor_edge_id,
+          item: optimisticItem,
+          position: variables.destination.position,
+          queryClient,
+          queryKey: getContainerQueryKey(parentId),
+        });
+        seedEmptyContainer({
+          queryClient,
+          queryKey: getContainerQueryKey(optimisticNodeId),
+        });
+
+        createFolderContextRef.current = {
+          optimisticNodeId,
+          treeSnapshots,
+        };
+      },
+      onSuccess: (newFolder, variables) => {
+        const context = createFolderContextRef.current;
+        if (context) {
+          const optimisticNode = findNodeInQueries({
+            nodeId: context.optimisticNodeId,
+            queryClient,
+            queryFilter: treeQueryFilter,
+          });
+
+          if (optimisticNode) {
+            updateNode({
+              nodeId: context.optimisticNodeId,
+              queryClient,
+              queryFilter: treeQueryFilter,
+              updater: () => newFolder,
+            });
+          } else {
+            insertItem({
+              anchorEdgeId: variables.destination.anchor_edge_id,
+              item: newFolder,
+              position: variables.destination.position,
+              queryClient,
+              queryKey: getContainerQueryKey(
+                variables.destination.parent_node_id,
+              ),
+            });
+          }
+        }
+        createFolderContextRef.current = null;
+
+        seedEmptyContainer({
+          queryClient,
+          queryKey: getContainerQueryKey(newFolder.node_id),
+        });
+      },
+    }),
   );
+
   const { mutate: createPage, isPending: isCreatingPage } = useMutation(
-    trpc.tree.createPage.mutationOptions({}),
+    trpc.tree.createPage.mutationOptions({
+      onError: (error) => {
+        const context = createPageContextRef.current;
+        if (context) {
+          restoreQueries({
+            queryClient,
+            snapshots: context.treeSnapshots,
+          });
+        }
+        createPageContextRef.current = null;
+
+        console.error("Failed to create page:", error);
+      },
+      onMutate: async (variables) => {
+        await queryClient.cancelQueries(treeQueryFilter);
+
+        const treeSnapshots = snapshotQueries({
+          queryClient,
+          queryFilter: treeQueryFilter,
+        });
+
+        const optimisticNodeId = crypto.randomUUID();
+        const optimisticEdgeId = crypto.randomUUID();
+        const optimisticPageId = crypto.randomUUID();
+        const optimisticDocumentId = crypto.randomUUID();
+        const now = new Date().toISOString();
+        const parentId = variables.destination.parent_node_id;
+
+        const optimisticItem = {
+          edge_id: optimisticEdgeId,
+          kind: "page",
+          node_id: optimisticNodeId,
+          page: {
+            created_at: now,
+            document_id: optimisticDocumentId,
+            edge_id: optimisticEdgeId,
+            id: optimisticPageId,
+            node_id: optimisticNodeId,
+            parent_node_id: parentId,
+            title: variables.title,
+            updated_at: now,
+            user_id: "",
+          },
+          parent_node_id: parentId,
+        } satisfies TreeItem;
+
+        insertItem({
+          anchorEdgeId: variables.destination.anchor_edge_id,
+          item: optimisticItem,
+          position: variables.destination.position,
+          queryClient,
+          queryKey: getContainerQueryKey(parentId),
+        });
+
+        createPageContextRef.current = {
+          optimisticNodeId,
+          treeSnapshots,
+        };
+      },
+      onSuccess: (newPage, variables) => {
+        const context = createPageContextRef.current;
+        if (context) {
+          const optimisticNode = findNodeInQueries({
+            nodeId: context.optimisticNodeId,
+            queryClient,
+            queryFilter: treeQueryFilter,
+          });
+
+          if (optimisticNode) {
+            updateNode({
+              nodeId: context.optimisticNodeId,
+              queryClient,
+              queryFilter: treeQueryFilter,
+              updater: () => newPage,
+            });
+          } else {
+            insertItem({
+              anchorEdgeId: variables.destination.anchor_edge_id,
+              item: newPage,
+              position: variables.destination.position,
+              queryClient,
+              queryKey: getContainerQueryKey(
+                variables.destination.parent_node_id,
+              ),
+            });
+          }
+        }
+        createPageContextRef.current = null;
+      },
+    }),
   );
-  const nestedFolderPagesQueryFilter =
-    trpc.tree.getNestedPagesPaginated.infiniteQueryFilter();
 
   const showLoading = isPending || isCreatingFolder || isCreatingPage;
 
@@ -67,42 +275,7 @@ export function AppSidebarTreeActions({
           name: "New folder",
         },
         {
-          onError: (error) => {
-            console.error("Failed to create folder:", error);
-          },
-          onSuccess: (newFolder) => {
-            queryClient.setQueryData(
-              trpc.tree.getChildrenPaginated.infiniteQueryOptions(
-                getInfiniteSidebarTreeQueryOptions(parentNodeId),
-              ).queryKey,
-              (old) => {
-                if (!old) {
-                  return {
-                    pageParams: [],
-                    pages: [
-                      {
-                        items: [newFolder],
-                        nextCursor: undefined,
-                      },
-                    ],
-                  };
-                }
-
-                const [first, ...rest] = old.pages;
-                return {
-                  ...old,
-                  pages: [
-                    {
-                      ...first,
-                      items: [newFolder, ...(first?.items ?? [])],
-                      nextCursor: first?.nextCursor,
-                    },
-                    ...rest,
-                  ],
-                };
-              },
-            );
-
+          onSuccess: () => {
             onCreateSuccess?.();
           },
         },
@@ -122,44 +295,12 @@ export function AppSidebarTreeActions({
           title: "",
         },
         {
-          onError: (error) => {
-            console.error("Failed to create page:", error);
-          },
           onSuccess: (newPage) => {
-            queryClient.setQueryData(
-              trpc.tree.getChildrenPaginated.infiniteQueryOptions(
-                getInfiniteSidebarTreeQueryOptions(parentNodeId),
-              ).queryKey,
-              (old) => {
-                if (!old) {
-                  return {
-                    pageParams: [],
-                    pages: [
-                      {
-                        items: [newPage],
-                        nextCursor: undefined,
-                      },
-                    ],
-                  };
-                }
-
-                const [first, ...rest] = old.pages;
-                return {
-                  ...old,
-                  pages: [
-                    {
-                      ...first,
-                      items: [newPage, ...(first?.items ?? [])],
-                      nextCursor: first?.nextCursor,
-                    },
-                    ...rest,
-                  ],
-                };
-              },
-            );
-
             onCreateSuccess?.();
-            void queryClient.invalidateQueries(nestedFolderPagesQueryFilter);
+
+            if (kind === "folder") {
+              return;
+            }
 
             if (isMobile) {
               setOpenMobile(false);

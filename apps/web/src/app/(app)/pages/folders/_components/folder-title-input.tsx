@@ -5,14 +5,14 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { useDebouncedCallback } from "use-debounce";
 import { Input } from "~/components/ui/input";
-import { getInfiniteSidebarTreeQueryOptions } from "~/trpc/options/sidebar-tree-query-options";
+import { updateNode } from "~/trpc/cache/tree-cache";
 import { useTRPC } from "~/trpc/react";
 
 const DEFAULT_PLACEHOLDER = "New folder";
 const DEFAULT_DEBOUNCE_TIME = 150;
 
 type FolderTitleInputProps = {
-  folder: Pick<Folder, "id" | "name" | "parent_node_id">;
+  folder: Pick<Folder, "id" | "name" | "node_id" | "parent_node_id">;
   debounceTime?: number;
   placeholder?: string;
 };
@@ -28,6 +28,7 @@ export function FolderTitleInput({
     trpc.folders.rename.mutationOptions({}),
   );
   const [title, setTitle] = useState(folder.name);
+  const treeQueryFilter = trpc.tree.getChildrenPaginated.infiniteQueryFilter();
 
   const debouncedRenameFolder = useDebouncedCallback((newTitle: string) => {
     queryClient.setQueryData(
@@ -58,34 +59,23 @@ export function FolderTitleInput({
       },
     );
 
-    queryClient.setQueryData(
-      trpc.tree.getChildrenPaginated.infiniteQueryOptions(
-        getInfiniteSidebarTreeQueryOptions(folder.parent_node_id ?? null),
-      ).queryKey,
-      (old) => {
-        if (!old) {
-          return old;
-        }
-
-        return {
-          ...old,
-          pages: old.pages.map((treePage) => ({
-            ...treePage,
-            items: treePage.items.map((item) =>
-              item.kind === "folder" && item.folder.id === folder.id
-                ? {
-                    ...item,
-                    folder: {
-                      ...item.folder,
-                      name: newTitle,
-                    },
-                  }
-                : item,
-            ),
-          })),
-        };
-      },
-    );
+    if (folder.node_id) {
+      updateNode({
+        nodeId: folder.node_id,
+        queryClient,
+        queryFilter: treeQueryFilter,
+        updater: (item) =>
+          item.kind === "folder"
+            ? {
+                ...item,
+                folder: {
+                  ...item.folder,
+                  name: newTitle,
+                },
+              }
+            : item,
+      });
+    }
 
     renameFolder(
       {
@@ -101,11 +91,7 @@ export function FolderTitleInput({
           void queryClient.invalidateQueries({
             queryKey: trpc.folders.getByUser.queryOptions().queryKey,
           });
-          void queryClient.invalidateQueries({
-            queryKey: trpc.tree.getChildrenPaginated.infiniteQueryOptions(
-              getInfiniteSidebarTreeQueryOptions(folder.parent_node_id ?? null),
-            ).queryKey,
-          });
+          void queryClient.invalidateQueries(treeQueryFilter);
         },
       },
     );

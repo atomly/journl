@@ -1,5 +1,7 @@
+import { USAGE_UNITS, type UsageUnit } from "@acme/db/usage";
 import { handleChatStream } from "@mastra/ai-sdk";
 import { Mastra } from "@mastra/core";
+import type { LLMStepResult } from "@mastra/core/agent";
 import { createUIMessageStreamResponse } from "ai";
 import {
   getJournlUserThread,
@@ -17,8 +19,10 @@ import {
 } from "~/ai/agents/journl-agent-reasoning";
 import type { JournlAgentState } from "~/ai/agents/journl-agent-state";
 import { journlMastraStore } from "~/ai/mastra/postgres-store";
+import { getOpenAIWebSearchActionType } from "~/ai/tools/common/openai-utils";
 import { handler as corsHandler } from "~/app/api/_cors/cors";
 import { withAuthGuard } from "~/auth/guards";
+import { env } from "~/env";
 import { withUsageGuard } from "~/usage/guards";
 import { buildUsageQuotaExceededPayload } from "~/usage/quota-error";
 import { startModelUsage } from "~/workflows/model-usage";
@@ -56,29 +60,42 @@ const handler = withAuthGuard(
               thread: memoryThreadId,
             },
             messages,
-            onFinish: async ({ totalUsage }) => {
+            onFinish: async ({ steps, totalUsage }) => {
               try {
                 const { provider, modelId } = await journlAgent.getModel();
 
-                console.debug("[Usage] JournlAgent", {
-                  usage: totalUsage,
-                });
+                if (env.NODE_ENV === "development") {
+                  console.debug("[Usage] JournlAgent", {
+                    steps,
+                    totalUsage,
+                  });
+                }
+
+                const metrics: Array<{ quantity: number; unit: UsageUnit }> = [
+                  {
+                    quantity: totalUsage.inputTokens || 0,
+                    unit: USAGE_UNITS.INPUT_TOKENS,
+                  },
+                  {
+                    quantity: totalUsage.outputTokens || 0,
+                    unit: USAGE_UNITS.OUTPUT_TOKENS,
+                  },
+                  {
+                    quantity: totalUsage.reasoningTokens || 0,
+                    unit: USAGE_UNITS.REASONING_TOKENS,
+                  },
+                ];
+
+                const webSearchCalls = countBillableWebSearchCalls(steps);
+                if (webSearchCalls > 0) {
+                  metrics.push({
+                    quantity: webSearchCalls,
+                    unit: USAGE_UNITS.WEB_SEARCH_CALLS,
+                  });
+                }
 
                 await startModelUsage({
-                  metrics: [
-                    {
-                      quantity: totalUsage.inputTokens || 0,
-                      unit: "input_tokens",
-                    },
-                    {
-                      quantity: totalUsage.outputTokens || 0,
-                      unit: "output_tokens",
-                    },
-                    {
-                      quantity: totalUsage.reasoningTokens || 0,
-                      unit: "reasoning_tokens",
-                    },
-                  ],
+                  metrics,
                   modelId,
                   modelProvider: provider,
                   userId: user.id,
@@ -126,3 +143,26 @@ const handler = withAuthGuard(
 );
 
 export { handler as POST, corsHandler as OPTIONS };
+
+function countBillableWebSearchCalls(steps: LLMStepResult<undefined>[]) {
+  let count = 0;
+
+  for (const { toolResults } of steps) {
+    for (const {
+      payload: { toolName, result },
+    } of toolResults) {
+      if (toolName !== "webSearch" && toolName !== "web_search") {
+        continue;
+      }
+
+      const actionType = getOpenAIWebSearchActionType(result);
+
+      // OpenAI bills web search tool calls for search actions.
+      if (actionType === "search") {
+        count += 1;
+      }
+    }
+  }
+
+  return count;
+}

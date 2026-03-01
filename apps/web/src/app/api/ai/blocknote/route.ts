@@ -1,3 +1,4 @@
+import { USAGE_UNITS } from "@acme/db/usage";
 import {
   aiDocumentFormats,
   injectDocumentStateMessages,
@@ -9,6 +10,7 @@ import { getEditorAgentPrompt } from "~/ai/agents/editor-agent";
 import { miniModel } from "~/ai/providers/openai/text";
 import { handler as corsHandler } from "~/app/api/_cors/cors";
 import { withAuthGuard } from "~/auth/guards";
+import { env } from "~/env";
 import { withUsageGuard } from "~/usage/guards";
 import { buildUsageQuotaExceededPayload } from "~/usage/quota-error";
 import { startModelUsage } from "~/workflows/model-usage";
@@ -42,23 +44,25 @@ const handler = withAuthGuard(
         try {
           const usage = await stream.usage;
 
-          console.debug("[Usage] BlockNote", {
-            usage,
-          });
+          if (env.NODE_ENV === "development") {
+            console.debug("[Usage] BlockNote", {
+              usage,
+            });
+          }
 
           await startModelUsage({
             metrics: [
               {
                 quantity: usage.inputTokens || 0,
-                unit: "input_tokens",
+                unit: USAGE_UNITS.INPUT_TOKENS,
               },
               {
                 quantity: usage.outputTokens || 0,
-                unit: "output_tokens",
+                unit: USAGE_UNITS.OUTPUT_TOKENS,
               },
               {
                 quantity: usage.reasoningTokens || 0,
-                unit: "reasoning_tokens",
+                unit: USAGE_UNITS.REASONING_TOKENS,
               },
             ],
             modelId: miniModel.modelId,

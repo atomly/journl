@@ -13,5 +13,4 @@ export default {
   dbCredentials: { url: dbUrl },
   dialect: "postgresql",
   schema: "./src/**/*.schema.ts",
-  tablesFilter: ["!mastra_*", "!memory_messages"],
 } satisfies Config;

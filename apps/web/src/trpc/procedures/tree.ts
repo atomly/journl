@@ -273,7 +273,7 @@ export const treeRouter = {
         const rootEdgeId = edgeByNodeId.get(folderNode.id);
         if (rootEdgeId) {
           await detachEdge({ db: tx, edgeId: rootEdgeId, userId });
-          // Delete the detached root edge separately to avoid trigger conflicts
+          // Delete the detached root edge separately from subtree bulk deletion.
           await tx
             .delete(TreeEdge)
             .where(
@@ -286,9 +286,8 @@ export const treeRouter = {
           (id) => id !== folderNode.id,
         );
         if (innerSubtreeNodeIds.length > 0) {
-          // Null out linked-list pointers so the before-delete trigger
-          // becomes a no-op — prevents constraint violations when
-          // deleting multiple sibling edges in one bulk statement.
+          // Null out sibling pointers before bulk deletion to avoid
+          // cross-row link conflicts during the delete statement.
           await tx
             .update(TreeEdge)
             .set({

@@ -164,52 +164,6 @@ async function writeEdgePlacement({
   return insertedEdge;
 }
 
-async function ensureEdgeRecord({
-  db,
-  edgeId,
-  nodeId,
-  parentNodeId,
-  userId,
-}: {
-  db: Db;
-  edgeId?: string;
-  nodeId: string;
-  parentNodeId: string | null;
-  userId: string;
-}) {
-  if (edgeId) {
-    // For moved edges, set parent_node_id early so the BEFORE trigger
-    // accepts sibling link updates (it validates matching parent_node_id).
-    await db
-      .update(TreeEdge)
-      .set({ parent_node_id: parentNodeId })
-      .where(and(eq(TreeEdge.id, edgeId), eq(TreeEdge.user_id, userId)));
-    return edgeId;
-  }
-
-  const [insertedEdge] = await db
-    .insert(TreeEdge)
-    .values({
-      next_edge_id: null,
-      node_id: nodeId,
-      parent_node_id: parentNodeId,
-      prev_edge_id: null,
-      user_id: userId,
-    })
-    .returning({
-      id: TreeEdge.id,
-    });
-
-  if (!insertedEdge) {
-    throw new TRPCError({
-      code: "INTERNAL_SERVER_ERROR",
-      message: "Failed to initialize tree edge",
-    });
-  }
-
-  return insertedEdge.id;
-}
-
 export async function insertEdgeAtPosition({
   anchorEdgeId,
   db,
@@ -232,13 +186,30 @@ export async function insertEdgeAtPosition({
     parentNodeId,
     userId,
   });
-  const placingEdgeId = await ensureEdgeRecord({
-    db,
-    edgeId,
-    nodeId,
-    parentNodeId,
-    userId,
-  });
+  let placingEdgeId = edgeId;
+  if (!placingEdgeId) {
+    const [insertedEdge] = await db
+      .insert(TreeEdge)
+      .values({
+        next_edge_id: null,
+        node_id: nodeId,
+        parent_node_id: parentNodeId,
+        prev_edge_id: null,
+        user_id: userId,
+      })
+      .returning({
+        id: TreeEdge.id,
+      });
+
+    if (!insertedEdge) {
+      throw new TRPCError({
+        code: "INTERNAL_SERVER_ERROR",
+        message: "Failed to initialize tree edge",
+      });
+    }
+
+    placingEdgeId = insertedEdge.id;
+  }
 
   if (!anchorEdgeId) {
     const headEdge = await findHeadEdge({

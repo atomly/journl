@@ -24,7 +24,8 @@ import {
 import {
   BookOpen,
   ChevronRight,
-  Folder as FolderIcon,
+  FolderClosed,
+  FolderOpen,
   Loader2,
 } from "lucide-react";
 import Link from "next/link";
@@ -94,6 +95,7 @@ type TreeItem =
 
 type SidebarTreeProps = {
   activeDragId: string | null;
+  enabled?: boolean;
   isDnDEnabled: boolean;
   onFolderInsideHover: (folderNodeId: string) => void;
   openFolders: Record<string, boolean>;
@@ -435,7 +437,11 @@ function DraggableFolderRow({
               }}
               className="flex w-full min-w-0 items-center gap-1"
             >
-              <FolderIcon className="size-3 shrink-0" />
+              {isOpen ? (
+                <FolderOpen className="size-3 shrink-0" />
+              ) : (
+                <FolderClosed className="size-3 shrink-0" />
+              )}
               <span className="line-clamp-1 min-w-0 flex-1 truncate text-left">
                 {folder.name || "New folder"}
               </span>
@@ -461,6 +467,7 @@ function DraggableFolderRow({
           <SidebarMenuSub className="mx-0 mr-0 gap-0 border-none px-0">
             <SidebarTree
               activeDragId={activeDragId}
+              enabled={isOpen}
               isDnDEnabled={isDnDEnabled}
               onFolderInsideHover={onFolderInsideHover}
               openFolders={openFolders}
@@ -477,6 +484,7 @@ function DraggableFolderRow({
 
 function SidebarTree({
   activeDragId,
+  enabled = true,
   isDnDEnabled,
   onFolderInsideHover,
   openFolders,
@@ -492,6 +500,7 @@ function SidebarTree({
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isPending } =
     useInfiniteQuery({
       ...queryOptions,
+      enabled,
       getNextPageParam: ({ nextCursor }) => {
         return nextCursor;
       },

@@ -113,6 +113,7 @@ type MoveMutationContext = {
 
 type TreeLevelProps = {
   activeDragId: string | null;
+  enabled?: boolean;
   itemIndentClassName: string;
   isDnDEnabled: boolean;
   onFolderInsideHover: (folderNodeId: string) => void;
@@ -846,6 +847,7 @@ function DraggableFolderRow({
             <div className="space-y-0.5">
               <FolderTreeLevel
                 activeDragId={activeDragId}
+                enabled={isOpen}
                 itemIndentClassName={TREE_ITEM_INDENT_CLASSNAME}
                 isDnDEnabled={isDnDEnabled}
                 onFolderInsideHover={onFolderInsideHover}
@@ -864,6 +866,7 @@ function DraggableFolderRow({
 
 function FolderTreeLevel({
   activeDragId,
+  enabled = true,
   itemIndentClassName,
   isDnDEnabled,
   onFolderInsideHover,
@@ -881,6 +884,7 @@ function FolderTreeLevel({
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isPending } =
     useInfiniteQuery({
       ...queryOptions,
+      enabled,
       getNextPageParam: ({ nextCursor }) => {
         return nextCursor;
       },

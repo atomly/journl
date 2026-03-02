@@ -629,7 +629,7 @@ export const AppSidebarPages = ({
   const pathname = usePathname();
   const trpc = useTRPC();
   const queryClient = useQueryClient();
-  const { state, setOpen, isMobile } = useSidebar();
+  const { state, setOpen } = useSidebar();
   const isPagesRoute = pathname.startsWith("/pages");
   const [isOpen, setIsOpen] = useState(defaultOpen);
   const [openFolders, setOpenFolders] = useState<Record<string, boolean>>({});
@@ -815,7 +815,7 @@ export const AppSidebarPages = ({
         setFolderOpen(folderNodeId, true);
       }, 700);
     },
-    [clearHoverExpandTimeout, isDnDEnabled, openFolders, setFolderOpen],
+    [clearHoverExpandTimeout, openFolders, setFolderOpen],
   );
 
   const handleDragOver = useCallback(
@@ -836,7 +836,7 @@ export const AppSidebarPages = ({
 
       handleFolderInsideHover(dropTarget.parentNodeId);
     },
-    [clearHoverExpandTimeout, handleFolderInsideHover, isDnDEnabled],
+    [clearHoverExpandTimeout, handleFolderInsideHover],
   );
 
   const handleDragEnd = useCallback(
@@ -884,7 +884,7 @@ export const AppSidebarPages = ({
         node_id: activeData.item.nodeId,
       });
     },
-    [clearHoverExpandTimeout, isDnDEnabled, markRecentDrag, moveItem],
+    [clearHoverExpandTimeout, markRecentDrag, moveItem],
   );
 
   return (

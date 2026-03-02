@@ -86,7 +86,7 @@ export function AppSidebarPageItem({
               </DeletePageButton>
             </DeletePageDialogTrigger>
           </SwipeActionReveal>
-          <SwipeActionContent className="group/swipe-content rounded-md">
+          <SwipeActionContent className="group/swipe-content rounded-md" {...dragActivatorProps}>
             <SidebarMenuSubButton
               asChild
               isActive={isActive}

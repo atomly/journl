@@ -8,6 +8,7 @@ import {
   type DragOverEvent,
   type DragStartEvent,
   MouseSensor,
+  TouchSensor,
   useDraggable,
   useDroppable,
   useSensor,
@@ -238,21 +239,28 @@ function parseDropTarget(id: unknown): DropTarget | null {
 }
 
 function FolderTreeDropZone({
+  activeDragId,
   className,
   dropId,
   itemIndentClassName,
   isDnDEnabled,
 }: {
+  activeDragId: string | null;
   className?: string;
   dropId: string;
   itemIndentClassName: string;
   isDnDEnabled: boolean;
 }) {
+  const { isMobile } = useSidebar();
   const { isOver, setNodeRef } = useDroppable({
     id: dropId,
   });
 
   if (!isDnDEnabled) {
+    return null;
+  }
+
+  if (isMobile && !activeDragId) {
     return null;
   }
 
@@ -962,6 +970,7 @@ function FolderTreeLevel({
 
       {items.length === 0 && !shouldShowInitialSkeleton ? (
         <FolderTreeDropZone
+          activeDragId={activeDragId}
           dropId={getParentDropId(parentNodeId)}
           itemIndentClassName={itemIndentClassName}
           isDnDEnabled={isDnDEnabled}
@@ -972,6 +981,7 @@ function FolderTreeLevel({
         return (
           <Fragment key={`${item.kind}-${item.node_id}`}>
             <FolderTreeDropZone
+              activeDragId={activeDragId}
               dropId={getBeforeDropId({
                 anchorEdgeId: item.edge_id,
                 parentNodeId,
@@ -1004,6 +1014,7 @@ function FolderTreeLevel({
             )}
 
             <FolderTreeDropZone
+              activeDragId={activeDragId}
               dropId={getAfterDropId({
                 anchorEdgeId: item.edge_id,
                 parentNodeId,
@@ -1033,7 +1044,7 @@ export function FolderNestedPagesList({
 }: FolderNestedPagesListProps) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
-  const { isMobile } = useSidebar();
+
   const [openFolders, setOpenFolders] = useState<Record<string, boolean>>({});
   const [activeDragId, setActiveDragId] = useState<string | null>(null);
   const hoverExpandTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
@@ -1151,17 +1162,18 @@ export function FolderNestedPagesList({
     return Date.now() < recentDragUntilRef.current;
   }, []);
 
-  const isDnDEnabled = !isMobile;
-  const sensors = useSensors(
-    useSensor(MouseSensor, {
-      activationConstraint: {
-        distance: 5,
-      },
-    }),
-  );
+  const isDnDEnabled = true;
+  const mouseSensor = useSensor(MouseSensor, {
+    activationConstraint: { distance: 5 },
+  });
+  const touchSensor = useSensor(TouchSensor, {
+    activationConstraint: { delay: 300, tolerance: 8 },
+  });
+  const sensors = useSensors(mouseSensor, touchSensor);
 
   const handleDragStart = useCallback(
     (event: DragStartEvent) => {
+      navigator.vibrate?.(50);
       markRecentDrag();
       setActiveDragId(String(event.active.id));
     },
@@ -1198,7 +1210,7 @@ export function FolderNestedPagesList({
         setFolderOpen(folderNodeId, true);
       }, 700);
     },
-    [clearHoverExpandTimeout, isDnDEnabled, openFolders, setFolderOpen],
+    [clearHoverExpandTimeout, openFolders, setFolderOpen],
   );
 
   const handleDragOver = useCallback(
@@ -1219,7 +1231,7 @@ export function FolderNestedPagesList({
 
       handleFolderInsideHover(dropTarget.parentNodeId);
     },
-    [clearHoverExpandTimeout, handleFolderInsideHover, isDnDEnabled],
+    [clearHoverExpandTimeout, handleFolderInsideHover],
   );
 
   const handleDragEnd = useCallback(
@@ -1267,7 +1279,7 @@ export function FolderNestedPagesList({
         node_id: activeData.item.nodeId,
       });
     },
-    [clearHoverExpandTimeout, isDnDEnabled, markRecentDrag, moveItem],
+    [clearHoverExpandTimeout, markRecentDrag, moveItem],
   );
 
   return (
@@ -1291,7 +1303,7 @@ export function FolderNestedPagesList({
         onDragEnd={handleDragEnd}
         onDragOver={handleDragOver}
         onDragStart={handleDragStart}
-        sensors={isDnDEnabled ? sensors : undefined}
+        sensors={sensors}
       >
         <div className="rounded-3xl border bg-background/80 p-2 shadow-xs">
           <div className="space-y-0.5">

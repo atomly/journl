@@ -9,6 +9,7 @@ import {
   type DragStartEvent,
   MouseSensor,
   pointerWithin,
+  TouchSensor,
   useDraggable,
   useDroppable,
   useSensor,
@@ -227,19 +228,26 @@ function parseDropTarget(id: unknown): DropTarget | null {
 }
 
 function SidebarTreeDropZone({
+  activeDragId,
   className,
   dropId,
   isDnDEnabled,
 }: {
+  activeDragId: string | null;
   className?: string;
   dropId: string;
   isDnDEnabled: boolean;
 }) {
+  const { isMobile } = useSidebar();
   const { isOver, setNodeRef } = useDroppable({
     id: dropId,
   });
 
   if (!isDnDEnabled) {
+    return null;
+  }
+
+  if (isMobile && !activeDragId) {
     return null;
   }
 
@@ -550,6 +558,7 @@ function SidebarTree({
 
       {items.length === 0 && !shouldShowInitialSkeleton ? (
         <SidebarTreeDropZone
+          activeDragId={activeDragId}
           dropId={getParentDropId(parentNodeId)}
           isDnDEnabled={isDnDEnabled}
         />
@@ -559,6 +568,7 @@ function SidebarTree({
         return (
           <Fragment key={`${item.kind}-${item.node_id}`}>
             <SidebarTreeDropZone
+              activeDragId={activeDragId}
               dropId={getBeforeDropId({
                 anchorEdgeId: item.edge_id,
                 parentNodeId,
@@ -588,6 +598,7 @@ function SidebarTree({
             )}
 
             <SidebarTreeDropZone
+              activeDragId={activeDragId}
               dropId={getAfterDropId({
                 anchorEdgeId: item.edge_id,
                 parentNodeId,
@@ -756,17 +767,18 @@ export const AppSidebarPages = ({
     }
   };
 
-  const isDnDEnabled = !isMobile;
-  const sensors = useSensors(
-    useSensor(MouseSensor, {
-      activationConstraint: {
-        distance: 5,
-      },
-    }),
-  );
+  const isDnDEnabled = true;
+  const mouseSensor = useSensor(MouseSensor, {
+    activationConstraint: { distance: 5 },
+  });
+  const touchSensor = useSensor(TouchSensor, {
+    activationConstraint: { delay: 300, tolerance: 8 },
+  });
+  const sensors = useSensors(mouseSensor, touchSensor);
 
   const handleDragStart = useCallback(
     (event: DragStartEvent) => {
+      navigator.vibrate?.(50);
       markRecentDrag();
       setActiveDragId(String(event.active.id));
     },
@@ -930,7 +942,7 @@ export const AppSidebarPages = ({
           onDragEnd={handleDragEnd}
           onDragOver={handleDragOver}
           onDragStart={handleDragStart}
-          sensors={isDnDEnabled ? sensors : undefined}
+          sensors={sensors}
         >
           <SidebarMenuSub className="mx-0 mr-0 flex-1 gap-0 overflow-scroll border-none px-0">
             <SidebarTree

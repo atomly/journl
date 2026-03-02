@@ -1274,9 +1274,9 @@ export function FolderNestedPagesList({
     <section className="flex flex-col gap-2">
       <div className="flex items-center justify-between gap-2">
         <div>
-          <h2 className="font-semibold text-base">Contents</h2>
+          <h2 className="font-semibold text-base">Content</h2>
           <p className="text-muted-foreground text-sm">
-            Includes folders and pages in this tree.
+            Includes folders and pages in this folder:
           </p>
         </div>
         <AppSidebarTreeActions

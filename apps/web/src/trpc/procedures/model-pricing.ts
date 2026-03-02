@@ -1,5 +1,6 @@
 import { and, desc, eq, lte } from "@acme/db";
 import { ModelPricing, zInsertModelPricing } from "@acme/db/schema";
+import { zUsageUnit } from "@acme/db/usage";
 import { TRPCError, type TRPCRouterRecord } from "@trpc/server";
 import { z } from "zod/v4";
 import { protectedProcedure, publicProcedure } from "../trpc";
@@ -40,7 +41,7 @@ export const modelPricingRouter = {
       z.object({
         model_id: z.string(),
         model_provider: z.string(),
-        unit_type: z.string(),
+        unit_type: zUsageUnit,
       }),
     )
     .query(async ({ ctx, input }) => {
@@ -67,7 +68,6 @@ export const modelPricingRouter = {
         });
       }
     }),
-
   upsertPricing: protectedProcedure
     .input(zInsertModelPricing)
     .mutation(async () => {

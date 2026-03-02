@@ -8,7 +8,8 @@ import { useAppLayout } from "../../../_components/app-layout-provider";
 type StickyHeaderProps = React.ComponentProps<"header">;
 
 const SHOW_AT_SCROLL_TOP = 12;
-const MIN_SCROLL_DELTA = SHOW_AT_SCROLL_TOP * 3;
+const HIDE_SCROLL_DELTA = SHOW_AT_SCROLL_TOP * 2;
+const SHOW_SCROLL_DELTA = SHOW_AT_SCROLL_TOP * 6;
 
 export function AppHeader({ className, ...props }: StickyHeaderProps) {
   const isMobile = useIsMobile();
@@ -32,22 +33,26 @@ export function AppHeader({ className, ...props }: StickyHeaderProps) {
     const updateVisibility = () => {
       const currentScrollY = getScrollTop();
       const delta = currentScrollY - lastScrollYRef.current;
-
-      if (Math.abs(delta) < MIN_SCROLL_DELTA) {
-        return;
-      }
+      lastScrollYRef.current = currentScrollY;
 
       if (currentScrollY <= SHOW_AT_SCROLL_TOP) {
         setIsHidden(false);
-        lastScrollYRef.current = currentScrollY;
         return;
       }
 
-      if (delta > MIN_SCROLL_DELTA) {
+      if (delta > 0 && delta < HIDE_SCROLL_DELTA) {
+        return;
+      }
+
+      if (delta < 0 && Math.abs(delta) < SHOW_SCROLL_DELTA) {
+        return;
+      }
+
+      if (delta > 0) {
         setIsHidden(true);
       }
 
-      if (delta < -MIN_SCROLL_DELTA) {
+      if (delta < 0) {
         setIsHidden(false);
       }
 

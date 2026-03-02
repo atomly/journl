@@ -1,3 +1,4 @@
+import { openai } from "@ai-sdk/openai";
 import { Agent } from "@mastra/core/agent";
 import { RequestContext } from "@mastra/core/request-context";
 import { Memory } from "@mastra/memory";
@@ -45,15 +46,17 @@ const journlMemory = new Memory({
   vector: journlMastraVector,
 });
 
-function instructions({ requestContext }: { requestContext?: RequestContext }) {
+function prompt({ requestContext }: { requestContext?: RequestContext }) {
   const context = getJournlRequestContext(requestContext);
   if (!context) {
     throw new Error("Missing Journl context");
   }
   if (env.NODE_ENV === "development") {
-    console.debug("JournlAgentContext", context);
+    console.debug("[JournlAgentContext]", context);
   }
-  return `You are ${JOURNL_AGENT_NAME}, an AI companion that helps users write, navigate, and manage their own notes.
+  return `# System Prompt
+
+You are ${JOURNL_AGENT_NAME}, an AI companion that helps users write, navigate, and manage their own notes.
 
 Current date: ${context.currentDate}
 User's name: ${context.user.name}
@@ -61,7 +64,9 @@ User's name: ${context.user.name}
 Do not reproduce song lyrics or any other copyrighted material, even if asked.
 ${context.reasoning === "instant" ? "Before answering, quickly check whether a tool would improve accuracy (especially for recent, uncertain, or user-specific facts). If yes, use the tool instead of guessing." : ""}
 
-# User State (deterministic, read-only)
+## Environment
+
+Here is useful information about the environment the user is in:
 
 ${
   context.view.name === "journal"
@@ -83,7 +88,7 @@ ${
     : ""
 }
 
-# Global Behavior Meta
+## Guidelines
 
 - **Important**: If user refers to current editors ("today's note", "the page"), simply read the content of the active editor(s) for context. Don't ask for information you can already access.
 - When referencing returned pages or journal entries, prefer markdown links using the tool-provided link field using this format for page and entries respectively: [Title](url) / [YYYY-MM-DD](url).
@@ -92,6 +97,8 @@ ${
 - Complete tasks immediately. Take obvious next steps. Prefer direct tool actions over explanatory prose.
 - Mirror user's tone but avoid corporate filler. Be concise and high-signal.
 - Operate only on existing content; never fabricate. Prefer partial completion over clarifying questions when scope is large.
+- For facts that are likely outside the user's notes (news, current events, live facts), use webSearch and cite sources.
+- Prefer semantic/temporal journl tools for the user's personal content; use webSearch for public-web knowledge.
 - When asked about what you can do, respond to the user in natural language.`;
 }
 
@@ -105,12 +112,13 @@ const tools = {
   semanticJournalSearch,
   semanticPageSearch,
   temporalJournalSearch,
+  webSearch: openai.tools.webSearch(),
 };
 
 export const journlNano = new Agent({
   description: `${JOURNL_AGENT_NAME}, an AI companion for personal reflection, journaling, and knowledge discovery. Optimized for fast retrieval and navigation tasks.`,
   id: "journl-nano",
-  instructions,
+  instructions: prompt,
   memory: journlMemory,
   model: nanoModel,
   name: JOURNL_AGENT_NAME,
@@ -120,7 +128,7 @@ export const journlNano = new Agent({
 export const journlMini = new Agent({
   description: `${JOURNL_AGENT_NAME}, an AI companion for personal reflection, journaling, and knowledge discovery.`,
   id: "journl-mini",
-  instructions,
+  instructions: prompt,
   memory: journlMemory,
   model: miniModel,
   name: JOURNL_AGENT_NAME,

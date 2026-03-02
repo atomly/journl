@@ -24,7 +24,7 @@ import {
   RefreshCwIcon,
   Square,
 } from "lucide-react";
-import type { ComponentProps, ReactNode } from "react";
+import type { ComponentProps, FocusEvent, ReactNode } from "react";
 import { MarkdownText } from "~/components/assistant-ui/markdown-text";
 import { useThreadRuntime } from "~/components/assistant-ui/thread-runtime";
 import { TooltipIconButton } from "~/components/assistant-ui/tooltip-icon-button";
@@ -185,10 +185,30 @@ export function UserMessage() {
   );
 }
 
+const EDIT_FOCUS_DELAY = 160;
+
 export function EditComposer() {
+  function handleFocus(event: FocusEvent<HTMLTextAreaElement, Element>) {
+    const target = event.currentTarget;
+    const scrollIntoView = () => {
+      target.scrollIntoView({
+        behavior: "auto",
+        block: "center",
+        inline: "nearest",
+      });
+    };
+
+    window.requestAnimationFrame(scrollIntoView);
+    window.setTimeout(scrollIntoView, EDIT_FOCUS_DELAY);
+  }
+
   return (
     <ComposerPrimitive.Root className="my-4 flex w-full max-w-(--thread-max-width) flex-col gap-2 rounded-xl bg-background">
-      <ComposerPrimitive.Input className="flex h-8 w-full resize-none bg-transparent p-4 pb-0 text-foreground outline-none" />
+      <ComposerPrimitive.Input
+        autoFocus
+        onFocus={handleFocus}
+        className="flex h-8 w-full resize-none bg-transparent p-4 pb-0 text-foreground outline-none"
+      />
 
       <div className="mx-3 mb-3 flex items-center justify-center gap-2 self-end">
         <ComposerPrimitive.Cancel asChild>

@@ -6,6 +6,7 @@ import {
   DocumentEmbedding,
   type zInsertDocumentEmbedding,
 } from "@acme/db/schema";
+import { USAGE_UNITS } from "@acme/db/usage";
 import { type ChunkParams, MDocument } from "@mastra/rag";
 import { embedMany } from "ai";
 import removeMarkdown from "remove-markdown";
@@ -166,7 +167,7 @@ async function embedDocument(
   });
 
   await startModelUsage({
-    metrics: [{ quantity: usage.tokens, unit: "tokens" }],
+    metrics: [{ quantity: usage.tokens, unit: USAGE_UNITS.TOKENS }],
     modelId: model.modelId,
     modelProvider: model.provider,
     userId: document.user_id,

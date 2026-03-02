@@ -11,7 +11,7 @@ export const ModelPricing = pgTable(
     model_provider: varchar("model_provider", {
       length: TEXT_LIMITS.MODEL_PROVIDER,
     }).notNull(),
-    unit_type: varchar("unit_type", { length: 50 }).notNull(), // e.g., "input_tokens", "output_tokens", "reasoning_tokens", "requests"
+    unit_type: varchar("unit_type", { length: 50 }).notNull(), // See usage-unit.ts for supported unit values
     price_per_unit: decimal("price_per_unit", {
       precision: 12,
       scale: 8,

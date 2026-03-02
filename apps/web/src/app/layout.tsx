@@ -7,7 +7,6 @@ import "~/app/styles.css";
 
 import { AuthModalProvider } from "~/components/auth/auth-modal-provider";
 import { BetterAuthProvider } from "../components/auth/better-auth-provider";
-import { PageLoadProgressBar } from "./_components/page-load-progress-bar";
 
 const publicWebUrl = getPublicWebUrl();
 
@@ -62,7 +61,6 @@ export default function RootLayout({
           geistMono.variable,
         )}
       >
-        <PageLoadProgressBar />
         <BetterAuthProvider>
           <AuthModalProvider>
             {children}

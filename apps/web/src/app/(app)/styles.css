@@ -118,6 +118,7 @@ The following is the z-index hierarchy for the app.
 The only component we need to edit in this file is the overlay.
 The rest of the components are set by the Tailwind CSS classes, or by our editor framework.
 
+- Progress Bar (`z-index`: 7000)
 - Sidebar Drag Handle Tooltips/Popover (`z-index`: 6000)
 - Dialog Content (Billing Modal, Auth Modal, etc.) (`z-index`: 5500)
 - Dialog Overlays (Billing Modal, Auth Modal, etc.) (`z-index`: 5000)

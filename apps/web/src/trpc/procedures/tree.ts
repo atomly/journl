@@ -216,193 +216,11 @@ export const treeRouter = {
     .input(
       z.object({
         folder_id: z.uuid(),
-        move_to_parent_node_id: z.uuid().nullable().optional(),
-        strategy: z.enum(["delete_all", "move"]),
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      if (input.strategy === "delete_all") {
-        // Phase 1: Synchronous — detach edges so subtree is invisible
-        const asyncPayload = await ctx.db.transaction(async (tx) => {
-          const userId = ctx.session.user.id;
-          const folderNode = await getFolderNodeByFolderId({
-            db: tx,
-            folderId: input.folder_id,
-            userId,
-          });
-
-          if (!folderNode) {
-            throw new TRPCError({
-              code: "NOT_FOUND",
-              message: "Folder node not found",
-            });
-          }
-
-          // BFS to collect all subtree node IDs
-          const edges = await tx
-            .select({
-              id: TreeEdge.id,
-              node_id: TreeEdge.node_id,
-              parent_node_id: TreeEdge.parent_node_id,
-            })
-            .from(TreeEdge)
-            .where(eq(TreeEdge.user_id, userId));
-
-          const childrenByParent = new Map<string, string[]>();
-          const edgeByNodeId = new Map<string, string>();
-          for (const edge of edges) {
-            edgeByNodeId.set(edge.node_id, edge.id);
-            if (!edge.parent_node_id) {
-              continue;
-            }
-            const children = childrenByParent.get(edge.parent_node_id) ?? [];
-            children.push(edge.node_id);
-            childrenByParent.set(edge.parent_node_id, children);
-          }
-
-          const subtreeNodeIds = new Set<string>([folderNode.id]);
-          const queue = [...(childrenByParent.get(folderNode.id) ?? [])];
-
-          while (queue.length > 0) {
-            const nodeId = queue.shift();
-            if (!nodeId || subtreeNodeIds.has(nodeId)) {
-              continue;
-            }
-            subtreeNodeIds.add(nodeId);
-            queue.push(...(childrenByParent.get(nodeId) ?? []));
-          }
-
-          // Detach the root folder's edge (re-links external siblings)
-          const rootEdgeId = edgeByNodeId.get(folderNode.id);
-          if (rootEdgeId) {
-            await detachEdge({ db: tx, edgeId: rootEdgeId, userId });
-            // Delete the detached root edge separately to avoid trigger conflicts
-            await tx
-              .delete(TreeEdge)
-              .where(
-                and(eq(TreeEdge.id, rootEdgeId), eq(TreeEdge.user_id, userId)),
-              );
-          }
-
-          // Bulk delete remaining inner subtree edges
-          const innerSubtreeNodeIds = [...subtreeNodeIds].filter(
-            (id) => id !== folderNode.id,
-          );
-          if (innerSubtreeNodeIds.length > 0) {
-            // Null out linked-list pointers so the before-delete trigger
-            // becomes a no-op — prevents constraint violations when
-            // deleting multiple sibling edges in one bulk statement.
-            await tx
-              .update(TreeEdge)
-              .set({
-                next_edge_id: null,
-                parent_node_id: null,
-                prev_edge_id: null,
-              })
-              .where(
-                and(
-                  eq(TreeEdge.user_id, userId),
-                  inArray(TreeEdge.node_id, innerSubtreeNodeIds),
-                ),
-              );
-
-            await tx
-              .delete(TreeEdge)
-              .where(
-                and(
-                  eq(TreeEdge.user_id, userId),
-                  inArray(TreeEdge.node_id, innerSubtreeNodeIds),
-                ),
-              );
-          }
-
-          // Collect page IDs and folder IDs from subtree nodes
-          const subtreeNodes = await tx
-            .select({
-              folder_id: TreeNode.folder_id,
-              id: TreeNode.id,
-              page_id: TreeNode.page_id,
-            })
-            .from(TreeNode)
-            .where(
-              and(
-                eq(TreeNode.user_id, userId),
-                inArray(TreeNode.id, [...subtreeNodeIds]),
-              ),
-            );
-
-          const pageIds = subtreeNodes
-            .map((node) => node.page_id)
-            .filter((value): value is string => !!value);
-          const folderIds = subtreeNodes
-            .map((node) => node.folder_id)
-            .filter((value): value is string => !!value);
-
-          let documentIds: string[] = [];
-          if (pageIds.length > 0) {
-            const pages = await tx
-              .select({ document_id: Page.document_id })
-              .from(Page)
-              .where(and(eq(Page.user_id, userId), inArray(Page.id, pageIds)));
-            documentIds = pages.map((page) => page.document_id);
-          }
-
-          // Delete root folder's TreeNode and Folder record synchronously
-          await tx
-            .delete(TreeNode)
-            .where(
-              and(eq(TreeNode.id, folderNode.id), eq(TreeNode.user_id, userId)),
-            );
-
-          await tx
-            .delete(Folder)
-            .where(
-              and(eq(Folder.id, input.folder_id), eq(Folder.user_id, userId)),
-            );
-
-          // Exclude root node/folder from async cleanup (already deleted)
-          const innerNodeIds = [...subtreeNodeIds].filter(
-            (id) => id !== folderNode.id,
-          );
-          const innerFolderIds = folderIds.filter(
-            (id) => id !== input.folder_id,
-          );
-
-          return { documentIds, folderIds: innerFolderIds, innerNodeIds };
-        });
-
-        // Phase 2: Async — delegate content cleanup to background workflow
-        const userId = ctx.session.user.id;
-        const { documentIds, folderIds, innerNodeIds } = asyncPayload;
-
-        if (
-          documentIds.length > 0 ||
-          folderIds.length > 0 ||
-          innerNodeIds.length > 0
-        ) {
-          try {
-            await startFolderContentDeletion({
-              documentIds,
-              folderIds,
-              subtreeNodeIds: innerNodeIds,
-              userId,
-            });
-          } catch (error) {
-            console.error(
-              "Failed to start folder content deletion workflow:",
-              error,
-            );
-          }
-        }
-
-        return {
-          deleted_folder_id: input.folder_id,
-          strategy: input.strategy,
-        };
-      }
-
-      // "move" strategy
-      return await ctx.db.transaction(async (tx) => {
+      // Phase 1: Synchronous — detach edges so subtree is invisible
+      const asyncPayload = await ctx.db.transaction(async (tx) => {
         const userId = ctx.session.user.id;
         const folderNode = await getFolderNodeByFolderId({
           db: tx,
@@ -417,51 +235,164 @@ export const treeRouter = {
           });
         }
 
-        if (input.move_to_parent_node_id === folderNode.id) {
-          throw new TRPCError({
-            code: "BAD_REQUEST",
-            message: "Destination parent cannot be the same folder node",
-          });
+        // BFS to collect all subtree node IDs
+        const edges = await tx
+          .select({
+            id: TreeEdge.id,
+            node_id: TreeEdge.node_id,
+            parent_node_id: TreeEdge.parent_node_id,
+          })
+          .from(TreeEdge)
+          .where(eq(TreeEdge.user_id, userId));
+
+        const childrenByParent = new Map<string, string[]>();
+        const edgeByNodeId = new Map<string, string>();
+        for (const edge of edges) {
+          edgeByNodeId.set(edge.node_id, edge.id);
+          if (!edge.parent_node_id) {
+            continue;
+          }
+          const children = childrenByParent.get(edge.parent_node_id) ?? [];
+          children.push(edge.node_id);
+          childrenByParent.set(edge.parent_node_id, children);
         }
 
-        const siblings = await orderedChildren({
-          db: tx,
-          limit: 10_000,
-          parentNodeId: folderNode.id,
-          userId,
-        });
+        const subtreeNodeIds = new Set<string>([folderNode.id]);
+        const queue = [...(childrenByParent.get(folderNode.id) ?? [])];
 
-        for (const edge of [...siblings.edges].reverse()) {
-          await moveNode({
-            db: tx,
-            destination: {
-              parent_node_id: input.move_to_parent_node_id ?? null,
-              position: "before",
-            },
-            nodeId: edge.node_id,
-            userId,
-          });
+        while (queue.length > 0) {
+          const nodeId = queue.shift();
+          if (!nodeId || subtreeNodeIds.has(nodeId)) {
+            continue;
+          }
+          subtreeNodeIds.add(nodeId);
+          queue.push(...(childrenByParent.get(nodeId) ?? []));
         }
 
-        const [deletedFolder] = await tx
+        // Detach the root folder's edge (re-links external siblings)
+        const rootEdgeId = edgeByNodeId.get(folderNode.id);
+        if (rootEdgeId) {
+          await detachEdge({ db: tx, edgeId: rootEdgeId, userId });
+          // Delete the detached root edge separately to avoid trigger conflicts
+          await tx
+            .delete(TreeEdge)
+            .where(
+              and(eq(TreeEdge.id, rootEdgeId), eq(TreeEdge.user_id, userId)),
+            );
+        }
+
+        // Bulk delete remaining inner subtree edges
+        const innerSubtreeNodeIds = [...subtreeNodeIds].filter(
+          (id) => id !== folderNode.id,
+        );
+        if (innerSubtreeNodeIds.length > 0) {
+          // Null out linked-list pointers so the before-delete trigger
+          // becomes a no-op — prevents constraint violations when
+          // deleting multiple sibling edges in one bulk statement.
+          await tx
+            .update(TreeEdge)
+            .set({
+              next_edge_id: null,
+              parent_node_id: null,
+              prev_edge_id: null,
+            })
+            .where(
+              and(
+                eq(TreeEdge.user_id, userId),
+                inArray(TreeEdge.node_id, innerSubtreeNodeIds),
+              ),
+            );
+
+          await tx
+            .delete(TreeEdge)
+            .where(
+              and(
+                eq(TreeEdge.user_id, userId),
+                inArray(TreeEdge.node_id, innerSubtreeNodeIds),
+              ),
+            );
+        }
+
+        // Collect page IDs and folder IDs from subtree nodes
+        const subtreeNodes = await tx
+          .select({
+            folder_id: TreeNode.folder_id,
+            id: TreeNode.id,
+            page_id: TreeNode.page_id,
+          })
+          .from(TreeNode)
+          .where(
+            and(
+              eq(TreeNode.user_id, userId),
+              inArray(TreeNode.id, [...subtreeNodeIds]),
+            ),
+          );
+
+        const pageIds = subtreeNodes
+          .map((node) => node.page_id)
+          .filter((value): value is string => !!value);
+        const folderIds = subtreeNodes
+          .map((node) => node.folder_id)
+          .filter((value): value is string => !!value);
+
+        let documentIds: string[] = [];
+        if (pageIds.length > 0) {
+          const pages = await tx
+            .select({ document_id: Page.document_id })
+            .from(Page)
+            .where(and(eq(Page.user_id, userId), inArray(Page.id, pageIds)));
+          documentIds = pages.map((page) => page.document_id);
+        }
+
+        // Delete root folder's TreeNode and Folder record synchronously
+        await tx
+          .delete(TreeNode)
+          .where(
+            and(eq(TreeNode.id, folderNode.id), eq(TreeNode.user_id, userId)),
+          );
+
+        await tx
           .delete(Folder)
           .where(
             and(eq(Folder.id, input.folder_id), eq(Folder.user_id, userId)),
-          )
-          .returning();
+          );
 
-        if (!deletedFolder) {
-          throw new TRPCError({
-            code: "NOT_FOUND",
-            message: "Folder not found",
-          });
-        }
+        // Exclude root node/folder from async cleanup (already deleted)
+        const innerNodeIds = [...subtreeNodeIds].filter(
+          (id) => id !== folderNode.id,
+        );
+        const innerFolderIds = folderIds.filter((id) => id !== input.folder_id);
 
-        return {
-          deleted_folder_id: deletedFolder.id,
-          strategy: input.strategy,
-        };
+        return { documentIds, folderIds: innerFolderIds, innerNodeIds };
       });
+
+      // Phase 2: Async — delegate content cleanup to background workflow
+      const userId = ctx.session.user.id;
+      const { documentIds, folderIds, innerNodeIds } = asyncPayload;
+
+      if (
+        documentIds.length > 0 ||
+        folderIds.length > 0 ||
+        innerNodeIds.length > 0
+      ) {
+        try {
+          await startFolderContentDeletion({
+            documentIds,
+            folderIds,
+            subtreeNodeIds: innerNodeIds,
+            userId,
+          });
+        } catch (error) {
+          console.error(
+            "Failed to start folder content deletion workflow:",
+            error,
+          );
+        }
+      }
+
+      return {
+        deleted_folder_id: input.folder_id,
+      };
     }),
   getChildrenPaginated: protectedProcedure
     .input(

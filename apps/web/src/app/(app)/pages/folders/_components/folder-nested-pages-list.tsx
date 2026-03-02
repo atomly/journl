@@ -23,7 +23,9 @@ import {
   ChevronRight,
   FileText,
   Folder as FolderIcon,
+  MoreHorizontal,
   Pencil,
+  Trash2,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -34,6 +36,12 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "~/components/ui/collapsible";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "~/components/ui/dropdown-menu";
 import { Input } from "~/components/ui/input";
 import { useSidebar } from "~/components/ui/sidebar";
 import { Skeleton } from "~/components/ui/skeleton";
@@ -49,16 +57,8 @@ import {
 import { getInfiniteSidebarTreeQueryOptions } from "~/trpc/options/sidebar-tree-query-options";
 import { useTRPC } from "~/trpc/react";
 import { AppSidebarTreeActions } from "../../../@appSidebar/_components/app-sidebar-tree-actions";
-import {
-  DeleteFolderButton,
-  DeleteFolderDialog,
-  DeleteFolderDialogTrigger,
-} from "../../../@appSidebar/_components/delete-folder-button";
-import {
-  DeletePageButton,
-  DeletePageDialog,
-  DeletePageDialogTrigger,
-} from "../../../@appSidebar/_components/delete-page-button";
+import { DeleteFolderDialog } from "../../../@appSidebar/_components/delete-folder-button";
+import { DeletePageDialog } from "../../../@appSidebar/_components/delete-page-button";
 
 const TREE_ITEM_INDENT_CLASSNAME = "ml-3 pl-2";
 const TREE_ROW_CLASSNAME =
@@ -288,8 +288,8 @@ function DraggablePageRow({
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const pathname = usePathname();
-  const { isMobile } = useSidebar();
   const [isEditing, setIsEditing] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [draftTitle, setDraftTitle] = useState(page.title);
   const shouldSkipBlurCommitRef = useRef(false);
   const itemRef: FolderTreeItemRef = {
@@ -389,7 +389,11 @@ function DraggablePageRow({
   );
 
   return (
-    <DeletePageDialog page={page}>
+    <DeletePageDialog
+      page={page}
+      open={isDeleteDialogOpen}
+      onOpenChange={setIsDeleteDialogOpen}
+    >
       <div className={cn(itemIndentClassName, "py-0")}>
         <div
           ref={setNodeRef}
@@ -493,32 +497,46 @@ function DraggablePageRow({
             </Link>
           )}
 
-          <Button
-            type="button"
-            aria-label="Rename page"
-            variant="ghost"
-            size="icon"
-            className={cn(
-              "h-8 w-8 rounded-md bg-transparent! p-0 text-muted-foreground",
-              !isMobile &&
-                "pointer-events-none invisible opacity-0 transition-opacity group-focus-within/tree-row:pointer-events-auto group-focus-within/tree-row:visible group-focus-within/tree-row:opacity-100 group-hover/tree-row:pointer-events-auto group-hover/tree-row:visible group-hover/tree-row:opacity-100",
-            )}
-            onPointerDown={(event) => {
-              event.stopPropagation();
-            }}
-            onClick={(event) => {
-              event.preventDefault();
-              event.stopPropagation();
-              setDraftTitle(page.title);
-              setIsEditing(true);
-            }}
-          >
-            <Pencil className="size-3.5" />
-          </Button>
-
-          <DeletePageDialogTrigger asChild>
-            <DeletePageButton className="pointer-events-none invisible bg-transparent! pr-0! text-destructive! opacity-0 transition-opacity group-focus-within/tree-row:pointer-events-auto group-focus-within/tree-row:visible group-focus-within/tree-row:opacity-100 group-hover/tree-row:pointer-events-auto group-hover/tree-row:visible group-hover/tree-row:opacity-100" />
-          </DeletePageDialogTrigger>
+          <DropdownMenu modal={false}>
+            <DropdownMenuTrigger asChild>
+              <Button
+                type="button"
+                aria-label="Page settings"
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 rounded-md bg-transparent! p-0 text-muted-foreground"
+                onPointerDown={(event) => {
+                  event.stopPropagation();
+                }}
+                onClick={(event) => {
+                  event.preventDefault();
+                  event.stopPropagation();
+                }}
+              >
+                <MoreHorizontal className="size-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem
+                onSelect={() => {
+                  setDraftTitle(page.title);
+                  setIsEditing(true);
+                }}
+              >
+                <Pencil className="size-3.5" />
+                Rename
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                variant="destructive"
+                onSelect={() => {
+                  setIsDeleteDialogOpen(true);
+                }}
+              >
+                <Trash2 className="size-3.5" />
+                Delete
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
     </DeletePageDialog>
@@ -549,8 +567,8 @@ function DraggableFolderRow({
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const pathname = usePathname();
-  const { isMobile } = useSidebar();
   const [isEditing, setIsEditing] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [draftName, setDraftName] = useState(folder.name);
   const shouldSkipBlurCommitRef = useRef(false);
   const itemRef: FolderTreeItemRef = {
@@ -672,7 +690,11 @@ function DraggableFolderRow({
   );
 
   return (
-    <DeleteFolderDialog folder={folder}>
+    <DeleteFolderDialog
+      folder={folder}
+      open={isDeleteDialogOpen}
+      onOpenChange={setIsDeleteDialogOpen}
+    >
       <Collapsible
         open={isOpen}
         onOpenChange={(open) => {
@@ -791,41 +813,46 @@ function DraggableFolderRow({
               )}
 
               <div className="ml-1 flex shrink-0 items-center gap-0.5">
-                <Button
-                  type="button"
-                  aria-label="Rename folder"
-                  variant="ghost"
-                  size="icon"
-                  className={cn(
-                    "h-8 w-8 rounded-md bg-transparent! p-0 text-muted-foreground",
-                    !isMobile &&
-                      "pointer-events-none invisible opacity-0 transition-opacity group-focus-within/folder-item:pointer-events-auto group-focus-within/folder-item:visible group-focus-within/folder-item:opacity-100 group-hover/folder-item:pointer-events-auto group-hover/folder-item:visible group-hover/folder-item:opacity-100",
-                  )}
-                  onPointerDown={(event) => {
-                    event.stopPropagation();
-                  }}
-                  onClick={(event) => {
-                    event.preventDefault();
-                    event.stopPropagation();
-                    setDraftName(folder.name);
-                    setIsEditing(true);
-                  }}
-                >
-                  <Pencil className="size-3.5" />
-                </Button>
-
-                <DeleteFolderDialogTrigger asChild>
-                  <DeleteFolderButton
-                    className={cn(
-                      "h-8 w-8 rounded-md bg-transparent! p-0 text-destructive!",
-                      !isMobile &&
-                        "pointer-events-none invisible opacity-0 transition-opacity group-focus-within/folder-item:pointer-events-auto group-focus-within/folder-item:visible group-focus-within/folder-item:opacity-100 group-hover/folder-item:pointer-events-auto group-hover/folder-item:visible group-hover/folder-item:opacity-100",
-                    )}
-                    onPointerDown={(event) => {
-                      event.stopPropagation();
-                    }}
-                  />
-                </DeleteFolderDialogTrigger>
+                <DropdownMenu modal={false}>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      type="button"
+                      aria-label="Folder settings"
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 rounded-md bg-transparent! p-0 text-muted-foreground"
+                      onPointerDown={(event) => {
+                        event.stopPropagation();
+                      }}
+                      onClick={(event) => {
+                        event.preventDefault();
+                        event.stopPropagation();
+                      }}
+                    >
+                      <MoreHorizontal className="size-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem
+                      onSelect={() => {
+                        setDraftName(folder.name);
+                        setIsEditing(true);
+                      }}
+                    >
+                      <Pencil className="size-3.5" />
+                      Rename
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      variant="destructive"
+                      onSelect={() => {
+                        setIsDeleteDialogOpen(true);
+                      }}
+                    >
+                      <Trash2 className="size-3.5" />
+                      Delete
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
 
                 <AppSidebarTreeActions
                   kind="folder"

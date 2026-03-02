@@ -1,7 +1,7 @@
 import { and, desc, eq, lte, sql } from "@acme/db";
 import { db } from "@acme/db/client";
 import { ModelPricing, UsageAggregate } from "@acme/db/schema";
-import { ensureUsagePeriodAtDate } from "@acme/db/usage";
+import { ensureUsagePeriodAtDate, zUsageUnit } from "@acme/db/usage";
 import { inArray } from "drizzle-orm";
 import { FatalError } from "workflow";
 import { start } from "workflow/api";
@@ -11,7 +11,7 @@ import { createTransaction } from "./utils/transaction";
 
 const zUsageMetric = z.object({
   quantity: z.number().nonnegative(),
-  unit: z.string().min(1),
+  unit: zUsageUnit,
 });
 
 const zModelUsageInput = z.object({

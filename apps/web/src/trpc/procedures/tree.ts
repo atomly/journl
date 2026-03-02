@@ -387,6 +387,12 @@ export const treeRouter = {
             "Failed to start folder content deletion workflow:",
             error,
           );
+          throw new TRPCError({
+            cause: error,
+            code: "INTERNAL_SERVER_ERROR",
+            message:
+              "Folder was removed from the tree but cleanup could not be queued. Please contact support if descendant content is missing.",
+          });
         }
       }
 

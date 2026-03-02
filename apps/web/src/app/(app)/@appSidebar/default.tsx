@@ -11,7 +11,7 @@ import {
 } from "~/components/ui/sidebar";
 import { Skeleton } from "~/components/ui/skeleton";
 import { env } from "~/env";
-import { infinitePagesQueryOptions } from "~/trpc/options/pages-query-options";
+import { infiniteSidebarTreeQueryOptions } from "~/trpc/options/sidebar-tree-query-options";
 import { prefetch, trpc } from "~/trpc/server";
 import { DynamicAppSidebarDevtools } from "./_components/app-sidebar-devtools.dynamic";
 import { AppSidebarNavigation } from "./_components/app-sidebar-main";
@@ -31,7 +31,9 @@ const navigationItems = [
 
 export default function AppSidebar() {
   prefetch(
-    trpc.pages.getPaginated.infiniteQueryOptions(infinitePagesQueryOptions),
+    trpc.tree.getChildrenPaginated.infiniteQueryOptions(
+      infiniteSidebarTreeQueryOptions,
+    ),
   );
   return (
     <Sidebar collapsible="icon" variant="floating">
@@ -47,9 +49,7 @@ export default function AppSidebar() {
           <SidebarGroupLabel>Navigation</SidebarGroupLabel>
           <AppSidebarNavigation items={navigationItems} />
           <Suspense fallback={<AppSidebarPagesSkeleton />}>
-            <AppSidebarPages
-              infinitePagesQueryOptions={infinitePagesQueryOptions}
-            />
+            <AppSidebarPages />
           </Suspense>
         </SidebarGroup>
       </SidebarContent>

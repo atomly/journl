@@ -6,7 +6,10 @@ import { useState } from "react";
 import { useDebouncedCallback } from "use-debounce";
 import { ExpandingTextarea } from "~/components/ui/expanding-textarea";
 import { cn } from "~/lib/cn";
-import { infinitePagesQueryOptions } from "~/trpc/options/pages-query-options";
+import {
+  updateNode,
+  updatePageTitleInNestedPages,
+} from "~/trpc/cache/tree-cache";
 import { useTRPC } from "~/trpc/react";
 
 const DEFAULT_PLACEHOLDER = "New page";
@@ -14,7 +17,7 @@ const DEFAULT_DEBOUNCE_TIME = 150;
 const MAX_TITLE_LENGTH = 100;
 
 type PageEditorTitleProps = {
-  page: Pick<Page, "id" | "title">;
+  page: Pick<Page, "id" | "node_id" | "parent_node_id" | "title">;
   placeholder?: string;
   className?: string;
   debounceTime?: number;
@@ -38,6 +41,9 @@ export function PageTitleTextarea({
     trpc.pages.updateTitle.mutationOptions({}),
   );
   const [title, setTitle] = useState(page.title);
+  const treeQueryFilter = trpc.tree.getChildrenPaginated.infiniteQueryFilter();
+  const nestedFolderPagesQueryFilter =
+    trpc.tree.getNestedPagesPaginated.infiniteQueryFilter();
 
   // Debounced API call for page title updates
   const debouncedUpdate = useDebouncedCallback((newTitle: string) => {
@@ -54,24 +60,30 @@ export function PageTitleTextarea({
       },
     );
 
-    // Update the pages.getPaginated query cache from sidebar
-    queryClient.setQueryData(
-      trpc.pages.getPaginated.infiniteQueryOptions(infinitePagesQueryOptions)
-        .queryKey,
-      (old) => {
-        if (!old) return old;
-        const pages = old.pages.map((p) => ({
-          ...p,
-          items: p.items.map((item) =>
-            item.id === page.id ? { ...item, title: newTitle } : item,
-          ),
-        }));
-        return {
-          ...old,
-          pages,
-        };
-      },
-    );
+    if (page.node_id) {
+      updateNode({
+        nodeId: page.node_id,
+        queryClient,
+        queryFilter: treeQueryFilter,
+        updater: (item) =>
+          item.kind === "page"
+            ? {
+                ...item,
+                page: {
+                  ...item.page,
+                  title: newTitle,
+                },
+              }
+            : item,
+      });
+    }
+
+    updatePageTitleInNestedPages({
+      pageId: page.id,
+      queryClient,
+      queryFilter: nestedFolderPagesQueryFilter,
+      title: newTitle,
+    });
 
     // Execute the mutation
     updatePageTitle(
@@ -82,9 +94,8 @@ export function PageTitleTextarea({
           queryClient.invalidateQueries({
             queryKey: trpc.pages.getById.queryOptions({ id: page.id }).queryKey,
           });
-          queryClient.invalidateQueries({
-            queryKey: trpc.pages.getByUser.queryOptions().queryKey,
-          });
+          queryClient.invalidateQueries(treeQueryFilter);
+          void queryClient.invalidateQueries(nestedFolderPagesQueryFilter);
         },
       },
     );

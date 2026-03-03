@@ -5,7 +5,6 @@ export function dbEnv() {
   return createEnv({
     experimental__runtimeEnv: {},
     server: {
-      POSTGRES_SSL_MODE: z.enum(["auto", "require", "disable"]).default("auto"),
       POSTGRES_URL: z.url(),
     },
     skipValidation:

@@ -18,11 +18,15 @@
     "db:push": "turbo -F @acme/db push",
     "db:studio": "turbo -F @acme/db studio",
     "dev": "turbo watch dev --continue",
-    "typecheck": "turbo run typecheck"
+    "typecheck": "turbo run typecheck",
+    "supabase:start": "supabase start",
+    "supabase:stop": "supabase stop",
+    "supabase:status": "supabase status"
   },
   "devDependencies": {
     "@biomejs/biome": "~2.4.4",
     "@turbo/gen": "~2.8.10",
+    "supabase": "^2.76.15",
     "turbo": "~2.8.10"
   },
   "pnpm": {

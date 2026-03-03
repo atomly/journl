@@ -37,23 +37,6 @@ export function getEmptyTreeChildrenData(): TreeChildrenInfiniteData {
   };
 }
 
-export function ensureTreeContainer({
-  queryClient,
-  queryKey,
-}: {
-  queryClient: QueryClient;
-  queryKey: QueryKey;
-}) {
-  const existing = queryClient.getQueryData<TreeChildrenInfiniteData>(queryKey);
-  if (existing) {
-    return existing;
-  }
-
-  const emptyData = getEmptyTreeChildrenData();
-  queryClient.setQueryData(queryKey, emptyData);
-  return emptyData;
-}
-
 export function seedEmptyContainer({
   queryClient,
   queryKey,
@@ -286,29 +269,6 @@ export function insertItem({
   );
 }
 
-export function prependItems({
-  items,
-  queryClient,
-  queryKey,
-}: {
-  items: TreeItem[];
-  queryClient: QueryClient;
-  queryKey: QueryKey;
-}) {
-  queryClient.setQueryData<TreeChildrenInfiniteData>(queryKey, (old) => {
-    let nextData = old;
-
-    for (const item of [...items].reverse()) {
-      nextData = insertItemInData({
-        data: nextData,
-        item,
-      });
-    }
-
-    return nextData;
-  });
-}
-
 export function removeNode({
   nodeId,
   queryClient,
@@ -410,16 +370,6 @@ export function moveNode({
   });
 
   return item;
-}
-
-export function setNodeParent({
-  item,
-  parentNodeId,
-}: {
-  item: TreeItem;
-  parentNodeId: string | null;
-}) {
-  return setTreeItemParentNodeId(item, parentNodeId);
 }
 
 export function getLoadedTreeItems({

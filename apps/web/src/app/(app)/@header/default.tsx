@@ -14,7 +14,7 @@ export default function JournalHeader() {
         <SidebarTrigger />
         <div className="flex w-full items-center justify-between gap-x-2">
           <HeaderJournalButton />
-          <div className="@container flex w-full flex-1 justify-end gap-x-2">
+          <div className="@container header-actions flex w-full flex-1 justify-end gap-x-2">
             <Suspense>
               <HeaderSubscriptionButton />
             </Suspense>

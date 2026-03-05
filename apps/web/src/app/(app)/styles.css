@@ -169,6 +169,29 @@ The rest of the components are set by the Tailwind CSS classes, or by our editor
   z-index: 4000 !important;
 }
 
+@container (max-width: 430px) {
+  .header-actions:has(.header-subscription-button) .header-search-trigger {
+    width: 2rem;
+    max-width: 2rem;
+    justify-content: center;
+  }
+
+  .header-actions:has(.header-subscription-button)
+    .header-search-trigger
+    .header-search-icon {
+    display: block;
+  }
+
+  .header-actions:has(.header-subscription-button)
+    .header-search-trigger
+    .header-search-label,
+  .header-actions:has(.header-subscription-button)
+    .header-search-trigger
+    .header-search-shortcuts {
+    display: none;
+  }
+}
+
 /* On mobile... */
 @media (max-width: 768px) {
   /* Sets the z-index of the sidebar and its overlay */

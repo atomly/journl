@@ -1,6 +1,6 @@
 import { z } from "zod";
-import { zTargetEditor } from "../manipulate-editor/schema";
+import { zJournlEditorId } from "~/ai/agents/journl-agent";
 
 export const zEditorChangesInput = z.object({
-  targetEditor: zTargetEditor,
+  targetEditor: zJournlEditorId,
 });

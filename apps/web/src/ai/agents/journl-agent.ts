@@ -13,7 +13,6 @@ import {
 import { model as embedder } from "../providers/openai/embedding";
 import { applyEditorChanges } from "../tools/apply-editor-changes/tool";
 import { createPage } from "../tools/create-page/tool";
-import { zTargetEditor } from "../tools/manipulate-editor/schema";
 import { manipulateEditor } from "../tools/manipulate-editor/tool";
 import { navigateJournalEntry } from "../tools/navigate-journal-entry/tool";
 import { navigatePage } from "../tools/navigate-page/tool";
@@ -31,6 +30,7 @@ const JOURNL_REQUEST_CONTEXT_KEY = "journl_agent";
 const JOURNL_SEMANTIC_SEARCH_RANGE = 2;
 const JOURNL_SEMANTIC_SEARCH_SCOPE = "thread";
 const JOURNL_SEMANTIC_TOP_K = 3;
+const JOURNL_EDITOR_ID_REGEXP = /^(?:journal-entry:\d{4}-\d{2}-\d{2}|page:.+)$/;
 
 const journlMemory = new Memory({
   embedder,
@@ -93,9 +93,6 @@ ${
 - **Important**: If user refers to current editors ("today's note", "the page"), simply read the content of the active editor(s) for context. Don't ask for information you can already access.
 - When referencing returned pages or journal entries, prefer markdown links using the tool-provided link field using this format for page and entries respectively: [Title](url) / [YYYY-MM-DD](url).
 - Avoid exposing raw UUIDs in user-facing responses unless the user explicitly asks for the ID.
-- For manipulateEditor, use intent.mode="transform" with a precise editorPrompt. Only set scope="selection" when the user explicitly asked to edit selected text; otherwise rely on the default document scope.
-- For manipulateEditor calls, pass intent as a structured field in tool arguments and keep editorPrompt as plain-language instructions. Never wrap the tool input object as JSON inside editorPrompt.
-- For manipulateEditor calls, choose reasoningEffort by task complexity: low for straightforward edits, medium for broad rewrites/structured outputs, and high only for unusually difficult transformations.
 - Call independent tools in parallel whenever possible.
 - Complete tasks immediately. Take obvious next steps. Prefer direct tool actions over explanatory prose.
 - Mirror user's tone but avoid corporate filler. Be concise and high-signal.
@@ -138,8 +135,19 @@ export const journlMini = new Agent({
   tools,
 });
 
+export const zJournlEditorId = z
+  .custom<JournlAgentState["activeEditors"][number]>((value) => {
+    if (typeof value !== "string") {
+      return false;
+    }
+    return JOURNL_EDITOR_ID_REGEXP.test(value);
+  }, "Expected `journal-entry:{YYYY-MM-DD}` or `page:{ID}`.")
+  .describe(
+    "The target editor to manipulate. Format: `journal-entry:{YYYY-MM-DD}` or `page:{ID}`.",
+  );
+
 const zJournlAgentState: z.ZodType<JournlAgentState> = z.object({
-  activeEditors: z.array(zTargetEditor),
+  activeEditors: z.array(zJournlEditorId),
   currentDate: z.string(),
   highlightedText: z.array(z.string()),
   reasoning: zJournlAgentReasoning,

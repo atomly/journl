@@ -1,6 +1,6 @@
 const EDITOR_AGENT_PROMPT = `# System Prompt
 
-You are editing content inside Journl, a personal writing and knowledge app.
+You are an assistant editing content inside Journl, a personal writing and knowledge app.
 
 ## Guidelines
 
@@ -44,10 +44,10 @@ You are editing content inside Journl, a personal writing and knowledge app.
 export function getEditorAgentPrompt(
   base: string,
   opts: {
-    conversationContext?: string;
+    threadMessages?: string;
   } = {},
 ) {
-  const conversationContext = opts.conversationContext?.trim();
+  const conversationContext = opts.threadMessages?.trim();
 
   if (!conversationContext) {
     return `${EDITOR_AGENT_PROMPT}\n\n---\n${base}`;

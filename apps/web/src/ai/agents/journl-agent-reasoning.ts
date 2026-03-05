@@ -10,7 +10,14 @@ export function parseJournlAgentReasoning(value: unknown) {
 
 export type GPTReasoningEffort = "minimal" | "low" | "medium";
 
-export function getGPTReasoningEffort(
+export const zOpenAIReasoningEffort = z.enum([
+  "minimal",
+  "low",
+  "medium",
+  "high",
+]);
+
+export function getOpenAIReasoningEffort(
   mode: JournlReasoning,
 ): GPTReasoningEffort {
   switch (mode) {

@@ -14,7 +14,7 @@ import {
   inferUserIntent,
 } from "~/ai/agents/journl-agent-intent";
 import {
-  getGPTReasoningEffort,
+  getOpenAIReasoningEffort,
   parseJournlAgentReasoning,
 } from "~/ai/agents/journl-agent-reasoning";
 import type { JournlAgentState } from "~/ai/agents/journl-agent-state";
@@ -107,7 +107,7 @@ const handler = withAuthGuard(
             providerOptions: {
               openai: {
                 include: ["reasoning.encrypted_content"],
-                reasoningEffort: getGPTReasoningEffort(reasoning),
+                reasoningEffort: getOpenAIReasoningEffort(reasoning),
                 // When using OpenAI, the `store` has to be turned off to avoid this
                 // issue with Mastra's message history: https://github.com/vercel/ai/issues/7099#issuecomment-3567630392
                 store: false,

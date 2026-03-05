@@ -1,4 +1,4 @@
-import { and, eq, gte, lte } from "drizzle-orm";
+import { and, eq, gte, lte, sql } from "drizzle-orm";
 import type { DbTransaction } from "../client.ts";
 import { Plan, type Subscription, UsagePeriod } from "../schema.ts";
 import {
@@ -34,8 +34,8 @@ export class UsageLimitError extends Error {
 
 function findUsagePeriodForDate(db: DbInstance, userId: string, date: string) {
   return db.query.UsagePeriod.findFirst({
-    orderBy: (fields, { desc }) => [
-      desc(fields.subscription_id),
+    orderBy: (fields, { asc, desc }) => [
+      asc(sql`${fields.subscription_id} is null`),
       desc(fields.created_at),
     ],
     where: and(
@@ -134,17 +134,6 @@ async function createProPeriod(db: DbInstance, subscription: Subscription) {
   const startISO = subscription.periodStart.toISOString();
   const endISO = subscription.periodEnd.toISOString();
 
-  const existingPeriod = await findPeriodByDates(
-    db,
-    subscription.referenceId,
-    startISO,
-    endISO,
-  );
-
-  if (existingPeriod) {
-    return existingPeriod;
-  }
-
   await db
     .insert(UsagePeriod)
     .values({
@@ -154,7 +143,11 @@ async function createProPeriod(db: DbInstance, subscription: Subscription) {
       subscription_id: subscription.id,
       user_id: subscription.referenceId,
     })
-    .onConflictDoNothing({
+    .onConflictDoUpdate({
+      set: {
+        plan_id: plan.id,
+        subscription_id: subscription.id,
+      },
       target: getUsagePeriodConflictTarget(),
     });
 
@@ -189,16 +182,16 @@ export async function ensureUsagePeriodAtDate(
   userId: string,
   date: string,
 ) {
-  const existingPeriod = await getUsagePeriodAtDate(db, userId, date);
-
-  if (existingPeriod) {
-    return existingPeriod;
-  }
-
   const activeSubscription = await findActiveSubscription(db, userId);
 
   if (activeSubscription && subscriptionCoversDate(activeSubscription, date)) {
     return await createProPeriod(db, activeSubscription);
+  }
+
+  const existingPeriod = await getUsagePeriodAtDate(db, userId, date);
+
+  if (existingPeriod) {
+    return existingPeriod;
   }
 
   return await createFreePeriod(db, userId, new Date(date));

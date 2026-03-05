@@ -16,21 +16,22 @@ export async function handleSubscriptionEvents(
   }
 
   const subscriptionId = getSubscriptionIdFromEvent(event);
+  const canFallbackToLatestSubscription =
+    shouldFallbackToLatestSubscription(event);
+
+  if (!subscriptionId && !canFallbackToLatestSubscription) {
+    console.warn(`No subscription id found for event: ${event.type}`);
+    return;
+  }
 
   const stripeSubscription = await retrieveStripeSubscription({
+    canFallbackToLatestSubscription,
     customerId,
-    event,
     subscriptionId,
   });
 
   if (!stripeSubscription) {
-    await db
-      .update(Subscription)
-      .set({
-        cancelAtPeriodEnd: false,
-        status: "canceled",
-      })
-      .where(eq(Subscription.stripeCustomerId, customerId));
+    await markSubscriptionsCanceledByCustomerId(customerId);
     return;
   }
 
@@ -98,8 +99,8 @@ function getStripeId(value: StripeId): string | null {
 }
 
 async function retrieveStripeSubscription(input: {
+  canFallbackToLatestSubscription: boolean;
   customerId: string;
-  event: Stripe.Event;
   subscriptionId: string | null;
 }) {
   if (input.subscriptionId) {
@@ -114,7 +115,7 @@ async function retrieveStripeSubscription(input: {
     }
   }
 
-  if (!shouldFallbackToLatestSubscription(input.event)) {
+  if (!input.canFallbackToLatestSubscription) {
     return null;
   }
 
@@ -126,6 +127,16 @@ async function retrieveStripeSubscription(input: {
   });
 
   return subscriptions.data[0] ?? null;
+}
+
+async function markSubscriptionsCanceledByCustomerId(customerId: string) {
+  await db
+    .update(Subscription)
+    .set({
+      cancelAtPeriodEnd: false,
+      status: "canceled",
+    })
+    .where(eq(Subscription.stripeCustomerId, customerId));
 }
 
 function isStripeNotFoundError(error: unknown) {

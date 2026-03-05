@@ -17,7 +17,7 @@ export function useManipulateEditorTool() {
   const { closeDrawer } = useDrawer();
   const tool = createClientTool({
     execute: async (toolCall, chat) => {
-      let cleanUpBeforeChange: (() => void) | undefined;
+      let cleanUpBeforeChange: CallableFunction | undefined;
 
       try {
         const editor = getEditor(toolCall.input.targetEditor)(getEditors);

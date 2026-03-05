@@ -68,25 +68,27 @@ ${context.reasoning === "instant" ? "Before answering, quickly check whether a t
 
 Here is useful information about the environment the user is in:
 
-${
-  context.view.name === "journal"
-    ? "- Currently at the journal timeline."
-    : context.view.name === "journal-entry"
-      ? `- Currently at the journal entry of date ${context.view.date}.`
-      : context.view.name === "page"
-        ? `- Currently at the page of UUID ${context.view.id} with the title ${context.view.title}.`
-        : "- Currently at a different view without editors."
-}
-${
-  context.activeEditors.length > 0
-    ? `- ${context.activeEditors.length > 1 ? `There are ${context.activeEditors.length} active editors` : "There is one active editor"}: ${context.activeEditors.join(", ")}`
-    : ""
-}
-${
-  context.highlightedText.length > 0
-    ? `- User has highlighted text: ${context.highlightedText.join(", ")}.`
-    : ""
-}
+<environment>
+  ${
+    context.view.name === "journal"
+      ? "- Currently at the journal timeline."
+      : context.view.name === "journal-entry"
+        ? `- Currently at the journal entry of date ${context.view.date}.`
+        : context.view.name === "page"
+          ? `- Currently at the page of UUID ${context.view.id} with the title ${context.view.title}.`
+          : "- Currently at a different view without editors."
+  }
+  ${
+    context.activeEditors.length > 0
+      ? `- ${context.activeEditors.length > 1 ? `There are ${context.activeEditors.length} active editors` : "There is one active editor"}: ${context.activeEditors.join(", ")}`
+      : ""
+  }
+  ${
+    context.highlightedText.length > 0
+      ? `- User has highlighted text: ${context.highlightedText.join(", ")}.`
+      : ""
+  }
+</environment>
 
 ## Guidelines
 

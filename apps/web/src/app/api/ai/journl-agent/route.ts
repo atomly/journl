@@ -8,17 +8,17 @@ import {
   journlMini,
   journlNano,
   setJournlRequestContext,
-} from "~/ai/agents/journl-agent";
+} from "~/ai/mastra/agents/journl-agent";
+import type { JournlAgentContext } from "~/ai/mastra/agents/journl-agent-context";
 import {
   getLastUserMessage,
   inferUserIntent,
-} from "~/ai/agents/journl-agent-intent";
+} from "~/ai/mastra/agents/journl-agent-intent";
 import {
   getOpenAIReasoningEffort,
   parseJournlAgentReasoning,
-} from "~/ai/agents/journl-agent-reasoning";
-import type { JournlAgentState } from "~/ai/agents/journl-agent-state";
-import { journlMastraStore } from "~/ai/mastra/postgres-store";
+} from "~/ai/mastra/agents/journl-agent-reasoning";
+import { journlStore } from "~/ai/mastra/memory/store";
 import { getOpenAIWebSearchActionType } from "~/ai/tools/common/openai-utils";
 import { handler as corsHandler } from "~/app/api/_cors/cors";
 import { withAuthGuard } from "~/auth/guards";
@@ -37,7 +37,7 @@ const mastra = new Mastra({
     journlMini,
     journlNano,
   },
-  storage: journlMastraStore,
+  storage: journlStore,
 });
 
 const handler = withAuthGuard(
@@ -119,7 +119,7 @@ const handler = withAuthGuard(
                 email: user.email,
                 name: user.name,
               },
-            } satisfies JournlAgentState),
+            } satisfies JournlAgentContext),
             toolCallConcurrency: JOURNL_AGENT_TOOL_CALL_CONCURRENCY,
           },
         });

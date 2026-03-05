@@ -7,15 +7,15 @@ import {
   type UIMessage,
 } from "ai";
 import { createContext, useContext, useState } from "react";
+import type { JournlAgentContext } from "~/ai/mastra/agents/journl-agent-context";
+import { useApplyEditorChangesTool } from "~/ai/tools/apply-editor-changes/client";
+import { useCreatePageTool } from "~/ai/tools/create-page/client";
+import { useManipulateEditorTool } from "~/ai/tools/manipulate-editor/client";
+import { useNavigateJournalEntryTool } from "~/ai/tools/navigate-journal-entry/client";
+import { useNavigatePageTool } from "~/ai/tools/navigate-page/client";
+import { useRejectEditorChangesTool } from "~/ai/tools/reject-editor-changes/client";
+import type { ClientTool } from "~/ai/utils/create-client-tool";
 import { env } from "~/env";
-import { useApplyEditorChangesTool } from "../tools/apply-editor-changes/client";
-import { useCreatePageTool } from "../tools/create-page/client";
-import { useManipulateEditorTool } from "../tools/manipulate-editor/client";
-import { useNavigateJournalEntryTool } from "../tools/navigate-journal-entry/client";
-import { useNavigatePageTool } from "../tools/navigate-page/client";
-import { useRejectEditorChangesTool } from "../tools/reject-editor-changes/client";
-import type { ClientTool } from "../utils/create-client-tool";
-import type { JournlAgentState } from "./journl-agent-state";
 import { useJournlAgent } from "./use-journl-agent";
 
 const JournlChatContext = createContext<{
@@ -88,7 +88,7 @@ export function JournlChatProvider({
                 highlightedText: selections.map((selection) => selection.text),
                 reasoning: getReasoning(),
                 view,
-              } satisfies Omit<JournlAgentState, "user">,
+              } satisfies Omit<JournlAgentContext, "user">,
               messageId,
               messages,
               trigger,

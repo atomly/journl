@@ -1,50 +1,27 @@
 import { openai } from "@ai-sdk/openai";
 import { Agent } from "@mastra/core/agent";
 import { RequestContext } from "@mastra/core/request-context";
-import { Memory } from "@mastra/memory";
 import type { User } from "better-auth";
-import { z } from "zod/v4";
+import {
+  type JournlAgentContext,
+  zJournlAgentContext,
+} from "~/ai/mastra/agents/journl-agent-context";
 import { miniModel, nanoModel } from "~/ai/providers/openai/text";
 import { env } from "~/env";
-import {
-  journlMastraStore,
-  journlMastraVector,
-} from "../mastra/postgres-store";
-import { model as embedder } from "../providers/openai/embedding";
-import { applyEditorChanges } from "../tools/apply-editor-changes/tool";
-import { createPage } from "../tools/create-page/tool";
-import { manipulateEditor } from "../tools/manipulate-editor/tool";
-import { navigateJournalEntry } from "../tools/navigate-journal-entry/tool";
-import { navigatePage } from "../tools/navigate-page/tool";
-import { rejectEditorChanges } from "../tools/reject-editor-changes/tool";
-import { semanticJournalSearch } from "../tools/semantic-journal-search";
-import { semanticPageSearch } from "../tools/semantic-page-search";
-import { temporalJournalSearch } from "../tools/temporal-journal-search";
-import { zJournlAgentReasoning } from "./journl-agent-reasoning";
-import type { JournlAgentState } from "./journl-agent-state";
+import { applyEditorChanges } from "../../tools/apply-editor-changes/tool";
+import { createPage } from "../../tools/create-page/tool";
+import { manipulateEditor } from "../../tools/manipulate-editor/tool";
+import { navigateJournalEntry } from "../../tools/navigate-journal-entry/tool";
+import { navigatePage } from "../../tools/navigate-page/tool";
+import { rejectEditorChanges } from "../../tools/reject-editor-changes/tool";
+import { semanticJournalSearch } from "../../tools/semantic-journal-search";
+import { semanticPageSearch } from "../../tools/semantic-page-search";
+import { temporalJournalSearch } from "../../tools/temporal-journal-search";
+import { journlMemory } from "../memory/memory";
 
 const JOURNL_AGENT_NAME = "Journl";
 const JOURNL_AGENT_THREAD_PREFIX = "journl";
-const JOURNL_MEMORY_LAST_MESSAGES = 30;
 const JOURNL_REQUEST_CONTEXT_KEY = "journl_agent";
-const JOURNL_SEMANTIC_SEARCH_RANGE = 2;
-const JOURNL_SEMANTIC_SEARCH_SCOPE = "thread";
-const JOURNL_SEMANTIC_TOP_K = 3;
-const JOURNL_EDITOR_ID_REGEXP = /^(?:journal-entry:\d{4}-\d{2}-\d{2}|page:.+)$/;
-
-const journlMemory = new Memory({
-  embedder,
-  options: {
-    lastMessages: JOURNL_MEMORY_LAST_MESSAGES,
-    semanticRecall: {
-      messageRange: JOURNL_SEMANTIC_SEARCH_RANGE,
-      scope: JOURNL_SEMANTIC_SEARCH_SCOPE,
-      topK: JOURNL_SEMANTIC_TOP_K,
-    },
-  },
-  storage: journlMastraStore,
-  vector: journlMastraVector,
-});
 
 function prompt({ requestContext }: { requestContext?: RequestContext }) {
   const context = getJournlRequestContext(requestContext);
@@ -137,57 +114,19 @@ export const journlMini = new Agent({
   tools,
 });
 
-export const zJournlEditorId = z
-  .custom<JournlAgentState["activeEditors"][number]>((value) => {
-    if (typeof value !== "string") {
-      return false;
-    }
-    return JOURNL_EDITOR_ID_REGEXP.test(value);
-  }, "Expected `journal-entry:{YYYY-MM-DD}` or `page:{ID}`.")
-  .describe(
-    "The target editor to manipulate. Format: `journal-entry:{YYYY-MM-DD}` or `page:{ID}`.",
-  );
-
-const zJournlAgentState: z.ZodType<JournlAgentState> = z.object({
-  activeEditors: z.array(zJournlEditorId),
-  currentDate: z.string(),
-  highlightedText: z.array(z.string()),
-  reasoning: zJournlAgentReasoning,
-  user: z.object({
-    name: z.string(),
-  }),
-  view: z.union([
-    z.object({
-      name: z.literal("journal"),
-    }),
-    z.object({
-      date: z.string(),
-      name: z.literal("journal-entry"),
-    }),
-    z.object({
-      id: z.string(),
-      name: z.literal("page"),
-      title: z.string(),
-    }),
-    z.object({
-      name: z.literal("other"),
-    }),
-  ]),
-});
-
-export function setJournlRequestContext(context: JournlAgentState) {
+export function setJournlRequestContext(context: JournlAgentContext) {
   const requestContext = new RequestContext<{
-    [JOURNL_REQUEST_CONTEXT_KEY]: JournlAgentState;
+    [JOURNL_REQUEST_CONTEXT_KEY]: JournlAgentContext;
   }>();
   requestContext.set(
     JOURNL_REQUEST_CONTEXT_KEY,
-    zJournlAgentState.parse(context),
+    zJournlAgentContext.parse(context),
   );
   return requestContext;
 }
 
 export function getJournlRequestContext(context?: RequestContext) {
-  return context?.get<typeof JOURNL_REQUEST_CONTEXT_KEY, JournlAgentState>(
+  return context?.get<typeof JOURNL_REQUEST_CONTEXT_KEY, JournlAgentContext>(
     JOURNL_REQUEST_CONTEXT_KEY,
   );
 }

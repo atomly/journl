@@ -13,10 +13,10 @@ import {
   useState,
 } from "react";
 import { useDebouncedCallback } from "use-debounce";
-import { useJournlAgent } from "~/ai/agents/use-journl-agent";
 import { BlockEditor } from "~/components/editor/block-editor";
 import { BlockEditorErrorOverlay } from "~/components/editor/block-editor-error-overlay";
 import { useBlockEditor } from "~/components/editor/use-block-editor";
+import { useJournlAgent } from "~/hooks/use-journl-agent";
 import { cn } from "~/lib/cn";
 import { formatDate } from "~/lib/format-date";
 import type { BlockTransaction, JournalListEntry } from "~/trpc";

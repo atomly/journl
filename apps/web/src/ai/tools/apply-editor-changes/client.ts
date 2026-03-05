@@ -1,6 +1,6 @@
 "use client";
 
-import { useJournlAgent } from "../../agents/use-journl-agent";
+import { useJournlAgent } from "../../../hooks/use-journl-agent";
 import { createClientTool } from "../../utils/create-client-tool";
 import { getAIExtension, getEditor } from "../common/blocknote-utils";
 import { zEditorChangesInput } from "../editor-changes/schema";

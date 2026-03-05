@@ -1,10 +1,10 @@
 import type { EditorPrimitive } from "@acme/blocknote/schema";
 import { AIExtension } from "@blocknote/xl-ai";
-import type { JournlAgentState } from "~/ai/agents/journl-agent-state";
-import type { useJournlAgent } from "~/ai/agents/use-journl-agent";
+import type { JournlAgentContext } from "~/ai/mastra/agents/journl-agent-context";
+import type { useJournlAgent } from "~/hooks/use-journl-agent";
 
 export function getEditor(
-  targetEditor: JournlAgentState["activeEditors"][number],
+  targetEditor: JournlAgentContext["activeEditors"][number],
 ) {
   return (getEditors: ReturnType<typeof useJournlAgent>["getEditors"]) => {
     const editors = getEditors();

@@ -1,6 +1,6 @@
 import { z } from "zod";
-import { zJournlEditorId } from "~/ai/agents/journl-agent";
-import { zOpenAIReasoningEffort } from "~/ai/agents/journl-agent-reasoning";
+import { zJournlEditorId } from "~/ai/mastra/agents/journl-agent-context";
+import { zOpenAIReasoningEffort } from "~/ai/mastra/agents/journl-agent-reasoning";
 
 export const zManipulateEditorInput = z.object({
   targetEditor: zJournlEditorId,

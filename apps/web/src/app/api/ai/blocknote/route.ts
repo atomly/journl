@@ -11,9 +11,9 @@ import { convertToModelMessages, streamText } from "ai";
 import type { User } from "better-auth";
 import { after, type NextRequest } from "next/server";
 import { z } from "zod";
-import { getEditorAgentPrompt } from "~/ai/agents/editor-agent";
-import { getJournlUserThread } from "~/ai/agents/journl-agent";
-import { journlMastraStore } from "~/ai/mastra/postgres-store";
+import { getEditorAgentPrompt } from "~/ai/mastra/agents/editor-agent";
+import { getJournlUserThread } from "~/ai/mastra/agents/journl-agent";
+import { journlMemory } from "~/ai/mastra/memory/memory";
 import { miniModel } from "~/ai/providers/openai/text";
 import { zManipulateEditorInput } from "~/ai/tools/manipulate-editor/schema";
 import { handler as corsHandler } from "~/app/api/_cors/cors";
@@ -135,15 +135,9 @@ export { handler as POST, corsHandler as OPTIONS };
 
 async function getThreadMessages(user: User) {
   try {
-    const memoryStore = await journlMastraStore.getStore("memory");
-
-    if (!memoryStore) {
-      return undefined;
-    }
-
     const memoryThreadId = getJournlUserThread(user);
 
-    const { messages } = await memoryStore.listMessages({
+    const { messages } = await journlMemory.recall({
       orderBy: {
         direction: "DESC",
         field: "createdAt",

@@ -1,9 +1,9 @@
 import { and, cosineDistance, desc, eq, gt, sql } from "@acme/db";
 import { DocumentEmbedding, JournalEntry, Page } from "@acme/db/schema";
-import { openai } from "@ai-sdk/openai";
 import { TRPCError, type TRPCRouterRecord } from "@trpc/server";
 import { embed } from "ai";
 import { z } from "zod/v4";
+import { model } from "~/ai/providers/openai/embedding";
 import { protectedProcedure, usageGuard } from "../trpc";
 
 type Note =
@@ -40,8 +40,7 @@ export const notesRouter = {
     .query(async ({ ctx, input }) => {
       try {
         const { embedding } = await embed({
-          // ! TODO: Move this to a shared package called `@acme/ai`.
-          model: openai.embedding("text-embedding-3-small"),
+          model,
           value: input.query,
         });
 

@@ -2,7 +2,7 @@
 
 import type { BlockNoteRequest } from "~/app/api/ai/blocknote/route";
 import { useDrawer } from "~/components/ui/drawer";
-import { useJournlAgent } from "../../agents/use-journl-agent";
+import { useJournlAgent } from "../../../hooks/use-journl-agent";
 import { createClientTool } from "../../utils/create-client-tool";
 import {
   followJournlAgent,

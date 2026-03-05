@@ -46,7 +46,7 @@ export function useManipulateEditorTool() {
           useSelection: selectionCount > 0,
         });
 
-        const aiMenuState = aiExtension.store.state.aiMenuState;
+        const { aiMenuState } = aiExtension.store.state;
 
         if (aiMenuState === "closed") {
           void chat.addToolOutput({

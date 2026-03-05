@@ -64,5 +64,6 @@ ${conversationContext}
 </conversation_context>
 
 ---
+
 ${base}`;
 }

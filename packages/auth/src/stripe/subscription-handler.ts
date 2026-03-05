@@ -97,10 +97,6 @@ function getStripeId(value: StripeId): string | null {
   return typeof value === "string" ? value : value.id;
 }
 
-function shouldFallbackToLatestSubscription(event: Stripe.Event) {
-  return event.type === "checkout.session.completed";
-}
-
 async function retrieveStripeSubscription(input: {
   customerId: string;
   event: Stripe.Event;
@@ -139,6 +135,10 @@ function isStripeNotFoundError(error: unknown) {
     "statusCode" in error &&
     (error as { statusCode?: number }).statusCode === 404
   );
+}
+
+function shouldFallbackToLatestSubscription(event: Stripe.Event) {
+  return event.type === "checkout.session.completed";
 }
 
 function isPaidUsageStatus(status: string | null | undefined) {

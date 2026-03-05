@@ -17,7 +17,7 @@ export async function handleSubscriptionEvents(
 
   const subscriptionId = getSubscriptionIdFromEvent(event);
 
-  const stripeSubscription = await resolveStripeSubscription({
+  const stripeSubscription = await retrieveStripeSubscription({
     customerId,
     event,
     subscriptionId,
@@ -45,7 +45,7 @@ export async function handleSubscriptionEvents(
     ? new Date(currentPeriodEnd * 1000)
     : undefined;
 
-  await db
+  const [updatedSubscription] = await db
     .update(Subscription)
     .set({
       cancelAtPeriodEnd: stripeSubscription.cancel_at_period_end,
@@ -53,11 +53,8 @@ export async function handleSubscriptionEvents(
       periodStart,
       status: stripeSubscription.status,
     })
-    .where(eq(Subscription.stripeSubscriptionId, stripeSubscription.id));
-
-  const updatedSubscription = await db.query.Subscription.findFirst({
-    where: eq(Subscription.stripeSubscriptionId, stripeSubscription.id),
-  });
+    .where(eq(Subscription.stripeSubscriptionId, stripeSubscription.id))
+    .returning();
 
   if (updatedSubscription && isPaidUsageStatus(updatedSubscription.status)) {
     await createUsagePeriodForSubscription(updatedSubscription);
@@ -104,7 +101,7 @@ function shouldFallbackToLatestSubscription(event: Stripe.Event) {
   return event.type === "checkout.session.completed";
 }
 
-async function resolveStripeSubscription(input: {
+async function retrieveStripeSubscription(input: {
   customerId: string;
   event: Stripe.Event;
   subscriptionId: string | null;

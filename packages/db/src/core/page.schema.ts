@@ -42,7 +42,12 @@ export const PageRelations = relations(Page, ({ many }) => ({
   block_edges: many(BlockEdge),
 }));
 
-export type Page = typeof Page.$inferSelect;
+type PageRow = typeof Page.$inferSelect;
+export type Page = PageRow & {
+  edge_id?: string | null;
+  node_id?: string | null;
+  parent_node_id?: string | null;
+};
 
 export const zInsertPage = createInsertSchema(Page, {
   title: z.string().max(TEXT_LIMITS.PAGE_TITLE),

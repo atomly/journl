@@ -32,6 +32,8 @@ export default async function Page({
           <PageTitleTextarea
             page={{
               id: page.id,
+              node_id: page.node_id,
+              parent_node_id: page.parent_node_id,
               title: page.title,
             }}
             className="px-8 py-0"

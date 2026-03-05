@@ -170,24 +170,25 @@ The rest of the components are set by the Tailwind CSS classes, or by our editor
 }
 
 @container (max-width: 430px) {
-  .header-actions:has(.header-subscription-button) .header-search-trigger {
+  [data-slot="header-actions"]:has([data-slot="header-subscription-button"])
+    [data-slot="header-search-trigger"] {
     width: 2rem;
     max-width: 2rem;
     justify-content: center;
   }
 
-  .header-actions:has(.header-subscription-button)
-    .header-search-trigger
-    .header-search-icon {
+  [data-slot="header-actions"]:has([data-slot="header-subscription-button"])
+    [data-slot="header-search-trigger"]
+    [data-slot="header-search-icon"] {
     display: block;
   }
 
-  .header-actions:has(.header-subscription-button)
-    .header-search-trigger
-    .header-search-label,
-  .header-actions:has(.header-subscription-button)
-    .header-search-trigger
-    .header-search-shortcuts {
+  [data-slot="header-actions"]:has([data-slot="header-subscription-button"])
+    [data-slot="header-search-trigger"]
+    [data-slot="header-search-label"],
+  [data-slot="header-actions"]:has([data-slot="header-subscription-button"])
+    [data-slot="header-search-trigger"]
+    [data-slot="header-search-shortcuts"] {
     display: none;
   }
 }

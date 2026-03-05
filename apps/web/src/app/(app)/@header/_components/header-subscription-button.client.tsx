@@ -67,10 +67,11 @@ export function HeaderSubscriptionButton({
 
   return (
     <Button
+      data-slot="header-subscription-button"
       onClick={handleClick}
       disabled={isUpgrading || isOpeningBillingPortal}
       size="sm"
-      className="header-subscription-button rounded-md border"
+      className="rounded-md border"
       variant="background"
     >
       {subscription ? (

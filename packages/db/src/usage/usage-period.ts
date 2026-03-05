@@ -24,6 +24,7 @@ export function findActiveSubscription(db: DbInstance, userId: string) {
   return db.query.Subscription.findFirst({
     orderBy: (fields, { asc, desc }) => [
       asc(sql`case when ${fields.status} = 'active' then 0 else 1 end`),
+      asc(sql`case when ${fields.periodEnd} is null then 1 else 0 end`),
       desc(fields.periodEnd),
       desc(fields.updatedAt),
     ],

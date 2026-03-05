@@ -7,6 +7,7 @@ import ChatSidebarTrigger from "./@chatSidebar/_components/chat-sidebar-trigger"
 import "./styles.css";
 import { AppProviders } from "../_components/app-providers";
 import { AppContainer } from "./_components/app-container";
+import { AppProgressBar } from "./_components/app-progress-bar";
 
 type AppLayoutProps = {
   children: React.ReactNode;
@@ -30,6 +31,7 @@ async function AppLayout({
 
   return (
     <AppProviders initialPreferences={preferences}>
+      <AppProgressBar className="fixed top-0 left-0 z-7000 h-1 w-full" />
       <SidebarProvider className="flex min-h-screen-safe flex-col">
         <div className="flex flex-1">
           <SidebarProvider>

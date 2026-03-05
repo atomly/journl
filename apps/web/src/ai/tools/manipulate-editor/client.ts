@@ -1,6 +1,5 @@
 "use client";
 
-import type { PartialBlock } from "@blocknote/core";
 import type { z } from "zod";
 import { useDrawer } from "~/components/ui/drawer";
 import { useJournlAgent } from "../../agents/use-journl-agent";
@@ -24,78 +23,37 @@ type ChatMessage = {
   }>;
 };
 
-type IntentSource = "input-intent" | "embedded-editorPrompt" | "default";
-
-type NormalizedManipulateEditorInput = {
-  targetEditor: ManipulateEditorInput["targetEditor"];
-  editorPrompt: string;
-  intent?: ManipulateEditorInput["intent"];
-  intentSource: IntentSource;
+type ResolvedEditorIntent = {
+  scope: "document" | "selection";
 };
 
-type ResolvedEditorIntent =
-  | {
-      mode: "replace";
-      content: string;
-      format: "markdown" | "plain-text";
-    }
-  | {
-      mode: "transform";
-      scope: "document" | "selection";
-    };
-
-const MAX_CONTEXT_MESSAGES = 6;
-const MAX_CONTEXT_CHARS = 1800;
+const MAX_CONTEXT_MESSAGES = 8;
+const MAX_CONTEXT_CHARS = 3200;
 
 export function useManipulateEditorTool() {
-  const { getEditors, getEditorSelections } = useJournlAgent();
+  const { getEditors, getEditorSelections, getReasoning } = useJournlAgent();
   const { closeDrawer } = useDrawer();
   const tool = createClientTool({
     execute: async (toolCall, chat) => {
       let cleanUpBeforeChange: (() => void) | undefined;
 
       try {
-        const normalizedInput = normalizeManipulateEditorInput(
-          toolCall.input as ManipulateEditorInput,
-        );
-        const editor = getEditor(normalizedInput.targetEditor)(getEditors);
-        const intent = resolveEditorIntent(normalizedInput);
-
-        if (intent.mode === "replace") {
-          closeDrawer();
-
-          applyDeterministicReplacement(editor, intent);
-
-          const verification = getEditorVerification(editor);
-
-          void chat.addToolOutput({
-            output: {
-              diagnostics: {
-                intentSource: normalizedInput.intentSource,
-              },
-              message:
-                "Applied deterministic editor replacement from provided content.",
-              mode: "replace",
-              status: "applied",
-              verification,
-            },
-            tool: toolCall.toolName,
-            toolCallId: toolCall.toolCallId,
-          });
-          return;
+        const input = toolCall.input as ManipulateEditorInput;
+        if (looksLikeEmbeddedToolPayload(input.editorPrompt)) {
+          throw new Error(
+            "Invalid manipulateEditor payload: intent must be passed as a top-level tool argument, not JSON encoded inside editorPrompt.",
+          );
         }
 
+        const editor = getEditor(input.targetEditor)(getEditors);
+        const intent = resolveEditorIntent(input);
         const aiExtension = getAIExtension(editor);
-        const { prompt: editorPrompt, usedConversationContext } =
-          buildEditorPrompt(
-            normalizedInput.editorPrompt,
-            chat.messages as ChatMessage[],
-          );
+        const conversationContext = getRecentConversationContext(
+          chat.messages as ChatMessage[],
+        );
         const selectionCount = getEditorSelections(editor).length;
-        const useSelection =
-          intent.mode === "transform" &&
-          intent.scope === "selection" &&
-          selectionCount > 0;
+        const useSelection = intent.scope === "selection" && selectionCount > 0;
+        const editorPrompt = buildEditorPrompt(input.editorPrompt);
 
         closeDrawer();
 
@@ -108,6 +66,13 @@ export function useManipulateEditorTool() {
         openAIMenu(editor, aiExtension);
 
         await aiExtension.invokeAI({
+          chatRequestOptions: {
+            body: {
+              journlConversationContext: conversationContext || undefined,
+              journlEditScope: intent.scope,
+              journlReasoningMode: getReasoning(),
+            },
+          },
           deleteEmptyCursorBlock: false,
           userPrompt: editorPrompt,
           useSelection,
@@ -120,16 +85,14 @@ export function useManipulateEditorTool() {
           void chat.addToolOutput({
             output: {
               diagnostics: {
-                intentSource: normalizedInput.intentSource,
+                conversationContextChars: conversationContext.length,
                 promptChars: editorPrompt.length,
                 scope: intent.scope,
                 selectionCount,
-                usedConversationContext,
                 useSelection,
               },
               message:
-                "Editor AI request finished without a reviewable draft. Retry with a more explicit prompt or use intent.mode=replace.",
-              mode: "transform",
+                "Editor AI request finished without a reviewable draft. Retry with a clearer editing instruction.",
               status: "no-draft",
               verification,
             },
@@ -144,15 +107,13 @@ export function useManipulateEditorTool() {
             output: {
               diagnostics: {
                 aiState: aiMenuState.status,
-                intentSource: normalizedInput.intentSource,
+                conversationContextChars: conversationContext.length,
                 promptChars: editorPrompt.length,
                 scope: intent.scope,
                 selectionCount,
-                usedConversationContext,
                 useSelection,
               },
               message: `Editor AI failed before producing a complete draft: ${toErrorMessage(aiMenuState.error)}`,
-              mode: "transform",
               status: "error",
               verification,
             },
@@ -167,15 +128,13 @@ export function useManipulateEditorTool() {
             output: {
               diagnostics: {
                 aiState: aiMenuState.status,
-                intentSource: normalizedInput.intentSource,
+                conversationContextChars: conversationContext.length,
                 promptChars: editorPrompt.length,
                 scope: intent.scope,
                 selectionCount,
-                usedConversationContext,
                 useSelection,
               },
               message: `Editor AI finished with unexpected state \`${aiMenuState.status}\` and did not produce a reviewable draft.`,
-              mode: "transform",
               status: "unexpected-state",
               verification,
             },
@@ -189,16 +148,14 @@ export function useManipulateEditorTool() {
           output: {
             diagnostics: {
               aiState: aiMenuState.status,
-              intentSource: normalizedInput.intentSource,
+              conversationContextChars: conversationContext.length,
               promptChars: editorPrompt.length,
               scope: intent.scope,
               selectionCount,
-              usedConversationContext,
               useSelection,
             },
             message:
               "Draft ready in the editor. Please accept or reject the suggested changes.",
-            mode: "transform",
             status: "draft-ready",
             verification,
           },
@@ -209,7 +166,6 @@ export function useManipulateEditorTool() {
         void chat.addToolOutput({
           output: {
             message: `Error when calling the tool: ${toErrorMessage(error)}`,
-            mode: "transform",
             status: "error",
           },
           tool: toolCall.toolName,
@@ -226,96 +182,23 @@ export function useManipulateEditorTool() {
 }
 
 function resolveEditorIntent(
-  input: NormalizedManipulateEditorInput,
+  input: ManipulateEditorInput,
 ): ResolvedEditorIntent {
   if (typeof input.intent === "string") {
     return {
-      mode: "transform",
       scope: "document",
     };
   }
 
   if (input.intent?.mode === "transform") {
     return {
-      mode: "transform",
       scope: input.intent.scope ?? "document",
     };
   }
 
-  if (input.intent?.mode === "replace") {
-    return {
-      content: input.intent.content,
-      format: input.intent.format ?? "markdown",
-      mode: "replace",
-    };
-  }
-
   return {
-    mode: "transform",
     scope: "document",
   };
-}
-
-function applyDeterministicReplacement(
-  editor: ReturnType<ReturnType<typeof getEditor>>,
-  intent: Extract<ResolvedEditorIntent, { mode: "replace" }>,
-) {
-  const content =
-    intent.format === "plain-text"
-      ? toMarkdownFromPlainText(intent.content)
-      : intent.content;
-  const parsedBlocks = editor.tryParseMarkdownToBlocks(content);
-
-  const blocksToInsert = toPartialBlocksWithoutIds(parsedBlocks);
-
-  if (blocksToInsert.length === 0) {
-    blocksToInsert.push({
-      type: "paragraph",
-    });
-  }
-
-  const rootBlockIds = editor.document.map((block) => block.id);
-
-  if (rootBlockIds.length > 0) {
-    editor.replaceBlocks(rootBlockIds, blocksToInsert);
-  } else {
-    const fallbackId = editor.document.at(0)?.id;
-
-    if (!fallbackId) {
-      throw new Error(
-        "Editor does not contain a reference block for deterministic replacement.",
-      );
-    }
-
-    editor.insertBlocks(blocksToInsert, fallbackId, "after");
-    editor.removeBlocks([fallbackId]);
-  }
-
-  const lastBlockId = editor.document.at(-1)?.id;
-  if (lastBlockId) {
-    editor.focus();
-    editor.setTextCursorPosition(lastBlockId, "end");
-  }
-}
-
-function toPartialBlocksWithoutIds(
-  blocks: Array<Record<string, unknown>>,
-): PartialBlock[] {
-  return blocks.map((block) => stripBlockIds(block));
-}
-
-function stripBlockIds(block: Record<string, unknown>): PartialBlock {
-  const copy = structuredClone(block);
-
-  delete (copy as { id?: unknown }).id;
-
-  if (Array.isArray(copy.children)) {
-    copy.children = copy.children
-      .filter((child): child is Record<string, unknown> => isRecord(child))
-      .map((child) => stripBlockIds(child));
-  }
-
-  return copy as PartialBlock;
 }
 
 function getEditorVerification(
@@ -361,29 +244,12 @@ function firstNonEmptyLine(value: string): string {
   return truncate(first, 140);
 }
 
-function buildEditorPrompt(editorPrompt: string, messages: ChatMessage[]) {
-  const conversationContext = getRecentConversationContext(messages);
-
-  if (!conversationContext) {
-    return {
-      prompt: editorPrompt,
-      usedConversationContext: false,
-    };
-  }
-
-  return {
-    prompt: [
-      "Use this conversation context for grounding and user intent. Keep the document self-contained and avoid process notes unless explicitly requested.",
-      "If the user asks for a standalone page or full rewrite, provide full body content rather than short edit notes.",
-      "Do not output labels like `Edit:` or change-log style notes unless the user explicitly asks for them.",
-      "<conversation_context>",
-      conversationContext,
-      "</conversation_context>",
-      "",
-      editorPrompt,
-    ].join("\n"),
-    usedConversationContext: true,
-  };
+function buildEditorPrompt(editorPrompt: string) {
+  return [
+    "Edit the document directly. Do not prepend process labels like `Edit:` unless the user explicitly asks for that exact label.",
+    "Do not append signatures such as `--Journl` or `—Journl` unless explicitly requested.",
+    editorPrompt.trim(),
+  ].join("\n\n");
 }
 
 function getRecentConversationContext(messages: ChatMessage[]) {
@@ -445,13 +311,6 @@ function truncate(value: string, maxChars: number) {
   return `${value.slice(0, maxChars - 1)}…`;
 }
 
-function toMarkdownFromPlainText(value: string) {
-  return value
-    .split("\n")
-    .map((line) => line.trimEnd())
-    .join("\n");
-}
-
 function toErrorMessage(error: unknown) {
   if (error instanceof Error) {
     return error.message;
@@ -468,109 +327,29 @@ function toErrorMessage(error: unknown) {
   }
 }
 
-function normalizeManipulateEditorInput(
-  input: ManipulateEditorInput,
-): NormalizedManipulateEditorInput {
-  if (input.intent !== undefined) {
-    return {
-      ...input,
-      intentSource: "input-intent",
-    };
-  }
+function looksLikeEmbeddedToolPayload(value: string) {
+  const trimmed = value.trim();
 
-  const embedded = tryParseEmbeddedInputFromEditorPrompt(input.editorPrompt);
-  if (embedded?.intent !== undefined) {
-    return {
-      editorPrompt: embedded.editorPrompt ?? input.editorPrompt,
-      intent: embedded.intent,
-      intentSource: "embedded-editorPrompt",
-      targetEditor: input.targetEditor,
-    };
-  }
-
-  return {
-    ...input,
-    intentSource: "default",
-  };
-}
-
-function tryParseEmbeddedInputFromEditorPrompt(editorPrompt: string) {
-  const trimmed = editorPrompt.trim();
   if (!trimmed.startsWith("{") || !trimmed.endsWith("}")) {
-    return;
+    return false;
   }
 
-  let parsed: unknown;
   try {
-    parsed = JSON.parse(trimmed);
-  } catch {
-    return;
-  }
+    const parsed: unknown = JSON.parse(trimmed);
 
-  if (!isRecord(parsed)) {
-    return;
-  }
-
-  const intent =
-    parseIntentValue(parsed.intent) ||
-    parseIntentValue(parsed.mode ? parsed : undefined);
-
-  if (!intent) {
-    return;
-  }
-
-  const normalizedPrompt =
-    typeof parsed.editorPrompt === "string"
-      ? parsed.editorPrompt
-      : typeof parsed.prompt === "string"
-        ? parsed.prompt
-        : undefined;
-
-  return {
-    editorPrompt: normalizedPrompt,
-    intent,
-  };
-}
-
-function parseIntentValue(
-  value: unknown,
-): ManipulateEditorInput["intent"] | undefined {
-  if (value === "transform" || value === "replace") {
-    return value;
-  }
-
-  if (!isRecord(value) || typeof value.mode !== "string") {
-    return;
-  }
-
-  if (value.mode === "transform") {
-    return {
-      mode: "transform",
-      operation:
-        typeof value.operation === "string" ? value.operation : undefined,
-      scope:
-        value.scope === "document" || value.scope === "selection"
-          ? value.scope
-          : undefined,
-    };
-  }
-
-  if (value.mode === "replace") {
-    if (typeof value.content !== "string" || value.content.length === 0) {
-      return;
+    if (!isRecord(parsed)) {
+      return false;
     }
 
-    return {
-      content: value.content,
-      format:
-        value.format === "markdown" || value.format === "plain-text"
-          ? value.format
-          : undefined,
-      mode: "replace",
-    };
+    return (
+      "intent" in parsed ||
+      "mode" in parsed ||
+      "targetEditor" in parsed ||
+      "editorPrompt" in parsed
+    );
+  } catch {
+    return false;
   }
-
-  return;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

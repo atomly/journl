@@ -16,50 +16,29 @@ export const zTargetEditor = z
   );
 
 export const zEditorIntent = z
-  .discriminatedUnion("mode", [
-    z.object({
-      mode: z.literal("transform").describe("Use BlockNote AI to draft edits."),
-      operation: z
-        .string()
-        .optional()
-        .describe(
-          "Optional short operation label, for example `rewrite`, `expand`, or `restructure`.",
-        ),
-      scope: z
-        .enum(["document", "selection"])
-        .optional()
-        .describe(
-          "Target scope for transform edits. Defaults to `document` to avoid accidental selection-only rewrites.",
-        ),
-    }),
-    z.object({
-      content: z
-        .string()
-        .min(1)
-        .describe(
-          "Exact body content to write to the editor. Keep it title-free because page titles are managed separately.",
-        ),
-      format: z
-        .enum(["markdown", "plain-text"])
-        .optional()
-        .describe(
-          "Formatting of `content`. Defaults to `markdown` when omitted.",
-        ),
-      mode: z
-        .literal("replace")
-        .describe(
-          "Bypass BlockNote AI and replace the editor body deterministically with `content`.",
-        ),
-    }),
-  ])
+  .object({
+    mode: z.literal("transform").describe("Use BlockNote AI to draft edits."),
+    operation: z
+      .string()
+      .optional()
+      .describe(
+        "Optional short operation label, for example `rewrite`, `expand`, or `restructure`.",
+      ),
+    scope: z
+      .enum(["document", "selection"])
+      .optional()
+      .describe(
+        "Target scope for transform edits. Defaults to `document` to avoid accidental selection-only rewrites.",
+      ),
+  })
   .describe(
-    "V2 editor intent contract. Prefer `replace` when you already have exact body content in the conversation.",
+    "Editor intent contract. Uses AI-assisted transform mode with optional scope.",
   );
 
 export const zLegacyEditorIntent = z
-  .enum(["transform", "replace"])
+  .literal("transform")
   .describe(
-    'Legacy shorthand for intent. `transform` is equivalent to `{ mode: "transform" }`. `replace` is accepted for compatibility and treated as transform unless full replace payload is provided.',
+    'Legacy shorthand for intent. `transform` is equivalent to `{ mode: "transform" }`.',
   );
 
 export const zManipulateEditorInput = z.object({
@@ -72,6 +51,6 @@ export const zManipulateEditorInput = z.object({
   editorPrompt: z
     .string()
     .describe(
-      "Instruction for editor changes. For `intent.mode=replace`, this is still required and should explain source and constraints.",
+      "Instruction for editor changes. Use plain-language editing instructions, not JSON payloads.",
     ),
 });

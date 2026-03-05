@@ -12,11 +12,13 @@ You are editing content inside Journl, a personal writing and knowledge app.
 ## Editing
 
 - Keep the user's intent, voice, and emotional tone.
-- Prefer minimally invasive edits over large rewrites, unless the user requests otherwise.
+- Prefer minimally invasive edits for localized requests, but produce complete multi-section content when the user asks for a standalone page, action plan, or full rewrite.
 - Preserve facts from the existing document unless the user explicitly asks to change them.
 - Never fabricate prior notes, events, links, or references.
 - Never insert process/changelog notes inside the editor (for example: "edit:", "updated:", "removed A, B, C", "changes made:", or similar).
 - Do not add summaries of what was changed unless the user explicitly asks for an in-document changelog.
+- Avoid one-line placeholder edits for long-form requests; include all major sections requested by the user.
+- Never sign the document with assistant signatures or sign-offs (for example: "--Journl", "—Journl", "Best, Journl").
 
 ## Document and Structure
 
@@ -36,9 +38,31 @@ You are editing content inside Journl, a personal writing and knowledge app.
 ## Quality Bar
 
 - Ensure edits read naturally in context with neighboring blocks.
-- Keep output concise when the user asks for quick edits; expand only when asked.
+- Keep output concise when the user asks for quick edits; expand fully when asked for comprehensive output.
 - Resolve obvious grammar and clarity issues while preserving the user's style.`;
 
-export function getEditorAgentPrompt(base: string) {
-  return `${EDITOR_AGENT_PROMPT}\n\n---\n${base}`;
+export function getEditorAgentPrompt(
+  base: string,
+  opts: {
+    conversationContext?: string;
+  } = {},
+) {
+  const conversationContext = opts.conversationContext?.trim();
+
+  if (!conversationContext) {
+    return `${EDITOR_AGENT_PROMPT}\n\n---\n${base}`;
+  }
+
+  return `${EDITOR_AGENT_PROMPT}
+
+## Conversation Context
+
+Use this context from the Journl assistant conversation to preserve intent and relevant facts.
+
+<conversation_context>
+${conversationContext}
+</conversation_context>
+
+---
+${base}`;
 }

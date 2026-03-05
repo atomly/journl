@@ -15,6 +15,7 @@ Important:
 - intent.mode supports transform only and defaults to scope="document".
 - Set scope="selection" only when the user explicitly asks to edit selected blocks.
 - Always pass intent as a structured tool argument. Never JSON-encode the whole input inside editorPrompt.
+- reasoningEffort is optional and controls OpenAI reasoning depth per edit. Use low for normal edits, medium for complex multi-section rewrites, and high only for the most difficult asks.
 
 Rules:
 - Do not use for pure recall or analysis of prior notes; use search tools instead.

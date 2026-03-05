@@ -41,6 +41,12 @@ export const zLegacyEditorIntent = z
     'Legacy shorthand for intent. `transform` is equivalent to `{ mode: "transform" }`.',
   );
 
+export const zOpenAIReasoningEffort = z
+  .enum(["minimal", "low", "medium", "high"])
+  .describe(
+    "OpenAI reasoning effort for this editor operation. Use `low` for normal edits, `medium` for multi-section rewrites, and `high` for the most complex asks.",
+  );
+
 export const zManipulateEditorInput = z.object({
   intent: z
     .optional(z.union([zEditorIntent, zLegacyEditorIntent]))
@@ -52,5 +58,10 @@ export const zManipulateEditorInput = z.object({
     .string()
     .describe(
       "Instruction for editor changes. Use plain-language editing instructions, not JSON payloads.",
+    ),
+  reasoningEffort: z
+    .optional(zOpenAIReasoningEffort)
+    .describe(
+      "Optional OpenAI reasoning effort for this edit. Defaults to `low` if omitted.",
     ),
 });

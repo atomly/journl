@@ -7,7 +7,6 @@ import {
 import { convertToModelMessages, streamText } from "ai";
 import { after, type NextRequest } from "next/server";
 import { getEditorAgentPrompt } from "~/ai/agents/editor-agent";
-import { parseJournlAgentReasoning } from "~/ai/agents/journl-agent-reasoning";
 import { journlMastraStore } from "~/ai/mastra/postgres-store";
 import { miniModel } from "~/ai/providers/openai/text";
 import { handler as corsHandler } from "~/app/api/_cors/cors";
@@ -25,7 +24,7 @@ const handler = withAuthGuard(
       const payload = (await req.json()) as {
         journlConversationContext?: unknown;
         journlEditScope?: unknown;
-        journlReasoningMode?: unknown;
+        journlReasoningEffort?: unknown;
         messages?: unknown;
         toolDefinitions?: unknown;
       };
@@ -61,7 +60,7 @@ const handler = withAuthGuard(
         threadConversationContext,
       });
       const reasoningEffort = resolveEditorReasoningEffort(
-        payload.journlReasoningMode,
+        payload.journlReasoningEffort,
       );
 
       if (env.NODE_ENV === "development") {
@@ -70,7 +69,8 @@ const handler = withAuthGuard(
           inlineConversationContextChars: conversationContext?.length ?? 0,
           journlEditScope:
             payload.journlEditScope === "selection" ? "selection" : "document",
-          journlReasoningMode: payload.journlReasoningMode,
+          journlReasoningEffortRequested: payload.journlReasoningEffort,
+          journlReasoningEffortResolved: reasoningEffort,
           mergedConversationContextChars:
             mergedConversationContext?.length ?? 0,
           messageCount: messages.length,
@@ -207,18 +207,20 @@ function parseConversationContext(value: unknown) {
   return `${trimmed.slice(0, MAX_CONVERSATION_CONTEXT_CHARS - 1)}…`;
 }
 
-function resolveEditorReasoningEffort(
-  mode: unknown,
-): "minimal" | "low" | "medium" {
-  try {
-    parseJournlAgentReasoning(mode);
-  } catch {
-    // ignore invalid mode and use default below
+function resolveEditorReasoningEffort(value: unknown): OpenAIReasoningEffort {
+  if (
+    value === "minimal" ||
+    value === "low" ||
+    value === "medium" ||
+    value === "high"
+  ) {
+    return value;
   }
 
-  // Editor document operations benefit from slightly higher reasoning depth.
-  return "medium";
+  return "low";
 }
+
+type OpenAIReasoningEffort = "minimal" | "low" | "medium" | "high";
 
 async function getThreadConversationContextFromMastra(userId: string) {
   try {

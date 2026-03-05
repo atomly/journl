@@ -31,7 +31,7 @@ const MAX_CONTEXT_MESSAGES = 8;
 const MAX_CONTEXT_CHARS = 3200;
 
 export function useManipulateEditorTool() {
-  const { getEditors, getEditorSelections, getReasoning } = useJournlAgent();
+  const { getEditors, getEditorSelections } = useJournlAgent();
   const { closeDrawer } = useDrawer();
   const tool = createClientTool({
     execute: async (toolCall, chat) => {
@@ -54,6 +54,7 @@ export function useManipulateEditorTool() {
         const selectionCount = getEditorSelections(editor).length;
         const useSelection = intent.scope === "selection" && selectionCount > 0;
         const editorPrompt = buildEditorPrompt(input.editorPrompt);
+        const reasoningEffort = input.reasoningEffort ?? "low";
 
         closeDrawer();
 
@@ -70,7 +71,7 @@ export function useManipulateEditorTool() {
             body: {
               journlConversationContext: conversationContext || undefined,
               journlEditScope: intent.scope,
-              journlReasoningMode: getReasoning(),
+              journlReasoningEffort: input.reasoningEffort,
             },
           },
           deleteEmptyCursorBlock: false,
@@ -87,6 +88,7 @@ export function useManipulateEditorTool() {
               diagnostics: {
                 conversationContextChars: conversationContext.length,
                 promptChars: editorPrompt.length,
+                reasoningEffort,
                 scope: intent.scope,
                 selectionCount,
                 useSelection,
@@ -109,6 +111,7 @@ export function useManipulateEditorTool() {
                 aiState: aiMenuState.status,
                 conversationContextChars: conversationContext.length,
                 promptChars: editorPrompt.length,
+                reasoningEffort,
                 scope: intent.scope,
                 selectionCount,
                 useSelection,
@@ -130,6 +133,7 @@ export function useManipulateEditorTool() {
                 aiState: aiMenuState.status,
                 conversationContextChars: conversationContext.length,
                 promptChars: editorPrompt.length,
+                reasoningEffort,
                 scope: intent.scope,
                 selectionCount,
                 useSelection,
@@ -150,6 +154,7 @@ export function useManipulateEditorTool() {
               aiState: aiMenuState.status,
               conversationContextChars: conversationContext.length,
               promptChars: editorPrompt.length,
+              reasoningEffort,
               scope: intent.scope,
               selectionCount,
               useSelection,
@@ -245,11 +250,7 @@ function firstNonEmptyLine(value: string): string {
 }
 
 function buildEditorPrompt(editorPrompt: string) {
-  return [
-    "Edit the document directly. Do not prepend process labels like `Edit:` unless the user explicitly asks for that exact label.",
-    "Do not append signatures such as `--Journl` or `—Journl` unless explicitly requested.",
-    editorPrompt.trim(),
-  ].join("\n\n");
+  return editorPrompt.trim();
 }
 
 function getRecentConversationContext(messages: ChatMessage[]) {

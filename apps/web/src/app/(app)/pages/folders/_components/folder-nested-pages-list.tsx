@@ -8,6 +8,7 @@ import {
   type DragOverEvent,
   type DragStartEvent,
   MouseSensor,
+  pointerWithin,
   TouchSensor,
   useDraggable,
   useDroppable,
@@ -1299,6 +1300,7 @@ export function FolderNestedPagesList({
       </div>
 
       <DndContext
+        collisionDetection={pointerWithin}
         onDragCancel={handleDragCancel}
         onDragEnd={handleDragEnd}
         onDragOver={handleDragOver}

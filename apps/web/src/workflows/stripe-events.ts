@@ -4,18 +4,18 @@ import { FatalError } from "workflow";
 import { start } from "workflow/api";
 import { z } from "zod/v4";
 
-const zStripeEventEnvelope = z
+const zStripeEvent = z
   .object({
     created: z.number().int(),
     id: z.string().min(1),
     type: z.string().min(1),
   })
-  .passthrough();
+  .loose();
 
-type StripeWorkflowEvent = Stripe.Event & z.infer<typeof zStripeEventEnvelope>;
+type StripeWorkflowEvent = Stripe.Event & z.infer<typeof zStripeEvent>;
 
 export async function enqueueStripeEvent(event: Stripe.Event) {
-  const payload = zStripeEventEnvelope.parse(event) as StripeWorkflowEvent;
+  const payload = zStripeEvent.parse(event) as StripeWorkflowEvent;
 
   await start(processStripeEvent, [payload]);
 }
@@ -35,7 +35,7 @@ async function validateStripeEvent(
   "use step";
 
   try {
-    return zStripeEventEnvelope.parse(event) as StripeWorkflowEvent;
+    return zStripeEvent.parse(event) as StripeWorkflowEvent;
   } catch (error) {
     throw new FatalError(
       error instanceof Error

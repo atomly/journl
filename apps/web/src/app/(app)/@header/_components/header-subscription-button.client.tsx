@@ -67,6 +67,7 @@ export function HeaderSubscriptionButton({
 
   return (
     <Button
+      data-slot="header-subscription-button"
       onClick={handleClick}
       disabled={isUpgrading || isOpeningBillingPortal}
       size="sm"

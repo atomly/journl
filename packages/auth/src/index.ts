@@ -5,6 +5,7 @@ import { type BetterAuthOptions, betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { oAuthProxy, organization } from "better-auth/plugins";
 import { eq } from "drizzle-orm";
+import type Stripe from "stripe";
 import { enforceInviteCodeForSignUp } from "./invite-code";
 import { stripeClient } from "./stripe-client";
 import { handleStripeWebhookEvent } from "./stripe-webhooks";
@@ -22,6 +23,7 @@ export function initAuth(options: {
   githubClientSecret: string;
   stripeSecretKey: string;
   stripeWebhookSecret: string;
+  onStripeEvent?: (event: Stripe.Event) => Promise<void> | void;
 }) {
   const config = {
     account: {
@@ -56,7 +58,14 @@ export function initAuth(options: {
         onCustomerCreate: async ({ user }) => {
           await createInitialUsagePeriodForUser(user.id);
         },
-        onEvent: handleStripeWebhookEvent,
+        onEvent: async (event) => {
+          if (options.onStripeEvent) {
+            await options.onStripeEvent(event);
+            return;
+          }
+
+          await handleStripeWebhookEvent(event);
+        },
         schema: {
           subscription: {
             fields: {
@@ -133,3 +142,5 @@ export function initAuth(options: {
 
 export type Auth = ReturnType<typeof initAuth>;
 export type Session = Auth["$Infer"]["Session"];
+
+export { handleStripeWebhookEvent };

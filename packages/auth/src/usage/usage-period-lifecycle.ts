@@ -1,7 +1,7 @@
 import type { DbTransaction } from "@acme/db/client";
 import { db } from "@acme/db/client";
 import { Plan, type Subscription, UsagePeriod } from "@acme/db/schema";
-import { and, eq, gte, isNull } from "drizzle-orm";
+import { and, eq, gte, isNull, lte } from "drizzle-orm";
 
 type DbInstance = typeof import("@acme/db/client").db | DbTransaction;
 
@@ -34,6 +34,7 @@ async function trimOverlappingFreePeriods({
     where: and(
       eq(UsagePeriod.user_id, userId),
       isNull(UsagePeriod.subscription_id),
+      lte(UsagePeriod.period_start, proPeriodStart.toISOString()),
       gte(UsagePeriod.period_end, proPeriodStart.toISOString()),
     ),
   });
@@ -126,7 +127,11 @@ export async function createProUsagePeriod({
       subscription_id: subscription.id,
       user_id: subscription.referenceId,
     })
-    .onConflictDoNothing({
+    .onConflictDoUpdate({
+      set: {
+        plan_id: plan.id,
+        subscription_id: subscription.id,
+      },
       target: getPeriodConflictTarget(),
     });
 }

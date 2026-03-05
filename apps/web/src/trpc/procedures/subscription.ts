@@ -45,8 +45,8 @@ export const subscriptionRouter = {
     }),
   getProPlan: protectedProcedure.query(async ({ ctx }) => {
     const plan = await ctx.db.query.Plan.findFirst({
-      where: (products, { ilike, eq }) =>
-        eq(products.active, true) && ilike(products.name, "%pro%"),
+      where: (products, { and, ilike, eq }) =>
+        and(eq(products.active, true), ilike(products.name, "%pro%")),
       with: {
         price: true,
       },

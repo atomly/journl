@@ -2,6 +2,7 @@ import { initAuth } from "@acme/auth";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { cache } from "react";
+import { enqueueStripeEvent } from "~/workflows/stripe-events";
 import { env, parseAuthDevOrigins } from "../env";
 
 const baseUrl =
@@ -36,6 +37,7 @@ export const auth = initAuth({
   githubClientSecret: env.AUTH_GITHUB_SECRET,
   googleClientId: env.AUTH_GOOGLE_ID,
   googleClientSecret: env.AUTH_GOOGLE_SECRET,
+  onStripeEvent: enqueueStripeEvent,
   productionUrl,
   secret: env.AUTH_SECRET,
   stripeSecretKey: env.STRIPE_SECRET_KEY,

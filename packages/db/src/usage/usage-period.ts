@@ -1,4 +1,4 @@
-import { and, eq, or } from "drizzle-orm";
+import { and, eq, or, sql } from "drizzle-orm";
 import type { DbTransaction } from "../client.ts";
 import { Subscription, UsagePeriod } from "../schema.ts";
 
@@ -22,6 +22,11 @@ export function calculate30DayPeriod(startDate: Date = new Date()) {
 
 export function findActiveSubscription(db: DbInstance, userId: string) {
   return db.query.Subscription.findFirst({
+    orderBy: (fields, { asc, desc }) => [
+      asc(sql`case when ${fields.status} = 'active' then 0 else 1 end`),
+      desc(fields.periodEnd),
+      desc(fields.updatedAt),
+    ],
     where: and(
       eq(Subscription.referenceId, userId),
       or(

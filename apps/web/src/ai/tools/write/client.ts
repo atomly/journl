@@ -39,11 +39,11 @@ export function useWriteTool() {
         await aiExtension.invokeAI({
           chatRequestOptions: {
             body: {
-              reasoningEffort: toolCall.input.reasoningEffort ?? "minimal",
+              reasoningEffort: toolCall.input.reasoningEffort ?? "low",
             } satisfies Pick<BlockNoteRequest, "reasoningEffort">,
           },
           deleteEmptyCursorBlock: false,
-          userPrompt: toolCall.input.userPrompt,
+          userPrompt: toolCall.input.agentPrompt,
           useSelection: selectionCount > 0,
         });
 

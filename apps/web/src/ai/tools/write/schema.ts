@@ -4,10 +4,10 @@ import { zOpenAIReasoningEffort } from "~/ai/mastra/agents/journl-agent-reasonin
 
 export const zWriteInput = z.object({
   targetEditor: zJournlEditorId,
-  userPrompt: z
+  agentPrompt: z
     .string()
     .describe(
-      "Instruction for editor changes. Use plain-language editing instructions, not JSON payloads.",
+      "Instructions for the writing agent that will manipulate the editor. Use a direct imperative command (not a question), avoid assistant/app sign-offs unless explicitly requested.",
     ),
   reasoningEffort: z
     .optional(zOpenAIReasoningEffort)

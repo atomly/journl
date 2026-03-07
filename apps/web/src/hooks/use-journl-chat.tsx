@@ -8,12 +8,12 @@ import {
 } from "ai";
 import { createContext, useContext, useState } from "react";
 import type { JournlAgentContext } from "~/ai/mastra/agents/journl-agent-context";
-import { useApplyEditorChangesTool } from "~/ai/tools/apply-editor-changes/client";
+import { useApplyChangesTool } from "~/ai/tools/apply-changes/client";
 import { useCreatePageTool } from "~/ai/tools/create-page/client";
-import { useManipulateEditorTool } from "~/ai/tools/manipulate-editor/client";
 import { useNavigateJournalEntryTool } from "~/ai/tools/navigate-journal-entry/client";
 import { useNavigatePageTool } from "~/ai/tools/navigate-page/client";
-import { useRejectEditorChangesTool } from "~/ai/tools/reject-editor-changes/client";
+import { useRejectChangesTool } from "~/ai/tools/reject-changes/client";
+import { useWriteTool } from "~/ai/tools/write/client";
 import type { ClientTool } from "~/ai/utils/create-client-tool";
 import { env } from "~/env";
 import { useJournlAgent } from "./use-journl-agent";
@@ -41,20 +41,20 @@ export function JournlChatProvider({
   } = useJournlAgent();
 
   const createPage = useCreatePageTool();
-  const applyEditorChanges = useApplyEditorChangesTool();
+  const applyChanges = useApplyChangesTool();
   const navigateJournalEntry = useNavigateJournalEntryTool();
   const navigatePage = useNavigatePageTool();
-  const manipulateEditor = useManipulateEditorTool();
-  const rejectEditorChanges = useRejectEditorChangesTool();
+  const write = useWriteTool();
+  const rejectChanges = useRejectChangesTool();
 
   const [chat] = useState(() => {
     const tools = new Map<string, ClientTool<string, Chat<UIMessage>>>([
       [createPage.name, createPage],
-      [applyEditorChanges.name, applyEditorChanges],
+      [applyChanges.name, applyChanges],
       [navigateJournalEntry.name, navigateJournalEntry],
       [navigatePage.name, navigatePage],
-      [manipulateEditor.name, manipulateEditor],
-      [rejectEditorChanges.name, rejectEditorChanges],
+      [write.name, write],
+      [rejectChanges.name, rejectChanges],
     ]);
 
     return new Chat({

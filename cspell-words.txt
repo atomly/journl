@@ -27,3 +27,4 @@ lucide
 offcanvas
 minmax
 orientationchange
+treeify

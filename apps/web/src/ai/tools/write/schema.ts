@@ -2,7 +2,7 @@ import { z } from "zod";
 import { zJournlEditorId } from "~/ai/mastra/agents/journl-agent-context";
 import { zOpenAIReasoningEffort } from "~/ai/mastra/agents/journl-agent-reasoning";
 
-export const zManipulateEditorInput = z.object({
+export const zWriteInput = z.object({
   targetEditor: zJournlEditorId,
   userPrompt: z
     .string()
@@ -16,4 +16,4 @@ export const zManipulateEditorInput = z.object({
     ),
 });
 
-export type ManipulateEditorInput = z.infer<typeof zManipulateEditorInput>;
+export type WriteInput = z.infer<typeof zWriteInput>;

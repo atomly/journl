@@ -29,7 +29,10 @@ export function useCreatePageTool() {
           onError: (error) => {
             console.error("Failed to create page:", error);
             void chat.addToolOutput({
-              output: `Failed to create page ${toolCall.input.title}`,
+              output: {
+                error,
+                message: `Failed to create page: ${toolCall.input.title}`,
+              },
               tool: toolCall.toolName,
               toolCallId: toolCall.toolCallId,
             });
@@ -77,6 +80,15 @@ export function useCreatePageTool() {
             );
 
             router.push(`/pages/${newPage.id}`);
+
+            void chat.addToolOutput({
+              output: {
+                message: `Opening new page: ${toolCall.input.title}`,
+                page: newPage,
+              },
+              tool: toolCall.toolName,
+              toolCallId: toolCall.toolCallId,
+            });
           },
         },
       );

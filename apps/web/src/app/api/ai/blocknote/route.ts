@@ -1,6 +1,5 @@
 import { USAGE_UNITS } from "@acme/db/usage";
 import {
-  aiDocumentFormats,
   injectDocumentStateMessages,
   toolDefinitionsToToolSet,
 } from "@blocknote/xl-ai";
@@ -15,7 +14,7 @@ import { getEditorAgentPrompt } from "~/ai/mastra/agents/editor-agent";
 import { getJournlUserThread } from "~/ai/mastra/agents/journl-agent";
 import { journlMemory } from "~/ai/mastra/memory/memory";
 import { miniModel } from "~/ai/providers/openai/text";
-import { zManipulateEditorInput } from "~/ai/tools/manipulate-editor/schema";
+import { zWriteInput } from "~/ai/tools/write/schema";
 import { handler as corsHandler } from "~/app/api/_cors/cors";
 import { withAuthGuard } from "~/auth/guards";
 import { env } from "~/env";
@@ -23,16 +22,31 @@ import { withUsageGuard } from "~/usage/guards";
 import { buildUsageQuotaExceededPayload } from "~/usage/quota-error";
 import { startModelUsage } from "~/workflows/model-usage";
 
+export const maxDuration = 300; // Allow streaming responses up to 300 seconds
+
 const MAX_THREAD_CONTEXT_MESSAGES = 24;
 
+const zMessages = z.custom<Parameters<typeof injectDocumentStateMessages>[0]>(
+  (value) => Array.isArray(value),
+  "messages must be an array",
+);
+
+const zReasoningEffort = zWriteInput.def.shape.reasoningEffort.default("low");
+
+const zToolDefinitions = z.custom<
+  Parameters<typeof toolDefinitionsToToolSet>[0]
+>((value) => {
+  if (!isRecord(value)) {
+    return false;
+  }
+
+  return "applyDocumentOperations" in value;
+}, "toolDefinitions must include applyDocumentOperations");
+
 const zBlockNoteRequest = z.object({
-  messages: z.custom<Parameters<typeof injectDocumentStateMessages>[0]>(
-    (value) => Array.isArray(value),
-    "messages must be an array",
-  ),
-  reasoningEffort:
-    zManipulateEditorInput.def.shape.reasoningEffort.default("low"),
-  toolDefinitions: z.object(),
+  messages: zMessages,
+  reasoningEffort: zReasoningEffort,
+  toolDefinitions: zToolDefinitions,
 });
 
 export type BlockNoteRequest = z.infer<typeof zBlockNoteRequest>;
@@ -40,12 +54,15 @@ export type BlockNoteRequest = z.infer<typeof zBlockNoteRequest>;
 const handler = withAuthGuard(
   withUsageGuard(
     async ({ user }, req: NextRequest) => {
-      const { data, success } = zBlockNoteRequest.safeParse(await req.json());
+      const parsedPayload = zBlockNoteRequest.safeParse(await req.json());
 
-      if (!success) {
+      if (!parsedPayload.success) {
         return Response.json(
           {
             error: "Invalid BlockNote AI payload.",
+            ...(env.NODE_ENV === "development"
+              ? { details: z.treeifyError(parsedPayload.error) }
+              : {}),
           },
           {
             status: 400,
@@ -53,7 +70,11 @@ const handler = withAuthGuard(
         );
       }
 
-      const { reasoningEffort, messages, toolDefinitions } = data;
+      const { reasoningEffort, messages, toolDefinitions } = parsedPayload.data;
+
+      const threadMessages = await getThreadMessages(user);
+
+      const systemPrompt = getEditorAgentPrompt(threadMessages);
 
       const stream = streamText({
         messages: await convertToModelMessages(
@@ -74,9 +95,7 @@ const handler = withAuthGuard(
             store: false,
           },
         },
-        system: getEditorAgentPrompt(aiDocumentFormats.html.systemPrompt, {
-          threadMessages: await getThreadMessages(user),
-        }),
+        system: systemPrompt,
         toolChoice: "required",
         tools: toolDefinitionsToToolSet(toolDefinitions),
       });
@@ -189,10 +208,12 @@ function mastraMessageToText(message: MastraDBMessage) {
 }
 
 function mastraMessageContentToText(content: MastraMessageContentV2) {
-  return content.parts
+  const text = content.parts
     .map((part) => mastraMessagePartToText(part))
     .join("\n")
     .trim();
+
+  return text;
 }
 
 function mastraMessagePartToText(part: MastraMessagePart) {
@@ -205,4 +226,8 @@ function mastraMessagePartToText(part: MastraMessagePart) {
   }
 
   return part.text;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
 }

@@ -101,7 +101,7 @@ export function PageEditor({
   useAppEventHandler(
     ({ payload }) => {
       void payload.chat.addToolOutput({
-        output: `Page ${payload.title} created successfully.`,
+        output: `Opened new page: ${payload.title}`,
         tool: payload.toolName,
         toolCallId: payload.toolCallId,
       });

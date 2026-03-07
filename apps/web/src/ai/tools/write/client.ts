@@ -2,6 +2,7 @@
 
 import type { BlockNoteRequest } from "~/app/api/ai/blocknote/route";
 import { useDrawer } from "~/components/ui/drawer";
+import { env } from "~/env";
 import { useJournlAgent } from "../../../hooks/use-journl-agent";
 import { createClientTool } from "../../utils/create-client-tool";
 import {
@@ -10,9 +11,9 @@ import {
   getEditor,
   openAIMenu,
 } from "../common/blocknote-utils";
-import { zManipulateEditorInput } from "./schema";
+import { zWriteInput } from "./schema";
 
-export function useManipulateEditorTool() {
+export function useWriteTool() {
   const { getEditors, getEditorSelections } = useJournlAgent();
   const { closeDrawer } = useDrawer();
   const tool = createClientTool({
@@ -47,6 +48,12 @@ export function useManipulateEditorTool() {
         });
 
         const { aiMenuState } = aiExtension.store.state;
+
+        if (env.NODE_ENV === "development") {
+          console.debug("[aiMenuState]", {
+            aiMenuState,
+          });
+        }
 
         if (aiMenuState === "closed") {
           void chat.addToolOutput({
@@ -87,16 +94,22 @@ export function useManipulateEditorTool() {
 
         void chat.addToolOutput({
           output: {
-            message:
-              "Draft ready. Please accept or reject the suggested changes.",
+            message: "Draft ready. Please accept changes or reject changes.",
             status: "draft-ready",
           },
           tool: toolCall.toolName,
           toolCallId: toolCall.toolCallId,
         });
       } catch (error) {
+        if (env.NODE_ENV === "development") {
+          console.debug("[error]", {
+            error,
+          });
+        }
+
         void chat.addToolOutput({
           output: {
+            error,
             message: `Error when calling the tool: ${toErrorMessage(error)}`,
             status: "error",
           },
@@ -107,9 +120,10 @@ export function useManipulateEditorTool() {
         cleanUpBeforeChange?.();
       }
     },
-    inputSchema: zManipulateEditorInput,
-    name: "manipulateEditor",
+    inputSchema: zWriteInput,
+    name: "write",
   });
+
   return tool;
 }
 

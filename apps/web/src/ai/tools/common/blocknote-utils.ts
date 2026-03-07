@@ -12,7 +12,7 @@ export function getEditor(
 
     if (!editor) {
       throw new Error(
-        `Editor ${targetEditor} was not found. Use one of the active editors.`,
+        "The requested editor was not found. Use an active editor.",
       );
     }
 

@@ -1,6 +1,5 @@
 import { USAGE_UNITS, type UsageUnit } from "@acme/db/usage";
 import { handleChatStream } from "@mastra/ai-sdk";
-import { Mastra } from "@mastra/core";
 import type { LLMStepResult } from "@mastra/core/agent";
 import { createUIMessageStreamResponse } from "ai";
 import {
@@ -18,8 +17,8 @@ import {
   getOpenAIReasoningEffort,
   parseJournlAgentReasoning,
 } from "~/ai/mastra/agents/journl-agent-reasoning";
-import { journlStore } from "~/ai/mastra/memory/store";
-import { getOpenAIWebSearchActionType } from "~/ai/tools/common/openai-utils";
+import { mastra } from "~/ai/mastra/mastra";
+import { isWebSearchCall } from "~/ai/tools/web-search";
 import { handler as corsHandler } from "~/app/api/_cors/cors";
 import { withAuthGuard } from "~/auth/guards";
 import { env } from "~/env";
@@ -31,14 +30,6 @@ export const maxDuration = 30; // Allow streaming responses up to 30 seconds
 
 const JOURNL_AGENT_MAX_STEPS = 5;
 const JOURNL_AGENT_TOOL_CALL_CONCURRENCY = 4;
-
-const mastra = new Mastra({
-  agents: {
-    journlMini,
-    journlNano,
-  },
-  storage: journlStore,
-});
 
 const handler = withAuthGuard(
   withUsageGuard(
@@ -148,17 +139,8 @@ function countBillableWebSearchCalls(steps: LLMStepResult<undefined>[]) {
   let count = 0;
 
   for (const { toolResults } of steps) {
-    for (const {
-      payload: { toolName, result },
-    } of toolResults) {
-      if (toolName !== "webSearch" && toolName !== "web_search") {
-        continue;
-      }
-
-      const actionType = getOpenAIWebSearchActionType(result);
-
-      // OpenAI bills web search tool calls for search actions.
-      if (actionType === "search") {
+    for (const result of toolResults) {
+      if (isWebSearchCall(result)) {
         count += 1;
       }
     }

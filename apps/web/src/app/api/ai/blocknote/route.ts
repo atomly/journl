@@ -10,8 +10,8 @@ import { convertToModelMessages, streamText } from "ai";
 import type { User } from "better-auth";
 import { after, type NextRequest } from "next/server";
 import { z } from "zod";
-import { getEditorAgentPrompt } from "~/ai/mastra/agents/editor-agent";
 import { getJournlUserThread } from "~/ai/mastra/agents/journl-agent";
+import { getWritingAgentPrompt } from "~/ai/mastra/agents/writing-agent";
 import { journlMemory } from "~/ai/mastra/memory/memory";
 import { miniModel } from "~/ai/providers/openai/text";
 import { zWriteInput } from "~/ai/tools/write/schema";
@@ -74,7 +74,7 @@ const handler = withAuthGuard(
 
       const threadMessages = await getThreadMessages(user);
 
-      const systemPrompt = getEditorAgentPrompt(threadMessages);
+      const systemPrompt = getWritingAgentPrompt(threadMessages);
 
       const stream = streamText({
         messages: await convertToModelMessages(

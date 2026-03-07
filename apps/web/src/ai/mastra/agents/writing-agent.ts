@@ -1,6 +1,6 @@
 import { aiDocumentFormats } from "@blocknote/xl-ai";
 
-export function getEditorAgentPrompt(threadMessages?: string) {
+export function getWritingAgentPrompt(threadMessages?: string) {
   const thread = threadMessages?.trim();
 
   const conversationContext = thread

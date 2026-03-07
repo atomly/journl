@@ -9,7 +9,9 @@ Use when the user wants reviewable AI edits (draft/rewrite/expand/restructure) i
 
 Contract:
 - targetEditor must be a valid active editor id.
-- userPrompt must be plain-language editing instructions (not JSON or tool payload prose).
+- agentPrompt must be a direct, imperative command (not a question) that tells the writing agent exactly what to produce.
+- agentPrompt must be self-contained and include all required constraints (sections/structure, tone, depth/length, and required facts).
+- Do not put JSON, tool payload prose, or internal IDs in agentPrompt.
 - This tool uses the draft flow (Accept / Revert in editor).
 - Use "accept changes" and "reject changes" terminology, not publishing terms.
 

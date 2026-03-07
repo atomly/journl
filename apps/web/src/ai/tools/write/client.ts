@@ -43,7 +43,7 @@ export function useWriteTool() {
             } satisfies Pick<BlockNoteRequest, "reasoningEffort">,
           },
           deleteEmptyCursorBlock: false,
-          userPrompt: toolCall.input.userPrompt,
+          userPrompt: toolCall.input.agentPrompt,
           useSelection: selectionCount > 0,
         });
 

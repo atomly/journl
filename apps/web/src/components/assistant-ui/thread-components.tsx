@@ -2,6 +2,7 @@
 
 import {
   ActionBarPrimitive,
+  type AssistantState,
   BranchPickerPrimitive,
   ChainOfThoughtPrimitive,
   ComposerPrimitive,
@@ -30,6 +31,12 @@ import type { Tools } from "~/ai/mastra/agents/journl-agent";
 import { MarkdownText } from "~/components/assistant-ui/markdown-text";
 import { useThreadRuntime } from "~/components/assistant-ui/thread-runtime";
 import { TooltipIconButton } from "~/components/assistant-ui/tooltip-icon-button";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "~/components/ui/accordion";
 import { Button } from "~/components/ui/button";
 import { cn } from "~/lib/cn";
 import { getHumanReadableChatError } from "~/usage/quota-error";
@@ -54,6 +61,12 @@ type ToolResultValue =
   | ToolResultObject
   | null
   | undefined;
+
+type AssistantSource = {
+  id: string;
+  title?: string;
+  url: string;
+};
 
 type ThreadScrollToBottomProps = Partial<
   ComponentProps<typeof TooltipIconButton>
@@ -255,6 +268,7 @@ export function AssistantMessage() {
             Text: AssistantText,
           }}
         />
+        <AssistantSources />
         <MessagePrimitive.Error>
           <ErrorPrimitive.Root className="mt-2 rounded-md border border-destructive bg-destructive/10 p-3 text-destructive text-sm dark:bg-destructive/5 dark:text-red-200">
             <ErrorPrimitive.Message className="line-clamp-3">
@@ -303,6 +317,44 @@ function AssistantText() {
         ) : null}
       </MessagePrimitive.If>
     </>
+  );
+}
+
+function AssistantSources() {
+  const sources = extractAssistantSources(useAuiState((s) => s.message.parts));
+
+  if (sources.length === 0) {
+    return null;
+  }
+
+  return (
+    <Accordion
+      type="single"
+      collapsible
+      className="mt-4 rounded-md border border-border bg-background px-3"
+    >
+      <AccordionItem value="assistant-sources" className="border-b-0">
+        <AccordionTrigger className="py-2 text-muted-foreground text-xs hover:no-underline">
+          Sources ({sources.length})
+        </AccordionTrigger>
+        <AccordionContent className="pb-3">
+          <ul className="space-y-1">
+            {sources.map((source) => (
+              <li key={source.id} className="text-xs">
+                <a
+                  href={source.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-medium text-primary underline underline-offset-4"
+                >
+                  {source.title?.trim() || getHost(source.url)}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </AccordionContent>
+      </AccordionItem>
+    </Accordion>
   );
 }
 
@@ -456,7 +508,7 @@ function ThoughtTool({
           {resultTags.map((tag) => (
             <span
               key={tag}
-              className="inline-flex items-center rounded-full border border-border/70 bg-sidebar-border px-2 py-0.5 text-xs"
+              className="inline-flex items-center rounded-full border border-border/70 bg-background px-2 py-0.5 text-xs"
             >
               {tag}
             </span>
@@ -635,6 +687,31 @@ function extractToolResultTags(value: ToolResultValue) {
   }
 
   return Array.from(new Set(tags));
+}
+
+function extractAssistantSources(parts: AssistantState["message"]["parts"]) {
+  const sources: AssistantSource[] = [];
+  const seenUrls = new Set<string>();
+
+  for (const part of parts) {
+    if (part.type !== "source" || part.sourceType !== "url") {
+      continue;
+    }
+
+    if (seenUrls.has(part.url)) {
+      continue;
+    }
+
+    seenUrls.add(part.url);
+
+    sources.push({
+      id: part.id,
+      title: part.title,
+      url: part.url,
+    });
+  }
+
+  return sources;
 }
 
 function getHost(url: string) {

@@ -1,5 +1,6 @@
 "use client";
 
+import { stripOpenAICitationTokens } from "~/ai/utils/openai-utils";
 import type { BlockNoteRequest } from "~/app/api/ai/blocknote/route";
 import { useDrawer } from "~/components/ui/drawer";
 import { env } from "~/env";
@@ -43,7 +44,7 @@ export function useWriteTool() {
             } satisfies Pick<BlockNoteRequest, "reasoningEffort">,
           },
           deleteEmptyCursorBlock: false,
-          userPrompt: toolCall.input.agentPrompt,
+          userPrompt: stripOpenAICitationTokens(toolCall.input.agentPrompt),
           useSelection: selectionCount > 0,
         });
 

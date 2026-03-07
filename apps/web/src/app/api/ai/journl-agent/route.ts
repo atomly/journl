@@ -18,7 +18,7 @@ import {
   parseJournlAgentReasoning,
 } from "~/ai/mastra/agents/journl-agent-reasoning";
 import { mastra } from "~/ai/mastra/mastra";
-import { isWebSearchCall } from "~/ai/tools/web-search";
+import { isOpenAIWebSearchCall } from "~/ai/utils/openai-utils";
 import { handler as corsHandler } from "~/app/api/_cors/cors";
 import { withAuthGuard } from "~/auth/guards";
 import { env } from "~/env";
@@ -113,6 +113,7 @@ const handler = withAuthGuard(
             } satisfies JournlAgentContext),
             toolCallConcurrency: JOURNL_AGENT_TOOL_CALL_CONCURRENCY,
           },
+          sendSources: true,
         });
 
         return createUIMessageStreamResponse({ stream });
@@ -140,7 +141,7 @@ function countBillableWebSearchCalls(steps: LLMStepResult<undefined>[]) {
 
   for (const { toolResults } of steps) {
     for (const result of toolResults) {
-      if (isWebSearchCall(result)) {
+      if (isOpenAIWebSearchCall(result)) {
         count += 1;
       }
     }

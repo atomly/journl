@@ -2,7 +2,7 @@
 
 import { useChat } from "@ai-sdk/react";
 import { useEffect, useRef, useState } from "react";
-import { useJournlChat } from "~/ai/agents/use-journl-chat";
+import { useJournlChat } from "~/hooks/use-journl-chat";
 
 export function useChatUnread(isChatOpen: boolean) {
   const { chat } = useJournlChat();

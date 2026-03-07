@@ -1,10 +1,7 @@
 "use client";
 
 import { X } from "lucide-react";
-import {
-  type BlockSelection,
-  useJournlAgent,
-} from "~/ai/agents/use-journl-agent";
+import { type BlockSelection, useJournlAgent } from "~/hooks/use-journl-agent";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
 import {

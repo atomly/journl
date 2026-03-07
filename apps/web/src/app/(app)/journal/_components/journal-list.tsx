@@ -5,9 +5,9 @@ import type React from "react";
 import { useEffect, useMemo } from "react";
 import { Virtuoso } from "react-virtuoso";
 import { useDebouncedCallback } from "use-debounce";
-import { useJournlAgent } from "~/ai/agents/use-journl-agent";
 import { useAppLayout } from "~/app/_components/app-layout-provider";
 import { useAppPreferences } from "~/components/preferences/app-preferences-provider";
+import { useJournlAgent } from "~/hooks/use-journl-agent";
 import type { JournalListEntry } from "~/trpc";
 import {
   getInfiniteEntriesQueryOptions,

@@ -1,11 +1,11 @@
 "use client";
 
-import { useJournlAgent } from "../../agents/use-journl-agent";
+import { useJournlAgent } from "../../../hooks/use-journl-agent";
 import { createClientTool } from "../../utils/create-client-tool";
+import { zEditorChangesInput } from "../common/blocknote-schema";
 import { getAIExtension, getEditor } from "../common/blocknote-utils";
-import { zEditorChangesInput } from "../editor-changes/schema";
 
-export function useApplyEditorChangesTool() {
+export function useRejectChangesTool() {
   const { getEditors } = useJournlAgent();
 
   const tool = createClientTool({
@@ -23,30 +23,38 @@ export function useApplyEditorChangesTool() {
             aiMenuState === "closed" ? "closed" : aiMenuState.status;
 
           void chat.addToolOutput({
-            output: `There are no pending suggested changes to apply in editor ${toolCall.input.targetEditor}. Current AI status: ${state}.`,
+            output: {
+              message: "There are no pending suggested changes to reject.",
+              state,
+            },
             tool: toolCall.toolName,
             toolCallId: toolCall.toolCallId,
           });
           return;
         }
 
-        aiExtension.acceptChanges();
+        aiExtension.rejectChanges();
 
         void chat.addToolOutput({
-          output: "Applied the suggested editor changes.",
+          output: {
+            message: "Rejected the suggested editor changes.",
+          },
           tool: toolCall.toolName,
           toolCallId: toolCall.toolCallId,
         });
       } catch (error) {
         void chat.addToolOutput({
-          output: `Error when calling the tool: ${error}`,
+          output: {
+            error,
+            message: `Error when calling the tool: ${error}`,
+          },
           tool: toolCall.toolName,
           toolCallId: toolCall.toolCallId,
         });
       }
     },
     inputSchema: zEditorChangesInput,
-    name: "applyEditorChanges",
+    name: "rejectChanges",
   });
 
   return tool;

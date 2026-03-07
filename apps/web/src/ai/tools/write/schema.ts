@@ -7,7 +7,7 @@ export const zWriteInput = z.object({
   agentPrompt: z
     .string()
     .describe(
-      "Instructions for the writing agent that will manipulate the editor. Use a direct imperative command (not a question), and include required sections, tone, depth, and must-include facts.",
+      "Instructions for the writing agent that will manipulate the editor. Use a direct imperative command (not a question), avoid assistant/app sign-offs unless explicitly requested.",
     ),
   reasoningEffort: z
     .optional(zOpenAIReasoningEffort)

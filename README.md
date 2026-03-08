@@ -63,6 +63,7 @@ day-to-day commands.
 
 Environment variables are loaded from a root `.env` file. See
 [`turbo.json`](./turbo.json) for shared env names used by tasks.
+If your local Postgres instance does not support TLS, set `POSTGRES_SSL_MODE=disable` in `.env` (default `auto` already disables SSL on loopback hosts).
 
 For database workflows, use root scripts (`pnpm db:push`, `pnpm db:studio`) or
 the dedicated utility app in [`apps/drizzle-studio`](./apps/drizzle-studio).

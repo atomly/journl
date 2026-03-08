@@ -2,6 +2,7 @@
 
 import {
   ActionBarPrimitive,
+  type AssistantState,
   BranchPickerPrimitive,
   ChainOfThoughtPrimitive,
   ComposerPrimitive,
@@ -17,6 +18,7 @@ import {
   ArrowDownIcon,
   ArrowUpIcon,
   CheckIcon,
+  ChevronDownIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
   CopyIcon,
@@ -24,13 +26,47 @@ import {
   RefreshCwIcon,
   Square,
 } from "lucide-react";
-import type { ComponentProps, FocusEvent, ReactNode } from "react";
+import { type ComponentProps, type FocusEvent, useMemo } from "react";
+import type { Tools } from "~/ai/mastra/agents/journl-agent";
 import { MarkdownText } from "~/components/assistant-ui/markdown-text";
 import { useThreadRuntime } from "~/components/assistant-ui/thread-runtime";
 import { TooltipIconButton } from "~/components/assistant-ui/tooltip-icon-button";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "~/components/ui/accordion";
 import { Button } from "~/components/ui/button";
 import { cn } from "~/lib/cn";
 import { getHumanReadableChatError } from "~/usage/quota-error";
+
+type ToolResultListItem = {
+  date?: string;
+  link?: string;
+  page_title?: string;
+};
+
+type ToolResultObject = Record<string, unknown> & {
+  action?: {
+    type?: string;
+  };
+  message?: string;
+  sources?: unknown[];
+};
+
+type ToolResultValue =
+  | string
+  | ToolResultListItem[]
+  | ToolResultObject
+  | null
+  | undefined;
+
+type AssistantSource = {
+  id: string;
+  title?: string;
+  url: string;
+};
 
 type ThreadScrollToBottomProps = Partial<
   ComponentProps<typeof TooltipIconButton>
@@ -232,6 +268,7 @@ export function AssistantMessage() {
             Text: AssistantText,
           }}
         />
+        <AssistantSources />
         <MessagePrimitive.Error>
           <ErrorPrimitive.Root className="mt-2 rounded-md border border-destructive bg-destructive/10 p-3 text-destructive text-sm dark:bg-destructive/5 dark:text-red-200">
             <ErrorPrimitive.Message className="line-clamp-3">
@@ -283,88 +320,147 @@ function AssistantText() {
   );
 }
 
+function AssistantSources() {
+  const sources = extractAssistantSources(useAuiState((s) => s.message.parts));
+
+  if (sources.length === 0) {
+    return null;
+  }
+
+  return (
+    <Accordion
+      type="single"
+      collapsible
+      className="mt-4 rounded-md border border-border bg-background px-3"
+    >
+      <AccordionItem value="assistant-sources" className="border-b-0">
+        <AccordionTrigger className="py-2 text-muted-foreground text-xs hover:no-underline">
+          Sources ({sources.length})
+        </AccordionTrigger>
+        <AccordionContent className="pb-3">
+          <ul className="space-y-1">
+            {sources.map((source) => (
+              <li key={source.id} className="text-xs">
+                <a
+                  href={source.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-medium text-primary underline underline-offset-4"
+                >
+                  {source.title?.trim() || getHost(source.url)}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </AccordionContent>
+      </AccordionItem>
+    </Accordion>
+  );
+}
+
 function AssistantThinking() {
   const collapsed = useAuiState((s) => s.chainOfThought.collapsed);
   const isThinking = useAuiState(
     (s) => s.chainOfThought.status.type === "running",
   );
-  const partsLength = useAuiState((s) => s.chainOfThought.parts.length);
+  const parts = useAuiState((s) => {
+    return s.chainOfThought.parts;
+  });
   const latestPart = useAuiState(
     (s) => s.chainOfThought.parts[s.chainOfThought.parts.length - 1],
   );
 
-  if (partsLength === 0) {
-    return null;
-  }
+  const toolCalls = useMemo(() => {
+    const actions: Array<{ id: string; label: string }> = [];
+
+    for (const part of parts) {
+      if (part.type !== "tool-call") {
+        continue;
+      }
+
+      const {
+        toolName,
+        argsText,
+        status: { type },
+      } = part;
+
+      actions.push({
+        id: `${toolName}:${argsText}:${type}:${actions.length + 1}`,
+        label: getToolAction(toolName),
+      });
+    }
+
+    return actions;
+  }, [parts]);
+
+  if (!toolCalls) return null;
+
+  const collapsedEntries =
+    toolCalls.length > 0
+      ? toolCalls
+      : [{ id: "latest", label: summarizeThoughtPart(latestPart) }];
+  const lastCollapsedEntryId =
+    collapsedEntries[collapsedEntries.length - 1]?.id;
 
   return (
-    <ChainOfThoughtPrimitive.Root className="mt-3 mb-8 overflow-hidden rounded-lg border border-border/70 bg-background">
-      <div className="p-4">
-        <ChainOfThoughtPrimitive.AccordionTrigger className="flex w-full items-center gap-2 text-left">
-          <MessagePrimitive.If assistant last>
-            <ThreadPrimitive.If running>
-              <span className="inline-block size-2 animate-pulse rounded-full bg-primary" />
-            </ThreadPrimitive.If>
-
-            <ThreadPrimitive.If running>
-              <span className="animate-text-shimmer font-medium text-sm">
-                Thinking
-              </span>
-            </ThreadPrimitive.If>
-            <ThreadPrimitive.If running={false}>
-              <span className="font-medium text-sm">Results</span>
-            </ThreadPrimitive.If>
-          </MessagePrimitive.If>
-
-          <MessagePrimitive.If assistant last={false}>
-            <span className="font-medium text-sm">Results</span>
-          </MessagePrimitive.If>
-
-          <span className="ml-auto text-muted-foreground text-xs">
-            {collapsed ? "Show" : "Hide"}
-          </span>
-        </ChainOfThoughtPrimitive.AccordionTrigger>
-      </div>
-
-      {collapsed ? (
-        <p
+    <ChainOfThoughtPrimitive.Root className="mt-3 mb-8 space-y-2 overflow-hidden rounded-lg border border-border/70 bg-background px-2.5 py-4">
+      <ChainOfThoughtPrimitive.AccordionTrigger className="flex w-full items-center gap-1.5 text-left">
+        <ChevronDownIcon
           className={cn(
-            "px-4 pb-3 text-muted-foreground text-sm",
-            isThinking && "animate-text-shimmer",
+            "size-3 shrink-0 text-muted-foreground transition-transform duration-200 ease-out",
+            collapsed && "-rotate-90",
           )}
-        >
-          {summarizeThoughtPart(latestPart)}
-        </p>
-      ) : (
-        <div className="px-3 pb-3">
-          <div className="space-y-3 pl-3">
-            <ChainOfThoughtPrimitive.Parts
-              components={{
-                Layout: ThoughtStep,
-                Reasoning: ThoughtReasoning,
-                tools: {
-                  Fallback: ThoughtTool,
-                },
-              }}
-            />
-          </div>
-        </div>
-      )}
-    </ChainOfThoughtPrimitive.Root>
-  );
-}
+        />
 
-function ThoughtStep({ children }: { children?: ReactNode }) {
-  return (
-    <div
-      className={cn(
-        "relative pl-3",
-        "before:absolute before:top-0 before:-left-2 before:size-2 before:rounded-full before:bg-sidebar-border",
-        "-after:translate-y-1/2 after:absolute after:top-0 after:-left-[0.275rem] after:my-4 after:size-px after:h-[calc(100%-1.5rem)] after:bg-sidebar-border",
-      )}
-    >
-      {children}
-    </div>
+        <MessagePrimitive.If assistant last>
+          <ThreadPrimitive.If running>
+            <span className="animate-text-shimmer font-medium text-sm">
+              Thinking
+            </span>
+          </ThreadPrimitive.If>
+
+          <ThreadPrimitive.If running={false}>
+            <span className="font-medium text-sm">Results</span>
+          </ThreadPrimitive.If>
+        </MessagePrimitive.If>
+
+        <MessagePrimitive.If assistant last={false}>
+          <span className="font-medium text-sm">Results</span>
+        </MessagePrimitive.If>
+      </ChainOfThoughtPrimitive.AccordionTrigger>
+
+      <div className="relative pl-5">
+        <span
+          aria-hidden
+          className="pointer-events-none absolute top-0 bottom-0 left-1.5 w-px -translate-x-1/2 bg-sidebar-border"
+        />
+        <div className={collapsed ? "block" : "hidden"}>
+          {collapsedEntries.map((action) => (
+            <p
+              key={action.id}
+              className={cn(
+                "line-clamp-1 py-1 text-muted-foreground text-sm",
+                isThinking &&
+                  action.id === lastCollapsedEntryId &&
+                  "animate-text-shimmer",
+              )}
+            >
+              {action.label}
+            </p>
+          ))}
+        </div>
+        <div className={cn("space-y-2", collapsed ? "hidden" : "block")}>
+          <ChainOfThoughtPrimitive.Parts
+            components={{
+              Reasoning: ThoughtReasoning,
+              tools: {
+                Fallback: ThoughtTool,
+              },
+            }}
+          />
+        </div>
+      </div>
+    </ChainOfThoughtPrimitive.Root>
   );
 }
 
@@ -383,20 +479,18 @@ function ThoughtReasoning({ text }: ReasoningMessagePartProps) {
 }
 
 function ThoughtTool({
-  argsText,
   isError,
   result,
   status,
   toolName,
-}: ToolCallMessagePartProps) {
-  const statusLabel = getToolStatusLabel(status.type);
-  const actionLabel = describeToolAction(toolName, argsText);
+}: ToolCallMessagePartProps<unknown, ToolResultValue>) {
+  const actionLabel = getToolAction(toolName);
   const resultSummary = summarizeToolResult(result);
   const resultTags = extractToolResultTags(result);
 
   return (
-    <div className="rounded-lg pr-3 pb-3 pl-1">
-      <div className="flex items-start justify-between gap-4">
+    <div className="space-y-1 py-1">
+      <div className="flex items-start justify-between">
         <span
           className={cn(
             "font-medium text-sm",
@@ -405,25 +499,22 @@ function ThoughtTool({
         >
           {actionLabel}
         </span>
-        <span className="text-muted-foreground text-xs">{statusLabel}</span>
       </div>
-      {resultSummary ? (
-        <p className="mt-1 line-clamp-2 text-muted-foreground text-xs">
-          {resultSummary}
-        </p>
-      ) : null}
-      {resultTags.length > 0 ? (
-        <div className="mt-2 flex flex-wrap gap-1">
+      {resultSummary && (
+        <p className="text-muted-foreground text-xs">{resultSummary}</p>
+      )}
+      {resultTags.length > 0 && (
+        <div className="flex flex-wrap gap-1">
           {resultTags.map((tag) => (
             <span
               key={tag}
-              className="inline-flex items-center rounded-full border border-border/70 bg-muted/60 px-2 py-0.5 text-xs"
+              className="inline-flex items-center rounded-full border border-border/70 bg-background px-2 py-0.5 text-xs"
             >
               {tag}
             </span>
           ))}
         </div>
-      ) : null}
+      )}
       {isError && <p className="mt-1 text-destructive text-xs">Tool failed</p>}
     </div>
   );
@@ -496,12 +587,8 @@ function summarizeThoughtPart(part: unknown) {
       "toolName" in part && typeof part.toolName === "string"
         ? part.toolName
         : "tool";
-    const argsText =
-      "argsText" in part && typeof part.argsText === "string"
-        ? part.argsText
-        : "";
 
-    return describeToolAction(toolName, argsText);
+    return getToolAction(toolName);
   }
 
   if (
@@ -516,90 +603,69 @@ function summarizeThoughtPart(part: unknown) {
   return "Working...";
 }
 
-function getToolStatusLabel(status: string) {
-  if (status === "running") return "Running";
-  if (status === "requires-action") return "Needs action";
-  if (status === "incomplete") return "Incomplete";
-  return "Complete";
-}
+const toolActionMap: Record<string, string> = {
+  applyChanges: "Accepting changes",
+  createPage: "Creating page",
+  navigateJournalEntry: "Opening journal",
+  navigatePage: "Opening page",
+  rejectChanges: "Rejecting changes",
+  semanticJournalSearch: "Searching entries",
+  semanticPageSearch: "Searching pages",
+  temporalJournalSearch: "Reading journal",
+  webSearch: "Searching web",
+  write: "Writing content",
+} satisfies Record<Tools, string>;
 
-// TODO: Find a way to avoid breaking this in the future in case we change or add new tools.
-// These should be coupled somehow.
-function describeToolAction(toolName: string, argsText: string) {
-  const query = extractQuery(argsText);
-
-  if (toolName === "semanticJournalSearch") {
-    return query ? `Searching journal for ${query}` : "Searching journal";
+function getToolAction(toolName: string) {
+  if (toolName in toolActionMap) {
+    return toolActionMap[toolName] ?? `Running ${humanizeToolName(toolName)}`;
   }
-
-  if (toolName === "semanticPageSearch") {
-    return query ? `Searching pages for ${query}` : "Searching pages";
-  }
-
-  if (toolName === "temporalJournalSearch") {
-    return query
-      ? `Searching journal timeline for ${query}`
-      : "Searching timeline";
-  }
-
-  if (toolName === "navigateJournalEntry") {
-    return "Opening journal entry";
-  }
-
-  if (toolName === "navigatePage") {
-    return "Opening page";
-  }
-
-  if (toolName === "createPage") {
-    return query ? `Creating page ${query}` : "Creating page";
-  }
-
-  if (toolName === "manipulateEditor") {
-    return "Updating editor";
-  }
-
   return `Running ${humanizeToolName(toolName)}`;
 }
 
-function extractQuery(argsText: string) {
-  try {
-    const parsed = JSON.parse(argsText) as Record<string, unknown>;
-    if (typeof parsed.query === "string" && parsed.query.trim().length > 0) {
-      const normalized = parsed.query.trim().replace(/\s+/g, " ");
-      return `"${truncate(normalized, 48)}"`;
-    }
-
-    if (typeof parsed.title === "string" && parsed.title.trim().length > 0) {
-      return `"${truncate(parsed.title.trim(), 48)}"`;
-    }
-  } catch {
-    // Ignore non-JSON args.
-  }
-
-  return "";
+function humanizeToolName(toolName: string) {
+  return toolName
+    .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
+    .replace(/[-_]/g, " ")
+    .toLowerCase();
 }
 
-function summarizeToolResult(value: unknown) {
+function summarizeToolResult(value: ToolResultValue) {
   if (Array.isArray(value)) {
     const noun = value.length === 1 ? "result" : "results";
     return `${value.length} ${noun} returned`;
+  }
+
+  if (!value) {
+    return null;
   }
 
   if (typeof value === "string") {
     return truncate(value.replace(/\s+/g, " ").trim(), 120);
   }
 
-  if (value && typeof value === "object") {
-    const keys = Object.keys(value as Record<string, unknown>);
-    if (keys.length > 0) {
-      return `Returned fields: ${keys.slice(0, 4).join(", ")}`;
-    }
+  if (typeof value.message === "string") {
+    return truncate(value.message.replace(/\s+/g, " ").trim(), 120);
+  }
+
+  if (value.action?.type === "search") {
+    const sourceCount = value.sources?.length ?? 0;
+    const noun = sourceCount === 1 ? "source" : "sources";
+
+    return sourceCount > 0
+      ? `${sourceCount} ${noun} returned`
+      : "Web search completed";
+  }
+
+  const keys = Object.keys(value);
+  if (keys.length > 0) {
+    return `Returned fields: ${keys.slice(0, 4).join(", ")}`;
   }
 
   return null;
 }
 
-function extractToolResultTags(value: unknown) {
+function extractToolResultTags(value: ToolResultValue) {
   if (!Array.isArray(value)) {
     return [];
   }
@@ -607,18 +673,12 @@ function extractToolResultTags(value: unknown) {
   const tags: string[] = [];
 
   for (const item of value) {
-    if (!item || typeof item !== "object") {
-      continue;
-    }
-
-    const candidate = item as Record<string, unknown>;
-
-    if (typeof candidate.page_title === "string") {
-      tags.push(truncate(candidate.page_title, 28));
-    } else if (typeof candidate.date === "string") {
-      tags.push(candidate.date);
-    } else if (typeof candidate.link === "string") {
-      tags.push(getHost(candidate.link));
+    if (typeof item.page_title === "string") {
+      tags.push(truncate(item.page_title, 28));
+    } else if (typeof item.date === "string") {
+      tags.push(item.date);
+    } else if (typeof item.link === "string") {
+      tags.push(getHost(item.link));
     }
 
     if (tags.length >= 4) {
@@ -629,11 +689,29 @@ function extractToolResultTags(value: unknown) {
   return Array.from(new Set(tags));
 }
 
-function humanizeToolName(toolName: string) {
-  return toolName
-    .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
-    .replace(/[-_]/g, " ")
-    .toLowerCase();
+function extractAssistantSources(parts: AssistantState["message"]["parts"]) {
+  const sources: AssistantSource[] = [];
+  const seenUrls = new Set<string>();
+
+  for (const part of parts) {
+    if (part.type !== "source" || part.sourceType !== "url") {
+      continue;
+    }
+
+    if (seenUrls.has(part.url)) {
+      continue;
+    }
+
+    seenUrls.add(part.url);
+
+    sources.push({
+      id: part.id,
+      title: part.title,
+      url: part.url,
+    });
+  }
+
+  return sources;
 }
 
 function getHost(url: string) {

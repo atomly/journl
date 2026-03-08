@@ -7,7 +7,7 @@ import {
 } from "@assistant-ui/react";
 import { useAISDKRuntime } from "@assistant-ui/react-ai-sdk";
 import { createContext, useContext, useMemo } from "react";
-import { useJournlChat } from "~/ai/agents/use-journl-chat";
+import { useJournlChat } from "~/hooks/use-journl-chat";
 import {
   parseUsageQuotaExceededPayload,
   type UsageQuotaExceededPayload,

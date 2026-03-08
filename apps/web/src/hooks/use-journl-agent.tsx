@@ -6,7 +6,7 @@ import {
   useRef,
   useState,
 } from "react";
-import type { JournlAgentState } from "./journl-agent-state";
+import type { JournlAgentContext as JournlAgentState } from "~/ai/mastra/agents/journl-agent-context";
 
 export type BlockSelection = {
   editor: EditorPrimitive;

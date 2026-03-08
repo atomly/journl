@@ -6,77 +6,47 @@ import { stripeClient } from "../stripe-client";
 import { createUsagePeriodForSubscription } from "../usage/usage-period-lifecycle";
 
 export async function handleSubscriptionEvents(
-  event:
-    | Stripe.CheckoutSessionCompletedEvent
-    | Stripe.CustomerSubscriptionCreatedEvent
-    | Stripe.CustomerSubscriptionDeletedEvent
-    | Stripe.CustomerSubscriptionPausedEvent
-    | Stripe.CustomerSubscriptionPendingUpdateAppliedEvent
-    | Stripe.CustomerSubscriptionPendingUpdateExpiredEvent
-    | Stripe.CustomerSubscriptionResumedEvent
-    | Stripe.CustomerSubscriptionUpdatedEvent
-    | Stripe.InvoicePaidEvent
-    | Stripe.InvoiceMarkedUncollectibleEvent
-    | Stripe.InvoicePaymentActionRequiredEvent
-    | Stripe.InvoicePaymentFailedEvent
-    | Stripe.InvoicePaymentSucceededEvent
-    | Stripe.InvoiceUpcomingEvent
-    | Stripe.PaymentIntentCanceledEvent
-    | Stripe.PaymentIntentPaymentFailedEvent
-    | Stripe.PaymentIntentSucceededEvent,
+  event: Stripe.Event,
 ): Promise<void> {
-  if (!("customer" in event.data.object)) {
-    throw new Error(`Customer ID missing or invalid for event: ${event.type}`);
+  const customerId = getCustomerIdFromEvent(event);
+
+  if (!customerId) {
+    console.warn(`No customer id found for event: ${event.type}`);
+    return;
   }
 
-  let { customer: customerId } = event.data.object;
+  const subscriptionId = getSubscriptionIdFromEvent(event);
+  const canFallbackToLatestSubscription =
+    shouldFallbackToLatestSubscription(event);
 
-  if (event.type === "checkout.session.completed") {
-    const session = event.data.object;
-    if (typeof session.customer === "string") {
-      customerId = session.customer;
-    }
+  if (!subscriptionId && !canFallbackToLatestSubscription) {
+    console.warn(`No subscription id found for event: ${event.type}`);
+    return;
   }
 
-  if (typeof customerId !== "string") {
-    throw new Error(`Customer ID missing or invalid for event: ${event.type}`);
-  }
-
-  const subscriptions = await stripeClient.subscriptions.list({
-    customer: customerId,
-    expand: ["data.default_payment_method"],
-    limit: 1,
-    status: "all",
+  const stripeSubscription = await retrieveStripeSubscription({
+    canFallbackToLatestSubscription,
+    customerId,
+    subscriptionId,
   });
 
-  if (subscriptions.data.length === 0) {
-    await db
-      .update(Subscription)
-      .set({
-        cancelAtPeriodEnd: false,
-        status: "canceled",
-      })
-      .where(eq(Subscription.stripeCustomerId, customerId));
+  if (!stripeSubscription) {
+    await markSubscriptionsCanceledByCustomerId(customerId);
     return;
   }
-
-  const [stripeSubscription] = subscriptions.data;
-  if (!stripeSubscription) return;
 
   const firstItem = stripeSubscription.items.data[0];
-  if (!firstItem) {
-    console.error("No subscription items found");
-    return;
-  }
+  const currentPeriodStart = firstItem?.current_period_start;
+  const currentPeriodEnd = firstItem?.current_period_end;
 
-  const periodStart = firstItem.current_period_start
-    ? new Date(firstItem.current_period_start * 1000)
+  const periodStart = currentPeriodStart
+    ? new Date(currentPeriodStart * 1000)
     : undefined;
-  const periodEnd = firstItem.current_period_end
-    ? new Date(firstItem.current_period_end * 1000)
+  const periodEnd = currentPeriodEnd
+    ? new Date(currentPeriodEnd * 1000)
     : undefined;
 
-  await db
+  const [updatedSubscription] = await db
     .update(Subscription)
     .set({
       cancelAtPeriodEnd: stripeSubscription.cancel_at_period_end,
@@ -84,13 +54,104 @@ export async function handleSubscriptionEvents(
       periodStart,
       status: stripeSubscription.status,
     })
-    .where(eq(Subscription.stripeSubscriptionId, stripeSubscription.id));
+    .where(eq(Subscription.stripeSubscriptionId, stripeSubscription.id))
+    .returning();
 
-  const updatedSubscription = await db.query.Subscription.findFirst({
-    where: eq(Subscription.stripeSubscriptionId, stripeSubscription.id),
-  });
-
-  if (updatedSubscription && updatedSubscription.status === "active") {
+  if (updatedSubscription && isPaidUsageStatus(updatedSubscription.status)) {
     await createUsagePeriodForSubscription(updatedSubscription);
   }
+}
+
+function getCustomerIdFromEvent(event: Stripe.Event): string | null {
+  const maybeCustomer = (event.data.object as { customer?: StripeId }).customer;
+
+  return getStripeId(maybeCustomer);
+}
+
+function getSubscriptionIdFromEvent(event: Stripe.Event): string | null {
+  if (event.type.startsWith("customer.subscription.")) {
+    return (event.data.object as Stripe.Subscription).id;
+  }
+
+  if (event.type.startsWith("invoice.")) {
+    const invoice = event.data.object as Stripe.Invoice;
+    return getStripeId(
+      invoice.parent?.subscription_details?.subscription as StripeId,
+    );
+  }
+
+  if (event.type === "checkout.session.completed") {
+    const session = event.data.object as Stripe.Checkout.Session;
+    return getStripeId(session.subscription as StripeId);
+  }
+
+  return null;
+}
+
+type StripeId = string | { id: string } | null | undefined;
+
+function getStripeId(value: StripeId): string | null {
+  if (!value) {
+    return null;
+  }
+
+  return typeof value === "string" ? value : value.id;
+}
+
+async function retrieveStripeSubscription(input: {
+  canFallbackToLatestSubscription: boolean;
+  customerId: string;
+  subscriptionId: string | null;
+}) {
+  if (input.subscriptionId) {
+    try {
+      return await stripeClient.subscriptions.retrieve(input.subscriptionId, {
+        expand: ["default_payment_method"],
+      });
+    } catch (error) {
+      if (!isStripeNotFoundError(error)) {
+        throw error;
+      }
+    }
+  }
+
+  if (!input.canFallbackToLatestSubscription) {
+    return null;
+  }
+
+  const subscriptions = await stripeClient.subscriptions.list({
+    customer: input.customerId,
+    expand: ["data.default_payment_method"],
+    limit: 1,
+    status: "all",
+  });
+
+  return subscriptions.data[0] ?? null;
+}
+
+async function markSubscriptionsCanceledByCustomerId(customerId: string) {
+  await db
+    .update(Subscription)
+    .set({
+      cancelAtPeriodEnd: false,
+      status: "canceled",
+    })
+    .where(eq(Subscription.stripeCustomerId, customerId));
+}
+
+function isStripeNotFoundError(error: unknown) {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "statusCode" in error &&
+    (error as { statusCode?: number }).statusCode === 404
+  );
+}
+
+function shouldFallbackToLatestSubscription(event: Stripe.Event) {
+  return event.type === "checkout.session.completed";
+}
+
+function isPaidUsageStatus(status: string | null | undefined) {
+  return status === "active" || status === "trialing";
 }

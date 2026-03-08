@@ -12,7 +12,7 @@ import { CheckIcon, CopyIcon } from "lucide-react";
 import Link from "next/link";
 import { memo, useState } from "react";
 import remarkGfm from "remark-gfm";
-
+import { stripOpenAICitationTokens } from "~/ai/utils/openai-utils";
 import { TooltipIconButton } from "~/components/assistant-ui/tooltip-icon-button";
 import { cn } from "~/lib/cn";
 import { useDrawer } from "../ui/drawer";
@@ -20,6 +20,7 @@ import { useDrawer } from "../ui/drawer";
 function MarkdownTextImpl() {
   return (
     <MarkdownTextPrimitive
+      preprocess={stripOpenAICitationTokens}
       remarkPlugins={[remarkGfm]}
       components={defaultComponents}
     />
@@ -36,7 +37,7 @@ function CodeHeader({ language, code }: CodeHeaderProps) {
   };
 
   return (
-    <div className="mt-4 flex items-center justify-between gap-4 rounded-t-lg bg-zinc-900 px-4 py-2 font-semibold text-sm text-white">
+    <div className="mt-4 flex items-center justify-between gap-4 rounded-t-lg bg-background px-4 py-2 font-semibold text-foreground text-sm">
       <span className="lowercase [&>span]:text-xs">{language}</span>
       <TooltipIconButton tooltip="Copy" onClick={onCopy}>
         {!isCopied && <CopyIcon />}
@@ -197,7 +198,7 @@ const defaultComponents = memoizeMarkdownComponents({
   pre: ({ className, ...props }) => (
     <pre
       className={cn(
-        "!rounded-t-none overflow-x-auto rounded-b-lg bg-black p-4 text-white",
+        "overflow-x-auto rounded-t-none! rounded-b-lg bg-background p-4 text-foreground",
         className,
       )}
       {...props}
@@ -221,7 +222,7 @@ const defaultComponents = memoizeMarkdownComponents({
   td: ({ className, ...props }) => (
     <td
       className={cn(
-        "border-b border-l px-4 py-2 text-left last:border-r [&[align=center]]:text-center [&[align=right]]:text-right",
+        "border-b border-l px-4 py-2 text-left last:border-r [[align=center]]:text-center [[align=right]]:text-right",
         className,
       )}
       {...props}
@@ -230,7 +231,7 @@ const defaultComponents = memoizeMarkdownComponents({
   th: ({ className, ...props }) => (
     <th
       className={cn(
-        "bg-muted px-4 py-2 text-left font-bold first:rounded-tl-lg last:rounded-tr-lg [&[align=center]]:text-center [&[align=right]]:text-right",
+        "bg-muted px-4 py-2 text-left font-bold first:rounded-tl-lg last:rounded-tr-lg [[align=center]]:text-center [[align=right]]:text-right",
         className,
       )}
       {...props}

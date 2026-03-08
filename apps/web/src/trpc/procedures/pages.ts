@@ -8,11 +8,11 @@ import {
   TreeNode,
   zInsertPage,
 } from "@acme/db/schema";
-import { openai } from "@ai-sdk/openai";
 import type { TRPCRouterRecord } from "@trpc/server";
 import { TRPCError } from "@trpc/server";
 import { embed } from "ai";
 import { z } from "zod/v4";
+import { model } from "~/ai/providers/openai/embedding";
 import {
   saveTransactions,
   zBlockTransactions,
@@ -177,7 +177,7 @@ export const pagesRouter = {
     .query(async ({ ctx, input }) => {
       try {
         const { embedding } = await embed({
-          model: openai.embedding("text-embedding-3-small"),
+          model,
           value: input.query,
         });
 

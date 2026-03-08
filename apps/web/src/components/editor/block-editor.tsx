@@ -5,8 +5,8 @@ import { BlockNoteView } from "@blocknote/shadcn";
 import { AIMenuController } from "@blocknote/xl-ai";
 import { useTheme } from "next-themes";
 import { type ComponentProps, useEffect, useRef } from "react";
-import { useJournlAgent } from "~/ai/agents/use-journl-agent";
 import { env } from "~/env";
+import { useJournlAgent } from "~/hooks/use-journl-agent";
 import type { BlockTransaction } from "~/trpc";
 import { DefaultMap } from "../../lib/default-map";
 

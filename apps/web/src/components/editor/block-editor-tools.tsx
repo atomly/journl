@@ -23,7 +23,7 @@ import {
 } from "@blocknote/xl-ai";
 import { RiSparkling2Fill } from "react-icons/ri";
 import removeMarkdown from "remove-markdown";
-import { useJournlAgent } from "~/ai/agents/use-journl-agent";
+import { useJournlAgent } from "~/hooks/use-journl-agent";
 import { useIsMobile } from "~/hooks/use-mobile";
 
 export function BlockEditorFloatingToolbar() {

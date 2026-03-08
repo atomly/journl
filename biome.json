@@ -16,7 +16,8 @@
       "!**/node_modules",
       "!**/.next",
       "!**/.turbo",
-      "!**/.mastra"
+      "!**/.mastra",
+      "!**/.well-known"
     ]
   },
   "formatter": {

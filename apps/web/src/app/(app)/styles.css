@@ -118,6 +118,7 @@ The following is the z-index hierarchy for the app.
 The only component we need to edit in this file is the overlay.
 The rest of the components are set by the Tailwind CSS classes, or by our editor framework.
 
+- Progress Bar (`z-index`: 7000)
 - Sidebar Drag Handle Tooltips/Popover (`z-index`: 6000)
 - Dialog Content (Billing Modal, Auth Modal, etc.) (`z-index`: 5500)
 - Dialog Overlays (Billing Modal, Auth Modal, etc.) (`z-index`: 5000)
@@ -166,6 +167,30 @@ The rest of the components are set by the Tailwind CSS classes, or by our editor
 /* Ensure the editor options menu appears above the sidebar */
 .bn-container > div[data-floating-ui-focusable] {
   z-index: 4000 !important;
+}
+
+@container (max-width: 430px) {
+  [data-slot="header-actions"]:has([data-slot="header-subscription-button"])
+    [data-slot="header-search-trigger"] {
+    width: 2rem;
+    max-width: 2rem;
+    justify-content: center;
+  }
+
+  [data-slot="header-actions"]:has([data-slot="header-subscription-button"])
+    [data-slot="header-search-trigger"]
+    [data-slot="header-search-icon"] {
+    display: block;
+  }
+
+  [data-slot="header-actions"]:has([data-slot="header-subscription-button"])
+    [data-slot="header-search-trigger"]
+    [data-slot="header-search-label"],
+  [data-slot="header-actions"]:has([data-slot="header-subscription-button"])
+    [data-slot="header-search-trigger"]
+    [data-slot="header-search-shortcuts"] {
+    display: none;
+  }
 }
 
 /* On mobile... */

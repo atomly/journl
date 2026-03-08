@@ -27,3 +27,6 @@ lucide
 offcanvas
 minmax
 orientationchange
+treeify
+noopener
+noreferrer

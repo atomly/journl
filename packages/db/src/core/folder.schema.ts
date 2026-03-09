@@ -4,21 +4,15 @@ import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 import { user } from "../auth/user.schema.ts";
 import { TEXT_LIMITS } from "../constants/resource-limits.ts";
-import { BlockEdge, BlockNode } from "./block-node.schema.ts";
-import { Document } from "./document.schema.ts";
 
-export const Page = pgTable(
-  "page",
+export const Folder = pgTable(
+  "folder",
   (t) => ({
     id: t.uuid().notNull().primaryKey().defaultRandom(),
     user_id: text()
       .notNull()
       .references(() => user.id, { onDelete: "cascade" }),
-    document_id: t
-      .uuid()
-      .notNull()
-      .references(() => Document.id, { onDelete: "cascade" }),
-    title: varchar("title", { length: TEXT_LIMITS.PAGE_TITLE }).notNull(),
+    name: varchar("name", { length: TEXT_LIMITS.PAGE_TITLE }).notNull(),
     created_at: t
       .timestamp({ mode: "string", withTimezone: true })
       .defaultNow()
@@ -30,35 +24,25 @@ export const Page = pgTable(
       .$onUpdateFn(() => sql`now()`),
   }),
   (t) => [
-    index("page_user_id_updated_at_desc_index").on(
+    index("folder_user_id_updated_at_desc_id_desc_index").on(
       t.user_id,
       t.updated_at.desc(),
+      t.id.desc(),
     ),
   ],
 );
 
-export const PageRelations = relations(Page, ({ many }) => ({
-  block_nodes: many(BlockNode),
-  block_edges: many(BlockEdge),
-}));
+export const FolderRelations = relations(Folder, () => ({}));
 
-type PageRow = typeof Page.$inferSelect;
-export type Page = PageRow & {
+type FolderRow = typeof Folder.$inferSelect;
+export type Folder = FolderRow & {
   edge_id?: string | null;
   node_id?: string | null;
   parent_node_id?: string | null;
 };
 
-export const zInsertPage = createInsertSchema(Page, {
-  title: z.string().max(TEXT_LIMITS.PAGE_TITLE),
-}).omit({
-  created_at: true,
-  id: true,
-  updated_at: true,
-});
-
-export const zUpdatePage = createInsertSchema(Page, {
-  title: z.string().min(1).max(TEXT_LIMITS.PAGE_TITLE),
+export const zInsertFolder = createInsertSchema(Folder, {
+  name: z.string().max(TEXT_LIMITS.PAGE_TITLE),
 }).omit({
   created_at: true,
   id: true,
@@ -66,4 +50,12 @@ export const zUpdatePage = createInsertSchema(Page, {
   user_id: true,
 });
 
-export const zPage = createSelectSchema(Page);
+export const zUpdateFolder = createInsertSchema(Folder, {
+  name: z.string().min(1).max(TEXT_LIMITS.PAGE_TITLE),
+})
+  .pick({
+    name: true,
+  })
+  .strict();
+
+export const zFolder = createSelectSchema(Folder);

@@ -3,7 +3,12 @@
 import type { Page } from "@acme/db/schema";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import type { CSSProperties, HTMLAttributes, MouseEventHandler } from "react";
+import type {
+  CSSProperties,
+  HTMLAttributes,
+  MouseEventHandler,
+  ReactNode,
+} from "react";
 import { useState } from "react";
 import {
   SidebarMenuSubButton,
@@ -26,6 +31,7 @@ type AppSidebarPageItemProps = {
   page: Page;
   className?: string;
   dragActivatorProps?: HTMLAttributes<HTMLDivElement>;
+  dropOverlay?: ReactNode;
   isDragging?: boolean;
   itemRef?: (node: HTMLLIElement | null) => void;
   itemStyle?: CSSProperties;
@@ -36,6 +42,7 @@ export function AppSidebarPageItem({
   page,
   className,
   dragActivatorProps,
+  dropOverlay,
   isDragging = false,
   itemRef,
   itemStyle,
@@ -55,76 +62,79 @@ export function AppSidebarPageItem({
   return (
     <SidebarMenuSubItem
       ref={itemRef}
-      key={page?.id}
       style={itemStyle}
       onClickCapture={onItemClickCapture}
       className={cn(
-        "border-sidebar-border border-l",
         isDragging && "opacity-60",
         isActive && "border-sidebar-primary",
         className,
       )}
     >
-      <DeletePageDialog
-        page={page}
-        open={isDeleteDialogOpen}
-        onOpenChange={setIsDeleteDialogOpen}
-      >
-        <SwipeAction
-          className="rounded-md md:hidden"
-          onFullSwipe={() => {
-            setIsDeleteDialogOpen(true);
-          }}
-        >
-          <SwipeActionReveal className="-ml-px">
-            <DeletePageDialogTrigger asChild>
-              <DeletePageButton
-                variant="destructive"
-                className="h-7 w-full rounded-none px-3 text-xs"
-              >
-                Delete
-              </DeletePageButton>
-            </DeletePageDialogTrigger>
-          </SwipeActionReveal>
-          <SwipeActionContent
-            className="group/swipe-content rounded-md"
-            {...dragActivatorProps}
+      <div className="relative py-1.5">
+        {dropOverlay}
+        <div className="relative z-10">
+          <DeletePageDialog
+            page={page}
+            open={isDeleteDialogOpen}
+            onOpenChange={setIsDeleteDialogOpen}
           >
-            <SidebarMenuSubButton
-              asChild
-              isActive={isActive}
-              className="group-data-[state=open]/swipe-content:rounded-r-none"
+            <SwipeAction
+              className="rounded-md md:hidden"
+              onFullSwipe={() => {
+                setIsDeleteDialogOpen(true);
+              }}
             >
-              <Link
-                href={`/pages/${page?.id}`}
-                onClick={handlePageNavigationClick}
-                className="line-clamp-1 min-w-0 flex-1 truncate hover:underline"
+              <SwipeActionReveal className="-ml-px">
+                <DeletePageDialogTrigger asChild>
+                  <DeletePageButton
+                    variant="destructive"
+                    className="h-7 w-full rounded-none px-3 text-xs"
+                  >
+                    Delete
+                  </DeletePageButton>
+                </DeletePageDialogTrigger>
+              </SwipeActionReveal>
+              <SwipeActionContent
+                className="group/swipe-content rounded-md"
+                {...dragActivatorProps}
               >
-                {page?.title || "New page"}
-              </Link>
+                <SidebarMenuSubButton
+                  asChild
+                  isActive={isActive}
+                  className="group-data-[state=open]/swipe-content:rounded-r-none"
+                >
+                  <Link
+                    href={`/pages/${page?.id}`}
+                    onClick={handlePageNavigationClick}
+                    className="line-clamp-1 min-w-0 flex-1 truncate hover:underline"
+                  >
+                    {page?.title || "New page"}
+                  </Link>
+                </SidebarMenuSubButton>
+              </SwipeActionContent>
+            </SwipeAction>
+            <SidebarMenuSubButton asChild isActive={isActive}>
+              <div
+                {...dragActivatorProps}
+                className="group/page-item hidden items-center justify-between md:flex"
+              >
+                <Link
+                  href={`/pages/${page?.id}`}
+                  onClick={handlePageNavigationClick}
+                  className="line-clamp-1 min-w-0 flex-1 truncate hover:underline"
+                >
+                  {page?.title || "New page"}
+                </Link>
+                {!!page && (
+                  <DeletePageDialogTrigger asChild>
+                    <DeletePageButton className="pointer-events-none invisible bg-transparent! pr-0! text-destructive! opacity-0 transition-opacity group-focus-within/page-item:pointer-events-auto group-focus-within/page-item:visible group-focus-within/page-item:opacity-100 group-hover/page-item:pointer-events-auto group-hover/page-item:visible group-hover/page-item:opacity-100" />
+                  </DeletePageDialogTrigger>
+                )}
+              </div>
             </SidebarMenuSubButton>
-          </SwipeActionContent>
-        </SwipeAction>
-        <SidebarMenuSubButton asChild isActive={isActive}>
-          <div
-            {...dragActivatorProps}
-            className="group/page-item hidden items-center justify-between md:flex"
-          >
-            <Link
-              href={`/pages/${page?.id}`}
-              onClick={handlePageNavigationClick}
-              className="line-clamp-1 min-w-0 flex-1 truncate hover:underline"
-            >
-              {page?.title || "New page"}
-            </Link>
-            {!!page && (
-              <DeletePageDialogTrigger asChild>
-                <DeletePageButton className="pointer-events-none invisible bg-transparent! pr-0! text-destructive! opacity-0 transition-opacity group-focus-within/page-item:pointer-events-auto group-focus-within/page-item:visible group-focus-within/page-item:opacity-100 group-hover/page-item:pointer-events-auto group-hover/page-item:visible group-hover/page-item:opacity-100" />
-              </DeletePageDialogTrigger>
-            )}
-          </div>
-        </SidebarMenuSubButton>
-      </DeletePageDialog>
+          </DeletePageDialog>
+        </div>
+      </div>
     </SidebarMenuSubItem>
   );
 }

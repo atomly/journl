@@ -35,7 +35,6 @@ import Link from "next/link";
 import { useParams, usePathname } from "next/navigation";
 import {
   createContext,
-  Fragment,
   useCallback,
   useContext,
   useEffect,
@@ -126,6 +125,15 @@ type SidebarTreeDragData = {
   parentNodeId: string | null;
 };
 
+type SidebarTreeData = {
+  hasNextPage: boolean;
+  isFetchingNextPage: boolean;
+  items: TreeItem[];
+  loadMoreRef: React.RefObject<HTMLDivElement | null>;
+  shouldRenderNestedContent: boolean;
+  shouldShowInitialSkeleton: boolean;
+};
+
 type DropTarget =
   | {
       parentNodeId: string | null;
@@ -137,9 +145,9 @@ type DropTarget =
       type: "after" | "before";
     };
 
-const DEFAULT_TREE_ITEM_CLASSNAME =
-  "ml-2 border-sidebar-border border-l py-0.5 ps-1";
-const DROP_ZONE_CLASSNAME = "h-1 rounded-sm transition-colors";
+const DEFAULT_TREE_ITEM_CLASSNAME = "ml-2 border-sidebar-border border-l ps-1";
+const TREE_DROP_LINE_CLASSNAME =
+  "absolute top-1/2 right-0 left-1 h-0.5 -translate-y-1/2 rounded-full bg-sidebar-primary transition-opacity";
 
 type SidebarTreeInteractions = {
   shouldSuppressClick: () => boolean;
@@ -255,42 +263,120 @@ function parseDropTarget(id: unknown): DropTarget | null {
   };
 }
 
-function SidebarTreeDropZone({
+function SidebarTreeInsertDropBand({
   activeDragId,
-  className,
+  bandClassName,
   dropId,
   isDnDEnabled,
 }: {
   activeDragId: string | null;
-  className?: string;
+  bandClassName: string;
   dropId: string;
   isDnDEnabled: boolean;
 }) {
-  const { isMobile } = useSidebar();
   const { isOver, setNodeRef } = useDroppable({
     id: dropId,
   });
 
-  if (!isDnDEnabled) {
-    return null;
-  }
+  const isActive = isDnDEnabled && !!activeDragId;
 
-  if (isMobile && !activeDragId) {
+  return (
+    <div
+      ref={setNodeRef}
+      className={cn(
+        "absolute inset-x-0 z-20",
+        bandClassName,
+        isActive ? "pointer-events-auto" : "pointer-events-none",
+      )}
+    >
+      <div
+        className={cn(
+          TREE_DROP_LINE_CLASSNAME,
+          isActive && isOver ? "opacity-100" : "opacity-0",
+        )}
+      />
+    </div>
+  );
+}
+
+function SidebarTreeInsertDropBands({
+  afterBandClassName = "bottom-0 h-1.5",
+  activeDragId,
+  anchorEdgeId,
+  beforeBandClassName = "top-0 h-1.5",
+  isDnDEnabled,
+  parentNodeId,
+  showAfter = true,
+  showBefore = true,
+}: {
+  afterBandClassName?: string;
+  activeDragId: string | null;
+  anchorEdgeId: string;
+  beforeBandClassName?: string;
+  isDnDEnabled: boolean;
+  parentNodeId: string | null;
+  showAfter?: boolean;
+  showBefore?: boolean;
+}) {
+  return (
+    <>
+      {showBefore ? (
+        <SidebarTreeInsertDropBand
+          activeDragId={activeDragId}
+          bandClassName={beforeBandClassName}
+          dropId={getBeforeDropId({
+            anchorEdgeId,
+            parentNodeId,
+          })}
+          isDnDEnabled={isDnDEnabled}
+        />
+      ) : null}
+      {showAfter ? (
+        <SidebarTreeInsertDropBand
+          activeDragId={activeDragId}
+          bandClassName={afterBandClassName}
+          dropId={getAfterDropId({
+            anchorEdgeId,
+            parentNodeId,
+          })}
+          isDnDEnabled={isDnDEnabled}
+        />
+      ) : null}
+    </>
+  );
+}
+
+function SidebarTreeEmptyDropTarget({
+  activeDragId,
+  dropId,
+  isDnDEnabled,
+}: {
+  activeDragId: string | null;
+  dropId: string;
+  isDnDEnabled: boolean;
+}) {
+  const { isOver, setNodeRef } = useDroppable({
+    id: dropId,
+  });
+  const isDragActive = isDnDEnabled && !!activeDragId;
+
+  if (!isDragActive) {
     return null;
   }
 
   return (
-    <SidebarMenuSubItem
-      className={cn(DEFAULT_TREE_ITEM_CLASSNAME, "py-0", className)}
-    >
-      <div
-        ref={setNodeRef}
-        className={cn(
-          DROP_ZONE_CLASSNAME,
-          "bg-transparent",
-          isOver && "bg-sidebar-primary/35",
-        )}
-      />
+    <SidebarMenuSubItem className={DEFAULT_TREE_ITEM_CLASSNAME}>
+      <div className="relative py-1.5">
+        <div
+          ref={setNodeRef}
+          className={cn(
+            "min-h-7 rounded-md border border-dashed transition-colors",
+            isOver
+              ? "border-sidebar-primary bg-sidebar-primary/10"
+              : "border-sidebar-border/60",
+          )}
+        />
+      </div>
     </SidebarMenuSubItem>
   );
 }
@@ -333,6 +419,14 @@ function DraggablePageRow({
             }
           : undefined
       }
+      dropOverlay={
+        <SidebarTreeInsertDropBands
+          activeDragId={activeDragId}
+          anchorEdgeId={page.edge_id}
+          isDnDEnabled={isDnDEnabled}
+          parentNodeId={parentNodeId}
+        />
+      }
       isDragging={activeDragId === draggableId}
       itemRef={setNodeRef}
       itemStyle={
@@ -352,6 +446,77 @@ function DraggablePageRow({
       }}
     />
   );
+}
+
+function useSidebarTreeData({
+  enabled = true,
+  parentNodeId,
+}: {
+  enabled?: boolean;
+  parentNodeId: string | null;
+}): SidebarTreeData {
+  const trpc = useTRPC();
+  const loadMoreRef = useRef<HTMLDivElement | null>(null);
+  const queryOptions = trpc.tree.getChildrenPaginated.infiniteQueryOptions(
+    getInfiniteSidebarTreeQueryOptions(parentNodeId),
+  );
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isPending } =
+    useInfiniteQuery({
+      ...queryOptions,
+      enabled,
+      getNextPageParam: ({ nextCursor }) => {
+        return nextCursor;
+      },
+    });
+
+  const items = (data?.pages?.flatMap((page) => page.items) ??
+    []) as TreeItem[];
+  const shouldShowInitialSkeleton = items.length === 0 && isPending;
+  const shouldRenderNestedContent =
+    shouldShowInitialSkeleton ||
+    items.length > 0 ||
+    isFetchingNextPage ||
+    !!hasNextPage;
+
+  useEffect(() => {
+    if (!hasNextPage || isFetchingNextPage) {
+      return;
+    }
+
+    if (typeof IntersectionObserver === "undefined") {
+      return;
+    }
+
+    const target = loadMoreRef.current;
+    if (!target) {
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry?.isIntersecting) {
+          void fetchNextPage();
+        }
+      },
+      {
+        rootMargin: INFINITE_SCROLL_ROOT_MARGIN,
+      },
+    );
+
+    observer.observe(target);
+    return () => {
+      observer.disconnect();
+    };
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
+
+  return {
+    hasNextPage: !!hasNextPage,
+    isFetchingNextPage,
+    items,
+    loadMoreRef,
+    shouldRenderNestedContent,
+    shouldShowInitialSkeleton,
+  };
 }
 
 function DraggableFolderRow({
@@ -397,6 +562,11 @@ function DraggableFolderRow({
     useDroppable({
       id: insideDropId,
     });
+  const treeData = useSidebarTreeData({
+    enabled: isOpen,
+    parentNodeId: folder.node_id,
+  });
+  const isDragActive = isDnDEnabled && !!activeDragId;
 
   useEffect(() => {
     if (isOverInside) {
@@ -444,98 +614,200 @@ function DraggableFolderRow({
             : undefined
         }
       >
-        <div
-          {...(isDnDEnabled
-            ? {
-                ...attributes,
-                ...listeners,
-              }
-            : undefined)}
-          ref={setInsideDropNodeRef}
-          className={cn(
-            "group/folder-navigation relative flex min-w-0 items-center gap-0.5 rounded-sm",
-            isOverInside && isDnDEnabled && "bg-sidebar-primary/15",
-          )}
-        >
-          <SidebarMenuSubButton
-            asChild
-            isActive={isActive}
-            className="w-full pr-12"
-          >
-            <button
-              type="button"
-              aria-expanded={isOpen}
-              aria-label={isOpen ? "Collapse folder" : "Expand folder"}
-              onClick={handleFolderToggle}
-              className="flex w-full min-w-0 items-center gap-1"
-            >
-              <span className="relative flex size-3 shrink-0 items-center justify-center">
-                {isOpen ? (
-                  <FolderOpen className="size-3 shrink-0 transition-opacity duration-150 group-focus-within/folder-navigation:opacity-0 group-hover/folder-navigation:opacity-0" />
-                ) : (
-                  <FolderClosed className="size-3 shrink-0 transition-opacity duration-150 group-focus-within/folder-navigation:opacity-0 group-hover/folder-navigation:opacity-0" />
-                )}
-                <ChevronRight className="absolute inset-0 size-3 shrink-0 opacity-0 transition-all duration-150 group-focus-within/folder-navigation:opacity-100 group-hover/folder-navigation:opacity-100 group-data-[state=open]/folder-collapsible:rotate-90" />
-              </span>
-              <span className="line-clamp-1 min-w-0 flex-1 truncate text-left">
-                {folder.name || "New folder"}
-              </span>
-            </button>
-          </SidebarMenuSubButton>
-
-          {isPending ? (
-            <output className="absolute top-1/2 right-7 z-10 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-sm text-sidebar-foreground/70 opacity-100">
-              <Loader2 className="size-3.5 animate-spin" />
-              <span className="sr-only">Folder is still being created</span>
-            </output>
-          ) : (
-            <Link
-              href={folderHref}
-              aria-label="Open folder"
-              onPointerDown={(event) => {
-                event.stopPropagation();
-              }}
-              onClick={(event) => {
-                event.stopPropagation();
-                if (isMobile) {
-                  setOpenMobile(false);
-                }
-              }}
-              className="absolute top-1/2 right-7 z-10 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-sm text-sidebar-foreground opacity-0 transition-opacity hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-sidebar-ring group-focus-within/folder-navigation:opacity-100 group-hover/folder-navigation:opacity-100"
-            >
-              <ArrowRight className="size-3.5" />
-            </Link>
-          )}
-
-          <AppSidebarTreeActions
-            disabled={isPending}
-            kind="folder"
-            folder={folder}
-            parentNodeId={folder.node_id}
-            onCreateStart={() => {
-              setFolderOpen(folder.node_id, true);
-            }}
-            onCreateSuccess={() => {
-              setFolderOpen(folder.node_id, true);
-            }}
+        <div className="relative py-1.5">
+          <SidebarTreeInsertDropBands
+            activeDragId={activeDragId}
+            anchorEdgeId={folder.edge_id}
+            isDnDEnabled={isDnDEnabled}
+            parentNodeId={parentNodeId}
+            showAfter={!treeData.shouldRenderNestedContent}
           />
+          <div
+            ref={setInsideDropNodeRef}
+            className={cn(
+              "absolute inset-x-0 z-20",
+              "top-1.5 bottom-1.5",
+              isDragActive ? "pointer-events-auto" : "pointer-events-none",
+            )}
+          />
+          <div
+            {...(isDnDEnabled
+              ? {
+                  ...attributes,
+                  ...listeners,
+                }
+              : undefined)}
+            className={cn(
+              "group/folder-navigation relative z-10 flex min-w-0 items-center gap-0.5 rounded-sm",
+              isOverInside && isDragActive && "bg-primary/10",
+            )}
+          >
+            <SidebarMenuSubButton
+              asChild
+              isActive={isActive}
+              className="w-full pr-12"
+            >
+              <button
+                type="button"
+                aria-expanded={isOpen}
+                aria-label={isOpen ? "Collapse folder" : "Expand folder"}
+                onClick={handleFolderToggle}
+                className="flex w-full min-w-0 items-center gap-1"
+              >
+                <span className="relative flex size-3 shrink-0 items-center justify-center">
+                  {isOpen ? (
+                    <FolderOpen className="size-3 shrink-0 transition-opacity duration-150 group-focus-within/folder-navigation:opacity-0 group-hover/folder-navigation:opacity-0" />
+                  ) : (
+                    <FolderClosed className="size-3 shrink-0 transition-opacity duration-150 group-focus-within/folder-navigation:opacity-0 group-hover/folder-navigation:opacity-0" />
+                  )}
+                  <ChevronRight className="absolute inset-0 size-3 shrink-0 opacity-0 transition-all duration-150 group-focus-within/folder-navigation:opacity-100 group-hover/folder-navigation:opacity-100 group-data-[state=open]/folder-collapsible:rotate-90" />
+                </span>
+                <span className="line-clamp-1 min-w-0 flex-1 truncate text-left">
+                  {folder.name || "New folder"}
+                </span>
+              </button>
+            </SidebarMenuSubButton>
+
+            {isPending ? (
+              <output className="absolute top-1/2 right-7 z-10 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-sm text-sidebar-foreground/70 opacity-100">
+                <Loader2 className="size-3.5 animate-spin" />
+                <span className="sr-only">Folder is still being created</span>
+              </output>
+            ) : (
+              <Link
+                href={folderHref}
+                aria-label="Open folder"
+                onPointerDown={(event) => {
+                  event.stopPropagation();
+                }}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  if (isMobile) {
+                    setOpenMobile(false);
+                  }
+                }}
+                className="absolute top-1/2 right-7 z-10 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-sm text-sidebar-foreground opacity-0 transition-opacity hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-sidebar-ring group-focus-within/folder-navigation:opacity-100 group-hover/folder-navigation:opacity-100"
+              >
+                <ArrowRight className="size-3.5" />
+              </Link>
+            )}
+
+            <AppSidebarTreeActions
+              disabled={isPending}
+              kind="folder"
+              folder={folder}
+              parentNodeId={folder.node_id}
+              onCreateStart={() => {
+                setFolderOpen(folder.node_id, true);
+              }}
+              onCreateSuccess={() => {
+                setFolderOpen(folder.node_id, true);
+              }}
+            />
+          </div>
         </div>
 
-        <CollapsibleContent className="pt-1">
-          <SidebarMenuSub className="mx-0 mr-0 gap-0 border-none px-0">
-            <SidebarTree
-              activeDragId={activeDragId}
-              enabled={isOpen}
-              isDnDEnabled={isDnDEnabled}
-              onFolderInsideHover={onFolderInsideHover}
-              openFolders={openFolders}
-              parentNodeId={folder.node_id}
-              setFolderOpen={setFolderOpen}
-            />
-          </SidebarMenuSub>
-        </CollapsibleContent>
+        {treeData.shouldRenderNestedContent ? (
+          <>
+            <CollapsibleContent
+              className={cn(treeData.items.length > 0 && "pt-1")}
+            >
+              <SidebarMenuSub className="mx-0 mr-0 gap-0 border-none px-0">
+                <SidebarTreeRows
+                  activeDragId={activeDragId}
+                  isDnDEnabled={isDnDEnabled}
+                  onFolderInsideHover={onFolderInsideHover}
+                  openFolders={openFolders}
+                  parentNodeId={folder.node_id}
+                  setFolderOpen={setFolderOpen}
+                  showEmptyParentDropZone={false}
+                  treeData={treeData}
+                />
+              </SidebarMenuSub>
+            </CollapsibleContent>
+            <div className="relative h-1.5">
+              <SidebarTreeInsertDropBands
+                activeDragId={activeDragId}
+                anchorEdgeId={folder.edge_id}
+                afterBandClassName="top-0 h-1.5"
+                isDnDEnabled={isDnDEnabled}
+                parentNodeId={parentNodeId}
+                showBefore={false}
+              />
+            </div>
+          </>
+        ) : null}
       </SidebarMenuSubItem>
     </Collapsible>
+  );
+}
+
+function SidebarTreeRows({
+  activeDragId,
+  isDnDEnabled,
+  onFolderInsideHover,
+  openFolders,
+  parentNodeId,
+  setFolderOpen,
+  showEmptyParentDropZone,
+  treeData,
+}: Omit<SidebarTreeProps, "enabled"> & {
+  showEmptyParentDropZone: boolean;
+  treeData: SidebarTreeData;
+}) {
+  return (
+    <>
+      {treeData.shouldShowInitialSkeleton ? (
+        <AppSidebarPageItemSkeleton className={DEFAULT_TREE_ITEM_CLASSNAME} />
+      ) : null}
+
+      {showEmptyParentDropZone &&
+      treeData.items.length === 0 &&
+      !treeData.shouldShowInitialSkeleton ? (
+        <SidebarTreeEmptyDropTarget
+          activeDragId={activeDragId}
+          dropId={getParentDropId(parentNodeId)}
+          isDnDEnabled={isDnDEnabled}
+        />
+      ) : null}
+
+      {treeData.items.map((item) => {
+        return item.kind === "folder" ? (
+          <DraggableFolderRow
+            key={`${item.kind}-${item.node_id}`}
+            activeDragId={activeDragId}
+            folder={item.folder}
+            isDnDEnabled={isDnDEnabled}
+            isPending={item.pending}
+            onFolderInsideHover={onFolderInsideHover}
+            openFolders={openFolders}
+            parentNodeId={parentNodeId}
+            setFolderOpen={setFolderOpen}
+          />
+        ) : (
+          <DraggablePageRow
+            key={`${item.kind}-${item.node_id}`}
+            activeDragId={activeDragId}
+            isDnDEnabled={isDnDEnabled}
+            page={item.page}
+            parentNodeId={parentNodeId}
+          />
+        );
+      })}
+
+      {treeData.isFetchingNextPage ? (
+        <AppSidebarPageItemSkeleton className={DEFAULT_TREE_ITEM_CLASSNAME} />
+      ) : null}
+
+      {treeData.hasNextPage ? (
+        <SidebarMenuSubItem
+          className={cn(DEFAULT_TREE_ITEM_CLASSNAME, "py-0")}
+          aria-hidden
+        >
+          <div ref={treeData.loadMoreRef} className="h-px w-full" />
+        </SidebarMenuSubItem>
+      ) : null}
+    </>
   );
 }
 
@@ -548,125 +820,22 @@ function SidebarTree({
   parentNodeId,
   setFolderOpen,
 }: SidebarTreeProps) {
-  const trpc = useTRPC();
-  const loadMoreRef = useRef<HTMLDivElement | null>(null);
-  const queryOptions = trpc.tree.getChildrenPaginated.infiniteQueryOptions(
-    getInfiniteSidebarTreeQueryOptions(parentNodeId),
-  );
-  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isPending } =
-    useInfiniteQuery({
-      ...queryOptions,
-      enabled,
-      getNextPageParam: ({ nextCursor }) => {
-        return nextCursor;
-      },
-    });
-
-  const items = (data?.pages?.flatMap((page) => page.items) ??
-    []) as TreeItem[];
-
-  useEffect(() => {
-    if (!hasNextPage || isFetchingNextPage) {
-      return;
-    }
-
-    if (typeof IntersectionObserver === "undefined") {
-      return;
-    }
-
-    const target = loadMoreRef.current;
-    if (!target) {
-      return;
-    }
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry?.isIntersecting) {
-          void fetchNextPage();
-        }
-      },
-      {
-        rootMargin: INFINITE_SCROLL_ROOT_MARGIN,
-      },
-    );
-
-    observer.observe(target);
-    return () => {
-      observer.disconnect();
-    };
-  }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
-
-  const shouldShowInitialSkeleton = items.length === 0 && isPending;
+  const treeData = useSidebarTreeData({
+    enabled,
+    parentNodeId,
+  });
 
   return (
-    <>
-      {shouldShowInitialSkeleton ? (
-        <AppSidebarPageItemSkeleton className={DEFAULT_TREE_ITEM_CLASSNAME} />
-      ) : null}
-
-      {items.length === 0 && !shouldShowInitialSkeleton ? (
-        <SidebarTreeDropZone
-          activeDragId={activeDragId}
-          dropId={getParentDropId(parentNodeId)}
-          isDnDEnabled={isDnDEnabled}
-        />
-      ) : null}
-
-      {items.map((item) => {
-        return (
-          <Fragment key={`${item.kind}-${item.node_id}`}>
-            <SidebarTreeDropZone
-              activeDragId={activeDragId}
-              dropId={getBeforeDropId({
-                anchorEdgeId: item.edge_id,
-                parentNodeId,
-              })}
-              isDnDEnabled={isDnDEnabled}
-            />
-
-            {item.kind === "folder" ? (
-              <DraggableFolderRow
-                activeDragId={activeDragId}
-                folder={item.folder}
-                isDnDEnabled={isDnDEnabled}
-                isPending={item.pending}
-                onFolderInsideHover={onFolderInsideHover}
-                openFolders={openFolders}
-                parentNodeId={parentNodeId}
-                setFolderOpen={setFolderOpen}
-              />
-            ) : (
-              <DraggablePageRow
-                activeDragId={activeDragId}
-                isDnDEnabled={isDnDEnabled}
-                page={item.page}
-                parentNodeId={parentNodeId}
-              />
-            )}
-
-            <SidebarTreeDropZone
-              activeDragId={activeDragId}
-              dropId={getAfterDropId({
-                anchorEdgeId: item.edge_id,
-                parentNodeId,
-              })}
-              isDnDEnabled={isDnDEnabled}
-            />
-          </Fragment>
-        );
-      })}
-
-      {isFetchingNextPage ? (
-        <AppSidebarPageItemSkeleton className={DEFAULT_TREE_ITEM_CLASSNAME} />
-      ) : null}
-
-      <SidebarMenuSubItem
-        className={cn(DEFAULT_TREE_ITEM_CLASSNAME, "py-0")}
-        aria-hidden
-      >
-        <div ref={loadMoreRef} className="h-px w-full" />
-      </SidebarMenuSubItem>
-    </>
+    <SidebarTreeRows
+      activeDragId={activeDragId}
+      isDnDEnabled={isDnDEnabled}
+      onFolderInsideHover={onFolderInsideHover}
+      openFolders={openFolders}
+      parentNodeId={parentNodeId}
+      setFolderOpen={setFolderOpen}
+      showEmptyParentDropZone
+      treeData={treeData}
+    />
   );
 }
 
@@ -687,6 +856,8 @@ export const AppSidebarPages = ({
     null,
   );
   const hoverFolderIdRef = useRef<string | null>(null);
+  const dragStartOpenFoldersRef = useRef<Record<string, boolean>>({});
+  const dragAutoExpandedFoldersRef = useRef<Set<string>>(new Set());
   const moveMutationContextRef = useRef<MoveMutationContext | null>(null);
   const recentDragUntilRef = useRef(0);
   const treeQueryFilter = trpc.tree.getChildrenPaginated.infiniteQueryFilter();
@@ -854,6 +1025,11 @@ export const AppSidebarPages = ({
     return Date.now() < recentDragUntilRef.current;
   }, []);
 
+  const resetDragFolderState = useCallback(() => {
+    dragStartOpenFoldersRef.current = {};
+    dragAutoExpandedFoldersRef.current.clear();
+  }, []);
+
   const handlePagesClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -879,9 +1055,11 @@ export const AppSidebarPages = ({
     (event: DragStartEvent) => {
       navigator.vibrate?.(50);
       markRecentDrag();
+      dragStartOpenFoldersRef.current = { ...openFolders };
+      dragAutoExpandedFoldersRef.current.clear();
       setActiveDragId(String(event.active.id));
     },
-    [markRecentDrag],
+    [markRecentDrag, openFolders],
   );
 
   const handleDragCancel = useCallback(
@@ -889,8 +1067,9 @@ export const AppSidebarPages = ({
       clearHoverExpandTimeout();
       markRecentDrag();
       setActiveDragId(null);
+      resetDragFolderState();
     },
-    [clearHoverExpandTimeout, markRecentDrag],
+    [clearHoverExpandTimeout, markRecentDrag, resetDragFolderState],
   );
 
   const handleFolderInsideHover = useCallback(
@@ -911,6 +1090,7 @@ export const AppSidebarPages = ({
       clearHoverExpandTimeout();
       hoverFolderIdRef.current = folderNodeId;
       hoverExpandTimeoutRef.current = setTimeout(() => {
+        dragAutoExpandedFoldersRef.current.add(folderNodeId);
         setFolderOpen(folderNodeId, true);
       }, 700);
     },
@@ -957,8 +1137,21 @@ export const AppSidebarPages = ({
 
       const dropTarget = parseDropTarget(event.over?.id);
       if (!dropTarget) {
+        resetDragFolderState();
         return;
       }
+
+      if (dropTarget.type === "inside" && dropTarget.parentNodeId) {
+        const targetFolderNodeId = dropTarget.parentNodeId;
+        const didAutoExpand =
+          dragAutoExpandedFoldersRef.current.has(targetFolderNodeId);
+        const wasOpenAtDragStart =
+          dragStartOpenFoldersRef.current[targetFolderNodeId] ?? false;
+
+        setFolderOpen(targetFolderNodeId, didAutoExpand || wasOpenAtDragStart);
+      }
+
+      resetDragFolderState();
 
       const destination =
         dropTarget.type === "before" || dropTarget.type === "after"
@@ -983,7 +1176,13 @@ export const AppSidebarPages = ({
         node_id: activeData.item.nodeId,
       });
     },
-    [clearHoverExpandTimeout, markRecentDrag, moveItem],
+    [
+      clearHoverExpandTimeout,
+      markRecentDrag,
+      moveItem,
+      resetDragFolderState,
+      setFolderOpen,
+    ],
   );
 
   return (

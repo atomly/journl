@@ -58,9 +58,9 @@ import {
 } from "~/trpc/cache/tree-cache";
 import { getInfiniteSidebarTreeQueryOptions } from "~/trpc/options/sidebar-tree-query-options";
 import { useTRPC } from "~/trpc/react";
-import { AppSidebarTreeActions } from "../../../@appSidebar/_components/app-sidebar-tree-actions";
-import { DeleteFolderDialog } from "../../../@appSidebar/_components/delete-folder-button";
-import { DeletePageDialog } from "../../../@appSidebar/_components/delete-page-button";
+import { AppSidebarTreeActions } from "../../@appSidebar/_components/app-sidebar-tree-actions";
+import { DeleteFolderDialog } from "../../@appSidebar/_components/delete-folder-button";
+import { DeletePageDialog } from "../../@appSidebar/_components/delete-page-button";
 
 const TREE_ITEM_INDENT_CLASSNAME = "ml-3 pl-2";
 const TREE_ROW_CLASSNAME =
@@ -585,7 +585,7 @@ function DraggableFolderRow({
     nodeId: folder.node_id,
   };
   const draggableId = getDragId(itemRef);
-  const folderHref = `/pages/folders/${folder.id}`;
+  const folderHref = `/folders/${folder.id}`;
   const isActive = pathname === folderHref;
   const isOpen = openFolders[folder.node_id] ?? false;
   const { attributes, listeners, setNodeRef, transform } = useDraggable({

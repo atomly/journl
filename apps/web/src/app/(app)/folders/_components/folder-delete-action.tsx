@@ -10,7 +10,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
-import { DeleteFolderDialog } from "../../../@appSidebar/_components/delete-folder-button";
+import { DeleteFolderDialog } from "../../@appSidebar/_components/delete-folder-button";
 
 type FolderDeleteActionProps = {
   folder: Folder;

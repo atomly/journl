@@ -275,7 +275,7 @@ export function DeleteFolderDialog({
     () => isPending || isDeleting,
     [isDeleting, isPending],
   );
-  const folderDetailsPath = `/pages/folders/${folder.id}`;
+  const folderDetailsPath = `/folders/${folder.id}`;
 
   const confirmDelete = useCallback(() => {
     startTransition(() => {

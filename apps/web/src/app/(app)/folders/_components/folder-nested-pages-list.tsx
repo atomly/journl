@@ -22,7 +22,7 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import {
-  ChevronRight,
+  ArrowRight,
   FileText,
   Folder as FolderIcon,
   MoreHorizontal,
@@ -36,7 +36,6 @@ import { Button } from "~/components/ui/button";
 import {
   Collapsible,
   CollapsibleContent,
-  CollapsibleTrigger,
 } from "~/components/ui/collapsible";
 import {
   DropdownMenu,
@@ -576,6 +575,7 @@ function DraggableFolderRow({
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const pathname = usePathname();
+  const { isMobile, setOpenMobile } = useSidebar();
   const [isEditing, setIsEditing] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [draftName, setDraftName] = useState(folder.name);
@@ -698,6 +698,14 @@ function DraggableFolderRow({
     ],
   );
 
+  const handleFolderToggle = useCallback(() => {
+    if (isEditing || shouldSuppressClick()) {
+      return;
+    }
+
+    setFolderOpen(folder.node_id, !isOpen);
+  }, [folder.node_id, isEditing, isOpen, setFolderOpen, shouldSuppressClick]);
+
   return (
     <DeleteFolderDialog
       folder={folder}
@@ -753,16 +761,6 @@ function DraggableFolderRow({
                 isOverInside && isDnDEnabled && "bg-primary/10",
               )}
             >
-              <CollapsibleTrigger asChild>
-                <button
-                  type="button"
-                  className="flex h-6 w-5 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-                  aria-label={isOpen ? "Collapse folder" : "Expand folder"}
-                >
-                  <ChevronRight className="size-3 transition-transform duration-200 group-data-[state=open]/folder-collapsible:rotate-90" />
-                </button>
-              </CollapsibleTrigger>
-
               {isEditing ? (
                 <span className="flex min-w-0 flex-1 items-center gap-2">
                   <span className="inline-flex size-6 shrink-0 items-center justify-center rounded-md border bg-background">
@@ -808,20 +806,43 @@ function DraggableFolderRow({
                   />
                 </span>
               ) : (
-                <Link
-                  href={folderHref}
-                  className="flex w-full min-w-0 items-center gap-2"
+                <button
+                  type="button"
+                  aria-expanded={isOpen}
+                  aria-label={isOpen ? "Collapse folder" : "Expand folder"}
+                  onClick={handleFolderToggle}
+                  className="flex w-full min-w-0 items-center gap-1.5 text-left"
                 >
-                  <span className="inline-flex size-6 shrink-0 items-center justify-center rounded-md border bg-background">
-                    <FolderIcon className="size-3 text-primary" />
+                  <span className="relative inline-flex size-6 shrink-0 items-center justify-center rounded-md border bg-background">
+                    <FolderIcon className="size-3 text-primary transition-opacity duration-150 group-hover/folder-item:opacity-0 group-focus-within/folder-item:opacity-0" />
+                    <ArrowRight className="absolute size-3 text-primary opacity-0 transition-all duration-150 group-hover/folder-item:opacity-100 group-focus-within/folder-item:opacity-100 group-data-[state=open]/folder-collapsible:rotate-90" />
                   </span>
                   <span className="line-clamp-1 min-w-0 flex-1 truncate text-left font-medium">
                     {folder.name || "New folder"}
                   </span>
-                </Link>
+                </button>
               )}
 
               <div className="ml-1 flex shrink-0 items-center gap-0.5">
+                {!isEditing ? (
+                  <Link
+                    href={folderHref}
+                    aria-label="Open folder"
+                    onPointerDown={(event) => {
+                      event.stopPropagation();
+                    }}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      if (isMobile) {
+                        setOpenMobile(false);
+                      }
+                    }}
+                    className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground opacity-0 transition-opacity hover:bg-muted hover:text-foreground focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-ring group-hover/folder-item:opacity-100 group-focus-within/folder-item:opacity-100"
+                  >
+                    <ArrowRight className="size-4" />
+                  </Link>
+                ) : null}
+
                 <DropdownMenu modal={false}>
                   <DropdownMenuTrigger asChild>
                     <Button

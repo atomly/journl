@@ -24,6 +24,7 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import {
+  ArrowRight,
   BookOpen,
   ChevronRight,
   FolderClosed,
@@ -377,6 +378,14 @@ function DraggableFolderRow({
     }
   }, [folder.node_id, isOverInside, onFolderInsideHover]);
 
+  const handleFolderToggle = useCallback(() => {
+    if (shouldSuppressClick()) {
+      return;
+    }
+
+    setFolderOpen(folder.node_id, !isOpen);
+  }, [folder.node_id, isOpen, setFolderOpen, shouldSuppressClick]);
+
   return (
     <Collapsible
       open={isOpen}
@@ -422,54 +431,60 @@ function DraggableFolderRow({
             isOverInside && isDnDEnabled && "bg-sidebar-primary/15",
           )}
         >
-          <CollapsibleTrigger asChild>
-            <button
-              type="button"
-              className="flex h-6 w-4 shrink-0 items-center justify-center rounded-sm text-sidebar-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-              aria-label={isOpen ? "Collapse folder" : "Expand folder"}
-            >
-              <ChevronRight className="size-3 transition-transform duration-200 group-data-[state=open]/folder-collapsible:rotate-90" />
-            </button>
-          </CollapsibleTrigger>
-
           <SidebarMenuSubButton
             asChild
             isActive={isActive}
-            className="w-full pr-7"
+            className="w-full pr-12"
           >
-            <Link
-              href={folderHref}
-              onClick={() => {
-                if (isMobile) {
-                  setOpenMobile(false);
-                }
-              }}
+            <button
+              type="button"
+              aria-expanded={isOpen}
+              aria-label={isOpen ? "Collapse folder" : "Expand folder"}
+              onClick={handleFolderToggle}
               className="flex w-full min-w-0 items-center gap-1"
             >
-              {isOpen ? (
-                <FolderOpen className="size-3 shrink-0" />
-              ) : (
-                <FolderClosed className="size-3 shrink-0" />
-              )}
+              <span className="relative flex size-3 shrink-0 items-center justify-center">
+                {isOpen ? (
+                  <FolderOpen className="size-3 shrink-0 transition-opacity duration-150 group-hover/folder-navigation:opacity-0 group-focus-within/folder-navigation:opacity-0" />
+                ) : (
+                  <FolderClosed className="size-3 shrink-0 transition-opacity duration-150 group-hover/folder-navigation:opacity-0 group-focus-within/folder-navigation:opacity-0" />
+                )}
+                <ChevronRight className="absolute inset-0 size-3 shrink-0 opacity-0 transition-all duration-150 group-hover/folder-navigation:opacity-100 group-focus-within/folder-navigation:opacity-100 group-data-[state=open]/folder-collapsible:rotate-90" />
+              </span>
               <span className="line-clamp-1 min-w-0 flex-1 truncate text-left">
                 {folder.name || "New folder"}
               </span>
-            </Link>
+            </button>
           </SidebarMenuSubButton>
 
-          <div className="absolute inset-y-0 right-0 flex items-center">
-            <AppSidebarTreeActions
-              kind="folder"
-              folder={folder}
-              parentNodeId={folder.node_id}
-              onCreateStart={() => {
-                setFolderOpen(folder.node_id, true);
-              }}
-              onCreateSuccess={() => {
-                setFolderOpen(folder.node_id, true);
-              }}
-            />
-          </div>
+          <Link
+            href={folderHref}
+            aria-label="Open folder"
+            onPointerDown={(event) => {
+              event.stopPropagation();
+            }}
+            onClick={(event) => {
+              event.stopPropagation();
+              if (isMobile) {
+                setOpenMobile(false);
+              }
+            }}
+            className="absolute top-1/2 right-7 z-10 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-sm text-sidebar-foreground opacity-0 transition-opacity hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-sidebar-ring group-hover/folder-navigation:opacity-100 group-focus-within/folder-navigation:opacity-100"
+          >
+            <ArrowRight className="size-3.5" />
+          </Link>
+
+          <AppSidebarTreeActions
+            kind="folder"
+            folder={folder}
+            parentNodeId={folder.node_id}
+            onCreateStart={() => {
+              setFolderOpen(folder.node_id, true);
+            }}
+            onCreateSuccess={() => {
+              setFolderOpen(folder.node_id, true);
+            }}
+          />
         </div>
 
         <CollapsibleContent className="pt-1">

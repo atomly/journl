@@ -31,7 +31,15 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Fragment, useCallback, useEffect, useRef, useState } from "react";
+import {
+  createContext,
+  Fragment,
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { Button } from "~/components/ui/button";
 import { Collapsible, CollapsibleContent } from "~/components/ui/collapsible";
 import {
@@ -59,6 +67,24 @@ import { DeleteFolderDialog } from "../../@appSidebar/_components/delete-folder-
 import { DeletePageDialog } from "../../@appSidebar/_components/delete-page-button";
 
 const TREE_ITEM_INDENT_CLASSNAME = "ml-3 pl-2";
+
+type FolderTreeInteractions = {
+  shouldSuppressClick: () => boolean;
+};
+
+const FolderTreeInteractionsContext =
+  createContext<FolderTreeInteractions | null>(null);
+
+function useFolderTreeInteractions(): FolderTreeInteractions {
+  const ctx = useContext(FolderTreeInteractionsContext);
+  if (!ctx) {
+    throw new Error(
+      "useFolderTreeInteractions must be used within FolderTreeInteractionsProvider",
+    );
+  }
+  return ctx;
+}
+
 const TREE_ROW_CLASSNAME =
   "group/tree-row flex min-h-9 items-center gap-1.5 rounded-lg px-2 py-1 transition-colors";
 const DROP_ZONE_CLASSNAME = "h-1 rounded-sm transition-colors";
@@ -119,7 +145,6 @@ type TreeLevelProps = {
   openFolders: Record<string, boolean>;
   parentNodeId: string | null;
   setFolderOpen: (folderNodeId: string, open: boolean) => void;
-  shouldSuppressClick: () => boolean;
 };
 
 type FolderTreeItemRef = {
@@ -330,15 +355,14 @@ function DraggablePageRow({
   itemIndentClassName,
   page,
   parentNodeId,
-  shouldSuppressClick,
 }: {
   activeDragId: string | null;
   isDnDEnabled: boolean;
   itemIndentClassName: string;
   page: TreePage;
   parentNodeId: string | null;
-  shouldSuppressClick: () => boolean;
 }) {
+  const { shouldSuppressClick } = useFolderTreeInteractions();
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const pathname = usePathname();
@@ -606,7 +630,6 @@ function DraggableFolderRow({
   openFolders,
   parentNodeId,
   setFolderOpen,
-  shouldSuppressClick,
 }: {
   activeDragId: string | null;
   folder: TreeFolder;
@@ -616,8 +639,8 @@ function DraggableFolderRow({
   openFolders: Record<string, boolean>;
   parentNodeId: string | null;
   setFolderOpen: (folderNodeId: string, open: boolean) => void;
-  shouldSuppressClick: () => boolean;
 }) {
+  const { shouldSuppressClick } = useFolderTreeInteractions();
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const pathname = usePathname();
@@ -958,7 +981,6 @@ function DraggableFolderRow({
                 openFolders={openFolders}
                 parentNodeId={folder.node_id}
                 setFolderOpen={setFolderOpen}
-                shouldSuppressClick={shouldSuppressClick}
               />
             </div>
           </CollapsibleContent>
@@ -978,7 +1000,6 @@ function FolderTreeLevel({
   openFolders,
   parentNodeId,
   setFolderOpen,
-  shouldSuppressClick,
 }: TreeLevelProps) {
   const trpc = useTRPC();
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
@@ -1078,7 +1099,6 @@ function FolderTreeLevel({
                 openFolders={openFolders}
                 parentNodeId={parentNodeId}
                 setFolderOpen={setFolderOpen}
-                shouldSuppressClick={shouldSuppressClick}
               />
             ) : (
               <DraggablePageRow
@@ -1087,7 +1107,6 @@ function FolderTreeLevel({
                 itemIndentClassName={itemIndentClassName}
                 page={item.page}
                 parentNodeId={parentNodeId}
-                shouldSuppressClick={shouldSuppressClick}
               />
             )}
 
@@ -1384,21 +1403,22 @@ export function FolderNestedPagesList({
         onDragStart={handleDragStart}
         sensors={sensors}
       >
-        <div className="rounded-3xl border bg-background/80 p-2 shadow-xs">
-          <div className="space-y-0.5">
-            <FolderTreeLevel
-              activeDragId={activeDragId}
-              emptyStateVariant="root"
-              itemIndentClassName=""
-              isDnDEnabled={isDnDEnabled}
-              onFolderInsideHover={handleFolderInsideHover}
-              openFolders={openFolders}
-              parentNodeId={rootParentNodeId}
-              setFolderOpen={setFolderOpen}
-              shouldSuppressClick={shouldSuppressClick}
-            />
+        <FolderTreeInteractionsContext.Provider value={{ shouldSuppressClick }}>
+          <div className="rounded-3xl border bg-background/80 p-2 shadow-xs">
+            <div className="space-y-0.5">
+              <FolderTreeLevel
+                activeDragId={activeDragId}
+                emptyStateVariant="root"
+                itemIndentClassName=""
+                isDnDEnabled={isDnDEnabled}
+                onFolderInsideHover={handleFolderInsideHover}
+                openFolders={openFolders}
+                parentNodeId={rootParentNodeId}
+                setFolderOpen={setFolderOpen}
+              />
+            </div>
           </div>
-        </div>
+        </FolderTreeInteractionsContext.Provider>
       </DndContext>
     </section>
   );

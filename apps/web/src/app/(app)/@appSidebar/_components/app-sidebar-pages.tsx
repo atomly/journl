@@ -33,7 +33,15 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useParams, usePathname } from "next/navigation";
-import { Fragment, useCallback, useEffect, useRef, useState } from "react";
+import {
+  createContext,
+  Fragment,
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import {
   Collapsible,
   CollapsibleContent,
@@ -104,7 +112,6 @@ type SidebarTreeProps = {
   openFolders: Record<string, boolean>;
   parentNodeId: string | null;
   setFolderOpen: (folderNodeId: string, open: boolean) => void;
-  shouldSuppressClick: () => boolean;
 };
 
 type SidebarTreeItemRef = {
@@ -131,6 +138,23 @@ type DropTarget =
 const DEFAULT_TREE_ITEM_CLASSNAME =
   "ml-2 border-sidebar-border border-l py-0.5 ps-1";
 const DROP_ZONE_CLASSNAME = "h-1 rounded-sm transition-colors";
+
+type SidebarTreeInteractions = {
+  shouldSuppressClick: () => boolean;
+};
+
+const SidebarTreeInteractionsContext =
+  createContext<SidebarTreeInteractions | null>(null);
+
+function useSidebarTreeInteractions(): SidebarTreeInteractions {
+  const ctx = useContext(SidebarTreeInteractionsContext);
+  if (!ctx) {
+    throw new Error(
+      "useSidebarTreeInteractions must be used within SidebarTreeInteractionsProvider",
+    );
+  }
+  return ctx;
+}
 const INFINITE_SCROLL_ROOT_MARGIN = "120px 0px";
 const DRAG_CLICK_SUPPRESSION_MS = 200;
 const ROOT_PARENT_KEY = "root";
@@ -274,14 +298,13 @@ function DraggablePageRow({
   isDnDEnabled,
   page,
   parentNodeId,
-  shouldSuppressClick,
 }: {
   activeDragId: string | null;
   isDnDEnabled: boolean;
   page: TreePage;
   parentNodeId: string | null;
-  shouldSuppressClick: () => boolean;
 }) {
+  const { shouldSuppressClick } = useSidebarTreeInteractions();
   const itemRef: SidebarTreeItemRef = {
     kind: "page",
     nodeId: page.node_id,
@@ -337,7 +360,6 @@ function DraggableFolderRow({
   openFolders,
   parentNodeId,
   setFolderOpen,
-  shouldSuppressClick,
 }: {
   activeDragId: string | null;
   folder: TreeFolder;
@@ -346,8 +368,8 @@ function DraggableFolderRow({
   openFolders: Record<string, boolean>;
   parentNodeId: string | null;
   setFolderOpen: (folderNodeId: string, open: boolean) => void;
-  shouldSuppressClick: () => boolean;
 }) {
+  const { shouldSuppressClick } = useSidebarTreeInteractions();
   const pathname = usePathname();
   const { isMobile, setOpenMobile } = useSidebar();
   const itemRef: SidebarTreeItemRef = {
@@ -497,7 +519,6 @@ function DraggableFolderRow({
               openFolders={openFolders}
               parentNodeId={folder.node_id}
               setFolderOpen={setFolderOpen}
-              shouldSuppressClick={shouldSuppressClick}
             />
           </SidebarMenuSub>
         </CollapsibleContent>
@@ -514,7 +535,6 @@ function SidebarTree({
   openFolders,
   parentNodeId,
   setFolderOpen,
-  shouldSuppressClick,
 }: SidebarTreeProps) {
   const trpc = useTRPC();
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
@@ -601,7 +621,6 @@ function SidebarTree({
                 openFolders={openFolders}
                 parentNodeId={parentNodeId}
                 setFolderOpen={setFolderOpen}
-                shouldSuppressClick={shouldSuppressClick}
               />
             ) : (
               <DraggablePageRow
@@ -609,7 +628,6 @@ function SidebarTree({
                 isDnDEnabled={isDnDEnabled}
                 page={item.page}
                 parentNodeId={parentNodeId}
-                shouldSuppressClick={shouldSuppressClick}
               />
             )}
 
@@ -1012,17 +1030,20 @@ export const AppSidebarPages = ({
           onDragStart={handleDragStart}
           sensors={sensors}
         >
-          <SidebarMenuSub className="mx-0 mr-0 flex-1 gap-0 overflow-scroll border-none px-0">
-            <SidebarTree
-              activeDragId={activeDragId}
-              isDnDEnabled={isDnDEnabled}
-              onFolderInsideHover={handleFolderInsideHover}
-              openFolders={openFolders}
-              parentNodeId={null}
-              setFolderOpen={setFolderOpen}
-              shouldSuppressClick={shouldSuppressClick}
-            />
-          </SidebarMenuSub>
+          <SidebarTreeInteractionsContext.Provider
+            value={{ shouldSuppressClick }}
+          >
+            <SidebarMenuSub className="mx-0 mr-0 flex-1 gap-0 overflow-scroll border-none px-0">
+              <SidebarTree
+                activeDragId={activeDragId}
+                isDnDEnabled={isDnDEnabled}
+                onFolderInsideHover={handleFolderInsideHover}
+                openFolders={openFolders}
+                parentNodeId={null}
+                setFolderOpen={setFolderOpen}
+              />
+            </SidebarMenuSub>
+          </SidebarTreeInteractionsContext.Provider>
         </DndContext>
       </CollapsibleContent>
     </Collapsible>

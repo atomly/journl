@@ -266,7 +266,8 @@ export function AppSidebarTreeActions({
     }),
   );
 
-  const showLoading = disabled || isPending || isCreatingFolder || isCreatingPage;
+  const showLoading =
+    disabled || isPending || isCreatingFolder || isCreatingPage;
 
   const handleCreateFolder = () => {
     onCreateStart?.();
@@ -324,7 +325,7 @@ export function AppSidebarTreeActions({
         type="button"
         variant="ghost"
         className={cn(
-          "h-8 w-full justify-start gap-2 rounded-md border border-dashed border-sidebar-border/80 px-3 text-sidebar-foreground/80 shadow-none hover:bg-transparent hover:text-sidebar-foreground active:bg-transparent active:text-sidebar-foreground",
+          "h-8 w-full justify-start gap-2 rounded-md border border-sidebar-border/80 border-dashed px-3 text-sidebar-foreground/80 shadow-none hover:bg-transparent hover:text-sidebar-foreground active:bg-transparent active:text-sidebar-foreground",
           className,
         )}
         onClick={handleCreatePage}

@@ -5,7 +5,6 @@ import {
   pgEnum,
   pgTable,
   text,
-  unique,
   uniqueIndex,
 } from "drizzle-orm/pg-core";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
@@ -37,7 +36,7 @@ export const TreeNode = pgTable(
       .$onUpdateFn(() => sql`now()`),
   }),
   (t) => [
-    unique("tree_node_user_id_id_unique").on(t.user_id, t.id),
+    index("tree_node_user_id_id_idx").on(t.user_id, t.id),
     uniqueIndex("tree_node_user_folder_unique_idx")
       .on(t.user_id, t.folder_id)
       .where(sql`${t.folder_id} is not null`),

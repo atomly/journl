@@ -18,8 +18,11 @@ export const TreeEdge = pgTable(
     user_id: text()
       .notNull()
       .references(() => user.id, { onDelete: "cascade" }),
-    parent_node_id: t.uuid(),
-    node_id: t.uuid().notNull(),
+    node_id: t
+      .uuid()
+      .notNull()
+      .references(() => TreeNode.id, { onDelete: "cascade" }),
+    parent_node_id: t.uuid().references(() => TreeNode.id, { onDelete: "cascade" }),
     prev_edge_id: t.uuid(),
     next_edge_id: t.uuid(),
     created_at: t
@@ -33,14 +36,6 @@ export const TreeEdge = pgTable(
       .$onUpdateFn(() => sql`now()`),
   }),
   (t) => [
-    foreignKey({
-      columns: [t.user_id, t.node_id],
-      foreignColumns: [TreeNode.user_id, TreeNode.id],
-    }).onDelete("cascade"),
-    foreignKey({
-      columns: [t.user_id, t.parent_node_id],
-      foreignColumns: [TreeNode.user_id, TreeNode.id],
-    }).onDelete("cascade"),
     /**
      * We have to write self-references in here, otherwise drizzle runs into TypeScript errors.
      * @see {@link https://github.com/drizzle-team/drizzle-orm/issues/4308 | [BUG]: Self referencing Foreign Key causes any type}

@@ -30,6 +30,7 @@ import { DeleteFolderDialog } from "./delete-folder-button";
 
 type AppSidebarTreeActionsProps = {
   className?: string;
+  disabled?: boolean;
   folder?: Folder;
   kind: "folder" | "root";
   onCreateStart?: () => void;
@@ -46,6 +47,7 @@ type CreateMutationContext = {
 
 export function AppSidebarTreeActions({
   className,
+  disabled = false,
   folder,
   kind,
   onCreateStart,
@@ -113,6 +115,7 @@ export function AppSidebarTreeActions({
           kind: "folder",
           node_id: optimisticNodeId,
           parent_node_id: parentId,
+          pending: true,
         } satisfies TreeItem;
 
         insertItem({
@@ -263,7 +266,8 @@ export function AppSidebarTreeActions({
     }),
   );
 
-  const showLoading = isPending || isCreatingFolder || isCreatingPage;
+  const showLoading =
+    disabled || isPending || isCreatingFolder || isCreatingPage;
 
   const handleCreateFolder = () => {
     onCreateStart?.();
@@ -321,7 +325,7 @@ export function AppSidebarTreeActions({
         type="button"
         variant="ghost"
         className={cn(
-          "h-8 w-full justify-start gap-2 rounded-md border border-dashed border-sidebar-border/80 px-3 text-sidebar-foreground/80 shadow-none hover:bg-transparent hover:text-sidebar-foreground active:bg-transparent active:text-sidebar-foreground",
+          "h-8 w-full justify-start gap-2 rounded-md border border-sidebar-border/80 border-dashed px-3 text-sidebar-foreground/80 shadow-none hover:bg-transparent hover:text-sidebar-foreground active:bg-transparent active:text-sidebar-foreground",
           className,
         )}
         onClick={handleCreatePage}

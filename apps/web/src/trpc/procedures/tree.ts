@@ -481,12 +481,12 @@ export const treeRouter = {
         );
       const nodesById = new Map(nodes.map((n) => [n.id, n]));
 
-      const folderIds = nodes
-        .filter((n) => n.node_type === "folder" && n.folder_id)
-        .map((n) => n.folder_id!);
-      const pageIds = nodes
-        .filter((n) => n.node_type === "page" && n.page_id)
-        .map((n) => n.page_id!);
+      const folderIds = nodes.flatMap((node) =>
+        node.node_type === "folder" && node.folder_id ? [node.folder_id] : [],
+      );
+      const pageIds = nodes.flatMap((node) =>
+        node.node_type === "page" && node.page_id ? [node.page_id] : [],
+      );
 
       const [folders, pages] = await Promise.all([
         folderIds.length > 0
@@ -517,7 +517,10 @@ export const treeRouter = {
 
       // ancestorNodeIds is current → root, so iterate in reverse
       for (let i = ancestorNodeIds.length - 1; i >= 0; i--) {
-        const nodeId = ancestorNodeIds[i]!;
+        const nodeId = ancestorNodeIds[i];
+        if (!nodeId) {
+          continue;
+        }
         const node = nodesById.get(nodeId);
         if (!node) {
           continue;

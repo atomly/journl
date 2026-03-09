@@ -33,10 +33,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Fragment, useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "~/components/ui/button";
-import {
-  Collapsible,
-  CollapsibleContent,
-} from "~/components/ui/collapsible";
+import { Collapsible, CollapsibleContent } from "~/components/ui/collapsible";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -114,6 +111,7 @@ type MoveMutationContext = {
 
 type TreeLevelProps = {
   activeDragId: string | null;
+  emptyStateVariant?: "root" | "tree";
   enabled?: boolean;
   itemIndentClassName: string;
   isDnDEnabled: boolean;
@@ -274,6 +272,54 @@ function FolderTreeDropZone({
           isOver && "bg-primary/35",
         )}
       />
+    </div>
+  );
+}
+
+function RootFolderEmptyState({
+  activeDragId,
+  isDnDEnabled,
+  parentNodeId,
+}: {
+  activeDragId: string | null;
+  isDnDEnabled: boolean;
+  parentNodeId: string | null;
+}) {
+  const dropId = getParentDropId(parentNodeId);
+  const { isOver, setNodeRef } = useDroppable({
+    id: dropId,
+  });
+
+  return (
+    <div
+      ref={setNodeRef}
+      className={cn(
+        "-m-2 rounded-[calc(theme(borderRadius.3xl)-2px)] bg-muted/25 px-5 py-6 transition-colors sm:px-6",
+        isOver &&
+          isDnDEnabled &&
+          "bg-primary/6 outline outline-1 outline-primary/25",
+        activeDragId && "min-h-32",
+      )}
+    >
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-start gap-3">
+          <div className="flex size-10 shrink-0 items-center justify-center rounded-2xl bg-background">
+            <FolderIcon className="size-4 text-primary" />
+          </div>
+          <div className="max-w-lg space-y-1">
+            <p className="font-medium text-sm">This folder is empty</p>
+            <p className="text-muted-foreground text-sm">
+              Add a page or a nested folder to start organizing this space.
+            </p>
+          </div>
+        </div>
+
+        <AppSidebarTreeActions
+          kind="folder"
+          parentNodeId={parentNodeId}
+          triggerVariant="empty-state"
+        />
+      </div>
     </div>
   );
 }
@@ -814,8 +860,8 @@ function DraggableFolderRow({
                   className="flex w-full min-w-0 items-center gap-1.5 text-left"
                 >
                   <span className="relative inline-flex size-6 shrink-0 items-center justify-center rounded-md border bg-background">
-                    <FolderIcon className="size-3 text-primary transition-opacity duration-150 group-hover/folder-item:opacity-0 group-focus-within/folder-item:opacity-0" />
-                    <ArrowRight className="absolute size-3 text-primary opacity-0 transition-all duration-150 group-hover/folder-item:opacity-100 group-focus-within/folder-item:opacity-100 group-data-[state=open]/folder-collapsible:rotate-90" />
+                    <FolderIcon className="size-3 text-primary transition-opacity duration-150 group-focus-within/folder-item:opacity-0 group-hover/folder-item:opacity-0" />
+                    <ArrowRight className="absolute size-3 text-primary opacity-0 transition-all duration-150 group-focus-within/folder-item:opacity-100 group-hover/folder-item:opacity-100 group-data-[state=open]/folder-collapsible:rotate-90" />
                   </span>
                   <span className="line-clamp-1 min-w-0 flex-1 truncate text-left font-medium">
                     {folder.name || "New folder"}
@@ -837,7 +883,7 @@ function DraggableFolderRow({
                         setOpenMobile(false);
                       }
                     }}
-                    className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground opacity-0 transition-opacity hover:bg-muted hover:text-foreground focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-ring group-hover/folder-item:opacity-100 group-focus-within/folder-item:opacity-100"
+                    className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground opacity-0 transition-opacity hover:bg-muted hover:text-foreground focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-ring group-focus-within/folder-item:opacity-100 group-hover/folder-item:opacity-100"
                   >
                     <ArrowRight className="size-4" />
                   </Link>
@@ -904,6 +950,7 @@ function DraggableFolderRow({
             <div className="space-y-0.5">
               <FolderTreeLevel
                 activeDragId={activeDragId}
+                emptyStateVariant="tree"
                 enabled={isOpen}
                 itemIndentClassName={TREE_ITEM_INDENT_CLASSNAME}
                 isDnDEnabled={isDnDEnabled}
@@ -923,6 +970,7 @@ function DraggableFolderRow({
 
 function FolderTreeLevel({
   activeDragId,
+  emptyStateVariant = "tree",
   enabled = true,
   itemIndentClassName,
   isDnDEnabled,
@@ -991,12 +1039,20 @@ function FolderTreeLevel({
       ) : null}
 
       {items.length === 0 && !shouldShowInitialSkeleton ? (
-        <FolderTreeDropZone
-          activeDragId={activeDragId}
-          dropId={getParentDropId(parentNodeId)}
-          itemIndentClassName={itemIndentClassName}
-          isDnDEnabled={isDnDEnabled}
-        />
+        emptyStateVariant === "root" ? (
+          <RootFolderEmptyState
+            activeDragId={activeDragId}
+            isDnDEnabled={isDnDEnabled}
+            parentNodeId={parentNodeId}
+          />
+        ) : (
+          <FolderTreeDropZone
+            activeDragId={activeDragId}
+            dropId={getParentDropId(parentNodeId)}
+            itemIndentClassName={itemIndentClassName}
+            isDnDEnabled={isDnDEnabled}
+          />
+        )
       ) : null}
 
       {items.map((item) => {
@@ -1332,6 +1388,7 @@ export function FolderNestedPagesList({
           <div className="space-y-0.5">
             <FolderTreeLevel
               activeDragId={activeDragId}
+              emptyStateVariant="root"
               itemIndentClassName=""
               isDnDEnabled={isDnDEnabled}
               onFolderInsideHover={handleFolderInsideHover}

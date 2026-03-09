@@ -300,36 +300,48 @@ function SidebarTreeInsertDropBand({
 }
 
 function SidebarTreeInsertDropBands({
+  afterBandClassName = "bottom-0 h-1.5",
   activeDragId,
   anchorEdgeId,
+  beforeBandClassName = "top-0 h-1.5",
   isDnDEnabled,
   parentNodeId,
+  showAfter = true,
+  showBefore = true,
 }: {
+  afterBandClassName?: string;
   activeDragId: string | null;
   anchorEdgeId: string;
+  beforeBandClassName?: string;
   isDnDEnabled: boolean;
   parentNodeId: string | null;
+  showAfter?: boolean;
+  showBefore?: boolean;
 }) {
   return (
     <>
-      <SidebarTreeInsertDropBand
-        activeDragId={activeDragId}
-        bandClassName="top-0 h-1.5"
-        dropId={getBeforeDropId({
-          anchorEdgeId,
-          parentNodeId,
-        })}
-        isDnDEnabled={isDnDEnabled}
-      />
-      <SidebarTreeInsertDropBand
-        activeDragId={activeDragId}
-        bandClassName="bottom-0 h-1.5"
-        dropId={getAfterDropId({
-          anchorEdgeId,
-          parentNodeId,
-        })}
-        isDnDEnabled={isDnDEnabled}
-      />
+      {showBefore ? (
+        <SidebarTreeInsertDropBand
+          activeDragId={activeDragId}
+          bandClassName={beforeBandClassName}
+          dropId={getBeforeDropId({
+            anchorEdgeId,
+            parentNodeId,
+          })}
+          isDnDEnabled={isDnDEnabled}
+        />
+      ) : null}
+      {showAfter ? (
+        <SidebarTreeInsertDropBand
+          activeDragId={activeDragId}
+          bandClassName={afterBandClassName}
+          dropId={getAfterDropId({
+            anchorEdgeId,
+            parentNodeId,
+          })}
+          isDnDEnabled={isDnDEnabled}
+        />
+      ) : null}
     </>
   );
 }
@@ -608,6 +620,7 @@ function DraggableFolderRow({
             anchorEdgeId={folder.edge_id}
             isDnDEnabled={isDnDEnabled}
             parentNodeId={parentNodeId}
+            showAfter={!treeData.shouldRenderNestedContent}
           />
           <div
             ref={setInsideDropNodeRef}
@@ -626,7 +639,7 @@ function DraggableFolderRow({
               : undefined)}
             className={cn(
               "group/folder-navigation relative z-10 flex min-w-0 items-center gap-0.5 rounded-sm",
-              isOverInside && isDragActive && "bg-sidebar-primary/20",
+              isOverInside && isDragActive && "bg-primary/10",
             )}
           >
             <SidebarMenuSubButton
@@ -695,22 +708,34 @@ function DraggableFolderRow({
         </div>
 
         {treeData.shouldRenderNestedContent ? (
-          <CollapsibleContent
-            className={cn(treeData.items.length > 0 && "pt-1")}
-          >
-            <SidebarMenuSub className="mx-0 mr-0 gap-0 border-none px-0">
-              <SidebarTreeRows
+          <>
+            <CollapsibleContent
+              className={cn(treeData.items.length > 0 && "pt-1")}
+            >
+              <SidebarMenuSub className="mx-0 mr-0 gap-0 border-none px-0">
+                <SidebarTreeRows
+                  activeDragId={activeDragId}
+                  isDnDEnabled={isDnDEnabled}
+                  onFolderInsideHover={onFolderInsideHover}
+                  openFolders={openFolders}
+                  parentNodeId={folder.node_id}
+                  setFolderOpen={setFolderOpen}
+                  showEmptyParentDropZone={false}
+                  treeData={treeData}
+                />
+              </SidebarMenuSub>
+            </CollapsibleContent>
+            <div className="relative h-1.5">
+              <SidebarTreeInsertDropBands
                 activeDragId={activeDragId}
+                anchorEdgeId={folder.edge_id}
+                afterBandClassName="top-0 h-1.5"
                 isDnDEnabled={isDnDEnabled}
-                onFolderInsideHover={onFolderInsideHover}
-                openFolders={openFolders}
-                parentNodeId={folder.node_id}
-                setFolderOpen={setFolderOpen}
-                showEmptyParentDropZone={false}
-                treeData={treeData}
+                parentNodeId={parentNodeId}
+                showBefore={false}
               />
-            </SidebarMenuSub>
-          </CollapsibleContent>
+            </div>
+          </>
         ) : null}
       </SidebarMenuSubItem>
     </Collapsible>
@@ -831,6 +856,8 @@ export const AppSidebarPages = ({
     null,
   );
   const hoverFolderIdRef = useRef<string | null>(null);
+  const dragStartOpenFoldersRef = useRef<Record<string, boolean>>({});
+  const dragAutoExpandedFoldersRef = useRef<Set<string>>(new Set());
   const moveMutationContextRef = useRef<MoveMutationContext | null>(null);
   const recentDragUntilRef = useRef(0);
   const treeQueryFilter = trpc.tree.getChildrenPaginated.infiniteQueryFilter();
@@ -998,6 +1025,11 @@ export const AppSidebarPages = ({
     return Date.now() < recentDragUntilRef.current;
   }, []);
 
+  const resetDragFolderState = useCallback(() => {
+    dragStartOpenFoldersRef.current = {};
+    dragAutoExpandedFoldersRef.current.clear();
+  }, []);
+
   const handlePagesClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -1023,9 +1055,11 @@ export const AppSidebarPages = ({
     (event: DragStartEvent) => {
       navigator.vibrate?.(50);
       markRecentDrag();
+      dragStartOpenFoldersRef.current = { ...openFolders };
+      dragAutoExpandedFoldersRef.current.clear();
       setActiveDragId(String(event.active.id));
     },
-    [markRecentDrag],
+    [markRecentDrag, openFolders],
   );
 
   const handleDragCancel = useCallback(
@@ -1033,8 +1067,9 @@ export const AppSidebarPages = ({
       clearHoverExpandTimeout();
       markRecentDrag();
       setActiveDragId(null);
+      resetDragFolderState();
     },
-    [clearHoverExpandTimeout, markRecentDrag],
+    [clearHoverExpandTimeout, markRecentDrag, resetDragFolderState],
   );
 
   const handleFolderInsideHover = useCallback(
@@ -1055,6 +1090,7 @@ export const AppSidebarPages = ({
       clearHoverExpandTimeout();
       hoverFolderIdRef.current = folderNodeId;
       hoverExpandTimeoutRef.current = setTimeout(() => {
+        dragAutoExpandedFoldersRef.current.add(folderNodeId);
         setFolderOpen(folderNodeId, true);
       }, 700);
     },
@@ -1101,8 +1137,21 @@ export const AppSidebarPages = ({
 
       const dropTarget = parseDropTarget(event.over?.id);
       if (!dropTarget) {
+        resetDragFolderState();
         return;
       }
+
+      if (dropTarget.type === "inside" && dropTarget.parentNodeId) {
+        const targetFolderNodeId = dropTarget.parentNodeId;
+        const didAutoExpand =
+          dragAutoExpandedFoldersRef.current.has(targetFolderNodeId);
+        const wasOpenAtDragStart =
+          dragStartOpenFoldersRef.current[targetFolderNodeId] ?? false;
+
+        setFolderOpen(targetFolderNodeId, didAutoExpand || wasOpenAtDragStart);
+      }
+
+      resetDragFolderState();
 
       const destination =
         dropTarget.type === "before" || dropTarget.type === "after"
@@ -1127,7 +1176,13 @@ export const AppSidebarPages = ({
         node_id: activeData.item.nodeId,
       });
     },
-    [clearHoverExpandTimeout, markRecentDrag, moveItem],
+    [
+      clearHoverExpandTimeout,
+      markRecentDrag,
+      moveItem,
+      resetDragFolderState,
+      setFolderOpen,
+    ],
   );
 
   return (

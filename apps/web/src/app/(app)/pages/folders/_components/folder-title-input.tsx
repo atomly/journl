@@ -3,6 +3,7 @@
 import type { Folder } from "@acme/db/schema";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
+import { toast } from "sonner";
 import { useDebouncedCallback } from "use-debounce";
 import { Input } from "~/components/ui/input";
 import { updateNode } from "~/trpc/cache/tree-cache";
@@ -31,6 +32,11 @@ export function FolderTitleInput({
   const treeQueryFilter = trpc.tree.getChildrenPaginated.infiniteQueryFilter();
 
   const debouncedRenameFolder = useDebouncedCallback((newTitle: string) => {
+    if (!newTitle.trim()) {
+      toast.warning("Folder name cannot be empty");
+      return;
+    }
+
     queryClient.setQueryData(
       trpc.folders.getById.queryOptions({ id: folder.id }).queryKey,
       (old) => {

@@ -106,6 +106,7 @@ export function FolderTitleInput({
         debouncedRenameFolder(newTitle);
       }}
       placeholder={placeholder}
+      maxLength={500}
       className="h-11 text-lg"
     />
   );

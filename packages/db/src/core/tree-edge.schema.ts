@@ -22,7 +22,9 @@ export const TreeEdge = pgTable(
       .uuid()
       .notNull()
       .references(() => TreeNode.id, { onDelete: "cascade" }),
-    parent_node_id: t.uuid().references(() => TreeNode.id, { onDelete: "cascade" }),
+    parent_node_id: t
+      .uuid()
+      .references(() => TreeNode.id, { onDelete: "cascade" }),
     prev_edge_id: t.uuid(),
     next_edge_id: t.uuid(),
     created_at: t

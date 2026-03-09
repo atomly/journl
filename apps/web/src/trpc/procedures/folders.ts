@@ -183,7 +183,7 @@ export const foldersRouter = {
     .input(
       z.object({
         id: z.uuid(),
-        name: z.string().max(500),
+        name: z.string().min(1).max(500),
       }),
     )
     .mutation(async ({ ctx, input }) => {

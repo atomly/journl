@@ -509,7 +509,8 @@ export async function moveNode({
 
   const isNoopMove =
     !destination.anchor_edge_id &&
-    existingEdge.parent_node_id === destination.parent_node_id;
+    existingEdge.parent_node_id === destination.parent_node_id &&
+    existingEdge.prev_edge_id === null;
   if (isNoopMove) {
     return existingEdge;
   }

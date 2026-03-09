@@ -900,12 +900,12 @@ function DraggableFolderRow({
               <div className="ml-1 flex shrink-0 items-center gap-0.5">
                 {!isEditing ? (
                   isPending ? (
-                    <span
-                      aria-label="Folder is still being created"
-                      className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground"
-                    >
+                    <output className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground">
                       <Loader2 className="size-4 animate-spin" />
-                    </span>
+                      <span className="sr-only">
+                        Folder is still being created
+                      </span>
+                    </output>
                   ) : (
                     <Link
                       href={folderHref}

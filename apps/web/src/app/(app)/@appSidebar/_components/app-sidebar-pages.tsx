@@ -471,11 +471,11 @@ function DraggableFolderRow({
             >
               <span className="relative flex size-3 shrink-0 items-center justify-center">
                 {isOpen ? (
-                  <FolderOpen className="size-3 shrink-0 transition-opacity duration-150 group-hover/folder-navigation:opacity-0 group-focus-within/folder-navigation:opacity-0" />
+                  <FolderOpen className="size-3 shrink-0 transition-opacity duration-150 group-focus-within/folder-navigation:opacity-0 group-hover/folder-navigation:opacity-0" />
                 ) : (
-                  <FolderClosed className="size-3 shrink-0 transition-opacity duration-150 group-hover/folder-navigation:opacity-0 group-focus-within/folder-navigation:opacity-0" />
+                  <FolderClosed className="size-3 shrink-0 transition-opacity duration-150 group-focus-within/folder-navigation:opacity-0 group-hover/folder-navigation:opacity-0" />
                 )}
-                <ChevronRight className="absolute inset-0 size-3 shrink-0 opacity-0 transition-all duration-150 group-hover/folder-navigation:opacity-100 group-focus-within/folder-navigation:opacity-100 group-data-[state=open]/folder-collapsible:rotate-90" />
+                <ChevronRight className="absolute inset-0 size-3 shrink-0 opacity-0 transition-all duration-150 group-focus-within/folder-navigation:opacity-100 group-hover/folder-navigation:opacity-100 group-data-[state=open]/folder-collapsible:rotate-90" />
               </span>
               <span className="line-clamp-1 min-w-0 flex-1 truncate text-left">
                 {folder.name || "New folder"}
@@ -484,12 +484,10 @@ function DraggableFolderRow({
           </SidebarMenuSubButton>
 
           {isPending ? (
-            <span
-              aria-label="Folder is still being created"
-              className="absolute top-1/2 right-7 z-10 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-sm text-sidebar-foreground/70 opacity-100"
-            >
+            <output className="absolute top-1/2 right-7 z-10 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-sm text-sidebar-foreground/70 opacity-100">
               <Loader2 className="size-3.5 animate-spin" />
-            </span>
+              <span className="sr-only">Folder is still being created</span>
+            </output>
           ) : (
             <Link
               href={folderHref}
@@ -503,7 +501,7 @@ function DraggableFolderRow({
                   setOpenMobile(false);
                 }
               }}
-              className="absolute top-1/2 right-7 z-10 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-sm text-sidebar-foreground opacity-0 transition-opacity hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-sidebar-ring group-hover/folder-navigation:opacity-100 group-focus-within/folder-navigation:opacity-100"
+              className="absolute top-1/2 right-7 z-10 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-sm text-sidebar-foreground opacity-0 transition-opacity hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-sidebar-ring group-focus-within/folder-navigation:opacity-100 group-hover/folder-navigation:opacity-100"
             >
               <ArrowRight className="size-3.5" />
             </Link>

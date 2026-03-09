@@ -20,6 +20,7 @@ import {
   useInfiniteQuery,
   useIsFetching,
   useMutation,
+  useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
 import {
@@ -30,7 +31,7 @@ import {
   Loader2,
 } from "lucide-react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { useParams, usePathname } from "next/navigation";
 import { Fragment, useCallback, useEffect, useRef, useState } from "react";
 import {
   Collapsible,
@@ -353,7 +354,7 @@ function DraggableFolderRow({
     nodeId: folder.node_id,
   };
   const draggableId = getDragId(itemRef);
-  const folderHref = `/pages/folders/${folder.id}`;
+  const folderHref = `/folders/${folder.id}`;
   const isActive = pathname === folderHref;
   const isOpen = openFolders[folder.node_id] ?? false;
   const { attributes, listeners, setNodeRef, transform } = useDraggable({
@@ -627,10 +628,12 @@ export const AppSidebarPages = ({
   defaultOpen = true,
 }: AppSidebarPagesProps) => {
   const pathname = usePathname();
+  const params = useParams<{ id?: string }>();
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const { state, setOpen } = useSidebar();
-  const isPagesRoute = pathname.startsWith("/pages");
+  const isPagesRoute =
+    pathname.startsWith("/pages") || pathname.startsWith("/folders");
   const [isOpen, setIsOpen] = useState(defaultOpen);
   const [openFolders, setOpenFolders] = useState<Record<string, boolean>>({});
   const [activeDragId, setActiveDragId] = useState<string | null>(null);
@@ -652,6 +655,56 @@ export const AppSidebarPages = ({
   const isRootFetching = useIsFetching({
     queryKey: rootTreeQueryKey,
   });
+
+  // Auto-expand ancestor folders on navigation
+  const activePageId = pathname.startsWith("/pages/")
+    ? (params.id ?? null)
+    : null;
+  const activeFolderId = pathname.startsWith("/folders/")
+    ? (params.id ?? null)
+    : null;
+  const ancestorQueryInput = activePageId
+    ? { page_id: activePageId }
+    : activeFolderId
+      ? { folder_id: activeFolderId }
+      : null;
+  const { data: ancestorPath } = useQuery({
+    ...trpc.tree.getAncestorPath.queryOptions(ancestorQueryInput ?? {}),
+    enabled: !!ancestorQueryInput,
+  });
+  const lastExpandedPathRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!ancestorPath || ancestorPath.length === 0) {
+      return;
+    }
+
+    // Only auto-expand once per pathname to avoid fighting user collapse
+    if (lastExpandedPathRef.current === pathname) {
+      return;
+    }
+    lastExpandedPathRef.current = pathname;
+
+    const folderAncestorNodeIds = ancestorPath
+      .filter((a) => a.node_type === "folder")
+      .map((a) => a.node_id);
+
+    if (folderAncestorNodeIds.length === 0) {
+      return;
+    }
+
+    setOpenFolders((previous) => {
+      const next = { ...previous };
+      let changed = false;
+      for (const nodeId of folderAncestorNodeIds) {
+        if (!next[nodeId]) {
+          next[nodeId] = true;
+          changed = true;
+        }
+      }
+      return changed ? next : previous;
+    });
+  }, [ancestorPath, pathname]);
 
   const { mutate: moveItem } = useMutation(
     trpc.tree.moveItem.mutationOptions({

@@ -399,6 +399,155 @@ export const treeRouter = {
         deleted_folder_id: input.folder_id,
       };
     }),
+  getAncestorPath: protectedProcedure
+    .input(
+      z.object({
+        folder_id: z.uuid().optional(),
+        node_id: z.uuid().optional(),
+        page_id: z.uuid().optional(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const userId = ctx.session.user.id;
+
+      // 1. Resolve starting node_id from folder_id or page_id
+      let startNodeId: string | null = input.node_id ?? null;
+
+      if (!startNodeId && input.folder_id) {
+        const folderNode = await getFolderNodeByFolderId({
+          db: ctx.db,
+          folderId: input.folder_id,
+          userId,
+        });
+        startNodeId = folderNode?.id ?? null;
+      }
+
+      if (!startNodeId && input.page_id) {
+        const pageNode = await ctx.db.query.TreeNode.findFirst({
+          where: and(
+            eq(TreeNode.user_id, userId),
+            eq(TreeNode.node_type, "page"),
+            eq(TreeNode.page_id, input.page_id),
+          ),
+        });
+        startNodeId = pageNode?.id ?? null;
+      }
+
+      if (!startNodeId) {
+        return [];
+      }
+
+      // 2. Load all edges for this user and build a parent map in memory
+      const edges = await ctx.db
+        .select({
+          node_id: TreeEdge.node_id,
+          parent_node_id: TreeEdge.parent_node_id,
+        })
+        .from(TreeEdge)
+        .where(eq(TreeEdge.user_id, userId));
+
+      const parentByNodeId = new Map<string, string | null>();
+      for (const edge of edges) {
+        parentByNodeId.set(edge.node_id, edge.parent_node_id);
+      }
+
+      // 3. Walk up the chain to collect ancestor node IDs
+      const ancestorNodeIds: string[] = [];
+      let currentNodeId: string | null = startNodeId;
+      const visited = new Set<string>();
+
+      while (currentNodeId) {
+        if (visited.has(currentNodeId)) {
+          break;
+        }
+        visited.add(currentNodeId);
+        ancestorNodeIds.push(currentNodeId);
+        currentNodeId = parentByNodeId.get(currentNodeId) ?? null;
+      }
+
+      if (ancestorNodeIds.length === 0) {
+        return [];
+      }
+
+      // 4. Batch-fetch all tree nodes, then batch-fetch folders and pages
+      const nodes = await ctx.db
+        .select()
+        .from(TreeNode)
+        .where(
+          and(
+            eq(TreeNode.user_id, userId),
+            inArray(TreeNode.id, ancestorNodeIds),
+          ),
+        );
+      const nodesById = new Map(nodes.map((n) => [n.id, n]));
+
+      const folderIds = nodes
+        .filter((n) => n.node_type === "folder" && n.folder_id)
+        .map((n) => n.folder_id!);
+      const pageIds = nodes
+        .filter((n) => n.node_type === "page" && n.page_id)
+        .map((n) => n.page_id!);
+
+      const [folders, pages] = await Promise.all([
+        folderIds.length > 0
+          ? ctx.db
+              .select()
+              .from(Folder)
+              .where(
+                and(eq(Folder.user_id, userId), inArray(Folder.id, folderIds)),
+              )
+          : Promise.resolve([]),
+        pageIds.length > 0
+          ? ctx.db
+              .select()
+              .from(Page)
+              .where(and(eq(Page.user_id, userId), inArray(Page.id, pageIds)))
+          : Promise.resolve([]),
+      ]);
+      const foldersById = new Map(folders.map((f) => [f.id, f]));
+      const pagesById = new Map(pages.map((p) => [p.id, p]));
+
+      // 5. Build the ancestor list in root → current order
+      const ancestors: Array<{
+        node_id: string;
+        node_type: "folder" | "page";
+        id: string;
+        name: string;
+      }> = [];
+
+      // ancestorNodeIds is current → root, so iterate in reverse
+      for (let i = ancestorNodeIds.length - 1; i >= 0; i--) {
+        const nodeId = ancestorNodeIds[i]!;
+        const node = nodesById.get(nodeId);
+        if (!node) {
+          continue;
+        }
+
+        if (node.node_type === "folder" && node.folder_id) {
+          const folder = foldersById.get(node.folder_id);
+          if (folder) {
+            ancestors.push({
+              id: folder.id,
+              name: folder.name,
+              node_id: node.id,
+              node_type: "folder",
+            });
+          }
+        } else if (node.node_type === "page" && node.page_id) {
+          const page = pagesById.get(node.page_id);
+          if (page) {
+            ancestors.push({
+              id: page.id,
+              name: page.title,
+              node_id: node.id,
+              node_type: "page",
+            });
+          }
+        }
+      }
+
+      return ancestors;
+    }),
   getChildrenPaginated: protectedProcedure
     .input(
       z.object({

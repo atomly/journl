@@ -67,8 +67,6 @@ import { AppSidebarTreeActions } from "../../@appSidebar/_components/app-sidebar
 import { DeleteFolderDialog } from "../../@appSidebar/_components/delete-folder-button";
 import { DeletePageDialog } from "../../@appSidebar/_components/delete-page-button";
 
-const TREE_ITEM_INDENT_CLASSNAME = "ml-3 pl-2";
-
 type FolderTreeInteractions = {
   shouldSuppressClick: () => boolean;
 };
@@ -991,7 +989,7 @@ function DraggableFolderRow({
                 activeDragId={activeDragId}
                 emptyStateVariant="tree"
                 enabled={isOpen}
-                itemIndentClassName={TREE_ITEM_INDENT_CLASSNAME}
+                itemIndentClassName="ml-3 pl-2"
                 isDnDEnabled={isDnDEnabled}
                 onFolderInsideHover={onFolderInsideHover}
                 openFolders={openFolders}

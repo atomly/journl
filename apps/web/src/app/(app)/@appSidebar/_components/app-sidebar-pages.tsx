@@ -146,9 +146,6 @@ type DropTarget =
     };
 
 const DEFAULT_TREE_ITEM_CLASSNAME = "ml-2 border-sidebar-border border-l ps-1";
-const TREE_ROW_SHELL_CLASSNAME = "relative py-1.5";
-const TREE_DROP_SURFACE_CLASSNAME = "absolute inset-x-0 z-20";
-const TREE_DROP_GUTTER_CLASSNAME = "h-1.5";
 const TREE_DROP_LINE_CLASSNAME =
   "absolute top-1/2 right-0 left-1 h-0.5 -translate-y-1/2 rounded-full bg-sidebar-primary transition-opacity";
 
@@ -287,7 +284,7 @@ function SidebarTreeInsertDropBand({
     <div
       ref={setNodeRef}
       className={cn(
-        TREE_DROP_SURFACE_CLASSNAME,
+        "absolute inset-x-0 z-20",
         bandClassName,
         isActive ? "pointer-events-auto" : "pointer-events-none",
       )}
@@ -317,7 +314,7 @@ function SidebarTreeInsertDropBands({
     <>
       <SidebarTreeInsertDropBand
         activeDragId={activeDragId}
-        bandClassName={cn("top-0", TREE_DROP_GUTTER_CLASSNAME)}
+        bandClassName="top-0 h-1.5"
         dropId={getBeforeDropId({
           anchorEdgeId,
           parentNodeId,
@@ -326,7 +323,7 @@ function SidebarTreeInsertDropBands({
       />
       <SidebarTreeInsertDropBand
         activeDragId={activeDragId}
-        bandClassName={cn("bottom-0", TREE_DROP_GUTTER_CLASSNAME)}
+        bandClassName="bottom-0 h-1.5"
         dropId={getAfterDropId({
           anchorEdgeId,
           parentNodeId,
@@ -357,7 +354,7 @@ function SidebarTreeEmptyDropTarget({
 
   return (
     <SidebarMenuSubItem className={DEFAULT_TREE_ITEM_CLASSNAME}>
-      <div className={TREE_ROW_SHELL_CLASSNAME}>
+      <div className="relative py-1.5">
         <div
           ref={setNodeRef}
           className={cn(
@@ -605,7 +602,7 @@ function DraggableFolderRow({
             : undefined
         }
       >
-        <div className={TREE_ROW_SHELL_CLASSNAME}>
+        <div className="relative py-1.5">
           <SidebarTreeInsertDropBands
             activeDragId={activeDragId}
             anchorEdgeId={folder.edge_id}
@@ -615,7 +612,7 @@ function DraggableFolderRow({
           <div
             ref={setInsideDropNodeRef}
             className={cn(
-              TREE_DROP_SURFACE_CLASSNAME,
+              "absolute inset-x-0 z-20",
               "top-1.5 bottom-1.5",
               isDragActive ? "pointer-events-auto" : "pointer-events-none",
             )}

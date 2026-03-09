@@ -25,6 +25,7 @@ import {
   ArrowRight,
   FileText,
   Folder as FolderIcon,
+  Loader2,
   MoreHorizontal,
   Pencil,
   Trash2,
@@ -117,12 +118,14 @@ type TreeItem =
       folder: TreeFolder;
       kind: "folder";
       node_id: string;
+      pending?: boolean;
       parent_node_id: string | null;
     }
   | {
       edge_id: string;
       kind: "page";
       node_id: string;
+      pending?: boolean;
       page: TreePage;
       parent_node_id: string | null;
     };
@@ -625,6 +628,7 @@ function DraggableFolderRow({
   activeDragId,
   folder,
   isDnDEnabled,
+  isPending = false,
   itemIndentClassName,
   onFolderInsideHover,
   openFolders,
@@ -634,6 +638,7 @@ function DraggableFolderRow({
   activeDragId: string | null;
   folder: TreeFolder;
   isDnDEnabled: boolean;
+  isPending?: boolean;
   itemIndentClassName: string;
   onFolderInsideHover: (folderNodeId: string) => void;
   openFolders: Record<string, boolean>;
@@ -894,22 +899,31 @@ function DraggableFolderRow({
 
               <div className="ml-1 flex shrink-0 items-center gap-0.5">
                 {!isEditing ? (
-                  <Link
-                    href={folderHref}
-                    aria-label="Open folder"
-                    onPointerDown={(event) => {
-                      event.stopPropagation();
-                    }}
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      if (isMobile) {
-                        setOpenMobile(false);
-                      }
-                    }}
-                    className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground opacity-0 transition-opacity hover:bg-muted hover:text-foreground focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-ring group-focus-within/folder-item:opacity-100 group-hover/folder-item:opacity-100"
-                  >
-                    <ArrowRight className="size-4" />
-                  </Link>
+                  isPending ? (
+                    <span
+                      aria-label="Folder is still being created"
+                      className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground"
+                    >
+                      <Loader2 className="size-4 animate-spin" />
+                    </span>
+                  ) : (
+                    <Link
+                      href={folderHref}
+                      aria-label="Open folder"
+                      onPointerDown={(event) => {
+                        event.stopPropagation();
+                      }}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        if (isMobile) {
+                          setOpenMobile(false);
+                        }
+                      }}
+                      className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground opacity-0 transition-opacity hover:bg-muted hover:text-foreground focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-ring group-focus-within/folder-item:opacity-100 group-hover/folder-item:opacity-100"
+                    >
+                      <ArrowRight className="size-4" />
+                    </Link>
+                  )
                 ) : null}
 
                 <DropdownMenu modal={false}>
@@ -920,6 +934,7 @@ function DraggableFolderRow({
                       variant="ghost"
                       size="icon"
                       className="h-8 w-8 rounded-md bg-transparent! p-0 text-muted-foreground"
+                      disabled={isPending}
                       onPointerDown={(event) => {
                         event.stopPropagation();
                       }}
@@ -954,6 +969,7 @@ function DraggableFolderRow({
                 </DropdownMenu>
 
                 <AppSidebarTreeActions
+                  disabled={isPending}
                   kind="folder"
                   folder={folder}
                   parentNodeId={folder.node_id}
@@ -1094,6 +1110,7 @@ function FolderTreeLevel({
                 activeDragId={activeDragId}
                 folder={item.folder}
                 isDnDEnabled={isDnDEnabled}
+                isPending={item.pending}
                 itemIndentClassName={itemIndentClassName}
                 onFolderInsideHover={onFolderInsideHover}
                 openFolders={openFolders}

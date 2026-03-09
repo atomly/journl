@@ -94,12 +94,14 @@ type TreeItem =
       folder: TreeFolder;
       kind: "folder";
       node_id: string;
+      pending?: boolean;
       parent_node_id: string | null;
     }
   | {
       edge_id: string;
       kind: "page";
       node_id: string;
+      pending?: boolean;
       page: TreePage;
       parent_node_id: string | null;
     };
@@ -356,6 +358,7 @@ function DraggableFolderRow({
   activeDragId,
   folder,
   isDnDEnabled,
+  isPending = false,
   onFolderInsideHover,
   openFolders,
   parentNodeId,
@@ -364,6 +367,7 @@ function DraggableFolderRow({
   activeDragId: string | null;
   folder: TreeFolder;
   isDnDEnabled: boolean;
+  isPending?: boolean;
   onFolderInsideHover: (folderNodeId: string) => void;
   openFolders: Record<string, boolean>;
   parentNodeId: string | null;
@@ -479,24 +483,34 @@ function DraggableFolderRow({
             </button>
           </SidebarMenuSubButton>
 
-          <Link
-            href={folderHref}
-            aria-label="Open folder"
-            onPointerDown={(event) => {
-              event.stopPropagation();
-            }}
-            onClick={(event) => {
-              event.stopPropagation();
-              if (isMobile) {
-                setOpenMobile(false);
-              }
-            }}
-            className="absolute top-1/2 right-7 z-10 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-sm text-sidebar-foreground opacity-0 transition-opacity hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-sidebar-ring group-hover/folder-navigation:opacity-100 group-focus-within/folder-navigation:opacity-100"
-          >
-            <ArrowRight className="size-3.5" />
-          </Link>
+          {isPending ? (
+            <span
+              aria-label="Folder is still being created"
+              className="absolute top-1/2 right-7 z-10 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-sm text-sidebar-foreground/70 opacity-100"
+            >
+              <Loader2 className="size-3.5 animate-spin" />
+            </span>
+          ) : (
+            <Link
+              href={folderHref}
+              aria-label="Open folder"
+              onPointerDown={(event) => {
+                event.stopPropagation();
+              }}
+              onClick={(event) => {
+                event.stopPropagation();
+                if (isMobile) {
+                  setOpenMobile(false);
+                }
+              }}
+              className="absolute top-1/2 right-7 z-10 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-sm text-sidebar-foreground opacity-0 transition-opacity hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-sidebar-ring group-hover/folder-navigation:opacity-100 group-focus-within/folder-navigation:opacity-100"
+            >
+              <ArrowRight className="size-3.5" />
+            </Link>
+          )}
 
           <AppSidebarTreeActions
+            disabled={isPending}
             kind="folder"
             folder={folder}
             parentNodeId={folder.node_id}
@@ -617,6 +631,7 @@ function SidebarTree({
                 activeDragId={activeDragId}
                 folder={item.folder}
                 isDnDEnabled={isDnDEnabled}
+                isPending={item.pending}
                 onFolderInsideHover={onFolderInsideHover}
                 openFolders={openFolders}
                 parentNodeId={parentNodeId}

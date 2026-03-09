@@ -146,6 +146,8 @@ type DropTarget =
     };
 
 const DEFAULT_TREE_ITEM_CLASSNAME = "ml-2 border-sidebar-border border-l ps-1";
+const TREE_ROW_SHELL_CLASSNAME = "relative py-1.5";
+const TREE_DROP_SURFACE_CLASSNAME = "absolute inset-x-0 z-20";
 const TREE_DROP_GUTTER_CLASSNAME = "h-1.5";
 const TREE_DROP_LINE_CLASSNAME =
   "absolute top-1/2 right-0 left-1 h-0.5 -translate-y-1/2 rounded-full bg-sidebar-primary transition-opacity";
@@ -285,7 +287,7 @@ function SidebarTreeInsertDropBand({
     <div
       ref={setNodeRef}
       className={cn(
-        "absolute inset-x-0 z-20",
+        TREE_DROP_SURFACE_CLASSNAME,
         bandClassName,
         isActive ? "pointer-events-auto" : "pointer-events-none",
       )}
@@ -347,14 +349,15 @@ function SidebarTreeEmptyDropTarget({
   const { isOver, setNodeRef } = useDroppable({
     id: dropId,
   });
+  const isDragActive = isDnDEnabled && !!activeDragId;
 
-  if (!isDnDEnabled || !activeDragId) {
+  if (!isDragActive) {
     return null;
   }
 
   return (
     <SidebarMenuSubItem className={DEFAULT_TREE_ITEM_CLASSNAME}>
-      <div className="py-1.5">
+      <div className={TREE_ROW_SHELL_CLASSNAME}>
         <div
           ref={setNodeRef}
           className={cn(
@@ -554,6 +557,7 @@ function DraggableFolderRow({
     enabled: isOpen,
     parentNodeId: folder.node_id,
   });
+  const isDragActive = isDnDEnabled && !!activeDragId;
 
   useEffect(() => {
     if (isOverInside) {
@@ -601,7 +605,7 @@ function DraggableFolderRow({
             : undefined
         }
       >
-        <div className="relative py-1.5">
+        <div className={TREE_ROW_SHELL_CLASSNAME}>
           <SidebarTreeInsertDropBands
             activeDragId={activeDragId}
             anchorEdgeId={folder.edge_id}
@@ -611,10 +615,9 @@ function DraggableFolderRow({
           <div
             ref={setInsideDropNodeRef}
             className={cn(
-              "absolute inset-x-0 top-1.5 bottom-1.5 z-20",
-              activeDragId && isDnDEnabled
-                ? "pointer-events-auto"
-                : "pointer-events-none",
+              TREE_DROP_SURFACE_CLASSNAME,
+              "top-1.5 bottom-1.5",
+              isDragActive ? "pointer-events-auto" : "pointer-events-none",
             )}
           />
           <div
@@ -626,7 +629,7 @@ function DraggableFolderRow({
               : undefined)}
             className={cn(
               "group/folder-navigation relative z-10 flex min-w-0 items-center gap-0.5 rounded-sm",
-              isOverInside && isDnDEnabled && "bg-sidebar-primary/20",
+              isOverInside && isDragActive && "bg-sidebar-primary/20",
             )}
           >
             <SidebarMenuSubButton

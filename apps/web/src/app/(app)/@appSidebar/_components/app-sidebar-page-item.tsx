@@ -62,11 +62,9 @@ export function AppSidebarPageItem({
   return (
     <SidebarMenuSubItem
       ref={itemRef}
-      key={page?.id}
       style={itemStyle}
       onClickCapture={onItemClickCapture}
       className={cn(
-        "border-sidebar-border border-l",
         isDragging && "opacity-60",
         isActive && "border-sidebar-primary",
         className,

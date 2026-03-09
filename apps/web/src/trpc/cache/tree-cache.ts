@@ -7,7 +7,9 @@ import type {
 import type { RouterOutputs } from "~/trpc";
 
 export type TreeChildrenPage = RouterOutputs["tree"]["getChildrenPaginated"];
-export type TreeItem = TreeChildrenPage["items"][number];
+export type TreeItem = TreeChildrenPage["items"][number] & {
+  pending?: boolean;
+};
 export type TreeChildrenInfiniteData = InfiniteData<TreeChildrenPage, unknown>;
 
 export type NestedPagesPage = RouterOutputs["tree"]["getNestedPagesPaginated"];

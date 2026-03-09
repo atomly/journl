@@ -29,10 +29,10 @@
   },
   "devDependencies": {
     "@acme/tsconfig": "workspace:*",
-    "@blocknote/core": "~0.46.2",
-    "@blocknote/react": "~0.46.2",
-    "@blocknote/server-util": "~0.46.2",
-    "@blocknote/xl-ai": "~0.46.2",
+    "@blocknote/core": "~0.47.0",
+    "@blocknote/react": "~0.47.0",
+    "@blocknote/server-util": "~0.47.0",
+    "@blocknote/xl-ai": "~0.47.0",
     "@tiptap/extensions": "3.20.0",
     "typescript": "~5.9.3"
   }

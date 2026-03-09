@@ -35,6 +35,7 @@ type AppSidebarTreeActionsProps = {
   onCreateStart?: () => void;
   onCreateSuccess?: () => void;
   parentNodeId: string | null;
+  triggerMode?: "direct-page" | "menu";
   triggerVariant?: "empty-state" | "inline" | "sidebar";
 };
 
@@ -50,6 +51,7 @@ export function AppSidebarTreeActions({
   onCreateStart,
   onCreateSuccess,
   parentNodeId,
+  triggerMode = "menu",
   triggerVariant = "sidebar",
 }: AppSidebarTreeActionsProps) {
   const router = useRouter();
@@ -312,6 +314,28 @@ export function AppSidebarTreeActions({
       );
     });
   };
+
+  if (triggerMode === "direct-page") {
+    return (
+      <Button
+        type="button"
+        variant="ghost"
+        className={cn(
+          "h-8 w-full justify-start gap-2 rounded-md border border-dashed border-sidebar-border/80 px-3 text-sidebar-foreground/80 shadow-none hover:bg-transparent hover:text-sidebar-foreground active:bg-transparent active:text-sidebar-foreground",
+          className,
+        )}
+        onClick={handleCreatePage}
+        disabled={showLoading}
+      >
+        {showLoading ? (
+          <Plus className="size-3.5 animate-pulse" />
+        ) : (
+          <Plus className="size-3.5 shrink-0" />
+        )}
+        <span>New page</span>
+      </Button>
+    );
+  }
 
   const menu = (
     <DropdownMenu modal={false}>

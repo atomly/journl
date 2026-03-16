@@ -15,16 +15,16 @@
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },
   "peerDependencies": {
-    "@blocknote/core": "~0.46.2",
-    "@blocknote/react": "~0.46.2",
-    "@blocknote/server-util": "~0.46.2",
-    "@blocknote/xl-ai": "~0.46.2",
+    "@blocknote/core": "~0.47.1",
+    "@blocknote/react": "~0.47.1",
+    "@blocknote/server-util": "~0.47.1",
+    "@blocknote/xl-ai": "~0.47.1",
     "@tiptap/extensions": ">=3.19.0 <4.0.0-0"
   },
   "dependencies": {
     "@acme/db": "workspace:*",
-    "@ai-sdk/openai": "~3.0.30",
-    "ai": "~6.0.97",
+    "@ai-sdk/openai": "~3.0.41",
+    "ai": "~6.0.116",
     "zod": "~4.3.6"
   },
   "devDependencies": {

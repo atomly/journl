@@ -33,6 +33,9 @@ export default function AppSidebar() {
   prefetch(
     trpc.tree.getChildrenPaginated.infiniteQueryOptions(
       infiniteSidebarTreeQueryOptions,
+      {
+        getNextPageParam: ({ nextCursor }) => nextCursor ?? undefined,
+      },
     ),
   );
   return (

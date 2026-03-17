@@ -372,10 +372,8 @@ function RootFolderEmptyState({
     <div
       ref={setNodeRef}
       className={cn(
-        "-m-2 rounded-[calc(theme(borderRadius.3xl)-2px)] bg-muted/25 px-5 py-6 transition-colors sm:px-6",
-        isOver &&
-          isDnDEnabled &&
-          "bg-primary/6 outline outline-1 outline-primary/25",
+        "-m-2 rounded-[calc(var(--radius-3xl)-2px)] bg-muted/25 px-5 py-6 transition-colors sm:px-6",
+        isOver && isDnDEnabled && "bg-primary/6 outline outline-primary/25",
       )}
     >
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -1113,15 +1111,17 @@ function useFolderTreeData({
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
   const queryOptions = trpc.tree.getChildrenPaginated.infiniteQueryOptions(
     getInfiniteSidebarTreeQueryOptions(parentNodeId),
+    {
+      getNextPageParam: ({ nextCursor }) => {
+        return nextCursor ?? undefined;
+      },
+    },
   );
 
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isPending } =
     useInfiniteQuery({
       ...queryOptions,
       enabled,
-      getNextPageParam: ({ nextCursor }) => {
-        return nextCursor;
-      },
     });
 
   const items = (data?.pages.flatMap((page) => page.items) ?? []) as TreeItem[];
@@ -1301,9 +1301,9 @@ export function FolderNestedPagesList({
   const recentDragUntilRef = useRef(0);
   const treeQueryFilter = trpc.tree.getChildrenPaginated.infiniteQueryFilter();
   const getContainerQueryKey = (targetParentNodeId: string | null) => {
-    return trpc.tree.getChildrenPaginated.infiniteQueryOptions(
+    return trpc.tree.getChildrenPaginated.infiniteQueryKey(
       getInfiniteSidebarTreeQueryOptions(targetParentNodeId),
-    ).queryKey;
+    );
   };
 
   const { mutate: moveItem } = useMutation(

@@ -67,9 +67,9 @@ export function AppSidebarTreeActions({
   const treeQueryFilter = trpc.tree.getChildrenPaginated.infiniteQueryFilter();
 
   const getContainerQueryKey = (targetParentNodeId: string | null) => {
-    return trpc.tree.getChildrenPaginated.infiniteQueryOptions(
+    return trpc.tree.getChildrenPaginated.infiniteQueryKey(
       getInfiniteSidebarTreeQueryOptions(targetParentNodeId),
-    ).queryKey;
+    );
   };
 
   const { mutate: createFolder, isPending: isCreatingFolder } = useMutation(

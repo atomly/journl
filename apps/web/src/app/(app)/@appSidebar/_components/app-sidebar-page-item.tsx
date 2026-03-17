@@ -116,20 +116,31 @@ export function AppSidebarPageItem({
             <SidebarMenuSubButton asChild isActive={isActive}>
               <div
                 {...dragActivatorProps}
-                className="group/page-item hidden items-center justify-between md:flex"
+                className="group/page-item hidden items-center md:flex"
               >
-                <Link
-                  href={`/pages/${page?.id}`}
-                  onClick={handlePageNavigationClick}
-                  className="line-clamp-1 min-w-0 flex-1 truncate hover:underline"
-                >
-                  {page?.title || "New page"}
-                </Link>
-                {!!page && (
-                  <DeletePageDialogTrigger asChild>
-                    <DeletePageButton className="pointer-events-none invisible bg-transparent! pr-0! text-destructive! opacity-0 transition-opacity group-focus-within/page-item:pointer-events-auto group-focus-within/page-item:visible group-focus-within/page-item:opacity-100 group-hover/page-item:pointer-events-auto group-hover/page-item:visible group-hover/page-item:opacity-100" />
-                  </DeletePageDialogTrigger>
-                )}
+                <div className="relative min-w-0 flex-1">
+                  <Link
+                    href={`/pages/${page?.id}`}
+                    onClick={handlePageNavigationClick}
+                    className="block w-full min-w-0 truncate hover:underline"
+                  >
+                    {page?.title || "New page"}
+                  </Link>
+                  {!!page && (
+                    <DeletePageDialogTrigger asChild>
+                      <DeletePageButton
+                        className={cn(
+                          {
+                            "bg-muted!": !isActive,
+                            "bg-sidebar-accent!": isActive,
+                          },
+                          "pointer-events-none invisible absolute top-1/2 right-0 -translate-y-1/2 rounded-none p-0! pl-1! text-destructive! opacity-0 transition-opacity",
+                          "group-focus-within/page-item:pointer-events-auto group-focus-within/page-item:visible group-focus-within/page-item:opacity-100 group-hover/page-item:pointer-events-auto group-hover/page-item:visible group-hover/page-item:opacity-100",
+                        )}
+                      />
+                    </DeletePageDialogTrigger>
+                  )}
+                </div>
               </div>
             </SidebarMenuSubButton>
           </DeletePageDialog>

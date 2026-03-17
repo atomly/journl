@@ -19,6 +19,6 @@ type RouterInputs = inferRouterInputs<ApiRouter>;
  **/
 type RouterOutputs = inferRouterOutputs<ApiRouter>;
 
-export { createTRPCContext, apiRouter, embedderRouter };
-export type { ApiRouter, RouterInputs, RouterOutputs, EmbedderRouter };
 export * from "./types";
+export type { ApiRouter, EmbedderRouter, RouterInputs, RouterOutputs };
+export { apiRouter, createTRPCContext, embedderRouter };

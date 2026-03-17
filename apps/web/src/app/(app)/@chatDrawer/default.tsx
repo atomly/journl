@@ -33,7 +33,7 @@ export default function ChatDrawer() {
       />
       <DrawerContent
         id={CHAT_DRAWER_CONTENT_ID}
-        className="z-4500 h-full! max-h-[82.5dvh]! transition-[bottom] duration-200 ease-out motion-reduce:transition-none"
+        className="z-4500 h-full! max-h-[90dvh]! transition-[bottom] duration-200 ease-out motion-reduce:transition-none"
       >
         <DrawerTitle className="hidden">Journl</DrawerTitle>
         <div className="relative h-full! border-sidebar-border border-t">

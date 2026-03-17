@@ -45,9 +45,9 @@ export function useCreatePageTool() {
             insertItem({
               item: newPage,
               queryClient,
-              queryKey: trpc.tree.getChildrenPaginated.infiniteQueryOptions(
+              queryKey: trpc.tree.getChildrenPaginated.infiniteQueryKey(
                 getInfiniteSidebarTreeQueryOptions(null),
-              ).queryKey,
+              ),
             });
 
             eventEmitter.buffer(

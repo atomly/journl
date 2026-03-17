@@ -150,7 +150,11 @@ The rest of the components are set by the Tailwind CSS classes, or by our editor
   z-index: 5000;
 }
 
-/* Sets the z-index of the drawer's overlay */
+/* Sets the z-index of the drawer and sheet overlay */
+[data-slot="drawer-content"] {
+  z-index: 4500;
+}
+
 [data-slot="drawer-overlay"] {
   z-index: 4500;
 }

@@ -23,4 +23,4 @@ async function handler(req: NextRequest) {
   return response;
 }
 
-export { handler as GET, handler as POST, corsHandler as OPTIONS };
+export { corsHandler as OPTIONS, handler as GET, handler as POST };

@@ -424,4 +424,4 @@ function SwipeActionContent({
   );
 }
 
-export { SwipeAction, SwipeActionReveal, SwipeActionContent };
+export { SwipeAction, SwipeActionContent, SwipeActionReveal };

@@ -17,19 +17,36 @@
     "clean": "turbo run clean && git clean -xdf .turbo node_modules",
     "db:push": "turbo -F @acme/db push",
     "db:studio": "turbo -F @acme/db studio",
-    "dev": "turbo watch dev --continue",
+    "dev": "turbo run dev --continue --parallel",
     "typecheck": "turbo run typecheck",
     "supabase:start": "supabase start",
     "supabase:stop": "supabase stop",
     "supabase:status": "supabase status"
   },
   "devDependencies": {
-    "@biomejs/biome": "~2.4.4",
-    "@turbo/gen": "~2.8.10",
-    "supabase": "^2.76.15",
-    "turbo": "~2.8.10"
+    "@biomejs/biome": "~2.4.7",
+    "@turbo/gen": "~2.8.17",
+    "supabase": "^2.79.0",
+    "turbo": "~2.8.17"
   },
   "pnpm": {
+    "overrides": {
+      "@tiptap/core": "3.20.0",
+      "@tiptap/pm": "3.20.0",
+      "@tiptap/react": "3.20.0",
+      "@tiptap/extensions": "3.20.0",
+      "@tiptap/extension-bold": "3.20.0",
+      "@tiptap/extension-code": "3.20.0",
+      "@tiptap/extension-italic": "3.20.0",
+      "@tiptap/extension-strike": "3.20.0",
+      "@tiptap/extension-underline": "3.20.0",
+      "@tiptap/extension-link": "3.20.0",
+      "@tiptap/extension-text": "3.20.0",
+      "@tiptap/extension-paragraph": "3.20.0",
+      "@tiptap/extension-horizontal-rule": "3.20.0",
+      "@tiptap/extension-bubble-menu": "3.20.0",
+      "@tiptap/extension-floating-menu": "3.20.0"
+    },
     "peerDependencyRules": {
       "allowedVersions": {
         "zod": "^3.23.8 || ^4.0.0"

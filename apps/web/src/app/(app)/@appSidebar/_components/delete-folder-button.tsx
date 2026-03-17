@@ -102,9 +102,9 @@ export function DeleteFolderDialog({
   }).queryKey;
 
   const getContainerQueryKey = (targetParentNodeId: string | null) => {
-    return trpc.tree.getChildrenPaginated.infiniteQueryOptions(
+    return trpc.tree.getChildrenPaginated.infiniteQueryKey(
       getInfiniteSidebarTreeQueryOptions(targetParentNodeId),
-    ).queryKey;
+    );
   };
 
   const { mutate: deleteFolder, isPending: isDeleting } = useMutation(

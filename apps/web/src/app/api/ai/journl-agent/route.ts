@@ -1,7 +1,7 @@
 import { USAGE_UNITS, type UsageUnit } from "@acme/db/usage";
 import { handleChatStream } from "@mastra/ai-sdk";
 import type { LLMStepResult } from "@mastra/core/agent";
-import { createUIMessageStreamResponse } from "ai";
+import { createUIMessageStreamResponse, type UIMessageChunk } from "ai";
 import {
   getJournlUserThread,
   journlMini,
@@ -116,7 +116,9 @@ const handler = withAuthGuard(
           sendSources: true,
         });
 
-        return createUIMessageStreamResponse({ stream });
+        return createUIMessageStreamResponse({
+          stream: stream as ReadableStream<UIMessageChunk>,
+        });
       } catch (error) {
         console.error("[api.chat.route] error 👀", error);
         return new Response("Internal Server Error", { status: 500 });
@@ -134,7 +136,7 @@ const handler = withAuthGuard(
   },
 );
 
-export { handler as POST, corsHandler as OPTIONS };
+export { corsHandler as OPTIONS, handler as POST };
 
 function countBillableWebSearchCalls(steps: LLMStepResult<undefined>[]) {
   let count = 0;

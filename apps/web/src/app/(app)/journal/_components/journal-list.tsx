@@ -45,13 +45,15 @@ export function JournalEntries(props: JournalListProps) {
   const queryClient = useQueryClient();
   const queryOptions = trpc.journal.getEntries.infiniteQueryOptions(
     getInfiniteEntriesQueryOptions(),
+    {
+      getNextPageParam: ({ nextPage }) => nextPage ?? undefined,
+      initialCursor: null,
+    },
   );
   const { status, data, error, fetchNextPage, hasNextPage, isFetching } =
     useInfiniteQuery({
       ...queryOptions,
       gcTime: 0,
-      getNextPageParam: ({ nextPage }) => nextPage ?? undefined,
-      initialPageParam: null,
     });
 
   return (
@@ -119,13 +121,15 @@ export function JournalTimeline(props: JournalListProps) {
   const queryClient = useQueryClient();
   const queryOptions = trpc.journal.getTimeline.infiniteQueryOptions(
     getInfiniteJournalEntriesQueryOptions(),
+    {
+      getNextPageParam: ({ nextPage }) => nextPage ?? undefined,
+      initialCursor: Date.now(),
+    },
   );
   const { status, data, error, fetchNextPage, hasNextPage, isFetching } =
     useInfiniteQuery({
       ...queryOptions,
       gcTime: 0,
-      getNextPageParam: ({ nextPage }) => nextPage ?? undefined,
-      initialPageParam: Date.now(),
     });
 
   return (

@@ -459,14 +459,16 @@ function useSidebarTreeData({
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
   const queryOptions = trpc.tree.getChildrenPaginated.infiniteQueryOptions(
     getInfiniteSidebarTreeQueryOptions(parentNodeId),
+    {
+      getNextPageParam: ({ nextCursor }) => {
+        return nextCursor ?? undefined;
+      },
+    },
   );
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isPending } =
     useInfiniteQuery({
       ...queryOptions,
       enabled,
-      getNextPageParam: ({ nextCursor }) => {
-        return nextCursor;
-      },
     });
 
   const items = (data?.pages?.flatMap((page) => page.items) ??
@@ -862,13 +864,13 @@ export const AppSidebarPages = ({
   const recentDragUntilRef = useRef(0);
   const treeQueryFilter = trpc.tree.getChildrenPaginated.infiniteQueryFilter();
   const getContainerQueryKey = (targetParentNodeId: string | null) => {
-    return trpc.tree.getChildrenPaginated.infiniteQueryOptions(
+    return trpc.tree.getChildrenPaginated.infiniteQueryKey(
       getInfiniteSidebarTreeQueryOptions(targetParentNodeId),
-    ).queryKey;
+    );
   };
-  const rootTreeQueryKey = trpc.tree.getChildrenPaginated.infiniteQueryOptions(
+  const rootTreeQueryKey = trpc.tree.getChildrenPaginated.infiniteQueryKey(
     getInfiniteSidebarTreeQueryOptions(null),
-  ).queryKey;
+  );
   const isRootFetching = useIsFetching({
     queryKey: rootTreeQueryKey,
   });

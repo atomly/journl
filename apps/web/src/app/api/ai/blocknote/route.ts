@@ -150,7 +150,7 @@ const handler = withAuthGuard(
   },
 );
 
-export { handler as POST, corsHandler as OPTIONS };
+export { corsHandler as OPTIONS, handler as POST };
 
 async function getThreadMessages(user: User) {
   try {

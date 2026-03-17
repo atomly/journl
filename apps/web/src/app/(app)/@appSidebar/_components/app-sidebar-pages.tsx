@@ -6,6 +6,7 @@ import {
   type DragCancelEvent,
   type DragEndEvent,
   type DragOverEvent,
+  DragOverlay,
   type DragStartEvent,
   MouseSensor,
   pointerWithin,
@@ -15,7 +16,6 @@ import {
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
-import { CSS } from "@dnd-kit/utilities";
 import {
   useInfiniteQuery,
   useIsFetching,
@@ -122,6 +122,7 @@ type SidebarTreeItemRef = {
 
 type SidebarTreeDragData = {
   item: SidebarTreeItemRef;
+  label: string;
   parentNodeId: string | null;
 };
 
@@ -147,7 +148,7 @@ type DropTarget =
 
 const DEFAULT_TREE_ITEM_CLASSNAME = "ml-2 border-sidebar-border border-l ps-1";
 const TREE_DROP_LINE_CLASSNAME =
-  "absolute top-1/2 right-0 left-1 h-0.5 -translate-y-1/2 rounded-full bg-sidebar-primary transition-opacity";
+  "absolute right-0 left-1 h-0.5 rounded-full bg-sidebar-primary transition-opacity";
 
 type SidebarTreeInteractions = {
   shouldSuppressClick: () => boolean;
@@ -268,11 +269,13 @@ function SidebarTreeInsertDropBand({
   bandClassName,
   dropId,
   isDnDEnabled,
+  lineClassName,
 }: {
   activeDragId: string | null;
   bandClassName: string;
   dropId: string;
   isDnDEnabled: boolean;
+  lineClassName?: string;
 }) {
   const { isOver, setNodeRef } = useDroppable({
     id: dropId,
@@ -292,6 +295,7 @@ function SidebarTreeInsertDropBand({
       <div
         className={cn(
           TREE_DROP_LINE_CLASSNAME,
+          lineClassName,
           isActive && isOver ? "opacity-100" : "opacity-0",
         )}
       />
@@ -300,19 +304,23 @@ function SidebarTreeInsertDropBand({
 }
 
 function SidebarTreeInsertDropBands({
-  afterBandClassName = "bottom-0 h-1.5",
+  afterBandClassName = "bottom-0 h-1/2",
+  afterLineClassName = "bottom-0",
   activeDragId,
   anchorEdgeId,
-  beforeBandClassName = "top-0 h-1.5",
+  beforeBandClassName = "top-0 h-1/2",
+  beforeLineClassName = "top-0",
   isDnDEnabled,
   parentNodeId,
   showAfter = true,
   showBefore = true,
 }: {
   afterBandClassName?: string;
+  afterLineClassName?: string;
   activeDragId: string | null;
   anchorEdgeId: string;
   beforeBandClassName?: string;
+  beforeLineClassName?: string;
   isDnDEnabled: boolean;
   parentNodeId: string | null;
   showAfter?: boolean;
@@ -329,6 +337,7 @@ function SidebarTreeInsertDropBands({
             parentNodeId,
           })}
           isDnDEnabled={isDnDEnabled}
+          lineClassName={beforeLineClassName}
         />
       ) : null}
       {showAfter ? (
@@ -340,6 +349,7 @@ function SidebarTreeInsertDropBands({
             parentNodeId,
           })}
           isDnDEnabled={isDnDEnabled}
+          lineClassName={afterLineClassName}
         />
       ) : null}
     </>
@@ -386,11 +396,13 @@ function DraggablePageRow({
   isDnDEnabled,
   page,
   parentNodeId,
+  showBeforeDropBand = true,
 }: {
   activeDragId: string | null;
   isDnDEnabled: boolean;
   page: TreePage;
   parentNodeId: string | null;
+  showBeforeDropBand?: boolean;
 }) {
   const { shouldSuppressClick } = useSidebarTreeInteractions();
   const itemRef: SidebarTreeItemRef = {
@@ -398,9 +410,10 @@ function DraggablePageRow({
     nodeId: page.node_id,
   };
   const draggableId = getDragId(itemRef);
-  const { attributes, listeners, setNodeRef, transform } = useDraggable({
+  const { attributes, listeners, setNodeRef } = useDraggable({
     data: {
       item: itemRef,
+      label: page.title || "New page",
       parentNodeId,
     } satisfies SidebarTreeDragData,
     disabled: !isDnDEnabled,
@@ -425,17 +438,11 @@ function DraggablePageRow({
           anchorEdgeId={page.edge_id}
           isDnDEnabled={isDnDEnabled}
           parentNodeId={parentNodeId}
+          showBefore={showBeforeDropBand}
         />
       }
       isDragging={activeDragId === draggableId}
       itemRef={setNodeRef}
-      itemStyle={
-        transform
-          ? {
-              transform: CSS.Translate.toString(transform),
-            }
-          : undefined
-      }
       onItemClickCapture={(event) => {
         if (!shouldSuppressClick()) {
           return;
@@ -530,6 +537,7 @@ function DraggableFolderRow({
   openFolders,
   parentNodeId,
   setFolderOpen,
+  showBeforeDropBand = true,
 }: {
   activeDragId: string | null;
   folder: TreeFolder;
@@ -539,6 +547,7 @@ function DraggableFolderRow({
   openFolders: Record<string, boolean>;
   parentNodeId: string | null;
   setFolderOpen: (folderNodeId: string, open: boolean) => void;
+  showBeforeDropBand?: boolean;
 }) {
   const { shouldSuppressClick } = useSidebarTreeInteractions();
   const pathname = usePathname();
@@ -551,9 +560,10 @@ function DraggableFolderRow({
   const folderHref = `/folders/${folder.id}`;
   const isActive = pathname === folderHref;
   const isOpen = openFolders[folder.node_id] ?? false;
-  const { attributes, listeners, setNodeRef, transform } = useDraggable({
+  const { attributes, listeners, setNodeRef } = useDraggable({
     data: {
       item: itemRef,
+      label: folder.name,
       parentNodeId,
     } satisfies SidebarTreeDragData,
     disabled: !isDnDEnabled,
@@ -608,13 +618,6 @@ function DraggableFolderRow({
           activeDragId === draggableId && "opacity-60",
           DEFAULT_TREE_ITEM_CLASSNAME,
         )}
-        style={
-          transform
-            ? {
-                transform: CSS.Translate.toString(transform),
-              }
-            : undefined
-        }
       >
         <div className="relative py-1.5">
           <SidebarTreeInsertDropBands
@@ -623,6 +626,7 @@ function DraggableFolderRow({
             isDnDEnabled={isDnDEnabled}
             parentNodeId={parentNodeId}
             showAfter={!treeData.shouldRenderNestedContent}
+            showBefore={showBeforeDropBand}
           />
           <div
             ref={setInsideDropNodeRef}
@@ -732,6 +736,7 @@ function DraggableFolderRow({
                 activeDragId={activeDragId}
                 anchorEdgeId={folder.edge_id}
                 afterBandClassName="top-0 h-1.5"
+                afterLineClassName="top-0"
                 isDnDEnabled={isDnDEnabled}
                 parentNodeId={parentNodeId}
                 showBefore={false}
@@ -773,7 +778,8 @@ function SidebarTreeRows({
         />
       ) : null}
 
-      {treeData.items.map((item) => {
+      {treeData.items.map((item, index) => {
+        const isFirst = index === 0;
         return item.kind === "folder" ? (
           <DraggableFolderRow
             key={`${item.kind}-${item.node_id}`}
@@ -785,6 +791,7 @@ function SidebarTreeRows({
             openFolders={openFolders}
             parentNodeId={parentNodeId}
             setFolderOpen={setFolderOpen}
+            showBeforeDropBand={isFirst}
           />
         ) : (
           <DraggablePageRow
@@ -793,6 +800,7 @@ function SidebarTreeRows({
             isDnDEnabled={isDnDEnabled}
             page={item.page}
             parentNodeId={parentNodeId}
+            showBeforeDropBand={isFirst}
           />
         );
       })}
@@ -854,6 +862,7 @@ export const AppSidebarPages = ({
   const [isOpen, setIsOpen] = useState(defaultOpen);
   const [openFolders, setOpenFolders] = useState<Record<string, boolean>>({});
   const [activeDragId, setActiveDragId] = useState<string | null>(null);
+  const [activeDragLabel, setActiveDragLabel] = useState<string | null>(null);
   const hoverExpandTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
     null,
   );
@@ -1060,6 +1069,10 @@ export const AppSidebarPages = ({
       dragStartOpenFoldersRef.current = { ...openFolders };
       dragAutoExpandedFoldersRef.current.clear();
       setActiveDragId(String(event.active.id));
+      const dragData = event.active.data.current as
+        | SidebarTreeDragData
+        | undefined;
+      setActiveDragLabel(dragData?.label ?? null);
     },
     [markRecentDrag, openFolders],
   );
@@ -1069,6 +1082,7 @@ export const AppSidebarPages = ({
       clearHoverExpandTimeout();
       markRecentDrag();
       setActiveDragId(null);
+      setActiveDragLabel(null);
       resetDragFolderState();
     },
     [clearHoverExpandTimeout, markRecentDrag, resetDragFolderState],
@@ -1125,6 +1139,7 @@ export const AppSidebarPages = ({
       clearHoverExpandTimeout();
       markRecentDrag();
       setActiveDragId(null);
+      setActiveDragLabel(null);
 
       if (!isDnDEnabled) {
         return;
@@ -1263,7 +1278,7 @@ export const AppSidebarPages = ({
           <SidebarTreeInteractionsContext.Provider
             value={{ shouldSuppressClick }}
           >
-            <SidebarMenuSub className="mx-0 mr-0 flex-1 gap-0 overflow-scroll border-none px-0">
+            <SidebarMenuSub className="mx-0 mr-0 flex-1 gap-0 overflow-y-scroll overflow-x-hidden border-none px-0">
               <SidebarTree
                 activeDragId={activeDragId}
                 isDnDEnabled={isDnDEnabled}
@@ -1274,6 +1289,13 @@ export const AppSidebarPages = ({
               />
             </SidebarMenuSub>
           </SidebarTreeInteractionsContext.Provider>
+          <DragOverlay dropAnimation={null}>
+            {activeDragLabel ? (
+              <div className="flex h-7 items-center gap-2 rounded-md bg-sidebar-accent px-2 text-sm shadow-md ring-1 ring-sidebar-border">
+                {activeDragLabel}
+              </div>
+            ) : null}
+          </DragOverlay>
         </DndContext>
       </CollapsibleContent>
     </Collapsible>

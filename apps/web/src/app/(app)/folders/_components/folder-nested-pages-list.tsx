@@ -6,6 +6,7 @@ import {
   type DragCancelEvent,
   type DragEndEvent,
   type DragOverEvent,
+  DragOverlay,
   type DragStartEvent,
   MouseSensor,
   pointerWithin,
@@ -15,7 +16,6 @@ import {
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
-import { CSS } from "@dnd-kit/utilities";
 import {
   useInfiniteQuery,
   useMutation,
@@ -89,7 +89,7 @@ function useFolderTreeInteractions(): FolderTreeInteractions {
 const TREE_ROW_CLASSNAME =
   "group/tree-row flex min-h-9 items-center gap-1.5 rounded-lg px-2 py-1 transition-colors";
 const TREE_DROP_LINE_CLASSNAME =
-  "absolute top-1/2 right-0 left-1 h-0.5 -translate-y-1/2 rounded-full bg-primary transition-opacity";
+  "absolute right-0 left-1 h-0.5 rounded-full bg-primary transition-opacity";
 const INFINITE_SCROLL_ROOT_MARGIN = "120px 0px";
 const DRAG_CLICK_SUPPRESSION_MS = 200;
 const ROOT_PARENT_KEY = "root";
@@ -167,6 +167,7 @@ type FolderTreeItemRef = {
 
 type FolderTreeDragData = {
   item: FolderTreeItemRef;
+  label: string;
   parentNodeId: string | null;
 };
 
@@ -279,11 +280,13 @@ function FolderTreeInsertDropBand({
   bandClassName,
   dropId,
   isDnDEnabled,
+  lineClassName,
 }: {
   activeDragId: string | null;
   bandClassName: string;
   dropId: string;
   isDnDEnabled: boolean;
+  lineClassName?: string;
 }) {
   const { isOver, setNodeRef } = useDroppable({
     id: dropId,
@@ -302,6 +305,7 @@ function FolderTreeInsertDropBand({
       <div
         className={cn(
           TREE_DROP_LINE_CLASSNAME,
+          lineClassName,
           isDragActive && isOver ? "opacity-100" : "opacity-0",
         )}
       />
@@ -310,19 +314,23 @@ function FolderTreeInsertDropBand({
 }
 
 function FolderTreeInsertDropBands({
-  afterBandClassName = "bottom-0 h-1.5",
+  afterBandClassName = "bottom-0 h-1/2",
+  afterLineClassName = "bottom-0",
   activeDragId,
   anchorEdgeId,
-  beforeBandClassName = "top-0 h-1.5",
+  beforeBandClassName = "top-0 h-1/2",
+  beforeLineClassName = "top-0",
   isDnDEnabled,
   parentNodeId,
   showAfter = true,
   showBefore = true,
 }: {
   afterBandClassName?: string;
+  afterLineClassName?: string;
   activeDragId: string | null;
   anchorEdgeId: string;
   beforeBandClassName?: string;
+  beforeLineClassName?: string;
   isDnDEnabled: boolean;
   parentNodeId: string | null;
   showAfter?: boolean;
@@ -339,6 +347,7 @@ function FolderTreeInsertDropBands({
             parentNodeId,
           })}
           isDnDEnabled={isDnDEnabled}
+          lineClassName={beforeLineClassName}
         />
       ) : null}
       {showAfter ? (
@@ -350,6 +359,7 @@ function FolderTreeInsertDropBands({
             parentNodeId,
           })}
           isDnDEnabled={isDnDEnabled}
+          lineClassName={afterLineClassName}
         />
       ) : null}
     </>
@@ -405,12 +415,14 @@ function DraggablePageRow({
   itemIndentClassName,
   page,
   parentNodeId,
+  showBeforeDropBand = true,
 }: {
   activeDragId: string | null;
   isDnDEnabled: boolean;
   itemIndentClassName: string;
   page: TreePage;
   parentNodeId: string | null;
+  showBeforeDropBand?: boolean;
 }) {
   const { shouldSuppressClick } = useFolderTreeInteractions();
   const trpc = useTRPC();
@@ -433,9 +445,10 @@ function DraggablePageRow({
   const { mutate: updatePageTitle } = useMutation(
     trpc.pages.updateTitle.mutationOptions({}),
   );
-  const { attributes, listeners, setNodeRef, transform } = useDraggable({
+  const { attributes, listeners, setNodeRef } = useDraggable({
     data: {
       item: itemRef,
+      label: page.title || "New page",
       parentNodeId,
     } satisfies FolderTreeDragData,
     disabled: !isDnDEnabled || isEditing,
@@ -526,19 +539,13 @@ function DraggablePageRow({
         <div
           ref={setNodeRef}
           className="relative py-1.5"
-          style={
-            transform
-              ? {
-                  transform: CSS.Translate.toString(transform),
-                }
-              : undefined
-          }
         >
           <FolderTreeInsertDropBands
             activeDragId={activeDragId}
             anchorEdgeId={page.edge_id}
             isDnDEnabled={isDnDEnabled}
             parentNodeId={parentNodeId}
+            showBefore={showBeforeDropBand}
           />
           <div
             className={cn(
@@ -691,6 +698,7 @@ function DraggableFolderRow({
   openFolders,
   parentNodeId,
   setFolderOpen,
+  showBeforeDropBand = true,
 }: {
   activeDragId: string | null;
   folder: TreeFolder;
@@ -701,6 +709,7 @@ function DraggableFolderRow({
   openFolders: Record<string, boolean>;
   parentNodeId: string | null;
   setFolderOpen: (folderNodeId: string, open: boolean) => void;
+  showBeforeDropBand?: boolean;
 }) {
   const { shouldSuppressClick } = useFolderTreeInteractions();
   const trpc = useTRPC();
@@ -719,9 +728,10 @@ function DraggableFolderRow({
   const folderHref = `/folders/${folder.id}`;
   const isActive = pathname === folderHref;
   const isOpen = openFolders[folder.node_id] ?? false;
-  const { attributes, listeners, setNodeRef, transform } = useDraggable({
+  const { attributes, listeners, setNodeRef } = useDraggable({
     data: {
       item: itemRef,
+      label: folder.name,
       parentNodeId,
     } satisfies FolderTreeDragData,
     disabled: !isDnDEnabled || isEditing,
@@ -859,13 +869,6 @@ function DraggableFolderRow({
           <div
             ref={setNodeRef}
             className="relative py-1.5"
-            style={
-              transform
-                ? {
-                    transform: CSS.Translate.toString(transform),
-                  }
-                : undefined
-            }
             onClickCapture={(event) => {
               if (isEditing) {
                 return;
@@ -885,6 +888,7 @@ function DraggableFolderRow({
               isDnDEnabled={isDnDEnabled}
               parentNodeId={parentNodeId}
               showAfter={!treeData.shouldRenderNestedContent}
+              showBefore={showBeforeDropBand}
             />
             <div
               ref={setInsideDropNodeRef}
@@ -1087,6 +1091,7 @@ function DraggableFolderRow({
                   activeDragId={activeDragId}
                   anchorEdgeId={folder.edge_id}
                   afterBandClassName="top-0 h-1.5"
+                  afterLineClassName="top-0"
                   isDnDEnabled={isDnDEnabled}
                   parentNodeId={parentNodeId}
                   showBefore={false}
@@ -1195,7 +1200,8 @@ function FolderTreeRows({
         </div>
       ) : null}
 
-      {treeData.items.map((item) => {
+      {treeData.items.map((item, index) => {
+        const isFirst = index === 0;
         return item.kind === "folder" ? (
           <DraggableFolderRow
             key={`${item.kind}-${item.node_id}`}
@@ -1208,6 +1214,7 @@ function FolderTreeRows({
             openFolders={openFolders}
             parentNodeId={parentNodeId}
             setFolderOpen={setFolderOpen}
+            showBeforeDropBand={isFirst}
           />
         ) : (
           <DraggablePageRow
@@ -1217,6 +1224,7 @@ function FolderTreeRows({
             itemIndentClassName={itemIndentClassName}
             page={item.page}
             parentNodeId={parentNodeId}
+            showBeforeDropBand={isFirst}
           />
         );
       })}
@@ -1291,6 +1299,7 @@ export function FolderNestedPagesList({
 
   const [openFolders, setOpenFolders] = useState<Record<string, boolean>>({});
   const [activeDragId, setActiveDragId] = useState<string | null>(null);
+  const [activeDragLabel, setActiveDragLabel] = useState<string | null>(null);
   const hoverExpandTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
     null,
   );
@@ -1429,6 +1438,10 @@ export function FolderNestedPagesList({
       dragStartOpenFoldersRef.current = { ...openFolders };
       dragAutoExpandedFoldersRef.current.clear();
       setActiveDragId(String(event.active.id));
+      const dragData = event.active.data.current as
+        | FolderTreeDragData
+        | undefined;
+      setActiveDragLabel(dragData?.label ?? null);
     },
     [markRecentDrag, openFolders],
   );
@@ -1438,6 +1451,7 @@ export function FolderNestedPagesList({
       clearHoverExpandTimeout();
       markRecentDrag();
       setActiveDragId(null);
+      setActiveDragLabel(null);
       resetDragFolderState();
     },
     [clearHoverExpandTimeout, markRecentDrag, resetDragFolderState],
@@ -1494,6 +1508,7 @@ export function FolderNestedPagesList({
       clearHoverExpandTimeout();
       markRecentDrag();
       setActiveDragId(null);
+      setActiveDragLabel(null);
 
       if (!isDnDEnabled) {
         return;
@@ -1581,7 +1596,7 @@ export function FolderNestedPagesList({
         sensors={sensors}
       >
         <FolderTreeInteractionsContext.Provider value={{ shouldSuppressClick }}>
-          <div className="rounded-3xl border bg-background/80 p-2 shadow-xs">
+          <div className="overflow-x-hidden rounded-3xl border bg-background/80 p-2 shadow-xs">
             <FolderTreeLevel
               activeDragId={activeDragId}
               emptyStateVariant="root"
@@ -1594,6 +1609,13 @@ export function FolderNestedPagesList({
             />
           </div>
         </FolderTreeInteractionsContext.Provider>
+        <DragOverlay dropAnimation={null}>
+          {activeDragLabel ? (
+            <div className="flex h-7 items-center gap-2 rounded-md bg-sidebar-accent px-2 text-sm shadow-md ring-1 ring-sidebar-border">
+              {activeDragLabel}
+            </div>
+          ) : null}
+        </DragOverlay>
       </DndContext>
     </section>
   );

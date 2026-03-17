@@ -47,7 +47,7 @@ export default function AppSidebar() {
         </Suspense>
       </SidebarHeader>
       <Separator />
-      <SidebarContent className="flex flex-1 flex-col">
+      <SidebarContent className="flex flex-1 flex-col overflow-x-clip">
         <SidebarGroup className="flex min-h-0 flex-1 flex-col gap-y-1">
           <SidebarGroupLabel>Navigation</SidebarGroupLabel>
           <AppSidebarNavigation items={navigationItems} />

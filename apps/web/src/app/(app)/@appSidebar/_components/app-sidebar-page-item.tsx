@@ -26,10 +26,6 @@ import {
   DeletePageDialog,
   DeletePageDialogTrigger,
 } from "./delete-page-button";
-import {
-  SIDEBAR_TREE_ROW_INTERACTIVE_CLASSNAME,
-  SIDEBAR_TREE_ROW_WRAPPER_CLASSNAME,
-} from "./app-sidebar-tree-row";
 
 type AppSidebarPageItemProps = {
   page: Page;
@@ -74,7 +70,7 @@ export function AppSidebarPageItem({
         className,
       )}
     >
-      <div className={SIDEBAR_TREE_ROW_WRAPPER_CLASSNAME}>
+      <div className="relative py-1">
         {dropOverlay}
         <div className="relative z-10">
           <DeletePageDialog
@@ -105,7 +101,7 @@ export function AppSidebarPageItem({
                 <SidebarMenuSubButton
                   asChild
                   isActive={isActive}
-                  className={`${SIDEBAR_TREE_ROW_INTERACTIVE_CLASSNAME} group-data-[state=open]/swipe-content:rounded-r-none`}
+                  className="min-h-7 rounded-md group-data-[state=open]/swipe-content:rounded-r-none"
                 >
                   <Link
                     href={`/pages/${page?.id}`}
@@ -120,7 +116,7 @@ export function AppSidebarPageItem({
             <SidebarMenuSubButton
               asChild
               isActive={isActive}
-              className={SIDEBAR_TREE_ROW_INTERACTIVE_CLASSNAME}
+              className="min-h-7 rounded-md"
             >
               <div
                 {...dragActivatorProps}

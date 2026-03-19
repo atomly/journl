@@ -6,10 +6,8 @@ import {
   type DragCancelEvent,
   type DragEndEvent,
   type DragOverEvent,
-  DragOverlay,
   type DragStartEvent,
   MouseSensor,
-  pointerWithin,
   TouchSensor,
   useDndContext,
   useDraggable,
@@ -62,6 +60,15 @@ import {
   snapshotQueries,
   updateNode,
 } from "~/trpc/cache/tree-cache";
+import {
+  TREE_INSIDE_DROP_ZONE_CLASSNAME,
+  TREE_REORDER_AFTER_BAND_CLASSNAME,
+  TREE_REORDER_AFTER_LINE_CLASSNAME,
+  TREE_REORDER_BEFORE_BAND_CLASSNAME,
+  TREE_REORDER_BEFORE_LINE_CLASSNAME,
+  TreeDragOverlay,
+  treeCollisionDetection,
+} from "~/lib/tree-dnd";
 import { getInfiniteSidebarTreeQueryOptions } from "~/trpc/options/sidebar-tree-query-options";
 import { useTRPC } from "~/trpc/react";
 import { AppSidebarPageItem } from "./app-sidebar-page-item";
@@ -311,13 +318,13 @@ function SidebarTreeInsertDropBand({
 }
 
 function SidebarTreeInsertDropBands({
-  afterBandClassName = "bottom-0 h-1/2",
-  afterLineClassName = "bottom-0 translate-y-1/2",
+  afterBandClassName = TREE_REORDER_AFTER_BAND_CLASSNAME,
+  afterLineClassName = TREE_REORDER_AFTER_LINE_CLASSNAME,
   afterSiblingDropId,
   activeDragId,
   anchorEdgeId,
-  beforeBandClassName = "top-0 h-1/2",
-  beforeLineClassName = "top-0 -translate-y-1/2",
+  beforeBandClassName = TREE_REORDER_BEFORE_BAND_CLASSNAME,
+  beforeLineClassName = TREE_REORDER_BEFORE_LINE_CLASSNAME,
   isDnDEnabled,
   parentNodeId,
   showAfter = true,
@@ -414,7 +421,6 @@ function DraggablePageRow({
   nextEdgeId,
   page,
   parentNodeId,
-  showBeforeDropBand = true,
   showBeforeLine = true,
 }: {
   activeDragId: string | null;
@@ -422,7 +428,6 @@ function DraggablePageRow({
   nextEdgeId?: string;
   page: TreePage;
   parentNodeId: string | null;
-  showBeforeDropBand?: boolean;
   showBeforeLine?: boolean;
 }) {
   const { shouldSuppressClick } = useSidebarTreeInteractions();
@@ -464,7 +469,6 @@ function DraggablePageRow({
           anchorEdgeId={page.edge_id}
           isDnDEnabled={isDnDEnabled}
           parentNodeId={parentNodeId}
-          showBefore={showBeforeDropBand}
           showBeforeLine={showBeforeLine}
         />
       }
@@ -565,7 +569,6 @@ function DraggableFolderRow({
   openFolders,
   parentNodeId,
   setFolderOpen,
-  showBeforeDropBand = true,
   showBeforeLine = true,
 }: {
   activeDragId: string | null;
@@ -577,7 +580,6 @@ function DraggableFolderRow({
   openFolders: Record<string, boolean>;
   parentNodeId: string | null;
   setFolderOpen: (folderNodeId: string, open: boolean) => void;
-  showBeforeDropBand?: boolean;
   showBeforeLine?: boolean;
 }) {
   const { shouldSuppressClick } = useSidebarTreeInteractions();
@@ -653,7 +655,7 @@ function DraggableFolderRow({
           DEFAULT_TREE_ITEM_CLASSNAME,
         )}
       >
-        <div className="relative py-1.5">
+        <div className="relative py-1">
           <SidebarTreeInsertDropBands
             activeDragId={activeDragId}
             afterSiblingDropId={afterSiblingDropId}
@@ -661,14 +663,12 @@ function DraggableFolderRow({
             isDnDEnabled={isDnDEnabled}
             parentNodeId={parentNodeId}
             showAfter={!treeData.shouldRenderNestedContent}
-            showBefore={showBeforeDropBand}
             showBeforeLine={showBeforeLine}
           />
           <div
             ref={setInsideDropNodeRef}
             className={cn(
-              "absolute inset-x-0 z-20",
-              "top-1.5 bottom-1.5",
+              TREE_INSIDE_DROP_ZONE_CLASSNAME,
               isDragActive ? "pointer-events-auto" : "pointer-events-none",
             )}
           />
@@ -680,8 +680,9 @@ function DraggableFolderRow({
                 }
               : undefined)}
             className={cn(
-              "group/folder-navigation relative z-10 flex min-w-0 items-center gap-0.5 rounded-sm",
-              isOverInside && isDragActive && "bg-primary/10",
+              "min-h-7 rounded-md",
+              "group/folder-navigation relative z-10 flex min-w-0 items-center gap-0.5",
+              isOverInside && isDragActive && "bg-primary/20 ring-1 ring-primary/30",
             )}
           >
             <SidebarMenuSubButton
@@ -767,12 +768,12 @@ function DraggableFolderRow({
                 />
               </SidebarMenuSub>
             </CollapsibleContent>
-            <div className="relative h-1.5">
+            <div className="relative h-1">
               <SidebarTreeInsertDropBands
                 activeDragId={activeDragId}
                 afterSiblingDropId={afterSiblingDropId}
                 anchorEdgeId={folder.edge_id}
-                afterBandClassName="top-0 h-1.5"
+                afterBandClassName="top-0 h-1"
                 afterLineClassName="top-0"
                 isDnDEnabled={isDnDEnabled}
                 parentNodeId={parentNodeId}
@@ -1308,7 +1309,7 @@ export const AppSidebarPages = ({
           </div>
         ) : null}
         <DndContext
-          collisionDetection={pointerWithin}
+          collisionDetection={treeCollisionDetection}
           onDragCancel={handleDragCancel}
           onDragEnd={handleDragEnd}
           onDragOver={handleDragOver}
@@ -1329,13 +1330,7 @@ export const AppSidebarPages = ({
               />
             </SidebarMenuSub>
           </SidebarTreeInteractionsContext.Provider>
-          <DragOverlay dropAnimation={null}>
-            {activeDragLabel ? (
-              <div className="flex h-7 items-center gap-2 rounded-md bg-sidebar-accent px-2 text-sm shadow-md ring-1 ring-sidebar-border">
-                {activeDragLabel}
-              </div>
-            ) : null}
-          </DragOverlay>
+          <TreeDragOverlay label={activeDragLabel} />
         </DndContext>
       </CollapsibleContent>
     </Collapsible>

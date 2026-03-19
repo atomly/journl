@@ -15,15 +15,16 @@ export function AppSidebarPageItemSkeleton({
 }: AppSidebarPageItemSkeletonProps) {
   return (
     <SidebarMenuSubItem className={className}>
-      <SidebarMenuSubButton asChild>
-        <div
-          className={
-            "group/page-item flex items-center justify-between p-0! hover:bg-transparent"
-          }
+      <div className="relative py-1">
+        <SidebarMenuSubButton
+          asChild
+          className="min-h-7 rounded-md"
         >
-          <Skeleton className="h-5 w-full rounded-sm" />
-        </div>
-      </SidebarMenuSubButton>
+          <div className="group/page-item flex items-center hover:bg-transparent">
+            <Skeleton className="h-7 w-full rounded-md" />
+          </div>
+        </SidebarMenuSubButton>
+      </div>
     </SidebarMenuSubItem>
   );
 }

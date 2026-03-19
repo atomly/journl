@@ -70,7 +70,7 @@ export function AppSidebarPageItem({
         className,
       )}
     >
-      <div className="relative py-1.5">
+      <div className="relative py-1">
         {dropOverlay}
         <div className="relative z-10">
           <DeletePageDialog
@@ -101,7 +101,7 @@ export function AppSidebarPageItem({
                 <SidebarMenuSubButton
                   asChild
                   isActive={isActive}
-                  className="group-data-[state=open]/swipe-content:rounded-r-none"
+                  className="min-h-7 rounded-md group-data-[state=open]/swipe-content:rounded-r-none"
                 >
                   <Link
                     href={`/pages/${page?.id}`}
@@ -113,7 +113,11 @@ export function AppSidebarPageItem({
                 </SidebarMenuSubButton>
               </SwipeActionContent>
             </SwipeAction>
-            <SidebarMenuSubButton asChild isActive={isActive}>
+            <SidebarMenuSubButton
+              asChild
+              isActive={isActive}
+              className="min-h-7 rounded-md"
+            >
               <div
                 {...dragActivatorProps}
                 className="group/page-item hidden items-center md:flex"

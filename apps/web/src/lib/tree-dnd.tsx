@@ -1,8 +1,9 @@
 import {
-  pointerWithin,
-  rectIntersection,
   type Collision,
   type CollisionDetection,
+  DragOverlay,
+  pointerWithin,
+  rectIntersection,
 } from "@dnd-kit/core";
 
 export const TREE_REORDER_BEFORE_BAND_CLASSNAME = "top-0 h-2";
@@ -65,3 +66,15 @@ export function createTreeCollisionDetection({
 }
 
 export const treeCollisionDetection = createTreeCollisionDetection();
+
+export function TreeDragOverlay({ label }: { label: string | null }) {
+  return (
+    <DragOverlay dropAnimation={null}>
+      {label ? (
+        <div className="flex h-7 items-center gap-2 rounded-md bg-sidebar-accent px-2 text-sm shadow-md ring-1 ring-sidebar-border">
+          {label}
+        </div>
+      ) : null}
+    </DragOverlay>
+  );
+}

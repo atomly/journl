@@ -53,7 +53,6 @@ import {
 import { Input } from "~/components/ui/input";
 import { useSidebar } from "~/components/ui/sidebar";
 import { Skeleton } from "~/components/ui/skeleton";
-import { TreeDragOverlay } from "~/components/tree-drag-overlay";
 import { cn } from "~/lib/cn";
 import {
   TREE_INSIDE_DROP_ZONE_CLASSNAME,
@@ -61,6 +60,7 @@ import {
   TREE_REORDER_AFTER_LINE_CLASSNAME,
   TREE_REORDER_BEFORE_BAND_CLASSNAME,
   TREE_REORDER_BEFORE_LINE_CLASSNAME,
+  TreeDragOverlay,
   treeCollisionDetection,
 } from "~/lib/tree-dnd";
 import {

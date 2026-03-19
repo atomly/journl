@@ -52,7 +52,6 @@ import {
   SidebarMenuSubItem,
   useSidebar,
 } from "~/components/ui/sidebar";
-import { TreeDragOverlay } from "~/components/tree-drag-overlay";
 import { cn } from "~/lib/cn";
 import {
   moveNode as moveTreeNode,
@@ -67,6 +66,7 @@ import {
   TREE_REORDER_AFTER_LINE_CLASSNAME,
   TREE_REORDER_BEFORE_BAND_CLASSNAME,
   TREE_REORDER_BEFORE_LINE_CLASSNAME,
+  TreeDragOverlay,
   treeCollisionDetection,
 } from "~/lib/tree-dnd";
 import { getInfiniteSidebarTreeQueryOptions } from "~/trpc/options/sidebar-tree-query-options";

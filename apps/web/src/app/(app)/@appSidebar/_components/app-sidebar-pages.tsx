@@ -73,6 +73,10 @@ import { getInfiniteSidebarTreeQueryOptions } from "~/trpc/options/sidebar-tree-
 import { useTRPC } from "~/trpc/react";
 import { AppSidebarPageItem } from "./app-sidebar-page-item";
 import { AppSidebarPageItemSkeleton } from "./app-sidebar-page-item-skeleton";
+import {
+  SIDEBAR_TREE_ROW_INTERACTIVE_CLASSNAME,
+  SIDEBAR_TREE_ROW_WRAPPER_CLASSNAME,
+} from "./app-sidebar-tree-row";
 import { AppSidebarTreeActions } from "./app-sidebar-tree-actions";
 
 type AppSidebarPagesProps = {
@@ -655,7 +659,7 @@ function DraggableFolderRow({
           DEFAULT_TREE_ITEM_CLASSNAME,
         )}
       >
-        <div className="relative py-1">
+        <div className={SIDEBAR_TREE_ROW_WRAPPER_CLASSNAME}>
           <SidebarTreeInsertDropBands
             activeDragId={activeDragId}
             afterSiblingDropId={afterSiblingDropId}
@@ -680,7 +684,8 @@ function DraggableFolderRow({
                 }
               : undefined)}
             className={cn(
-              "group/folder-navigation relative z-10 flex min-w-0 items-center gap-0.5 rounded-sm",
+              SIDEBAR_TREE_ROW_INTERACTIVE_CLASSNAME,
+              "group/folder-navigation relative z-10 flex min-w-0 items-center gap-0.5",
               isOverInside && isDragActive && "bg-primary/20 ring-1 ring-primary/30",
             )}
           >

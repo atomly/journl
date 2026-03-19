@@ -5,6 +5,11 @@ import {
   SidebarMenuSubItem,
 } from "~/components/ui/sidebar";
 import { Skeleton } from "~/components/ui/skeleton";
+import {
+  SIDEBAR_TREE_ROW_INTERACTIVE_CLASSNAME,
+  SIDEBAR_TREE_ROW_SKELETON_CLASSNAME,
+  SIDEBAR_TREE_ROW_WRAPPER_CLASSNAME,
+} from "./app-sidebar-tree-row";
 
 type AppSidebarPageItemSkeletonProps = {
   className?: string;
@@ -15,15 +20,16 @@ export function AppSidebarPageItemSkeleton({
 }: AppSidebarPageItemSkeletonProps) {
   return (
     <SidebarMenuSubItem className={className}>
-      <SidebarMenuSubButton asChild>
-        <div
-          className={
-            "group/page-item flex items-center justify-between p-0! hover:bg-transparent"
-          }
+      <div className={SIDEBAR_TREE_ROW_WRAPPER_CLASSNAME}>
+        <SidebarMenuSubButton
+          asChild
+          className={SIDEBAR_TREE_ROW_INTERACTIVE_CLASSNAME}
         >
-          <Skeleton className="h-5 w-full rounded-sm" />
-        </div>
-      </SidebarMenuSubButton>
+          <div className="group/page-item flex items-center hover:bg-transparent">
+            <Skeleton className={SIDEBAR_TREE_ROW_SKELETON_CLASSNAME} />
+          </div>
+        </SidebarMenuSubButton>
+      </div>
     </SidebarMenuSubItem>
   );
 }

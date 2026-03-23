@@ -16,11 +16,11 @@
   },
   "peerDependencies": {
     "better-auth": "1.4.18",
-    "better-call": "1.1.8",
+    "better-call": "2.0.2",
     "next": "~16.1.6",
     "react": "~19.2.4",
     "react-dom": "~19.2.4",
-    "stripe": "~18.5.0"
+    "stripe": "~20.4.1"
   },
   "dependencies": {
     "@acme/db": "workspace:*",

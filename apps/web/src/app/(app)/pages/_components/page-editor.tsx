@@ -100,9 +100,6 @@ export function PageEditor({
 
   useAppEventHandler(
     ({ payload }) => {
-      console.log("[PageEditor] useAppEventHandler", {
-        payload,
-      });
       if (payload.tool) {
         void payload.tool.chat.addToolOutput({
           output: `Opened new page: ${payload.title}`,

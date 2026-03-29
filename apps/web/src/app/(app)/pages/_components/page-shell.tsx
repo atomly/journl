@@ -20,11 +20,7 @@ export async function PageShell({
 
   // Listen for page created events and drain them if they match the current page ID.
   useEffect(() => {
-    const events = eventEmitter.drain(PageCreatedEvent.eventType, page.id);
-    console.log("[PageShell] drain", {
-      events,
-      page: page.id,
-    });
+    const _events = eventEmitter.drain(PageCreatedEvent.eventType, page.id);
   }, [eventEmitter, page.id]);
 
   return (

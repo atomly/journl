@@ -1,11 +1,13 @@
 import { withAuth } from "~/app/_guards/page-guards";
-import { SidebarInset, SidebarProvider } from "~/components/ui/sidebar";
+import { SidebarInset } from "~/components/ui/sidebar";
 import { Toaster } from "~/components/ui/toast";
 import { getAppPreferences } from "~/preferences/get-preferences";
-import { AppLayoutProvider } from "../_components/app-layout-provider";
-import ChatSidebarTrigger from "./@chatSidebar/_components/chat-sidebar-trigger";
 import "./styles.css";
+import { AppLayoutProvider } from "../_components/app-layout-provider";
 import { AppProviders } from "../_components/app-providers";
+import { AppSidebarProvider } from "./@appSidebar/_components/app-sidebar-provider";
+import { ChatSidebarProvider } from "./@chatSidebar/_components/chat-sidebar-provider";
+import ChatSidebarTrigger from "./@chatSidebar/_components/chat-sidebar-trigger";
 import { AppContainer } from "./_components/app-container";
 import { AppProgressBar } from "./_components/app-progress-bar";
 
@@ -32,9 +34,9 @@ async function AppLayout({
   return (
     <AppProviders initialPreferences={preferences}>
       <AppProgressBar className="fixed top-0 left-0 z-7000 h-1 w-full" />
-      <SidebarProvider className="flex min-h-screen-safe flex-col">
+      <ChatSidebarProvider className="flex min-h-screen-safe flex-col">
         <div className="flex flex-1">
-          <SidebarProvider>
+          <AppSidebarProvider>
             {appSidebar}
             <SidebarInset className="flex max-h-dvh min-w-sm flex-col gap-y-2">
               <AppLayoutProvider>
@@ -45,11 +47,11 @@ async function AppLayout({
                 <div className="mt-auto">{chatDrawer}</div>
               </AppLayoutProvider>
             </SidebarInset>
-          </SidebarProvider>
+          </AppSidebarProvider>
           {chatSidebar}
           <ChatSidebarTrigger className="fixed right-2 bottom-2 z-4500 hidden md:flex" />
         </div>
-      </SidebarProvider>
+      </ChatSidebarProvider>
       {subscriptionModal}
       <Toaster />
     </AppProviders>

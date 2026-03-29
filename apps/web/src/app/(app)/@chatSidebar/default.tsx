@@ -14,10 +14,15 @@ import { ThreadMessages } from "~/components/assistant-ui/thread-messages";
 import { ComposerSources } from "~/components/assistant-ui/thread-sources";
 import { ThreadWelcome } from "~/components/assistant-ui/thread-welcome";
 import { Sidebar, SidebarContent } from "~/components/ui/sidebar";
+import {
+  CHAT_SIDEBAR_WIDTH_REM_DEFAULT,
+  CHAT_SIDEBAR_WIDTH_REM_MAX,
+  CHAT_SIDEBAR_WIDTH_REM_MIN,
+} from "~/preferences/app-preferences";
 
-const CHAT_SIDEBAR_DEFAULT_WIDTH = "20rem";
-const CHAT_SIDEBAR_MIN_WIDTH = "20rem";
-const CHAT_SIDEBAR_WIDTH_MAX = "50rem";
+const CHAT_SIDEBAR_DEFAULT_WIDTH = `${CHAT_SIDEBAR_WIDTH_REM_DEFAULT}rem`;
+const CHAT_SIDEBAR_MIN_WIDTH = `${CHAT_SIDEBAR_WIDTH_REM_MIN}rem`;
+const CHAT_SIDEBAR_WIDTH_MAX = `${CHAT_SIDEBAR_WIDTH_REM_MAX}rem`;
 const CHAT_THREAD_MIN_WIDTH = "18rem"; // Leave 2rem for the padding.
 const CHAT_THREAD_MAX_WIDTH = "50rem";
 const CHAT_SIDEBAR_REASONING_CONTENT_ID =

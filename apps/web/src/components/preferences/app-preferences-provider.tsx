@@ -9,6 +9,20 @@ import {
 } from "~/preferences/app-preferences";
 import { setAppPreferencesAction } from "./app-preferences.actions";
 
+function isAbortOrNetworkError(error: unknown) {
+  if (error instanceof DOMException && error.name === "AbortError") {
+    return true;
+  }
+
+  if (error instanceof TypeError) {
+    return /(networkerror|failed to fetch|load failed|fetch resource)/i.test(
+      error.message,
+    );
+  }
+
+  return false;
+}
+
 type AppPreferencesContextValue = {
   preferences: AppPreferences;
   setPreferences: (
@@ -35,8 +49,16 @@ export function AppPreferencesProvider({
     [initialPreferences],
   );
   const [preferences, savePreferences] = useOptimisticActionState(
-    async (_current: AppPreferences, next: AppPreferences) =>
-      setAppPreferencesAction(next),
+    async (current: AppPreferences, next: AppPreferences) => {
+      try {
+        return await setAppPreferencesAction(next);
+      } catch (error) {
+        if (!isAbortOrNetworkError(error)) {
+          console.error("Failed to persist app preferences.", error);
+        }
+        return current;
+      }
+    },
     initialState,
     (
       current: AppPreferences,

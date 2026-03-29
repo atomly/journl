@@ -8,9 +8,6 @@ const JOURNL_MEMORY_LAST_MESSAGES = 30;
 const JOURNL_OBSERVATIONAL_MEMORY_SCOPE = "resource";
 const JOURNL_OBSERVATIONAL_TOKENS = 30000;
 const JOURNL_REFLECTION_TOKENS = 40000;
-const JOURNL_SEMANTIC_SEARCH_RANGE = 2;
-const JOURNL_SEMANTIC_SEARCH_SCOPE = "thread";
-const JOURNL_SEMANTIC_TOP_K = 3;
 const JOURNL_WORKING_MEMORY_SCOPE = "resource";
 const JOURNL_WORKING_MEMORY_TEMPLATE = `## Preferences
 
@@ -46,11 +43,6 @@ export const journlMemory = new Memory({
       // let message history borrow from observation budget,
       // disabling to free context window space for the messaging history, etc.
       shareTokenBudget: false,
-    },
-    semanticRecall: {
-      messageRange: JOURNL_SEMANTIC_SEARCH_RANGE,
-      scope: JOURNL_SEMANTIC_SEARCH_SCOPE,
-      topK: JOURNL_SEMANTIC_TOP_K,
     },
     workingMemory: {
       enabled: true,

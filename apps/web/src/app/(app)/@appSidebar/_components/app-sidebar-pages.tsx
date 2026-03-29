@@ -54,13 +54,6 @@ import {
 } from "~/components/ui/sidebar";
 import { cn } from "~/lib/cn";
 import {
-  moveNode as moveTreeNode,
-  type QuerySnapshot,
-  restoreQueries,
-  snapshotQueries,
-  updateNode,
-} from "~/trpc/cache/tree-cache";
-import {
   TREE_INSIDE_DROP_ZONE_CLASSNAME,
   TREE_REORDER_AFTER_BAND_CLASSNAME,
   TREE_REORDER_AFTER_LINE_CLASSNAME,
@@ -69,6 +62,13 @@ import {
   TreeDragOverlay,
   treeCollisionDetection,
 } from "~/lib/tree-dnd";
+import {
+  moveNode as moveTreeNode,
+  type QuerySnapshot,
+  restoreQueries,
+  snapshotQueries,
+  updateNode,
+} from "~/trpc/cache/tree-cache";
 import { getInfiniteSidebarTreeQueryOptions } from "~/trpc/options/sidebar-tree-query-options";
 import { useTRPC } from "~/trpc/react";
 import { AppSidebarPageItem } from "./app-sidebar-page-item";
@@ -682,7 +682,9 @@ function DraggableFolderRow({
             className={cn(
               "min-h-7 rounded-md",
               "group/folder-navigation relative z-10 flex min-w-0 items-center gap-0.5",
-              isOverInside && isDragActive && "bg-primary/20 ring-1 ring-primary/30",
+              isOverInside &&
+                isDragActive &&
+                "bg-primary/20 ring-1 ring-primary/30",
             )}
           >
             <SidebarMenuSubButton
@@ -1319,7 +1321,7 @@ export const AppSidebarPages = ({
           <SidebarTreeInteractionsContext.Provider
             value={{ shouldSuppressClick }}
           >
-            <SidebarMenuSub className="mx-0 mr-0 flex-1 gap-0 overflow-y-scroll overflow-x-clip border-none px-0">
+            <SidebarMenuSub className="mx-0 mr-0 flex-1 gap-0 overflow-x-clip overflow-y-scroll border-none px-0">
               <SidebarTree
                 activeDragId={activeDragId}
                 isDnDEnabled={isDnDEnabled}

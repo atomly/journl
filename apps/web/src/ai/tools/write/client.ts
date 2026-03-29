@@ -21,6 +21,12 @@ export function useWriteTool() {
     execute: async (toolCall, chat) => {
       let cleanUpBeforeChange: CallableFunction | undefined;
 
+      if (env.NODE_ENV === "development") {
+        console.debug("[useWriteTool]", {
+          input: toolCall.input,
+        });
+      }
+
       try {
         const editor = getEditor(toolCall.input.targetEditor)(getEditors);
         const aiExtension = getAIExtension(editor);

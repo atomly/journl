@@ -12,7 +12,7 @@ export const zWriteInput = z.object({
   reasoningEffort: z
     .optional(zOpenAIReasoningEffort)
     .describe(
-      "Optional reasoning effort for this edit. Use `low` for normal edits, `medium` for multi-section rewrites, and `high` for the most complex asks. Defaults to `low` if omitted.",
+      "Optional reasoning effort for this edit. Use `minimal` for normal edits, `medium` for multi-section rewrites, and `high` for the most complex asks. Defaults to `minimal` if omitted.",
     ),
 });
 

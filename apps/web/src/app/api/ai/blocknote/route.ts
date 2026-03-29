@@ -26,27 +26,22 @@ export const maxDuration = 300; // Allow streaming responses up to 300 seconds
 
 const MAX_THREAD_CONTEXT_MESSAGES = 24;
 
-const zMessages = z.custom<Parameters<typeof injectDocumentStateMessages>[0]>(
-  (value) => Array.isArray(value),
-  "messages must be an array",
-);
-
-const zReasoningEffort = zWriteInput.def.shape.reasoningEffort.default("low");
-
-const zToolDefinitions = z.custom<
-  Parameters<typeof toolDefinitionsToToolSet>[0]
->((value) => {
-  if (!isRecord(value)) {
-    return false;
-  }
-
-  return "applyDocumentOperations" in value;
-}, "toolDefinitions must include applyDocumentOperations");
-
 const zBlockNoteRequest = z.object({
-  messages: zMessages,
-  reasoningEffort: zReasoningEffort,
-  toolDefinitions: zToolDefinitions,
+  messages: z.custom<Parameters<typeof injectDocumentStateMessages>[0]>(
+    (value) => Array.isArray(value),
+    "messages must be an array",
+  ),
+  reasoningEffort: zWriteInput.def.shape.reasoningEffort.default("minimal"),
+  toolDefinitions: z.custom<Parameters<typeof toolDefinitionsToToolSet>[0]>(
+    (value) => {
+      if (!isRecord(value)) {
+        return false;
+      }
+
+      return "applyDocumentOperations" in value;
+    },
+    "toolDefinitions must include applyDocumentOperations",
+  ),
 });
 
 export type BlockNoteRequest = z.infer<typeof zBlockNoteRequest>;

@@ -4,9 +4,11 @@ import { AppEvent, type AppEventPayload } from "./app-event";
 export interface PageCreatedPayload extends AppEventPayload {
   id: string;
   title: string;
-  toolName: string;
-  toolCallId: string;
-  chat: Chat<UIMessage>;
+  tool?: {
+    toolName: string;
+    toolCallId: string;
+    chat: Chat<UIMessage>;
+  };
 }
 
 export class PageCreatedEvent extends AppEvent<PageCreatedPayload> {

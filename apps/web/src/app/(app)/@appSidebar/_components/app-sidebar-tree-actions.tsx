@@ -5,6 +5,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { FilePlus2, FolderPlus, Plus, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useRef, useState, useTransition } from "react";
+import { useAppEventEmitter } from "~/components/events/app-event-context";
 import { Button } from "~/components/ui/button";
 import {
   DropdownMenu,
@@ -13,6 +14,7 @@ import {
   DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
 import { useSidebar } from "~/components/ui/sidebar";
+import { PageCreatedEvent } from "~/events/page-created-event";
 import { cn } from "~/lib/cn";
 import {
   findNodeInQueries,
@@ -65,6 +67,7 @@ export function AppSidebarTreeActions({
   const createPageContextRef = useRef<CreateMutationContext | null>(null);
   const { isMobile, setOpenMobile } = useSidebar();
   const treeQueryFilter = trpc.tree.getChildrenPaginated.infiniteQueryFilter();
+  const eventEmitter = useAppEventEmitter();
 
   const getContainerQueryKey = (targetParentNodeId: string | null) => {
     return trpc.tree.getChildrenPaginated.infiniteQueryKey(
@@ -260,6 +263,13 @@ export function AppSidebarTreeActions({
               ),
             });
           }
+
+          eventEmitter.buffer(
+            new PageCreatedEvent({
+              id: newPage.page.id,
+              title: newPage.page.title,
+            }),
+          );
         }
         createPageContextRef.current = null;
       },

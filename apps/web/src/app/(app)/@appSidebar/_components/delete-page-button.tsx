@@ -154,6 +154,15 @@ export function DeletePageDialog({
           treeSnapshots,
         };
       },
+      onSuccess: () => {
+        deletePageContextRef.current = null;
+
+        if (pathname === `/pages/${page.id}`) {
+          router.push("/journal");
+        }
+
+        setDialogOpen(false);
+      },
     }),
   );
 
@@ -178,22 +187,9 @@ export function DeletePageDialog({
 
   const confirmDelete = useCallback(() => {
     startTransition(() => {
-      deletePage(
-        { id: page.document_id },
-        {
-          onSuccess: () => {
-            deletePageContextRef.current = null;
-
-            if (pathname === `/pages/${page.id}`) {
-              router.push("/journal");
-            }
-
-            setDialogOpen(false);
-          },
-        },
-      );
+      deletePage({ id: page.document_id });
     });
-  }, [deletePage, page.document_id, page.id, pathname, router, setDialogOpen]);
+  }, [deletePage, page.document_id]);
 
   return (
     <Dialog open={isDialogOpen} onOpenChange={setDialogOpen}>

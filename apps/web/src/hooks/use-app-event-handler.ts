@@ -17,11 +17,6 @@ export function useAppEventHandler<
   const eventType: string = EventClass.eventType;
 
   useEffect(() => {
-    const bufferedEvent = eventEmitter.flush(eventType, id);
-    if (bufferedEvent && bufferedEvent instanceof EventClass) {
-      handler(bufferedEvent);
-    }
-
     const handleLiveEvent = (event: AppEvent<AppEventPayload>): void => {
       if (
         event.type === eventType &&

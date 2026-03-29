@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { api } from "~/trpc/server";
 import { DynamicPageEditor } from "../_components/page-editor.dynamic";
+import { PageShell } from "../_components/page-shell";
 import { PageSkeleton } from "../_components/page-skeleton";
 import { PageTitleTextarea } from "../_components/page-title-textarea";
 
@@ -19,8 +20,19 @@ export default async function Page({
   }
 
   return (
-    <div className="mx-auto flex min-h-full max-w-5xl flex-col gap-4 pt-8 pb-52">
-      <Suspense fallback={<PageSkeleton />}>
+    <Suspense
+      fallback={
+        <div className="mx-auto flex min-h-full max-w-5xl flex-col gap-4 pt-8 pb-52">
+          <PageSkeleton />
+        </div>
+      }
+    >
+      <PageShell
+        page={{
+          id,
+        }}
+        className="mx-auto flex min-h-full max-w-5xl flex-col gap-4 pt-8 pb-52"
+      >
         <DynamicPageEditor
           page={{
             document_id: page.document_id,
@@ -36,10 +48,10 @@ export default async function Page({
               parent_node_id: page.parent_node_id,
               title: page.title,
             }}
-            className="px-8 py-0"
+            className="px-8 py-2"
           />
         </DynamicPageEditor>
-      </Suspense>
-    </div>
+      </PageShell>
+    </Suspense>
   );
 }

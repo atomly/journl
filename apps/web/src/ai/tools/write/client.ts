@@ -46,7 +46,7 @@ export function useWriteTool() {
         await aiExtension.invokeAI({
           chatRequestOptions: {
             body: {
-              reasoningEffort: toolCall.input.reasoningEffort ?? "low",
+              reasoningEffort: toolCall.input.reasoningEffort ?? "minimal",
             } satisfies Pick<BlockNoteRequest, "reasoningEffort">,
           },
           deleteEmptyCursorBlock: false,

@@ -23,21 +23,35 @@ export class AppEventEmitter<T extends AppEventPayload = AppEventPayload> {
   }
 
   /**
-   * Smart buffering: emits immediately if listeners exist, otherwise buffers for later.
+   * Buffers for later consumption.
    * Use this to handle race conditions where listeners might not be registered yet.
    */
   buffer<E extends AppEvent<T>>(event: E): void {
-    const eventListeners = this.eventListeners.get(event.eventType) || [];
+    this.eventBuffer.store(event);
+  }
 
-    if (eventListeners.length > 0) {
-      // If there are active listeners, emit immediately
-      eventListeners.forEach((listener) => {
-        listener(event);
-      });
-    } else {
-      // If no listeners, buffer the event for later consumption
-      this.eventBuffer.store(event);
+  /**
+   * Drains a buffered event by delivering it to all current listeners,
+   * then consuming it from the buffer.
+   *
+   * This is useful for orchestrated "sticky event" delivery where
+   * buffered events should only be played once, but fan out to all
+   * listeners that are currently mounted.
+   *
+   * Returns the drained event if found, otherwise null.
+   */
+  drain<E extends AppEvent<T>>(eventType: string, id: string): E | null {
+    const bufferedEvent = this.eventBuffer.flush<E>(eventType, id);
+    if (!bufferedEvent) {
+      return null;
     }
+
+    const eventListeners = this.eventListeners.get(eventType) || [];
+    eventListeners.forEach((listener) => {
+      listener(bufferedEvent);
+    });
+
+    return bufferedEvent;
   }
 
   /**

@@ -2,9 +2,11 @@
 
 import type { Page } from "@acme/db/schema";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useDebouncedCallback } from "use-debounce";
 import { ExpandingTextarea } from "~/components/ui/expanding-textarea";
+import { PageCreatedEvent } from "~/events/page-created-event";
+import { useAppEventHandler } from "~/hooks/use-app-event-handler";
 import { cn } from "~/lib/cn";
 import {
   updateNode,
@@ -32,9 +34,9 @@ export function PageTitleTextarea({
   debounceTime = DEFAULT_DEBOUNCE_TIME,
   onTitleChange,
   onKeyDown,
-  ref,
   ...rest
 }: PageEditorTitleProps) {
+  const ref = useRef<HTMLTextAreaElement | null>(null);
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const { mutate: updatePageTitle } = useMutation(
@@ -111,6 +113,15 @@ export function PageTitleTextarea({
   function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
     onKeyDown?.(e);
   }
+
+  useAppEventHandler(
+    ({ payload }) => {
+      if (!payload.title && ref.current) {
+        ref.current.focus();
+      }
+    },
+    [PageCreatedEvent, page.id],
+  );
 
   return (
     <ExpandingTextarea

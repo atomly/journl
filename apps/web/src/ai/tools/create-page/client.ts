@@ -52,11 +52,13 @@ export function useCreatePageTool() {
 
             eventEmitter.buffer(
               new PageCreatedEvent({
-                chat,
                 id: newPage.page.id,
                 title: toolCall.input.title,
-                toolCallId: toolCall.toolCallId,
-                toolName: toolCall.toolName,
+                tool: {
+                  chat,
+                  toolCallId: toolCall.toolCallId,
+                  toolName: toolCall.toolName,
+                },
               }),
             );
 

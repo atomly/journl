@@ -20,6 +20,9 @@ export class AppEventBuffer<T extends AppEventPayload = AppEventPayload> {
   /**
    * Removes and optionally returns a buffered event if it exists.
    * Automatically cleans up empty event type maps.
+   *
+   * Note: this only operates on buffer storage. It does not notify
+   * listeners. Use AppEventEmitter.drain() when you need fan-out delivery.
    */
   flush<E extends AppEvent<T>>(eventType: string, id: string): E | null {
     const events = this.buffer.get(eventType);

@@ -100,11 +100,19 @@ export function PageEditor({
 
   useAppEventHandler(
     ({ payload }) => {
-      void payload.chat.addToolOutput({
-        output: `Opened new page: ${payload.title}`,
-        tool: payload.toolName,
-        toolCallId: payload.toolCallId,
+      console.log("[PageEditor] useAppEventHandler", {
+        payload,
       });
+      if (payload.tool) {
+        void payload.tool.chat.addToolOutput({
+          output: `Opened new page: ${payload.title}`,
+          tool: payload.tool.toolName,
+          toolCallId: payload.tool.toolCallId,
+        });
+      }
+      if (payload.title) {
+        editor.focus();
+      }
     },
     [PageCreatedEvent, page.id],
   );

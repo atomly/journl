@@ -1,7 +1,9 @@
 import { notFound } from "next/navigation";
+import { Suspense } from "react";
 import { api } from "~/trpc/server";
 import { DynamicPageEditor } from "../_components/page-editor.dynamic";
 import { PageShell } from "../_components/page-shell";
+import { PageSkeleton } from "../_components/page-skeleton";
 import { PageTitleTextarea } from "../_components/page-title-textarea";
 
 export default async function Page({
@@ -18,30 +20,38 @@ export default async function Page({
   }
 
   return (
-    <PageShell
-      page={{
-        id,
-      }}
-      className="mx-auto flex min-h-full max-w-5xl flex-col gap-4 pt-8 pb-52"
+    <Suspense
+      fallback={
+        <div className="mx-auto flex min-h-full max-w-5xl flex-col gap-4 pt-8 pb-52">
+          <PageSkeleton />
+        </div>
+      }
     >
-      <DynamicPageEditor
+      <PageShell
         page={{
-          document_id: page.document_id,
-          id: page.id,
-          title: page.title,
+          id,
         }}
-        initialBlocks={page.blocks}
+        className="mx-auto flex min-h-full max-w-5xl flex-col gap-4 pt-8 pb-52"
       >
-        <PageTitleTextarea
+        <DynamicPageEditor
           page={{
+            document_id: page.document_id,
             id: page.id,
-            node_id: page.node_id,
-            parent_node_id: page.parent_node_id,
             title: page.title,
           }}
-          className="px-8 py-2"
-        />
-      </DynamicPageEditor>
-    </PageShell>
+          initialBlocks={page.blocks}
+        >
+          <PageTitleTextarea
+            page={{
+              id: page.id,
+              node_id: page.node_id,
+              parent_node_id: page.parent_node_id,
+              title: page.title,
+            }}
+            className="px-8 py-2"
+          />
+        </DynamicPageEditor>
+      </PageShell>
+    </Suspense>
   );
 }

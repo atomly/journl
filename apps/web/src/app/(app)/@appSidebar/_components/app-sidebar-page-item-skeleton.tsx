@@ -16,10 +16,7 @@ export function AppSidebarPageItemSkeleton({
   return (
     <SidebarMenuSubItem className={className}>
       <div className="relative py-1">
-        <SidebarMenuSubButton
-          asChild
-          className="min-h-7 rounded-md"
-        >
+        <SidebarMenuSubButton asChild className="min-h-7 rounded-md">
           <div className="group/page-item flex items-center hover:bg-transparent">
             <Skeleton className="h-7 w-full rounded-md" />
           </div>

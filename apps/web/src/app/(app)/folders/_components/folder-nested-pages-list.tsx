@@ -562,10 +562,7 @@ function DraggablePageRow({
       onOpenChange={setIsDeleteDialogOpen}
     >
       <div className={itemIndentClassName}>
-        <div
-          ref={setNodeRef}
-          className="relative py-1"
-        >
+        <div ref={setNodeRef} className="relative py-1">
           <FolderTreeInsertDropBands
             activeDragId={activeDragId}
             afterSiblingDropId={
@@ -946,7 +943,9 @@ function DraggableFolderRow({
                 "group/folder-navigation relative z-10",
                 isActive && "bg-primary/5 ring-1 ring-primary/20",
                 activeDragId === draggableId && "opacity-60",
-                isOverInside && isDragActive && "bg-primary/20 ring-1 ring-primary/30",
+                isOverInside &&
+                  isDragActive &&
+                  "bg-primary/20 ring-1 ring-primary/30",
               )}
             >
               {isEditing ? (

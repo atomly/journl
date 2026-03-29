@@ -24,8 +24,6 @@ import {
 import { useIsMobile } from "~/hooks/use-mobile";
 import { cn } from "~/lib/cn";
 
-const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7;
-const SIDEBAR_COOKIE_NAME = "sidebar:state";
 const SIDEBAR_KEYBOARD_SHORTCUT_OPTION_S = "KeyS";
 const SIDEBAR_KEYBOARD_SHORTCUT_CTRL_SHIFT_B = "KeyB";
 const SIDEBAR_MIN_WIDTH = "14rem";
@@ -34,6 +32,19 @@ const SIDEBAR_WIDTH_ICON = "3rem";
 const SIDEBAR_WIDTH_MAX = "50rem";
 const SIDEBAR_WIDTH_MOBILE = "18rem";
 const SIDEBAR_DRAG_HANDLE_SPACING = 16;
+
+function parseRem(value: `${string}rem`) {
+  const parsed = Number.parseFloat(value);
+  return parsed;
+}
+
+function clampNumber(value: number, min: number, max: number) {
+  return Math.max(min, Math.min(max, value));
+}
+
+function roundNumber(value: number) {
+  return Math.round(value * 1000) / 1000;
+}
 
 type SidebarContextProps = {
   state: "expanded" | "collapsed";
@@ -45,6 +56,8 @@ type SidebarContextProps = {
   toggleSidebar: () => void;
   isDraggingRail: boolean;
   setIsDraggingRail: (isDraggingRail: boolean) => void;
+  initialWidthRem?: number;
+  handleResizeEnd: (widthRem: number) => void;
 };
 
 const SidebarContext = React.createContext<SidebarContextProps | null>(null);
@@ -61,12 +74,16 @@ type SidebarProviderProps = React.ComponentProps<"div"> & {
   defaultOpen?: boolean;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
+  initialWidthRem?: number;
+  onResizeEnd?: (widthRem: number) => void;
 };
 
 function SidebarProvider({
   defaultOpen = true,
   open: openProp,
   onOpenChange: setOpenProp,
+  initialWidthRem,
+  onResizeEnd,
   className,
   style,
   children,
@@ -81,6 +98,14 @@ function SidebarProvider({
   // We use openProp and setOpenProp for control from outside the component.
   const [_open, _setOpen] = React.useState(defaultOpen);
   const open = openProp ?? _open;
+
+  const handleResizeEnd = React.useCallback(
+    (widthRem: number) => {
+      onResizeEnd?.(widthRem);
+    },
+    [onResizeEnd],
+  );
+
   const setOpen = React.useCallback(
     (value: boolean | ((value: boolean) => boolean)) => {
       const openState = typeof value === "function" ? value(open) : value;
@@ -89,10 +114,6 @@ function SidebarProvider({
       } else {
         _setOpen(openState);
       }
-
-      // This sets the cookie to keep the sidebar state.
-      // biome-ignore lint/suspicious/noDocumentCookie: <This is OK for now, let's use local storage later.>
-      document.cookie = `${SIDEBAR_COOKIE_NAME}=${openState}; path=/; max-age=${SIDEBAR_COOKIE_MAX_AGE}`;
     },
     [setOpenProp, open],
   );
@@ -147,6 +168,8 @@ function SidebarProvider({
 
   const contextValue = React.useMemo<SidebarContextProps>(
     () => ({
+      handleResizeEnd,
+      initialWidthRem,
       isDraggingRail,
       isMobile,
       open,
@@ -157,7 +180,17 @@ function SidebarProvider({
       state,
       toggleSidebar,
     }),
-    [state, open, setOpen, isMobile, openMobile, toggleSidebar, isDraggingRail],
+    [
+      isMobile,
+      initialWidthRem,
+      handleResizeEnd,
+      open,
+      openMobile,
+      isDraggingRail,
+      setOpen,
+      state,
+      toggleSidebar,
+    ],
   );
 
   return (
@@ -201,9 +234,9 @@ function Sidebar({
   side?: "left" | "right";
   variant?: "sidebar" | "floating" | "inset";
   collapsible?: "offcanvas" | "icon" | "none";
-  defaultWidth?: string;
-  minWidth?: string;
-  maxWidth?: string;
+  defaultWidth?: `${string}rem`;
+  minWidth?: `${string}rem`;
+  maxWidth?: `${string}rem`;
   defaultOpen?: boolean;
 }) {
   const {
@@ -214,10 +247,20 @@ function Sidebar({
     setIsDraggingRail,
     open,
     setOpen,
+    initialWidthRem,
+    handleResizeEnd,
   } = useSidebar();
 
   // Local state for this sidebar instance
-  const [width, setWidth] = React.useState(defaultWidth);
+  const [widthRem, setWidthRem] = React.useState(() => {
+    const defaultWidthRem = defaultWidth
+      ? parseRem(defaultWidth)
+      : parseRem(SIDEBAR_WIDTH);
+
+    return typeof initialWidthRem === "number"
+      ? initialWidthRem
+      : defaultWidthRem;
+  });
 
   const toggleSidebar = React.useCallback(() => {
     return isMobile ? setOpenMobile((open) => !open) : setOpen((open) => !open);
@@ -231,11 +274,11 @@ function Sidebar({
       e.preventDefault();
       e.stopPropagation();
 
+      const minWidthRem = parseRem(minWidth);
+      const maxWidthRem = parseRem(maxWidth);
       const startX = e.clientX;
-      const startWidth = Number.parseFloat(width.replace("rem", ""));
-      const minWidthNum = Number.parseFloat(minWidth.replace("rem", ""));
-      const maxWidthNum = Number.parseFloat(maxWidth.replace("rem", ""));
-
+      const startWidthRem = widthRem;
+      let latestWidthRem = widthRem;
       let isDragging = false;
 
       const handleMouseMove = (moveEvent: globalThis.MouseEvent) => {
@@ -246,20 +289,22 @@ function Sidebar({
 
         const deltaX = moveEvent.clientX - startX;
         const factor = side === "left" ? 1 : -1;
-        const newWidthRem = startWidth + (deltaX * factor) / 16;
+        const newWidthRem = startWidthRem + (deltaX * factor) / 16;
 
         // Apply normal min/max constraints
-        const clampedWidth = Math.max(
-          minWidthNum,
-          Math.min(maxWidthNum, newWidthRem),
+        const clampedWidthRem = clampNumber(
+          newWidthRem,
+          minWidthRem,
+          maxWidthRem,
         );
 
         // Auto-collapse if dragged below minimum threshold
-        if (newWidthRem < minWidthNum * 0.8 && collapsible !== "none") {
+        if (newWidthRem < minWidthRem * 0.8 && collapsible !== "none") {
           setOpen(false);
         } else {
           setOpen(true);
-          setWidth(`${clampedWidth}rem`);
+          latestWidthRem = clampedWidthRem;
+          setWidthRem(clampedWidthRem);
         }
       };
 
@@ -269,6 +314,8 @@ function Sidebar({
           if (collapsible !== "none") {
             toggleSidebar();
           }
+        } else {
+          handleResizeEnd(roundNumber(latestWidthRem));
         }
 
         // Clean up
@@ -281,14 +328,15 @@ function Sidebar({
       document.addEventListener("mouseup", handleMouseUp);
     },
     [
-      width,
-      minWidth,
-      maxWidth,
+      widthRem,
       side,
       collapsible,
       toggleSidebar,
       setOpen,
       setIsDraggingRail,
+      handleResizeEnd,
+      maxWidth,
+      minWidth,
     ],
   );
 
@@ -298,7 +346,7 @@ function Sidebar({
         data-slot="sidebar"
         style={
           {
-            "--sidebar-width": width,
+            "--sidebar-width": `${widthRem}rem`,
           } as React.CSSProperties
         }
         className={cn(
@@ -371,7 +419,7 @@ function Sidebar({
       ref={ref}
       style={
         {
-          "--sidebar-width": state === "collapsed" ? 0 : width,
+          "--sidebar-width": state === "collapsed" ? 0 : `${widthRem}rem`,
         } as React.CSSProperties
       }
     >

@@ -10,7 +10,7 @@ type PageShellProps = React.ComponentProps<"div"> & {
   page: Pick<Page, "id">;
 };
 
-export async function PageShell({
+export function PageShell({
   className,
   children,
   page,

@@ -34,6 +34,6 @@
     "@blocknote/server-util": "~0.47.1",
     "@blocknote/xl-ai": "~0.47.1",
     "@tiptap/extensions": "3.20.0",
-    "typescript": "~5.9.3"
+    "typescript": "~6.0.2"
   }
 }

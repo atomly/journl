@@ -27,7 +27,7 @@
     "@biomejs/biome": "~2.4.7",
     "@turbo/gen": "~2.8.17",
     "supabase": "^2.79.0",
-    "turbo": "~2.8.17"
+    "turbo": "~2.9.0"
   },
   "pnpm": {
     "overrides": {

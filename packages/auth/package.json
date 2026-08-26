@@ -25,7 +25,7 @@
   "dependencies": {
     "@acme/db": "workspace:*",
     "@better-auth/core": "1.5.5",
-    "@better-auth/stripe": "1.5.5",
+    "@better-auth/stripe": "1.6.21",
     "@better-auth/utils": "0.3.1",
     "@t3-oss/env-nextjs": "~0.13.10",
     "zod": "~4.3.6"

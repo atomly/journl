@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { env } from "~/env";
 import { cn } from "~/lib/cn";
 import { getPublicWebUrl } from "~/lib/public-web-url";
 
@@ -67,7 +68,11 @@ export default function RootLayout({
           geistMono.variable,
         )}
       >
-        <BetterAuthProvider>
+        <BetterAuthProvider
+          passwordSignIn={
+            env.VERCEL_ENV === "preview" || env.NODE_ENV === "development"
+          }
+        >
           <AuthModalProvider>
             {children}
             {authModal}

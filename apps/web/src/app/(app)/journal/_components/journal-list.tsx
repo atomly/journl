@@ -241,6 +241,7 @@ function VirtualizedJournalList({
 
   return (
     <Virtuoso
+      computeItemKey={(_, entry) => entry.date}
       customScrollParent={scrollElement ?? undefined}
       data={entries}
       endReached={() => {

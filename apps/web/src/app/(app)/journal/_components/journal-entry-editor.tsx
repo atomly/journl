@@ -1,7 +1,6 @@
 "use client";
 
 import type { PartialBlock } from "@blocknote/core";
-import { useMutation } from "@tanstack/react-query";
 import Link from "next/link";
 import {
   type ComponentProps,
@@ -9,23 +8,22 @@ import {
   useContext,
   useEffect,
   useMemo,
-  useRef,
-  useState,
+  useSyncExternalStore,
 } from "react";
-import { useDebouncedCallback } from "use-debounce";
 import { BlockEditor } from "~/components/editor/block-editor";
-import { BlockEditorErrorOverlay } from "~/components/editor/block-editor-error-overlay";
 import { useBlockEditor } from "~/components/editor/use-block-editor";
+import { Button } from "~/components/ui/button";
 import { useJournlAgent } from "~/hooks/use-journl-agent";
 import { cn } from "~/lib/cn";
 import { formatDate } from "~/lib/format-date";
 import type { BlockTransaction, JournalListEntry } from "~/trpc";
-import { useTRPC } from "~/trpc/react";
+import { useJournalEntryDraft } from "./journal-drafts-provider";
 
 const DEFAULT_DEBOUNCE_TIME = 150;
 
 type JournalEntryContextValue = {
   documentId: string | null;
+  updatedAt: string | null;
   date: string;
   formattedDate: string;
   initialBlocks: [PartialBlock, ...PartialBlock[]] | undefined;
@@ -60,6 +58,7 @@ export function JournalEntryProvider({
       formattedDate,
       initialBlocks: "blocks" in entry ? entry.blocks : undefined,
       isToday,
+      updatedAt: "updated_at" in entry ? entry.updated_at : null,
     };
   }, [entry]);
 
@@ -149,55 +148,46 @@ export function JournalEntryEditor({
   onCreateAction,
   ...rest
 }: JournalEntryEditorProps) {
-  const trpc = useTRPC();
-  const pendingChangesRef = useRef<BlockTransaction[]>([]);
-  const { initialBlocks, documentId, date } = useJournalEntry();
+  const { initialBlocks, documentId, updatedAt, date } = useJournalEntry();
+  const { draft, retainDraft } = useJournalEntryDraft(date, {
+    blocks: initialBlocks,
+    documentId,
+    updatedAt,
+  });
+  const snapshot = useSyncExternalStore(
+    draft.subscribe,
+    draft.getSnapshot,
+    draft.getSnapshot,
+  );
   const { setEditor, unsetEditor } = useJournlAgent();
-  const editor = useBlockEditor({ initialBlocks });
-  const [isOverlayOpen, setOverlayOpen] = useState(false);
-
-  /**
-   * Handles the error state of the editor.
-   *
-   * @privateRemarks
-   *
-   * Using replace() to avoid creating a new history entry
-   */
-  function handleError() {
-    setOverlayOpen(true);
-    requestAnimationFrame(() => {
-      location.replace(location.href);
-    });
-  }
-
-  const { mutate, isPending } = useMutation({
-    ...trpc.journal.saveTransactions.mutationOptions({}),
-    onError: (error) => {
-      console.error("[JournalEntryEditor] error 👀", error);
-      handleError();
-    },
-    onSuccess: (data) => {
-      if (pendingChangesRef.current.length > 0) {
-        debouncedMutate();
-      }
-      if (!documentId && data) {
-        onCreateAction?.(data);
-      }
-    },
+  const editor = useBlockEditor({
+    initialBlocks: snapshot.blocks,
+    resetKey: snapshot.resetKey,
   });
 
-  const debouncedMutate = useDebouncedCallback(() => {
-    if (isPending) return;
-    const transactions = pendingChangesRef.current;
-    pendingChangesRef.current = [];
-    mutate({ date, document_id: documentId, transactions });
-  }, debounceTime);
+  async function downloadDraft(blocks = editor.document as PartialBlock[]) {
+    const markdown = await editor.blocksToMarkdownLossy(blocks);
+    const url = URL.createObjectURL(
+      new Blob([markdown], { type: "text/markdown" }),
+    );
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `journal-${date}-draft.md`;
+    link.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
 
   function handleEditorChange(transactions: BlockTransaction[]) {
-    pendingChangesRef.current.push(...transactions);
-
-    debouncedMutate();
+    retainDraft();
+    draft.update(editor.document, transactions, debounceTime, onCreateAction);
   }
+
+  useEffect(
+    () => () => {
+      void draft.flush();
+    },
+    [draft],
+  );
 
   useEffect(() => {
     const id = `journal-entry:${date}` as const;
@@ -210,6 +200,7 @@ export function JournalEntryEditor({
   return (
     <>
       <BlockEditor
+        key={snapshot.resetKey}
         editor={editor}
         onChange={handleEditorChange}
         // Disabling the default because we're using a formatting toolbar with the AI option.
@@ -218,7 +209,51 @@ export function JournalEntryEditor({
         slashMenu={false}
         {...rest}
       />
-      <BlockEditorErrorOverlay isOpen={isOverlayOpen} />
+      {Boolean(snapshot.error) && (
+        <div
+          role="alert"
+          className="mx-8 mt-4 rounded-md border border-destructive/50 p-3 text-sm"
+        >
+          <p>
+            {snapshot.conflict
+              ? "This entry changed elsewhere. Your draft is still here; download it before loading the saved entry."
+              : "Your latest changes haven’t been saved. Your draft is still here."}
+          </p>
+          <div className="mt-2 flex gap-2">
+            <Button
+              type="button"
+              size="sm"
+              disabled={snapshot.isSaving}
+              onClick={() => void draft.retry()}
+            >
+              {snapshot.isSaving ? "Retrying…" : "Retry save"}
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              onClick={() => void downloadDraft()}
+            >
+              Download draft
+            </Button>
+            {snapshot.conflict && (
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                disabled={snapshot.isSaving}
+                onClick={async () => {
+                  const blocks = draft.getSnapshot().blocks;
+                  await downloadDraft(blocks);
+                  await draft.loadSaved(blocks);
+                }}
+              >
+                Download draft and load saved entry
+              </Button>
+            )}
+          </div>
+        </div>
+      )}
     </>
   );
 }

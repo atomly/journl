@@ -340,13 +340,38 @@ export const journalRouter = {
       zBlockTransactions.extend({
         date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
         document_id: z.uuid().nullable(),
+        expected_updated_at: z.string().nullable().optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
       try {
         return await ctx.db.transaction(async (tx) => {
+          // Serialize creation and retries for a date, including when no row exists yet.
+          await tx.execute(
+            sql`select pg_advisory_xact_lock(hashtext(${ctx.session.user.id}), hashtext(${input.date}))`,
+          );
+          const current = await tx.query.JournalEntry.findFirst({
+            where: and(
+              eq(JournalEntry.user_id, ctx.session.user.id),
+              eq(JournalEntry.date, input.date),
+            ),
+          });
+          if (
+            input.expected_updated_at !== undefined &&
+            (current?.updated_at ?? null) !== input.expected_updated_at
+          ) {
+            throw new TRPCError({
+              code: "CONFLICT",
+              message: "This entry has changed since it was loaded.",
+            });
+          }
+          if (input.document_id && current?.document_id !== input.document_id) {
+            throw new TRPCError({
+              code: "NOT_FOUND",
+              message: "Journal entry not found",
+            });
+          }
           let documentId = input.document_id;
-          let journalEntry: JournalEntry | null = null;
 
           if (!documentId) {
             const [document] = await tx
@@ -380,8 +405,6 @@ export const journalRouter = {
                 message: "Failed to create journal entry",
               });
             }
-
-            journalEntry = entry;
           }
 
           await saveTransactions(
@@ -392,7 +415,24 @@ export const journalRouter = {
             },
           );
 
-          return journalEntry ?? null;
+          const [saved] = await tx
+            .update(JournalEntry)
+            .set({
+              updated_at: sql`greatest(clock_timestamp(), ${JournalEntry.updated_at} + interval '1 microsecond')`,
+            })
+            .where(
+              and(
+                eq(JournalEntry.document_id, documentId),
+                eq(JournalEntry.user_id, ctx.session.user.id),
+              ),
+            )
+            .returning();
+          if (!saved)
+            throw new TRPCError({
+              code: "NOT_FOUND",
+              message: "Journal entry not found",
+            });
+          return saved;
         });
       } catch (error) {
         if (error instanceof TRPCError) {

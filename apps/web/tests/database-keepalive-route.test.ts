@@ -46,7 +46,27 @@ test.each([
   expect(start).not.toHaveBeenCalled();
 });
 
-test("queues an authenticated request and returns the run ID", async () => {
+test.each<Record<string, string>>([
+  { cookie: "better-auth.session_token=user-session" },
+  { cookie: "__Secure-better-auth.session_token=user-session" },
+  { authorization: "Bearer user-session" },
+  {
+    cookie: "__Secure-better-auth.session_token=user-session",
+    "user-agent": "vercel-cron/1.0",
+    "x-vercel-cron-schedule": "0 6 * * *",
+  },
+])("rejects user credentials and forged scheduler headers: %j", async (headers) => {
+  const response = await GET(
+    new Request("https://example.com/api/cron/database-keepalive", {
+      headers,
+    }),
+  );
+
+  expect(response.status).toBe(401);
+  expect(start).not.toHaveBeenCalled();
+});
+
+test("queues a request with the scheduler secret and returns the run ID", async () => {
   start.mockResolvedValue({ runId: "run_test" });
 
   const response = await GET(request(`Bearer ${env.CRON_SECRET}`));

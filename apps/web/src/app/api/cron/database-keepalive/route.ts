@@ -6,6 +6,8 @@ import { runDatabaseKeepalive } from "~/workflows/database-keepalive";
 export const dynamic = "force-dynamic";
 
 export async function GET(request: Request) {
+  // Only the scheduler's server-side secret grants access. Application sessions
+  // and scheduler-identifying headers must never authorize this endpoint.
   if (
     !env.CRON_SECRET ||
     request.headers.get("authorization") !== `Bearer ${env.CRON_SECRET}`

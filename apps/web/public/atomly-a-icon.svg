@@ -1,18 +1,12 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" fill="none">
   <title>Atomly A</title>
   <rect width="512" height="512" fill="black"/>
-  <!-- Atomly's filled A with subtly rounded outer corners at the cap. -->
+  <!-- Atomly's filled A, extending its sloping sides into a rounded apex. -->
   <g transform="translate(103 -13) scale(3.6)">
-    <clipPath id="rounded-cap">
-      <path d="M1.0625 119 34.39 30.45Q35.3125 28 37.93 28H46.94Q49.5625 28 50.49 30.45L83.9375 119Z"/>
-    </clipPath>
     <mask id="atomly-a-mask" maskUnits="userSpaceOnUse" x="0" y="0" width="85" height="150">
       <rect width="85" height="150" fill="white"/>
       <path d="M67.5 121.5H17.5L42.5 49L67.5 121.5Z" stroke="black" stroke-width="5"/>
     </mask>
-    <g mask="url(#atomly-a-mask)" clip-path="url(#rounded-cap)">
-      <path d="M44.6875 40.125L17.5 119H1.0625L35.3125 28H45.8125L44.6875 40.125ZM67.4375 119L40.1875 40.125L39 28H49.5625L83.9375 119H67.4375ZM66.125 85.25V97.6875H16.625V85.25H66.125Z" fill="white"/>
-      <path d="M67.5 121.5H17.5L42.5 49L67.5 121.5Z" fill="white"/>
-    </g>
+    <path d="M1.0625 119 37.01 23.46C38.85 18.57 46.02 18.57 47.86 23.46L83.9375 119Z" fill="white" mask="url(#atomly-a-mask)"/>
   </g>
 </svg>

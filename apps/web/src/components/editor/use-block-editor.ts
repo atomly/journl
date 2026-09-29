@@ -14,6 +14,7 @@ type UseBlockEditorOptions = {
    * @note The initial blocks must be a non-empty array.
    */
   initialBlocks?: [PartialBlock, ...PartialBlock[]] | undefined;
+  resetKey?: number;
 };
 
 function getAnchorFromTarget(target: EventTarget | null) {
@@ -22,54 +23,60 @@ function getAnchorFromTarget(target: EventTarget | null) {
   return anchor instanceof HTMLAnchorElement ? anchor : null;
 }
 
-export function useBlockEditor({ initialBlocks }: UseBlockEditorOptions) {
-  const editor = useCreateBlockNote({
-    _tiptapOptions: {
-      editorProps: {
-        handleClick: (_view, _pos, event) => {
-          const anchor = getAnchorFromTarget(event.target);
+export function useBlockEditor({
+  initialBlocks,
+  resetKey,
+}: UseBlockEditorOptions) {
+  const editor = useCreateBlockNote(
+    {
+      _tiptapOptions: {
+        editorProps: {
+          handleClick: (_view, _pos, event) => {
+            const anchor = getAnchorFromTarget(event.target);
 
-          if (!anchor) return false;
+            if (!anchor) return false;
 
-          event.preventDefault();
+            event.preventDefault();
 
-          // Block single-click navigation for links in the editor.
-          return true;
-        },
-        handleDoubleClick: (_view, _pos, event) => {
-          const anchor = getAnchorFromTarget(event.target);
+            // Block single-click navigation for links in the editor.
+            return true;
+          },
+          handleDoubleClick: (_view, _pos, event) => {
+            const anchor = getAnchorFromTarget(event.target);
 
-          if (!anchor) return false;
+            if (!anchor) return false;
 
-          event.preventDefault();
+            event.preventDefault();
 
-          window.open(
-            anchor.href,
-            anchor.target || "_blank",
-            "noopener,noreferrer",
-          );
+            window.open(
+              anchor.href,
+              anchor.target || "_blank",
+              "noopener,noreferrer",
+            );
 
-          return true;
+            return true;
+          },
         },
       },
-    },
-    animations: false,
-    dictionary: {
-      ...en,
-      ai: aiEn,
-    },
-    extensions: [
-      AIExtension({
-        // The `agentCursor.color` is the default across multiple BlockNote components, we're just setting the name.
-        agentCursor: { color: "#8bc6ff", name: "Journl" },
-        transport: new DefaultChatTransport({
-          api: "/api/ai/blocknote",
+      animations: false,
+      dictionary: {
+        ...en,
+        ai: aiEn,
+      },
+      extensions: [
+        AIExtension({
+          // The `agentCursor.color` is the default across multiple BlockNote components, we're just setting the name.
+          agentCursor: { color: "#8bc6ff", name: "Journl" },
+          transport: new DefaultChatTransport({
+            api: "/api/ai/blocknote",
+          }),
         }),
-      }),
-    ],
-    initialContent: initialBlocks,
-    schema,
-  });
+      ],
+      initialContent: initialBlocks,
+      schema,
+    },
+    [resetKey],
+  );
 
   return editor;
 }

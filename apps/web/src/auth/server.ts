@@ -23,6 +23,11 @@ const productionUrl =
 
 const trustedOrigins = Array.from(
   new Set([
+    baseUrl,
+    // GitHub's preview links use the branch alias, not the unique VERCEL_URL.
+    ...(env.VERCEL_ENV === "preview" && env.VERCEL_BRANCH_URL
+      ? [`https://${env.VERCEL_BRANCH_URL}`]
+      : []),
     ...(env.NODE_ENV === "development"
       ? parseAuthDevOrigins(env.AUTH_DEV_ORIGINS)
       : []),

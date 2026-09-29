@@ -24,6 +24,7 @@ export const env = createEnv({
    * This way you can ensure the app isn't built with invalid env vars.
    */
   server: {
+    CRON_SECRET: z.string().min(16).optional(),
     OPENAI_API_KEY: z.string(),
     OPENAI_API_URL: z.string().url().default("https://api.openai.com/v1/"),
     POSTGRES_URL: z.string().url(),

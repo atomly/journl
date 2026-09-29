@@ -8,6 +8,7 @@
     "AUTH_DEV_ORIGINS",
     "AUTH_DEV_PROXY_URL",
     "AUTH_SECRET",
+    "CRON_SECRET",
     "OPENAI_API_KEY",
     "OPENAI_API_URL",
     "PORT",

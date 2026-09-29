@@ -41,8 +41,9 @@ async function AppLayout({
             <SidebarInset className="flex max-h-dvh min-w-sm flex-col gap-y-2">
               <AppLayoutProvider>
                 {header}
-                {/* Keep header spacing in the scroll content so hiding it never resizes the viewport. */}
-                <AppContainer className="min-w-54 flex-1 overflow-auto pt-16 md:pt-0">
+                <AppContainer className="min-w-54 flex-1 overflow-auto [--app-header-offset:4rem] peer-[[data-hidden=true]:not(:focus-within)]/app-header:[--app-header-offset:0px] md:[--app-header-offset:0px]">
+                  {/* A scrolling spacer avoids resizing the viewport or offsetting sticky editor toolbars with container padding. */}
+                  <div aria-hidden className="h-16 md:hidden" />
                   {children}
                 </AppContainer>
                 <div className="mt-auto">{chatDrawer}</div>

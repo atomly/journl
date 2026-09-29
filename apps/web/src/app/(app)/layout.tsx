@@ -41,7 +41,8 @@ async function AppLayout({
             <SidebarInset className="flex max-h-dvh min-w-sm flex-col gap-y-2">
               <AppLayoutProvider>
                 {header}
-                <AppContainer className="min-w-54 flex-1 overflow-auto">
+                {/* Keep header spacing in the scroll content so hiding it never resizes the viewport. */}
+                <AppContainer className="min-w-54 flex-1 overflow-auto pt-16 md:pt-0">
                   {children}
                 </AppContainer>
                 <div className="mt-auto">{chatDrawer}</div>

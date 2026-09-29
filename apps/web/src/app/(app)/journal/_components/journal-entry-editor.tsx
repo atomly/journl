@@ -19,7 +19,7 @@ import { formatDate } from "~/lib/format-date";
 import type { BlockTransaction, JournalListEntry } from "~/trpc";
 import { useJournalEntryDraft } from "./journal-drafts-provider";
 
-const DEFAULT_DEBOUNCE_TIME = 150;
+const DEFAULT_DEBOUNCE_TIME = 1000;
 
 type JournalEntryContextValue = {
   documentId: string | null;

@@ -14,7 +14,7 @@ import { useJournlAgent } from "~/hooks/use-journl-agent";
 import type { BlockTransaction } from "~/trpc";
 import { useTRPC } from "~/trpc/react";
 
-const DEFAULT_DEBOUNCE_TIME = 150;
+const DEFAULT_DEBOUNCE_TIME = 1000;
 
 type PageEditorProps = Omit<
   React.ComponentProps<typeof BlockEditor>,

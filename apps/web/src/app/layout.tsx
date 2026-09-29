@@ -11,6 +11,12 @@ import { BetterAuthProvider } from "../components/auth/better-auth-provider";
 const publicWebUrl = getPublicWebUrl();
 
 export const metadata: Metadata = {
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Journl",
+  },
+  applicationName: "Journl",
   description:
     "Journl helps you capture thoughts, reflect with AI guidance, and turn daily notes into momentum.",
   metadataBase: new URL(publicWebUrl),

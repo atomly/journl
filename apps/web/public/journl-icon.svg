@@ -1,10 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" fill="none">
   <title>Journl</title>
   <rect width="512" height="512" fill="black"/>
-  <!-- The interrupted orbit echoes the existing Atomly mark. -->
-  <path d="M365 113a180 180 0 1 0 70 163" stroke="white" stroke-width="12"/>
-  <!-- A geometric J with a broad cap and a rounded, open hook. -->
-  <path d="M238 148h108v32h-36v134c0 48-28 76-72 76-43 0-70-27-70-69h36c0 25 13 38 34 38 23 0 36-15 36-45V180h-36v-32Z" fill="white"/>
-  <!-- A four-point glint decorates the break in the orbit. -->
-  <path d="m403 139 9 25 25 9-25 9-9 25-9-25-25-9 25-9 9-25Z" fill="white"/>
+  <!-- The circular outline meets the J's cap, as Atomly's outline meets its letters. -->
+  <path d="M76 256a180 180 0 0 1 320-113" stroke="white" stroke-width="16"/>
+  <!-- The J's hook continues the lower outline with the same stroke weight. -->
+  <path d="M330 143h96M396 143v113c0 100-60 180-140 180-100 0-180-80-180-150" stroke="white" stroke-width="16"/>
 </svg>

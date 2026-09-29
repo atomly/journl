@@ -49,7 +49,7 @@ async function AppLayout({
             </SidebarInset>
           </AppSidebarProvider>
           {chatSidebar}
-          <ChatSidebarTrigger className="fixed right-2 bottom-2 z-4500 hidden md:flex" />
+          <ChatSidebarTrigger className="fixed right-[calc(1rem+env(safe-area-inset-right,0px))] bottom-[calc(1rem+env(safe-area-inset-bottom,0px))] z-4500 hidden md:flex" />
         </div>
       </ChatSidebarProvider>
       {subscriptionModal}

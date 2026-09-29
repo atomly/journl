@@ -29,7 +29,7 @@ export default function ChatDrawer() {
     <Drawer>
       <ChatDrawerTrigger
         aria-controls={CHAT_DRAWER_CONTENT_ID}
-        className="fixed right-2 bottom-2 z-4500 flex md:hidden"
+        className="fixed right-[calc(1rem+env(safe-area-inset-right,0px))] bottom-[calc(1rem+env(safe-area-inset-bottom,0px))] z-4500 flex md:hidden"
       />
       <DrawerContent
         id={CHAT_DRAWER_CONTENT_ID}

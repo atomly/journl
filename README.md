@@ -68,47 +68,6 @@ If your local Postgres instance does not support TLS, set `POSTGRES_SSL_MODE=dis
 For database workflows, use root scripts (`pnpm db:push`, `pnpm db:studio`) or
 the dedicated utility app in [`apps/drizzle-studio`](./apps/drizzle-studio).
 
-### Signing in to previews with an existing account
-
-After deploying this change to production, sign in there with Google or GitHub
-and open **Account → Security** (`/account/security`). Set a password within
-15 minutes of signing in. Accounts with an existing password must provide their
-current password to change it.
-
-Preview deployments (`VERCEL_ENV=preview`) and local development show email/password
-login at `/auth/sign-in`, including in the sign-in modal. Use the email on your
-existing account and the password you set. Production's sign-in screen continues
-to show OAuth only; password signup remains disabled in every environment.
-
-Authentication uses each deployment's `POSTGRES_URL`. To access your actual
-production account and live journal data, the preview must use that same database;
-changes made in that preview will then affect production data. A separate database
-needs a copy of your user and linked credential account to accept the same login,
-and will only show the data present in that database. This feature does not change
-database connections, copy accounts, or share production session cookies.
-
-### Database keepalive
-
-[`apps/web/vercel.json`](./apps/web/vercel.json) schedules a daily production
-request to `/api/cron/database-keepalive` at 06:00 UTC (within that hour on Vercel
-Hobby). The route starts a Vercel Workflow that runs `select 1` through the shared
-Drizzle client, with up to three retries on query failure. It does not read or
-write journal data. Daily activity leaves margin inside Supabase's seven-day
-inactivity window; this is a best-effort keepalive, not a guarantee against
-[Supabase project pausing](https://supabase.com/docs/guides/platform/free-project-pausing).
-
-To enable it, set `CRON_SECRET` in the web project's Vercel **Production**
-environment to a random value of at least 16 characters (for example, generate
-one with `openssl rand -hex 32`), then deploy with `apps/web` as the project root.
-Vercel sends the secret as a Bearer authorization header. The route rejects
-requests when the secret is missing or incorrect. Local development does not
-schedule cron requests automatically.
-
-An accepted request returns HTTP 202 with a `runId`; this confirms the workflow
-was queued, not that the database query succeeded. Check the run in Vercel
-Workflow observability for completion or query errors. If Supabase has already
-paused the project, resume it in the Supabase dashboard first.
-
 ---
 
 ## License

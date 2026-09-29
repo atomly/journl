@@ -15,7 +15,7 @@ import {
 import { useTRPC } from "~/trpc/react";
 
 const DEFAULT_PLACEHOLDER = "New page";
-const DEFAULT_DEBOUNCE_TIME = 150;
+const DEFAULT_DEBOUNCE_TIME = 1000;
 const MAX_TITLE_LENGTH = 100;
 
 type PageEditorTitleProps = {

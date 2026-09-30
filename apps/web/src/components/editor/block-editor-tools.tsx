@@ -54,8 +54,10 @@ export function BlockEditorStickyToolbar() {
 
   return (
     <div
-      className="sticky z-4000 rounded-lg px-6 shadow-sm md:hidden md:px-2"
-      style={{ top: "var(--app-visual-viewport-offset-top, 0px)" }}
+      className="sticky z-4000 rounded-lg px-6 shadow-sm transition-[top] duration-300 ease-out motion-reduce:transition-none md:hidden md:px-2"
+      style={{
+        top: "calc(var(--app-visual-viewport-offset-top, 0px) + var(--app-header-offset, 0px))",
+      }}
     >
       <FormattingToolbar>
         {isMobile && (

@@ -1,21 +1,25 @@
 version: 2
 
-updates:
-  - package-ecosystem: 'npm'
-    directories:
-      - '/'
-      - '/apps/*'
-      - '/packages/*'
+multi-ecosystem-groups:
+  all-dependencies:
     schedule:
       interval: 'weekly'
       day: 'monday'
       time: '09:00'
       timezone: 'America/New_York'
 
+updates:
+  - package-ecosystem: 'npm'
+    directories:
+      - '/'
+      - '/apps/*'
+      - '/packages/*'
+    patterns:
+      - '*'
+    multi-ecosystem-group: 'all-dependencies'
+
   - package-ecosystem: 'github-actions'
     directory: '/'
-    schedule:
-      interval: 'weekly'
-      day: 'monday'
-      time: '09:00'
-      timezone: 'America/New_York'
+    patterns:
+      - '*'
+    multi-ecosystem-group: 'all-dependencies'

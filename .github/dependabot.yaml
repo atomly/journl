@@ -16,6 +16,10 @@ updates:
       - '/packages/*'
     patterns:
       - '*'
+    groups:
+      all-npm-dependencies:
+        patterns:
+          - '*'
     multi-ecosystem-group: 'all-dependencies'
 
   - package-ecosystem: 'github-actions'

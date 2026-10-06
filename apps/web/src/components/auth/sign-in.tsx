@@ -79,8 +79,6 @@ export function SignIn({
   const { mutateAsync: signInEmail, isPending: signInEmailPending } =
     useSignInEmail(authClient, {
       onError: (error, { email }) => {
-        form.setFieldValue("password", "");
-
         if (error.error?.code === "EMAIL_NOT_VERIFIED") {
           sessionStorage.setItem("better-auth-ui.verify-email", email);
           navigate({

@@ -123,10 +123,10 @@ The rest of the components are set by the Tailwind CSS classes, or by our editor
 - Dialog Content (Billing Modal, Auth Modal, etc.) (`z-index`: 5500)
 - Dialog Overlays (Billing Modal, Auth Modal, etc.) (`z-index`: 5000)
 - Header Search Modal and Overlay (`z-index`: 5000)
-- Tooltips/Popover (`z-index`: 4500)
-- Auth Settings Dropdown (`z-index`: 4500)
+- Base UI popup positioners (`z-index`: 4600)
 - Drawer & DrawerTrigger (with its overlay and drag handles) (`z-index`: 4500)
-- Mobile Sidebar (`z-index`: 4500)
+- Mobile Sidebar Overlay (`z-index`: 4500)
+- Mobile Sidebar (`z-index`: 4501)
 - Mobile BlockNoteFormattingBar (`z-index`: 4000)
 - Editor Options/Drag Handle (`z-index`: 4000)
 - Editor Options/Drag Handle Menu (`z-index`: 4000)
@@ -159,17 +159,40 @@ The rest of the components are set by the Tailwind CSS classes, or by our editor
   z-index: 4500;
 }
 
+/* Keep the Sheet popup above its backdrop; the nested sidebar cannot escape
+   the popup's stacking context with its own z-index. */
 [data-slot="sheet-overlay"] {
   z-index: 4500;
 }
 
-/* Ensure the tooltips/popover appears above the sidebar */
-[data-radix-popper-content-wrapper] {
+[data-slot="sheet-content"] {
+  z-index: 4501;
+}
+
+/* Base UI positioners create stacking contexts. Keep every popup above the
+   mobile Sheet, including sidebar actions, rather than only the user menu. */
+[data-slot="tooltip-positioner"],
+[data-slot="popover-positioner"],
+[data-slot="select-positioner"],
+[data-slot="combobox-positioner"],
+[data-slot="hover-card-positioner"],
+[data-slot="navigation-menu-positioner"],
+[data-slot="dropdown-menu-positioner"] {
+  z-index: 4600 !important;
+}
+
+/* Popup-level z-index remains useful for stacking within each positioner. */
+[data-slot="tooltip-content"],
+[data-slot="popover-content"],
+[data-slot="select-content"],
+[data-slot="dropdown-menu-content"],
+[data-slot="dropdown-menu-sub-content"] {
   z-index: 4500 !important;
 }
 
 /* Ensure the editor options menu appears above the sidebar */
-.bn-container > div[data-floating-ui-focusable] {
+.bn-container > div[data-floating-ui-focusable],
+.bn-container > [data-floating-ui-portal] > div[data-floating-ui-focusable] {
   z-index: 4000 !important;
 }
 
@@ -199,9 +222,13 @@ The rest of the components are set by the Tailwind CSS classes, or by our editor
 
 /* On mobile... */
 @media (max-width: 768px) {
-  /* Sets the z-index of the sidebar and its overlay */
   [data-slot="sidebar"] {
     z-index: 4500;
+  }
+
+  /* Keep the sidebar content and Sheet popup above the dialog backdrop. */
+  [data-slot="sidebar"][data-mobile="true"] {
+    z-index: 4501;
   }
 
   /* Hide the editor's AI suggestion menu key shortcut elements */

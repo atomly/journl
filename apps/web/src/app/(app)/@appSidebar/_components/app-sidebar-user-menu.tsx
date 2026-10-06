@@ -13,6 +13,10 @@ export function AppSidebarUserMenu(props: AppSidebarUserMenuProps) {
   const { isMobile } = useSidebar();
 
   return (
-    <DropdownMenuContent side={isMobile ? "bottom" : "right"} {...props} />
+    <DropdownMenuContent
+      side={isMobile ? "bottom" : "right"}
+      positionerClassName="sidebar-user-menu-positioner"
+      {...props}
+    />
   );
 }

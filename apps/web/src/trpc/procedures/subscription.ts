@@ -52,7 +52,7 @@ export const subscriptionRouter = {
       },
     });
 
-    if (!plan || !plan.price) {
+    if (!plan?.price) {
       return null;
     }
 

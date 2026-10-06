@@ -141,7 +141,9 @@ export function blocknoteBlocks(
     }
 
     const zBlockNoteData = z.object({
-      content: z.any(),
+      // Older persisted blocks may omit content; BlockNote treats it as a
+      // partial block and supplies the default for the block type.
+      content: z.any().optional(),
       props: zBlockNoteBlockProps,
       type: zBlockNoteBlockType,
     });

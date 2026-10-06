@@ -12,17 +12,17 @@ vi.mock("next/navigation", () => ({
 vi.mock("~/auth/client", () => ({
   authClient: { signIn: { social: vi.fn() } },
 }));
-vi.mock("@daveyplate/better-auth-ui", () => ({
-  AuthUIProvider: ({
+vi.mock("~/components/auth/auth-provider", () => ({
+  AuthProvider: ({
     children,
-    credentials,
+    emailAndPassword,
   }: {
     children: ReactNode;
-    credentials: false | { forgotPassword: boolean };
+    emailAndPassword: { enabled: boolean; forgotPassword: boolean };
   }) => (
     <div
-      data-password={!!credentials}
-      data-forgot-password={credentials ? credentials.forgotPassword : false}
+      data-password={emailAndPassword.enabled}
+      data-forgot-password={emailAndPassword.forgotPassword}
     >
       {children}
     </div>
@@ -52,14 +52,13 @@ test("production sign-in keeps password login hidden", () => {
   expect(html).not.toContain('data-password="true"');
 });
 
-test.each([
-  "/auth/sign-up",
-  "/account/security",
-  "/invite",
-])("does not expose credential signup or the email-based setup flow on %s", (pathname) => {
-  fixture.pathname = pathname;
-  const html = renderToStaticMarkup(
-    <BetterAuthProvider passwordSignIn>Account</BetterAuthProvider>,
-  );
-  expect(html).not.toContain('data-password="true"');
-});
+test.each(["/auth/sign-up", "/account/security", "/invite"])(
+  "does not expose credential signup or the email-based setup flow on %s",
+  (pathname) => {
+    fixture.pathname = pathname;
+    const html = renderToStaticMarkup(
+      <BetterAuthProvider passwordSignIn>Account</BetterAuthProvider>,
+    );
+    expect(html).not.toContain('data-password="true"');
+  },
+);

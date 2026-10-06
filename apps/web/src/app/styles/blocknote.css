@@ -4,6 +4,12 @@
 
 @source "../../../../../node_modules/@blocknote/shadcn";
 
+/* Floating UI adds a portal wrapper when editor hover controls appear.
+   Keep that wrapper out of the editor's flex layout so it cannot add a gap. */
+.bn-container > [data-floating-ui-portal] {
+  display: contents;
+}
+
 /* Custom theme with transparent background */
 .bn-container[data-color-scheme],
 .bn-container[data-color-scheme="dark"] {
@@ -17,7 +23,8 @@
 }
 
 /* Remove nested block border */
-.bn-block-group .bn-block:not(:has(.bn-toggle-wrapper))
+.bn-block-group
+  .bn-block:not(:has(.bn-toggle-wrapper))
   .bn-block-group
   .bn-block-outer:not([data-prev-depth-changed]):before {
   border-left: none;

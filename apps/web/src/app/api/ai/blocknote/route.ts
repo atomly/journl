@@ -6,14 +6,14 @@ import {
 import type { MastraMessageContentV2 } from "@mastra/core/agent";
 import type { MastraMessagePart } from "@mastra/core/agent/message-list";
 import type { MastraDBMessage } from "@mastra/core/memory";
-import { convertToModelMessages, streamText } from "ai";
+import { convertToModelMessages, streamText } from "ai-sdk-v6";
 import type { User } from "better-auth";
 import { after, type NextRequest } from "next/server";
 import { z } from "zod";
 import { getJournlUserThread } from "~/ai/mastra/agents/journl-agent";
 import { getWritingAgentPrompt } from "~/ai/mastra/agents/writing-agent";
 import { journlMemory } from "~/ai/mastra/memory/memory";
-import { miniModel } from "~/ai/providers/openai/text";
+import { blockNoteModel as miniModel } from "~/ai/providers/openai/compatibility";
 import { zWriteInput } from "~/ai/tools/write/schema";
 import { handler as corsHandler } from "~/app/api/_cors/cors";
 import { withAuthGuard } from "~/auth/guards";

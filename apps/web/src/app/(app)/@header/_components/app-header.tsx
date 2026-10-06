@@ -90,11 +90,13 @@ export function AppHeader({ className, ...props }: AppHeaderProps) {
     };
   }, [isMobile, scrollElement]);
 
+  // Client navigation retains pointer focus; only keyboard focus should keep
+  // the header visible while the content scrolls.
   return (
     <header
       data-hidden={isHidden}
       className={cn(
-        "peer/app-header fixed top-0 right-0 left-0 z-4500 mx-6 mt-2 h-12 transform-gpu transition-transform duration-300 ease-out will-change-transform focus-within:translate-y-0 motion-reduce:transition-none md:sticky md:top-0 md:right-auto md:left-auto md:m-2",
+        "peer/app-header fixed top-0 right-0 left-0 z-4500 mx-6 mt-2 h-12 transform-gpu transition-transform duration-300 ease-out will-change-transform has-[:focus-visible]:translate-y-0 motion-reduce:transition-none md:sticky md:top-0 md:right-auto md:left-auto md:m-2",
         {
           "-translate-y-[calc(100%+2rem)] md:translate-y-0": isHidden,
         },

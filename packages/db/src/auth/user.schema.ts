@@ -14,6 +14,9 @@ export const user = pgTable("user", {
   emailVerified: boolean("email_verified")
     .$defaultFn(() => false)
     .notNull(),
+  stripeCustomerId: varchar("stripe_customer_id", {
+    length: TEXT_LIMITS.STRIPE_ID,
+  }),
   image: varchar("image", { length: TEXT_LIMITS.URL }),
   createdAt: timestamp("created_at")
     .$defaultFn(() => /* @__PURE__ */ new Date())

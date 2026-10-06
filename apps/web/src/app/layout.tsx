@@ -6,7 +6,6 @@ import { getPublicWebUrl } from "~/lib/public-web-url";
 
 import "~/app/styles.css";
 
-import { AuthModalProvider } from "~/components/auth/auth-modal-provider";
 import { BetterAuthProvider } from "../components/auth/better-auth-provider";
 
 const publicWebUrl = getPublicWebUrl();
@@ -73,10 +72,8 @@ export default function RootLayout({
             env.VERCEL_ENV === "preview" || env.NODE_ENV === "development"
           }
         >
-          <AuthModalProvider>
-            {children}
-            {authModal}
-          </AuthModalProvider>
+          {children}
+          {authModal}
         </BetterAuthProvider>
       </body>
     </html>

@@ -83,7 +83,7 @@ function isQuotaExceededCode(code: string | null): boolean {
 }
 
 function asRecord(value: unknown): UnknownRecord | null {
-  return Boolean(value) && typeof value === "object" && !Array.isArray(value)
+  return value && typeof value === "object" && !Array.isArray(value)
     ? (value as UnknownRecord)
     : null;
 }

@@ -1,106 +1,97 @@
 "use client";
-import { AuthUIProvider } from "@daveyplate/better-auth-ui";
+
+import { QueryClientProvider } from "@tanstack/react-query";
 import NextLink from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
   type ComponentProps,
   createContext,
   type ReactNode,
-  useCallback,
   useContext,
+  useState,
 } from "react";
 import { authClient } from "~/auth/client";
+import { AuthProvider } from "~/components/auth/auth-provider";
+import { createQueryClient } from "~/trpc/query-client";
 
 type AuthProviderProps = {
   children: ReactNode;
-  Link?: ComponentProps<typeof AuthUIProvider>["Link"];
+  Link?: ComponentProps<typeof AuthProvider>["Link"];
   passwordSignIn?: boolean;
 };
+
+let browserQueryClient: ReturnType<typeof createQueryClient> | undefined;
+
+function getQueryClient() {
+  if (typeof window === "undefined") {
+    return createQueryClient();
+  }
+
+  browserQueryClient ??= createQueryClient();
+  return browserQueryClient;
+}
+
+function isModalPath(path: string) {
+  return path.startsWith("/auth/") || path.startsWith("/invite");
+}
+
+function AuthNavigationLink({
+  href,
+  replace,
+  ...props
+}: ComponentProps<typeof NextLink>) {
+  const pathname = usePathname();
+  const targetPath = typeof href === "string" ? href : href.pathname;
+  const replaceNavigation =
+    replace ?? (isModalPath(pathname) && isModalPath(targetPath ?? ""));
+
+  return <NextLink href={href} replace={replaceNavigation} {...props} />;
+}
 
 // Nested providers (including intercepted auth modals) inherit the server flag.
 const PasswordSignInContext = createContext(false);
 
-type SocialSignInParams = Parameters<typeof authClient.signIn.social>[0];
-
-function normalizeInviteCode(value: string | null): string | null {
-  if (!value) {
-    return null;
-  }
-
-  const normalized = value
-    .trim()
-    .toUpperCase()
-    .replace(/[\s-]+/g, "");
-
-  return normalized.length > 0 ? normalized : null;
-}
-
 export function BetterAuthProvider({
   children,
-  Link = NextLink,
+  Link = AuthNavigationLink,
   passwordSignIn,
 }: AuthProviderProps) {
   const inheritedPasswordSignIn = useContext(PasswordSignInContext);
   const allowPasswordSignIn = passwordSignIn ?? inheritedPasswordSignIn;
   const pathname = usePathname();
   const router = useRouter();
-
-  const signInWithSocialProvider = useCallback(
-    async (params: SocialSignInParams) => {
-      if (pathname !== "/auth/sign-up") {
-        await authClient.signIn.social(params);
-        return;
-      }
-
-      const inviteCode = normalizeInviteCode(
-        new URLSearchParams(window.location.search).get("invite"),
-      );
-
-      if (!inviteCode) {
-        throw new Error("An invite code is required to sign up.");
-      }
-
-      await authClient.signIn.social({
-        ...params,
-        additionalData: {
-          ...((params.additionalData as Record<string, unknown>) ?? {}),
-          inviteCode,
-        },
-        requestSignUp: true,
-      });
-    },
-    [pathname],
-  );
+  const [queryClient] = useState(getQueryClient);
 
   return (
-    <PasswordSignInContext value={allowPasswordSignIn}>
-      <AuthUIProvider
-        /* `basePath` is the path for the auth views */
-        basePath="/auth"
-        /* `account` is the path for the account views */
-        account
-        /* `organization` is the path for the organization views */
-        organization={false}
-        credentials={
-          allowPasswordSignIn && pathname === "/auth/sign-in"
-            ? { forgotPassword: false }
-            : false
-        }
-        social={{
-          providers: ["google", "github"],
-          signIn: signInWithSocialProvider,
-        }}
-        authClient={authClient}
-        navigate={router.push}
-        replace={router.replace}
-        onSessionChange={() => {
-          // Clear router cache (protected routes)
-          router.refresh();
-        }}
-        Link={Link}
-      >
-        {children}
-      </AuthUIProvider>
-    </PasswordSignInContext>
+    <QueryClientProvider client={queryClient}>
+      <PasswordSignInContext value={allowPasswordSignIn}>
+        <AuthProvider
+          authClient={authClient}
+          basePaths={{ auth: "/auth", settings: "/account" }}
+          emailAndPassword={{
+            enabled: allowPasswordSignIn && pathname === "/auth/sign-in",
+            forgotPassword: false,
+          }}
+          localization={{
+            auth: {
+              continueWith: "Continue with",
+              signIn: "Sign in",
+              signUp: "Sign up",
+            },
+          }}
+          navigate={({ to, replace }) =>
+            replace ? router.replace(to) : router.push(to)
+          }
+          redirectTo="/journal"
+          socialProviders={["google", "github"]}
+          socialSignInMode="redirect"
+          viewPaths={{ settings: { account: "settings" } }}
+          Link={Link}
+          queryClient={queryClient}
+        >
+          {children}
+        </AuthProvider>
+      </PasswordSignInContext>
+    </QueryClientProvider>
   );
 }

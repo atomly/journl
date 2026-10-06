@@ -1,9 +1,11 @@
 "use client";
 
-import { SignedIn, SignedOut } from "@daveyplate/better-auth-ui";
+import { useSession } from "@better-auth-ui/react";
 import { ArrowLeft, LogOut } from "lucide-react";
 import Link from "next/link";
+import type { ReactNode } from "react";
 import { signOutAction } from "~/app/_actions/sign-out.action";
+import { authClient } from "~/auth/client";
 import { Button } from "~/components/ui/button";
 
 import {
@@ -18,6 +20,18 @@ import { cn } from "~/lib/cn";
 type UserHeaderProps = {
   className?: string;
 };
+
+function SessionGate({
+  authenticated,
+  children,
+}: {
+  authenticated: boolean;
+  children: ReactNode;
+}) {
+  const { data, isPending } = useSession(authClient);
+  if (isPending || Boolean(data?.user) !== authenticated) return null;
+  return children;
+}
 
 export function DashboardHeader({ className }: UserHeaderProps) {
   return (
@@ -37,7 +51,7 @@ export function DashboardHeader({ className }: UserHeaderProps) {
         viewport={false}
       >
         <NavigationMenuList className="w-full justify-end gap-x-2">
-          <SignedOut>
+          <SessionGate authenticated={false}>
             <NavigationMenuItem>
               <NavigationMenuLink
                 asChild
@@ -51,8 +65,8 @@ export function DashboardHeader({ className }: UserHeaderProps) {
                 </Link>
               </NavigationMenuLink>
             </NavigationMenuItem>
-          </SignedOut>
-          <SignedIn>
+          </SessionGate>
+          <SessionGate authenticated>
             <NavigationMenuItem>
               <NavigationMenuLink
                 asChild
@@ -81,7 +95,7 @@ export function DashboardHeader({ className }: UserHeaderProps) {
                 </Button>
               </NavigationMenuLink>
             </NavigationMenuItem>
-          </SignedIn>
+          </SessionGate>
         </NavigationMenuList>
       </NavigationMenu>
     </header>

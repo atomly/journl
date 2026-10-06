@@ -18,6 +18,7 @@ import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -26,7 +27,6 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
-import { Form } from "../ui/form";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
@@ -354,6 +354,7 @@ export function BlockEditor({
           DropdownMenu,
           DropdownMenuCheckboxItem,
           DropdownMenuContent,
+          DropdownMenuGroup,
           DropdownMenuItem,
           DropdownMenuLabel,
           DropdownMenuSeparator,
@@ -361,9 +362,6 @@ export function BlockEditor({
           DropdownMenuSubContent,
           DropdownMenuSubTrigger,
           DropdownMenuTrigger,
-        },
-        Form: {
-          Form,
         },
         Input: {
           Input: Input,

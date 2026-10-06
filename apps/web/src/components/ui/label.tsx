@@ -1,18 +1,21 @@
-import { Label as LabelPrimitive } from "radix-ui";
-import type * as React from "react";
-import { cn } from "~/lib/cn";
+// biome-ignore-all lint/a11y/noLabelWithoutControl: The reusable Label is associated with its control by callers.
 
-export function Label({
-  className,
-  ...props
-}: React.ComponentProps<typeof LabelPrimitive.Root>) {
+"use client";
+
+import { cn } from "cn";
+import type * as React from "react";
+
+function Label({ className, ...props }: React.ComponentProps<"label">) {
   return (
-    <LabelPrimitive.Root
+    <label
+      data-slot="label"
       className={cn(
-        "font-medium text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70",
+        "flex select-none items-center gap-2 font-medium text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-50 group-data-[disabled=true]:pointer-events-none group-data-[disabled=true]:opacity-50",
         className,
       )}
       {...props}
     />
   );
 }
+
+export { Label };

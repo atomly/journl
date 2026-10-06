@@ -12,7 +12,7 @@ function UserLayout({ children }: AppLayoutProps) {
     <DashboardProviders>
       <div className="flex min-h-svh flex-col">
         <DashboardHeader className="container mx-auto sm:mt-4" />
-        <main className="container mx-auto flex flex-1 grow flex-col items-center justify-center gap-4 self-center p-4 md:p-6">
+        <main className="container mx-auto flex flex-1 grow flex-col items-center justify-start gap-4 self-center p-4 md:p-6">
           {children}
         </main>
       </div>

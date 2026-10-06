@@ -8,8 +8,11 @@
     "utils": "~/components/utils"
   },
   "iconLibrary": "lucide",
+  "registries": {
+    "@better-auth-ui": "https://better-auth-ui.com/r/{style}/{name}.json"
+  },
   "rsc": true,
-  "style": "new-york",
+  "style": "base-nova",
   "tailwind": {
     "baseColor": "zinc",
     "config": "",

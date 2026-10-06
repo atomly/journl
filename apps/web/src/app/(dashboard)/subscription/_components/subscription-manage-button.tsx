@@ -1,5 +1,6 @@
 "use client";
 
+import type { BaseUIEvent } from "@base-ui/react/types";
 import { useMutation } from "@tanstack/react-query";
 import { usePathname, useRouter } from "next/navigation";
 import type { ComponentProps } from "react";
@@ -35,7 +36,9 @@ export const SubscriptionManageButton = ({
     return null;
   }
 
-  const handleClick = async (event: React.MouseEvent<HTMLButtonElement>) => {
+  const handleClick = async (
+    event: BaseUIEvent<React.MouseEvent<HTMLButtonElement>>,
+  ) => {
     openBillingPortal({
       returnUrl: pathname,
     });

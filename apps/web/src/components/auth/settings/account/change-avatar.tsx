@@ -3,19 +3,25 @@
 import { fileToAvatarDataUrl } from "@better-auth-ui/core";
 import { useAuth, useSession, useUpdateUser } from "@better-auth-ui/react";
 import { Trash2, Upload } from "lucide-react";
-import { type ChangeEvent, useRef, useState } from "react";
+import { type ChangeEvent, useId, useRef, useState } from "react";
 import { toast } from "sonner";
 import { UserAvatar } from "~/components/auth/user/user-avatar";
-import { Button, buttonVariants } from "~/components/ui/button";
+import { Button } from "~/components/ui/button";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "~/components/ui/dropdown-menu";
-import { Field, FieldLabel } from "~/components/ui/field";
+  Field,
+  FieldDescription,
+  FieldError,
+  FieldLabel,
+} from "~/components/ui/field";
 import { Spinner } from "~/components/ui/spinner";
-import { cn } from "~/lib/cn";
+
+const MAX_AVATAR_FILE_BYTES = 5 * 1024 * 1024;
+const AVATAR_FILE_TYPES = [
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/gif",
+];
 
 export type ChangeAvatarProps = {
   className?: string;
@@ -25,10 +31,13 @@ export function ChangeAvatar({ className }: ChangeAvatarProps) {
   const { authClient, localization, avatar } = useAuth();
   const { data: session } = useSession(authClient);
 
-  const { mutate: updateUser, isPending: updatePending } =
+  const { mutateAsync: updateUser, isPending: updatePending } =
     useUpdateUser(authClient);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const inputId = useId();
+  const descriptionId = useId();
+  const [error, setError] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -39,63 +48,80 @@ export function ChangeAvatar({ className }: ChangeAvatarProps) {
     if (!file) return;
 
     e.target.value = "";
+    setError(null);
+
+    if (!session || isPending) return;
+    if (!AVATAR_FILE_TYPES.includes(file.type)) {
+      setError("Choose a JPG, PNG, WebP, or GIF image.");
+      return;
+    }
+    if (file.size === 0 || file.size > MAX_AVATAR_FILE_BYTES) {
+      setError("Choose an image smaller than 5 MB that isn't empty.");
+      return;
+    }
 
     setIsUploading(true);
 
+    let image: string;
     try {
       const resized =
         (await avatar.resize?.(file, avatar.size, avatar.extension)) || file;
 
-      const image =
-        (await avatar.upload?.(resized)) ||
-        (await fileToAvatarDataUrl(resized));
-
-      updateUser(
-        { image },
-        {
-          onSuccess: () =>
-            toast.success(localization.settings.avatarChangedSuccess),
-        },
-      );
-    } catch (error) {
-      console.error("[Better Auth UI] Image operation failed", error);
-      toast.error(localization.errors.imageUploadFailed);
+      image = avatar.upload
+        ? await avatar.upload(resized)
+        : await fileToAvatarDataUrl(resized);
+    } catch {
+      setError(localization.errors.imageUploadFailed);
+      setIsUploading(false);
+      return;
     }
-
-    setIsUploading(false);
+    try {
+      await updateUser({ image });
+      toast.success(localization.settings.avatarChangedSuccess);
+    } catch {
+      setError("Your photo couldn't be saved. Please try again.");
+    } finally {
+      setIsUploading(false);
+    }
   }
 
   async function handleDelete() {
     const currentImage = session?.user.image;
+    if (!session || !currentImage || isPending) return;
+    setError(null);
+    setIsDeleting(true);
 
-    updateUser(
-      { image: null },
-      {
-        onSuccess: async () => {
-          if (currentImage) {
-            setIsDeleting(true);
-            try {
-              await avatar.delete?.(currentImage);
-            } finally {
-              setIsDeleting(false);
-            }
-          }
-
-          toast.success(localization.settings.avatarDeletedSuccess);
-        },
-      },
-    );
+    try {
+      await updateUser({ image: null });
+    } catch {
+      setError("Your photo couldn't be removed. Please try again.");
+      setIsDeleting(false);
+      return;
+    }
+    try {
+      await avatar.delete?.(currentImage);
+      toast.success(localization.settings.avatarDeletedSuccess);
+    } catch {
+      setError(
+        "Your photo was removed, but the stored file couldn't be deleted.",
+      );
+    } finally {
+      setIsDeleting(false);
+    }
   }
 
   return (
     <Field className={className}>
-      <FieldLabel>{localization.settings.avatar}</FieldLabel>
+      <FieldLabel htmlFor={inputId}>{localization.settings.avatar}</FieldLabel>
 
       <input
         ref={fileInputRef}
+        id={inputId}
         type="file"
-        accept="image/*"
+        accept={AVATAR_FILE_TYPES.join(",")}
         className="hidden"
+        disabled={!session || isPending}
+        aria-describedby={descriptionId}
         onChange={handleFileChange}
       />
 
@@ -104,41 +130,43 @@ export function ChangeAvatar({ className }: ChangeAvatarProps) {
           type="button"
           variant="ghost"
           className="h-auto w-auto rounded-full p-0"
-          disabled={isPending}
+          disabled={!session || isPending}
+          aria-label={localization.settings.uploadAvatar}
           onClick={() => fileInputRef.current?.click()}
         >
           <UserAvatar className="size-12" isPending={isPending} />
         </Button>
 
-        <DropdownMenu>
-          <DropdownMenuTrigger
-            className={cn(buttonVariants({ size: "sm", variant: "secondary" }))}
+        <div className="flex flex-wrap items-center gap-2">
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
             disabled={!session || isPending}
+            onClick={() => fileInputRef.current?.click()}
+            aria-describedby={descriptionId}
           >
-            {isPending && <Spinner />}
-
-            {localization.settings.changeAvatar}
-          </DropdownMenuTrigger>
-
-          <DropdownMenuContent className="min-w-fit">
-            <DropdownMenuItem onClick={() => fileInputRef.current?.click()}>
-              <Upload className="text-muted-foreground" />
-
-              {localization.settings.uploadAvatar}
-            </DropdownMenuItem>
-
-            <DropdownMenuItem
-              variant="destructive"
-              disabled={!session?.user.image}
+            {isUploading ? <Spinner /> : <Upload />}
+            {localization.settings.uploadAvatar}
+          </Button>
+          {session?.user.image && (
+            <Button
+              type="button"
+              size="sm"
+              variant="ghost"
+              disabled={isPending}
               onClick={handleDelete}
             >
-              <Trash2 />
-
+              {isDeleting ? <Spinner /> : <Trash2 />}
               {localization.settings.deleteAvatar}
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+            </Button>
+          )}
+        </div>
       </div>
+      <FieldDescription id={descriptionId}>
+        JPG, PNG, WebP, or GIF. Maximum 5 MB.
+      </FieldDescription>
+      {error && <FieldError>{error}</FieldError>}
     </Field>
   );
 }

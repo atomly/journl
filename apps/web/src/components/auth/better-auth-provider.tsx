@@ -67,6 +67,7 @@ export function BetterAuthProvider({
       <PasswordSignInContext value={allowPasswordSignIn}>
         <AuthProvider
           authClient={authClient}
+          avatar={{ enabled: true, extension: "webp", size: 256 }}
           basePaths={{ auth: "/auth", settings: "/account" }}
           emailAndPassword={{
             enabled: allowPasswordSignIn && pathname === "/auth/sign-in",

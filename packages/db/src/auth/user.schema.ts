@@ -17,7 +17,7 @@ export const user = pgTable("user", {
   stripeCustomerId: varchar("stripe_customer_id", {
     length: TEXT_LIMITS.STRIPE_ID,
   }),
-  image: varchar("image", { length: TEXT_LIMITS.URL }),
+  image: varchar("image", { length: TEXT_LIMITS.AVATAR_IMAGE }),
   createdAt: timestamp("created_at")
     .$defaultFn(() => /* @__PURE__ */ new Date())
     .notNull(),

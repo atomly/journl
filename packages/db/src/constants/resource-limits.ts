@@ -15,6 +15,8 @@ export const JSONB_LIMITS = {
 
 /* String length limits (for varchar fields) */
 export const TEXT_LIMITS = {
+  /** Avatar URLs or compact data URLs produced by Better Auth UI (4 KiB). */
+  AVATAR_IMAGE: 4096,
   /** Currency codes */
   CURRENCY: 10,
   /** Plan descriptions */

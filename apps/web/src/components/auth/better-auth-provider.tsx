@@ -74,7 +74,6 @@ export function BetterAuthProvider({
           }}
           localization={{
             auth: {
-              continueWith: "Continue with",
               signIn: "Sign in",
               signUp: "Sign up",
             },

@@ -1,7 +1,6 @@
 "use client";
 import { usePathname, useRouter } from "next/navigation";
 import { Dialog, DialogContent, DialogTitle } from "~/components/ui/dialog";
-import { useAuthModal } from "./auth-modal-provider";
 
 type AuthModalProps = {
   /**
@@ -27,15 +26,12 @@ function getScreenReaderContent(pathname: string) {
 export function AuthModal({ children }: AuthModalProps) {
   const router = useRouter();
   const pathname = usePathname();
-  const { cancelUrl } = useAuthModal();
   return (
     <Dialog
       open={pathname.startsWith("/auth") || pathname.startsWith("/invite")}
       onOpenChange={(open) => {
         if (!open) {
-          router.replace(
-            cancelUrl.startsWith("/") ? cancelUrl : `/${cancelUrl}`,
-          );
+          router.back();
         }
       }}
     >

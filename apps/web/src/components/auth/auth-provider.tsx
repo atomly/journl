@@ -22,7 +22,7 @@ declare module "@better-auth-ui/core" {
         { className?: string; href: string; to?: string } & Pick<
           ComponentPropsWithoutRef<"a">,
           "aria-disabled" | "tabIndex" | "onClick"
-        >
+        > & { replace?: boolean }
       >
     >;
   }

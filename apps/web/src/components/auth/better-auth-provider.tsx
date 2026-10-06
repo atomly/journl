@@ -31,12 +31,29 @@ function getQueryClient() {
   return browserQueryClient;
 }
 
+function isModalPath(path: string) {
+  return path.startsWith("/auth/") || path.startsWith("/invite");
+}
+
+function AuthNavigationLink({
+  href,
+  replace,
+  ...props
+}: ComponentProps<typeof NextLink>) {
+  const pathname = usePathname();
+  const targetPath = typeof href === "string" ? href : href.pathname;
+  const replaceNavigation =
+    replace ?? (isModalPath(pathname) && isModalPath(targetPath ?? ""));
+
+  return <NextLink href={href} replace={replaceNavigation} {...props} />;
+}
+
 // Nested providers (including intercepted auth modals) inherit the server flag.
 const PasswordSignInContext = createContext(false);
 
 export function BetterAuthProvider({
   children,
-  Link = NextLink,
+  Link = AuthNavigationLink,
   passwordSignIn,
 }: AuthProviderProps) {
   const inheritedPasswordSignIn = useContext(PasswordSignInContext);

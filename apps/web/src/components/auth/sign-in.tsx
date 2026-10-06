@@ -141,7 +141,7 @@ export function SignIn({
               )}
 
               {showSeparator && (
-                <FieldSeparator className="m-0 text-xs *:data-[slot=field-separator-content]:bg-card">
+                <FieldSeparator className="m-0 text-xs">
                   {localization.auth.or}
                 </FieldSeparator>
               )}
@@ -338,7 +338,7 @@ export function SignIn({
           {socialPosition === "bottom" && (
             <>
               {showSeparator && (
-                <FieldSeparator className="text-xs *:data-[slot=field-separator-content]:bg-card">
+                <FieldSeparator className="text-xs">
                   {localization.auth.or}
                 </FieldSeparator>
               )}

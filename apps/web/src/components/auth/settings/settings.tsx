@@ -73,11 +73,11 @@ export function Settings({ className, view, path, hideNav }: SettingsProps) {
         <TabsList
           aria-label={localization.settings.settings}
           variant="line"
-          className="w-full justify-start gap-4 rounded-none border-b px-0"
+          className="h-10 w-full justify-start gap-4 rounded-none border-b px-0"
         >
           <TabsTrigger
             value="account"
-            className="h-10 flex-none gap-2 rounded-none px-3"
+            className="flex-none gap-2 rounded-none px-3 after:bottom-0 after:bg-primary data-active:font-semibold"
             onClick={() =>
               navigate({
                 to: `${basePaths.settings}/${viewPaths.settings.account}`,
@@ -91,7 +91,7 @@ export function Settings({ className, view, path, hideNav }: SettingsProps) {
 
           <TabsTrigger
             value="security"
-            className="h-10 flex-none gap-2 rounded-none px-3"
+            className="flex-none gap-2 rounded-none px-3 after:bottom-0 after:bg-primary data-active:font-semibold"
             onClick={() =>
               navigate({
                 to: `${basePaths.settings}/${viewPaths.settings.security}`,
@@ -109,7 +109,7 @@ export function Settings({ className, view, path, hideNav }: SettingsProps) {
                 <TabsTrigger
                   key={`${plugin.id}-${settingsTab.view}`}
                   value={settingsTab.view}
-                  className="h-10 flex-none gap-2 rounded-none px-3"
+                  className="flex-none gap-2 rounded-none px-3 after:bottom-0 after:bg-primary data-active:font-semibold"
                   onClick={() =>
                     navigate({
                       to: `${basePaths.settings}/${plugin.viewPaths?.settings?.[settingsTab.view]}`,

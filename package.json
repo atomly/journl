@@ -63,6 +63,11 @@
         "@triplit/client",
         "@triplit/react"
       ]
-    }
+    },
+    "onlyBuiltDependencies": [
+      "@swc/core",
+      "cbor-extract",
+      "esbuild"
+    ]
   }
 }

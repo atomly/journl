@@ -22,43 +22,26 @@ export function AppHeader({ className, ...props }: AppHeaderProps) {
       return;
     }
 
-    const getScrollTop = (element: HTMLElement) => {
+    const getScrollTop = () => {
+      const element = scrollElement ?? document.documentElement;
+      const scrollTop = scrollElement
+        ? scrollElement.scrollTop
+        : window.scrollY;
+
       // Ignore elastic overscroll at either edge of the scroll container.
       return Math.max(
         0,
-        Math.min(
-          element.scrollTop,
-          element.scrollHeight - element.clientHeight,
-        ),
+        Math.min(scrollTop, element.scrollHeight - element.clientHeight),
       );
     };
 
-    const initialScrollTarget = scrollElement ?? document.scrollingElement;
-    let lastScrollTarget: HTMLElement =
-      initialScrollTarget instanceof HTMLElement
-        ? initialScrollTarget
-        : document.documentElement;
-    let lastScrollY = getScrollTop(lastScrollTarget);
+    let lastScrollY = getScrollTop();
     let directionDistance = 0;
     let animationFrameId: number | null = null;
-    let pendingScrollTarget: HTMLElement | null = null;
     setIsHidden(false);
 
-    const updateVisibility = (target: HTMLElement) => {
-      const currentScrollY = getScrollTop(target);
-
-      // Virtualized pages can use a descendant as their scroll container.
-      // Start a fresh direction measurement when the active scroller changes.
-      if (target !== lastScrollTarget) {
-        lastScrollTarget = target;
-        lastScrollY = currentScrollY;
-        directionDistance = 0;
-        if (currentScrollY <= SHOW_AT_SCROLL_TOP) {
-          setIsHidden(false);
-        }
-        return;
-      }
-
+    const updateVisibility = () => {
+      const currentScrollY = getScrollTop();
       const delta = currentScrollY - lastScrollY;
       lastScrollY = currentScrollY;
 
@@ -85,58 +68,35 @@ export function AppHeader({ className, ...props }: AppHeaderProps) {
       }
     };
 
-    const onScroll = (event: Event) => {
-      const target =
-        event.target instanceof HTMLElement
-          ? event.target
-          : document.scrollingElement;
-      if (!(target instanceof HTMLElement)) {
-        return;
-      }
-
-      if (
-        scrollElement &&
-        target !== scrollElement &&
-        !scrollElement.contains(target) &&
-        target !== document.documentElement &&
-        target !== document.body
-      ) {
-        return;
-      }
-
-      pendingScrollTarget = target;
+    const onScroll = () => {
       if (animationFrameId !== null) {
         return;
       }
 
       animationFrameId = window.requestAnimationFrame(() => {
         animationFrameId = null;
-        const targetToUpdate = pendingScrollTarget;
-        pendingScrollTarget = null;
-        if (targetToUpdate) {
-          updateVisibility(targetToUpdate);
-        }
+        updateVisibility();
       });
     };
 
-    window.addEventListener("scroll", onScroll, {
-      capture: true,
-      passive: true,
-    });
+    const listenerTarget = scrollElement ?? window;
+    listenerTarget.addEventListener("scroll", onScroll, { passive: true });
 
     return () => {
-      window.removeEventListener("scroll", onScroll, true);
+      listenerTarget.removeEventListener("scroll", onScroll);
       if (animationFrameId !== null) {
         window.cancelAnimationFrame(animationFrameId);
       }
     };
   }, [isMobile, scrollElement]);
 
+  // Client navigation retains pointer focus; only keyboard focus should keep
+  // the header visible while the content scrolls.
   return (
     <header
       data-hidden={isHidden}
       className={cn(
-        "peer/app-header fixed top-0 right-0 left-0 z-4500 mx-6 mt-2 h-12 transform-gpu transition-transform duration-300 ease-out will-change-transform focus-within:translate-y-0 motion-reduce:transition-none md:sticky md:top-0 md:right-auto md:left-auto md:m-2",
+        "peer/app-header fixed top-0 right-0 left-0 z-4500 mx-6 mt-2 h-12 transform-gpu transition-transform duration-300 ease-out will-change-transform has-[:focus-visible]:translate-y-0 motion-reduce:transition-none md:sticky md:top-0 md:right-auto md:left-auto md:m-2",
         {
           "-translate-y-[calc(100%+2rem)] md:translate-y-0": isHidden,
         },

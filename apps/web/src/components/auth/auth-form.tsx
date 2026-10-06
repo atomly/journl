@@ -35,7 +35,24 @@ import { AdditionalField, type AdditionalFieldProps } from "./additional-field";
 const { fieldContext, formContext, useFieldContext, useFormContext } =
   createFormHookContexts();
 
-const DEFAULT_AUTH_FORM_SERVER_ERROR = "Unable to submit this form. Try again.";
+const DEFAULT_AUTH_FORM_SERVER_ERROR =
+  "Something went wrong. Please try again.";
+
+function getAuthFormServerErrorMessage(
+  error: unknown,
+  fallbackMessage: string,
+) {
+  const normalized = normalizeAuthFormServerError(error, fallbackMessage);
+  const message = normalized.form?.message;
+
+  // Some failed auth requests only expose the HTTP status as their message
+  // (for example, "500"). Showing that value gives users no useful guidance.
+  if (message && /^5\d\d$/.test(message)) {
+    return { ...normalized, form: { message: fallbackMessage } };
+  }
+
+  return normalized;
+}
 
 export function focusFirstInvalidAuthFormControl(form: HTMLFormElement) {
   requestAnimationFrame(() => {
@@ -80,7 +97,7 @@ export function setAuthFormServerError(
   error: unknown,
   fallbackMessage: string,
 ) {
-  const normalized = normalizeAuthFormServerError(error, fallbackMessage);
+  const normalized = getAuthFormServerErrorMessage(error, fallbackMessage);
   form.setErrorMap({
     onServer: {
       fields: normalized.fields ?? {},

@@ -1010,7 +1010,7 @@ function DraggableFolderRow({
                     ) : (
                       <FolderClosed className="size-3 shrink-0 transition-opacity duration-150 group-focus-within/folder-navigation:opacity-0 group-hover/folder-navigation:opacity-0" />
                     )}
-                    <ChevronRight className="absolute inset-0 size-3 shrink-0 opacity-0 transition-all duration-150 group-focus-within/folder-navigation:opacity-100 group-hover/folder-navigation:opacity-100 group-data-[state=open]/folder-collapsible:rotate-90" />
+                    <ChevronRight className="absolute inset-0 size-3 shrink-0 opacity-0 transition-all duration-150 group-focus-within/folder-navigation:opacity-100 group-hover/folder-navigation:opacity-100 group-data-[open]/folder-collapsible:rotate-90" />
                   </span>
                   <span className="line-clamp-1 min-w-0 flex-1 truncate text-left font-medium">
                     {folder.name || "New folder"}

@@ -126,7 +126,8 @@ The rest of the components are set by the Tailwind CSS classes, or by our editor
 - Tooltips/Popover (`z-index`: 4500)
 - Auth Settings Dropdown (`z-index`: 4500)
 - Drawer & DrawerTrigger (with its overlay and drag handles) (`z-index`: 4500)
-- Mobile Sidebar (`z-index`: 4500)
+- Mobile Sidebar Overlay (`z-index`: 4500)
+- Mobile Sidebar (`z-index`: 4501)
 - Mobile BlockNoteFormattingBar (`z-index`: 4000)
 - Editor Options/Drag Handle (`z-index`: 4000)
 - Editor Options/Drag Handle Menu (`z-index`: 4000)
@@ -159,12 +160,17 @@ The rest of the components are set by the Tailwind CSS classes, or by our editor
   z-index: 4500;
 }
 
+/* The mobile sidebar popup is separately layered at z-index 4501. */
 [data-slot="sheet-overlay"] {
   z-index: 4500;
 }
 
-/* Ensure the tooltips/popover appears above the sidebar */
-[data-radix-popper-content-wrapper] {
+/* Base UI popups use component slots instead of Radix's popper wrapper. */
+[data-slot="tooltip-content"],
+[data-slot="popover-content"],
+[data-slot="select-content"],
+[data-slot="dropdown-menu-content"],
+[data-slot="dropdown-menu-sub-content"] {
   z-index: 4500 !important;
 }
 
@@ -199,9 +205,13 @@ The rest of the components are set by the Tailwind CSS classes, or by our editor
 
 /* On mobile... */
 @media (max-width: 768px) {
-  /* Sets the z-index of the sidebar and its overlay */
   [data-slot="sidebar"] {
     z-index: 4500;
+  }
+
+  /* Keep the mobile sidebar above its Base UI dialog backdrop. */
+  [data-slot="sidebar"][data-mobile="true"] {
+    z-index: 4501;
   }
 
   /* Hide the editor's AI suggestion menu key shortcut elements */

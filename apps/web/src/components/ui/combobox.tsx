@@ -99,6 +99,7 @@ function ComboboxContent({
   return (
     <ComboboxPrimitive.Portal>
       <ComboboxPrimitive.Positioner
+        data-slot="combobox-positioner"
         side={side}
         sideOffset={sideOffset}
         align={align}

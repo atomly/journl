@@ -123,8 +123,8 @@ The rest of the components are set by the Tailwind CSS classes, or by our editor
 - Dialog Content (Billing Modal, Auth Modal, etc.) (`z-index`: 5500)
 - Dialog Overlays (Billing Modal, Auth Modal, etc.) (`z-index`: 5000)
 - Header Search Modal and Overlay (`z-index`: 5000)
-- Tooltips/Popover (`z-index`: 4500)
-- Auth Settings Dropdown (`z-index`: 4500)
+- Base UI popup positioners (`z-index`: 4500)
+- Sidebar user menu positioner (`z-index`: 4600)
 - Drawer & DrawerTrigger (with its overlay and drag handles) (`z-index`: 4500)
 - Mobile Sidebar Overlay (`z-index`: 4500)
 - Mobile Sidebar (`z-index`: 4501)
@@ -160,12 +160,32 @@ The rest of the components are set by the Tailwind CSS classes, or by our editor
   z-index: 4500;
 }
 
-/* The mobile sidebar popup is separately layered at z-index 4501. */
+/* Keep the Sheet popup above its backdrop; the nested sidebar cannot escape
+   the popup's stacking context with its own z-index. */
 [data-slot="sheet-overlay"] {
   z-index: 4500;
 }
 
-/* Base UI popups use component slots instead of Radix's popper wrapper. */
+[data-slot="sheet-content"] {
+  z-index: 4501;
+}
+
+/* Base UI popups use Positioners that create their own stacking contexts. */
+[data-slot="tooltip-positioner"],
+[data-slot="popover-positioner"],
+[data-slot="select-positioner"],
+[data-slot="combobox-positioner"],
+[data-slot="hover-card-positioner"],
+[data-slot="navigation-menu-positioner"],
+[data-slot="dropdown-menu-positioner"] {
+  z-index: 4500 !important;
+}
+
+[data-slot="dropdown-menu-positioner"].sidebar-user-menu-positioner {
+  z-index: 4600 !important;
+}
+
+/* Popup-level z-index remains useful for stacking within each positioner. */
 [data-slot="tooltip-content"],
 [data-slot="popover-content"],
 [data-slot="select-content"],
@@ -209,7 +229,7 @@ The rest of the components are set by the Tailwind CSS classes, or by our editor
     z-index: 4500;
   }
 
-  /* Keep the mobile sidebar above its Base UI dialog backdrop. */
+  /* Keep the sidebar content and Sheet popup above the dialog backdrop. */
   [data-slot="sidebar"][data-mobile="true"] {
     z-index: 4501;
   }

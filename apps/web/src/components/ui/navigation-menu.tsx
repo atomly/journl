@@ -110,6 +110,7 @@ function NavigationMenuPositioner({
   return (
     <NavigationMenuPrimitive.Portal>
       <NavigationMenuPrimitive.Positioner
+        data-slot="navigation-menu-positioner"
         side={side}
         sideOffset={sideOffset}
         align={align}

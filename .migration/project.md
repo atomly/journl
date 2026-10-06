@@ -9,6 +9,8 @@
 - Upgraded workspace dependencies to current releases, with compatibility pins where upstream peer ranges prohibit the newest major (Stripe 22 for Better Auth; other pins are documented in manifests).
 - Added the Better Auth 1.7 schema fields for user Stripe customer IDs, subscription cancellation/billing metadata, and invitation creation timestamps.
 - Apply the additive database schema changes through the project's normal `db:push` deployment workflow before deploying the upgraded auth package.
+- Better Auth UI now follows its shadcn registry model: auth and settings views/provider code live under `apps/web/src/components/auth`, with only `@better-auth-ui/core` and `@better-auth-ui/react` retained as shared logic packages. The old `@daveyplate/better-auth-ui` component/server imports are removed.
+- `components.json` uses the Base UI `base-nova` style and the Better Auth UI registry alias. Invite-only social sign-up remains on the local view and passes the validated invite code as additional user data.
 - Added BlockNote's Yjs peers, which its server utility imports during the production build.
 - Typecheck, Biome check/format, Vitest (59 tests), and the production build pass. The build logs expected plan lookup errors because this environment has no database at the placeholder `POSTGRES_URL`.
 

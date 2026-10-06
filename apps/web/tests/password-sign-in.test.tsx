@@ -12,17 +12,17 @@ vi.mock("next/navigation", () => ({
 vi.mock("~/auth/client", () => ({
   authClient: { signIn: { social: vi.fn() } },
 }));
-vi.mock("@daveyplate/better-auth-ui", () => ({
-  AuthUIProvider: ({
+vi.mock("~/components/auth/auth-provider", () => ({
+  AuthProvider: ({
     children,
-    credentials,
+    emailAndPassword,
   }: {
     children: ReactNode;
-    credentials: false | { forgotPassword: boolean };
+    emailAndPassword: { enabled: boolean; forgotPassword: boolean };
   }) => (
     <div
-      data-password={!!credentials}
-      data-forgot-password={credentials ? credentials.forgotPassword : false}
+      data-password={emailAndPassword.enabled}
+      data-forgot-password={emailAndPassword.forgotPassword}
     >
       {children}
     </div>

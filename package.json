@@ -52,10 +52,13 @@
         "zod": "^3.23.8 || ^4.0.0"
       },
       "ignoreMissing": [
+        "@better-auth/agent-auth",
+        "@better-auth/api-key",
         "@better-auth/passkey",
         "@daveyplate/better-auth-tanstack",
         "@instantdb/react",
         "@marsidev/react-turnstile",
+        "@mikkelscheike/email-provider-links",
         "@triplit/client",
         "@triplit/react"
       ]

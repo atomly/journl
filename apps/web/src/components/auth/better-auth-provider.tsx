@@ -1,39 +1,38 @@
 "use client";
-import { AuthUIProvider } from "@daveyplate/better-auth-ui";
+
+import { QueryClientProvider } from "@tanstack/react-query";
 import NextLink from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
   type ComponentProps,
   createContext,
   type ReactNode,
-  useCallback,
   useContext,
+  useState,
 } from "react";
 import { authClient } from "~/auth/client";
+import { AuthProvider } from "~/components/auth/auth-provider";
+import { createQueryClient } from "~/trpc/query-client";
 
 type AuthProviderProps = {
   children: ReactNode;
-  Link?: ComponentProps<typeof AuthUIProvider>["Link"];
+  Link?: ComponentProps<typeof AuthProvider>["Link"];
   passwordSignIn?: boolean;
 };
 
-// Nested providers (including intercepted auth modals) inherit the server flag.
-const PasswordSignInContext = createContext(false);
+let browserQueryClient: ReturnType<typeof createQueryClient> | undefined;
 
-type SocialSignInParams = Parameters<typeof authClient.signIn.social>[0];
-
-function normalizeInviteCode(value: string | null): string | null {
-  if (!value) {
-    return null;
+function getQueryClient() {
+  if (typeof window === "undefined") {
+    return createQueryClient();
   }
 
-  const normalized = value
-    .trim()
-    .toUpperCase()
-    .replace(/[\s-]+/g, "");
-
-  return normalized.length > 0 ? normalized : null;
+  browserQueryClient ??= createQueryClient();
+  return browserQueryClient;
 }
+
+// Nested providers (including intercepted auth modals) inherit the server flag.
+const PasswordSignInContext = createContext(false);
 
 export function BetterAuthProvider({
   children,
@@ -44,64 +43,38 @@ export function BetterAuthProvider({
   const allowPasswordSignIn = passwordSignIn ?? inheritedPasswordSignIn;
   const pathname = usePathname();
   const router = useRouter();
-
-  const signInWithSocialProvider = useCallback(
-    async (params: unknown) => {
-      const socialParams = params as SocialSignInParams;
-      if (pathname !== "/auth/sign-up") {
-        await authClient.signIn.social(socialParams);
-        return;
-      }
-
-      const inviteCode = normalizeInviteCode(
-        new URLSearchParams(window.location.search).get("invite"),
-      );
-
-      if (!inviteCode) {
-        throw new Error("An invite code is required to sign up.");
-      }
-
-      await authClient.signIn.social({
-        ...socialParams,
-        additionalData: {
-          ...((socialParams.additionalData as Record<string, unknown>) ?? {}),
-          inviteCode,
-        },
-        requestSignUp: true,
-      });
-    },
-    [pathname],
-  );
+  const [queryClient] = useState(getQueryClient);
 
   return (
-    <PasswordSignInContext value={allowPasswordSignIn}>
-      <AuthUIProvider
-        /* `basePath` is the path for the auth views */
-        basePath="/auth"
-        /* `account` is the path for the account views */
-        account
-        /* `organization` is the path for the organization views */
-        organization={false}
-        credentials={
-          allowPasswordSignIn && pathname === "/auth/sign-in"
-            ? { forgotPassword: false }
-            : false
-        }
-        social={{
-          providers: ["google", "github"],
-          signIn: signInWithSocialProvider,
-        }}
-        authClient={authClient}
-        navigate={router.push}
-        replace={router.replace}
-        onSessionChange={() => {
-          // Clear router cache (protected routes)
-          router.refresh();
-        }}
-        Link={Link}
-      >
-        {children}
-      </AuthUIProvider>
-    </PasswordSignInContext>
+    <QueryClientProvider client={queryClient}>
+      <PasswordSignInContext value={allowPasswordSignIn}>
+        <AuthProvider
+          authClient={authClient}
+          basePaths={{ auth: "/auth", settings: "/account" }}
+          emailAndPassword={{
+            enabled: allowPasswordSignIn && pathname === "/auth/sign-in",
+            forgotPassword: false,
+          }}
+          localization={{
+            auth: {
+              continueWith: "Continue with",
+              signIn: "Sign in",
+              signUp: "Sign up",
+            },
+          }}
+          navigate={({ to, replace }) =>
+            replace ? router.replace(to) : router.push(to)
+          }
+          redirectTo="/journal"
+          socialProviders={["google", "github"]}
+          socialSignInMode="redirect"
+          viewPaths={{ settings: { account: "settings" } }}
+          Link={Link}
+          queryClient={queryClient}
+        >
+          {children}
+        </AuthProvider>
+      </PasswordSignInContext>
+    </QueryClientProvider>
   );
 }

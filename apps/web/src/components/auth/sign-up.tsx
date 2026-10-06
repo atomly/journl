@@ -176,7 +176,7 @@ export function SignUp({
     emailAndPassword?.enabled && socialProviders && socialProviders.length > 0;
 
   return (
-    <Card className={cn("w-full max-w-sm", className)}>
+    <Card className={cn("w-full max-w-sm bg-transparent ring-0", className)}>
       <AuthPrompts view="signUp" />
       <CardHeader>
         <CardTitle className="font-semibold text-xl">
@@ -193,7 +193,7 @@ export function SignUp({
               )}
 
               {showSeparator && (
-                <FieldSeparator className="flex items-center text-xs *:data-[slot=field-separator-content]:bg-card">
+                <FieldSeparator className="text-xs *:data-[slot=field-separator-content]:bg-card">
                   {localization.auth.or}
                 </FieldSeparator>
               )}
@@ -546,7 +546,7 @@ export function SignUp({
           {socialPosition === "bottom" && (
             <>
               {showSeparator && (
-                <FieldSeparator className="flex items-center text-xs *:data-[slot=field-separator-content]:bg-card">
+                <FieldSeparator className="text-xs *:data-[slot=field-separator-content]:bg-card">
                   {localization.auth.or}
                 </FieldSeparator>
               )}

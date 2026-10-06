@@ -1,10 +1,13 @@
+// biome-ignore-all lint/a11y/useSemanticElements: Field groups use the documented ARIA group pattern.
+
 "use client";
 
 import { cva, type VariantProps } from "class-variance-authority";
+import { cn } from "cn";
 import { useMemo } from "react";
+
 import { Label } from "~/components/ui/label";
 import { Separator } from "~/components/ui/separator";
-import { cn } from "~/lib/cn";
 
 function FieldSet({ className, ...props }: React.ComponentProps<"fieldset">) {
   return (
@@ -74,7 +77,6 @@ function Field({
   ...props
 }: React.ComponentProps<"div"> & VariantProps<typeof fieldVariants>) {
   return (
-    // biome-ignore lint/a11y/useSemanticElements: This general field wrapper also groups non-form content.
     <div
       role="group"
       data-slot="field"

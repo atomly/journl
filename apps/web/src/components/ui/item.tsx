@@ -1,13 +1,14 @@
+// biome-ignore-all lint/a11y/useSemanticElements: The item group intentionally exposes list semantics around generic children.
 import { mergeProps } from "@base-ui/react/merge-props";
 import { useRender } from "@base-ui/react/use-render";
 import { cva, type VariantProps } from "class-variance-authority";
+import { cn } from "cn";
 import type * as React from "react";
+
 import { Separator } from "~/components/ui/separator";
-import { cn } from "~/lib/cn";
 
 function ItemGroup({ className, ...props }: React.ComponentProps<"div">) {
   return (
-    // biome-ignore lint/a11y/useSemanticElements: ItemGroup accepts arbitrary item content rather than list items only.
     <div
       role="list"
       data-slot="item-group"

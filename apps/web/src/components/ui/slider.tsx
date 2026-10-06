@@ -1,5 +1,7 @@
+// biome-ignore-all lint/suspicious/noArrayIndexKey: Slider thumbs are fixed positional slots.
+
 import { Slider as SliderPrimitive } from "@base-ui/react/slider";
-import { cn } from "~/lib/cn";
+import { cn } from "cn";
 
 function Slider({
   className,
@@ -14,10 +16,6 @@ function Slider({
     : Array.isArray(defaultValue)
       ? defaultValue
       : [min, max];
-  const thumbs = Array.from(
-    { length: _values.length },
-    (_, index) => `slider-thumb-${index}`,
-  );
 
   return (
     <SliderPrimitive.Root
@@ -40,13 +38,15 @@ function Slider({
             className="select-none bg-primary data-horizontal:h-full data-vertical:w-full"
           />
         </SliderPrimitive.Track>
-        {thumbs.map((thumb) => (
-          <SliderPrimitive.Thumb
-            data-slot="slider-thumb"
-            key={thumb}
-            className="relative block size-3 shrink-0 select-none rounded-full border border-ring bg-white ring-ring/50 transition-[color,box-shadow] after:absolute after:-inset-2 hover:ring-3 focus-visible:outline-hidden focus-visible:ring-3 active:ring-3 disabled:pointer-events-none disabled:opacity-50"
-          />
-        ))}
+        {Array.from({ length: _values.length }, (_, index) => {
+          return (
+            <SliderPrimitive.Thumb
+              data-slot="slider-thumb"
+              key={index}
+              className="relative block size-3 shrink-0 select-none rounded-full border border-ring bg-white ring-ring/50 transition-[color,box-shadow] after:absolute after:-inset-2 hover:ring-3 focus-visible:outline-hidden focus-visible:ring-3 active:ring-3 disabled:pointer-events-none disabled:opacity-50"
+            />
+          );
+        })}
       </SliderPrimitive.Control>
     </SliderPrimitive.Root>
   );

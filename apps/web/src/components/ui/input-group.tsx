@@ -1,15 +1,18 @@
+// biome-ignore-all lint/a11y/useSemanticElements: Input groups use the documented ARIA group pattern.
+// biome-ignore-all lint/a11y/useKeyWithClickEvents: The addon focuses its associated keyboard-accessible input.
+
 "use client";
 
 import { cva, type VariantProps } from "class-variance-authority";
+import { cn } from "cn";
 import type * as React from "react";
+
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { Textarea } from "~/components/ui/textarea";
-import { cn } from "~/lib/cn";
 
 function InputGroup({ className, ...props }: React.ComponentProps<"div">) {
   return (
-    // biome-ignore lint/a11y/useSemanticElements: This visual grouping can include buttons and inputs together.
     <div
       data-slot="input-group"
       role="group"
@@ -49,8 +52,6 @@ function InputGroupAddon({
   ...props
 }: React.ComponentProps<"div"> & VariantProps<typeof inputGroupAddonVariants>) {
   return (
-    // biome-ignore lint/a11y/useKeyWithClickEvents: The click handler only forwards focus to the child input.
-    // biome-ignore lint/a11y/useSemanticElements: This addon is a visual grouping, not a standalone form section.
     <div
       role="group"
       data-slot="input-group-addon"

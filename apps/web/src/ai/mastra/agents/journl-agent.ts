@@ -145,7 +145,7 @@ export const journlNano = new Agent({
   memory: journlMemory,
   model: nanoModel,
   name: JOURNL_AGENT_NAME,
-  tools: tools as never,
+  tools: tools,
 });
 
 export const journlMini = new Agent({
@@ -156,7 +156,7 @@ export const journlMini = new Agent({
   memory: journlMemory,
   model: miniModel,
   name: JOURNL_AGENT_NAME,
-  tools: tools as never,
+  tools: tools,
 });
 
 export function setJournlRequestContext(context: JournlAgentContext) {

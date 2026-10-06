@@ -1,6 +1,6 @@
 import { Memory } from "@mastra/memory";
+import { memoryEmbedder as embedder } from "~/ai/providers/openai/compatibility";
 import { miniModel } from "~/ai/providers/openai/text";
-import { model as embedder } from "../../providers/openai/embedding";
 import { journlStore } from "./store";
 import { journlVector } from "./vector";
 
@@ -25,7 +25,7 @@ const JOURNL_WORKING_MEMORY_TEMPLATE = `## Preferences
 `;
 
 export const journlMemory = new Memory({
-  embedder: embedder as never,
+  embedder: embedder,
   options: {
     lastMessages: JOURNL_MEMORY_LAST_MESSAGES,
     observationalMemory: {

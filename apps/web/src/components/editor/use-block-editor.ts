@@ -6,7 +6,7 @@ import { en } from "@blocknote/core/locales";
 import { useCreateBlockNote } from "@blocknote/react";
 import { AIExtension } from "@blocknote/xl-ai";
 import { en as aiEn } from "@blocknote/xl-ai/locales";
-import { DefaultChatTransport } from "ai";
+import { DefaultChatTransport } from "ai-sdk-v6";
 
 type UseBlockEditorOptions = {
   /**
@@ -69,7 +69,7 @@ export function useBlockEditor({
           agentCursor: { color: "#8bc6ff", name: "Journl" },
           transport: new DefaultChatTransport({
             api: "/api/ai/blocknote",
-          }) as never,
+          }),
         }),
       ],
       initialContent: initialBlocks,

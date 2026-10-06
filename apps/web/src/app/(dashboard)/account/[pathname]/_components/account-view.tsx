@@ -19,7 +19,7 @@ export async function AuthView({ pathname }: { pathname: string }) {
   return (
     <>
       <Settings
-        className="z-10 w-full flex-col gap-6 rounded-xl border bg-card py-6 text-card-foreground shadow-sm"
+        className="z-10 w-full flex-col gap-6 rounded-xl border bg-card px-4 py-6 text-card-foreground shadow-sm sm:px-6"
         path={pathname}
       />
       {pathname === "security" && (

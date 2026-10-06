@@ -2,6 +2,12 @@ import { db } from "@acme/db/client";
 import { type InsertPrice, Price } from "@acme/db/schema";
 import { eq } from "drizzle-orm";
 import type Stripe from "stripe";
+import { z } from "zod";
+
+const zPriceBillingFields = z.object({
+  interval: z.enum(["day", "week", "month", "year"]),
+  type: z.enum(["one_time", "recurring"]),
+});
 
 async function upsertPrice(price: Stripe.Price) {
   if (!price.recurring) {
@@ -9,6 +15,13 @@ async function upsertPrice(price: Stripe.Price) {
       `Price data is missing recurring info for price: ${price.id}`,
     );
   }
+
+  // Stripe's extensible string enums may contain values our billing schema
+  // does not support. Validate them instead of asserting database compatibility.
+  const { interval, type } = zPriceBillingFields.parse({
+    interval: price.recurring.interval,
+    type: price.type,
+  });
 
   const planId =
     typeof price.product === "string" ? price.product : price.product.id;
@@ -22,11 +35,10 @@ async function upsertPrice(price: Stripe.Price) {
     nickname: price.nickname,
     planId,
     recurring: {
-      interval: price.recurring
-        .interval as InsertPrice["recurring"]["interval"],
+      interval,
       intervalCount: price.recurring.interval_count,
     },
-    type: price.type as InsertPrice["type"],
+    type,
     unitAmount: price.unit_amount ?? 0,
   };
 

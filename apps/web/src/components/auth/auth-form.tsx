@@ -117,10 +117,10 @@ export function clearAuthFormFieldServerError(
   form.setErrorMap({ onServer: undefined });
   if (!fieldName) return;
 
-  const fieldMeta = form.getFieldMeta(fieldName as never);
+  const fieldMeta = form.getFieldMeta(fieldName);
   if (!fieldMeta?.errorMap.onServer) return;
 
-  form.setFieldMeta(fieldName as never, (current = fieldMeta) => ({
+  form.setFieldMeta(fieldName, (current = fieldMeta) => ({
     ...current,
     errorMap: { ...current.errorMap, onServer: undefined },
     errorSourceMap: { ...current.errorSourceMap, onServer: undefined },

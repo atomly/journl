@@ -22,18 +22,18 @@
     "with-env": "dotenv -e ../../.env --"
   },
   "dependencies": {
-    "@t3-oss/env-nextjs": "~0.13.10",
-    "drizzle-orm": "~0.45.1",
+    "@t3-oss/env-nextjs": "~0.13.11",
+    "drizzle-orm": "~0.45.3",
     "drizzle-zod": "~0.8.3",
-    "postgres": "~3.4.8",
-    "zod": "~4.3.6"
+    "postgres": "~3.4.9",
+    "zod": "~4.6.5"
   },
   "devDependencies": {
     "@acme/tsconfig": "workspace:*",
     "dotenv-cli": "~11.0.0",
-    "drizzle-kit": "~0.31.9",
-    "pg": "^8.20.0",
-    "stripe": "~20.4.1",
-    "typescript": "~5.9.3"
+    "drizzle-kit": "~0.31.11",
+    "pg": "^8.23.1",
+    "stripe": "~22.6.2",
+    "typescript": "~7.0.2"
   }
 }

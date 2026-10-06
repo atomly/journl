@@ -22,10 +22,11 @@ async function upsertPrice(price: Stripe.Price) {
     nickname: price.nickname,
     planId,
     recurring: {
-      interval: price.recurring.interval,
+      interval: price.recurring
+        .interval as InsertPrice["recurring"]["interval"],
       intervalCount: price.recurring.interval_count,
     },
-    type: price.type,
+    type: price.type as InsertPrice["type"],
     unitAmount: price.unit_amount ?? 0,
   };
 

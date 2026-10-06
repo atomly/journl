@@ -1,7 +1,6 @@
 "use client";
 
 import { standardSchemaResolver } from "@hookform/resolvers/standard-schema";
-import { Slot } from "@radix-ui/react-slot";
 import * as React from "react";
 import type {
   ControllerProps,
@@ -16,6 +15,7 @@ import {
 } from "react-hook-form";
 import type { ZodType } from "zod/v4";
 import { cn } from "~/lib/cn";
+import { Slot } from "./base-slot";
 import { Label } from "./label";
 
 export { FormProvider as Form, useFieldArray } from "react-hook-form";

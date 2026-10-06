@@ -6,7 +6,7 @@ import {
 import type { MastraMessageContentV2 } from "@mastra/core/agent";
 import type { MastraMessagePart } from "@mastra/core/agent/message-list";
 import type { MastraDBMessage } from "@mastra/core/memory";
-import { convertToModelMessages, streamText } from "ai";
+import { convertToModelMessages, streamText, type ToolSet } from "ai";
 import type { User } from "better-auth";
 import { after, type NextRequest } from "next/server";
 import { z } from "zod";
@@ -92,7 +92,7 @@ const handler = withAuthGuard(
         },
         system: systemPrompt,
         toolChoice: "required",
-        tools: toolDefinitionsToToolSet(toolDefinitions),
+        tools: toolDefinitionsToToolSet(toolDefinitions) as unknown as ToolSet,
       });
 
       after(async () => {

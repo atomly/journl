@@ -1,6 +1,6 @@
 "use client";
 
-import * as HoverCardPrimitive from "@radix-ui/react-hover-card";
+import { PreviewCard as HoverCardPrimitive } from "@base-ui/react/preview-card";
 import type * as React from "react";
 
 import { cn } from "~/lib/cn";
@@ -23,20 +23,31 @@ function HoverCardContent({
   className,
   align = "center",
   sideOffset = 4,
+  alignOffset,
+  side,
   ...props
-}: React.ComponentProps<typeof HoverCardPrimitive.Content>) {
+}: React.ComponentProps<typeof HoverCardPrimitive.Popup> &
+  Pick<
+    React.ComponentProps<typeof HoverCardPrimitive.Positioner>,
+    "align" | "alignOffset" | "side" | "sideOffset"
+  >) {
   return (
     <HoverCardPrimitive.Portal data-slot="hover-card-portal">
-      <HoverCardPrimitive.Content
-        data-slot="hover-card-content"
+      <HoverCardPrimitive.Positioner
         align={align}
+        alignOffset={alignOffset}
+        side={side}
         sideOffset={sideOffset}
-        className={cn(
-          "data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 z-50 w-64 origin-(--radix-hover-card-content-transform-origin) rounded-md border bg-popover p-4 text-popover-foreground shadow-md outline-hidden data-[state=closed]:animate-out data-[state=open]:animate-in",
-          className,
-        )}
-        {...props}
-      />
+      >
+        <HoverCardPrimitive.Popup
+          data-slot="hover-card-content"
+          className={cn(
+            "data-[closed]:fade-out-0 data-[open]:fade-in-0 data-[closed]:zoom-out-95 data-[open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 z-50 w-64 origin-(--transform-origin) rounded-md border bg-popover p-4 text-popover-foreground shadow-md outline-hidden data-[closed]:animate-out data-[open]:animate-in",
+            className,
+          )}
+          {...props}
+        />
+      </HoverCardPrimitive.Positioner>
     </HoverCardPrimitive.Portal>
   );
 }

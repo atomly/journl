@@ -1163,11 +1163,7 @@ export const AppSidebarPages = ({
       }
 
       const dropTarget = parseDropTarget(event.over?.id);
-      if (
-        !dropTarget ||
-        dropTarget.type !== "inside" ||
-        !dropTarget.parentNodeId
-      ) {
+      if (dropTarget?.type !== "inside" || !dropTarget.parentNodeId) {
         clearHoverExpandTimeout();
         return;
       }

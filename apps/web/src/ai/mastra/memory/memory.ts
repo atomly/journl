@@ -25,7 +25,7 @@ const JOURNL_WORKING_MEMORY_TEMPLATE = `## Preferences
 `;
 
 export const journlMemory = new Memory({
-  embedder,
+  embedder: embedder as never,
   options: {
     lastMessages: JOURNL_MEMORY_LAST_MESSAGES,
     observationalMemory: {

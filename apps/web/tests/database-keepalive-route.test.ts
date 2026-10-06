@@ -23,28 +23,27 @@ function request(authorization?: string) {
   });
 }
 
-test.each([
-  undefined,
-  "Bearer wrong-secret",
-  "test-cron-secret-value",
-])("rejects unauthorized requests (%s) without starting a workflow", async (authorization) => {
-  const response = await GET(request(authorization));
+test.each([undefined, "Bearer wrong-secret", "test-cron-secret-value"])(
+  "rejects unauthorized requests (%s) without starting a workflow",
+  async (authorization) => {
+    const response = await GET(request(authorization));
 
-  expect(response.status).toBe(401);
-  expect(start).not.toHaveBeenCalled();
-});
+    expect(response.status).toBe(401);
+    expect(start).not.toHaveBeenCalled();
+  },
+);
 
-test.each([
-  undefined,
-  "",
-])("fails closed when CRON_SECRET is unset (%s)", async (secret) => {
-  env.CRON_SECRET = secret;
+test.each([undefined, ""])(
+  "fails closed when CRON_SECRET is unset (%s)",
+  async (secret) => {
+    env.CRON_SECRET = secret;
 
-  const response = await GET(request(`Bearer ${secret}`));
+    const response = await GET(request(`Bearer ${secret}`));
 
-  expect(response.status).toBe(401);
-  expect(start).not.toHaveBeenCalled();
-});
+    expect(response.status).toBe(401);
+    expect(start).not.toHaveBeenCalled();
+  },
+);
 
 test.each<Record<string, string>>([
   { cookie: "better-auth.session_token=user-session" },
@@ -55,16 +54,19 @@ test.each<Record<string, string>>([
     "user-agent": "vercel-cron/1.0",
     "x-vercel-cron-schedule": "0 6 * * *",
   },
-])("rejects user credentials and forged scheduler headers: %j", async (headers) => {
-  const response = await GET(
-    new Request("https://example.com/api/cron/database-keepalive", {
-      headers,
-    }),
-  );
+])(
+  "rejects user credentials and forged scheduler headers: %j",
+  async (headers) => {
+    const response = await GET(
+      new Request("https://example.com/api/cron/database-keepalive", {
+        headers,
+      }),
+    );
 
-  expect(response.status).toBe(401);
-  expect(start).not.toHaveBeenCalled();
-});
+    expect(response.status).toBe(401);
+    expect(start).not.toHaveBeenCalled();
+  },
+);
 
 test("queues a request with the scheduler secret and returns the run ID", async () => {
   start.mockResolvedValue({ runId: "run_test" });

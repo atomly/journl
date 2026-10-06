@@ -328,11 +328,7 @@ function AssistantSources() {
   }
 
   return (
-    <Accordion
-      type="single"
-      collapsible
-      className="mt-4 rounded-md border border-border bg-background px-3"
-    >
+    <Accordion className="mt-4 rounded-md border border-border bg-background px-3">
       <AccordionItem value="assistant-sources" className="border-b-0">
         <AccordionTrigger className="py-2 text-muted-foreground text-xs hover:no-underline">
           Sources ({sources.length})

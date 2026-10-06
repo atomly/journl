@@ -148,7 +148,7 @@ async function render(show = true, current: JournalListEntry = entry) {
             createElement(
               JournalEntryProvider,
               { entry: current },
-              createElement(JournalEntryEditor),
+              createElement(JournalEntryEditor, { debounceTime: 150 }),
             ),
         ),
       ),

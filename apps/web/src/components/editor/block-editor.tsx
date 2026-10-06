@@ -18,6 +18,7 @@ import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -332,76 +333,79 @@ export function BlockEditor({
       editor={editor}
       theme={resolvedTheme as "light" | "dark"}
       onChange={handleEditorChange}
-      shadCNComponents={{
-        // Pass modified ShadCN components from your project here.
-        // Otherwise, the default ShadCN components will be used.
-        Avatar: {
-          Avatar,
-          AvatarFallback,
-          AvatarImage,
-        },
-        Badge: {
-          Badge: Badge,
-        },
-        Button: {
-          Button: Button,
-        },
-        Card: {
-          Card: Card,
-          CardContent: CardContent,
-        },
-        DropdownMenu: {
-          DropdownMenu,
-          DropdownMenuCheckboxItem,
-          DropdownMenuContent,
-          DropdownMenuItem,
-          DropdownMenuLabel,
-          DropdownMenuSeparator,
-          DropdownMenuSub,
-          DropdownMenuSubContent,
-          DropdownMenuSubTrigger,
-          DropdownMenuTrigger,
-        },
-        Form: {
-          Form,
-        },
-        Input: {
-          Input: Input,
-        },
-        Label: {
-          Label: Label,
-        },
-        Popover: {
-          Popover: Popover,
-          PopoverContent: PopoverContent,
-          PopoverTrigger: PopoverTrigger,
-        },
-        Select: {
-          Select: Select,
-          SelectContent: SelectContent,
-          SelectItem: SelectItem,
-          SelectTrigger: SelectTrigger,
-          SelectValue: SelectValue,
-        },
-        Skeleton: {
-          Skeleton: Skeleton,
-        },
-        Tabs: {
-          Tabs: Tabs,
-          TabsContent: TabsContent,
-          TabsList: TabsList,
-          TabsTrigger: TabsTrigger,
-        },
-        Toggle: {
-          Toggle: Toggle,
-        },
-        Tooltip: {
-          Tooltip,
-          TooltipContent,
-          TooltipProvider,
-          TooltipTrigger,
-        },
-      }}
+      shadCNComponents={
+        {
+          // Pass modified ShadCN components from your project here.
+          // Otherwise, the default ShadCN components will be used.
+          Avatar: {
+            Avatar,
+            AvatarFallback,
+            AvatarImage,
+          },
+          Badge: {
+            Badge: Badge,
+          },
+          Button: {
+            Button: Button,
+          },
+          Card: {
+            Card: Card,
+            CardContent: CardContent,
+          },
+          DropdownMenu: {
+            DropdownMenu,
+            DropdownMenuCheckboxItem,
+            DropdownMenuContent,
+            DropdownMenuGroup,
+            DropdownMenuItem,
+            DropdownMenuLabel,
+            DropdownMenuSeparator,
+            DropdownMenuSub,
+            DropdownMenuSubContent,
+            DropdownMenuSubTrigger,
+            DropdownMenuTrigger,
+          },
+          Form: {
+            Form,
+          },
+          Input: {
+            Input: Input,
+          },
+          Label: {
+            Label: Label,
+          },
+          Popover: {
+            Popover: Popover,
+            PopoverContent: PopoverContent,
+            PopoverTrigger: PopoverTrigger,
+          },
+          Select: {
+            Select: Select,
+            SelectContent: SelectContent,
+            SelectItem: SelectItem,
+            SelectTrigger: SelectTrigger,
+            SelectValue: SelectValue,
+          },
+          Skeleton: {
+            Skeleton: Skeleton,
+          },
+          Tabs: {
+            Tabs: Tabs,
+            TabsContent: TabsContent,
+            TabsList: TabsList,
+            TabsTrigger: TabsTrigger,
+          },
+          Toggle: {
+            Toggle: Toggle,
+          },
+          Tooltip: {
+            Tooltip,
+            TooltipContent,
+            TooltipProvider,
+            TooltipTrigger,
+          },
+        } as never
+      }
     >
       {children}
       <BlockEditorFloatingToolbar />

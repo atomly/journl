@@ -44,11 +44,14 @@ beforeEach(() => {
 async function setup() {
   const { auth } = await import("~/auth/server");
   const context = await auth.$context;
-  const user = await context.internalAdapter.createUser({
-    email: "existing-user@example.com",
-    emailVerified: true,
-    name: "Existing user",
-  });
+  const user = await context.internalAdapter.createUser(
+    {
+      email: "existing-user@example.com",
+      emailVerified: true,
+      name: "Existing user",
+    },
+    { method: "test" },
+  );
   await context.internalAdapter.linkAccount({
     accountId: "existing-github-user",
     providerId: "github",
@@ -85,20 +88,20 @@ function loginRequest(origin: string, withCookie = true) {
   });
 }
 
-test.each([
-  true,
-  false,
-])("branch preview login accepts the password set on the server (cookie=%s)", async (withCookie) => {
-  const { auth, user } = await setup();
-  const response = await auth.handler(
-    loginRequest(`https://${fixture.env.VERCEL_BRANCH_URL}`, withCookie),
-  );
-  const body = await response.json();
-  expect(body).not.toHaveProperty("code", "INVALID_ORIGIN");
-  expect(response.status).toBe(200);
-  expect(body.user.id).toBe(user.id);
-  expect(response.headers.get("set-cookie")).toContain("session_token=");
-});
+test.each([true, false])(
+  "branch preview login accepts the password set on the server (cookie=%s)",
+  async (withCookie) => {
+    const { auth, user } = await setup();
+    const response = await auth.handler(
+      loginRequest(`https://${fixture.env.VERCEL_BRANCH_URL}`, withCookie),
+    );
+    const body = await response.json();
+    expect(body).not.toHaveProperty("code", "INVALID_ORIGIN");
+    expect(response.status).toBe(200);
+    expect(body.user.id).toBe(user.id);
+    expect(response.headers.get("set-cookie")).toContain("session_token=");
+  },
+);
 
 test("the deployment URL also supports browser password login", async () => {
   const { auth } = await setup();

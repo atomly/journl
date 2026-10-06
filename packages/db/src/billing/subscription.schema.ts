@@ -35,6 +35,15 @@ export const Subscription = pgTable(
     trialStart: timestamp("trial_start"),
     trialEnd: timestamp("trial_end"),
     cancelAtPeriodEnd: boolean("cancel_at_period_end"),
+    cancelAt: timestamp("cancel_at"),
+    canceledAt: timestamp("canceled_at"),
+    endedAt: timestamp("ended_at"),
+    billingInterval: varchar("billing_interval", {
+      length: TEXT_LIMITS.STATUS,
+    }),
+    stripeScheduleId: varchar("stripe_schedule_id", {
+      length: TEXT_LIMITS.STRIPE_ID,
+    }),
     createdAt: timestamp("created_at")
       .$defaultFn(() => /* @__PURE__ */ new Date())
       .notNull(),

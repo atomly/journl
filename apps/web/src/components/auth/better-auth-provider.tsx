@@ -46,9 +46,10 @@ export function BetterAuthProvider({
   const router = useRouter();
 
   const signInWithSocialProvider = useCallback(
-    async (params: SocialSignInParams) => {
+    async (params: unknown) => {
+      const socialParams = params as SocialSignInParams;
       if (pathname !== "/auth/sign-up") {
-        await authClient.signIn.social(params);
+        await authClient.signIn.social(socialParams);
         return;
       }
 
@@ -61,9 +62,9 @@ export function BetterAuthProvider({
       }
 
       await authClient.signIn.social({
-        ...params,
+        ...socialParams,
         additionalData: {
-          ...((params.additionalData as Record<string, unknown>) ?? {}),
+          ...((socialParams.additionalData as Record<string, unknown>) ?? {}),
           inviteCode,
         },
         requestSignUp: true,

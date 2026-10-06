@@ -1,6 +1,5 @@
 "use client";
 
-import { Slot } from "@radix-ui/react-slot";
 import { cva, type VariantProps } from "class-variance-authority";
 import { PanelLeftIcon } from "lucide-react";
 import * as React from "react";
@@ -23,6 +22,7 @@ import {
 } from "~/components/ui/tooltip";
 import { useIsMobile } from "~/hooks/use-mobile";
 import { cn } from "~/lib/cn";
+import { Slot } from "./base-slot";
 
 const SIDEBAR_KEYBOARD_SHORTCUT_OPTION_S = "KeyS";
 const SIDEBAR_KEYBOARD_SHORTCUT_CTRL_SHIFT_B = "KeyB";
@@ -195,7 +195,7 @@ function SidebarProvider({
 
   return (
     <SidebarContext.Provider value={contextValue}>
-      <TooltipProvider delayDuration={0}>
+      <TooltipProvider delay={0}>
         <div
           data-slot="sidebar-wrapper"
           style={

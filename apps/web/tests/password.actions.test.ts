@@ -35,11 +35,14 @@ beforeEach(async () => {
   for (const key of Object.keys(fixture.database)) fixture.database[key] = [];
   fixture.revalidatePath.mockReset();
   const context = await auth.$context;
-  const user = await context.internalAdapter.createUser({
-    email,
-    emailVerified: true,
-    name: "Existing user",
-  });
+  const user = await context.internalAdapter.createUser(
+    {
+      email,
+      emailVerified: true,
+      name: "Existing user",
+    },
+    { method: "test" },
+  );
   userId = user.id;
   await context.internalAdapter.linkAccount({
     accountId: "github-existing-user",

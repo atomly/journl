@@ -69,7 +69,7 @@ export function useBlockEditor({
           agentCursor: { color: "#8bc6ff", name: "Journl" },
           transport: new DefaultChatTransport({
             api: "/api/ai/blocknote",
-          }),
+          }) as never,
         }),
       ],
       initialContent: initialBlocks,

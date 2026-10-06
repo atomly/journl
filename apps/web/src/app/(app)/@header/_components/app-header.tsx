@@ -123,9 +123,11 @@ export function AppHeader({ className, ...props }: AppHeaderProps) {
       capture: true,
       passive: true,
     });
+    window.addEventListener("scroll", onScroll, { passive: true });
 
     return () => {
       document.removeEventListener("scroll", onScroll, true);
+      window.removeEventListener("scroll", onScroll);
       if (animationFrameId !== null) {
         window.cancelAnimationFrame(animationFrameId);
       }

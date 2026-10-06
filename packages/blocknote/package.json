@@ -15,10 +15,10 @@
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },
   "peerDependencies": {
-    "@blocknote/core": "~0.46.2",
-    "@blocknote/react": "~0.46.2",
-    "@blocknote/server-util": "~0.46.2",
-    "@blocknote/xl-ai": "~0.46.2",
+    "@blocknote/core": "~0.55.0",
+    "@blocknote/react": "~0.55.0",
+    "@blocknote/server-util": "~0.55.0",
+    "@blocknote/xl-ai": "~0.55.0",
     "@tiptap/extensions": ">=3.19.0 <4.0.0-0"
   },
   "dependencies": {

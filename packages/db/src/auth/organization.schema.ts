@@ -39,5 +39,7 @@ export const invitation = pgTable("invitation", {
   inviterId: text("inviter_id")
     .notNull()
     .references(() => user.id, { onDelete: "cascade" }),
-  createdAt: timestamp("created_at").notNull(),
+  // A SQL default lets schema push backfill existing invitations when adding
+  // this required column, without dropping rows or assuming an empty table.
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 });

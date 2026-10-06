@@ -61,10 +61,10 @@ Registry components now import `cn` from the `cn` package; the app's
   and `cn-toast` class used by app styling. The registry sync currently has
   only the theme integration; reapply the icons, variables, and toast class
   from the baseline if those are still desired.
-- **Existing composition APIs:** local wrappers retain `asChild` behavior in
-  Button, Badge, Breadcrumb, Collapsible, Dialog, Dropdown Menu, Navigation
-  Menu, Tooltip, and Sidebar. Keep these compatible while adopting newer
-  Base UI `render` APIs.
+- **Existing composition APIs:** Button, Collapsible, Dialog, Dropdown Menu,
+  Navigation Menu, Tooltip, and Sidebar retain `asChild` compatibility while
+  using Base UI `render`. Badge and Breadcrumb now expose Base UI's `render`
+  prop; no current app callsites use their previous `asChild` prop.
 - **Other product classes:** the baseline snapshot at commit `3ca1a50` is the
   exact source of local component classes and wrapper props before registry
   synchronization. Refer to that revision when restoring any finer-grained

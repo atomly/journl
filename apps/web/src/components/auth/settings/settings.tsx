@@ -73,7 +73,7 @@ export function Settings({ className, view, path, hideNav }: SettingsProps) {
         <TabsList
           aria-label={localization.settings.settings}
           variant="line"
-          className="h-10 w-full justify-start gap-4 rounded-none border-b px-0"
+          className="w-full justify-start gap-4 rounded-none border-b px-0 group-data-[orientation=horizontal]/tabs:h-10"
         >
           <TabsTrigger
             value="account"

@@ -18,7 +18,7 @@ export function AuthView({ pathname, className, classNames }: AuthViewProps) {
   }
 
   const styles = cn(
-    "z-10 w-full flex-col gap-6 rounded-xl border bg-card py-6 text-card-foreground shadow-sm",
+    "w-full max-w-sm flex-col gap-6 border-0 bg-transparent py-6 text-foreground shadow-none ring-0",
     className,
     classNames?.base,
   );

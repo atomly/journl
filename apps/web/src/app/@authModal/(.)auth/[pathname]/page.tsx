@@ -13,13 +13,7 @@ async function InterceptingAuthModalPage({
   const { invite } = await searchParams;
 
   return (
-    <AuthView
-      classNames={{
-        base: "bg-transparent border-none max-w-lg",
-      }}
-      pathname={pathname}
-      inviteCode={parseInviteCodeString(invite)}
-    />
+    <AuthView pathname={pathname} inviteCode={parseInviteCodeString(invite)} />
   );
 }
 

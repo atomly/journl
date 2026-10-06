@@ -16,7 +16,7 @@ function AuthPageLink({
       {...props}
       href={href}
       onNavigate={(event) => {
-        if (pathname.startsWith("/auth")) {
+        if (pathname.startsWith("/auth/") || pathname === "/invite") {
           event.preventDefault();
           window.location.href = href.toString();
         }
@@ -26,5 +26,7 @@ function AuthPageLink({
 }
 
 export function AuthPageProviders({ children }: { children: React.ReactNode }) {
-  return <BetterAuthProvider Link={AuthPageLink}>{children}</BetterAuthProvider>;
+  return (
+    <BetterAuthProvider Link={AuthPageLink}>{children}</BetterAuthProvider>
+  );
 }

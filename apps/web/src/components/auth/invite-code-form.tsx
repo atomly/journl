@@ -2,19 +2,12 @@
 
 import { ArrowRight } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { type SubmitEvent, useState } from "react";
+import { type SubmitEvent, useId, useState } from "react";
+import { normalizeInviteCode } from "~/components/auth/invite-code";
 import { Button } from "~/components/ui/button";
+import { Field, FieldError, FieldLabel } from "~/components/ui/field";
 import { Input } from "~/components/ui/input";
 import { cn } from "~/lib/cn";
-
-const INVITE_CODE_PATTERN = /^[A-Z0-9]{8,128}$/;
-
-function normalizeInviteCode(value: string) {
-  return value
-    .trim()
-    .toUpperCase()
-    .replace(/[\s-]+/g, "");
-}
 
 type InviteCodeFormProps = {
   buttonLabel?: string;
@@ -23,7 +16,7 @@ type InviteCodeFormProps = {
   placeholder?: string;
   initialValue?: string;
   redirectPath?: string;
-  validateInBackground?: boolean;
+  standalone?: boolean;
 };
 
 export function InviteCodeForm({
@@ -33,57 +26,67 @@ export function InviteCodeForm({
   initialValue,
   placeholder = "Enter invite code",
   redirectPath = "/auth/sign-up",
-  validateInBackground = false,
+  standalone = false,
 }: InviteCodeFormProps) {
   const router = useRouter();
   const [code, setCode] = useState(initialValue ?? "");
   const [error, setError] = useState<string | null>(null);
   const [isChecking, setIsChecking] = useState(false);
+  const inputId = useId();
 
   async function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (isChecking) return;
 
     const normalizedCode = normalizeInviteCode(code);
 
-    if (!INVITE_CODE_PATTERN.test(normalizedCode)) {
+    if (!normalizedCode) {
       setError("Enter a valid invite code.");
       return;
     }
 
-    if (validateInBackground) {
-      setIsChecking(true);
+    setError(null);
+    setIsChecking(true);
 
-      try {
-        const response = await fetch(
-          `/api/invite/validate?code=${encodeURIComponent(normalizedCode)}`,
-        );
+    try {
+      const response = await fetch(
+        `/api/invite/validate?code=${encodeURIComponent(normalizedCode)}`,
+      );
 
-        if (!response.ok) {
-          setError("That invite code is not valid.");
-          return;
-        }
-      } catch {
-        setError("Could not verify invite code. Please try again.");
+      const result = await response.json();
+      if (!response.ok || result?.valid !== true) {
+        setError("That invite code is not valid.");
         return;
-      } finally {
-        setIsChecking(false);
       }
+    } catch {
+      setError("Could not verify invite code. Please try again.");
+      return;
+    } finally {
+      setIsChecking(false);
     }
 
     setError(null);
-    router.push(`${redirectPath}?invite=${encodeURIComponent(normalizedCode)}`);
+    const destination = `${redirectPath}?invite=${encodeURIComponent(normalizedCode)}`;
+    if (standalone) {
+      window.location.assign(destination);
+    } else {
+      router.replace(destination);
+    }
   }
 
   return (
     <form className={cn("space-y-3", className)} onSubmit={handleSubmit}>
-      <div className="space-y-3">
+      <Field>
+        <FieldLabel htmlFor={inputId}>Invite code</FieldLabel>
         <Input
+          id={inputId}
           aria-label="Invite code"
           aria-invalid={!!error}
           autoCapitalize="characters"
           autoComplete="off"
           inputMode="text"
-          className="h-14 rounded-2xl border-border/70 px-5 text-center text-base uppercase"
+          className="text-center uppercase"
+          disabled={isChecking}
           onChange={(event) => {
             const nextCode = event.currentTarget.value
               .toUpperCase()
@@ -94,22 +97,18 @@ export function InviteCodeForm({
               setError(null);
             }
           }}
-          maxLength={10}
+          maxLength={128}
           placeholder={placeholder.toUpperCase()}
           value={code}
         />
 
-        <Button
-          className="h-12 w-full rounded-xl"
-          disabled={isChecking}
-          type="submit"
-        >
+        <Button className="w-full" disabled={isChecking} type="submit">
           {isChecking ? "Checking..." : buttonLabel}
           <ArrowRight className="h-4 w-4" />
         </Button>
-      </div>
+      </Field>
 
-      {error ? <p className="text-destructive text-sm">{error}</p> : null}
+      {error ? <FieldError>{error}</FieldError> : null}
       {helperText ? (
         <p className="text-muted-foreground text-sm">{helperText}</p>
       ) : null}

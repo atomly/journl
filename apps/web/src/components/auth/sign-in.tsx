@@ -360,17 +360,12 @@ export function SignIn({
             </Link>
           )}
 
-          {emailAndPassword?.enabled && (
-            <FieldDescription className="text-center">
-              {localization.auth.needToCreateAnAccount}{" "}
-              <Link
-                href={`${basePaths.auth}/${viewPaths.auth.signUp}`}
-                className="underline underline-offset-4"
-              >
-                {localization.auth.signUp}
-              </Link>
-            </FieldDescription>
-          )}
+          <FieldDescription className="text-center">
+            {localization.auth.needToCreateAnAccount}{" "}
+            <Link href="/invite" className="underline underline-offset-4">
+              {localization.auth.signUp}
+            </Link>
+          </FieldDescription>
         </div>
       </CardContent>
     </Card>

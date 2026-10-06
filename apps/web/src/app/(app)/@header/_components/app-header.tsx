@@ -22,26 +22,43 @@ export function AppHeader({ className, ...props }: AppHeaderProps) {
       return;
     }
 
-    const getScrollTop = () => {
-      const element = scrollElement ?? document.documentElement;
-      const scrollTop = scrollElement
-        ? scrollElement.scrollTop
-        : window.scrollY;
-
+    const getScrollTop = (element: HTMLElement) => {
       // Ignore elastic overscroll at either edge of the scroll container.
       return Math.max(
         0,
-        Math.min(scrollTop, element.scrollHeight - element.clientHeight),
+        Math.min(
+          element.scrollTop,
+          element.scrollHeight - element.clientHeight,
+        ),
       );
     };
 
-    let lastScrollY = getScrollTop();
+    const initialScrollTarget = scrollElement ?? document.scrollingElement;
+    let lastScrollTarget: HTMLElement =
+      initialScrollTarget instanceof HTMLElement
+        ? initialScrollTarget
+        : document.documentElement;
+    let lastScrollY = getScrollTop(lastScrollTarget);
     let directionDistance = 0;
     let animationFrameId: number | null = null;
+    let pendingScrollTarget: HTMLElement | null = null;
     setIsHidden(false);
 
-    const updateVisibility = () => {
-      const currentScrollY = getScrollTop();
+    const updateVisibility = (target: HTMLElement) => {
+      const currentScrollY = getScrollTop(target);
+
+      // Virtualized pages can use a descendant as their scroll container.
+      // Start a fresh direction measurement when the active scroller changes.
+      if (target !== lastScrollTarget) {
+        lastScrollTarget = target;
+        lastScrollY = currentScrollY;
+        directionDistance = 0;
+        if (currentScrollY <= SHOW_AT_SCROLL_TOP) {
+          setIsHidden(false);
+        }
+        return;
+      }
+
       const delta = currentScrollY - lastScrollY;
       lastScrollY = currentScrollY;
 
@@ -68,22 +85,47 @@ export function AppHeader({ className, ...props }: AppHeaderProps) {
       }
     };
 
-    const onScroll = () => {
+    const onScroll = (event: Event) => {
+      const target =
+        event.target instanceof HTMLElement
+          ? event.target
+          : document.scrollingElement;
+      if (!(target instanceof HTMLElement)) {
+        return;
+      }
+
+      if (
+        scrollElement &&
+        target !== scrollElement &&
+        !scrollElement.contains(target) &&
+        target !== document.documentElement &&
+        target !== document.body
+      ) {
+        return;
+      }
+
+      pendingScrollTarget = target;
       if (animationFrameId !== null) {
         return;
       }
 
       animationFrameId = window.requestAnimationFrame(() => {
         animationFrameId = null;
-        updateVisibility();
+        const targetToUpdate = pendingScrollTarget;
+        pendingScrollTarget = null;
+        if (targetToUpdate) {
+          updateVisibility(targetToUpdate);
+        }
       });
     };
 
-    const listenerTarget = scrollElement ?? window;
-    listenerTarget.addEventListener("scroll", onScroll, { passive: true });
+    document.addEventListener("scroll", onScroll, {
+      capture: true,
+      passive: true,
+    });
 
     return () => {
-      listenerTarget.removeEventListener("scroll", onScroll);
+      document.removeEventListener("scroll", onScroll, true);
       if (animationFrameId !== null) {
         window.cancelAnimationFrame(animationFrameId);
       }

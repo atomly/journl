@@ -70,10 +70,10 @@ export function Settings({ className, view, path, hideNav }: SettingsProps) {
       className={cn("w-full gap-4 md:gap-6", className)}
     >
       <div className={cn(hideNav && "hidden")}>
-        <TabsList aria-label={localization.settings.settings}>
+        <TabsList aria-label={localization.settings.settings} className="p-1">
           <TabsTrigger
             value="account"
-            className="gap-1"
+            className="gap-1 px-3 py-1.5"
             onClick={() =>
               navigate({
                 to: `${basePaths.settings}/${viewPaths.settings.account}`,
@@ -87,7 +87,7 @@ export function Settings({ className, view, path, hideNav }: SettingsProps) {
 
           <TabsTrigger
             value="security"
-            className="gap-1"
+            className="gap-1 px-3 py-1.5"
             onClick={() =>
               navigate({
                 to: `${basePaths.settings}/${viewPaths.settings.security}`,
@@ -105,7 +105,7 @@ export function Settings({ className, view, path, hideNav }: SettingsProps) {
                 <TabsTrigger
                   key={`${plugin.id}-${settingsTab.view}`}
                   value={settingsTab.view}
-                  className="gap-1"
+                  className="gap-1 px-3 py-1.5"
                   onClick={() =>
                     navigate({
                       to: `${basePaths.settings}/${plugin.viewPaths?.settings?.[settingsTab.view]}`,

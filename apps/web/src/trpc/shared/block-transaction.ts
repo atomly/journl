@@ -260,14 +260,6 @@ export async function rebuildReferenceProjection(
       const wasCommitted = previousKeys.has(
         `${block.id}|${occurrencePath}|${targetKey}|${occurrence.presentation}`,
       );
-      if (
-        strictReferences &&
-        !env.CONTENT_REFERENCES_ENABLED &&
-        occurrence.presentation !== "link" &&
-        !wasCommitted
-      ) {
-        throw invalidContent();
-      }
       if (target.kind === "document") {
         if (!lockedTargetIds.has(target.documentId) && !wasCommitted)
           throw invalidContent();

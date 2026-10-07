@@ -24,10 +24,6 @@ export const env = createEnv({
    * This way you can ensure the app isn't built with invalid env vars.
    */
   server: {
-    CONTENT_REFERENCES_ENABLED: z
-      .enum(["true", "false"])
-      .default("false")
-      .transform((value) => value === "true"),
     CRON_SECRET: z.string().min(16).optional(),
     OPENAI_API_KEY: z.string(),
     OPENAI_API_URL: z.string().url().default("https://api.openai.com/v1/"),

@@ -39,15 +39,6 @@ function truncate(text: string, max: number) {
     : { text: normalized, truncated: false };
 }
 
-function assertContentReferencesEnabled() {
-  if (!env.CONTENT_REFERENCES_ENABLED) {
-    throw new TRPCError({
-      code: "PRECONDITION_FAILED",
-      message: "Content references are temporarily unavailable.",
-    });
-  }
-}
-
 function blockText(value: unknown, inCode = false): string {
   if (Array.isArray(value))
     return value.map((item) => blockText(item, inCode)).join(" ");
@@ -121,10 +112,7 @@ async function externalPreview(url: string, userId: string) {
   const parsed = new URL(url);
   const isGithub = parsed.hostname.toLowerCase() === "github.com";
   const segments = parsed.pathname.split("/").filter(Boolean);
-  const githubMetadata =
-    isGithub && env.CONTENT_REFERENCES_ENABLED
-      ? await getGithubMetadata(userId, url)
-      : null;
+  const githubMetadata = isGithub ? await getGithubMetadata(userId, url) : null;
   let title = parsed.hostname;
   let excerpt = parsed.href;
   if (isGithub && segments.length >= 2) {
@@ -247,7 +235,6 @@ export const referencesRouter = {
       }),
     )
     .query(async ({ ctx, input }) => {
-      assertContentReferencesEnabled();
       const targets = input.targets.map((target) => ({
         kind: "document" as const,
         ...target,
@@ -384,7 +371,6 @@ export const referencesRouter = {
         }),
     )
     .query(async ({ ctx, input }) => {
-      assertContentReferencesEnabled();
       const typeFilter = new Set(
         input.types ?? ["page", "journal", "block", "external"],
       );
@@ -823,7 +809,6 @@ export const referencesRouter = {
   getPreviews: protectedProcedure
     .input(z.object({ targets: z.array(zTarget).max(50) }))
     .query(async ({ ctx, input }) => {
-      assertContentReferencesEnabled();
       return {
         items: await Promise.all(
           input.targets.map(async (target) => ({
@@ -846,7 +831,6 @@ export const referencesRouter = {
       }),
     )
     .query(async ({ ctx, input }) => {
-      assertContentReferencesEnabled();
       const [target] = await ctx.db
         .select({ id: Document.id })
         .from(Document)
@@ -1072,7 +1056,6 @@ export const referencesRouter = {
       }),
     )
     .query(async ({ ctx, input }) => {
-      assertContentReferencesEnabled();
       const [owned] = await ctx.db
         .select({ id: Document.id })
         .from(Document)
@@ -1194,7 +1177,6 @@ export const referencesRouter = {
       }),
     )
     .query(async ({ ctx, input }) => {
-      assertContentReferencesEnabled();
       const [seed] = await ctx.db
         .select({ id: Document.id })
         .from(Document)
@@ -1450,7 +1432,6 @@ export const referencesRouter = {
   resolveUrls: protectedProcedure
     .input(z.object({ urls: z.array(z.string().max(2048)).max(50) }))
     .query(async ({ ctx, input }) => {
-      assertContentReferencesEnabled();
       const uniqueUrls = [...new Set(input.urls)];
       if (uniqueUrls.length > 50) throw new TRPCError({ code: "BAD_REQUEST" });
       const items = await Promise.all(
@@ -1540,7 +1521,6 @@ export const referencesRouter = {
       }),
     )
     .query(async ({ ctx, input }) => {
-      assertContentReferencesEnabled();
       let after: { documentId: string; blockId: string } | undefined;
       if (input.cursor) {
         try {
@@ -1677,7 +1657,6 @@ export const referencesRouter = {
       }),
     )
     .query(async ({ ctx, input }) => {
-      assertContentReferencesEnabled();
       const cursorScope = JSON.stringify({
         limit: input.limit,
         query: input.query,

@@ -68,6 +68,18 @@ If your local Postgres instance does not support TLS, set `POSTGRES_SSL_MODE=dis
 For database workflows, use root scripts (`pnpm db:push`, `pnpm db:studio`) or
 the dedicated utility app in [`apps/drizzle-studio`](./apps/drizzle-studio).
 
+Content references are disabled by default. Set `CONTENT_REFERENCES_ENABLED=true`
+in the root `.env` for local development and separately in the deployment's
+environment variables. For Vercel preview testing, select the **Preview**
+environment and redeploy after adding the variable; local `.env` values do not
+configure Vercel deployments.
+
+With references enabled, paste a plain URL into an empty paragraph to create a
+card, or into existing text to create a badge. Use `/Embed note`, select a page or
+journal entry, and expand the resulting embed to read its content. Existing saved
+links retain their original display; the reference backfill builds indexes without
+rewriting editor content.
+
 ---
 
 ## License

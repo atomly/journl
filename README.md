@@ -80,6 +80,9 @@ and embeds are different presentations of the same relationship.
 - Select multiple blocks and use Tab/Shift+Tab to indent/outdent text, cards, and embeds together.
   Tab from a reference's action controls moves keyboard focus normally.
 - Linked references load when the editor opens. The section appears only when references exist.
+- Use **Explore this note** beside a note or journal heading to follow its connections. Select a note
+  for its preview and linking passages; **Explore connections** follows the thread, and Back restores
+  your earlier position. The sidebar **Explore** view groups connected notes and keeps unlinked notes separate.
 - Public websites use page metadata when available, with URL fallback. Cards can show desktop thumbnails;
   mobile keeps the compact text presentation. Metadata fetching has bounded, cached public-network requests.
 

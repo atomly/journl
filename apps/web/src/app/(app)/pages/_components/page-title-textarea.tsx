@@ -44,7 +44,7 @@ export function PageTitleTextarea({
       onSuccess: () => {
         for (const queryKey of [
           trpc.references.getPreviews.queryKey(),
-          trpc.references.getGraph.queryKey(),
+          trpc.references.getGraph.infiniteQueryKey(),
           trpc.references.listBacklinks.queryKey(),
         ]) {
           void queryClient.invalidateQueries({ queryKey });

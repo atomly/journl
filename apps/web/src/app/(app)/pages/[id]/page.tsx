@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
+import { ExploreNoteLink } from "~/components/references/explore-note-link";
 import { api } from "~/trpc/server";
 import { DynamicPageEditor } from "../_components/page-editor.dynamic";
 import { PageShell } from "../_components/page-shell";
@@ -41,15 +42,18 @@ export default async function Page({
           }}
           initialBlocks={page.blocks}
         >
-          <PageTitleTextarea
-            page={{
-              id: page.id,
-              node_id: page.node_id,
-              parent_node_id: page.parent_node_id,
-              title: page.title,
-            }}
-            className="px-8 py-2"
-          />
+          <div className="flex items-start gap-3 px-8">
+            <PageTitleTextarea
+              page={{
+                id: page.id,
+                node_id: page.node_id,
+                parent_node_id: page.parent_node_id,
+                title: page.title,
+              }}
+              className="min-w-0 flex-1 py-2"
+            />
+            <ExploreNoteLink documentId={page.document_id} />
+          </div>
         </DynamicPageEditor>
       </PageShell>
     </Suspense>

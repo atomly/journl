@@ -1,4 +1,4 @@
-import { Calendar, Network } from "lucide-react";
+import { Calendar, Compass } from "lucide-react";
 import { type ComponentProps, Suspense } from "react";
 import { Separator } from "~/components/ui/separator";
 import {
@@ -28,8 +28,8 @@ const navigationItems = [
     url: "/journal",
   },
   {
-    icon: <Network />,
-    title: "Graph",
+    icon: <Compass />,
+    title: "Explore",
     url: "/graph",
   },
 ] satisfies ComponentProps<typeof AppSidebarNavigation>["items"];

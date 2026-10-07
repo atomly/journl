@@ -162,7 +162,7 @@ export function DeletePageDialog({
           trpc.references.listBacklinks.queryKey(),
           trpc.references.listOccurrences.queryKey(),
           trpc.references.queryNeighbors.queryKey(),
-          trpc.references.getGraph.queryKey(),
+          trpc.references.getGraph.infiniteQueryKey(),
         ]) {
           void queryClient.invalidateQueries({ queryKey });
         }

@@ -67,6 +67,72 @@ function blockText(value: unknown, inCode = false): string {
     .join(" ");
 }
 
+type GraphOccurrenceRow = Pick<
+  typeof DocumentReference.$inferSelect,
+  "id" | "presentation" | "source_block_id" | "source_document_id"
+>;
+type GraphSourceBlock = Pick<
+  typeof BlockNode.$inferSelect,
+  "data" | "document_id" | "user_id"
+>;
+type GraphSourceNote = { href: string };
+
+export type GraphSourceExcerpt = {
+  blockId: string;
+  excerpt: string;
+  href: string;
+};
+
+export function createGraphSourceExcerpt(
+  occurrence: GraphOccurrenceRow,
+  block: GraphSourceBlock | undefined,
+  note: GraphSourceNote | undefined,
+  userId: string,
+): GraphSourceExcerpt | undefined {
+  if (
+    !block ||
+    !note ||
+    block.user_id !== userId ||
+    block.document_id !== occurrence.source_document_id
+  )
+    return undefined;
+  return {
+    blockId: occurrence.source_block_id,
+    excerpt: truncate(blockText(block.data), 160).text,
+    href: `${note.href}#block=${occurrence.source_block_id}`,
+  };
+}
+
+type GraphEdgeAccumulator = {
+  occurrenceCount: number;
+  occurrenceIds: string[];
+  presentations: Set<string>;
+  sources: GraphSourceExcerpt[];
+  sourceBlocks: string[];
+};
+
+export function addGraphOccurrence(
+  edge: GraphEdgeAccumulator,
+  occurrence: GraphOccurrenceRow,
+  excerpt?: GraphSourceExcerpt,
+) {
+  if (edge.occurrenceIds.includes(occurrence.id)) return;
+  edge.occurrenceIds.push(occurrence.id);
+  edge.occurrenceCount = edge.occurrenceIds.length;
+  edge.presentations.add(occurrence.presentation);
+  if (
+    edge.sourceBlocks.length < 3 &&
+    !edge.sourceBlocks.includes(occurrence.source_block_id)
+  )
+    edge.sourceBlocks.push(occurrence.source_block_id);
+  if (
+    excerpt &&
+    edge.sources.length < 3 &&
+    !edge.sources.some((item) => item.blockId === excerpt.blockId)
+  )
+    edge.sources.push(excerpt);
+}
+
 function collectBlock(
   blocks: ReturnType<typeof blocknoteBlocks>,
   blockId?: string,
@@ -608,6 +674,33 @@ export const referencesRouter = {
             title: entry.date,
           });
       }
+      const graphBlockIds = [
+        ...new Set(
+          allOccurrences.flatMap((occurrence) => [
+            occurrence.source_block_id,
+            ...(occurrence.target_block_id ? [occurrence.target_block_id] : []),
+          ]),
+        ),
+      ];
+      const graphBlocks = graphBlockIds.length
+        ? await ctx.db
+            .select({
+              data: BlockNode.data,
+              document_id: BlockNode.document_id,
+              id: BlockNode.id,
+              user_id: BlockNode.user_id,
+            })
+            .from(BlockNode)
+            .where(
+              and(
+                eq(BlockNode.user_id, ctx.session.user.id),
+                inArray(BlockNode.id, graphBlockIds),
+              ),
+            )
+        : [];
+      const graphBlockById = new Map(
+        graphBlocks.map((block) => [block.id, block]),
+      );
       type GraphNode = {
         key: string;
         target?: ReferenceTarget;
@@ -643,7 +736,9 @@ export const referencesRouter = {
           fromKey: string;
           toKey: string;
           occurrenceCount: number;
+          occurrenceIds: string[];
           presentations: Set<string>;
+          sources: GraphSourceExcerpt[];
           sourceBlocks: string[];
         }
       >();
@@ -665,18 +760,12 @@ export const referencesRouter = {
           toKey = getGraphDocumentTargetKey(target, typeFilter.has("block"));
           if (occurrence.target_block_id && typeFilter.has("block")) {
             const note = docs.get(occurrence.target_document_id);
-            const [block] = await ctx.db
-              .select()
-              .from(BlockNode)
-              .where(
-                and(
-                  eq(BlockNode.id, occurrence.target_block_id),
-                  eq(BlockNode.document_id, occurrence.target_document_id),
-                  eq(BlockNode.user_id, ctx.session.user.id),
-                ),
-              )
-              .limit(1);
-            if (block && note)
+            const block = graphBlockById.get(occurrence.target_block_id);
+            if (
+              block &&
+              note &&
+              block.document_id === occurrence.target_document_id
+            )
               nodes.set(toKey, {
                 href: `${note.href}#block=${occurrence.target_block_id}`,
                 key: toKey,
@@ -778,17 +867,19 @@ export const referencesRouter = {
         const edge = edgeMap.get(edgeKey) ?? {
           fromKey,
           occurrenceCount: 0,
+          occurrenceIds: [],
           presentations: new Set<string>(),
           sourceBlocks: [],
+          sources: [],
           toKey,
         };
-        edge.occurrenceCount += 1;
-        edge.presentations.add(occurrence.presentation);
-        if (
-          edge.sourceBlocks.length < 3 &&
-          !edge.sourceBlocks.includes(occurrence.source_block_id)
-        )
-          edge.sourceBlocks.push(occurrence.source_block_id);
+        const sourceExcerpt = createGraphSourceExcerpt(
+          occurrence,
+          graphBlockById.get(occurrence.source_block_id),
+          docs.get(occurrence.source_document_id),
+          ctx.session.user.id,
+        );
+        addGraphOccurrence(edge, occurrence, sourceExcerpt);
         edgeMap.set(edgeKey, edge);
       }
       const selectedNodes = [...nodes.values()]

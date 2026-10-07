@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { ChevronDown, Network } from "lucide-react";
+import { ChevronDown, Compass } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import type { RouterOutputs } from "~/trpc";
@@ -109,8 +109,8 @@ function ReferenceBacklinksContent({
             className="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-md text-muted-foreground text-xs hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring"
             href={`/graph?documentId=${documentId}${blockId ? `&blockId=${blockId}` : ""}`}
           >
-            <Network aria-hidden="true" className="size-3.5" />
-            Open graph
+            <Compass aria-hidden="true" className="size-3.5" />
+            Explore this note
           </Link>
         )}
       </div>

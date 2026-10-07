@@ -2,6 +2,7 @@
 
 import { fileToAvatarDataUrl } from "@better-auth-ui/core";
 import { useAuth, useSession, useUpdateUser } from "@better-auth-ui/react";
+import { cn } from "cn";
 import { Trash2, Upload } from "lucide-react";
 import { type ChangeEvent, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -15,12 +16,15 @@ import {
 } from "~/components/ui/dropdown-menu";
 import { Field, FieldLabel } from "~/components/ui/field";
 import { Spinner } from "~/components/ui/spinner";
-import { cn } from "~/lib/cn";
 
 export type ChangeAvatarProps = {
   className?: string;
 };
 
+/**
+ * Better Auth UI's Base UI avatar component, with built-in file uploads.
+ * @see https://better-auth-ui.com/r/base-nova/user-profile.json
+ */
 export function ChangeAvatar({ className }: ChangeAvatarProps) {
   const { authClient, localization, avatar } = useAuth();
   const { data: session } = useSession(authClient);
@@ -65,6 +69,9 @@ export function ChangeAvatar({ className }: ChangeAvatarProps) {
     setIsUploading(false);
   }
 
+  /**
+   * Removes the avatar on request; uploading a replacement does not call this.
+   */
   async function handleDelete() {
     const currentImage = session?.user.image;
 
@@ -120,14 +127,18 @@ export function ChangeAvatar({ className }: ChangeAvatarProps) {
             {localization.settings.changeAvatar}
           </DropdownMenuTrigger>
 
-          <DropdownMenuContent className="min-w-fit">
-            <DropdownMenuItem onClick={() => fileInputRef.current?.click()}>
+          <DropdownMenuContent className="w-52 min-w-52 p-2">
+            <DropdownMenuItem
+              className="whitespace-nowrap px-3 py-2"
+              onClick={() => fileInputRef.current?.click()}
+            >
               <Upload className="text-muted-foreground" />
 
               {localization.settings.uploadAvatar}
             </DropdownMenuItem>
 
             <DropdownMenuItem
+              className="whitespace-nowrap px-3 py-2"
               variant="destructive"
               disabled={!session?.user.image}
               onClick={handleDelete}

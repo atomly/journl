@@ -1,9 +1,11 @@
 import { withoutAuth } from "~/app/_guards/page-guards";
+import { AuthPageProviders } from "~/components/auth/auth-page-providers";
+import { AuthPageShell } from "~/components/auth/auth-page-shell";
 import { AuthView } from "~/components/auth/auth-view";
 import { parseInviteCodeString } from "~/components/auth/invite-code";
 import { requireSignUpInvite } from "~/lib/auth/require-sign-up-invite";
 
-async function InterceptingAuthModalPage({
+async function AuthPage({
   params,
   searchParams,
 }: {
@@ -17,7 +19,15 @@ async function InterceptingAuthModalPage({
     parseInviteCodeString(invite),
   );
 
-  return <AuthView pathname={pathname} inviteCode={inviteCode} />;
+  return (
+    <AuthPageProviders>
+      <AuthPageShell>
+        <AuthView pathname={pathname} inviteCode={inviteCode} />
+      </AuthPageShell>
+    </AuthPageProviders>
+  );
 }
 
-export default withoutAuth(InterceptingAuthModalPage);
+export default withoutAuth(AuthPage, {
+  redirectTo: "/account/settings",
+});

@@ -1,5 +1,4 @@
 import { Toaster } from "~/components/ui/toast";
-import "./styles.css";
 import { DashboardHeader } from "./_components/dashboard-header";
 import { DashboardProviders } from "./_components/dashboard-providers";
 

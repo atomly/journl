@@ -62,11 +62,13 @@ export function BetterAuthProvider({
   const router = useRouter();
   const [queryClient] = useState(getQueryClient);
 
+  // Avatars are embedded in user.image; replacements leave no stored file.
   return (
     <QueryClientProvider client={queryClient}>
       <PasswordSignInContext value={allowPasswordSignIn}>
         <AuthProvider
           authClient={authClient}
+          avatar={{ enabled: true, extension: "webp", size: 256 }}
           basePaths={{ auth: "/auth", settings: "/account" }}
           emailAndPassword={{
             enabled: allowPasswordSignIn && pathname === "/auth/sign-in",
@@ -74,7 +76,7 @@ export function BetterAuthProvider({
           }}
           localization={{
             auth: {
-              continueWith: "Continue with",
+              continueWith: "Continue with {{provider}}",
               signIn: "Sign in",
               signUp: "Sign up",
             },

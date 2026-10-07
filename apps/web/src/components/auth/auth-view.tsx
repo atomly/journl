@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { Auth } from "~/components/auth/auth";
+import { normalizeInviteCode } from "~/components/auth/invite-code";
 import { InviteSignUp } from "~/components/auth/invite-sign-up";
 import { cn } from "~/lib/cn";
 
@@ -12,13 +13,21 @@ type AuthViewProps = {
   classNames?: { base?: string };
 };
 
-export function AuthView({ pathname, className, classNames }: AuthViewProps) {
+export function AuthView({
+  pathname,
+  className,
+  classNames,
+  inviteCode,
+}: AuthViewProps) {
   if (!IDENTITY_VIEWS.has(pathname)) {
     redirect("/");
   }
+  if (pathname === "sign-up" && !normalizeInviteCode(inviteCode)) {
+    redirect("/invite");
+  }
 
   const styles = cn(
-    "z-10 w-full flex-col gap-6 rounded-xl border bg-card py-6 text-card-foreground shadow-sm",
+    "w-full max-w-sm flex-col gap-6 border-0 bg-transparent py-6 text-foreground shadow-none ring-0",
     className,
     classNames?.base,
   );

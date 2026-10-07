@@ -1,9 +1,6 @@
 import { withoutAuth } from "~/app/_guards/page-guards";
+import { parseInviteCodeString } from "~/components/auth/invite-code";
 import { InviteView } from "~/components/auth/invite-view";
-
-function getSingleSearchParam(value?: string | string[]) {
-  return Array.isArray(value) ? value[0] : value;
-}
 
 async function InviteModalPage({
   searchParams,
@@ -12,7 +9,7 @@ async function InviteModalPage({
 }) {
   const { code } = await searchParams;
 
-  return <InviteView inviteCode={getSingleSearchParam(code)} showSignInLink />;
+  return <InviteView inviteCode={parseInviteCodeString(code)} />;
 }
 
 export default withoutAuth(InviteModalPage);

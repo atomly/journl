@@ -219,12 +219,10 @@ test("internal source URL is resolved when legacy card props have no URL", async
     ],
     schema,
   });
-  const loadPreview = vi
-    .fn()
-    .mockResolvedValue({
-      href: "/pages/11111111-1111-4111-8111-111111111111",
-      status: "ready",
-    });
+  const loadPreview = vi.fn().mockResolvedValue({
+    href: "/pages/11111111-1111-4111-8111-111111111111",
+    status: "ready",
+  });
   const adapter = { loadPreview } as unknown as ReferenceRenderAdapter;
   expect(
     await referenceSourceHref(required(editor.getBlock("card")), adapter),

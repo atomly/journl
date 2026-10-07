@@ -43,8 +43,12 @@ export function ReferenceRuntime({
           return;
         }
         const props = {
-          blockId: target.kind === "document" ? (target.blockId ?? "") : "",
-          documentId: target.kind === "document" ? target.documentId : "",
+          ...(target.kind === "document"
+            ? {
+                blockId: target.blockId ?? "",
+                documentId: target.documentId,
+              }
+            : {}),
           label,
           resolutionToken: "",
           targetKind: target.kind,
@@ -103,11 +107,15 @@ export function ReferenceRuntime({
         )
           return;
         const props = {
-          blockId: target.kind === "document" ? (target.blockId ?? "") : "",
-          documentId: target.kind === "document" ? target.documentId : "",
+          ...(target.kind === "document"
+            ? {
+                blockId: target.blockId ?? "",
+                documentId: target.documentId,
+              }
+            : {}),
           label,
           resolutionToken: "",
-          targetKind: "document",
+          targetKind: target.kind,
           url: target.kind === "external" ? target.url : href,
           version: 1,
         } as const;

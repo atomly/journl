@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { ExternalLink, Maximize2, RotateCcw } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { Skeleton } from "~/components/ui/skeleton";
@@ -16,6 +16,41 @@ type GraphNode = GraphData["nodes"][number];
 
 const WIDTH = 920;
 const HEIGHT = 520;
+
+function mergeGraphPages(pages: GraphData[]): GraphData | undefined {
+  if (pages.length === 0) return undefined;
+  const nodes = new Map<string, GraphNode>();
+  const edges = new Map<string, GraphData["edges"][number]>();
+  for (const page of pages) {
+    for (const node of page.nodes) nodes.set(node.key, node);
+    for (const edge of page.edges) {
+      const key = `${edge.fromKey}|${edge.toKey}`;
+      const existing = edges.get(key);
+      if (!existing) {
+        edges.set(key, {
+          ...edge,
+          presentations: [...edge.presentations],
+          sourceBlocks: [...edge.sourceBlocks],
+        });
+        continue;
+      }
+      existing.occurrenceCount += edge.occurrenceCount;
+      existing.presentations = [
+        ...new Set([...existing.presentations, ...edge.presentations]),
+      ];
+      existing.sourceBlocks = [
+        ...new Set([...existing.sourceBlocks, ...edge.sourceBlocks]),
+      ].slice(0, 3);
+    }
+  }
+  const lastPage = pages.at(-1);
+  return {
+    edges: [...edges.values()],
+    nextCursor: lastPage?.nextCursor ?? null,
+    nodes: [...nodes.values()].sort((a, b) => a.key.localeCompare(b.key)),
+    truncated: lastPage?.truncated ?? false,
+  };
+}
 
 function nodePosition(index: number, total: number) {
   if (total <= 1) return { x: WIDTH / 2, y: HEIGHT / 2 };
@@ -52,6 +87,10 @@ export function GraphExplorer() {
     () => params.get("blockId") ?? undefined,
   );
   const [cursor, setCursor] = useState<string | undefined>();
+  const [pageCache, setPageCache] = useState<{
+    pages: Array<{ cursor?: string; data: GraphData }>;
+    scope: string;
+  }>({ pages: [], scope: "" });
   const [showBlocks, setShowBlocks] = useState(true);
   const [showExternal, setShowExternal] = useState(true);
   const [selectedKey, setSelectedKey] = useState<string>();
@@ -77,8 +116,38 @@ export function GraphExplorer() {
     ],
   });
   const { data, error, isPending, refetch } = useQuery(graphQuery);
-  const nodes = data?.nodes ?? [];
-  const edges = data?.edges ?? [];
+  const graphScope = JSON.stringify({
+    seedBlockId,
+    seedDocumentId,
+    showBlocks,
+    showExternal,
+  });
+  useEffect(() => {
+    if (!data) return;
+    setPageCache((previous) => {
+      if (previous.scope !== graphScope || !cursor) {
+        return { pages: [{ cursor, data }], scope: graphScope };
+      }
+      const existingPage = previous.pages.findIndex(
+        (page) => page.cursor === cursor,
+      );
+      if (existingPage >= 0) {
+        const pages = [...previous.pages];
+        pages[existingPage] = { cursor, data };
+        return { pages, scope: graphScope };
+      }
+      return {
+        pages: [...previous.pages, { cursor, data }],
+        scope: graphScope,
+      };
+    });
+  }, [cursor, data, graphScope]);
+  const graphData =
+    pageCache.scope === graphScope
+      ? mergeGraphPages(pageCache.pages.map((page) => page.data))
+      : data;
+  const nodes = graphData?.nodes ?? [];
+  const edges = graphData?.edges ?? [];
   const selected = nodes.find((node) => node.key === selectedKey);
   const selectedDocumentId =
     selected?.target?.kind === "document"
@@ -177,8 +246,8 @@ export function GraphExplorer() {
           External links
         </label>
         <span className="text-muted-foreground" aria-live="polite">
-          {data
-            ? `${nodes.length} nodes · ${edges.length} connections${data.truncated ? " · results clipped" : ""}`
+          {graphData
+            ? `${nodes.length} nodes · ${edges.length} connections${graphData.truncated ? " · more results available" : ""}`
             : ""}
         </span>
       </div>
@@ -409,10 +478,10 @@ export function GraphExplorer() {
                 )}
               </>
             )}
-            {data?.nextCursor && (
+            {graphData?.nextCursor && (
               <Button
                 variant="outline"
-                onClick={() => setCursor(data.nextCursor ?? undefined)}
+                onClick={() => setCursor(graphData.nextCursor ?? undefined)}
               >
                 Load more nodes
               </Button>

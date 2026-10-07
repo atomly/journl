@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { blocknoteBlocks } from "@acme/blocknote/server";
-import { and, asc, desc, eq, gt, ilike, inArray, or } from "@acme/db";
+import { and, asc, desc, eq, gt, ilike, inArray, lt, or, sql } from "@acme/db";
 import {
   BlockEdge,
   BlockNode,
@@ -387,24 +387,36 @@ export const referencesRouter = {
       const typeFilter = new Set(
         input.types ?? ["page", "journal", "block", "external"],
       );
+      const pageSize = Math.min(50, input.limit);
       const scope = JSON.stringify({
         seedBlockId: input.seedBlockId ?? null,
         seedDocumentId: input.seedDocumentId ?? null,
         types: [...typeFilter].sort(),
+        userId: ctx.session.user.id,
       });
-      let offset = 0;
+      let documentAfter: string | undefined;
+      let referenceAfter: string | undefined;
       if (input.cursor) {
         try {
           const cursor = JSON.parse(
             Buffer.from(input.cursor, "base64url").toString("utf8"),
-          ) as { offset?: unknown; scope?: unknown };
+          ) as {
+            documentAfter?: unknown;
+            referenceAfter?: unknown;
+            scope?: unknown;
+          };
           if (
             cursor.scope !== scope ||
-            typeof cursor.offset !== "number" ||
-            cursor.offset < 0
+            (cursor.documentAfter !== undefined &&
+              (typeof cursor.documentAfter !== "string" ||
+                !z.uuid().safeParse(cursor.documentAfter).success)) ||
+            (cursor.referenceAfter !== undefined &&
+              (typeof cursor.referenceAfter !== "string" ||
+                !z.uuid().safeParse(cursor.referenceAfter).success))
           )
             throw new Error();
-          offset = cursor.offset;
+          documentAfter = cursor.documentAfter as string | undefined;
+          referenceAfter = cursor.referenceAfter as string | undefined;
         } catch {
           throw new TRPCError({
             code: "BAD_REQUEST",
@@ -439,14 +451,26 @@ export const referencesRouter = {
           if (!block) throw new TRPCError({ code: "NOT_FOUND" });
         }
       }
-      const ownedDocuments = input.seedDocumentId
+      // Keep each response bounded while advancing over the entire owner-scoped
+      // document and occurrence sets. A page has at most 50 standalone
+      // documents and 50 occurrences; each occurrence can add no more than
+      // three nodes (source, target, and block), keeping the node ceiling at
+      // 200 without silently clipping rows before the cursor advances.
+      const documentPage = input.seedDocumentId
         ? []
         : await ctx.db
             .select({ id: Document.id })
             .from(Document)
-            .where(eq(Document.user_id, ctx.session.user.id))
-            .orderBy(Document.id)
-            .limit(2000);
+            .where(
+              and(
+                eq(Document.user_id, ctx.session.user.id),
+                documentAfter ? gt(Document.id, documentAfter) : undefined,
+              ),
+            )
+            .orderBy(asc(Document.id))
+            .limit(pageSize + 1);
+      const ownedDocuments = documentPage.slice(0, pageSize);
+      const hasMoreDocuments = documentPage.length > ownedDocuments.length;
       const ownedIds = input.seedDocumentId
         ? [input.seedDocumentId]
         : ownedDocuments.map((document) => document.id);
@@ -490,7 +514,7 @@ export const referencesRouter = {
         docs.set(page.documentId, {
           href: `${env.PUBLIC_WEB_URL}/pages/${page.id}`,
           kind: "page",
-          title: page.title,
+          title: truncate(page.title, 160).text,
         });
       for (const entry of entries)
         docs.set(entry.documentId, {
@@ -498,55 +522,38 @@ export const referencesRouter = {
           kind: "journal",
           title: entry.date,
         });
-      const [sourceDocs, incoming] = input.seedDocumentId
-        ? await Promise.all([
-            ctx.db
-              .select()
-              .from(DocumentReference)
-              .where(
-                and(
-                  eq(DocumentReference.user_id, ctx.session.user.id),
-                  eq(
-                    DocumentReference.source_document_id,
-                    input.seedDocumentId,
-                  ),
-                  input.seedBlockId
-                    ? eq(DocumentReference.source_block_id, input.seedBlockId)
-                    : undefined,
-                ),
-              )
-              .limit(1000),
-            ctx.db
-              .select()
-              .from(DocumentReference)
-              .where(
-                and(
-                  eq(DocumentReference.user_id, ctx.session.user.id),
-                  eq(
-                    DocumentReference.target_document_id,
-                    input.seedDocumentId,
-                  ),
-                  input.seedBlockId
-                    ? eq(DocumentReference.target_block_id, input.seedBlockId)
-                    : undefined,
-                ),
-              )
-              .limit(1000),
-          ])
-        : await Promise.all([
-            ctx.db
-              .select()
-              .from(DocumentReference)
-              .where(
-                and(
-                  eq(DocumentReference.user_id, ctx.session.user.id),
-                  inArray(DocumentReference.source_document_id, ownedIds),
-                ),
-              )
-              .limit(5000),
-            Promise.resolve([]),
-          ]);
-      const allOccurrences = [...sourceDocs, ...incoming];
+      const occurrenceScope = input.seedDocumentId
+        ? or(
+            and(
+              eq(DocumentReference.source_document_id, input.seedDocumentId),
+              input.seedBlockId
+                ? eq(DocumentReference.source_block_id, input.seedBlockId)
+                : undefined,
+            ),
+            and(
+              eq(DocumentReference.target_document_id, input.seedDocumentId),
+              input.seedBlockId
+                ? eq(DocumentReference.target_block_id, input.seedBlockId)
+                : undefined,
+            ),
+          )
+        : undefined;
+      const occurrencePage = await ctx.db
+        .select()
+        .from(DocumentReference)
+        .where(
+          and(
+            eq(DocumentReference.user_id, ctx.session.user.id),
+            occurrenceScope,
+            referenceAfter
+              ? gt(DocumentReference.id, referenceAfter)
+              : undefined,
+          ),
+        )
+        .orderBy(asc(DocumentReference.id))
+        .limit(pageSize + 1);
+      const allOccurrences = occurrencePage.slice(0, pageSize);
+      const hasMoreOccurrences = occurrencePage.length > allOccurrences.length;
       const adjacentDocumentIds = [
         ...new Set(
           allOccurrences.flatMap((occurrence) => [
@@ -589,7 +596,7 @@ export const referencesRouter = {
           docs.set(page.documentId, {
             href: `${env.PUBLIC_WEB_URL}/pages/${page.id}`,
             kind: "page",
-            title: page.title,
+            title: truncate(page.title, 160).text,
           });
         for (const entry of adjacentEntries)
           docs.set(entry.documentId, {
@@ -672,7 +679,10 @@ export const referencesRouter = {
                 key: toKey,
                 kind: "block",
                 target,
-                title: `${note.title} · ${truncate(blockText(block.data), 80).text || "Block"}`,
+                title: truncate(
+                  `${note.title} · ${truncate(blockText(block.data), 80).text || "Block"}`,
+                  160,
+                ).text,
               });
           }
           if (!nodes.has(`document:${occurrence.target_document_id}`)) {
@@ -720,7 +730,7 @@ export const referencesRouter = {
                   key: `document:${ownedTarget.id}`,
                   kind: "page",
                   target: { documentId: ownedTarget.id, kind: "document" },
-                  title: page.title,
+                  title: truncate(page.title, 160).text,
                 });
               if (entry)
                 nodes.set(`document:${ownedTarget.id}`, {
@@ -744,20 +754,20 @@ export const referencesRouter = {
           occurrence.target_kind === "external" &&
           occurrence.target_url
         ) {
-          target = { kind: "external", url: occurrence.target_url };
           const parsed = new URL(occurrence.target_url);
           const parts = parsed.pathname.split("/").filter(Boolean);
           const title =
             parsed.hostname === "github.com" && parts.length >= 2
               ? `${parts[0]}/${parts[1]}`
               : parsed.hostname;
+          const externalKey = `external:${createHash("sha256").update(occurrence.target_url).digest("hex")}`;
+          toKey = externalKey;
           if (typeFilter.has("external"))
-            nodes.set(toKey, {
+            nodes.set(externalKey, {
               href: occurrence.target_url,
-              key: toKey,
+              key: externalKey,
               kind: "external",
-              target,
-              title,
+              title: truncate(title, 160).text,
             });
         }
         if (
@@ -780,10 +790,9 @@ export const referencesRouter = {
           edge.sourceBlocks.push(occurrence.source_block_id);
         edgeMap.set(edgeKey, edge);
       }
-      const allNodes = [...nodes.values()].sort((a, b) =>
-        a.key.localeCompare(b.key),
-      );
-      const selectedNodes = allNodes.slice(offset, offset + input.limit);
+      const selectedNodes = [...nodes.values()]
+        .sort((a, b) => a.key.localeCompare(b.key))
+        .slice(0, 200);
       const selectedKeys = new Set(selectedNodes.map((node) => node.key));
       const edges = [...edgeMap.values()]
         .filter(
@@ -792,22 +801,22 @@ export const referencesRouter = {
         )
         .slice(0, 500)
         .map((edge) => ({ ...edge, presentations: [...edge.presentations] }));
-      const clipped =
-        offset + selectedNodes.length < allNodes.length ||
-        edgeMap.size > edges.length;
+      const hasMore = hasMoreDocuments || hasMoreOccurrences;
+      const nextDocumentAfter = ownedDocuments.at(-1)?.id ?? documentAfter;
+      const nextReferenceAfter = allOccurrences.at(-1)?.id ?? referenceAfter;
       return {
         edges,
-        nextCursor:
-          offset + selectedNodes.length < allNodes.length
-            ? Buffer.from(
-                JSON.stringify({
-                  offset: offset + selectedNodes.length,
-                  scope,
-                }),
-              ).toString("base64url")
-            : null,
+        nextCursor: hasMore
+          ? Buffer.from(
+              JSON.stringify({
+                documentAfter: nextDocumentAfter,
+                referenceAfter: nextReferenceAfter,
+                scope,
+              }),
+            ).toString("base64url")
+          : null,
         nodes: selectedNodes,
-        truncated: clipped,
+        truncated: hasMore,
       };
     }),
   getPreviews: protectedProcedure
@@ -848,8 +857,35 @@ export const referencesRouter = {
         )
         .limit(1);
       if (!target) throw new TRPCError({ code: "NOT_FOUND" });
-      const incoming = await ctx.db
-        .select()
+      const cursorScope = JSON.stringify({
+        blockId: input.blockId ?? null,
+        documentId: input.documentId,
+        userId: ctx.session.user.id,
+      });
+      let after: string | undefined;
+      if (input.cursor) {
+        try {
+          const cursor = JSON.parse(
+            Buffer.from(input.cursor, "base64url").toString("utf8"),
+          ) as { after?: unknown; scope?: unknown };
+          if (
+            cursor.scope !== cursorScope ||
+            typeof cursor.after !== "string" ||
+            !z.uuid().safeParse(cursor.after).success
+          )
+            throw new Error("Cursor scope mismatch");
+          after = cursor.after;
+        } catch {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "Invalid cursor",
+          });
+        }
+      }
+      const sourcePage = await ctx.db
+        .selectDistinct({
+          sourceDocumentId: DocumentReference.source_document_id,
+        })
         .from(DocumentReference)
         .where(
           and(
@@ -858,20 +894,16 @@ export const referencesRouter = {
             input.blockId
               ? eq(DocumentReference.target_block_id, input.blockId)
               : undefined,
+            after ? gt(DocumentReference.source_document_id, after) : undefined,
           ),
-        );
-      const groups = new Map<string, typeof incoming>();
-      for (const occurrence of incoming) {
-        const group = groups.get(occurrence.source_document_id) ?? [];
-        group.push(occurrence);
-        groups.set(occurrence.source_document_id, group);
-      }
-      const allIds = [...groups.keys()].sort();
-      const after = input.cursor;
-      const selectedIds = allIds
-        .filter((id) => !after || id > after)
-        .slice(0, input.limit);
-      const [pages, entries, sourceBlocks] = await Promise.all([
+        )
+        .orderBy(asc(DocumentReference.source_document_id))
+        .limit(input.limit + 1);
+      const selectedIds = sourcePage
+        .slice(0, input.limit)
+        .map((source) => source.sourceDocumentId);
+      const hasMore = sourcePage.length > selectedIds.length;
+      const [pages, entries, occurrenceCounts, snippets] = await Promise.all([
         selectedIds.length
           ? ctx.db
               .select({
@@ -904,16 +936,76 @@ export const referencesRouter = {
           : Promise.resolve([]),
         selectedIds.length
           ? ctx.db
-              .select()
-              .from(BlockNode)
+              .select({
+                count: sql<number>`count(*)::int`,
+                sourceDocumentId: DocumentReference.source_document_id,
+              })
+              .from(DocumentReference)
               .where(
                 and(
-                  eq(BlockNode.user_id, ctx.session.user.id),
-                  inArray(BlockNode.document_id, selectedIds),
+                  eq(DocumentReference.user_id, ctx.session.user.id),
+                  eq(DocumentReference.target_document_id, input.documentId),
+                  input.blockId
+                    ? eq(DocumentReference.target_block_id, input.blockId)
+                    : undefined,
+                  inArray(DocumentReference.source_document_id, selectedIds),
                 ),
               )
+              .groupBy(DocumentReference.source_document_id)
+          : Promise.resolve([]),
+        selectedIds.length
+          ? Promise.all(
+              selectedIds.map((sourceDocumentId) =>
+                ctx.db
+                  .select({
+                    presentation: DocumentReference.presentation,
+                    sourceBlockId: DocumentReference.source_block_id,
+                  })
+                  .from(DocumentReference)
+                  .where(
+                    and(
+                      eq(DocumentReference.user_id, ctx.session.user.id),
+                      eq(
+                        DocumentReference.target_document_id,
+                        input.documentId,
+                      ),
+                      eq(
+                        DocumentReference.source_document_id,
+                        sourceDocumentId,
+                      ),
+                      input.blockId
+                        ? eq(DocumentReference.target_block_id, input.blockId)
+                        : undefined,
+                    ),
+                  )
+                  .orderBy(asc(DocumentReference.id))
+                  .limit(3),
+              ),
+            )
           : Promise.resolve([]),
       ]);
+      const snippetsBySource = new Map(
+        selectedIds.map((id, index) => [id, snippets[index] ?? []]),
+      );
+      const countsBySource = new Map(
+        occurrenceCounts.map((row) => [row.sourceDocumentId, row.count]),
+      );
+      const snippetBlockIds = [
+        ...new Set(
+          snippets.flatMap((rows) => rows.map((row) => row.sourceBlockId)),
+        ),
+      ];
+      const sourceBlocks = snippetBlockIds.length
+        ? await ctx.db
+            .select()
+            .from(BlockNode)
+            .where(
+              and(
+                eq(BlockNode.user_id, ctx.session.user.id),
+                inArray(BlockNode.id, snippetBlockIds),
+              ),
+            )
+        : [];
       const sourceTitle = new Map<
         string,
         { href: string; kind: "page" | "journal"; title: string }
@@ -935,24 +1027,24 @@ export const referencesRouter = {
       const blockById = new Map(sourceBlocks.map((block) => [block.id, block]));
       const items = selectedIds.flatMap((sourceDocumentId) => {
         const title = sourceTitle.get(sourceDocumentId);
-        const occurrences = groups.get(sourceDocumentId) ?? [];
+        const sourceSnippets = snippetsBySource.get(sourceDocumentId) ?? [];
         if (!title) return [];
-        const snippets = occurrences.slice(0, 3).map((occurrence) => ({
-          href: `${title.href}#block=${occurrence.source_block_id}`,
+        const sourceOccurrences = sourceSnippets.map((occurrence) => ({
+          href: `${title.href}#block=${occurrence.sourceBlockId}`,
           presentation: occurrence.presentation,
           snippet: truncate(
-            blockText(blockById.get(occurrence.source_block_id)?.data),
+            blockText(blockById.get(occurrence.sourceBlockId)?.data),
             160,
           ).text,
-          sourceBlockId: occurrence.source_block_id,
+          sourceBlockId: occurrence.sourceBlockId,
         }));
         return [
           {
             documentId: sourceDocumentId,
             href: title.href,
             kind: title.kind,
-            occurrenceCount: occurrences.length,
-            snippets,
+            occurrenceCount: countsBySource.get(sourceDocumentId) ?? 0,
+            snippets: sourceOccurrences,
             title: title.title,
           },
         ];
@@ -960,7 +1052,12 @@ export const referencesRouter = {
       const last = selectedIds.at(-1);
       return {
         items,
-        nextCursor: last && allIds.some((id) => id > last) ? last : null,
+        nextCursor:
+          hasMore && last
+            ? Buffer.from(
+                JSON.stringify({ after: last, scope: cursorScope }),
+              ).toString("base64url")
+            : null,
       };
     }),
   listOccurrences: protectedProcedure
@@ -1580,6 +1677,49 @@ export const referencesRouter = {
     )
     .query(async ({ ctx, input }) => {
       assertContentReferencesEnabled();
+      const cursorScope = JSON.stringify({
+        limit: input.limit,
+        query: input.query,
+        userId: ctx.session.user.id,
+      });
+      type SearchAfter = { documentId: string; updatedAt: string };
+      let pageAfter: SearchAfter | undefined;
+      let journalAfter: SearchAfter | undefined;
+      if (input.cursor) {
+        try {
+          const cursor = JSON.parse(
+            Buffer.from(input.cursor, "base64url").toString("utf8"),
+          ) as {
+            journalAfter?: unknown;
+            pageAfter?: unknown;
+            scope?: unknown;
+          };
+          const parseAfter = (value: unknown): SearchAfter | undefined => {
+            if (value === undefined) return undefined;
+            if (!value || typeof value !== "object") throw new Error();
+            const record = value as Record<string, unknown>;
+            if (
+              typeof record.documentId !== "string" ||
+              !z.uuid().safeParse(record.documentId).success ||
+              typeof record.updatedAt !== "string" ||
+              Number.isNaN(Date.parse(record.updatedAt))
+            )
+              throw new Error();
+            return {
+              documentId: record.documentId,
+              updatedAt: record.updatedAt,
+            };
+          };
+          if (cursor.scope !== cursorScope) throw new Error();
+          pageAfter = parseAfter(cursor.pageAfter);
+          journalAfter = parseAfter(cursor.journalAfter);
+        } catch {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "Invalid cursor",
+          });
+        }
+      }
       const pattern = input.query
         ? `%${input.query.replace(/[\\%_]/g, "\\$&")}%`
         : "%";
@@ -1596,10 +1736,19 @@ export const referencesRouter = {
           and(
             eq(Page.user_id, ctx.session.user.id),
             ilike(Page.title, pattern),
+            pageAfter
+              ? or(
+                  lt(Page.updated_at, pageAfter.updatedAt),
+                  and(
+                    eq(Page.updated_at, pageAfter.updatedAt),
+                    gt(Page.document_id, pageAfter.documentId),
+                  ),
+                )
+              : undefined,
           ),
         )
-        .orderBy(desc(Page.updated_at))
-        .limit(500);
+        .orderBy(desc(Page.updated_at), asc(Page.document_id))
+        .limit(input.limit + 1);
       const entries = await ctx.db
         .select({
           date: JournalEntry.date,
@@ -1612,10 +1761,19 @@ export const referencesRouter = {
           and(
             eq(JournalEntry.user_id, ctx.session.user.id),
             ilike(JournalEntry.date, pattern),
+            journalAfter
+              ? or(
+                  lt(JournalEntry.updated_at, journalAfter.updatedAt),
+                  and(
+                    eq(JournalEntry.updated_at, journalAfter.updatedAt),
+                    gt(JournalEntry.document_id, journalAfter.documentId),
+                  ),
+                )
+              : undefined,
           ),
         )
-        .orderBy(desc(JournalEntry.date))
-        .limit(500);
+        .orderBy(desc(JournalEntry.updated_at), asc(JournalEntry.document_id))
+        .limit(input.limit + 1);
       const items = [
         ...pages.map((page) => ({
           documentId: page.documentId,
@@ -1636,15 +1794,30 @@ export const referencesRouter = {
       ].sort(
         (a, b) =>
           b.updatedAt.localeCompare(a.updatedAt) ||
-          a.documentId.localeCompare(b.documentId),
+          a.documentId.localeCompare(b.documentId) ||
+          a.kind.localeCompare(b.kind),
       );
-      const offset = input.cursor
-        ? Number.parseInt(Buffer.from(input.cursor, "base64url").toString(), 10)
-        : 0;
-      const page = items.slice(offset, offset + input.limit);
+      const available = items.slice(0, input.limit + 1);
+      const page = available.slice(0, input.limit);
+      let nextPageAfter = pageAfter;
+      let nextJournalAfter = journalAfter;
+      for (const item of page) {
+        const position = {
+          documentId: item.documentId,
+          updatedAt: item.updatedAt,
+        };
+        if (item.kind === "page") nextPageAfter = position;
+        else nextJournalAfter = position;
+      }
       const nextCursor =
-        offset + input.limit < items.length
-          ? Buffer.from(String(offset + input.limit)).toString("base64url")
+        available.length > input.limit
+          ? Buffer.from(
+              JSON.stringify({
+                journalAfter: nextJournalAfter,
+                pageAfter: nextPageAfter,
+                scope: cursorScope,
+              }),
+            ).toString("base64url")
           : null;
       return { items: page, nextCursor };
     }),

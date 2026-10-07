@@ -5,9 +5,9 @@ import {
 } from "@blocknote/core";
 import type {
   BlockPrimitive,
+  schema as clientSchema,
   EditorPartialBlock,
   EditorPrimitive,
-  schema as clientSchema,
 } from "../blocknote-schema";
 import {
   contentEmbed,

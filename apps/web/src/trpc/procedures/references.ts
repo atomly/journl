@@ -854,6 +854,7 @@ export const referencesRouter = {
               href: occurrence.target_url,
               key: externalKey,
               kind: "external",
+              target: { kind: "external", url: occurrence.target_url },
               title: truncate(title, 160).text,
             });
         }

@@ -35,7 +35,9 @@ export function ReferenceRuntime({
           editor.updateBlock(blockId, {
             content: [
               {
-                content: [{ text: label, type: "text" }],
+                content: [
+                  { text: label || href || "Referenced content", type: "text" },
+                ],
                 href,
                 type: "link",
               },
@@ -67,24 +69,55 @@ export function ReferenceRuntime({
       },
       convertInline(blockId, target, display, label, href, occurrenceIndex) {
         if (!editor.isEditable) return;
-        type StoredBlock = {
-          id: string;
-          content?: unknown;
-          children?: StoredBlock[];
-        };
-        let source: StoredBlock | undefined;
-        const find = (blocks: StoredBlock[]): boolean => {
-          for (const block of blocks) {
-            if (block.id === blockId) {
-              source = block;
-              return true;
-            }
-            if (block.children && find(block.children)) return true;
-          }
-          return false;
-        };
-        find(editor.document as unknown as StoredBlock[]);
-        if (!source || !Array.isArray(source.content)) return;
+        const source = editor.getBlock(blockId);
+        if (!source) return;
+        if (!Array.isArray(source.content)) {
+          // Tables store cells instead of block.content's inline array. Replace only
+          // the selected native inline atom, preserving the complete table shape.
+          if (display !== "link") return;
+          const { state } = editor._tiptapEditor;
+          let selected: { from: number; size: number } | undefined;
+          state.doc.descendants((node, position) => {
+            if (
+              node.type.name !== "blockContainer" ||
+              node.attrs.id !== blockId
+            )
+              return;
+            const blockContent = node.firstChild;
+            if (!blockContent) return false;
+            let ordinal = -1;
+            blockContent.descendants((inline, offset) => {
+              if (inline.type.name !== "contentReference") return;
+              ordinal += 1;
+              if (occurrenceIndex !== undefined && ordinal !== occurrenceIndex)
+                return;
+              const matches =
+                target.kind === "document"
+                  ? inline.attrs.targetKind === "document" &&
+                    inline.attrs.documentId === target.documentId &&
+                    (inline.attrs.blockId || "") === (target.blockId ?? "")
+                  : inline.attrs.targetKind === "external" &&
+                    inline.attrs.url === target.url;
+              if (matches && !selected)
+                selected = {
+                  from: position + 2 + offset,
+                  size: inline.nodeSize,
+                };
+            });
+            return false;
+          });
+          const link = state.schema.marks.link;
+          const range = selected;
+          if (range && link)
+            editor.transact((transaction) =>
+              transaction.replaceWith(
+                range.from,
+                range.from + range.size,
+                state.schema.text(label || href, [link.create({ href })]),
+              ),
+            );
+          return;
+        }
         const content = source.content as Array<Record<string, unknown>>;
         let referenceIndex = -1;
         const index = content.findIndex((item) => {
@@ -106,7 +139,9 @@ export function ReferenceRuntime({
         if (display === "link") {
           const nextContent = [...content];
           nextContent[index] = {
-            content: [{ text: label, type: "text" }],
+            content: [
+              { text: label || href || "Referenced content", type: "text" },
+            ],
             href,
             type: "link",
           };
@@ -136,9 +171,15 @@ export function ReferenceRuntime({
               [
                 { props, type: display },
                 ...(after.length
-                  ? [{ content: after as never, type: "paragraph" as const }]
+                  ? [
+                      {
+                        content: after as never,
+                        props: source.props,
+                        type: source.type,
+                      },
+                    ]
                   : []),
-              ],
+              ] as never,
               blockId,
               "after",
             );

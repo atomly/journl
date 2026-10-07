@@ -1,7 +1,12 @@
 "use client";
 
-import { FileText, NotebookPen } from "lucide-react";
-import { useRef } from "react";
+import {
+  CircleDot,
+  FileText,
+  GitPullRequest,
+  Globe,
+  NotebookPen,
+} from "lucide-react";
 import {
   type ExploreEdge,
   type ExploreGraph,
@@ -9,8 +14,9 @@ import {
   layoutExploreGraph,
 } from "~/references/explore-graph";
 
-export type ExploreCamera = { zoom: number; x: number; y: number };
-export const INITIAL_CAMERA: ExploreCamera = { x: 0, y: 0, zoom: 1 };
+import { type ExploreCamera, useExploreCamera } from "./use-explore-camera";
+
+export { type ExploreCamera, INITIAL_CAMERA } from "./use-explore-camera";
 
 export function ExploreCanvas({
   graph,
@@ -32,11 +38,7 @@ export function ExploreCanvas({
   onExplore(node: ExploreNode): void;
 }) {
   const layout = layoutExploreGraph(graph, width, focusKey);
-  const drag = useRef<{ x: number; y: number; camera: ExploreCamera } | null>(
-    null,
-  );
-  const pointers = useRef(new Map<number, { x: number; y: number }>());
-  const pinchDistance = useRef<number | undefined>(undefined);
+  const gestures = useExploreCamera(camera, onCamera, width, layout.height);
   const visibleNodes = graph.nodes.filter((node) =>
     layout.positions.has(node.key),
   );
@@ -52,68 +54,14 @@ export function ExploreCanvas({
       <svg
         aria-label={
           focusKey
-            ? "Connected notes. Select a note or connection to read its context."
-            : "Connected note clusters. Select a note to preview it or explore a thread."
+            ? "Connected notes and sources. Select a note or connection to read its context."
+            : "Connected note and source clusters. Select a note to preview it or explore a thread."
         }
         className="block w-full touch-none select-none"
         width={width}
         height={layout.height}
         viewBox={`0 0 ${width} ${layout.height}`}
-        onPointerDown={(event) => {
-          if ((event.target as Element).closest("button, [role=button]"))
-            return;
-          pointers.current.set(event.pointerId, {
-            x: event.clientX,
-            y: event.clientY,
-          });
-          event.currentTarget.setPointerCapture(event.pointerId);
-          drag.current = { camera, x: event.clientX, y: event.clientY };
-        }}
-        onPointerMove={(event) => {
-          if (!pointers.current.has(event.pointerId)) return;
-          pointers.current.set(event.pointerId, {
-            x: event.clientX,
-            y: event.clientY,
-          });
-          const points = [...pointers.current.values()];
-          if (points.length === 2) {
-            const [a, b] = points;
-            if (!a || !b) return;
-            const distance = Math.hypot(a.x - b.x, a.y - b.y);
-            if (pinchDistance.current)
-              onCamera({
-                ...camera,
-                zoom: Math.max(
-                  0.75,
-                  Math.min(2, (camera.zoom * distance) / pinchDistance.current),
-                ),
-              });
-            pinchDistance.current = distance;
-            drag.current = null;
-          } else if (drag.current) {
-            const scale =
-              width / event.currentTarget.getBoundingClientRect().width;
-            onCamera({
-              ...drag.current.camera,
-              x:
-                drag.current.camera.x +
-                (event.clientX - drag.current.x) * scale,
-              y:
-                drag.current.camera.y +
-                (event.clientY - drag.current.y) * scale,
-            });
-          }
-        }}
-        onPointerUp={(event) => {
-          pointers.current.delete(event.pointerId);
-          drag.current = null;
-          pinchDistance.current = undefined;
-        }}
-        onPointerCancel={() => {
-          pointers.current.clear();
-          drag.current = null;
-          pinchDistance.current = undefined;
-        }}
+        {...gestures}
       >
         <g
           transform={`translate(${width / 2 + camera.x} ${layout.height / 2 + camera.y}) scale(${camera.zoom}) translate(${-width / 2} ${-layout.height / 2})`}
@@ -147,7 +95,7 @@ export function ExploreCanvas({
                       {group.root.title}
                     </span>
                     <span className="text-muted-foreground text-xs">
-                      {group.count} connected notes
+                      {group.count} connected items
                     </span>
                   </span>
                   <span className="shrink-0 text-muted-foreground text-xs">
@@ -205,7 +153,18 @@ export function ExploreCanvas({
             if (!point) return null;
             const focused = node.key === focusKey;
             const selected = node.key === selectedKey;
-            const Icon = node.kind === "journal" ? NotebookPen : FileText;
+            const Icon =
+              node.kind === "journal"
+                ? NotebookPen
+                : node.kind === "external"
+                  ? node.href?.startsWith("https://github.com/") &&
+                    node.href.includes("/pull/")
+                    ? GitPullRequest
+                    : node.href?.startsWith("https://github.com/") &&
+                        node.href.includes("/issues/")
+                      ? CircleDot
+                      : Globe
+                  : FileText;
             return (
               <foreignObject
                 key={node.key}
@@ -230,7 +189,9 @@ export function ExploreCanvas({
                       ? "Starting note"
                       : node.kind === "journal"
                         ? "Journal"
-                        : "Note"}
+                        : node.kind === "external"
+                          ? "Linked source"
+                          : "Note"}
                   </span>
                 </button>
               </foreignObject>
@@ -248,7 +209,7 @@ export function ExploreCanvas({
               if (root) onSelect(root);
             }}
           >
-            See all connected notes (
+            See all connections (
             {layout.positions.size - 1 + layout.hiddenCount})
           </button>
         </div>

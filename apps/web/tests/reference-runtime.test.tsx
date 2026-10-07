@@ -109,9 +109,15 @@ test("display conversions preserve the source block ID and its nested blocks", a
   adapter.convertBlock(SOURCE, target, "contentEmbed", "", `/pages/${PAGE}`);
   expect(editor.getBlock(SOURCE)?.type).toBe("contentEmbed");
   expect(editor.getBlock(SOURCE)?.children[0]?.id).toBe(child);
-  adapter.convertBlock(SOURCE, target, "link", "First title", `/pages/${PAGE}`);
+  adapter.convertBlock(SOURCE, target, "link", "", `/pages/${PAGE}`);
   expect(editor.getBlock(SOURCE)?.type).toBe("paragraph");
   expect(editor.getBlock(SOURCE)?.children[0]?.id).toBe(child);
+  expect(editor.getBlock(SOURCE)?.content).toEqual([
+    expect.objectContaining({
+      content: [expect.objectContaining({ text: `/pages/${PAGE}` })],
+      type: "link",
+    }),
+  ]);
 });
 
 test("converting the second badge leaves the first occurrence intact", async () => {
@@ -299,4 +305,55 @@ test("rendered reference links reject script, credential, and remote relative UR
   expect(safeReferenceHref("https://github.com/atomly/journl")).toBe(
     "https://github.com/atomly/journl",
   );
+});
+
+test("table-cell badge to link conversion preserves table shape and chooses the second occurrence", async () => {
+  const { adapter, editor } = await setup([
+    {
+      content: {
+        rows: [
+          {
+            cells: [
+              [
+                {
+                  props: { ...props, label: "First cell alias" },
+                  type: "contentReference",
+                },
+              ],
+              [
+                { styles: { bold: true }, text: "Before ", type: "text" },
+                {
+                  props: { ...props, label: "Second cell alias" },
+                  type: "contentReference",
+                },
+                { styles: { italic: true }, text: " after", type: "text" },
+              ],
+            ],
+          },
+        ],
+        type: "tableContent",
+      } as never,
+      id: SOURCE,
+      type: "table",
+    },
+  ]);
+  adapter.convertInline(
+    SOURCE,
+    target,
+    "link",
+    "Second cell alias",
+    `/pages/${PAGE}`,
+    1,
+  );
+  const block = editor.getBlock(SOURCE);
+  if (block?.type !== "table") throw new Error("Expected a table");
+  expect(block.content.rows).toHaveLength(1);
+  expect(block.content.rows[0]?.cells).toHaveLength(2);
+  const stored = JSON.stringify(block.content);
+  expect(stored).toContain('"type":"contentReference"');
+  expect(stored).toContain("First cell alias");
+  expect(stored).toContain('"type":"link"');
+  expect(stored).toContain("Second cell alias");
+  expect(stored).toContain('"bold":true');
+  expect(stored).toContain('"italic":true');
 });

@@ -29,12 +29,18 @@ import {
 } from "@blocknote/xl-ai";
 import { useQueryClient } from "@tanstack/react-query";
 import { Check, Link2, MessageSquarePlus, Unlink } from "lucide-react";
-import { useContext, useState } from "react";
+import { useContext, useRef, useState } from "react";
 import { RiSparkling2Fill } from "react-icons/ri";
 import removeMarkdown from "remove-markdown";
+import { toast } from "sonner";
 import { useJournlAgent } from "~/hooks/use-journl-agent";
 import { useIsMobile } from "~/hooks/use-mobile";
 import { useTRPC } from "~/trpc/react";
+import {
+  type CapturedReferenceLink,
+  captureReferenceLink,
+  convertCapturedReferenceLink,
+} from "./reference-link-conversion";
 
 export function BlockEditorFloatingToolbar() {
   const isMobile = useIsMobile();
@@ -122,145 +128,48 @@ function BlockEditorCopyBlockLinkButton() {
   );
 }
 
-function BlockEditorConvertLinkButton() {
+export function BlockEditorConvertLinkButton() {
   const editor = useBlockNoteEditor(schema);
   const Components = useComponentsContext();
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const [converted, setConverted] = useState(false);
+  const [open, setOpen] = useState(false);
   const adapter = useContext(ReferenceRenderContext);
   const portalElement = usePortalElement();
-  const tiptap = editor._tiptapEditor;
-  const selection = tiptap.state.selection;
-  if (
-    !Components ||
-    !editor.isEditable ||
-    selection.empty ||
-    !selection.$from.sameParent(selection.$to)
-  )
-    return null;
-  const linkMark = tiptap.schema.marks.link;
-  let link = selection.$from.marks().find((mark) => mark.type === linkMark);
-  let allLinked = true;
-  tiptap.state.doc.nodesBetween(selection.from, selection.to, (node) => {
-    if (!node.isText) return;
-    const mark = node.marks.find((candidate) => candidate.type === linkMark);
-    if (!mark || (link && mark.attrs.href !== link.attrs.href))
-      allLinked = false;
-    else link = mark;
-  });
-  const label = tiptap.state.doc.textBetween(
-    selection.from,
-    selection.to,
-    "",
-    "",
-  );
-  const href = typeof link?.attrs.href === "string" ? link.attrs.href : "";
-  if (!link || !allLinked || !href || !label.trim()) return null;
-
-  const captured = {
-    blockId: editor.getTextCursorPosition().block.id,
-    from: selection.from,
-    href,
-    label,
-    to: selection.to,
-  };
+  const saved = useRef<CapturedReferenceLink | null>(null);
+  const current = captureReferenceLink(editor);
+  if (!open && current) saved.current = current;
+  const captured = open ? saved.current : current;
+  if (!Components || !adapter || !captured) return null;
+  const canPromote = adapter.canConvertInline?.(captured.blockId) ?? false;
   async function convertLink(
     display: "contentReference" | "referenceCard" | "contentEmbed",
   ) {
+    if (!captured || !adapter) return;
     try {
-      const { items } = await queryClient.fetchQuery(
-        trpc.references.resolveUrls.queryOptions({
-          urls: [
-            (() => {
-              const url = new URL(captured.href, window.location.origin);
-              return url.origin === window.location.origin
-                ? `${url.pathname}${url.search}${url.hash}`
-                : captured.href;
-            })(),
-          ],
-        }),
+      const result = await convertCapturedReferenceLink(
+        editor,
+        adapter,
+        captured,
+        display,
+        (url) =>
+          queryClient.fetchQuery(
+            trpc.references.resolveUrls.queryOptions({ urls: [url] }),
+          ),
       );
-      const resolved = items[0];
-      if (!resolved?.target) return;
-      const current = editor._tiptapEditor.state.selection;
-      let currentHref: string | undefined;
-      let sameLink = true;
-      editor._tiptapEditor.state.doc.nodesBetween(
-        current.from,
-        current.to,
-        (node) => {
-          if (!node.isText) return;
-          const mark = node.marks.find(
-            (item) => item.type === editor._tiptapEditor.schema.marks.link,
-          );
-          if (!mark || (currentHref && mark.attrs.href !== currentHref))
-            sameLink = false;
-          else currentHref = mark.attrs.href;
-        },
-      );
-      if (
-        current.from !== captured.from ||
-        current.to !== captured.to ||
-        editor._tiptapEditor.state.doc.textBetween(
-          current.from,
-          current.to,
-          "",
-          "",
-        ) !== captured.label ||
-        !sameLink ||
-        currentHref !== captured.href
-      )
-        return;
-      const target = resolved.target;
-      if (display === "contentEmbed" && target.kind !== "document") return;
-      let occurrenceIndex = 0;
-      current.$from.parent.nodesBetween(
-        0,
-        current.$from.parentOffset,
-        (node) => {
-          if (node.type.name === "contentReference") occurrenceIndex += 1;
-        },
-      );
-      const resolvedHref =
-        target.kind === "external"
-          ? target.url
-          : resolved.preview.status === "ready"
-            ? (resolved.preview.href ?? captured.href)
-            : captured.href;
-      const alias = captured.label === captured.href ? "" : captured.label;
-      editor.insertInlineContent([
-        {
-          props: {
-            blockId: target.kind === "document" ? (target.blockId ?? "") : "",
-            documentId: target.kind === "document" ? target.documentId : "",
-            label: captured.label === captured.href ? "" : captured.label,
-            resolutionToken: "",
-            targetKind: target.kind,
-            url:
-              target.kind === "external"
-                ? target.url
-                : resolved.preview.status === "ready"
-                  ? (resolved.preview.href ?? captured.href)
-                  : captured.href,
-            version: 1,
-          },
-          type: "contentReference",
-        },
-      ]);
-      if (display !== "contentReference")
-        adapter?.convertInline(
-          captured.blockId,
-          target,
-          display,
-          alias,
-          resolvedHref,
-          occurrenceIndex,
+      if (result !== "converted") {
+        toast.error(
+          result === "changed"
+            ? "The link changed. Select it again to change its display."
+            : "This link is unavailable. The original link has been kept.",
         );
+        return;
+      }
       setConverted(true);
       window.setTimeout(() => setConverted(false), 1500);
     } catch {
-      // A failed resolver leaves the selected link intact for a later retry.
+      toast.error("Could not change the link display. Please try again.");
     }
   }
 
@@ -269,6 +178,7 @@ function BlockEditorConvertLinkButton() {
       portalElement={portalElement}
       position="bottom-start"
       preventFocusOnOpen
+      onOpenChange={setOpen}
     >
       <Components.Generic.Menu.Trigger>
         <Components.FormattingToolbar.Button
@@ -294,12 +204,14 @@ function BlockEditorConvertLinkButton() {
         >
           Inline
         </Components.Generic.Menu.Item>
-        <Components.Generic.Menu.Item
-          onClick={() => void convertLink("referenceCard")}
-        >
-          Card
-        </Components.Generic.Menu.Item>
-        {/\/(pages\/|journal\/)/.test(href) && (
+        {canPromote && (
+          <Components.Generic.Menu.Item
+            onClick={() => void convertLink("referenceCard")}
+          >
+            Card
+          </Components.Generic.Menu.Item>
+        )}
+        {canPromote && /\/(pages\/|journal\/)/.test(captured.href) && (
           <Components.Generic.Menu.Item
             onClick={() => void convertLink("contentEmbed")}
           >

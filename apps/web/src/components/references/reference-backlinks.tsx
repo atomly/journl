@@ -107,7 +107,7 @@ function ReferenceBacklinksContent({
         {open && (
           <Link
             className="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-md text-muted-foreground text-xs hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring"
-            href={`/graph?documentId=${documentId}${blockId ? `&blockId=${blockId}` : ""}`}
+            href={`/explore?documentId=${documentId}${blockId ? `&blockId=${blockId}` : ""}`}
           >
             <Compass aria-hidden="true" className="size-3.5" />
             Explore this note

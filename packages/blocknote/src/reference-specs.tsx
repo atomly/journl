@@ -164,11 +164,7 @@ function DisplayMenu({
   if (!Components || !options.length) return null;
   const Menu = Components.Generic.Menu;
   return (
-    <Menu.Root
-      portalElement={portalElement}
-      position="bottom-end"
-      preventFocusOnOpen
-    >
+    <Menu.Root portalElement={portalElement} position="bottom-end">
       <Menu.Trigger>
         <button
           type="button"
@@ -350,9 +346,13 @@ function ReferenceBadge({
     elementRef.current?.closest<HTMLElement>("[data-id]")?.dataset.id;
   const convert = (display: Display) => {
     const blockId = sourceBlockId();
-    const inlineRoot = elementRef.current?.closest(".bn-inline-content");
-    const badges = inlineRoot
-      ? [...inlineRoot.querySelectorAll(".content-reference-wrap")]
+    const owner = elementRef.current?.closest("[data-id]");
+    const badges = owner
+      ? [...owner.querySelectorAll(".content-reference-wrap")].filter(
+          (badge) =>
+            badge.closest("[data-id]") === owner &&
+            !badge.closest(".content-embed-content"),
+        )
       : [];
     const occurrenceIndex = badges.indexOf(elementRef.current as HTMLElement);
     if (blockId && target)
@@ -508,6 +508,11 @@ function blockSurface<
       editor?.getExtension(SideMenuExtension)?.blockDragEnd();
     },
     onDragStart(event: ReactDragEvent<HTMLElement>) {
+      if (
+        !(event.target instanceof Node) ||
+        !event.currentTarget.contains(event.target)
+      )
+        return;
       if (!enabled || !editor || !id || interactive(event.target)) {
         event.preventDefault();
         return;
@@ -521,6 +526,8 @@ function blockSurface<
         !enabled ||
         !editor ||
         !id ||
+        !(event.target instanceof Node) ||
+        !event.currentTarget.contains(event.target) ||
         event.button !== 0 ||
         interactive(event.target)
       )

@@ -73,7 +73,7 @@ vi.mock("next/navigation", async () => {
     useRouter: () => ({
       push: (href: string) => {
         mock.pushes.push(href);
-        if (!href.startsWith("/graph")) return;
+        if (!href.startsWith("/explore")) return;
         mock.location = href.split("?")[1] ?? "";
         for (const listener of mock.listeners) listener();
       },
@@ -252,7 +252,7 @@ test("automatically merges pages into one clustered canvas and separates unlinke
       container.querySelector(
         'svg button[aria-label="Preview github.com/atomly/journl/pull/302"]',
       ),
-    ).toBeNull();
+    ).not.toBeNull();
     await click(
       container.querySelector('[aria-label="Preview Testing feedback"]'),
     );
@@ -334,7 +334,7 @@ test("a note without internal links stays available to preview and open", async 
     expect(container.querySelector("h1")?.textContent).toBe(
       "A separate thought",
     );
-    expect(container.textContent).toContain("0 connected notes");
+    expect(container.textContent).toContain("0 connections");
     await click(
       container.querySelector('[aria-label="Preview A separate thought"]'),
     );
@@ -358,6 +358,8 @@ test("mobile selections open a dismissible preview sheet with the source passage
       container.querySelector('[aria-label="Preview Testing feedback"]'),
     );
     const sheet = document.querySelector('[data-slot="sheet-content"]');
+    expect(sheet?.className).toContain("data-[side=bottom]:h-[78dvh]");
+    expect(sheet?.querySelector(".overscroll-contain")).not.toBeNull();
     expect(sheet?.textContent).toContain(
       "The heading menu closes while choosing a text type.",
     );
@@ -374,21 +376,24 @@ test("mobile selections open a dismissible preview sheet with the source passage
   }
 });
 
-test("search finds a starting note across the library and opens its connections", async () => {
+test("Explore uses the app search and keeps desktop context beside the canvas", async () => {
   const { container, cleanup } = await setup();
   try {
-    await act(async () =>
-      container.querySelector<HTMLInputElement>("#explore-search")?.focus(),
+    expect(container.querySelector("#explore-search")).toBeNull();
+    const context = container.querySelector(
+      '[aria-label="Connection context"]',
     );
-    await settle();
-    const result = [...container.querySelectorAll("[data-search-result]")].find(
-      (button) => button.textContent?.includes("Implementation decisions"),
+    expect(context?.className).toContain("sticky");
+    expect(context?.className).toContain("self-start");
+    await click(
+      container.querySelector('[aria-label="Preview Testing feedback"]'),
     );
-    await click(result ?? null);
-    expect(mock.location).toBe("documentId=c");
-    expect(container.querySelector("h1")?.textContent).toBe(
-      "Implementation decisions",
+    await click(
+      [
+        ...container.querySelectorAll('[aria-label="Note preview"] button'),
+      ].find((button) => button.textContent === "Explore connections") ?? null,
     );
+    expect(mock.pushes.at(-1)).toBe("/explore?documentId=b");
   } finally {
     await cleanup();
   }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery } from "@tanstack/react-query";
 import {
   ArrowLeft,
   ChevronRight,
@@ -8,15 +8,12 @@ import {
   Maximize2,
   Minus,
   Plus,
-  Search,
   X,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useDebounce } from "use-debounce";
 import { Button } from "~/components/ui/button";
-import { Input } from "~/components/ui/input";
 import {
   Sheet,
   SheetContent,
@@ -48,7 +45,11 @@ type Snapshot = {
   scrollTop: number;
 };
 type Step = { scope: string; href: string; title: string };
-const OVERVIEW: Step = { href: "/graph", scope: "overview", title: "Explore" };
+const OVERVIEW: Step = {
+  href: "/explore",
+  scope: "overview",
+  title: "Explore",
+};
 
 export function GraphExplorer() {
   const params = useSearchParams();
@@ -61,8 +62,8 @@ export function GraphExplorer() {
   const [trail, setTrail] = useState<Step[]>([]);
   useEffect(() => {
     const href = documentId
-      ? `/graph?documentId=${documentId}${blockId ? `&blockId=${blockId}` : ""}`
-      : "/graph";
+      ? `/explore?documentId=${documentId}${blockId ? `&blockId=${blockId}` : ""}`
+      : "/explore";
     setTrail((previous) => {
       const existing = previous.findIndex((step) => step.scope === scope);
       if (existing >= 0) return previous.slice(0, existing + 1);
@@ -92,7 +93,7 @@ export function GraphExplorer() {
     const nextScope = `${node.target.documentId}:`;
     if (nextScope === scope) return;
     titles.current.set(nextScope, getExploreTitle(node));
-    router.push(`/graph?documentId=${node.target.documentId}`);
+    router.push(`/explore?documentId=${node.target.documentId}`);
   }
   return (
     <main className="mx-auto flex min-h-full w-full max-w-7xl flex-col gap-5 px-4 py-6 md:px-8">
@@ -118,7 +119,7 @@ export function GraphExplorer() {
           {documentId && !trail.some((step) => step.scope === "overview") && (
             <>
               <Link
-                href="/graph"
+                href="/explore"
                 className="inline-flex min-h-11 items-center rounded-md px-2 text-muted-foreground hover:text-foreground"
               >
                 Explore
@@ -194,10 +195,6 @@ function ExploreView({
   const viewport = useRef<HTMLDivElement>(null);
   const initialSnapshot = useRef(snapshot).current;
   const [width, setWidth] = useState(920);
-  const [search, setSearch] = useState("");
-  const [searchOpen, setSearchOpen] = useState(false);
-  const [debouncedSearch] = useDebounce(search, 200);
-  const searchRoot = useRef<HTMLFormElement>(null);
   const graphQuery = useInfiniteQuery(
     trpc.references.getGraph.infiniteQueryOptions(
       {
@@ -253,12 +250,6 @@ function ExploreView({
   useEffect(() => {
     saveSnapshot();
   }, [saveSnapshot]);
-  const searchQuery = useQuery(
-    trpc.references.searchTargets.queryOptions(
-      { limit: 8, query: debouncedSearch },
-      { enabled: searchOpen },
-    ),
-  );
   const preview = selected ? (
     <ExplorePreview
       node={selected}
@@ -292,8 +283,8 @@ function ExploreView({
           </h1>
           <p className="mt-1 max-w-xl text-muted-foreground text-sm leading-relaxed">
             {documentId
-              ? "Follow the notes that connect to this one. Select a note to see why it belongs here."
-              : "Find a starting note and follow its connections to pick up where you left off."}
+              ? "Follow the notes and sources that connect to this one. Select an item to see why it belongs here."
+              : "Choose a thread below, or explore connections from any note to pick up where you left off."}
           </p>
           {root?.href && (
             <Link
@@ -304,93 +295,6 @@ function ExploreView({
             </Link>
           )}
         </div>
-        <form
-          aria-label="Find a starting note"
-          onSubmit={(event) => event.preventDefault()}
-          ref={searchRoot}
-          className="relative w-full md:w-72"
-          onBlur={(event) => {
-            if (!event.currentTarget.contains(event.relatedTarget))
-              setSearchOpen(false);
-          }}
-        >
-          <label htmlFor="explore-search" className="sr-only">
-            Find a starting note
-          </label>
-          <Search
-            aria-hidden="true"
-            className="absolute top-3 left-3 size-4 text-muted-foreground"
-          />
-          <Input
-            id="explore-search"
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-            onFocus={() => setSearchOpen(true)}
-            onKeyDown={(event) => {
-              if (event.key === "Escape") setSearchOpen(false);
-              if (event.key === "ArrowDown") {
-                event.preventDefault();
-                searchRoot.current
-                  ?.querySelector<HTMLButtonElement>("[data-search-result]")
-                  ?.focus();
-              }
-            }}
-            placeholder="Find a note…"
-            className="min-h-11 pl-9"
-          />
-          {searchOpen && (
-            <section
-              className="absolute top-full right-0 left-0 z-30 mt-2 max-h-80 overflow-auto rounded-xl border bg-popover p-2 shadow-lg"
-              aria-label="Starting notes"
-            >
-              <p className="px-2 py-1 text-muted-foreground text-xs">
-                {search.trim() ? "Matching notes" : "Recently edited"}
-              </p>
-              {searchQuery.isPending ? (
-                <p className="p-3 text-muted-foreground text-sm">
-                  Finding notes…
-                </p>
-              ) : searchQuery.isError ? (
-                <p className="p-3 text-muted-foreground text-sm">
-                  Could not search notes. Try again.
-                </p>
-              ) : !searchQuery.data?.items.length ? (
-                <p className="p-3 text-muted-foreground text-sm">
-                  No notes found.
-                </p>
-              ) : (
-                searchQuery.data.items.map((item) => (
-                  <button
-                    key={item.documentId}
-                    data-search-result
-                    type="button"
-                    className="flex min-h-11 w-full flex-col justify-center rounded-lg px-3 py-2 text-left hover:bg-accent focus-visible:bg-accent focus-visible:outline-2 focus-visible:outline-ring"
-                    onClick={() => {
-                      setSearchOpen(false);
-                      onExplore({
-                        href: item.href,
-                        key: `document:${item.documentId}`,
-                        kind: item.kind,
-                        target: {
-                          documentId: item.documentId,
-                          kind: "document",
-                        },
-                        title: getExploreTitle(item),
-                      });
-                    }}
-                  >
-                    <span className="line-clamp-2 text-sm">
-                      {getExploreTitle(item)}
-                    </span>
-                    <span className="text-muted-foreground text-xs">
-                      {item.kind === "journal" ? "Journal entry" : "Note"}
-                    </span>
-                  </button>
-                ))
-              )}
-            </section>
-          )}
-        </form>
       </header>
       {graphQuery.isError ? (
         <section role="alert" className="rounded-xl border p-8 text-center">
@@ -404,9 +308,13 @@ function ExploreView({
           </Button>
         </section>
       ) : !complete ? (
-        <div>
-          <Skeleton className="h-96 rounded-2xl" />
-          <p className="mt-3 text-muted-foreground text-sm" role="status">
+        <div
+          className="grid min-w-0 gap-5 md:grid-cols-[minmax(0,1fr)_20rem] xl:grid-cols-[minmax(0,1fr)_22rem]"
+          aria-busy="true"
+        >
+          <Skeleton className="h-[calc(min(70dvh,42rem)+3.5rem)] min-h-94 rounded-2xl" />
+          <Skeleton className="hidden h-80 rounded-2xl md:block" />
+          <p className="sr-only" role="status">
             Finding your connections…
           </p>
         </div>
@@ -420,9 +328,9 @@ function ExploreView({
               <div className="flex min-h-14 items-center justify-between gap-3 border-b px-3 py-2">
                 <p className="pl-1 text-muted-foreground text-xs">
                   {documentId
-                    ? `${connectionCount} connected ${connectionCount === 1 ? "note" : "notes"}`
+                    ? `${connectionCount} ${connectionCount === 1 ? "connection" : "connections"}`
                     : `${clusters.length} ${clusters.length === 1 ? "thread" : "threads"}`}{" "}
-                  · Select a note to read its context
+                  · Select a note or source to read its context
                 </p>
                 <div className="flex shrink-0 items-center gap-0.5">
                   <Button
@@ -470,7 +378,7 @@ function ExploreView({
               <div
                 ref={viewport}
                 onScroll={saveSnapshot}
-                className="max-h-[70dvh] min-h-80 overflow-auto bg-card/30"
+                className="h-[min(70dvh,42rem)] min-h-80 overflow-auto bg-card/30"
               >
                 {!documentId && !clusters.length ? (
                   <div className="flex min-h-80 flex-col items-center justify-center gap-3 px-6 text-center">
@@ -482,8 +390,9 @@ function ExploreView({
                       Your next thread starts with a note
                     </p>
                     <p className="max-w-sm text-muted-foreground text-sm">
-                      Find a note above, or choose one below. Links between
-                      notes will bring your threads together here.
+                      Choose a note below or open a note and explore its
+                      connections. Links between notes will bring your threads
+                      together here.
                     </p>
                   </div>
                 ) : (
@@ -528,7 +437,7 @@ function ExploreView({
             )}
           </div>
           <aside
-            className="hidden max-h-[78dvh] self-start overflow-auto rounded-2xl border bg-card/30 md:block"
+            className="sticky top-[calc(var(--app-header-offset,0px)+1rem)] hidden max-h-[calc(100dvh-var(--app-header-offset,0px)-2rem)] self-start overflow-auto rounded-2xl border bg-card/30 md:block"
             aria-label="Connection context"
           >
             {preview ?? (
@@ -567,7 +476,7 @@ function ExploreView({
       >
         <SheetContent
           side="bottom"
-          className="max-h-[78dvh] overflow-auto rounded-t-2xl pb-[env(safe-area-inset-bottom)]"
+          className="h-[78dvh] max-h-[78dvh] overflow-hidden rounded-t-2xl pb-[env(safe-area-inset-bottom)] data-[side=bottom]:h-[78dvh]"
           showCloseButton={false}
         >
           <SheetTitle className="sr-only">Note preview</SheetTitle>
@@ -585,7 +494,12 @@ function ExploreView({
               <X aria-hidden="true" />
             </Button>
           </div>
-          {preview}
+          <div
+            key={selectedKey}
+            className="min-h-0 flex-1 overflow-auto overscroll-contain"
+          >
+            {preview}
+          </div>
         </SheetContent>
       </Sheet>
     </>

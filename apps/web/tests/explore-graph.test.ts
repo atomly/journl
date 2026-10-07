@@ -54,7 +54,7 @@ test("overlapping graph pages merge each relationship without inflating its refe
   expect(merged.edges[0]?.sources).toHaveLength(1);
 });
 
-test("clusters follow actual internal links and keep independent, self-linked, and external-only notes separate", () => {
+test("clusters include authored source URLs and keep independent and self-linked notes separate", () => {
   const external: ExploreNode = {
     key: "url",
     kind: "external",
@@ -78,12 +78,13 @@ test("clusters follow actual internal links and keep independent, self-linked, a
   ).toEqual([
     ["a", "b"],
     ["c", "d"],
+    ["e", "url"],
   ]);
-  expect(grouped.unlinked.map((node) => node.key)).toEqual(["e", "f"]);
+  expect(grouped.unlinked.map((node) => node.key)).toEqual(["f"]);
   const layout = layoutExploreGraph(graph, 900);
-  expect(layout.groups).toHaveLength(2);
-  expect(layout.positions.has("e")).toBe(false);
-  expect(layout.positions.has("url")).toBe(false);
+  expect(layout.groups).toHaveLength(3);
+  expect(layout.positions.has("e")).toBe(true);
+  expect(layout.positions.has("url")).toBe(true);
   const first = layout.groups[0];
   const second = layout.groups[1];
   expect((first?.x ?? 0) + (first?.width ?? 0)).toBeLessThan(second?.x ?? 0);
@@ -102,4 +103,53 @@ test("a focused note has readable mobile cards and only its immediate neighbors 
     expect(point.x - layout.cardWidth / 2).toBeGreaterThanOrEqual(0);
     expect(point.x + layout.cardWidth / 2).toBeLessThanOrEqual(340);
   }
+});
+
+test("one shared external URL joins its actual source notes and focused view includes that source", () => {
+  const external: ExploreNode = {
+    href: "https://example.com/article",
+    key: "url",
+    kind: "external",
+    target: { kind: "external", url: "https://example.com/article" },
+    title: "Article",
+  };
+  const graph = {
+    edges: [edge("a", "url"), edge("b", "url")],
+    nodes: [note("a"), note("b"), external, note("unlinked")],
+  };
+  const clusters = getNoteClusters(graph);
+  expect(clusters.clusters).toHaveLength(1);
+  expect(clusters.clusters[0]?.[0]?.kind).toBe("page");
+  expect(clusters.clusters[0]?.map((node) => node.key).sort()).toEqual([
+    "a",
+    "b",
+    "url",
+  ]);
+  expect([...layoutExploreGraph(graph, 340, "a").positions.keys()]).toEqual([
+    "a",
+    "url",
+  ]);
+});
+
+test("linked sources remain visible in compact previews when many note connections precede them", () => {
+  const external: ExploreNode = {
+    key: "z-source",
+    kind: "external",
+    title: "Source",
+  };
+  const notes = Array.from({ length: 10 }, (_, index) => note(`note-${index}`));
+  const graph = {
+    edges: [
+      ...notes.map((node) => edge("root", node.key)),
+      edge("root", external.key),
+    ],
+    nodes: [note("root"), ...notes, external],
+  };
+  expect(layoutExploreGraph(graph, 900).positions.has(external.key)).toBe(true);
+  expect(
+    layoutExploreGraph(graph, 340, "root").positions.has(external.key),
+  ).toBe(true);
+  expect(
+    layoutExploreGraph(graph, 900, "root").positions.has(external.key),
+  ).toBe(true);
 });

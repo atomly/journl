@@ -74,7 +74,10 @@ export function getConnectedNotes(graph: ExploreGraph, key: string) {
   );
   return graph.nodes
     .filter(
-      (node) => isNote(node) && node.key !== key && adjacent.has(node.key),
+      (node) =>
+        (isNote(node) || node.kind === "external") &&
+        node.key !== key &&
+        adjacent.has(node.key),
     )
     .sort((a, b) => a.title.localeCompare(b.title));
 }
@@ -82,7 +85,7 @@ export function getConnectedNotes(graph: ExploreGraph, key: string) {
 /** Clusters describe authored note links, never proximity or inferred similarity. */
 export function getNoteClusters(graph: ExploreGraph) {
   const notes = graph.nodes
-    .filter(isNote)
+    .filter((node) => isNote(node) || node.kind === "external")
     .sort(
       (a, b) => a.title.localeCompare(b.title) || a.key.localeCompare(b.key),
     );
@@ -104,7 +107,7 @@ export function getNoteClusters(graph: ExploreGraph) {
   for (const note of notes) {
     if (visited.has(note.key)) continue;
     if (!neighbors.get(note.key)?.size) {
-      unlinked.push(note);
+      if (isNote(note)) unlinked.push(note);
       visited.add(note.key);
       continue;
     }
@@ -120,6 +123,7 @@ export function getNoteClusters(graph: ExploreGraph) {
     }
     const root = [...component].sort(
       (a, b) =>
+        Number(isNote(b)) - Number(isNote(a)) ||
         (neighbors.get(b.key)?.size ?? 0) - (neighbors.get(a.key)?.size ?? 0) ||
         a.title.localeCompare(b.title),
     )[0];
@@ -134,7 +138,12 @@ export function getNoteClusters(graph: ExploreGraph) {
       seen.add(key);
       const node = byKey.get(key);
       if (node) ordered.push(node);
-      next.push(...(neighbors.get(key) ?? []));
+      const adjacent = [...(neighbors.get(key) ?? [])].sort(
+        (a, b) =>
+          Number(byKey.get(b)?.kind === "external") -
+            Number(byKey.get(a)?.kind === "external") || a.localeCompare(b),
+      );
+      next.push(...adjacent);
     }
     clusters.push(ordered);
   }
@@ -174,7 +183,13 @@ export function layoutExploreGraph(
   if (focusKey) {
     const root = graph.nodes.find((node) => node.key === focusKey);
     const notes = getConnectedNotes(graph, focusKey);
-    const visible = notes.slice(0, mobile ? 6 : 8);
+    const limit = mobile ? 6 : 8;
+    const visible = notes.slice(0, limit);
+    const source = notes.find((node) => node.kind === "external");
+    // A compact neighborhood still represents its linked sources when a note
+    // has more connections than the visible canvas can comfortably fit.
+    if (source && !visible.some((node) => node.kind === "external"))
+      visible[visible.length - 1] = source;
     const height = mobile
       ? Math.max(340, 200 + Math.ceil(visible.length / 2) * 120)
       : 560;

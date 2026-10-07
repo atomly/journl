@@ -30,7 +30,7 @@ const navigationItems = [
   {
     icon: <Compass />,
     title: "Explore",
-    url: "/graph",
+    url: "/explore",
   },
 ] satisfies ComponentProps<typeof AppSidebarNavigation>["items"];
 

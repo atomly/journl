@@ -18,6 +18,7 @@ import {
   handleReferencePaste,
   insertReferenceUrl,
 } from "./reference-insertion";
+import { ReferenceSelectionExtension } from "./reference-selection";
 
 type UseBlockEditorOptions = {
   /**
@@ -143,6 +144,7 @@ export function useBlockEditor({
       },
       extensions: [
         ReferenceTabNavigationExtension(),
+        ReferenceSelectionExtension(),
         AIExtension({
           // The `agentCursor.color` is the default across multiple BlockNote components, we're just setting the name.
           agentCursor: { color: "#8bc6ff", name: "Journl" },

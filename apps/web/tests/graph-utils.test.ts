@@ -7,10 +7,10 @@ import {
 test("graph labels distinguish separate GitHub issues and website pages", () => {
   expect(
     getExternalGraphTitle("https://github.com/atomly/journl/issues/291"),
-  ).toBe("github.com/atomly/journl/issues/291");
+  ).toBe("atomly/journl · Issue #291");
   expect(
     getExternalGraphTitle("https://github.com/atomly/journl/pull/302"),
-  ).toBe("github.com/atomly/journl/pull/302");
+  ).toBe("atomly/journl · PR #302");
   expect(getExternalGraphTitle("https://example.com/a?version=2")).toBe(
     "example.com/a?version=2",
   );

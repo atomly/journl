@@ -5,6 +5,7 @@ import {
   ArrowUpRight,
   ExternalLink,
   FileText,
+  Globe,
   NotebookPen,
 } from "lucide-react";
 import Link from "next/link";
@@ -42,10 +43,15 @@ export function ExplorePreview({
   onOpen(node: ExploreNode): void;
 }) {
   const trpc = useTRPC();
+  const target =
+    node.target ??
+    (node.kind === "external" && node.href
+      ? { kind: "external" as const, url: node.href }
+      : undefined);
   const previewQuery = useQuery(
     trpc.references.getPreviews.queryOptions(
-      { targets: node.target?.kind === "document" ? [node.target] : [] },
-      { enabled: node.target?.kind === "document" },
+      { targets: target ? [target] : [] },
+      { enabled: Boolean(target) },
     ),
   );
   const preview = previewQuery.data?.items[0]?.preview;
@@ -77,7 +83,12 @@ export function ExplorePreview({
     (edge) =>
       edge.fromKey === node.key && byKey.get(edge.toKey)?.kind === "external",
   );
-  const Icon = node.kind === "journal" ? NotebookPen : FileText;
+  const Icon =
+    node.kind === "journal"
+      ? NotebookPen
+      : node.kind === "external"
+        ? Globe
+        : FileText;
   function connectionList(
     title: string,
     edges: ExploreEdge[],
@@ -140,7 +151,11 @@ export function ExplorePreview({
       <div>
         <p className="mb-2 flex items-center gap-1.5 text-muted-foreground text-xs">
           <Icon aria-hidden="true" className="size-3.5" />
-          {node.kind === "journal" ? "Journal entry" : "Note"}
+          {node.kind === "journal"
+            ? "Journal entry"
+            : node.kind === "external"
+              ? "Linked source"
+              : "Note"}
           {node.key === focusKey && " · Starting note"}
         </p>
         <h2 className="break-words pr-5 font-semibold text-lg leading-snug">
@@ -148,24 +163,43 @@ export function ExplorePreview({
             ? getExploreTitle({ ...node, title: preview.title || node.title })
             : node.title}
         </h2>
-        {previewQuery.isPending && node.target?.kind === "document" ? (
+        {previewQuery.isPending && target ? (
           <Skeleton className="mt-3 h-12" />
         ) : preview?.status === "ready" && preview.excerpt ? (
           <p className="mt-3 text-muted-foreground text-sm leading-relaxed">
             {preview.excerpt}
           </p>
         ) : null}
+        {previewQuery.isError && (
+          <p className="mt-3 text-muted-foreground text-sm">
+            Preview could not load. You can still open the{" "}
+            {node.kind === "external" ? "source" : "note"} below.
+          </p>
+        )}
         {preview?.status === "unavailable" && (
           <p className="mt-3 text-muted-foreground text-sm">
-            This note is no longer available.
+            {node.kind === "external"
+              ? "Preview unavailable. You can still open the source below."
+              : "This note is no longer available."}
           </p>
         )}
       </div>
       <div className="flex flex-wrap gap-2">
-        {node.href && (
-          <Button className="min-h-11" size="sm" onClick={() => onOpen(node)}>
-            Open note <ArrowUpRight aria-hidden="true" />
-          </Button>
+        {node.kind === "external" && node.href ? (
+          <a
+            href={node.href}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex min-h-11 items-center gap-2 rounded-lg bg-primary px-3 font-medium text-primary-foreground text-sm"
+          >
+            Open source <ExternalLink aria-hidden="true" className="size-4" />
+          </a>
+        ) : (
+          node.href && (
+            <Button className="min-h-11" size="sm" onClick={() => onOpen(node)}>
+              Open note <ArrowUpRight aria-hidden="true" />
+            </Button>
+          )
         )}
         {node.target?.kind === "document" && node.key !== focusKey && (
           <Button
@@ -178,7 +212,7 @@ export function ExplorePreview({
           </Button>
         )}
       </div>
-      {focusKey && node.key !== focusKey && (
+      {focusKey && node.key !== focusKey && node.kind !== "external" && (
         <p className="text-muted-foreground text-xs">
           Showing connections in this thread. Explore this note to follow it
           further.

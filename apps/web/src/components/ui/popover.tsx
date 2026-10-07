@@ -2,14 +2,29 @@
 
 import { Popover as PopoverPrimitive } from "@base-ui/react/popover";
 import { cn } from "cn";
-import type * as React from "react";
+import * as React from "react";
 
 function Popover({ ...props }: PopoverPrimitive.Root.Props) {
   return <PopoverPrimitive.Root data-slot="popover" {...props} />;
 }
 
-function PopoverTrigger({ ...props }: PopoverPrimitive.Trigger.Props) {
-  return <PopoverPrimitive.Trigger data-slot="popover-trigger" {...props} />;
+function PopoverTrigger({
+  render,
+  nativeButton,
+  ...props
+}: PopoverPrimitive.Trigger.Props) {
+  const elementType = React.isValidElement(render) ? render.type : undefined;
+  return (
+    <PopoverPrimitive.Trigger
+      data-slot="popover-trigger"
+      render={render}
+      nativeButton={
+        nativeButton ??
+        (typeof elementType === "string" ? elementType === "button" : undefined)
+      }
+      {...props}
+    />
+  );
 }
 
 function PopoverContent({

@@ -44,9 +44,11 @@ export function permitsBlockContextMenu(
     pointerType !== "touch" &&
     pointerType !== "pen" &&
     !target.closest(
-      "a[href], button, input, textarea, select, [role='button'], [role='menuitem'], .content-embed-body, .content-embed-content",
+      "a[href]:not(.content-reference), button, input, textarea, select, [role='button']:not(.content-reference), [role='menuitem'], .content-embed-body, .content-embed-content",
     ) &&
-    (wholeBlockSelected || !window.getSelection()?.toString())
+    (wholeBlockSelected ||
+      Boolean(target.closest(".content-reference")) ||
+      !window.getSelection()?.toString())
   );
 }
 
@@ -108,12 +110,83 @@ function referenceTarget(block: BlockPrimitive): ReferenceRenderTarget | null {
     : null;
 }
 
+type InlineReferenceAction = {
+  target: ReferenceRenderTarget;
+  href: string;
+  label: string;
+  occurrenceIndex: number;
+  canPromote: boolean;
+};
+
+export function inlineReferenceAction(
+  element: Element,
+  block: BlockPrimitive,
+): InlineReferenceAction | undefined {
+  const reference = element.closest<HTMLElement>(
+    "[data-inline-content-type='contentReference']",
+  );
+  const inlineRoot = reference?.closest(".bn-inline-content");
+  if (!reference || !inlineRoot) return;
+  const owner = reference.closest("[data-id]");
+  if (!owner) return;
+  const occurrenceIndex = [
+    ...owner.querySelectorAll("[data-inline-content-type='contentReference']"),
+  ]
+    .filter(
+      (item) =>
+        item.closest("[data-id]") === owner &&
+        !item.closest(".content-embed-content"),
+    )
+    .indexOf(reference);
+  const content = Array.isArray(block.content)
+    ? block.content
+    : block.type === "table"
+      ? block.content.rows.flatMap((row) =>
+          row.cells.flatMap((cell) =>
+            Array.isArray(cell) ? cell : cell.content,
+          ),
+        )
+      : [];
+  const record = content.filter((item) => item.type === "contentReference")[
+    occurrenceIndex
+  ];
+  if (record?.type !== "contentReference") return;
+  const props = record.props;
+  let target: ReferenceRenderTarget;
+  if (props.targetKind === "external") {
+    try {
+      const url = new URL(props.url);
+      if (!["https:", "http:"].includes(url.protocol)) return;
+      target = { kind: "external", url: url.toString() };
+    } catch {
+      return;
+    }
+  } else {
+    if (!props.documentId) return;
+    target = {
+      documentId: props.documentId,
+      kind: "document",
+      ...(props.blockId ? { blockId: props.blockId } : {}),
+    };
+  }
+  return {
+    canPromote: Array.isArray(block.content),
+    href:
+      reference.querySelector<HTMLAnchorElement>("a[href]")?.href || props.url,
+    label: props.label,
+    occurrenceIndex,
+    target,
+  };
+}
+
 function BlockActions({
   block,
   handle = false,
+  inlineReference,
 }: {
   block: BlockPrimitive;
   handle?: boolean;
+  inlineReference?: InlineReferenceAction;
 }) {
   const editor = useBlockNoteEditor(schema);
   const components = useComponentsContext();
@@ -121,7 +194,7 @@ function BlockActions({
   const adapter = useContext(ReferenceRenderContext);
   if (!components || !editor.isEditable) return null;
   const Menu = components.Generic.Menu;
-  const target = referenceTarget(block);
+  const target = inlineReference?.target ?? referenceTarget(block);
   async function copy(value: string) {
     try {
       await navigator.clipboard.writeText(value);
@@ -133,7 +206,9 @@ function BlockActions({
     <>
       {target &&
         adapter &&
-        (block.type === "referenceCard" || block.type === "contentEmbed") && (
+        (inlineReference ||
+          block.type === "referenceCard" ||
+          block.type === "contentEmbed") && (
           <>
             <Menu.Root sub portalElement={portalElement} position="right">
               <Menu.Trigger sub>
@@ -148,11 +223,36 @@ function BlockActions({
                     ...(target.kind === "document" ? ["contentEmbed"] : []),
                   ] as const
                 )
-                  .filter((display) => display !== block.type)
+                  .filter(
+                    (display) =>
+                      !inlineReference ||
+                      inlineReference.canPromote ||
+                      display === "link",
+                  )
+                  .filter(
+                    (display) =>
+                      display !==
+                      (inlineReference ? "contentReference" : block.type),
+                  )
                   .map((display) => (
                     <Menu.Item
                       key={display}
                       onClick={() => {
+                        if (inlineReference) {
+                          adapter.convertInline(
+                            block.id,
+                            target,
+                            display as
+                              | "contentReference"
+                              | "referenceCard"
+                              | "link"
+                              | "contentEmbed",
+                            inlineReference.label,
+                            inlineReference.href,
+                            inlineReference.occurrenceIndex,
+                          );
+                          return;
+                        }
                         void referenceSourceHref(block, adapter)
                           .then((href) => {
                             if (!href || !editor.getBlock(block.id)) {
@@ -167,7 +267,7 @@ function BlockActions({
                                 | "referenceCard"
                                 | "link"
                                 | "contentEmbed",
-                              block.props.label,
+                              "label" in block.props ? block.props.label : "",
                               href,
                             );
                           })
@@ -189,14 +289,23 @@ function BlockActions({
             </Menu.Root>
             <Menu.Item
               onClick={() =>
-                adapter.openTarget(target, block.props.url || undefined)
+                adapter.openTarget(
+                  target,
+                  inlineReference?.href ||
+                    ("url" in block.props ? block.props.url : undefined) ||
+                    undefined,
+                )
               }
             >
               Open source
             </Menu.Item>
             <Menu.Item
               onClick={() =>
-                void referenceSourceHref(block, adapter)
+                void (
+                  inlineReference
+                    ? Promise.resolve(inlineReference.href)
+                    : referenceSourceHref(block, adapter)
+                )
                   .then((href) => {
                     if (href) return copy(href);
                     toast.error("Source link is unavailable.");
@@ -352,6 +461,7 @@ export function BlockEditorContextMenu() {
     block: BlockPrimitive;
     x: number;
     y: number;
+    inlineReference?: InlineReferenceAction;
   } | null>(null);
   useEffect(() => {
     const dom = editor._tiptapEditor.view.dom;
@@ -372,7 +482,12 @@ export function BlockEditorContextMenu() {
       const block = id ? editor.getBlock(id) : undefined;
       if (!block) return;
       event.preventDefault();
-      setContext({ block, x, y });
+      setContext({
+        block,
+        inlineReference: inlineReferenceAction(target, block),
+        x,
+        y,
+      });
     };
     const menu = (event: MouseEvent) => {
       if (
@@ -450,7 +565,10 @@ export function BlockEditorContextMenu() {
         }}
         className="bn-menu-dropdown"
       >
-        <BlockActions block={context.block} />
+        <BlockActions
+          block={context.block}
+          inlineReference={context.inlineReference}
+        />
       </DropdownMenuContent>
     </DropdownMenu>
   );

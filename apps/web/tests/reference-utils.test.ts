@@ -2,6 +2,7 @@ import { describe, expect, test } from "vitest";
 import {
   classifyInternalUrl,
   extractReferenceOccurrences,
+  getPlainUrlForAutomaticReference,
   getTargetKey,
   normalizeExternalUrl,
 } from "../src/references/reference-utils";
@@ -10,11 +11,40 @@ const appUrl = "https://journl.example";
 const pageId = "36b06f18-6e7f-4b9e-9139-773f1f47baac";
 
 describe("reference URL handling", () => {
+  test("automatically converts only an unselected plain URL", () => {
+    expect(
+      getPlainUrlForAutomaticReference({
+        html: "",
+        selectionEmpty: true,
+        text: "https://github.com/atomly/journl/issues/291",
+      }),
+    ).toBe("https://github.com/atomly/journl/issues/291");
+    expect(
+      getPlainUrlForAutomaticReference({
+        html: '<a href="https://example.com">example</a>',
+        selectionEmpty: true,
+        text: "https://example.com",
+      }),
+    ).toBeNull();
+    expect(
+      getPlainUrlForAutomaticReference({
+        html: "",
+        selectionEmpty: false,
+        text: "https://example.com",
+      }),
+    ).toBeNull();
+  });
   test("recognizes only exact trusted canonical routes and real dates", () => {
     expect(classifyInternalUrl(`/pages/${pageId}`, [], appUrl)).toEqual({
       entityId: pageId,
       kind: "page",
     });
+    expect(
+      classifyInternalUrl(`/pages/${pageId}#block=${pageId}`, [], appUrl),
+    ).toEqual({ blockId: pageId, entityId: pageId, kind: "page" });
+    expect(
+      classifyInternalUrl(`/pages/${pageId}#heading`, [], appUrl),
+    ).toBeNull();
     expect(
       classifyInternalUrl("https://evil-journl.example/pages/x", [], appUrl),
     ).toBeNull();

@@ -7,6 +7,7 @@ CREATE TABLE IF NOT EXISTS document_reference (
   source_document_id uuid NOT NULL REFERENCES document (id) ON DELETE CASCADE,
   source_block_id uuid NOT NULL REFERENCES block_node (id) ON DELETE CASCADE,
   occurrence_path varchar(256) NOT NULL,
+  target_identity text NOT NULL DEFAULT 'explicit',
   target_kind text NOT NULL,
   target_document_id uuid,
   target_block_id uuid,
@@ -22,6 +23,9 @@ CREATE TABLE IF NOT EXISTS document_reference (
   CONSTRAINT document_reference_presentation_check CHECK (
     presentation IN ('link', 'badge', 'card', 'embed')
   ),
+  CONSTRAINT document_reference_identity_check CHECK (
+    target_identity IN ('route', 'explicit')
+  ),
   CONSTRAINT document_reference_block_target_check CHECK (
     target_block_id IS NULL OR target_kind = 'document'
   )
@@ -30,7 +34,7 @@ CREATE TABLE IF NOT EXISTS document_reference (
 CREATE UNIQUE INDEX IF NOT EXISTS document_reference_source_path_unique
   ON document_reference (source_block_id, occurrence_path);
 CREATE INDEX IF NOT EXISTS document_reference_incoming_index
-  ON document_reference (user_id, target_document_id, target_block_id, source_document_id, source_block_id);
+  ON document_reference (user_id, target_document_id, target_identity, target_block_id, source_document_id, source_block_id);
 CREATE INDEX IF NOT EXISTS document_reference_outgoing_index
   ON document_reference (user_id, source_document_id, source_block_id);
 CREATE INDEX IF NOT EXISTS document_reference_external_index

@@ -12,6 +12,7 @@ import {
 } from "react";
 import { BlockEditor } from "~/components/editor/block-editor";
 import { useBlockEditor } from "~/components/editor/use-block-editor";
+import { ReferenceBacklinks } from "~/components/references/reference-backlinks";
 import { Button } from "~/components/ui/button";
 import { useJournlAgent } from "~/hooks/use-journl-agent";
 import { cn } from "~/lib/cn";
@@ -211,6 +212,9 @@ export function JournalEntryEditor({
         slashMenu={false}
         {...rest}
       />
+      {snapshot.documentId && (
+        <ReferenceBacklinks documentId={snapshot.documentId} />
+      )}
       {Boolean(snapshot.error) && (
         <div
           role="alert"

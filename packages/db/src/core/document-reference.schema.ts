@@ -26,6 +26,7 @@ export const DocumentReference = pgTable(
       .references(() => Document.id, { onDelete: "cascade" }),
     source_block_id: uuid().notNull(),
     occurrence_path: varchar({ length: 256 }).notNull(),
+    target_identity: text().notNull().default("explicit"),
     target_kind: text().notNull(),
     target_document_id: uuid(),
     target_block_id: uuid(),
@@ -54,6 +55,10 @@ export const DocumentReference = pgTable(
       sql`${t.presentation} IN ('link', 'badge', 'card', 'embed')`,
     ),
     check(
+      "document_reference_identity_check",
+      sql`${t.target_identity} IN ('route', 'explicit')`,
+    ),
+    check(
       "document_reference_block_target_check",
       sql`${t.target_block_id} IS NULL OR ${t.target_kind} = 'document'`,
     ),
@@ -64,6 +69,7 @@ export const DocumentReference = pgTable(
     index("document_reference_incoming_index").on(
       t.user_id,
       t.target_document_id,
+      t.target_identity,
       t.target_block_id,
       t.source_document_id,
       t.source_block_id,

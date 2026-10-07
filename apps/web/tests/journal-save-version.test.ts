@@ -71,7 +71,11 @@ function setup(current: typeof metadata | undefined = metadata) {
   return { caller, execute, insert, read, update };
 }
 
-beforeEach(() => mocks.persist.mockReset().mockResolvedValue(undefined));
+beforeEach(() =>
+  mocks.persist
+    .mockReset()
+    .mockResolvedValue({ id: metadata.document_id, updatedAt: v2 }),
+);
 
 test("a successful save checks the version under the lock and returns its new version", async () => {
   const { caller, execute, read } = setup();

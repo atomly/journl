@@ -131,6 +131,24 @@ export function AppSidebarPageItem({
                     {page?.title || "New page"}
                   </Link>
                   {!!page && (
+                    <button
+                      type="button"
+                      draggable
+                      aria-label={`Drag reference to ${page.title || "New page"}`}
+                      title="Drag into an editor to add a reference"
+                      onDragStart={(event) => {
+                        event.dataTransfer.effectAllowed = "copy";
+                        event.dataTransfer.setData(
+                          "application/x-journl-page-reference",
+                          JSON.stringify({ pageId: page.id }),
+                        );
+                      }}
+                      className="pointer-events-none invisible absolute top-1/2 right-6 -translate-y-1/2 rounded px-1 text-muted-foreground opacity-0 transition-opacity group-focus-within/page-item:pointer-events-auto group-focus-within/page-item:visible group-focus-within/page-item:opacity-100 group-hover/page-item:pointer-events-auto group-hover/page-item:visible group-hover/page-item:opacity-100"
+                    >
+                      ↗
+                    </button>
+                  )}
+                  {!!page && (
                     <DeletePageDialogTrigger asChild>
                       <DeletePageButton
                         className={cn(

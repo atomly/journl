@@ -1,6 +1,6 @@
 import type { BlockEdge, BlockNode } from "@acme/db/schema";
 import { z } from "zod/v4";
-import type { EditorPartialBlock } from "../blocknote-schema";
+import type { EditorPartialBlock } from "./blocknote-schema";
 
 // Simply using `any` types as we aren't really changing the BlockNote schema anywhere.
 const zBlockNoteBlockType = z.any();

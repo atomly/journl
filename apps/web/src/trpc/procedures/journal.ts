@@ -209,6 +209,7 @@ export const journalRouter = {
           .selectDistinctOn([DocumentEmbedding.document_id], {
             chunk_markdown_text: DocumentEmbedding.chunk_markdown_text,
             date: JournalEntry.date,
+            document_id: DocumentEmbedding.document_id,
             similarity: embeddingSimilarity.as("similarity"),
           })
           .from(DocumentEmbedding)
@@ -224,6 +225,7 @@ export const journalRouter = {
           .select({
             chunk_markdown_text: distinctMatches.chunk_markdown_text,
             date: distinctMatches.date,
+            document_id: distinctMatches.document_id,
             similarity: distinctMatches.similarity,
           })
           .from(distinctMatches)

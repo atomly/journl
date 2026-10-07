@@ -187,6 +187,7 @@ export const pagesRouter = {
         const distinctMatches = ctx.db
           .selectDistinctOn([DocumentEmbedding.document_id], {
             chunk_markdown_text: DocumentEmbedding.chunk_markdown_text,
+            document_id: DocumentEmbedding.document_id,
             page_id: Page.id,
             page_title: Page.title,
             similarity: embeddingSimilarity.as("similarity"),
@@ -200,6 +201,7 @@ export const pagesRouter = {
         return await ctx.db
           .select({
             chunk_markdown_text: distinctMatches.chunk_markdown_text,
+            document_id: distinctMatches.document_id,
             page_id: distinctMatches.page_id,
             page_title: distinctMatches.page_title,
             similarity: distinctMatches.similarity,

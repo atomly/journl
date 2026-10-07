@@ -37,6 +37,152 @@
   margin-top: 0.34375rem;
 }
 
+.content-reference-wrap {
+  position: relative;
+  display: inline-flex;
+  vertical-align: baseline;
+}
+
+.content-reference {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--border);
+  border-radius: 0.35rem;
+  background: var(--muted);
+  padding: 0 0.35rem;
+  color: var(--foreground);
+  font-size: 0.9em;
+  text-decoration: none;
+}
+
+.content-reference:hover,
+.content-reference:focus-visible {
+  border-color: var(--ring);
+  outline: 2px solid color-mix(in srgb, var(--ring) 35%, transparent);
+  outline-offset: 1px;
+}
+
+.content-reference-preview {
+  position: absolute;
+  z-index: 50;
+  top: calc(100% + 0.4rem);
+  left: 0;
+  display: flex;
+  width: max-content;
+  max-width: min(24rem, 80vw);
+  flex-direction: column;
+  gap: 0.45rem;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  background: var(--popover);
+  padding: 0.65rem 0.75rem;
+  color: var(--popover-foreground);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 14%);
+  white-space: normal;
+}
+
+.content-reference-preview button,
+.content-reference-card button,
+.content-embed-heading button,
+.content-embed-fallback button {
+  align-self: flex-start;
+  border: 1px solid var(--border);
+  border-radius: 0.35rem;
+  background: var(--background);
+  padding: 0.2rem 0.5rem;
+  font-size: 0.8rem;
+}
+
+.content-reference-display-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: 0.35rem;
+}
+
+.content-reference-card,
+.content-embed {
+  margin: 0.65rem 0;
+  border: 1px solid var(--border);
+  border-radius: 0.65rem;
+  background: var(--card);
+  padding: 0.8rem 1rem;
+  color: var(--card-foreground);
+}
+
+.content-reference-card-heading,
+.content-embed-heading {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.content-reference-card-heading a {
+  font-weight: 600;
+}
+
+.content-reference-card-excerpt {
+  margin: 0.45rem 0;
+  color: var(--muted-foreground);
+  font-size: 0.9rem;
+}
+
+.content-embed-heading strong {
+  flex: 1;
+}
+
+.content-embed-body {
+  max-height: 28rem;
+  overflow: auto;
+  padding: 0.5rem 0.25rem 0;
+}
+
+.content-embed-body > :first-child {
+  margin-top: 0;
+}
+
+.content-embed-body > :last-child {
+  margin-bottom: 0;
+}
+
+.content-embed-list-item {
+  padding-left: 1rem;
+}
+
+.content-embed-fallback {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  background: var(--muted);
+  padding: 0.5rem 0.75rem;
+}
+
+.reference-target-highlight {
+  outline: 2px solid var(--ring);
+  outline-offset: 0.35rem;
+  border-radius: 0.35rem;
+  animation: reference-target-fade 2.2s ease-out forwards;
+}
+
+@keyframes reference-target-fade {
+  0%,
+  70% {
+    background-color: color-mix(in srgb, var(--ring) 16%, transparent);
+  }
+  100% {
+    background-color: transparent;
+    outline-color: transparent;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reference-target-highlight {
+    animation: none;
+  }
+}
+
 /* AI suggestion combobox only (scoped by the AI menu id) */
 .bn-combobox:has(input[name="ai-prompt"]) > .bn-combobox-input {
   min-height: 44px;

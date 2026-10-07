@@ -21,6 +21,7 @@ Returns multiple relevant results from different pages that should be analyzed a
 
     return result.map((result) => ({
       content: result.chunk_markdown_text,
+      document_id: result.document_id,
       link: `${env.PUBLIC_WEB_URL}/pages/${result.page_id}`,
       page_id: result.page_id,
       page_title: result.page_title,
@@ -39,6 +40,7 @@ Returns multiple relevant results from different pages that should be analyzed a
   outputSchema: z.array(
     z.object({
       content: z.string(),
+      document_id: z.string().uuid(),
       link: z.string(),
       page_id: z.string(),
       page_title: z.string(),

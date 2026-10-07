@@ -19,8 +19,8 @@ export type ExternalReferenceTarget = { kind: "external"; url: string };
 export type ReferenceTarget = InternalReferenceTarget | ExternalReferenceTarget;
 
 export type CanonicalRoute =
-  | { kind: "page"; entityId: string }
-  | { kind: "journal"; date: string };
+  | { kind: "page"; entityId: string; blockId?: string }
+  | { kind: "journal"; date: string; blockId?: string };
 
 const UUID =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -64,12 +64,21 @@ export function classifyInternalUrl(
   }
 
   const page = parsed.pathname.match(/^\/pages\/([^/]+)\/?$/);
+  const blockFragment = parsed.hash.match(/^#block=([0-9a-f-]{36})$/i);
+  if (parsed.hash && (!blockFragment || !UUID.test(blockFragment[1] ?? ""))) {
+    return null;
+  }
+  const blockId = blockFragment?.[1];
   if (page?.[1] && UUID.test(page[1])) {
-    return { entityId: page[1], kind: "page" };
+    return { entityId: page[1], kind: "page", ...(blockId ? { blockId } : {}) };
   }
   const journal = parsed.pathname.match(/^\/journal\/(\d{4}-\d{2}-\d{2})\/?$/);
   if (journal?.[1] && isRealDate(journal[1])) {
-    return { date: journal[1], kind: "journal" };
+    return {
+      date: journal[1],
+      kind: "journal",
+      ...(blockId ? { blockId } : {}),
+    };
   }
   return null;
 }
@@ -88,6 +97,30 @@ export function normalizeExternalUrl(value: string) {
   return parsed.toString();
 }
 
+/** Only convert an unselected, plain-text URL; preserve native HTML and link-text paste. */
+export function getPlainUrlForAutomaticReference(input: {
+  html: string;
+  selectionEmpty: boolean;
+  text: string;
+}) {
+  if (input.html || !input.selectionEmpty) return null;
+  const candidate = input.text.trim();
+  if (!candidate || candidate.length > 2048 || /\s/.test(candidate))
+    return null;
+  try {
+    const parsed = new URL(candidate);
+    if (
+      (parsed.protocol !== "http:" && parsed.protocol !== "https:") ||
+      parsed.username ||
+      parsed.password
+    )
+      return null;
+    return parsed.toString();
+  } catch {
+    return null;
+  }
+}
+
 export function getTargetKey(target: ReferenceTarget) {
   if (target.kind === "document") {
     return target.blockId
@@ -101,6 +134,7 @@ export function getTargetKey(target: ReferenceTarget) {
 }
 
 type RefOccurrence = {
+  identity: "explicit" | "route";
   occurrencePath: string;
   presentation: "link" | "badge" | "card" | "embed";
   target: ReferenceTarget | null;
@@ -154,6 +188,7 @@ export function extractReferenceOccurrences(
         }
         if (target && (type !== "contentEmbed" || target.kind === "document")) {
           occurrences.push({
+            identity: "explicit",
             occurrencePath:
               type.endsWith("Card") || type === "contentEmbed"
                 ? `${path}/props`
@@ -178,6 +213,7 @@ export function extractReferenceOccurrences(
         );
         if (route) {
           occurrences.push({
+            identity: "route",
             occurrencePath: path,
             presentation: "link",
             route,
@@ -190,11 +226,21 @@ export function extractReferenceOccurrences(
           } catch {
             absoluteHref = null;
           }
+          if (absoluteHref) {
+            const parsedHref = new URL(absoluteHref);
+            const baseOrigin = new URL(options.baseUrl).origin;
+            const looksLikeInternalRoute =
+              (parsedHref.origin === baseOrigin ||
+                (options.trustedOrigins ?? []).includes(parsedHref.origin)) &&
+              /^\/(pages|journal)\//.test(parsedHref.pathname);
+            if (looksLikeInternalRoute) return;
+          }
           const parsed = absoluteHref
             ? normalizeExternalUrl(absoluteHref)
             : null;
           if (parsed) {
             occurrences.push({
+              identity: "explicit",
               occurrencePath: path,
               presentation: "link",
               target: { kind: "external", url: parsed },

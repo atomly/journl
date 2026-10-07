@@ -1,8 +1,10 @@
+import { createHash } from "node:crypto";
 import { blocknoteBlocks } from "@acme/blocknote/server";
-import { and, desc, eq, ilike } from "@acme/db";
+import { and, asc, desc, eq, gt, ilike, inArray, or } from "@acme/db";
 import {
   BlockEdge,
   BlockNode,
+  BlockSearchText,
   Document,
   DocumentReference,
   JournalEntry,
@@ -12,8 +14,11 @@ import type { TRPCRouterRecord } from "@trpc/server";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod/v4";
 import { env } from "~/env";
+import { getGithubMetadata } from "~/references/github-provider";
 import {
   classifyInternalUrl,
+  getTargetKey,
+  normalizeExternalUrl,
   type ReferenceTarget,
 } from "~/references/reference-utils";
 import { protectedProcedure, type TRPCContext } from "../trpc";
@@ -32,6 +37,15 @@ function truncate(text: string, max: number) {
   return normalized.length > max
     ? { text: `${normalized.slice(0, max - 1).trimEnd()}…`, truncated: true }
     : { text: normalized, truncated: false };
+}
+
+function assertContentReferencesEnabled() {
+  if (!env.CONTENT_REFERENCES_ENABLED) {
+    throw new TRPCError({
+      code: "PRECONDITION_FAILED",
+      message: "Content references are temporarily unavailable.",
+    });
+  }
 }
 
 function blockText(value: unknown, inCode = false): string {
@@ -103,10 +117,14 @@ function blockSnippet(
     .join(" ");
 }
 
-function externalPreview(url: string) {
+async function externalPreview(url: string, userId: string) {
   const parsed = new URL(url);
   const isGithub = parsed.hostname.toLowerCase() === "github.com";
   const segments = parsed.pathname.split("/").filter(Boolean);
+  const githubMetadata =
+    isGithub && env.CONTENT_REFERENCES_ENABLED
+      ? await getGithubMetadata(userId, url)
+      : null;
   let title = parsed.hostname;
   let excerpt = parsed.href;
   if (isGithub && segments.length >= 2) {
@@ -119,15 +137,22 @@ function externalPreview(url: string) {
     }
     excerpt = `GitHub · ${title}`;
   }
+  if (githubMetadata) {
+    title = githubMetadata.title;
+    excerpt = githubMetadata.excerpt || excerpt;
+  }
   return {
     excerpt,
     href: url,
     kind: "external" as const,
-    metadataState: "url-only" as const,
+    metadataState: githubMetadata
+      ? ("enriched" as const)
+      : ("url-only" as const),
     provider: isGithub ? ("github" as const) : ("generic" as const),
     status: "ready" as const,
     title,
     truncated: false,
+    ...(githubMetadata?.status ? { sourceStatus: githubMetadata.status } : {}),
   };
 }
 
@@ -209,19 +234,735 @@ async function resolveInternal(
 }
 
 export const referencesRouter = {
+  getEmbedContent: protectedProcedure
+    .input(
+      z.object({
+        cursor: z.string().optional(),
+        targets: z
+          .array(
+            z.object({ blockId: z.uuid().optional(), documentId: z.uuid() }),
+          )
+          .min(1)
+          .max(10),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      assertContentReferencesEnabled();
+      const targets = input.targets.map((target) => ({
+        kind: "document" as const,
+        ...target,
+      }));
+      const signature = targets.map((target) => getTargetKey(target)).join("|");
+      let cursorData: {
+        signature?: string;
+        offsets?: Record<string, { offset: number; version: string }>;
+      } = {};
+      if (input.cursor) {
+        try {
+          cursorData = JSON.parse(
+            Buffer.from(input.cursor, "base64url").toString("utf8"),
+          ) as typeof cursorData;
+          if (cursorData.signature !== signature)
+            throw new Error("Cursor scope mismatch");
+        } catch {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "Invalid cursor",
+          });
+        }
+      }
+      const results: unknown[] = [];
+      const offsets: Record<string, { offset: number; version: string }> = {};
+      let totalBlocks = 0;
+      let totalBytes = 0;
+      let truncated = false;
+      for (const target of targets) {
+        const key = getTargetKey(target);
+        if (!key) continue;
+        const preview = await resolveInternal(
+          ctx.db,
+          ctx.session.user.id,
+          target,
+        );
+        if (preview.status !== "ready") {
+          results.push({ status: "unavailable", target });
+          continue;
+        }
+        const [blocks, edges] = await Promise.all([
+          ctx.db
+            .select()
+            .from(BlockNode)
+            .where(
+              and(
+                eq(BlockNode.user_id, ctx.session.user.id),
+                eq(BlockNode.document_id, target.documentId),
+              ),
+            ),
+          ctx.db
+            .select()
+            .from(BlockEdge)
+            .where(
+              and(
+                eq(BlockEdge.user_id, ctx.session.user.id),
+                eq(BlockEdge.document_id, target.documentId),
+              ),
+            ),
+        ]);
+        const tree = blocknoteBlocks(blocks, edges);
+        const content = collectBlock(tree, target.blockId);
+        const savedOffset = cursorData.offsets?.[key];
+        const offset =
+          savedOffset?.version === preview.contentUpdatedAt
+            ? savedOffset.offset
+            : 0;
+        const selected = content.slice(offset);
+        const pageBlocks: unknown[] = [];
+        for (const block of selected) {
+          if (pageBlocks.length >= 200 || totalBlocks >= 500) {
+            truncated = true;
+            break;
+          }
+          const normalized = {
+            content: block.content,
+            id: block.id,
+            props: block.props,
+            type: block.type,
+          };
+          const bytes = Buffer.byteLength(JSON.stringify(normalized), "utf8");
+          if (totalBytes + bytes > 256 * 1024) {
+            truncated = true;
+            break;
+          }
+          pageBlocks.push(normalized);
+          totalBytes += bytes;
+          totalBlocks += 1;
+        }
+        const nextOffset = offset + pageBlocks.length;
+        if (nextOffset < content.length) {
+          truncated = true;
+          offsets[key] = {
+            offset: nextOffset,
+            version: preview.contentUpdatedAt,
+          };
+        }
+        results.push({
+          blocks: pageBlocks,
+          contentUpdatedAt: preview.contentUpdatedAt,
+          href: preview.href,
+          status: "ready",
+          target,
+          title: preview.title,
+          truncated: nextOffset < content.length,
+        });
+      }
+      return {
+        items: results,
+        nextCursor:
+          Object.keys(offsets).length > 0
+            ? Buffer.from(JSON.stringify({ offsets, signature })).toString(
+                "base64url",
+              )
+            : null,
+        truncated,
+      };
+    }),
+  getGraph: protectedProcedure
+    .input(
+      z
+        .object({
+          cursor: z.string().optional(),
+          limit: z.number().min(1).max(200).default(100),
+          seedBlockId: z.uuid().optional(),
+          seedDocumentId: z.uuid().optional(),
+          types: z
+            .array(z.enum(["page", "journal", "block", "external"]))
+            .optional(),
+        })
+        .refine((input) => !input.seedBlockId || input.seedDocumentId, {
+          message: "A block seed requires a document seed",
+        }),
+    )
+    .query(async ({ ctx, input }) => {
+      assertContentReferencesEnabled();
+      const typeFilter = new Set(
+        input.types ?? ["page", "journal", "block", "external"],
+      );
+      const scope = JSON.stringify({
+        seedBlockId: input.seedBlockId ?? null,
+        seedDocumentId: input.seedDocumentId ?? null,
+        types: [...typeFilter].sort(),
+      });
+      let offset = 0;
+      if (input.cursor) {
+        try {
+          const cursor = JSON.parse(
+            Buffer.from(input.cursor, "base64url").toString("utf8"),
+          ) as { offset?: unknown; scope?: unknown };
+          if (
+            cursor.scope !== scope ||
+            typeof cursor.offset !== "number" ||
+            cursor.offset < 0
+          )
+            throw new Error();
+          offset = cursor.offset;
+        } catch {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "Invalid cursor",
+          });
+        }
+      }
+      if (input.seedDocumentId) {
+        const [seed] = await ctx.db
+          .select({ id: Document.id })
+          .from(Document)
+          .where(
+            and(
+              eq(Document.id, input.seedDocumentId),
+              eq(Document.user_id, ctx.session.user.id),
+            ),
+          )
+          .limit(1);
+        if (!seed) throw new TRPCError({ code: "NOT_FOUND" });
+        if (input.seedBlockId) {
+          const [block] = await ctx.db
+            .select({ id: BlockNode.id })
+            .from(BlockNode)
+            .where(
+              and(
+                eq(BlockNode.id, input.seedBlockId),
+                eq(BlockNode.document_id, input.seedDocumentId),
+                eq(BlockNode.user_id, ctx.session.user.id),
+              ),
+            )
+            .limit(1);
+          if (!block) throw new TRPCError({ code: "NOT_FOUND" });
+        }
+      }
+      const ownedDocuments = input.seedDocumentId
+        ? []
+        : await ctx.db
+            .select({ id: Document.id })
+            .from(Document)
+            .where(eq(Document.user_id, ctx.session.user.id))
+            .orderBy(Document.id)
+            .limit(2000);
+      const ownedIds = input.seedDocumentId
+        ? [input.seedDocumentId]
+        : ownedDocuments.map((document) => document.id);
+      const [pages, entries] = await Promise.all([
+        ownedIds.length
+          ? ctx.db
+              .select({
+                documentId: Page.document_id,
+                id: Page.id,
+                title: Page.title,
+              })
+              .from(Page)
+              .where(
+                and(
+                  eq(Page.user_id, ctx.session.user.id),
+                  inArray(Page.document_id, ownedIds),
+                ),
+              )
+          : Promise.resolve([]),
+        ownedIds.length
+          ? ctx.db
+              .select({
+                date: JournalEntry.date,
+                documentId: JournalEntry.document_id,
+                id: JournalEntry.id,
+              })
+              .from(JournalEntry)
+              .where(
+                and(
+                  eq(JournalEntry.user_id, ctx.session.user.id),
+                  inArray(JournalEntry.document_id, ownedIds),
+                ),
+              )
+          : Promise.resolve([]),
+      ]);
+      const docs = new Map<
+        string,
+        { href: string; kind: "page" | "journal"; title: string }
+      >();
+      for (const page of pages)
+        docs.set(page.documentId, {
+          href: `${env.PUBLIC_WEB_URL}/pages/${page.id}`,
+          kind: "page",
+          title: page.title,
+        });
+      for (const entry of entries)
+        docs.set(entry.documentId, {
+          href: `${env.PUBLIC_WEB_URL}/journal/${entry.date}`,
+          kind: "journal",
+          title: entry.date,
+        });
+      const [sourceDocs, incoming] = input.seedDocumentId
+        ? await Promise.all([
+            ctx.db
+              .select()
+              .from(DocumentReference)
+              .where(
+                and(
+                  eq(DocumentReference.user_id, ctx.session.user.id),
+                  eq(
+                    DocumentReference.source_document_id,
+                    input.seedDocumentId,
+                  ),
+                  input.seedBlockId
+                    ? eq(DocumentReference.source_block_id, input.seedBlockId)
+                    : undefined,
+                ),
+              )
+              .limit(1000),
+            ctx.db
+              .select()
+              .from(DocumentReference)
+              .where(
+                and(
+                  eq(DocumentReference.user_id, ctx.session.user.id),
+                  eq(
+                    DocumentReference.target_document_id,
+                    input.seedDocumentId,
+                  ),
+                  input.seedBlockId
+                    ? eq(DocumentReference.target_block_id, input.seedBlockId)
+                    : undefined,
+                ),
+              )
+              .limit(1000),
+          ])
+        : await Promise.all([
+            ctx.db
+              .select()
+              .from(DocumentReference)
+              .where(
+                and(
+                  eq(DocumentReference.user_id, ctx.session.user.id),
+                  inArray(DocumentReference.source_document_id, ownedIds),
+                ),
+              )
+              .limit(5000),
+            Promise.resolve([]),
+          ]);
+      const allOccurrences = [...sourceDocs, ...incoming];
+      const adjacentDocumentIds = [
+        ...new Set(
+          allOccurrences.flatMap((occurrence) => [
+            occurrence.source_document_id,
+            ...(occurrence.target_document_id
+              ? [occurrence.target_document_id]
+              : []),
+          ]),
+        ),
+      ];
+      if (adjacentDocumentIds.length > 0) {
+        const [adjacentPages, adjacentEntries] = await Promise.all([
+          ctx.db
+            .select({
+              documentId: Page.document_id,
+              id: Page.id,
+              title: Page.title,
+            })
+            .from(Page)
+            .where(
+              and(
+                eq(Page.user_id, ctx.session.user.id),
+                inArray(Page.document_id, adjacentDocumentIds),
+              ),
+            ),
+          ctx.db
+            .select({
+              date: JournalEntry.date,
+              documentId: JournalEntry.document_id,
+            })
+            .from(JournalEntry)
+            .where(
+              and(
+                eq(JournalEntry.user_id, ctx.session.user.id),
+                inArray(JournalEntry.document_id, adjacentDocumentIds),
+              ),
+            ),
+        ]);
+        for (const page of adjacentPages)
+          docs.set(page.documentId, {
+            href: `${env.PUBLIC_WEB_URL}/pages/${page.id}`,
+            kind: "page",
+            title: page.title,
+          });
+        for (const entry of adjacentEntries)
+          docs.set(entry.documentId, {
+            href: `${env.PUBLIC_WEB_URL}/journal/${entry.date}`,
+            kind: "journal",
+            title: entry.date,
+          });
+      }
+      type GraphNode = {
+        key: string;
+        target?: ReferenceTarget;
+        title: string;
+        href?: string;
+        kind: "page" | "journal" | "block" | "external" | "unavailable";
+      };
+      const nodes = new Map<string, GraphNode>();
+      for (const [documentId, note] of docs) {
+        if (!typeFilter.has(note.kind)) continue;
+        const key = `document:${documentId}`;
+        if (
+          input.seedDocumentId &&
+          documentId !== input.seedDocumentId &&
+          !allOccurrences.some(
+            (occurrence) =>
+              occurrence.source_document_id === documentId ||
+              occurrence.target_document_id === documentId,
+          )
+        )
+          continue;
+        nodes.set(key, {
+          href: note.href,
+          key,
+          kind: note.kind,
+          target: { documentId, kind: "document" },
+          title: note.title,
+        });
+      }
+      const edgeMap = new Map<
+        string,
+        {
+          fromKey: string;
+          toKey: string;
+          occurrenceCount: number;
+          presentations: Set<string>;
+          sourceBlocks: string[];
+        }
+      >();
+      for (const occurrence of allOccurrences) {
+        const fromKey = `document:${occurrence.source_document_id}`;
+        let toKey = occurrence.target_key;
+        let target: ReferenceTarget | null = null;
+        if (
+          occurrence.target_kind === "document" &&
+          occurrence.target_document_id
+        ) {
+          target = {
+            documentId: occurrence.target_document_id,
+            kind: "document",
+            ...(occurrence.target_block_id
+              ? { blockId: occurrence.target_block_id }
+              : {}),
+          };
+          if (occurrence.target_block_id && typeFilter.has("block")) {
+            toKey = `document:${occurrence.target_document_id}#block:${occurrence.target_block_id}`;
+            const note = docs.get(occurrence.target_document_id);
+            const [block] = await ctx.db
+              .select()
+              .from(BlockNode)
+              .where(
+                and(
+                  eq(BlockNode.id, occurrence.target_block_id),
+                  eq(BlockNode.document_id, occurrence.target_document_id),
+                  eq(BlockNode.user_id, ctx.session.user.id),
+                ),
+              )
+              .limit(1);
+            if (block && note)
+              nodes.set(toKey, {
+                href: `${note.href}#block=${occurrence.target_block_id}`,
+                key: toKey,
+                kind: "block",
+                target,
+                title: `${note.title} · ${truncate(blockText(block.data), 80).text || "Block"}`,
+              });
+          }
+          if (!nodes.has(`document:${occurrence.target_document_id}`)) {
+            const [ownedTarget] = await ctx.db
+              .select({ id: Document.id })
+              .from(Document)
+              .where(
+                and(
+                  eq(Document.id, occurrence.target_document_id),
+                  eq(Document.user_id, ctx.session.user.id),
+                ),
+              )
+              .limit(1);
+            if (ownedTarget) {
+              const [page] = await ctx.db
+                .select({
+                  documentId: Page.document_id,
+                  id: Page.id,
+                  title: Page.title,
+                })
+                .from(Page)
+                .where(
+                  and(
+                    eq(Page.document_id, ownedTarget.id),
+                    eq(Page.user_id, ctx.session.user.id),
+                  ),
+                )
+                .limit(1);
+              const [entry] = await ctx.db
+                .select({
+                  date: JournalEntry.date,
+                  documentId: JournalEntry.document_id,
+                })
+                .from(JournalEntry)
+                .where(
+                  and(
+                    eq(JournalEntry.document_id, ownedTarget.id),
+                    eq(JournalEntry.user_id, ctx.session.user.id),
+                  ),
+                )
+                .limit(1);
+              if (page)
+                nodes.set(`document:${ownedTarget.id}`, {
+                  href: `${env.PUBLIC_WEB_URL}/pages/${page.id}`,
+                  key: `document:${ownedTarget.id}`,
+                  kind: "page",
+                  target: { documentId: ownedTarget.id, kind: "document" },
+                  title: page.title,
+                });
+              if (entry)
+                nodes.set(`document:${ownedTarget.id}`, {
+                  href: `${env.PUBLIC_WEB_URL}/journal/${entry.date}`,
+                  key: `document:${ownedTarget.id}`,
+                  kind: "journal",
+                  target: { documentId: ownedTarget.id, kind: "document" },
+                  title: entry.date,
+                });
+            } else {
+              const anonymousKey = `unavailable:${createHash("sha256").update(`${ctx.session.user.id}:${occurrence.target_key}`).digest("hex")}`;
+              toKey = anonymousKey;
+              nodes.set(anonymousKey, {
+                key: anonymousKey,
+                kind: "unavailable",
+                title: "Content unavailable",
+              });
+            }
+          }
+        } else if (
+          occurrence.target_kind === "external" &&
+          occurrence.target_url
+        ) {
+          target = { kind: "external", url: occurrence.target_url };
+          const parsed = new URL(occurrence.target_url);
+          const parts = parsed.pathname.split("/").filter(Boolean);
+          const title =
+            parsed.hostname === "github.com" && parts.length >= 2
+              ? `${parts[0]}/${parts[1]}`
+              : parsed.hostname;
+          if (typeFilter.has("external"))
+            nodes.set(toKey, {
+              href: occurrence.target_url,
+              key: toKey,
+              kind: "external",
+              target,
+              title,
+            });
+        }
+        if (
+          !docs.has(occurrence.source_document_id) ||
+          !nodes.has(fromKey) ||
+          !nodes.has(toKey)
+        )
+          continue;
+        const edgeKey = `${fromKey}|${toKey}`;
+        const edge = edgeMap.get(edgeKey) ?? {
+          fromKey,
+          occurrenceCount: 0,
+          presentations: new Set<string>(),
+          sourceBlocks: [],
+          toKey,
+        };
+        edge.occurrenceCount += 1;
+        edge.presentations.add(occurrence.presentation);
+        if (edge.sourceBlocks.length < 3)
+          edge.sourceBlocks.push(occurrence.source_block_id);
+        edgeMap.set(edgeKey, edge);
+      }
+      const allNodes = [...nodes.values()].sort((a, b) =>
+        a.key.localeCompare(b.key),
+      );
+      const selectedNodes = allNodes.slice(offset, offset + input.limit);
+      const selectedKeys = new Set(selectedNodes.map((node) => node.key));
+      const edges = [...edgeMap.values()]
+        .filter(
+          (edge) =>
+            selectedKeys.has(edge.fromKey) && selectedKeys.has(edge.toKey),
+        )
+        .slice(0, 500)
+        .map((edge) => ({ ...edge, presentations: [...edge.presentations] }));
+      const clipped =
+        offset + selectedNodes.length < allNodes.length ||
+        edgeMap.size > edges.length;
+      return {
+        edges,
+        nextCursor:
+          offset + selectedNodes.length < allNodes.length
+            ? Buffer.from(
+                JSON.stringify({
+                  offset: offset + selectedNodes.length,
+                  scope,
+                }),
+              ).toString("base64url")
+            : null,
+        nodes: selectedNodes,
+        truncated: clipped,
+      };
+    }),
   getPreviews: protectedProcedure
     .input(z.object({ targets: z.array(zTarget).max(50) }))
-    .query(async ({ ctx, input }) => ({
-      items: await Promise.all(
-        input.targets.map(async (target) => ({
-          preview:
-            target.kind === "external"
-              ? externalPreview(target.url)
-              : await resolveInternal(ctx.db, ctx.session.user.id, target),
-          target,
-        })),
-      ),
-    })),
+    .query(async ({ ctx, input }) => {
+      assertContentReferencesEnabled();
+      return {
+        items: await Promise.all(
+          input.targets.map(async (target) => ({
+            preview:
+              target.kind === "external"
+                ? await externalPreview(target.url, ctx.session.user.id)
+                : await resolveInternal(ctx.db, ctx.session.user.id, target),
+            target,
+          })),
+        ),
+      };
+    }),
+  listBacklinks: protectedProcedure
+    .input(
+      z.object({
+        blockId: z.uuid().optional(),
+        cursor: z.string().optional(),
+        documentId: z.uuid(),
+        limit: z.number().min(1).max(50).default(20),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      assertContentReferencesEnabled();
+      const [target] = await ctx.db
+        .select({ id: Document.id })
+        .from(Document)
+        .where(
+          and(
+            eq(Document.id, input.documentId),
+            eq(Document.user_id, ctx.session.user.id),
+          ),
+        )
+        .limit(1);
+      if (!target) throw new TRPCError({ code: "NOT_FOUND" });
+      const incoming = await ctx.db
+        .select()
+        .from(DocumentReference)
+        .where(
+          and(
+            eq(DocumentReference.user_id, ctx.session.user.id),
+            eq(DocumentReference.target_document_id, input.documentId),
+            input.blockId
+              ? eq(DocumentReference.target_block_id, input.blockId)
+              : undefined,
+          ),
+        );
+      const groups = new Map<string, typeof incoming>();
+      for (const occurrence of incoming) {
+        const group = groups.get(occurrence.source_document_id) ?? [];
+        group.push(occurrence);
+        groups.set(occurrence.source_document_id, group);
+      }
+      const allIds = [...groups.keys()].sort();
+      const after = input.cursor;
+      const selectedIds = allIds
+        .filter((id) => !after || id > after)
+        .slice(0, input.limit);
+      const [pages, entries, sourceBlocks] = await Promise.all([
+        selectedIds.length
+          ? ctx.db
+              .select({
+                documentId: Page.document_id,
+                entityId: Page.id,
+                title: Page.title,
+              })
+              .from(Page)
+              .where(
+                and(
+                  eq(Page.user_id, ctx.session.user.id),
+                  inArray(Page.document_id, selectedIds),
+                ),
+              )
+          : Promise.resolve([]),
+        selectedIds.length
+          ? ctx.db
+              .select({
+                documentId: JournalEntry.document_id,
+                entityId: JournalEntry.id,
+                title: JournalEntry.date,
+              })
+              .from(JournalEntry)
+              .where(
+                and(
+                  eq(JournalEntry.user_id, ctx.session.user.id),
+                  inArray(JournalEntry.document_id, selectedIds),
+                ),
+              )
+          : Promise.resolve([]),
+        selectedIds.length
+          ? ctx.db
+              .select()
+              .from(BlockNode)
+              .where(
+                and(
+                  eq(BlockNode.user_id, ctx.session.user.id),
+                  inArray(BlockNode.document_id, selectedIds),
+                ),
+              )
+          : Promise.resolve([]),
+      ]);
+      const sourceTitle = new Map<
+        string,
+        { href: string; kind: "page" | "journal"; title: string }
+      >();
+      for (const page of pages) {
+        sourceTitle.set(page.documentId, {
+          href: `${env.PUBLIC_WEB_URL}/pages/${page.entityId}`,
+          kind: "page",
+          title: page.title,
+        });
+      }
+      for (const entry of entries) {
+        sourceTitle.set(entry.documentId, {
+          href: `${env.PUBLIC_WEB_URL}/journal/${entry.title}`,
+          kind: "journal",
+          title: entry.title,
+        });
+      }
+      const blockById = new Map(sourceBlocks.map((block) => [block.id, block]));
+      const items = selectedIds.flatMap((sourceDocumentId) => {
+        const title = sourceTitle.get(sourceDocumentId);
+        const occurrences = groups.get(sourceDocumentId) ?? [];
+        if (!title) return [];
+        const snippets = occurrences.slice(0, 3).map((occurrence) => ({
+          href: `${title.href}#block=${occurrence.source_block_id}`,
+          presentation: occurrence.presentation,
+          snippet: truncate(
+            blockText(blockById.get(occurrence.source_block_id)?.data),
+            160,
+          ).text,
+          sourceBlockId: occurrence.source_block_id,
+        }));
+        return [
+          {
+            documentId: sourceDocumentId,
+            href: title.href,
+            kind: title.kind,
+            occurrenceCount: occurrences.length,
+            snippets,
+            title: title.title,
+          },
+        ];
+      });
+      const last = selectedIds.at(-1);
+      return {
+        items,
+        nextCursor: last && allIds.some((id) => id > last) ? last : null,
+      };
+    }),
   listOccurrences: protectedProcedure
     .input(
       z.object({
@@ -233,6 +974,7 @@ export const referencesRouter = {
       }),
     )
     .query(async ({ ctx, input }) => {
+      assertContentReferencesEnabled();
       const [owned] = await ctx.db
         .select({ id: Document.id })
         .from(Document)
@@ -244,7 +986,7 @@ export const referencesRouter = {
         )
         .limit(1);
       if (!owned) throw new TRPCError({ code: "NOT_FOUND" });
-      const items = await ctx.db
+      const matches = await ctx.db
         .select()
         .from(DocumentReference)
         .where(
@@ -258,18 +1000,359 @@ export const referencesRouter = {
                 ? eq(DocumentReference.source_block_id, input.blockId)
                 : eq(DocumentReference.target_block_id, input.blockId)
               : undefined,
+            input.cursor ? gt(DocumentReference.id, input.cursor) : undefined,
           ),
         )
+        .orderBy(asc(DocumentReference.id))
         .limit(input.limit + 1);
+      const page = matches.slice(0, input.limit);
+      const sourceDocumentIds = [
+        ...new Set(page.map((item) => item.source_document_id)),
+      ];
+      const [sourcePages, sourceEntries, sourceBlocks] = await Promise.all([
+        sourceDocumentIds.length
+          ? ctx.db
+              .select({
+                documentId: Page.document_id,
+                id: Page.id,
+                title: Page.title,
+              })
+              .from(Page)
+              .where(
+                and(
+                  eq(Page.user_id, ctx.session.user.id),
+                  inArray(Page.document_id, sourceDocumentIds),
+                ),
+              )
+          : Promise.resolve([]),
+        sourceDocumentIds.length
+          ? ctx.db
+              .select({
+                date: JournalEntry.date,
+                documentId: JournalEntry.document_id,
+              })
+              .from(JournalEntry)
+              .where(
+                and(
+                  eq(JournalEntry.user_id, ctx.session.user.id),
+                  inArray(JournalEntry.document_id, sourceDocumentIds),
+                ),
+              )
+          : Promise.resolve([]),
+        sourceDocumentIds.length
+          ? ctx.db
+              .select()
+              .from(BlockNode)
+              .where(
+                and(
+                  eq(BlockNode.user_id, ctx.session.user.id),
+                  inArray(BlockNode.document_id, sourceDocumentIds),
+                ),
+              )
+          : Promise.resolve([]),
+      ]);
+      const sourceMeta = new Map<string, { href: string; title: string }>();
+      for (const source of sourcePages)
+        sourceMeta.set(source.documentId, {
+          href: `${env.PUBLIC_WEB_URL}/pages/${source.id}`,
+          title: source.title,
+        });
+      for (const source of sourceEntries)
+        sourceMeta.set(source.documentId, {
+          href: `${env.PUBLIC_WEB_URL}/journal/${source.date}`,
+          title: source.date,
+        });
+      const blocksById = new Map(
+        sourceBlocks.map((block) => [block.id, block]),
+      );
+      const items = page.map((item) => {
+        const source = sourceMeta.get(item.source_document_id);
+        const text = blockText(blocksById.get(item.source_block_id)?.data);
+        return {
+          ...item,
+          snippet: truncate(text, 160).text,
+          sourceHref: source
+            ? `${source.href}#block=${item.source_block_id}`
+            : undefined,
+          sourceTitle: source?.title,
+        };
+      });
       return {
-        items: items.slice(0, input.limit),
+        items,
         nextCursor:
-          items.length > input.limit ? (items[input.limit]?.id ?? null) : null,
+          matches.length > input.limit
+            ? (matches[input.limit]?.id ?? null)
+            : null,
+      };
+    }),
+  queryNeighbors: protectedProcedure
+    .input(
+      z.object({
+        blockId: z.uuid().optional(),
+        cursor: z.string().optional(),
+        direction: z.enum(["incoming", "outgoing", "both"]).default("both"),
+        documentId: z.uuid(),
+        limit: z.number().min(1).max(20).default(10),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      assertContentReferencesEnabled();
+      const [seed] = await ctx.db
+        .select({ id: Document.id })
+        .from(Document)
+        .where(
+          and(
+            eq(Document.id, input.documentId),
+            eq(Document.user_id, ctx.session.user.id),
+          ),
+        )
+        .limit(1);
+      if (!seed) throw new TRPCError({ code: "NOT_FOUND" });
+      const cursorScope = `${input.documentId}|${input.blockId ?? ""}|${input.direction}`;
+      let cursorKey: string | undefined;
+      if (input.cursor) {
+        try {
+          const cursor = JSON.parse(
+            Buffer.from(input.cursor, "base64url").toString("utf8"),
+          ) as { key?: unknown; scope?: unknown };
+          if (cursor.scope !== cursorScope || typeof cursor.key !== "string")
+            throw new Error();
+          cursorKey = cursor.key;
+        } catch {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "Invalid cursor",
+          });
+        }
+      }
+      const [outgoing, incoming] = await Promise.all([
+        input.direction === "incoming"
+          ? Promise.resolve([])
+          : ctx.db
+              .select()
+              .from(DocumentReference)
+              .where(
+                and(
+                  eq(DocumentReference.user_id, ctx.session.user.id),
+                  eq(DocumentReference.source_document_id, input.documentId),
+                  input.blockId
+                    ? eq(DocumentReference.source_block_id, input.blockId)
+                    : undefined,
+                ),
+              )
+              .limit(1000),
+        input.direction === "outgoing"
+          ? Promise.resolve([])
+          : ctx.db
+              .select()
+              .from(DocumentReference)
+              .where(
+                and(
+                  eq(DocumentReference.user_id, ctx.session.user.id),
+                  eq(DocumentReference.target_document_id, input.documentId),
+                  input.blockId
+                    ? eq(DocumentReference.target_block_id, input.blockId)
+                    : undefined,
+                ),
+              )
+              .limit(1000),
+      ]);
+      type NeighborGroup = {
+        key: string;
+        target: ReferenceTarget;
+        directions: Set<"incoming" | "outgoing">;
+        occurrences: (typeof DocumentReference.$inferSelect)[];
+      };
+      const neighbors = new Map<string, NeighborGroup>();
+      for (const occurrence of outgoing) {
+        const target: ReferenceTarget | null =
+          occurrence.target_kind === "document" && occurrence.target_document_id
+            ? {
+                documentId: occurrence.target_document_id,
+                kind: "document",
+                ...(occurrence.target_block_id
+                  ? { blockId: occurrence.target_block_id }
+                  : {}),
+              }
+            : occurrence.target_kind === "external" && occurrence.target_url
+              ? { kind: "external", url: occurrence.target_url }
+              : null;
+        if (!target) continue;
+        const key =
+          target.kind === "document"
+            ? `document:${target.documentId}`
+            : occurrence.target_key;
+        if (key === `document:${input.documentId}`) continue;
+        const group = neighbors.get(key) ?? {
+          directions: new Set(),
+          key,
+          occurrences: [],
+          target,
+        };
+        group.directions.add("outgoing");
+        group.occurrences.push(occurrence);
+        neighbors.set(key, group);
+      }
+      for (const occurrence of incoming) {
+        if (occurrence.source_document_id === input.documentId) continue;
+        const key = `document:${occurrence.source_document_id}`;
+        const group = neighbors.get(key) ?? {
+          directions: new Set(),
+          key,
+          occurrences: [],
+          target: {
+            documentId: occurrence.source_document_id,
+            kind: "document",
+          },
+        };
+        group.directions.add("incoming");
+        group.occurrences.push(occurrence);
+        neighbors.set(key, group);
+      }
+      const ordered = [...neighbors.values()].sort((a, b) =>
+        a.key.localeCompare(b.key),
+      );
+      const afterCursor = ordered.filter(
+        (neighbor) => !cursorKey || neighbor.key > cursorKey,
+      );
+      const selected = afterCursor.slice(0, input.limit);
+      const sourceDocumentIds = [
+        ...new Set(
+          selected.flatMap((item) =>
+            item.occurrences.map((occurrence) => occurrence.source_document_id),
+          ),
+        ),
+      ];
+      const [sourcePages, sourceEntries, sourceBlocks] = await Promise.all([
+        sourceDocumentIds.length
+          ? ctx.db
+              .select({
+                documentId: Page.document_id,
+                id: Page.id,
+                title: Page.title,
+              })
+              .from(Page)
+              .where(
+                and(
+                  eq(Page.user_id, ctx.session.user.id),
+                  inArray(Page.document_id, sourceDocumentIds),
+                ),
+              )
+          : Promise.resolve([]),
+        sourceDocumentIds.length
+          ? ctx.db
+              .select({
+                date: JournalEntry.date,
+                documentId: JournalEntry.document_id,
+                id: JournalEntry.id,
+              })
+              .from(JournalEntry)
+              .where(
+                and(
+                  eq(JournalEntry.user_id, ctx.session.user.id),
+                  inArray(JournalEntry.document_id, sourceDocumentIds),
+                ),
+              )
+          : Promise.resolve([]),
+        sourceDocumentIds.length
+          ? ctx.db
+              .select()
+              .from(BlockNode)
+              .where(
+                and(
+                  eq(BlockNode.user_id, ctx.session.user.id),
+                  inArray(BlockNode.document_id, sourceDocumentIds),
+                ),
+              )
+          : Promise.resolve([]),
+      ]);
+      const sourceMeta = new Map<
+        string,
+        { href: string; title: string; kind: "page" | "journal" }
+      >();
+      for (const page of sourcePages)
+        sourceMeta.set(page.documentId, {
+          href: `${env.PUBLIC_WEB_URL}/pages/${page.id}`,
+          kind: "page",
+          title: page.title,
+        });
+      for (const entry of sourceEntries)
+        sourceMeta.set(entry.documentId, {
+          href: `${env.PUBLIC_WEB_URL}/journal/${entry.date}`,
+          kind: "journal",
+          title: entry.date,
+        });
+      const blockById = new Map(sourceBlocks.map((block) => [block.id, block]));
+      const resultNeighbors = await Promise.all(
+        selected.map(async (group) => {
+          const preview =
+            group.target.kind === "external"
+              ? await externalPreview(group.target.url, ctx.session.user.id)
+              : await resolveInternal(
+                  ctx.db,
+                  ctx.session.user.id,
+                  group.target,
+                );
+          const occurrences = group.occurrences
+            .slice(0, 3)
+            .flatMap((occurrence) => {
+              const source = sourceMeta.get(occurrence.source_document_id);
+              if (!source) return [];
+              return [
+                {
+                  presentation: occurrence.presentation,
+                  snippet: truncate(
+                    blockText(blockById.get(occurrence.source_block_id)?.data),
+                    160,
+                  ).text,
+                  sourceBlockId: occurrence.source_block_id,
+                  sourceDocumentId: occurrence.source_document_id,
+                  sourceHref: `${source.href}#block=${occurrence.source_block_id}`,
+                  sourceKind: source.kind,
+                  sourceTitle: source.title,
+                  target: group.target,
+                  targetPreview: preview,
+                },
+              ];
+            });
+          return {
+            directions: [...group.directions],
+            key: group.key,
+            occurrences,
+            preview,
+            target: group.target,
+          };
+        }),
+      );
+      let bounded = resultNeighbors;
+      let truncated = afterCursor.length > input.limit;
+      while (
+        bounded.length > 0 &&
+        Buffer.byteLength(JSON.stringify(bounded), "utf8") > 16 * 1024
+      ) {
+        bounded = bounded.slice(0, -1);
+        truncated = true;
+      }
+      const last = bounded.at(-1)?.key;
+      return {
+        neighbors: bounded,
+        nextCursor:
+          truncated && last
+            ? Buffer.from(
+                JSON.stringify({ key: last, scope: cursorScope }),
+              ).toString("base64url")
+            : null,
+        seed: await resolveInternal(ctx.db, ctx.session.user.id, {
+          documentId: input.documentId,
+          kind: "document",
+        }),
+        truncated,
       };
     }),
   resolveUrls: protectedProcedure
     .input(z.object({ urls: z.array(z.string().max(2048)).max(50) }))
     .query(async ({ ctx, input }) => {
+      assertContentReferencesEnabled();
       const uniqueUrls = [...new Set(input.urls)];
       if (uniqueUrls.length > 50) throw new TRPCError({ code: "BAD_REQUEST" });
       const items = await Promise.all(
@@ -288,7 +1371,11 @@ export const referencesRouter = {
               )
               .limit(1);
             if (page)
-              target = { documentId: page.documentId, kind: "document" };
+              target = {
+                documentId: page.documentId,
+                kind: "document",
+                ...(route.blockId ? { blockId: route.blockId } : {}),
+              };
           } else if (route?.kind === "journal") {
             const [entry] = await ctx.db
               .select({ documentId: JournalEntry.document_id })
@@ -301,7 +1388,11 @@ export const referencesRouter = {
               )
               .limit(1);
             if (entry)
-              target = { documentId: entry.documentId, kind: "document" };
+              target = {
+                documentId: entry.documentId,
+                kind: "document",
+                ...(route.blockId ? { blockId: route.blockId } : {}),
+              };
           }
           if (target)
             return {
@@ -317,14 +1408,17 @@ export const referencesRouter = {
             try {
               const external = new URL(url);
               if (!external.username && !external.password) {
-                return {
-                  preview: externalPreview(external.toString()),
-                  target: {
-                    kind: "external" as const,
-                    url: external.toString(),
-                  },
-                  url,
-                };
+                const normalized = normalizeExternalUrl(external.toString());
+                if (normalized) {
+                  return {
+                    preview: await externalPreview(
+                      normalized,
+                      ctx.session.user.id,
+                    ),
+                    target: { kind: "external" as const, url: normalized },
+                    url,
+                  };
+                }
               }
             } catch {
               // Invalid URLs use the unavailable fallback.
@@ -339,6 +1433,143 @@ export const referencesRouter = {
       );
       return { items };
     }),
+  searchBlocks: protectedProcedure
+    .input(
+      z.object({
+        cursor: z.string().optional(),
+        limit: z.number().min(1).max(50).default(20),
+        query: z.string().min(1).max(200),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      assertContentReferencesEnabled();
+      let after: { documentId: string; blockId: string } | undefined;
+      if (input.cursor) {
+        try {
+          const decoded = JSON.parse(
+            Buffer.from(input.cursor, "base64url").toString("utf8"),
+          ) as { documentId?: unknown; blockId?: unknown };
+          if (
+            typeof decoded.documentId !== "string" ||
+            typeof decoded.blockId !== "string"
+          ) {
+            throw new Error("Invalid cursor");
+          }
+          after = { blockId: decoded.blockId, documentId: decoded.documentId };
+        } catch {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "Invalid cursor",
+          });
+        }
+      }
+      const pattern = `%${input.query.replace(/[\\%_]/g, "\\$&")}%`;
+      const matches = await ctx.db
+        .select({
+          blockId: BlockSearchText.block_id,
+          documentId: BlockSearchText.document_id,
+          snippet: BlockSearchText.search_text,
+        })
+        .from(BlockSearchText)
+        .where(
+          and(
+            eq(BlockSearchText.user_id, ctx.session.user.id),
+            ilike(BlockSearchText.search_text, pattern),
+            after
+              ? or(
+                  gt(BlockSearchText.document_id, after.documentId),
+                  and(
+                    eq(BlockSearchText.document_id, after.documentId),
+                    gt(BlockSearchText.block_id, after.blockId),
+                  ),
+                )
+              : undefined,
+          ),
+        )
+        .orderBy(BlockSearchText.document_id, BlockSearchText.block_id)
+        .limit(input.limit + 1);
+      const page = matches.slice(0, input.limit);
+      const documentIds = [...new Set(page.map((match) => match.documentId))];
+      const [pages, entries] = await Promise.all([
+        documentIds.length
+          ? ctx.db
+              .select({
+                documentId: Page.document_id,
+                entityId: Page.id,
+                title: Page.title,
+              })
+              .from(Page)
+              .where(
+                and(
+                  eq(Page.user_id, ctx.session.user.id),
+                  inArray(Page.document_id, documentIds),
+                ),
+              )
+          : Promise.resolve([]),
+        documentIds.length
+          ? ctx.db
+              .select({
+                documentId: JournalEntry.document_id,
+                entityId: JournalEntry.id,
+                title: JournalEntry.date,
+              })
+              .from(JournalEntry)
+              .where(
+                and(
+                  eq(JournalEntry.user_id, ctx.session.user.id),
+                  inArray(JournalEntry.document_id, documentIds),
+                ),
+              )
+          : Promise.resolve([]),
+      ]);
+      const noteByDocument = new Map<
+        string,
+        {
+          documentId: string;
+          entityId: string;
+          kind: "page" | "journal";
+          title: string;
+        }
+      >();
+      for (const page of pages) {
+        noteByDocument.set(page.documentId, { ...page, kind: "page" });
+      }
+      for (const entry of entries) {
+        noteByDocument.set(entry.documentId, { ...entry, kind: "journal" });
+      }
+      const items = page.flatMap((match) => {
+        const note = noteByDocument.get(match.documentId);
+        if (!note) return [];
+        const snippet = truncate(match.snippet, 160).text;
+        const href =
+          note.kind === "page"
+            ? `${env.PUBLIC_WEB_URL}/pages/${note.entityId}#block=${match.blockId}`
+            : `${env.PUBLIC_WEB_URL}/journal/${note.title}#block=${match.blockId}`;
+        return [
+          {
+            blockId: match.blockId,
+            documentId: match.documentId,
+            documentTitle: note.title,
+            href,
+            kind: note.kind,
+            snippet,
+          },
+        ];
+      });
+      const last = page.at(-1);
+      return {
+        items,
+        nextCursor:
+          matches.length > input.limit && last
+            ? Buffer.from(
+                JSON.stringify({
+                  blockId: last.blockId,
+                  documentId: last.documentId,
+                }),
+              ).toString("base64url")
+            : null,
+      };
+    }),
   searchTargets: protectedProcedure
     .input(
       z.object({
@@ -348,6 +1579,7 @@ export const referencesRouter = {
       }),
     )
     .query(async ({ ctx, input }) => {
+      assertContentReferencesEnabled();
       const pattern = input.query
         ? `%${input.query.replace(/[\\%_]/g, "\\$&")}%`
         : "%";

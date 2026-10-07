@@ -10,6 +10,7 @@
     "dev": "NODE_ENV=development pnpm with-env next dev --turbopack",
     "shadcn": "pnpm dlx shadcn@latest add && pnpm check --write --unsafe",
     "start": "NODE_ENV=production pnpm with-env next start",
+    "references:backfill": "pnpm with-env jiti scripts/backfill-reference-projections.ts",
     "test:env": "NODE_ENV=development vitest run ./tests/env.test.ts",
     "typecheck": "tsc --noEmit",
     "with-env": "dotenv -e ../../.env --"

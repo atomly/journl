@@ -9,7 +9,7 @@ import { env } from "~/env";
 import { useJournlAgent } from "~/hooks/use-journl-agent";
 import type { BlockTransaction } from "~/trpc";
 import { DefaultMap } from "../../lib/default-map";
-
+import { ReferenceRuntime } from "../references/reference-runtime";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
@@ -49,6 +49,7 @@ import {
 import { cn } from "../utils";
 import {
   BlockEditorFloatingToolbar,
+  BlockEditorReferenceMenu,
   BlockEditorSlashMenu,
   BlockEditorStickyToolbar,
 } from "./block-editor-tools";
@@ -109,6 +110,34 @@ export function BlockEditor({
       unsetEditorSelections(editor);
     };
   }, [unsetEditorSelections, editor]);
+
+  useEffect(() => {
+    const blockId = window.location.hash.match(
+      /^#block=([0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})$/i,
+    )?.[1];
+    if (!blockId) return;
+    let focusTimeout: ReturnType<typeof setTimeout> | undefined;
+    let highlightTimeout: ReturnType<typeof setTimeout> | undefined;
+    const frame = requestAnimationFrame(() => {
+      focusTimeout = setTimeout(() => {
+        const target = document.querySelector<HTMLElement>(
+          `[data-id="${blockId}"]`,
+        );
+        if (!target) return;
+        target.scrollIntoView({ behavior: "smooth", block: "center" });
+        target.classList.add("reference-target-highlight");
+        highlightTimeout = setTimeout(
+          () => target.classList.remove("reference-target-highlight"),
+          2200,
+        );
+      }, 80);
+    });
+    return () => {
+      cancelAnimationFrame(frame);
+      if (focusTimeout) clearTimeout(focusTimeout);
+      if (highlightTimeout) clearTimeout(highlightTimeout);
+    };
+  }, []);
 
   /**
    * Change handler for the editor.
@@ -326,86 +355,89 @@ export function BlockEditor({
   const resolvedTheme = theme === "system" ? systemTheme : theme;
 
   return (
-    <BlockNoteView
-      {...rest}
-      className={cn("flex flex-col-reverse gap-y-6 md:gap-y-8", className)}
-      editor={editor}
-      theme={resolvedTheme as "light" | "dark"}
-      onChange={handleEditorChange}
-      shadCNComponents={{
-        // Pass modified ShadCN components from your project here.
-        // Otherwise, the default ShadCN components will be used.
-        Avatar: {
-          Avatar,
-          AvatarFallback,
-          AvatarImage,
-        },
-        Badge: {
-          Badge: Badge,
-        },
-        Button: {
-          Button: Button,
-        },
-        Card: {
-          Card: Card,
-          CardContent: CardContent,
-        },
-        DropdownMenu: {
-          DropdownMenu,
-          DropdownMenuCheckboxItem,
-          DropdownMenuContent,
-          DropdownMenuGroup,
-          DropdownMenuItem,
-          DropdownMenuLabel,
-          DropdownMenuSeparator,
-          DropdownMenuSub,
-          DropdownMenuSubContent,
-          DropdownMenuSubTrigger,
-          DropdownMenuTrigger,
-        },
-        Input: {
-          Input: Input,
-        },
-        Label: {
-          Label: Label,
-        },
-        Popover: {
-          Popover: Popover,
-          PopoverContent: PopoverContent,
-          PopoverTrigger: PopoverTrigger,
-        },
-        Select: {
-          Select: Select,
-          SelectContent: SelectContent,
-          SelectItem: SelectItem,
-          SelectTrigger: SelectTrigger,
-          SelectValue: SelectValue,
-        },
-        Skeleton: {
-          Skeleton: Skeleton,
-        },
-        Tabs: {
-          Tabs: Tabs,
-          TabsContent: TabsContent,
-          TabsList: TabsList,
-          TabsTrigger: TabsTrigger,
-        },
-        Toggle: {
-          Toggle: Toggle,
-        },
-        Tooltip: {
-          Tooltip,
-          TooltipContent,
-          TooltipProvider,
-          TooltipTrigger,
-        },
-      }}
-    >
-      {children}
-      <BlockEditorFloatingToolbar />
-      <BlockEditorStickyToolbar />
-      <BlockEditorSlashMenu />
-      <AIMenuController />
-    </BlockNoteView>
+    <ReferenceRuntime editor={editor}>
+      <BlockNoteView
+        {...rest}
+        className={cn("flex flex-col-reverse gap-y-6 md:gap-y-8", className)}
+        editor={editor}
+        theme={resolvedTheme as "light" | "dark"}
+        onChange={handleEditorChange}
+        shadCNComponents={{
+          // Pass modified ShadCN components from your project here.
+          // Otherwise, the default ShadCN components will be used.
+          Avatar: {
+            Avatar,
+            AvatarFallback,
+            AvatarImage,
+          },
+          Badge: {
+            Badge: Badge,
+          },
+          Button: {
+            Button: Button,
+          },
+          Card: {
+            Card: Card,
+            CardContent: CardContent,
+          },
+          DropdownMenu: {
+            DropdownMenu,
+            DropdownMenuCheckboxItem,
+            DropdownMenuContent,
+            DropdownMenuGroup,
+            DropdownMenuItem,
+            DropdownMenuLabel,
+            DropdownMenuSeparator,
+            DropdownMenuSub,
+            DropdownMenuSubContent,
+            DropdownMenuSubTrigger,
+            DropdownMenuTrigger,
+          },
+          Input: {
+            Input: Input,
+          },
+          Label: {
+            Label: Label,
+          },
+          Popover: {
+            Popover: Popover,
+            PopoverContent: PopoverContent,
+            PopoverTrigger: PopoverTrigger,
+          },
+          Select: {
+            Select: Select,
+            SelectContent: SelectContent,
+            SelectItem: SelectItem,
+            SelectTrigger: SelectTrigger,
+            SelectValue: SelectValue,
+          },
+          Skeleton: {
+            Skeleton: Skeleton,
+          },
+          Tabs: {
+            Tabs: Tabs,
+            TabsContent: TabsContent,
+            TabsList: TabsList,
+            TabsTrigger: TabsTrigger,
+          },
+          Toggle: {
+            Toggle: Toggle,
+          },
+          Tooltip: {
+            Tooltip,
+            TooltipContent,
+            TooltipProvider,
+            TooltipTrigger,
+          },
+        }}
+      >
+        {children}
+        <BlockEditorFloatingToolbar />
+        <BlockEditorStickyToolbar />
+        <BlockEditorSlashMenu />
+        <BlockEditorReferenceMenu />
+        <AIMenuController />
+      </BlockNoteView>
+    </ReferenceRuntime>
   );
 }

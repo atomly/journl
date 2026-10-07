@@ -1,5 +1,5 @@
 import { and, eq, inArray } from "@acme/db";
-import { Document, Folder, TreeNode } from "@acme/db/schema";
+import { Document, DocumentReference, Folder, TreeNode } from "@acme/db/schema";
 import { start } from "workflow/api";
 import { z } from "zod/v4";
 
@@ -76,6 +76,15 @@ async function deleteDocuments(input: {
   }
 
   return await createTransaction(async (tx) => {
+    await tx
+      .delete(DocumentReference)
+      .where(
+        and(
+          eq(DocumentReference.user_id, input.userId),
+          inArray(DocumentReference.target_document_id, input.documentIds),
+          eq(DocumentReference.target_identity, "route"),
+        ),
+      );
     const deleted = await tx
       .delete(Document)
       .where(

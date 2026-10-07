@@ -130,13 +130,13 @@ test("resolver failures restore the URL without losing the source block ID", asy
   expect(findNodes(view, "blockContainer")[0]?.props.id).toBe(SOURCE);
 });
 
-function clipboardEvent(text: string, html = "") {
+function clipboardEvent(text: string, html = "", textType = "text/plain") {
   const event = new Event("paste", { bubbles: true, cancelable: true });
   Object.defineProperty(event, "clipboardData", {
     value: {
       getData: (type: string) =>
-        type === "text/plain" ? text : type === "text/html" ? html : "",
-      types: html ? ["text/plain", "text/html"] : ["text/plain"],
+        type === textType ? text : type === "text/html" ? html : "",
+      types: html ? [textType, "text/html"] : [textType],
     },
   });
   return event;
@@ -159,8 +159,10 @@ async function mountedEditor(type: "paragraph" | "codeBlock" = "paragraph") {
       element.remove();
     },
     editor,
-    paste: (text: string, html = "") =>
-      editor.prosemirrorView.dom.dispatchEvent(clipboardEvent(text, html)),
+    paste: (text: string, html = "", textType = "text/plain") =>
+      editor.prosemirrorView.dom.dispatchEvent(
+        clipboardEvent(text, html, textType),
+      ),
   };
 }
 
@@ -220,5 +222,42 @@ test("real DOM paste leaves URLs in code blocks as text", async () => {
     expect(editor.document[0]?.type).toBe("codeBlock");
   } finally {
     cleanup();
+  }
+});
+
+test("native URL-only clipboard data creates a card instead of swallowing the paste", async () => {
+  const url = "https://github.com/atomly/journl/pull/302";
+  const { editor, paste, cleanup } = await mountedEditor();
+  try {
+    paste(url, "", "text/uri-list");
+    await vi.waitFor(() =>
+      expect(editor.document[0]?.type).toBe("referenceCard"),
+    );
+    expect(editor.document[0]?.props).toMatchObject({ url });
+  } finally {
+    cleanup();
+  }
+});
+
+test("URI-list comments are skipped and code-block pastes retain the URL as text", async () => {
+  const url = "https://github.com/atomly/journl/pull/302";
+  for (const type of ["paragraph", "codeBlock"] as const) {
+    const { editor, paste, cleanup } = await mountedEditor(type);
+    try {
+      paste(`# copied link\r\n${url}\r\n`, "", "text/uri-list");
+      if (type === "paragraph") {
+        await vi.waitFor(() =>
+          expect(editor.document[0]?.type).toBe("referenceCard"),
+        );
+        expect(editor.document[0]?.props).toMatchObject({ url });
+      } else {
+        await vi.waitFor(() =>
+          expect(editor.prosemirrorView.state.doc.textContent).toBe(url),
+        );
+        expect(editor.document[0]?.type).toBe("codeBlock");
+      }
+    } finally {
+      cleanup();
+    }
   }
 });

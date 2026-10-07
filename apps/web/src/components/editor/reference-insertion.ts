@@ -214,15 +214,43 @@ export function handleReferencePaste(
   const { event, editor, defaultPasteHandler } = context;
   const clipboard = event.clipboardData;
   const view = editor.prosemirrorView;
+  if (!clipboard) return defaultPasteHandler();
+  const plainText = clipboard.getData("text/plain");
+  const text =
+    plainText ||
+    clipboard.getData("Text") ||
+    clipboard
+      .getData("text/uri-list")
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter((line) => line && !line.startsWith("#"))
+      .join("\n");
+  let html = clipboard.getData("text/html");
+  const isCode = Boolean(view.state.selection.$from.parent.type.spec.code);
+  const fallbackPaste = () => {
+    // BlockNote's MIME whitelist doesn't include URI lists or legacy Text.
+    // Its handler cancels the DOM event even when it inserts nothing. Route
+    // these formats through ProseMirror's text paste instead.
+    if (
+      text &&
+      !plainText &&
+      !clipboard.types.includes("Files") &&
+      !clipboard.types.includes("blocknote/html") &&
+      (isCode ||
+        (!html &&
+          !clipboard.getData("text/markdown") &&
+          !clipboard.getData("vscode-editor-data")))
+    ) {
+      return view.pasteText(text, event);
+    }
+    return defaultPasteHandler();
+  };
   if (
-    !clipboard ||
     clipboard.types.includes("Files") ||
     clipboard.types.includes("blocknote/html") ||
-    view.state.selection.$from.parent.type.spec.code
+    isCode
   )
-    return defaultPasteHandler();
-  const text = clipboard.getData("text/plain");
-  let html = clipboard.getData("text/html");
+    return fallbackPaste();
   // Browsers often copy a bare URL as both text and HTML. Preserve aliases,
   // images, and richer HTML; allow wrappers around just the same URL.
   if (html) {
@@ -243,5 +271,5 @@ export function handleReferencePaste(
   });
   if (url && insertReferenceUrl(view, url, resolveUrl, undefined, true))
     return true;
-  return defaultPasteHandler();
+  return fallbackPaste();
 }

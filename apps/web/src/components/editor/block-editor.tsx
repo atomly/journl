@@ -47,6 +47,8 @@ import {
   TooltipTrigger,
 } from "../ui/tooltip";
 import { cn } from "../utils";
+import { BlockEditorContextMenu } from "./block-editor-block-menu";
+import { BlockEditorSideMenu } from "./block-editor-side-menu";
 import {
   BlockEditorFloatingToolbar,
   BlockEditorReferenceMenu,
@@ -362,6 +364,7 @@ export function BlockEditor({
         editor={editor}
         theme={resolvedTheme as "light" | "dark"}
         onChange={handleEditorChange}
+        sideMenu={false}
         shadCNComponents={{
           // Pass modified ShadCN components from your project here.
           // Otherwise, the default ShadCN components will be used.
@@ -432,6 +435,8 @@ export function BlockEditor({
         }}
       >
         {children}
+        <BlockEditorSideMenu />
+        <BlockEditorContextMenu />
         <BlockEditorFloatingToolbar />
         <BlockEditorStickyToolbar />
         <BlockEditorSlashMenu />

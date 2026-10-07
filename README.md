@@ -79,6 +79,11 @@ and embeds are different presentations of the same relationship.
 - Use `/Embed note` to insert a page or journal entry. Expand the embed to read its current content.
 - Select multiple blocks and use Tab/Shift+Tab to indent/outdent text, cards, and embeds together.
   Tab from a reference's action controls moves keyboard focus normally.
+- Click a card background to select the whole block; drag its surface or handle to move it.
+  Desktop thumbnails appear on the left and disappear cleanly if unavailable.
+- Right-click a desktop block or press Shift+F10 for block actions. The drag-handle menu offers
+  the same display, copy, duplicate, and delete actions. Links and selected text keep native menus;
+  touch devices keep native long-press behavior and the sticky toolbar.
 - Linked references load when the editor opens. The section appears only when references exist.
 - Use **Explore this note** beside a note or journal heading to follow its connections. Select a note
   for its preview and linking passages; **Explore connections** follows the thread, and Back restores

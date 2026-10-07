@@ -94,7 +94,10 @@ test("hover preview closes after leaving and remains available while pointer mov
   vi.useFakeTimers();
   const host = await renderBadge();
   const badge = requireElement(host, "a");
-  await act(async () => mouse(badge, "mouseover"));
+  await act(async () => {
+    mouse(badge, "mouseover");
+    vi.advanceTimersByTime(250);
+  });
   expect(host.querySelector("[data-preview]")).not.toBeNull();
   await act(async () => mouse(badge, "mouseout"));
   const preview = requireElement(host, "[data-preview] > fieldset");
@@ -133,10 +136,14 @@ test("click pins preview until keyboard focus leaves", async () => {
 });
 
 test("GitHub badges identify PRs compactly while preview keeps the metadata title", async () => {
+  vi.useFakeTimers();
   const host = await renderBadge();
   const badge = requireElement(host, "a");
   expect(badge.textContent).toBe("atomly/journl #302");
-  await act(async () => mouse(badge, "mouseover"));
+  await act(async () => {
+    mouse(badge, "mouseover");
+    vi.advanceTimersByTime(250);
+  });
   expect(host.querySelector("[data-preview] strong")?.textContent).toBe(
     "A very long pull request title",
   );
@@ -151,4 +158,30 @@ test("generic inline references fall back to the link path when metadata is unav
   expect(host.querySelector("a")?.textContent).toBe(
     "example.com/articles/useful-notes",
   );
+});
+
+test("hover waits and does not interrupt text selection", async () => {
+  vi.useFakeTimers();
+  const host = await renderBadge();
+  const badge = requireElement(host, "a");
+  await act(async () => mouse(badge, "mouseover"));
+  expect(host.querySelector("[data-preview]")).toBeNull();
+  await act(async () => vi.advanceTimersByTime(250));
+  expect(host.querySelector("[data-preview]")).not.toBeNull();
+  const range = document.createRange();
+  range.selectNodeContents(requireElement(host, "a"));
+  await act(async () => {
+    window.getSelection()?.removeAllRanges();
+    window.getSelection()?.addRange(range);
+    expect(window.getSelection()?.isCollapsed).toBe(false);
+    document.dispatchEvent(new Event("selectionchange"));
+  });
+  expect(host.querySelector("[data-preview]")).toBeNull();
+  await act(async () => {
+    mouse(badge, "mouseout");
+    mouse(badge, "mouseover");
+    vi.advanceTimersByTime(300);
+  });
+  expect(host.querySelector("[data-preview]")).toBeNull();
+  window.getSelection()?.removeAllRanges();
 });

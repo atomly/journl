@@ -10,7 +10,10 @@ import type { EditorView } from "@tiptap/pm/view";
 import { DefaultChatTransport } from "ai-sdk-v6";
 import { getPlainUrlForAutomaticReference } from "~/references/reference-paste-url";
 import { useTRPC } from "~/trpc/react";
-import { preserveControlTabNavigation } from "./editor-tab-navigation";
+import {
+  preserveControlTabNavigation,
+  ReferenceTabNavigationExtension,
+} from "./editor-tab-navigation";
 import {
   handleReferencePaste,
   insertReferenceUrl,
@@ -63,7 +66,7 @@ export function useBlockEditor({
           handleClick: (_view, _pos, event) => {
             const anchor = getAnchorFromTarget(event.target);
 
-            if (!anchor) return false;
+            if (!anchor || event.metaKey || event.ctrlKey) return false;
 
             event.preventDefault();
 
@@ -86,7 +89,9 @@ export function useBlockEditor({
 
             return true;
           },
-          handleDrop: (view, event) => {
+          handleDrop: (view, event, _slice, moved) => {
+            // BlockNote owns internal block moves; do not reinterpret their URLs as new cards.
+            if (moved || view.dragging) return false;
             const plainText = event.dataTransfer?.getData("text/plain") ?? "";
             const html = event.dataTransfer?.getData("text/html") ?? "";
             const pageReference = event.dataTransfer?.getData(
@@ -137,6 +142,7 @@ export function useBlockEditor({
         ai: aiEn,
       },
       extensions: [
+        ReferenceTabNavigationExtension(),
         AIExtension({
           // The `agentCursor.color` is the default across multiple BlockNote components, we're just setting the name.
           agentCursor: { color: "#8bc6ff", name: "Journl" },

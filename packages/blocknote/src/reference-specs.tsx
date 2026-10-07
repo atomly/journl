@@ -1,3 +1,10 @@
+import type {
+  BlockNoteEditor,
+  BlockSchema,
+  InlineContentSchema,
+  StyleSchema,
+} from "@blocknote/core";
+import { SideMenuExtension } from "@blocknote/core/extensions";
 import {
   createReactBlockSpec,
   createReactInlineContentSpec,
@@ -5,6 +12,8 @@ import {
   usePortalElement,
 } from "@blocknote/react";
 import {
+  type DragEvent as ReactDragEvent,
+  type MouseEvent as ReactMouseEvent,
   type ReactNode,
   useContext,
   useEffect,
@@ -239,11 +248,19 @@ function ReferenceBadge({
   const closeTimer = useRef<ReturnType<typeof setTimeout> | undefined>(
     undefined,
   );
+  const openTimer = useRef<ReturnType<typeof setTimeout> | undefined>(
+    undefined,
+  );
+  const clearOpen = () => {
+    clearTimeout(openTimer.current);
+    openTimer.current = undefined;
+  };
   const clearClose = () => {
     if (closeTimer.current) clearTimeout(closeTimer.current);
     closeTimer.current = undefined;
   };
   const close = () => {
+    clearOpen();
     clearClose();
     pinned.current = false;
     setActive(false);
@@ -252,12 +269,51 @@ function ReferenceBadge({
     clearClose();
     setActive(true);
   };
+  const hover = (event: ReactMouseEvent<HTMLAnchorElement>) => {
+    if (event.buttons || !window.getSelection()?.isCollapsed) return;
+    clearClose();
+    clearOpen();
+    openTimer.current = setTimeout(() => {
+      if (window.getSelection()?.isCollapsed) enter();
+    }, 250);
+  };
   const leave = () => {
+    clearOpen();
     if (pinned.current) return;
     clearClose();
     closeTimer.current = setTimeout(() => setActive(false), 160);
   };
-  useEffect(() => () => clearClose(), []);
+  useEffect(() => {
+    const cancel = () => {
+      clearOpen();
+      pinned.current = false;
+      setActive(false);
+    };
+    const selection = () => {
+      if (!window.getSelection()?.isCollapsed) cancel();
+    };
+    const pointer = (event: PointerEvent) => {
+      if (
+        !previewRef.current?.contains(event.target as Node) &&
+        !elementRef.current?.contains(event.target as Node) &&
+        !(
+          event.target instanceof Element &&
+          event.target.closest(".content-reference-display-menu")
+        )
+      )
+        cancel();
+    };
+    document.addEventListener("selectionchange", selection);
+    document.addEventListener("dragstart", cancel);
+    document.addEventListener("pointerdown", pointer);
+    return () => {
+      clearOpen();
+      clearClose();
+      document.removeEventListener("selectionchange", selection);
+      document.removeEventListener("dragstart", cancel);
+      document.removeEventListener("pointerdown", pointer);
+    };
+  }, []);
   useEffect(() => {
     if (!active) return;
     const leaveFocus = (event: FocusEvent) => {
@@ -316,9 +372,11 @@ function ReferenceBadge({
       href={href}
       rel={target?.kind === "external" ? "noopener noreferrer" : undefined}
       target={target?.kind === "external" ? "_blank" : undefined}
-      onMouseEnter={enter}
+      draggable={false}
+      onMouseEnter={hover}
       onMouseLeave={leave}
       onClick={(event) => {
+        if (!window.getSelection()?.isCollapsed) return;
         if (!event.metaKey && !event.ctrlKey) {
           event.preventDefault();
           pinned.current = true;
@@ -425,11 +483,78 @@ function ReferenceBadge({
   );
 }
 
-function ReferenceCardView({
+// Use BlockNote's move path for the whole compact surface, just like its handle.
+function blockSurface<
+  BS extends BlockSchema,
+  IS extends InlineContentSchema,
+  SS extends StyleSchema,
+>(
+  editor: BlockNoteEditor<BS, IS, SS> | undefined,
+  id: string | undefined,
+  editable: boolean | undefined,
+) {
+  const enabled = Boolean(editor && id && editable);
+  const interactive = (target: EventTarget | null) =>
+    target instanceof Element &&
+    Boolean(
+      target.closest(
+        "a, button, input, select, textarea, [role=button], .content-embed-content",
+      ),
+    );
+  return {
+    "data-block-surface": enabled ? "true" : undefined,
+    draggable: enabled,
+    onDragEnd() {
+      editor?.getExtension(SideMenuExtension)?.blockDragEnd();
+    },
+    onDragStart(event: ReactDragEvent<HTMLElement>) {
+      if (!enabled || !editor || !id || interactive(event.target)) {
+        event.preventDefault();
+        return;
+      }
+      const block = editor.getBlock(id);
+      if (block)
+        editor.getExtension(SideMenuExtension)?.blockDragStart(event, block);
+    },
+    onMouseDown(event: ReactMouseEvent<HTMLElement>) {
+      if (
+        !enabled ||
+        !editor ||
+        !id ||
+        event.button !== 0 ||
+        interactive(event.target)
+      )
+        return;
+      if (event.shiftKey) {
+        const anchor =
+          editor.getSelection()?.blocks[0]?.id ??
+          editor.getTextCursorPosition().block.id;
+        editor.setSelection(anchor, id);
+      } else {
+        editor._tiptapEditor.state.doc.descendants((node, pos) => {
+          if (node.type.name === "blockContainer" && node.attrs.id === id) {
+            editor._tiptapEditor.commands.setNodeSelection(pos + 1);
+            return false;
+          }
+        });
+      }
+      editor.focus();
+    },
+  };
+}
+
+function ReferenceCardView<
+  BS extends BlockSchema,
+  IS extends InlineContentSchema,
+  SS extends StyleSchema,
+>({
   block,
+  editor,
 }: {
   block: { id?: string; props: Record<string, unknown> };
+  editor?: BlockNoteEditor<BS, IS, SS>;
 }) {
+  const [failedImage, setFailedImage] = useState<string>();
   const props = block.props;
   const target = useMemo(() => targetFromProps(props), [props]);
   const { adapter, loading, preview } = usePreview(target, true);
@@ -445,72 +570,81 @@ function ReferenceCardView({
   return (
     <article
       className="content-reference-card"
+      {...blockSurface(editor, block.id, adapter?.editable)}
       aria-label={`${title} reference card`}
     >
-      {preview?.status === "ready" && preview.imageUrl && (
-        <img
-          key={preview.imageUrl}
-          className="content-reference-thumbnail"
-          onError={(event) => {
-            event.currentTarget.style.display = "none";
-          }}
-          src={safeHref(preview.imageUrl)}
-          alt=""
-          loading="lazy"
-          referrerPolicy="no-referrer"
-        />
-      )}
-      <div className="content-reference-card-heading">
-        <ReferenceIcon target={target} />
-        <a
-          href={href}
-          rel={target?.kind === "external" ? "noopener noreferrer" : undefined}
-          target={target?.kind === "external" ? "_blank" : undefined}
-          onClick={(event) => {
-            if (adapter && target && !event.metaKey && !event.ctrlKey) {
-              event.preventDefault();
-              adapter.openTarget(target, href);
-            }
-          }}
-        >
-          {title}
-        </a>
-        {block.id && adapter?.editable && target && (
-          <DisplayMenu
-            options={[
-              ...(target.kind === "document" ? ["contentEmbed" as const] : []),
-              "contentReference",
-              "link",
-            ]}
-            onChange={(display) =>
-              adapter.convertBlock(
-                block.id as string,
-                target,
-                display,
-                display === "link" ? title : authoredLabel,
-                href,
-              )
-            }
+      {preview?.status === "ready" &&
+        preview.imageUrl &&
+        preview.imageUrl !== failedImage && (
+          <img
+            key={preview.imageUrl}
+            className="content-reference-thumbnail"
+            draggable={false}
+            onError={() => setFailedImage(preview.imageUrl)}
+            src={safeHref(preview.imageUrl)}
+            alt=""
+            loading="lazy"
+            referrerPolicy="no-referrer"
           />
         )}
+      <div className="content-reference-card-body">
+        <div className="content-reference-card-heading">
+          <ReferenceIcon target={target} />
+          <a
+            draggable={false}
+            href={href}
+            rel={
+              target?.kind === "external" ? "noopener noreferrer" : undefined
+            }
+            target={target?.kind === "external" ? "_blank" : undefined}
+            onClick={(event) => {
+              if (adapter && target && !event.metaKey && !event.ctrlKey) {
+                event.preventDefault();
+                adapter.openTarget(target, href);
+              }
+            }}
+          >
+            {title}
+          </a>
+          {block.id && adapter?.editable && target && (
+            <DisplayMenu
+              options={[
+                ...(target.kind === "document"
+                  ? ["contentEmbed" as const]
+                  : []),
+                "contentReference",
+                "link",
+              ]}
+              onChange={(display) =>
+                adapter.convertBlock(
+                  block.id as string,
+                  target,
+                  display,
+                  display === "link" ? title : authoredLabel,
+                  href,
+                )
+              }
+            />
+          )}
+        </div>
+        <p className="content-reference-card-excerpt">
+          {loading
+            ? "Loading preview…"
+            : preview?.status === "unavailable"
+              ? "Content unavailable"
+              : preview?.excerpt || String(props.url ?? "")}
+        </p>
+        <span className="content-reference-source">
+          {preview?.kind === "journal"
+            ? "Journal entry"
+            : preview?.kind === "page"
+              ? "Page"
+              : target?.kind === "external"
+                ? new URL(target.url).hostname
+                : "Note"}
+          {preview?.sourceStatus ? ` · ${preview.sourceStatus}` : ""}
+        </span>
       </div>
-      <p className="content-reference-card-excerpt">
-        {loading
-          ? "Loading preview…"
-          : preview?.status === "unavailable"
-            ? "Content unavailable"
-            : preview?.excerpt || String(props.url ?? "")}
-      </p>
-      <span className="content-reference-source">
-        {preview?.kind === "journal"
-          ? "Journal entry"
-          : preview?.kind === "page"
-            ? "Page"
-            : target?.kind === "external"
-              ? new URL(target.url).hostname
-              : "Note"}
-        {preview?.sourceStatus ? ` · ${preview.sourceStatus}` : ""}
-      </span>
     </article>
   );
 }
@@ -661,14 +795,20 @@ function ReadOnlyBlocks({
   );
 }
 
-function ReferenceEmbedView({
+function ReferenceEmbedView<
+  BS extends BlockSchema,
+  IS extends InlineContentSchema,
+  SS extends StyleSchema,
+>({
   props,
   blockId,
+  editor,
   depth,
   ancestorKeys,
 }: {
   props: Record<string, unknown>;
   blockId?: string;
+  editor?: BlockNoteEditor<BS, IS, SS>;
   depth: number;
   ancestorKeys: Set<string>;
 }) {
@@ -771,7 +911,11 @@ function ReferenceEmbedView({
   const nextAncestors = new Set(ancestorKeys);
   nextAncestors.add(key);
   return (
-    <section className="content-embed" aria-label={`${title} live embed`}>
+    <section
+      className="content-embed"
+      {...blockSurface(editor, blockId, adapter?.editable)}
+      aria-label={`${title} live embed`}
+    >
       <header className="content-embed-heading">
         <button
           className="content-embed-toggle"
@@ -894,7 +1038,9 @@ export const contentReference = createReactInlineContentSpec(
 );
 
 export const referenceCard = createReactBlockSpec(referenceCardConfig, {
-  render: ({ block }) => <ReferenceCardView block={block} />,
+  render: ({ block, editor }) => (
+    <ReferenceCardView block={block} editor={editor} />
+  ),
   toExternalHTML: ({ block }) => (
     <a href={safeHref(block.props.url)}>
       {block.props.label || block.props.url || "Referenced content"}
@@ -903,8 +1049,9 @@ export const referenceCard = createReactBlockSpec(referenceCardConfig, {
 });
 
 export const contentEmbed = createReactBlockSpec(contentEmbedConfig, {
-  render: ({ block }) => (
+  render: ({ block, editor }) => (
     <ReferenceEmbedView
+      editor={editor}
       blockId={block.id}
       props={block.props}
       depth={1}

@@ -127,14 +127,18 @@ export function ChangeAvatar({ className }: ChangeAvatarProps) {
             {localization.settings.changeAvatar}
           </DropdownMenuTrigger>
 
-          <DropdownMenuContent className="min-w-fit">
-            <DropdownMenuItem onClick={() => fileInputRef.current?.click()}>
+          <DropdownMenuContent className="w-52 min-w-52 p-2">
+            <DropdownMenuItem
+              className="whitespace-nowrap px-3 py-2"
+              onClick={() => fileInputRef.current?.click()}
+            >
               <Upload className="text-muted-foreground" />
 
               {localization.settings.uploadAvatar}
             </DropdownMenuItem>
 
             <DropdownMenuItem
+              className="whitespace-nowrap px-3 py-2"
               variant="destructive"
               disabled={!session?.user.image}
               onClick={handleDelete}

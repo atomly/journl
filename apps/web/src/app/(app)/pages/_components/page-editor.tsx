@@ -1,7 +1,7 @@
 "use client";
 
+import type { EditorPartialBlock } from "@acme/blocknote/schema";
 import type { Page } from "@acme/db/schema";
-import type { PartialBlock } from "@blocknote/core";
 import { useMutation } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { useDebouncedCallback } from "use-debounce";
@@ -21,7 +21,7 @@ type PageEditorProps = Omit<
   "editor" | "onChange" | "formattingToolbar" | "slashMenu"
 > & {
   page: Pick<Page, "id" | "title" | "document_id">;
-  initialBlocks: [PartialBlock, ...PartialBlock[]] | undefined;
+  initialBlocks: [EditorPartialBlock, ...EditorPartialBlock[]] | undefined;
   debounceTime?: number;
 };
 

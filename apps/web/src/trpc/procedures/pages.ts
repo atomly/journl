@@ -13,6 +13,7 @@ import { TRPCError } from "@trpc/server";
 import { embed } from "ai";
 import { z } from "zod/v4";
 import { model } from "~/ai/providers/openai/embedding";
+import { startDocumentEmbedding } from "~/workflows/document-embedding";
 import {
   saveTransactions,
   zBlockTransactions,
@@ -218,7 +219,22 @@ export const pagesRouter = {
   saveTransactions: protectedProcedure
     .input(zBlockTransactions)
     .mutation(async ({ ctx, input }) => {
-      return await saveTransactions(ctx, input);
+      const document = await ctx.db.transaction(async (tx) =>
+        saveTransactions({ ...ctx, db: tx }, input),
+      );
+      try {
+        await startDocumentEmbedding({
+          documentId: document.id,
+          documentUpdatedAt: document.updatedAt,
+          userId: ctx.session.user.id,
+        });
+      } catch (error) {
+        console.error("Failed to start document embedding workflow", {
+          documentId: document.id,
+          error,
+        });
+      }
+      return document;
     }),
   updateTitle: protectedProcedure
     .input(

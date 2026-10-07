@@ -1,6 +1,6 @@
 "use client";
 
-import type { PartialBlock } from "@blocknote/core";
+import type { EditorPartialBlock } from "@acme/blocknote/schema";
 import Link from "next/link";
 import {
   type ComponentProps,
@@ -26,7 +26,7 @@ type JournalEntryContextValue = {
   updatedAt: string | null;
   date: string;
   formattedDate: string;
-  initialBlocks: [PartialBlock, ...PartialBlock[]] | undefined;
+  initialBlocks: [EditorPartialBlock, ...EditorPartialBlock[]] | undefined;
   isToday: boolean;
 };
 
@@ -165,7 +165,9 @@ export function JournalEntryEditor({
     resetKey: snapshot.resetKey,
   });
 
-  async function downloadDraft(blocks = editor.document as PartialBlock[]) {
+  async function downloadDraft(
+    blocks = editor.document as EditorPartialBlock[],
+  ) {
     const markdown = await editor.blocksToMarkdownLossy(blocks);
     const url = URL.createObjectURL(
       new Blob([markdown], { type: "text/markdown" }),

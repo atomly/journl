@@ -1,6 +1,7 @@
 import { getBlockInfoAtNearest } from "@blocknote/core";
 import { Selection } from "@tiptap/pm/state";
 import type { EditorView } from "@tiptap/pm/view";
+import { getPlainUrlForAutomaticReference } from "~/references/reference-paste-url";
 import type { RouterOutputs } from "~/trpc";
 
 export function insertReferenceUrl(
@@ -198,4 +199,49 @@ export function insertReferenceUrl(
     })
     .catch(restorePlainUrl);
   return true;
+}
+
+// BlockNote handles the DOM paste event itself. Returning false from a
+// ProseMirror handlePaste hook never reaches that clipboard pipeline.
+export function handleReferencePaste(
+  context: {
+    event: ClipboardEvent;
+    editor: { prosemirrorView: EditorView };
+    defaultPasteHandler: () => boolean | undefined;
+  },
+  resolveUrl: Parameters<typeof insertReferenceUrl>[2],
+) {
+  const { event, editor, defaultPasteHandler } = context;
+  const clipboard = event.clipboardData;
+  const view = editor.prosemirrorView;
+  if (
+    !clipboard ||
+    clipboard.types.includes("Files") ||
+    clipboard.types.includes("blocknote/html") ||
+    view.state.selection.$from.parent.type.spec.code
+  )
+    return defaultPasteHandler();
+  const text = clipboard.getData("text/plain");
+  let html = clipboard.getData("text/html");
+  // Browsers often copy a bare URL as both text and HTML. Preserve aliases,
+  // images, and richer HTML; allow wrappers around just the same URL.
+  if (html) {
+    const body = new DOMParser().parseFromString(html, "text/html").body;
+    if (
+      body.textContent?.trim() === text.trim() &&
+      !body.querySelector("img, table, video, audio, iframe, pre, code") &&
+      [...body.querySelectorAll("a")].every(
+        (anchor) => anchor.getAttribute("href") === text.trim(),
+      )
+    )
+      html = "";
+  }
+  const url = getPlainUrlForAutomaticReference({
+    html,
+    selectionEmpty: view.state.selection.empty,
+    text,
+  });
+  if (url && insertReferenceUrl(view, url, resolveUrl, undefined, true))
+    return true;
+  return defaultPasteHandler();
 }

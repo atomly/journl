@@ -16,6 +16,10 @@ import { z } from "zod/v4";
 import { env } from "~/env";
 import { getGithubMetadata } from "~/references/github-provider";
 import {
+  getExternalGraphTitle,
+  getGraphDocumentTargetKey,
+} from "~/references/graph-utils";
+import {
   classifyInternalUrl,
   getTargetKey,
   normalizeExternalUrl,
@@ -646,8 +650,8 @@ export const referencesRouter = {
               ? { blockId: occurrence.target_block_id }
               : {}),
           };
+          toKey = getGraphDocumentTargetKey(target, typeFilter.has("block"));
           if (occurrence.target_block_id && typeFilter.has("block")) {
-            toKey = `document:${occurrence.target_document_id}#block:${occurrence.target_block_id}`;
             const note = docs.get(occurrence.target_document_id);
             const [block] = await ctx.db
               .select()
@@ -741,12 +745,7 @@ export const referencesRouter = {
           occurrence.target_kind === "external" &&
           occurrence.target_url
         ) {
-          const parsed = new URL(occurrence.target_url);
-          const parts = parsed.pathname.split("/").filter(Boolean);
-          const title =
-            parsed.hostname === "github.com" && parts.length >= 2
-              ? `${parts[0]}/${parts[1]}`
-              : parsed.hostname;
+          const title = getExternalGraphTitle(occurrence.target_url);
           const externalKey = `external:${createHash("sha256").update(occurrence.target_url).digest("hex")}`;
           toKey = externalKey;
           if (typeFilter.has("external"))
@@ -773,11 +772,17 @@ export const referencesRouter = {
         };
         edge.occurrenceCount += 1;
         edge.presentations.add(occurrence.presentation);
-        if (edge.sourceBlocks.length < 3)
+        if (
+          edge.sourceBlocks.length < 3 &&
+          !edge.sourceBlocks.includes(occurrence.source_block_id)
+        )
           edge.sourceBlocks.push(occurrence.source_block_id);
         edgeMap.set(edgeKey, edge);
       }
       const selectedNodes = [...nodes.values()]
+        .filter(
+          (node) => node.kind === "unavailable" || typeFilter.has(node.kind),
+        )
         .sort((a, b) => a.key.localeCompare(b.key))
         .slice(0, 200);
       const selectedKeys = new Set(selectedNodes.map((node) => node.key));

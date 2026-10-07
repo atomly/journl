@@ -4,9 +4,18 @@ import { schema } from "@acme/blocknote/schema";
 import { BlockNoteEditor } from "@blocknote/core";
 import { EditorState, TextSelection } from "@tiptap/pm/state";
 import type { EditorView } from "@tiptap/pm/view";
-import { expect, test, vi } from "vitest";
-import { insertReferenceUrl } from "../src/components/editor/reference-insertion";
+import { afterAll, beforeAll, expect, test, vi } from "vitest";
+import {
+  handleReferencePaste,
+  insertReferenceUrl,
+} from "../src/components/editor/reference-insertion";
 import type { RouterOutputs } from "../src/trpc";
+
+beforeAll(() => {
+  // jsdom omits ClipboardEvent; ProseMirror creates one for its paste API.
+  vi.stubGlobal("ClipboardEvent", class extends Event {});
+});
+afterAll(() => vi.unstubAllGlobals());
 
 const SOURCE = "10000000-0000-4000-8000-000000000001";
 const DOCUMENT = "20000000-0000-4000-8000-000000000002";
@@ -119,4 +128,97 @@ test("resolver failures restore the URL without losing the source block ID", asy
   view.state.doc.check();
   expect(view.state.doc.textContent).toContain(github);
   expect(findNodes(view, "blockContainer")[0]?.props.id).toBe(SOURCE);
+});
+
+function clipboardEvent(text: string, html = "") {
+  const event = new Event("paste", { bubbles: true, cancelable: true });
+  Object.defineProperty(event, "clipboardData", {
+    value: {
+      getData: (type: string) =>
+        type === "text/plain" ? text : type === "text/html" ? html : "",
+      types: html ? ["text/plain", "text/html"] : ["text/plain"],
+    },
+  });
+  return event;
+}
+
+async function mountedEditor(type: "paragraph" | "codeBlock" = "paragraph") {
+  const element = document.createElement("div");
+  document.body.append(element);
+  const editor = BlockNoteEditor.create({
+    initialContent: [{ id: SOURCE, type }],
+    pasteHandler: (context) =>
+      handleReferencePaste(context, async () => unavailable),
+    schema,
+  });
+  editor.mount(element);
+  editor.setTextCursorPosition(SOURCE, "end");
+  return {
+    cleanup: () => {
+      editor.unmount();
+      element.remove();
+    },
+    editor,
+    paste: (text: string, html = "") =>
+      editor.prosemirrorView.dom.dispatchEvent(clipboardEvent(text, html)),
+  };
+}
+
+test("real DOM paste creates cards for plain and browser HTML URLs", async () => {
+  for (const html of [
+    "",
+    `<meta charset="utf-8"><a href="${github}">${github}</a>`,
+  ]) {
+    const { editor, paste, cleanup } = await mountedEditor();
+    try {
+      paste(github, html);
+      await vi.waitFor(() =>
+        expect(
+          editor.document.some((block) => block.type === "referenceCard"),
+        ).toBe(true),
+      );
+      editor.prosemirrorView.state.doc.check();
+      expect(editor.document[0]?.id).toBe(SOURCE);
+    } finally {
+      cleanup();
+    }
+  }
+});
+
+test("real DOM paste preserves text, multiline Markdown, and rich HTML", async () => {
+  for (const [text, html, expected] of [
+    ["Hello clipboard", "", "Hello clipboard"],
+    ["First paragraph\n\nSecond paragraph", "", "Second paragraph"],
+    ["Formatted", "<p><strong>Formatted</strong></p>", "Formatted"],
+    ["Repository", `<a href="${github}">Repository</a>`, "Repository"],
+  ]) {
+    const { editor, paste, cleanup } = await mountedEditor();
+    try {
+      paste(text ?? "", html);
+      await vi.waitFor(() =>
+        expect(editor.prosemirrorView.state.doc.textContent).toContain(
+          expected,
+        ),
+      );
+      expect(
+        editor.document.some((block) => block.type === "referenceCard"),
+      ).toBe(false);
+      editor.prosemirrorView.state.doc.check();
+    } finally {
+      cleanup();
+    }
+  }
+});
+
+test("real DOM paste leaves URLs in code blocks as text", async () => {
+  const { editor, paste, cleanup } = await mountedEditor("codeBlock");
+  try {
+    paste(github);
+    await vi.waitFor(() =>
+      expect(editor.prosemirrorView.state.doc.textContent).toContain(github),
+    );
+    expect(editor.document[0]?.type).toBe("codeBlock");
+  } finally {
+    cleanup();
+  }
 });

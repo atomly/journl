@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { ExternalLink, Maximize2, Minus, Plus, RotateCcw } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { Skeleton } from "~/components/ui/skeleton";
@@ -17,12 +17,12 @@ type GraphNode = GraphData["nodes"][number];
 const WIDTH = 920;
 const HEIGHT = 520;
 
-function nodePosition(index: number, total: number) {
-  if (total <= 1) return { x: WIDTH / 2, y: HEIGHT / 2 };
+function nodePosition(index: number, total: number, width: number) {
+  if (total <= 1) return { x: width / 2, y: HEIGHT / 2 };
   const angle = index * 2.399963229728653;
   const radius = Math.sqrt((index + 0.5) / total);
   return {
-    x: WIDTH / 2 + Math.cos(angle) * radius * WIDTH * 0.4,
+    x: width / 2 + Math.cos(angle) * radius * width * 0.35,
     y: HEIGHT / 2 + Math.sin(angle) * radius * HEIGHT * 0.37,
   };
 }
@@ -56,8 +56,8 @@ export function GraphExplorer() {
   const [previousCursors, setPreviousCursors] = useState<
     Array<string | undefined>
   >([]);
-  const [showBlocks, setShowBlocks] = useState(true);
-  const [showExternal, setShowExternal] = useState(true);
+  const [showBlocks, setShowBlocks] = useState(false);
+  const [showExternal, setShowExternal] = useState(false);
   const [selectedKey, setSelectedKey] = useState<string>();
   const [nodeSearch, setNodeSearch] = useState("");
   const [zoom, setZoom] = useState(1);
@@ -90,26 +90,32 @@ export function GraphExplorer() {
     setPreviousCursors([]);
     setSelectedKey(undefined);
   }, [urlDocumentId, urlBlockId]);
+  const graphRef = useRef<HTMLElement>(null);
+  const [canvasWidth, setCanvasWidth] = useState(WIDTH);
+  useEffect(() => {
+    if (isPending || error) return;
+    const element = graphRef.current;
+    if (!element || typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver(([entry]) => {
+      if (entry)
+        setCanvasWidth(Math.max(360, Math.min(WIDTH, entry.contentRect.width)));
+    });
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [isPending, error]);
   const graphData = data;
   const nodes = graphData?.nodes ?? [];
   const edges = graphData?.edges ?? [];
   const selected = nodes.find((node) => node.key === selectedKey);
-  const selectedDocumentId =
-    selected?.target?.kind === "document"
-      ? selected.target.documentId
-      : undefined;
-  const occurrencesQuery = useQuery({
-    ...trpc.references.listOccurrences.queryOptions({
-      blockId:
-        selected?.target?.kind === "document"
-          ? selected.target.blockId
-          : undefined,
-      direction: "outgoing",
-      documentId: selectedDocumentId ?? "00000000-0000-4000-8000-000000000000",
-      limit: 50,
-    }),
-    enabled: Boolean(selectedDocumentId),
-  });
+  const visibleEdges = selectedKey
+    ? edges.filter(
+        (edge) => edge.fromKey === selectedKey || edge.toKey === selectedKey,
+      )
+    : edges;
+  const connectedKeys = new Set(
+    visibleEdges.flatMap((edge) => [edge.fromKey, edge.toKey]),
+  );
+
   const filteredNodes = nodes.filter((node) =>
     `${node.title} ${node.kind}`
       .toLowerCase()
@@ -120,10 +126,10 @@ export function GraphExplorer() {
       new Map(
         nodes.map((node, index) => [
           node.key,
-          nodePosition(index, nodes.length),
+          nodePosition(index, nodes.length, canvasWidth),
         ]),
       ),
-    [nodes],
+    [nodes, canvasWidth],
   );
 
   function openNode(node: GraphNode) {
@@ -163,8 +169,8 @@ export function GraphExplorer() {
         <div>
           <h1 className="font-semibold text-2xl">Knowledge graph</h1>
           <p className="text-muted-foreground text-sm">
-            Explore direct references between your pages, journal entries,
-            blocks, and external sources.
+            Connections come from links and references saved in your notes.
+            Select a note to highlight its connections and open their sources.
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -250,6 +256,7 @@ export function GraphExplorer() {
       ) : (
         <div className="grid min-h-0 flex-1 gap-4 xl:grid-cols-[minmax(0,2fr)_minmax(18rem,1fr)]">
           <section
+            ref={graphRef}
             className="min-h-[440px] overflow-hidden rounded-xl border bg-card"
             aria-label="Interactive graph visualization"
           >
@@ -266,7 +273,7 @@ export function GraphExplorer() {
                 aria-label="Graph connections. Select a circle to inspect it; use Open to navigate."
                 className="h-full min-h-[440px] w-full touch-none"
                 role="img"
-                viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
+                viewBox={`0 0 ${canvasWidth} ${HEIGHT}`}
                 onPointerDown={(event) => {
                   if ((event.target as Element).closest("a")) return;
                   event.currentTarget.setPointerCapture(event.pointerId);
@@ -280,7 +287,8 @@ export function GraphExplorer() {
                 onPointerMove={(event) => {
                   if (drag) {
                     const scale =
-                      WIDTH / event.currentTarget.getBoundingClientRect().width;
+                      canvasWidth /
+                      event.currentTarget.getBoundingClientRect().width;
                     setPan({
                       x: drag.panX + (event.clientX - drag.x) * scale,
                       y: drag.panY + (event.clientY - drag.y) * scale,
@@ -300,7 +308,7 @@ export function GraphExplorer() {
                 }}
               >
                 <g
-                  transform={`translate(${pan.x} ${pan.y}) translate(${WIDTH / 2} ${HEIGHT / 2}) scale(${zoom}) translate(${-WIDTH / 2} ${-HEIGHT / 2})`}
+                  transform={`translate(${pan.x} ${pan.y}) translate(${canvasWidth / 2} ${HEIGHT / 2}) scale(${zoom}) translate(${-canvasWidth / 2} ${-HEIGHT / 2})`}
                 >
                   {edges.map((edge) => {
                     const from = positions.get(edge.fromKey);
@@ -314,9 +322,26 @@ export function GraphExplorer() {
                         y1={from.y}
                         y2={to.y}
                         stroke="currentColor"
-                        strokeOpacity="0.28"
+                        strokeOpacity={
+                          selectedKey
+                            ? edge.fromKey === selectedKey ||
+                              edge.toKey === selectedKey
+                              ? 0.65
+                              : 0.06
+                            : 0.28
+                        }
                         strokeWidth={Math.min(5, 1 + edge.occurrenceCount / 2)}
-                      />
+                      >
+                        <title>
+                          {
+                            nodes.find((node) => node.key === edge.fromKey)
+                              ?.title
+                          }{" "}
+                          →{" "}
+                          {nodes.find((node) => node.key === edge.toKey)?.title}{" "}
+                          · {edge.occurrenceCount} saved references
+                        </title>
+                      </line>
                     );
                   })}
                   {nodes.map((node) => {
@@ -333,7 +358,15 @@ export function GraphExplorer() {
                           setSelectedKey(node.key);
                         }}
                       >
-                        <g>
+                        <g
+                          opacity={
+                            selectedKey &&
+                            !selectedNode &&
+                            !connectedKeys.has(node.key)
+                              ? 0.25
+                              : 1
+                          }
+                        >
                           <circle
                             cx={point.x}
                             cy={point.y}
@@ -347,7 +380,9 @@ export function GraphExplorer() {
                           <title>
                             {node.title} · {node.kind}
                           </title>
-                          {(nodes.length <= 30 || selectedNode) && (
+                          {(nodes.length <= 30 ||
+                            selectedNode ||
+                            (selectedKey && connectedKeys.has(node.key))) && (
                             <text
                               x={point.x}
                               y={point.y + 33}
@@ -355,7 +390,9 @@ export function GraphExplorer() {
                               fontSize="12"
                               fill="currentColor"
                             >
-                              {node.title.slice(0, 24)}
+                              {node.title.length > 32
+                                ? `${node.title.slice(0, 13)}…${node.title.slice(-18)}`
+                                : node.title}
                             </text>
                           )}
                         </g>
@@ -368,7 +405,7 @@ export function GraphExplorer() {
           </section>
 
           <aside className="flex min-h-0 flex-col gap-3 rounded-xl border bg-card p-4">
-            <h2 className="font-medium">
+            <h2 className="break-words font-medium">
               {selected ? selected.title : "Graph contents"}
             </h2>
             {selected ? (
@@ -406,7 +443,7 @@ export function GraphExplorer() {
                 <li key={node.key}>
                   <button
                     type="button"
-                    className="w-full rounded-md px-2 py-1.5 text-left text-sm hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring"
+                    className="w-full break-words rounded-md px-2 py-1.5 text-left text-sm hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring"
                     aria-current={selectedKey === node.key ? "true" : undefined}
                     onClick={() => setSelectedKey(node.key)}
                   >
@@ -423,67 +460,49 @@ export function GraphExplorer() {
               ))}
             </ul>
             <h3 className="font-semibold text-muted-foreground text-xs uppercase">
-              Connections
+              {selected ? "Connections to this note" : "Connections"}
             </h3>
+            <p className="text-muted-foreground text-xs">
+              Arrows point from the note containing the reference to its target.
+              External links include ordinary hyperlinks saved before this
+              feature.
+            </p>
             <ul
               className="max-h-40 space-y-1 overflow-auto"
               aria-label="Graph connections and provenance"
             >
-              {edges.map((edge) => {
+              {visibleEdges.map((edge) => {
                 const from = nodes.find((node) => node.key === edge.fromKey);
                 const to = nodes.find((node) => node.key === edge.toKey);
                 return (
-                  <li key={`${edge.fromKey}|${edge.toKey}`} className="text-sm">
+                  <li
+                    key={`${edge.fromKey}|${edge.toKey}`}
+                    className="break-words text-sm"
+                  >
                     {from?.title ?? "Note"} →{" "}
                     {to?.title ?? "Content unavailable"}{" "}
                     <span className="text-muted-foreground">
                       ({edge.occurrenceCount})
                     </span>
+                    {from?.href &&
+                      edge.sourceBlocks.map((blockId, index) => (
+                        <Link
+                          key={blockId}
+                          className="ml-2 text-muted-foreground text-xs underline underline-offset-4 hover:text-foreground"
+                          href={`${new URL(from.href ?? "/", "https://journl.invalid").pathname}#block=${blockId}`}
+                        >
+                          Open source
+                          {edge.sourceBlocks.length > 1 ? ` ${index + 1}` : ""}
+                        </Link>
+                      ))}
                   </li>
                 );
               })}
             </ul>
-            {selectedDocumentId && (
-              <>
-                <h3 className="font-semibold text-muted-foreground text-xs uppercase">
-                  Occurrence details
-                </h3>
-                {occurrencesQuery.isPending ? (
-                  <p className="text-muted-foreground text-sm">
-                    Loading source blocks…
-                  </p>
-                ) : occurrencesQuery.data?.items.length ? (
-                  <ul className="max-h-40 space-y-2 overflow-auto">
-                    {occurrencesQuery.data.items.map((occurrence) => (
-                      <li
-                        key={occurrence.id}
-                        className="border-t pt-2 first:border-0 first:pt-0"
-                      >
-                        <p className="text-muted-foreground text-xs">
-                          {occurrence.presentation} reference ·{" "}
-                          {occurrence.sourceTitle ?? "Source note"}
-                        </p>
-                        {occurrence.sourceHref ? (
-                          <Link
-                            className="text-sm hover:underline"
-                            href={occurrence.sourceHref}
-                          >
-                            {occurrence.snippet || "Open source block"}
-                          </Link>
-                        ) : (
-                          <p className="text-sm">
-                            {occurrence.snippet || "Open source block"}
-                          </p>
-                        )}
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p className="text-muted-foreground text-sm">
-                    No outgoing occurrences.
-                  </p>
-                )}
-              </>
+            {selected && visibleEdges.length === 0 && (
+              <p className="text-muted-foreground text-sm">
+                No connections in this view.
+              </p>
             )}
             {graphData?.nextCursor && (
               <Button

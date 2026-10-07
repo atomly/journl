@@ -8,9 +8,12 @@ import { en as aiEn } from "@blocknote/xl-ai/locales";
 import { useQueryClient } from "@tanstack/react-query";
 import type { EditorView } from "@tiptap/pm/view";
 import { DefaultChatTransport } from "ai-sdk-v6";
-import { getPlainUrlForAutomaticReference } from "~/references/reference-utils";
+import { getPlainUrlForAutomaticReference } from "~/references/reference-paste-url";
 import { useTRPC } from "~/trpc/react";
-import { insertReferenceUrl } from "./reference-insertion";
+import {
+  handleReferencePaste,
+  insertReferenceUrl,
+} from "./reference-insertion";
 
 type UseBlockEditorOptions = {
   /**
@@ -124,19 +127,6 @@ export function useBlockEditor({
             if (handled) event.preventDefault();
             return handled;
           },
-          handlePaste: (view, event) => {
-            const plainText = event.clipboardData?.getData("text/plain") ?? "";
-            const html = event.clipboardData?.getData("text/html") ?? "";
-            const url = getPlainUrlForAutomaticReference({
-              html,
-              selectionEmpty: view.state.selection.empty,
-              text: plainText,
-            });
-            if (!url) return false;
-            const handled = insertPendingReference(view, url, undefined, true);
-            if (handled) event.preventDefault();
-            return handled;
-          },
         },
       },
       animations: false,
@@ -154,6 +144,12 @@ export function useBlockEditor({
         }),
       ],
       initialContent: initialBlocks,
+      pasteHandler: (context) =>
+        handleReferencePaste(context, (url) =>
+          queryClient.fetchQuery(
+            trpc.references.resolveUrls.queryOptions({ urls: [url] }),
+          ),
+        ),
       schema,
     },
     [resetKey],

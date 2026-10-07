@@ -62,6 +62,7 @@ export function BetterAuthProvider({
   const router = useRouter();
   const [queryClient] = useState(getQueryClient);
 
+  // Avatars are embedded in user.image; replacements leave no stored file.
   return (
     <QueryClientProvider client={queryClient}>
       <PasswordSignInContext value={allowPasswordSignIn}>

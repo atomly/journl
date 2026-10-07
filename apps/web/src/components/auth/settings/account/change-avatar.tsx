@@ -27,6 +27,9 @@ export type ChangeAvatarProps = {
   className?: string;
 };
 
+// Adapted from Better Auth UI's Base UI user-profile registry item:
+// https://better-auth-ui.com/r/base-nova/user-profile.json
+// Keep its resize/upload/delete hooks, with local validation and awaited saves.
 export function ChangeAvatar({ className }: ChangeAvatarProps) {
   const { authClient, localization, avatar } = useAuth();
   const { data: session } = useSession(authClient);
@@ -85,6 +88,7 @@ export function ChangeAvatar({ className }: ChangeAvatarProps) {
     }
   }
 
+  // Manual removal only. Uploading a replacement does not call this handler.
   async function handleDelete() {
     const currentImage = session?.user.image;
     if (!session || !currentImage || isPending) return;

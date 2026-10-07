@@ -1,14 +1,14 @@
 # Rich links, content previews, and document references
 
-Status: proposed; awaiting product review. No feature implementation is authorized by this document alone.
+Status: approved for implementation and agent handoff. The reviewer accepted the proposed defaults and requested one complete feature release, including section 11 and the previously staged block references, read-only full-content embeds, and graph visualization. This PR remains the design artifact; implementation belongs in its linked implementation branch.
 
 Related issue: [#291 — Spike: Add rich embedded previews for linked content](https://github.com/atomly/journl/issues/291).
 
 Prepared October 6, 2026. Repository baseline: `efe8c9ab81041d5fc6fd60a9f8a18a8b4691f31f`.
 
-This is a temporary design and agent handoff artifact on `codex/spec-291-content-references`. Review it in the PR before implementation. Keep it available throughout the handoff; remove this file from the branch before merging implementation into `main`. Do not merge this design-only PR or automatically close #291 upon approval. If implementation uses a separate branch, link this PR as its design reference and close this PR after the handoff.
+This is a temporary design and agent handoff artifact on `codex/spec-291-content-references`. Product review is complete; use this PR as the approved implementation reference. Keep it available throughout the handoff; remove this file from the branch before merging implementation into `main`. Do not merge this design-only PR or automatically close #291 upon approval. If implementation uses a separate branch, link this PR as its design reference and close this PR after the handoff.
 
-## 1. Outcome and release proposal
+## 1. Approved outcome and single-release scope
 
 Users can paste or drop a GitHub URL to produce a recognizable GitHub badge, and reference a Journl page or journal entry to show its current title and a truncated excerpt. The same internal relationship supports navigation, previews, backlinks, and authorized AI lookups. Changing a reference's appearance must not change the relationship it represents.
 
@@ -18,14 +18,14 @@ Terminology:
 - **Badge:** an atomic inline reference, suitable within a sentence.
 - **Card:** a standalone block with source/type, title, and a short excerpt.
 - **Preview:** a temporary hover/focus/touch surface; no editor content mutation.
-- **Full-content embed:** content transclusion, possibly editable in place. This is a separate future feature; cards in the first release are previews of content.
+- **Full-content embed:** a read-only, live view of a referenced document or block subtree, distinct from a title/excerpt card. Source editing happens in its own editor.
 - **Reference occurrence:** a link from a particular source block to a target, with provenance. Backlinks are the reverse lookup of these occurrences.
 
-Recommended first release includes page/entry badges and cards, GitHub badges/cards derived from the URL without network fetching, plain external URL fallbacks, accessible previews, a cross-document picker, backlinks, and a bounded one-hop AI reference query. Explicit references and recognizable existing internal hyperlinks contribute graph edges. Neither title matching nor semantic similarity silently creates edges.
+The approved release includes page/entry/block badges and cards, public GitHub metadata enrichment with URL-derived fallbacks, plain external URL fallbacks, accessible previews, a cross-document/block picker, backlinks, a bounded one-hop AI reference query, read-only full-content embeds, and a graph visualization. Explicit references and recognizable existing internal hyperlinks contribute graph edges. Neither title matching nor semantic similarity silently creates edges.
 
-Follow-up releases: public GitHub metadata enrichment, block references, read-only full-content embeds, and a graph visualization. General web unfurling, private GitHub OAuth, editing transcluded content, and inferred relationships require separate designs.
+All planned features ship together after M0–M8 pass. General web unfurling, private GitHub OAuth, editing transcluded content, and inferred relationships remain outside this scope because the original design explicitly required separate designs for them.
 
-The graph foundation and AI query are part of this proposal, beyond the narrower preview spike in #291. Approval can split delivery into milestones without removing that intended outcome.
+The graph foundation and AI query extend the narrower preview spike in #291. Milestones describe implementation dependencies within one release; finishing a subset is not release completion. Incremental implementation PRs and deployment preparation remain possible behind the rollout flag.
 
 ## 2. Reference research and product choices
 
@@ -34,10 +34,10 @@ These are documented product behaviors, not claims from hands-on testing. Logseq
 | Reference | Observed behavior | Journl proposal |
 | --- | --- | --- |
 | [Atlassian links](https://support.atlassian.com/confluence-cloud/docs/insert-links-and-anchors/) | Pasted URLs can unfurl; URL, inline, card, and interactive embed are distinct presentations. The toolbar can switch views and undo can cancel conversion. | Context-sensitive badge/card defaults, explicit display conversion, and reversible insertion. Skip interactive web embeds initially. |
-| [Logseq page/block references](https://raw.githubusercontent.com/logseq/docs/master/pages/Page%20and%20block%20references.md) | Page and block reference triggers offer completion, custom labels, navigation, and hover previews. | A `[[` picker and explicit IDs, with page/entry type labels and previews. Reserve block selection for a follow-up. |
+| [Logseq page/block references](https://raw.githubusercontent.com/logseq/docs/master/pages/Page%20and%20block%20references.md) | Page and block reference triggers offer completion, custom labels, navigation, and hover previews. | A `[[` picker and explicit IDs, with page/entry type labels and previews. Include block selection with stable block IDs. |
 | [Logseq block embeds](https://raw.githubusercontent.com/logseq/docs/master/pages/block_embed.md), [page embeds](https://raw.githubusercontent.com/logseq/docs/master/pages/page_embed.md) | Embeds display source content and can edit the source. Page embeds are documented separately from linked references. | Keep reference identity separate from rendering. Unlike that documented page-embed behavior, our cards count as explicit graph relationships. Do not duplicate editable source blocks. |
 | [Obsidian links](https://obsidian.md/help/links), [embeds](https://obsidian.md/help/embeds) | Links support labels, heading/block targets, and rename handling; `!` requests live embedded content. | Separate linking from transclusion, preserve labels, and use document IDs so rename needs no source rewrite. |
-| [Obsidian backlinks](https://obsidian.md/help/plugins/backlinks), [page preview](https://obsidian.md/help/plugins/page-preview) | Linked and unlinked mentions are distinct; editing-mode hover previews can require a modifier key. | Explicit backlinks only in release one; previews must preserve editor selection and support keyboard/touch alternatives. |
+| [Obsidian backlinks](https://obsidian.md/help/plugins/backlinks), [page preview](https://obsidian.md/help/plugins/page-preview) | Linked and unlinked mentions are distinct; editing-mode hover previews can require a modifier key. | Explicit backlinks only; previews must preserve editor selection and support keyboard/touch alternatives. |
 
 The recommendation combines Atlassian's presentation choices with Logseq/Obsidian's explicit references. It does not propose Markdown syntax compatibility or import of their graphs.
 
@@ -57,28 +57,32 @@ The recommendation combines Atlassian's presentation choices with Logseq/Obsidia
 | R8 | AI retrieval | A read-only tool returns authorized neighbors and source occurrences, using the same relationships as backlinks. |
 | R9 | Harmless failures | Loading, malformed, missing, inaccessible, unsupported, and offline states preserve editable content and safe navigation where possible. |
 | R10 | Compatibility | Existing documents render; custom references survive JSON/clipboard round trips; Markdown exports contain readable links. |
+| R11 | Public GitHub enrichment | Public repositories/issues/PRs show available titles, descriptions, and statuses; failures preserve URL-derived badges/cards. |
+| R12 | Block references | Users select existing blocks across pages/entries, navigate to the exact source, and see block-specific previews/backlinks. |
+| R13 | Read-only live embeds | An explicit Embed view shows current document/block content with bounded nesting, cycle handling, authorization, and Open source. |
+| R14 | Graph visualization | A bounded interactive graph and equivalent accessible list show authorized document/block connections with source provenance. |
 
 ### Nonfunctional requirements
 
 - Every private lookup and graph query derives the user from the session. Caller-supplied IDs confer no access.
-- Preview rendering never fetches external URLs in release one. Network enrichment is isolated from document saving in later releases.
+- Public GitHub enrichment uses the server provider in section 11; arbitrary external URLs are never fetched. Network enrichment is isolated from document saving.
 - One batched query for unique visible references, no request per render or per duplicate occurrence. Queries and graph responses have explicit limits.
 - Cards, badges, picker, and preview controls work with keyboard, touch, screen readers, light/dark themes, and narrow screens.
 - References in accepted content are the source of truth; preview metadata and graph rows are replaceable projections.
 
-### Decisions for the reviewer
+### Approved defaults
 
-All defaults below are proposals, not previously approved requirements. Record changes in this section before handing the design to the implementation agent.
+The reviewer approved the defaults below, with the scope expanded to include section 11, block references, read-only full-content embeds, and graph visualization in one release. Preserve badge/card paste defaults, personal ownership, and bounded one-hop AI queries.
 
-| Decision | Recommended default | Consequence of another choice |
+| Decision | Approved default | Scope implication |
 | --- | --- | --- |
-| First-release external scope | GitHub identity from URLs; hostname fallback for other sites | Fetched titles/descriptions require milestone M5 and its network safeguards. |
+| External scope | Public GitHub titles/descriptions/status where available, with URL-derived fallback; hostname fallback for other sites | M5 and its network safeguards are required before release. |
 | Paste/drop default | Badge within prose; card in empty paragraph | Always-inline is simpler but makes excerpts less discoverable. |
-| Meaning of “embed” | A title/excerpt card in release one | Live full-content embeds require recursion limits and separate source-edit semantics. |
-| Internal types | Pages and persisted journal entries, across both editor surfaces | Blocks require dedicated targeting, deep links, and deletion semantics. |
-| Picker syntax | `[[` and `/Reference`; choose existing content only | Create-on-missing and `![[` are additional authoring behaviors. |
+| Meaning of “embed” | Paste defaults to title/excerpt card; explicit Embed displays read-only live content | M7 defines bounded rendering; editing opens the source. |
+| Internal types | Pages, persisted journal entries, and their blocks, across both editor surfaces | M6 defines block targeting and deletion semantics. |
+| Picker syntax | `[[` and `/Reference`; block/Embed modes and explicit slash commands; choose existing content only | No create-on-missing or additional shorthand syntax is required. |
 | Graph membership | Badges, cards, and resolvable ordinary internal links; direct occurrences only | Excluding plain links would make backlinks incomplete for existing notes. |
-| AI scope | One-hop references plus existing semantic search | Multi-hop traversal, ranking, and graph UI can follow independently. |
+| AI scope | One-hop references plus existing semantic search; graph UI uses the same adjacency service | Multi-hop AI traversal and ranking remain outside scope. |
 | Editor navigation | Keep single-click for selection; explicit Open and modifier-click for navigation; retain double-click | Replacing single-click behavior would be an editor-wide UX change. |
 | Ownership | Personal notes under current user ownership | Sharing/workspace ACLs must be designed before supporting cross-user targets. |
 
@@ -116,16 +120,16 @@ Do not reuse `apps/web/src/trpc/embedder/document.ts` as a preview API: it is a 
 | Input/context | Behavior |
 | --- | --- |
 | Single URL into empty, top-level paragraph | Insert a card immediately with safe fallback; resolve internal identity asynchronously. Leave a trailing editable paragraph. |
-| Single URL within prose or a list item | Insert an inline badge. Internal label resolves to current title; GitHub label derives from its path. |
+| Single URL within prose or a list item | Insert an inline badge. Internal label resolves to current title; GitHub label uses enriched metadata when available, with a path-derived fallback. |
 | URL pasted over selected words | Preserve the words as an ordinary link/custom label. Offer explicit Convert to badge/card. |
 | Code block, inline-code span, multiline/multi-URL text, file paste | Delegate to existing/default handling; no automatic conversion. |
 | HTML/native BlockNote clipboard data | Preserve native structured content first; do not collapse a rich selection to a single link because plain clipboard text looks URL-like. Validate imported reference props. |
 | Plain URL drop (`text/uri-list` or `text/plain`) | Apply the same position/context rules as paste. Files keep existing upload behavior; editor block reorders retain BlockNote behavior. |
 | Sidebar page drag | Add a separate custom MIME payload containing page ID; resolve ownership before insertion. Integrate into current sidebar drag handlers without overriding reorder gestures. |
 | `/Reference` or `[[` | Open searchable picker; return typed results with title/date and ID. Enter chooses; Escape leaves typed text intact. Slash command inserts a card only in an empty paragraph. |
-| Explicit conversion | Offer Link, Badge, Card. Card conversion is enabled only for an isolated reference; never split surrounding prose automatically. |
+| Explicit conversion | Offer Link, Badge, Card, and Embed for internal targets. Card conversion is enabled only for an isolated reference; never split surrounding prose automatically. |
 
-Recognition is limited to exact single HTTP(S) URLs or canonical relative internal routes. Do not use a URL regex over arbitrary prose. Typed `[[...]]` is a picker trigger, not title-based persisted syntax. No missing-note creation, title alias registry, `![[...]]` transclusion, or `((...))` block syntax initially.
+Recognition is limited to exact single HTTP(S) URLs or canonical relative internal routes. Do not use a URL regex over arbitrary prose. Typed `[[...]]` is a picker trigger, not title-based persisted syntax. No missing-note creation, title alias registry, `![[...]]`, or `((...))` shorthand is required. Block and embed authoring are available through picker modes and slash commands in section 13.
 
 Insertion is a single local undoable editor operation. Preview hydration never adds undo entries. If resolution is asynchronous, replace the pending internal URL only when the insertion still exists, its identity has not changed, and it belongs to the same editor; never use a stale cursor position. Group that replacement with the insertion where the installed editor history API permits it. If grouping cannot be reliable, keep a plain link and offer explicit conversion; do not ship an async mutation that restores content after undo. Record the chosen behavior in M0.
 
@@ -146,7 +150,7 @@ Card:    Journal entry
 
 Title display is capped at two lines; excerpts at three lines. Generate at most 240 Unicode code points, collapse whitespace, and append an ellipsis when truncated. Journals use the stored calendar date formatted for the user's locale, never a timezone conversion of midnight UTC. Badges show an optional user-authored label instead of title; cards still show the actual target title.
 
-GitHub fallback examples: repository `GitHub · atomly/journl`, issue `GitHub · atomly/journl #291`, PR `GitHub · atomly/journl PR #300`. Only exact `github.com` is recognized; profiles and unsupported paths use `GitHub · <path>` with length limits. No guessed issue titles/statuses. Other external sites use `Link · <hostname>` and the original URL; their card has no invented description.
+GitHub URL fallbacks (during loading or when metadata is unavailable): repository `GitHub · atomly/journl`, issue `GitHub · atomly/journl #291`, PR `GitHub · atomly/journl PR #300`. Only exact `github.com` is recognized; profiles and unsupported paths use `GitHub · <path>` with length limits. No guessed issue titles/statuses. Other external sites use `Link · <hostname>` and the original URL; their card has no invented description.
 
 ### Mouse, keyboard, touch, and selection
 
@@ -167,17 +171,18 @@ Domain-level shape (not a BlockNote prop schema):
 
 ```ts
 type ReferenceTarget =
-  | { kind: "document"; documentId: string }
+  | { kind: "document"; documentId: string; blockId?: string }
   | { kind: "external"; url: string };
 ```
 
-BlockNote custom props must be scalar. Define `contentReference` inline content with `content: "none"`, and `referenceCard` block with `content: "none"`. Both use the same validated fields:
+BlockNote custom props must be scalar. Define `contentReference` inline content, `referenceCard` block, and `contentEmbed` block, all with `content: "none"`. They use the same validated fields:
 
 ```ts
 type ReferencePropsV1 = {
   version: 1;
   targetKind: "document" | "external";
   documentId: string; // UUID for document; empty string for external
+  blockId: string;    // UUID for a block target; empty for whole document/external
   url: string;        // canonical internal fallback href or original external URL
   label: string;      // user-authored alias; empty means resolve current label
 };
@@ -187,7 +192,7 @@ const inline = {
   type: "contentReference",
   props: {
     version: 1, targetKind: "document",
-    documentId: "36b06f18-6e7f-4b9e-9139-773f1f47baac",
+    documentId: "36b06f18-6e7f-4b9e-9139-773f1f47baac", blockId: "",
     url: "/pages/24c335d6-7c2b-4f57-a911-9c8bbd8a92a6", label: "",
   },
 };
@@ -197,12 +202,12 @@ const inline = {
 
 No fetched title, excerpt, icon URL, source status, or nested target content is stored in these props. Metadata updates must not cause block saves, document timestamp changes, or embedding jobs. `label` is intentional source content and can differ from the title.
 
-Validation: version exactly 1; UUID document ID for internal; empty document ID for external; URL max 2,048 characters; label max 255 characters; allowed scheme and route rules below. Keep default legacy block validation compatible while adding strict validation for the two new types. Never trust client-provided metadata or ownership. Unknown versions must degrade to escaped readable links, not crash document loading or erase source JSON.
+Validation: version exactly 1; UUID document ID for internal; optional UUID block ID (empty defaults to whole document); empty document/block IDs for external; URL max 2,048 characters; label max 255 characters; allowed scheme and route rules below. `contentEmbed` permits internal targets only. Keep default legacy block validation compatible while adding strict validation for the three new types. Never trust client-provided metadata or ownership. Unknown versions must degrade to escaped readable links, not crash document loading or erase source JSON. The original draft was never deployed, so include these fields in version 1 rather than shipping an intermediate schema.
 
 ### URL classification
 
 1. Parse with the URL parser using `PUBLIC_WEB_URL` as base. Relative `/pages/<uuid>` and `/journal/<YYYY-MM-DD>` are internal. Absolute URLs are internal only on configured trusted application origins (production plus explicit preview/development origins); never match by suffix or pathname alone.
-2. Match those routes exactly, permitting an optional trailing slash. Validate journal dates as real calendar dates. Queries may be retained for navigation but do not establish identity. Unsupported fragments remain ordinary links initially.
+2. Match those routes exactly, permitting an optional trailing slash. Validate journal dates as real calendar dates. Queries may be retained for navigation but do not establish identity. Recognize validated `#block=<uuid>` targets as specified in section 13; other unsupported fragments remain ordinary links.
 3. Resolve page ID or date under the authenticated user to its document. Resolution is read-only; an unpersisted day returns unavailable and creates no JournalEntry or Document. A user's unsaved source draft can contain references to persisted targets and gains graph occurrences after its first save.
 4. Prefer explicit `documentId` whenever present; do not fall back to date/URL resolution if that document has been deleted. The stored URL is a fallback for clipboard/export, not a way to bypass authorization.
 5. External URLs permit HTTP(S); reject embedded credentials, control characters, and non-web schemes for custom references. Existing mailto or other legacy links remain ordinary links and receive no rich preview.
@@ -237,7 +242,7 @@ references.resolveUrls({ urls: string[] })
 // <= 50 unique URLs; per-item { url, target: ReferenceTarget | null, preview: Preview }
 
 references.getPreviews({ targets: ReferenceTarget[] })
-// <= 50; per-item { target, preview: Preview }; external is local URL formatting in M1-M4
+// <= 50; per-item { target, preview: Preview }; external uses the public GitHub provider with local URL fallback
 
 references.searchTargets({ query: string, types?: ("page" | "journal")[], cursor?: string, limit?: number })
 // query <= 200 chars; limit default 20/max 50; title/date matching, not paid semantic search
@@ -256,7 +261,7 @@ references.queryNeighbors({ documentId: string, direction: "incoming" | "outgoin
 
 Malformed batch envelope is BAD_REQUEST; valid batches with unavailable targets return per-item fallbacks. No existence leaks via counts or error wording. Search filters by owner before matching, ranks exact title/date then prefix then substring, and orders ties by kind/title/document ID. Empty query returns recently updated persisted targets. Escape SQL wildcard characters in search text. Use opaque validated keyset cursors containing the corresponding sort tuple, not unrestricted SQL values.
 
-Generate excerpts deterministically from the current owned blocks in document order, including textual table cells/list content, excluding code, raw URLs, images/files, reference cards, and resolved target text. Inline aliases may contribute their source-authored text. Never recurse into another reference. Do not use AI summaries or embedding chunks: they can lag behind saves and would couple previews to usage costs. Bound traversal by existing document limits and stop once enough eligible text is collected. Share the extractor with backlink source snippets (max 160 characters).
+Generate excerpts deterministically from the current owned blocks in document order, including textual table cells/list content, excluding code, raw URLs, images/files, reference cards/embeds, and resolved target text. Inline aliases may contribute their source-authored text. Never recurse into another reference. Do not use AI summaries or embedding chunks: they can lag behind saves and would couple previews to usage costs. Bound traversal by existing document limits and stop once enough eligible text is collected. Share the extractor with backlink source snippets (max 160 characters).
 
 `contentUpdatedAt` comes from Document; `metadataUpdatedAt` from Page/JournalEntry, since page rename currently updates Page but not Document. Do not assume one timestamp covers both. Fetch only authorized rows and minimal fields; batch blocks/edges by owned document IDs instead of one query per target.
 
@@ -265,7 +270,7 @@ Generate excerpts deterministically from the current owned blocks in document or
 - A coordinator per editor discovers references in visible cards, and fetches ordinary links/badges on preview activation; deduplicate by target. Batch across simultaneous activations on the next task tick, max 50. Never eagerly resolve every link in a long journal timeline.
 - React Query key includes the authenticated user/session scope plus target identity; cache lives only in the session. Clear it on logout/user switch and avoid persisted private previews.
 - Internal ready previews: stale after 30 seconds; unavailable after 5 seconds; garbage collect after 5 minutes. Recheck on reopening once stale and on window focus. No polling while closed.
-- Own-app content save/rename/delete invalidates affected previews and occurrence lists. Deletion removes ready cached content immediately. Other-tab edits are observed on focus/reopen within the stale window; real-time propagation is outside release one.
+- Own-app content save/rename/delete invalidates affected previews and occurrence lists. Deletion removes ready cached content immediately. Other-tab edits are observed on focus/reopen within the stale window; real-time cross-tab propagation is outside scope.
 - Abort unresolved work on editor unmount where no other consumer needs it. Guard asynchronous conversions by editor instance and insertion identity. Transient errors stay separate from `unavailable` and permit retry; do not cache them indefinitely.
 
 ## 8. Reference projection and relational graph
@@ -283,20 +288,21 @@ Proposed `document_reference` table:
 | `occurrence_path` | text NOT NULL, max 256 | Deterministic position, e.g. `/content/2`, `/content/rows/0/cells/1/0`, or `/props` for card |
 | `target_kind` | text CHECK document/external | Target discriminator |
 | `target_document_id` | UUID nullable, deliberately no target FK | Stable internal identity retained when a target is deleted |
+| `target_block_id` | UUID nullable, deliberately no target FK | Optional stable block target; requires internal document identity |
 | `target_url` | varchar(2048) nullable | Normalized external URL; null for internal |
-| `target_key` | text NOT NULL | `document:<uuid>` or `external:<sha256>` |
-| `presentation` | text CHECK link/badge/card | Source representation, not a semantic edge type |
+| `target_key` | text NOT NULL | `document:<uuid>`, `document:<uuid>#block:<uuid>`, or `external:<sha256>` |
+| `presentation` | text CHECK link/badge/card/embed | Source representation, not a semantic edge type |
 | `created_at`, `updated_at` | timestamptz NOT NULL | Projection bookkeeping |
 
-Constraints: exactly one target field populated consistent with `target_kind`; unique `(source_block_id, occurrence_path)`; indexed `(user_id, target_document_id, source_document_id, source_block_id)` for incoming and `(user_id, source_document_id, source_block_id)` for outgoing; external lookup index `(user_id, target_key)` if used. Extractor guarantees target_key matches target fields; only server code writes this table.
+Constraints: exactly one of target_document_id/target_url populated consistent with `target_kind`; target_block_id is nullable and permitted only for internal targets; unique `(source_block_id, occurrence_path)`; indexed `(user_id, target_document_id, source_document_id, source_block_id)` for incoming and `(user_id, source_document_id, source_block_id)` for outgoing; external lookup index `(user_id, target_key)` if used. Extractor guarantees target_key matches target fields; only server code writes this table.
 
 Source foreign keys ensure deletion cleanup; same-owner/same-document consistency must be checked inside the locked save transaction because existing single-column FKs do not enforce it. Retaining a deleted target UUID allows truthful dangling relationships and avoids silently binding to a newly created page/date. API resolution checks ownership every time and exposes no target metadata on failure. No separate tombstone containing private target titles.
 
-An edge is a direct occurrence. Two mentions in one block produce two rows; backlinks group by source document and return bounded occurrence snippets. A graph node pair can aggregate occurrences for traversal, but no transitive edges are stored. Self-references and cycles are valid. Rendering/AI never recursively expands them in release one. Display conversion changes `presentation` only; graph adjacency is unchanged.
+An edge is a direct occurrence. Two mentions in one block produce two rows; backlinks group by source document and return bounded occurrence snippets. A graph node pair can aggregate occurrences for traversal, but no transitive edges are stored. Self-references and cycles are valid. AI never recursively expands them; embed rendering uses the bounded policy in section 13. Display conversion changes `presentation` only; graph adjacency is unchanged.
 
 ### Extractor
 
-Implement a pure server-side extractor over validated persisted block data. Recognize `contentReference`, `referenceCard`, and default inline `link` objects, including nested/table inline content. Do not regex scan strings, code, or prose. For ordinary links, resolve only canonical internal URLs to owned documents; keep external occurrences as external URLs. Unresolved internal routes contribute no edge and never become external network fetches. Invalid custom data fails a new write before mutation; legacy malformed data has a readable fallback and contributes no edge.
+Implement a pure server-side extractor over validated persisted block data. Recognize `contentReference`, `referenceCard`, `contentEmbed`, and default inline `link` objects, including nested/table inline content. Do not regex scan strings, code, or prose. For ordinary links, resolve only canonical internal URLs to owned documents; keep external occurrences as external URLs. Unresolved internal routes contribute no edge and never become external network fetches. Invalid custom data fails a new write before mutation; legacy malformed data has a readable fallback and contributes no edge.
 
 Ordinary internal links retain URL navigation semantics: their projection resolves the current route on save/backfill. If an entry is deleted and recreated at the same date, that URL can resolve to the new document; a resave/rebuild updates its projection. Only explicit serialized document references guarantee stable identity across deletion/recreation and arbitrary edits. Explain this distinction in the conversion UI and tests; previews of ordinary URLs resolve their current route, and legacy projections can lag route changes until rebuild. On target deletion, remove incoming ordinary-link rows in the same transaction while retaining badge/card rows. New target creation may discover legacy incoming links during a repair/backfill, not through speculative graph edges.
 
@@ -338,7 +344,7 @@ Both page and single-entry views render a “Referenced by” panel below the ed
 
 Authorize the requested node and source documents/blocks before pagination/aggregation. Resolve each target under the same user; authored dangling IDs may be returned as unavailable without target metadata. Incoming/outgoing row cursors use `(source_document_id, source_block_id, occurrence_path)` in stable order; grouped backlink pagination first selects distinct source-document IDs, then fetches up to 3 occurrences per selected source and a total count. Never paginate occurrence rows and then pretend the results are complete document groups.
 
-Add internal `#block=<uuid>` navigation generated by the server. After the correct editor mounts, locate the block with editor-scoped querying, scroll and highlight it without changing content. If missing, open the source note and show a quiet fallback. Do not interpolate unvalidated hashes into DOM selectors. This supports provenance navigation; selecting a target block as a reference is deferred.
+Add internal `#block=<uuid>` navigation generated by the server. After the correct editor mounts, locate the block with editor-scoped querying, scroll and highlight it without changing content. If missing, open the source note and show a quiet fallback. Do not interpolate unvalidated hashes into DOM selectors. This supports provenance navigation; selecting a target block as a reference is required by section 13.
 
 ## 9. AI querying contract
 
@@ -355,11 +361,11 @@ type QueryNoteReferencesInput = {
 type OccurrenceView = {
   sourceDocumentId: string; sourceBlockId: string; sourceHref: string;
   sourceTitle: string; sourceKind: "page" | "journal";
-  snippet: string; presentation: "link" | "badge" | "card";
+  snippet: string; presentation: "link" | "badge" | "card" | "embed";
   target: ReferenceTarget; targetPreview: Preview;
 };
 type Neighbor = {
-  key: string; // document:<uuid> or external:<sha256>
+  key: string; // document:<uuid>, document:<uuid>#block:<uuid>, or external:<sha256>
   target: ReferenceTarget;
   preview: Preview;
   directions: ("incoming" | "outgoing")[];
@@ -396,9 +402,9 @@ The shared BlockNote package must not depend on web tRPC or app navigation. Clie
 - Existing ordinary links are not visually rewritten by backfill. On-demand preview and explicit conversion are additive. Keep old blocks with optional content valid as in `blocknoteBlocks` today.
 - Client display failover for malformed/unknown references must preserve raw source data. Do not silently save a downgraded document until the user explicitly edits the occurrence.
 
-## 11. Optional public GitHub metadata enrichment (M5)
+## 11. Public GitHub metadata enrichment (M5, required)
 
-This follow-up is needed only if review requires actual repository/issue/PR titles, descriptions, or statuses rather than URL-derived GitHub badges. It is not a dependency for internal previews or the graph.
+Approved as a required part of the single release: repository/issue/PR titles, descriptions, and statuses where public metadata is available. Internal previews and graph implementation can proceed independently, but release completion requires this provider and its failure handling.
 
 Use a provider registry with `canHandle`, `parseTarget`, `resolveMetadata` and `formatFallback`. GitHub parses recognized repo/issue/PR paths and calls fixed `https://api.github.com` REST endpoints assembled from encoded validated path components. User URLs are never fetched directly. No arbitrary Open Graph scraper in this milestone. Unknown paths and private/404/rate-limited responses retain URL-only fallback. Do not use user credentials or accept custom GitHub hosts in this public provider.
 
@@ -412,7 +418,7 @@ Any later arbitrary-host fetcher requires a dedicated SSRF design covering redir
 
 ## 12. Delivery plan and agent handoff
 
-Do not start feature implementation until the reviewer approves the scope/decisions. Work in order; milestones are dependency units, not time estimates. Keep each implementation PR reviewable and reference this design PR.
+Product approval is recorded; the implementation agent may proceed without another scope approval. Work in dependency order; milestones are internal work units, not separate feature releases or time estimates. Keep implementation PRs reviewable and reference this design PR. The complete release requires M0–M8 and R1–R14.
 
 | Milestone | Work and principal paths | Exit condition |
 | --- | --- | --- |
@@ -421,9 +427,12 @@ Do not start feature implementation until the reviewer approves the scope/decisi
 | M2: internal resolution | New `trpc/shared/reference-target.ts`, `reference-preview.ts`, `reference-projection.ts`; `procedures/references.ts` and router registration | Batch previews/search/occurrences are authorized, bounded, deterministic, and usable for both note types. |
 | M3: editor authoring | Shared/client schema specs; `components/editor/references/` provider, badge/card, picker, preview coordinator; editor hook/tools and both editor wrappers | Paste/drop/conversion/preview behavior matches section 5 with URL-only GitHub fallback. |
 | M4: backlinks and AI | Both note surfaces; block deep-link handling; `query-note-references.ts`; semantic search document IDs; agent registration | Cross-type backlinks and bounded AI neighbor query use the same committed graph, with source citations. |
-| M5: optional enrichment | New server provider/cache/limiter modules and GitHub tests | Only after separate scope approval; network policy, cache, and fallback tests pass. |
+| M5: GitHub enrichment | New server provider/cache/limiter modules and GitHub tests | Required: public metadata, network policy, cache, and fallback tests pass. |
+| M6: block references | Extend target props/projection/preview/backlink APIs; block picker and copy-link action; validate block membership and deletion | Exact block references survive reload/rename and remain unavailable after deletion; document and block backlinks agree. |
+| M7: live read-only embeds | `contentEmbed` schema/client/static renderer; bounded `getEmbedContent`; invalidation and cycle handling | Current source content renders without duplicated source blocks, recursive requests, or source writes; limits and exports pass. |
+| M8: graph visualization | Bounded `getGraph` API, `/graph` and note-local graph, keyboard/list interface, provenance panel | Complete authorized graph exploration with block nodes, clipping indicators, filters, and accessible navigation. |
 
-M1/M2 can expose server contracts before M3, but do not enable custom-type writes until all readers/server exporters support them. M4 completes the proposed first release; graph visualization and transclusion follow separately.
+M1/M2 can expose server contracts before M3, but do not enable custom-type writes until all readers/server exporters support them. M4 alone is not release completion. M5–M8 are equally required; all feature surfaces become available in the same release after verification.
 
 ### Data deployment and backfill
 
@@ -433,11 +442,11 @@ The repo currently uses Drizzle schema discovery and `pnpm db:push`; no versione
 2. Deploy compatible readers/exporters, then enable transactional projection for all normal saves. Custom authoring remains disabled.
 3. Run an idempotent owner-scoped backfill in bounded batches (e.g. 100 documents, resumable document-ID cursor), taking the same source lock and using the same extractor. Resolve ordinary page/entry links; do not fetch metadata, rewrite content, bump document versions, or enqueue embeddings.
 4. Reconcile projected occurrences against source data, collect malformed/unresolved counts without logging content, and mark projection ready. Do not present incomplete backlink counts as complete during the backfill.
-5. Enable previews/authoring/backlinks/AI gradually via one server-authoritative rollout flag; verify saves and fallbacks.
+5. After M0–M8 pass, enable previews, block authoring, backlinks, AI querying, GitHub enrichment, embeds, and graph UI together via one server-authoritative rollout flag. Gradual rollout cohorts receive the complete feature set; verify saves and fallbacks.
 
 Repair command rebuilds one owner/document transactionally from persisted content. Backfill cannot recover the historical identity of a date-based plain link whose original target was deleted; it resolves current routes. New explicit references prevent that ambiguity going forward.
 
-Rollback disables authoring and optional fetching but keeps compatible readers and extraction for already-authored references. Do not drop source props/graph schema or deploy a default-only BlockNote reader after custom content has been saved. Projection can be repaired/rebuilt without content loss.
+Rollback disables authoring and provider fetching but keeps compatible readers and extraction for already-authored references. Do not drop source props/graph schema or deploy a default-only BlockNote reader after custom content has been saved. Projection can be repaired/rebuilt without content loss.
 
 ### Required verification for implementation
 
@@ -449,17 +458,94 @@ Rollback disables authoring and optional fetching but keeps compatible readers a
 | Editor/clipboard | Paste contexts; URL vs native HTML precedence; URI/file/internal drag; inline/card conversion; undo during pending resolution; unmount; badge deletion; schema load/export with no client provider; AI accept/reject; existing draft lifecycle tests. |
 | Accessibility/browser | Mouse hover/delay/selection; keyboard picker/focus/Escape/Open; touch selection; screen-reader names; mobile layout; modifier/double-click; block navigation after mount. Check in a real browser, not only mocked DOM. |
 | AI | Owned seed only; cross-type neighbors; duplicates/cycles/output budget/pagination; source block citations; external terminal URLs; retrieved instruction text treated as data. |
-| Optional provider | Fixed-host URL construction; redirect/IP/DNS policy; streamed size/timeout; malformed JSON; 404/private/rate limit; cache coalescing/expiry; no cookie/auth forwarding or remote image requests. |
+| GitHub provider | Fixed-host URL construction; redirect/IP/DNS policy; streamed size/timeout; malformed JSON; 404/private/rate limit; cache coalescing/expiry; no cookie/auth forwarding or remote image requests. |
+| Block references | Nested/table block lookup; membership checks; copy vs move identity; deleted/recreated block; source-block backlink filtering; scoped deep links and read-only picker search. |
+| Live embeds | Whole document/subtree updates; self/mutual/deep cycles; target deletion; size/depth limits; nested read-only links; hidden/unmounted cleanup; no source editor/AI selection registration; faithful JSON and readable Markdown export. |
+| Graph UI | Mixed page/entry/block nodes; duplicate edge aggregation; unavailable targets; authorized clipping/counts; expand/reset/filter; keyboard/list equivalence; no implied similarity edges or automatic recursive expansion. |
 
 Suggested implementation checks after dependencies are installed: `pnpm check`, `pnpm typecheck`, focused Vitest through `pnpm --filter @acme/web exec vitest run <test paths>`, and `pnpm build` for client/server boundaries. Preserve existing journal lifecycle/version test coverage. No runtime code changes are made by this planning PR, so those application checks are not evidence of this document's correctness.
 
-Observability: redacted counters for resolver latency/failure, unavailable targets, save/projection failures, backfill progress, cache hit rate, and optional provider timeouts. Never log note excerpts, titles, raw URLs, or full editor payloads. Validate batching with a 100-reference document and a long timeline: duplicate references resolve once per cache window; UI fetches remain bounded by visible/activated references.
+Observability: redacted counters for resolver latency/failure, unavailable targets, save/projection failures, backfill progress, cache hit rate, and provider timeouts. Never log note excerpts, titles, raw URLs, or full editor payloads. Validate batching with a 100-reference document and a long timeline: duplicate references resolve once per cache window; UI fetches remain bounded by visible/activated references.
 
 ### Approval and handoff checklist
 
-- [ ] Reviewer confirms or edits the defaults in section 3 and optional M5 scope.
+- [x] Reviewer approved defaults, section 11, and all planned features in one release.
 - [ ] Implementation agent records M0 compatibility findings and resolves any unsupported APIs before broad changes.
-- [ ] R1–R10 and #291's accessibility, ownership, fallback, and request-deduplication criteria have evidence.
+- [ ] R1–R14 and #291's accessibility, ownership, fallback, and request-deduplication criteria have evidence.
 - [ ] Backfill, deployment, and rollback steps are concrete and reviewed before rollout.
 - [ ] Implementation PR(s) link this design review; source preserved for handoff.
 - [ ] Delete this temporary spec from the implementation branch before merge; retain reviewed design in PR history. Do not merge an empty design-only PR just to mark it complete.
+
+## 13. Expanded single-release contracts: blocks, live embeds, and graph
+
+This section supplies the previously deferred functionality approved by the reviewer. Its contracts extend sections 5–10; all three features and section 11 are required release criteria. No intermediate public release of badge/card-only functionality is planned.
+
+### 13.1 Block identity, authoring, and projection
+
+The internal target is a document plus an optional block UUID. The document scopes authorization and routing; the block UUID selects a subtree within it. An empty block ID means the entire document. Block membership is validated by `(user_id, document_id, id)` on every resolve/save/content read. Do not accept a block from another document even when both belong to the same user.
+
+- `/Reference block` and a Blocks mode in the shared picker search existing owned blocks. `/Reference` and `[[` retain their document defaults and expose that mode explicitly. No extra Markdown trigger syntax is required.
+- Results show containing note title/type plus a maximum 160-character authored block excerpt. Return `{ documentId, blockId, documentTitle, snippet, href }`. Duplicate text never identifies a target.
+- Add Copy block link to the editor block menu. Canonical href is the containing page/entry route plus `#block=<uuid>`. Pasting/dropping it creates a badge/card using the same context rules as document references.
+- Block search uses the deterministic authored-text extractor over owned block snapshots, excludes code/reference-only blocks, and matches text without resolving nested targets. Limit defaults to 20/max 50, query max 200 characters, keyset order `(document_id, block_id)`. For scale, maintain a rebuildable `block_search_text` projection keyed by block ID in the save transaction; backfill it with references. Search is bounded by result limits and a query timeout, not by silently searching only recently opened notes.
+- Add optional `blockId` filters to preview, occurrence/backlink, neighbor, and content requests. Document backlinks include references targeting the document or any of its blocks. A block-specific backlink list includes only occurrences targeting that exact block; descendant membership does not imply an authored relationship.
+- A block preview returns the containing note's title/type and an excerpt of that block subtree. Add `targetBlockId?: string` to ready internal Preview. Missing blocks return unavailable; do not silently substitute the containing document.
+- Add `target_block_id` to the table and an incoming index `(user_id, target_document_id, target_block_id, source_document_id, source_block_id)`. CHECK requires it to be null for external targets. Deletion retains explicit target block IDs, while ordinary URL rows targeting deleted blocks are removed transactionally. No private target-text tombstone or target FK cascade.
+- Copying a source block creates a new source ID and preserves authorized target IDs. Reordering/reparenting within the same document preserves a target block's identity. A cross-document move is copy/delete under current persistence rules, so old references become unavailable; do not silently retarget them. A future true move requires its own identity migration.
+
+Save normalization and graph extraction handle all three custom types with the same ownership rules. An embed is an explicit occurrence with presentation `embed`; content displayed inside it never adds inherited edges to the host. A block target's graph key includes its block ID. Note-level AI queries aggregate those targets to their containing document, retaining the exact block target in occurrence provenance; block-scoped AI queries retain exact targets. Include the chosen scope in cursors and reject a cursor reused for another scope.
+
+### 13.2 Live, read-only document and block embeds
+
+Add `/Embed note`, `/Embed block`, and an Embed choice on an isolated internal badge/card. External references have no Embed choice. Conversion is a single undoable operation using the same scalar reference props; `contentEmbed` is a source block with no editable child content. Paste/drop still defaults to card/badge, and embedding requires an explicit choice.
+
+Render a source header (type/title, optional block context), live read-only content, and Open source/Display as/Copy link actions. Open source navigates to the exact target; edits occur in that source editor. Do not mount an editable BlockEditor or register a second active AI editor for an embed. Selection/copy within rendered content is allowed; typing, paste, deletion, AI acceptance, and block dragging affect only the host embed block or its own editor, never transcluded source data.
+
+Add `references.getEmbedContent({ targets: InternalTarget[], cursor?: string })`, where `InternalTarget` is the document branch of ReferenceTarget and the batch is at most 10 targets. Each owned target returns current versions, safe href/title, ordered blocks for the document or subtree, and `{ truncated, nextCursor }`. Reuse block reconstruction after authorization. Limit to 200 blocks per target and 500 blocks/256 KiB JSON per batch; page by deterministic document traversal position and bind cursors to target and content version. A version change resets pagination. Target deletion/membership failure produces unavailable without source metadata. Fetch only visible expanded embeds, coalesce requests across them, and cancel on unmount when there are no other consumers.
+
+Limits are loading/rendering budgets, not permanent truncation of the source: expose Load more within the remaining batch budget and Open source for the complete document. A note's top-level embed area may render at most 500 transcluded blocks at once; if exhausted, further expansion requires opening the source. Never retry recursively to fill a quota. Collapse large embeds locally without persisting display state into source props.
+
+Nested contentEmbed nodes render with an ancestor target-key set and a maximum nesting depth of 2 (root embed is depth 1). A repeated key shows “Circular reference — Open source”; a depth-limit node shows a compact reference card. Block targets use their full document/block key; enforce the depth and shared block budget even when different block keys form a cycle. Nested badges/cards remain references with controlled preview activation. A nested embed may fetch only after an explicit Expand action; no eager recursive request tree. Apply the same authorization and byte budget at every request.
+
+Cache with target and user scope, respecting the 30-second internal freshness policy. Invalidate embedded document/subtree content on save/delete of its containing document, including ancestor/block deletion, and metadata on rename. Renders use refreshed blocks without saving target content into the host, altering host timestamps, or triggering host embeddings. Cross-tab refresh occurs on focus/reopen; continuous collaboration remains outside scope.
+
+JSON/native clipboard retains only the host embed block and target identity. HTML/Markdown export emits an ordinary readable source link (with block fragment when applicable), never stale transcluded private content. Server indexing sees only authored host reference labels/fallbacks. Embedded targets' outgoing links remain their own provenance; the host has only its direct embed relationship. Deleting the host embed removes that occurrence and never deletes source content.
+
+### 13.3 Graph API and interaction
+
+Add a global authenticated `/graph` route with a sidebar Graph action and an Open graph action in page/entry/backlink views. A note-local graph is centered on that document and can include referenced block nodes. Nodes are owned documents and explicitly referenced blocks; external URLs appear as terminal source/provider nodes. No similarity-inferred nodes or edges. Use distinguishable shape/icon plus text for page, journal, block, and external types; do not rely on color alone.
+
+```ts
+type GraphRequest = {
+  seedDocumentId?: string; // absent: global graph
+  seedBlockId?: string;    // requires seedDocumentId
+  cursor?: string;
+  limit?: number;         // default 100, max 200 nodes
+  types?: ("page" | "journal" | "block" | "external")[];
+};
+type GraphResponse = {
+  nodes: { key: string; target: ReferenceTarget; title: string; href?: string;
+           kind: "page" | "journal" | "block" | "external" | "unavailable" }[];
+  edges: { fromKey: string; toKey: string; occurrenceCount: number;
+           presentations: ("link" | "badge" | "card" | "embed")[] }[];
+  nextCursor: string | null;
+  truncated: boolean;
+};
+// references.getGraph(input: GraphRequest): GraphResponse
+```
+
+Every request returns at most 200 nodes, 500 edges, and 256 KiB. Apply ownership before clipping/counting. Global graph pages owned documents and their referenced nodes in stable key order; unused owned documents can appear as isolated nodes. A seeded graph loads one hop; expansion is a separate user-triggered seeded request. Include edges only when both endpoints appear in the returned node set. Mark clipping and permit Load more/Expand; never imply the bounded slice is the user's complete graph. Validate cursor against seed, filters, and sort mode. External nodes require no new provider request to draw the graph.
+
+For outgoing block provenance, anchor the edge at the containing document by default and expose the source block in the edge details; Show block nodes adds block target nodes and their containing-document association. These containment associations are styled separately and excluded from semantic adjacency/backlink counts. Aggregate repeated direct occurrences into a single displayed edge with a count. References to unavailable targets show anonymous “Content unavailable” terminal nodes only when authored by the current user; never reuse cached private titles or enumerate foreign IDs.
+
+Use an interactive client SVG graph with deterministic initial layout, pan/zoom, fit/reset, type filters, select node, and explicit Open. Cap the accumulated visible graph at 200 nodes/500 edges; expanding beyond the cap replaces the seed view rather than growing indefinitely. Layout stays on the client and never requires a new graph database. Freeze/reuse layout positions on metadata refresh; respect reduced motion and avoid continuous force animation.
+
+Provide an equivalent searchable node/connection list and edge-provenance panel alongside the visualization. Keyboard users can select a node, list incoming/outgoing neighbors, inspect occurrence counts/snippets, and open source blocks without navigating an SVG-only interaction. Graph edges use existing occurrence/backlink APIs for provenance, up to 3 snippets with Load more. Screen readers receive titles, types, directions, and bounded-result announcements. Unavailable nodes have no Open action.
+
+Add `apps/web/src/app/(app)/graph/page.tsx`, its client graph/list components, and shared reference graph queries. Verify node selection does not navigate automatically while users pan/select; link navigation requires Open or keyboard activation. Graph UI uses saved content, never rejected/unsaved AI drafts; refresh/invalidate on reference commits, source deletion, and metadata changes. Graph exploration does not increase the AI tool's one-hop scope.
+
+### 13.4 Unified completion gate
+
+M0 must verify all three persisted custom types and both document/block targets together. M1's initial additive schema includes target-block and embed support; do not deploy intermediate target schemas as separate releases. Extend the single backfill to build block-search text. M6–M8 can be developed after their server/editor prerequisites; section 11 can proceed after the shared preview/provider boundary is ready.
+
+Before release, verify R1–R14, M0–M8, all required verification rows in section 12, and the original issue's criteria. Provider unavailability still uses designed fallbacks, but missing provider implementation is incomplete. Cycles/large embeds still use designed bounded rendering, but missing embed or graph UI is incomplete. Remove the temporary spec only after the implementation handoff is preserved in this PR and release criteria have concrete review evidence.

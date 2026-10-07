@@ -12,12 +12,12 @@ import {
 } from "@acme/db/schema";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod/v4";
-import { env } from "~/env";
+import { env } from "../../env";
 import {
   extractReferenceOccurrences,
   getTargetKey,
   zReferenceProps,
-} from "~/references/reference-utils";
+} from "../../references/reference-utils";
 import type { TRPCContext } from "../trpc";
 
 export const zBlockTransactions = z.object({

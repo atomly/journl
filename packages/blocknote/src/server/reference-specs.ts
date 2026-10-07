@@ -1,24 +1,10 @@
-import {
-  createBlockSpec,
-  createInlineContentSpec,
-} from "@blocknote/core";
+import { createBlockSpec, createInlineContentSpec } from "@blocknote/core";
 import {
   contentEmbedConfig,
   contentReferenceConfig,
   referenceCardConfig,
 } from "../reference-config";
-
-function safeHref(url: string) {
-  if (url.startsWith("/")) return url;
-  try {
-    const parsed = new URL(url);
-    return parsed.protocol === "https:" || parsed.protocol === "http:"
-      ? parsed.toString()
-      : "#";
-  } catch {
-    return "#";
-  }
-}
+import { safeReferenceHref as safeHref } from "../reference-href";
 
 function linkElement(url: string, label: string) {
   const link = document.createElement("a");

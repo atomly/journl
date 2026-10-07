@@ -194,10 +194,7 @@ export function useBlockEditor({
           reconcile({
             blockId: result.target.blockId ?? "",
             documentId: result.target.documentId,
-            label:
-              result.preview.status === "ready"
-                ? (result.preview.title ?? "")
-                : "",
+            label: "",
             targetKind: "document",
             url:
               result.preview.status === "ready"
@@ -206,10 +203,7 @@ export function useBlockEditor({
           });
         } else {
           reconcile({
-            label:
-              result.preview.status === "ready"
-                ? (result.preview.title ?? "")
-                : parsed.hostname,
+            label: "",
             targetKind: "external",
             url: result.target.url,
           });

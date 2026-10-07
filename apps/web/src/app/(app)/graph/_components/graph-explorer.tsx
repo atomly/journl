@@ -1,9 +1,9 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { ExternalLink, Maximize2, RotateCcw } from "lucide-react";
+import { ExternalLink, Maximize2, Minus, Plus, RotateCcw } from "lucide-react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
@@ -17,69 +17,35 @@ type GraphNode = GraphData["nodes"][number];
 const WIDTH = 920;
 const HEIGHT = 520;
 
-function mergeGraphPages(pages: GraphData[]): GraphData | undefined {
-  if (pages.length === 0) return undefined;
-  const nodes = new Map<string, GraphNode>();
-  const edges = new Map<string, GraphData["edges"][number]>();
-  for (const page of pages) {
-    for (const node of page.nodes) nodes.set(node.key, node);
-    for (const edge of page.edges) {
-      const key = `${edge.fromKey}|${edge.toKey}`;
-      const existing = edges.get(key);
-      if (!existing) {
-        edges.set(key, {
-          ...edge,
-          presentations: [...edge.presentations],
-          sourceBlocks: [...edge.sourceBlocks],
-        });
-        continue;
-      }
-      existing.occurrenceCount += edge.occurrenceCount;
-      existing.presentations = [
-        ...new Set([...existing.presentations, ...edge.presentations]),
-      ];
-      existing.sourceBlocks = [
-        ...new Set([...existing.sourceBlocks, ...edge.sourceBlocks]),
-      ].slice(0, 3);
-    }
-  }
-  const lastPage = pages.at(-1);
-  return {
-    edges: [...edges.values()],
-    nextCursor: lastPage?.nextCursor ?? null,
-    nodes: [...nodes.values()].sort((a, b) => a.key.localeCompare(b.key)),
-    truncated: lastPage?.truncated ?? false,
-  };
-}
-
 function nodePosition(index: number, total: number) {
   if (total <= 1) return { x: WIDTH / 2, y: HEIGHT / 2 };
-  const angle = (index / total) * Math.PI * 2 - Math.PI / 2;
-  const radius = Math.min(WIDTH, HEIGHT) * 0.34;
+  const angle = index * 2.399963229728653;
+  const radius = Math.sqrt((index + 0.5) / total);
   return {
-    x: WIDTH / 2 + Math.cos(angle) * radius,
-    y: HEIGHT / 2 + Math.sin(angle) * radius,
+    x: WIDTH / 2 + Math.cos(angle) * radius * WIDTH * 0.4,
+    y: HEIGHT / 2 + Math.sin(angle) * radius * HEIGHT * 0.37,
   };
 }
 
 function nodeColor(kind: GraphNode["kind"]) {
   switch (kind) {
     case "page":
-      return "#3b82f6";
+      return "var(--chart-1)";
     case "journal":
-      return "#10b981";
+      return "var(--chart-2)";
     case "block":
-      return "#8b5cf6";
+      return "var(--primary)";
     case "external":
-      return "#f59e0b";
+      return "var(--chart-3)";
     default:
-      return "#94a3b8";
+      return "var(--muted-foreground)";
   }
 }
 
 export function GraphExplorer() {
   const trpc = useTRPC();
   const params = useSearchParams();
+  const router = useRouter();
   const [seedDocumentId, setSeedDocumentId] = useState<string | undefined>(
     () => params.get("documentId") ?? undefined,
   );
@@ -87,10 +53,9 @@ export function GraphExplorer() {
     () => params.get("blockId") ?? undefined,
   );
   const [cursor, setCursor] = useState<string | undefined>();
-  const [pageCache, setPageCache] = useState<{
-    pages: Array<{ cursor?: string; data: GraphData }>;
-    scope: string;
-  }>({ pages: [], scope: "" });
+  const [previousCursors, setPreviousCursors] = useState<
+    Array<string | undefined>
+  >([]);
   const [showBlocks, setShowBlocks] = useState(true);
   const [showExternal, setShowExternal] = useState(true);
   const [selectedKey, setSelectedKey] = useState<string>();
@@ -116,36 +81,16 @@ export function GraphExplorer() {
     ],
   });
   const { data, error, isPending, refetch } = useQuery(graphQuery);
-  const graphScope = JSON.stringify({
-    seedBlockId,
-    seedDocumentId,
-    showBlocks,
-    showExternal,
-  });
+  const urlDocumentId = params.get("documentId") ?? undefined;
+  const urlBlockId = params.get("blockId") ?? undefined;
   useEffect(() => {
-    if (!data) return;
-    setPageCache((previous) => {
-      if (previous.scope !== graphScope || !cursor) {
-        return { pages: [{ cursor, data }], scope: graphScope };
-      }
-      const existingPage = previous.pages.findIndex(
-        (page) => page.cursor === cursor,
-      );
-      if (existingPage >= 0) {
-        const pages = [...previous.pages];
-        pages[existingPage] = { cursor, data };
-        return { pages, scope: graphScope };
-      }
-      return {
-        pages: [...previous.pages, { cursor, data }],
-        scope: graphScope,
-      };
-    });
-  }, [cursor, data, graphScope]);
-  const graphData =
-    pageCache.scope === graphScope
-      ? mergeGraphPages(pageCache.pages.map((page) => page.data))
-      : data;
+    setSeedDocumentId(urlDocumentId);
+    setSeedBlockId(urlBlockId);
+    setCursor(undefined);
+    setPreviousCursors([]);
+    setSelectedKey(undefined);
+  }, [urlDocumentId, urlBlockId]);
+  const graphData = data;
   const nodes = graphData?.nodes ?? [];
   const edges = graphData?.edges ?? [];
   const selected = nodes.find((node) => node.key === selectedKey);
@@ -182,8 +127,13 @@ export function GraphExplorer() {
   );
 
   function openNode(node: GraphNode) {
-    if (node.href && node.kind !== "unavailable")
-      window.location.assign(node.href);
+    if (!node.href || node.kind === "unavailable") return;
+    if (node.kind === "external")
+      window.open(node.href, "_blank", "noopener,noreferrer");
+    else {
+      const route = new URL(node.href, window.location.origin);
+      router.push(`${route.pathname}${route.search}${route.hash}`);
+    }
   }
 
   function expandNode(node: GraphNode) {
@@ -192,10 +142,23 @@ export function GraphExplorer() {
     setSeedBlockId(node.target.blockId);
     setCursor(undefined);
     setSelectedKey(undefined);
+    setPreviousCursors([]);
+    setZoom(1);
+    setPan({ x: 0, y: 0 });
+  }
+
+  function resetGraph() {
+    setSeedDocumentId(undefined);
+    setSeedBlockId(undefined);
+    setCursor(undefined);
+    setPreviousCursors([]);
+    setSelectedKey(undefined);
+    setZoom(1);
+    setPan({ x: 0, y: 0 });
   }
 
   return (
-    <main className="mx-auto flex h-full w-full max-w-7xl flex-col gap-4 p-4 md:p-8">
+    <main className="mx-auto flex h-full w-full max-w-7xl flex-col gap-4 px-6 py-6 md:px-8">
       <header className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="font-semibold text-2xl">Knowledge graph</h1>
@@ -205,24 +168,39 @@ export function GraphExplorer() {
           </p>
         </div>
         <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={resetGraph}>
+            <RotateCcw aria-hidden="true" /> Reset
+          </Button>
           <Button
             variant="outline"
             size="sm"
             onClick={() => {
-              setSeedDocumentId(undefined);
-              setSeedBlockId(undefined);
-              setCursor(undefined);
+              setZoom(1);
+              setPan({ x: 0, y: 0 });
             }}
           >
-            <RotateCcw aria-hidden="true" /> Reset
-          </Button>
-          <Button variant="outline" size="sm" onClick={() => setZoom(1)}>
             <Maximize2 aria-hidden="true" /> Fit
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            aria-label="Zoom out"
+            onClick={() => setZoom((value) => Math.max(0.5, value - 0.25))}
+          >
+            <Minus aria-hidden="true" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            aria-label="Zoom in"
+            onClick={() => setZoom((value) => Math.min(2.5, value + 0.25))}
+          >
+            <Plus aria-hidden="true" />
           </Button>
         </div>
       </header>
 
-      <div className="flex flex-wrap gap-x-5 gap-y-2 rounded-lg border bg-card p-3 text-sm">
+      <div className="flex flex-wrap gap-x-5 gap-y-2 border-b pb-3 text-sm">
         <label className="flex items-center gap-2">
           <input
             type="checkbox"
@@ -230,6 +208,8 @@ export function GraphExplorer() {
             onChange={(event) => {
               setShowBlocks(event.target.checked);
               setCursor(undefined);
+              setPreviousCursors([]);
+              setSelectedKey(undefined);
             }}
           />{" "}
           Block targets
@@ -241,6 +221,8 @@ export function GraphExplorer() {
             onChange={(event) => {
               setShowExternal(event.target.checked);
               setCursor(undefined);
+              setPreviousCursors([]);
+              setSelectedKey(undefined);
             }}
           />{" "}
           External links
@@ -271,93 +253,118 @@ export function GraphExplorer() {
             className="min-h-[440px] overflow-hidden rounded-xl border bg-card"
             aria-label="Interactive graph visualization"
           >
-            <svg
-              aria-label="Graph connections. Select a circle to inspect it; use Open to navigate."
-              className="h-full min-h-[440px] w-full touch-none"
-              role="img"
-              viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
-              onPointerDown={(event) =>
-                setDrag({
-                  panX: pan.x,
-                  panY: pan.y,
-                  x: event.clientX,
-                  y: event.clientY,
-                })
-              }
-              onPointerMove={(event) => {
-                if (drag)
-                  setPan({
-                    x: drag.panX + event.clientX - drag.x,
-                    y: drag.panY + event.clientY - drag.y,
+            {nodes.length === 0 ? (
+              <div className="flex min-h-[440px] flex-col items-center justify-center gap-2 px-6 text-center">
+                <p className="font-medium">No connections yet</p>
+                <p className="max-w-sm text-muted-foreground text-sm">
+                  Reference a note with [[ or paste a link into the editor to
+                  start connecting your ideas.
+                </p>
+              </div>
+            ) : (
+              <svg
+                aria-label="Graph connections. Select a circle to inspect it; use Open to navigate."
+                className="h-full min-h-[440px] w-full touch-none"
+                role="img"
+                viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
+                onPointerDown={(event) => {
+                  if ((event.target as Element).closest("a")) return;
+                  event.currentTarget.setPointerCapture(event.pointerId);
+                  setDrag({
+                    panX: pan.x,
+                    panY: pan.y,
+                    x: event.clientX,
+                    y: event.clientY,
                   });
-              }}
-              onPointerUp={() => setDrag(undefined)}
-              onPointerLeave={() => setDrag(undefined)}
-              onWheel={(event) => {
-                event.preventDefault();
-                setZoom((current) =>
-                  Math.max(0.5, Math.min(2.5, current - event.deltaY * 0.001)),
-                );
-              }}
-            >
-              <g
-                transform={`translate(${pan.x} ${pan.y}) translate(${WIDTH / 2} ${HEIGHT / 2}) scale(${zoom}) translate(${-WIDTH / 2} ${-HEIGHT / 2})`}
+                }}
+                onPointerMove={(event) => {
+                  if (drag) {
+                    const scale =
+                      WIDTH / event.currentTarget.getBoundingClientRect().width;
+                    setPan({
+                      x: drag.panX + (event.clientX - drag.x) * scale,
+                      y: drag.panY + (event.clientY - drag.y) * scale,
+                    });
+                  }
+                }}
+                onPointerUp={() => setDrag(undefined)}
+                onPointerCancel={() => setDrag(undefined)}
+                onWheel={(event) => {
+                  event.preventDefault();
+                  setZoom((current) =>
+                    Math.max(
+                      0.5,
+                      Math.min(2.5, current - event.deltaY * 0.001),
+                    ),
+                  );
+                }}
               >
-                {edges.map((edge) => {
-                  const from = positions.get(edge.fromKey);
-                  const to = positions.get(edge.toKey);
-                  if (!from || !to) return null;
-                  return (
-                    <line
-                      key={`${edge.fromKey}|${edge.toKey}`}
-                      x1={from.x}
-                      x2={to.x}
-                      y1={from.y}
-                      y2={to.y}
-                      stroke="currentColor"
-                      strokeOpacity="0.28"
-                      strokeWidth={Math.min(5, 1 + edge.occurrenceCount / 2)}
-                    />
-                  );
-                })}
-                {nodes.map((node) => {
-                  const point = positions.get(node.key);
-                  if (!point) return null;
-                  const selectedNode = selectedKey === node.key;
-                  return (
-                    <a
-                      key={node.key}
-                      href={`#graph-node-${encodeURIComponent(node.key)}`}
-                      aria-label={`Select ${node.title}`}
-                      onClick={(event) => {
-                        event.preventDefault();
-                        setSelectedKey(node.key);
-                      }}
-                    >
-                      <g>
-                        <circle
-                          cx={point.x}
-                          cy={point.y}
-                          r={selectedNode ? 18 : 14}
-                          fill={nodeColor(node.kind)}
-                          stroke={selectedNode ? "currentColor" : "white"}
-                          strokeWidth={selectedNode ? 4 : 2}
-                        />
-                        <text
-                          x={point.x}
-                          y={point.y + 33}
-                          textAnchor="middle"
-                          fontSize="12"
-                          fill="currentColor"
-                        >
-                          {node.title.slice(0, 24)}
-                        </text>
-                      </g>
-                    </a>
-                  );
-                })}
-              </g>
-            </svg>
+                <g
+                  transform={`translate(${pan.x} ${pan.y}) translate(${WIDTH / 2} ${HEIGHT / 2}) scale(${zoom}) translate(${-WIDTH / 2} ${-HEIGHT / 2})`}
+                >
+                  {edges.map((edge) => {
+                    const from = positions.get(edge.fromKey);
+                    const to = positions.get(edge.toKey);
+                    if (!from || !to) return null;
+                    return (
+                      <line
+                        key={`${edge.fromKey}|${edge.toKey}`}
+                        x1={from.x}
+                        x2={to.x}
+                        y1={from.y}
+                        y2={to.y}
+                        stroke="currentColor"
+                        strokeOpacity="0.28"
+                        strokeWidth={Math.min(5, 1 + edge.occurrenceCount / 2)}
+                      />
+                    );
+                  })}
+                  {nodes.map((node) => {
+                    const point = positions.get(node.key);
+                    if (!point) return null;
+                    const selectedNode = selectedKey === node.key;
+                    return (
+                      <a
+                        key={node.key}
+                        href={`#graph-node-${encodeURIComponent(node.key)}`}
+                        aria-label={`Select ${node.title}`}
+                        onClick={(event) => {
+                          event.preventDefault();
+                          setSelectedKey(node.key);
+                        }}
+                      >
+                        <g>
+                          <circle
+                            cx={point.x}
+                            cy={point.y}
+                            r={selectedNode ? 18 : 14}
+                            fill={nodeColor(node.kind)}
+                            stroke={
+                              selectedNode ? "var(--foreground)" : "var(--card)"
+                            }
+                            strokeWidth={selectedNode ? 4 : 2}
+                          />
+                          <title>
+                            {node.title} · {node.kind}
+                          </title>
+                          {(nodes.length <= 30 || selectedNode) && (
+                            <text
+                              x={point.x}
+                              y={point.y + 33}
+                              textAnchor="middle"
+                              fontSize="12"
+                              fill="currentColor"
+                            >
+                              {node.title.slice(0, 24)}
+                            </text>
+                          )}
+                        </g>
+                      </a>
+                    );
+                  })}
+                </g>
+              </svg>
+            )}
           </section>
 
           <aside className="flex min-h-0 flex-col gap-3 rounded-xl border bg-card p-4">
@@ -481,14 +488,32 @@ export function GraphExplorer() {
             {graphData?.nextCursor && (
               <Button
                 variant="outline"
-                onClick={() => setCursor(graphData.nextCursor ?? undefined)}
+                onClick={() => {
+                  setPreviousCursors((previous) => [...previous, cursor]);
+                  setCursor(graphData.nextCursor ?? undefined);
+                  setSelectedKey(undefined);
+                  setZoom(1);
+                  setPan({ x: 0, y: 0 });
+                }}
               >
-                Load more nodes
+                Next graph view
+              </Button>
+            )}
+            {previousCursors.length > 0 && (
+              <Button
+                variant="ghost"
+                onClick={() => {
+                  setCursor(previousCursors.at(-1));
+                  setPreviousCursors((previous) => previous.slice(0, -1));
+                  setSelectedKey(undefined);
+                }}
+              >
+                Previous graph view
               </Button>
             )}
             {seedDocumentId && (
-              <Button variant="link" asChild>
-                <Link href="/graph">Return to full graph</Link>
+              <Button variant="link" onClick={resetGraph}>
+                Return to full graph
               </Button>
             )}
           </aside>

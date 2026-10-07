@@ -26,7 +26,7 @@ import {
   useAIDictionary,
 } from "@blocknote/xl-ai";
 import { useQueryClient } from "@tanstack/react-query";
-import { Link2 } from "lucide-react";
+import { Check, Link2, MessageSquarePlus, Unlink } from "lucide-react";
 import { useState } from "react";
 import { RiSparkling2Fill } from "react-icons/ri";
 import removeMarkdown from "remove-markdown";
@@ -110,12 +110,12 @@ function BlockEditorCopyBlockLinkButton() {
 
   return (
     <Components.FormattingToolbar.Button
+      label={copied ? "Block link copied" : "Copy block link"}
       mainTooltip={copied ? "Block link copied" : "Copy block link"}
       onClick={() => void copyBlockLink()}
       className="shrink-0"
     >
-      <Link2 aria-hidden="true" />
-      {copied ? "Copied" : "Copy block link"}
+      {copied ? <Check aria-hidden="true" /> : <Link2 aria-hidden="true" />}
     </Components.FormattingToolbar.Button>
   );
 }
@@ -198,6 +198,7 @@ function BlockEditorConvertLinkButton() {
 
   return (
     <Components.FormattingToolbar.Button
+      label="Convert link to reference badge"
       mainTooltip={
         converted
           ? "Link converted to reference"
@@ -206,8 +207,7 @@ function BlockEditorConvertLinkButton() {
       onClick={() => void convertLink()}
       className="shrink-0"
     >
-      <Link2 aria-hidden="true" />
-      {converted ? "Converted" : "Convert link"}
+      {converted ? <Check aria-hidden="true" /> : <Link2 aria-hidden="true" />}
     </Components.FormattingToolbar.Button>
   );
 }
@@ -380,7 +380,7 @@ export function BlockEditorReferenceMenu() {
               insertPickedReference(editor, mode, {
                 blockId: match.blockId,
                 documentId: match.documentId,
-                label: `${match.documentTitle} · ${match.snippet}`,
+                label: "",
                 resolutionToken: "",
                 targetKind: "document",
                 url: match.href,
@@ -422,7 +422,7 @@ export function BlockEditorReferenceMenu() {
                           : "",
                       documentId:
                         target.kind === "document" ? target.documentId : "",
-                      label,
+                      label: "",
                       resolutionToken: "",
                       targetKind: target.kind,
                       url:
@@ -460,7 +460,7 @@ export function BlockEditorReferenceMenu() {
             insertPickedReference(editor, mode, {
               blockId: "",
               documentId: target.documentId,
-              label: target.title,
+              label: "",
               resolutionToken: "",
               targetKind: "document",
               url: target.href,
@@ -478,6 +478,7 @@ export function BlockEditorReferenceMenu() {
  * Button to add a block selection.
  */
 function BlockEditorSelectionButton() {
+  const isMobile = useIsMobile();
   const editor = useBlockNoteEditor(schema);
   const Components = useComponentsContext();
   const { setSelection, getSelection, unsetSelection } = useJournlAgent();
@@ -520,12 +521,21 @@ function BlockEditorSelectionButton() {
 
   return (
     <Components.FormattingToolbar.Button
+      label={text}
       mainTooltip={text}
       onClick={onClick}
       isSelected={Boolean(selection)}
       className="shrink-0"
     >
-      {text}
+      {isMobile ? (
+        selection ? (
+          <Unlink aria-hidden="true" />
+        ) : (
+          <MessageSquarePlus aria-hidden="true" />
+        )
+      ) : (
+        text
+      )}
     </Components.FormattingToolbar.Button>
   );
 }

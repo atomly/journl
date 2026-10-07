@@ -1,8 +1,22 @@
 import {
   createReactBlockSpec,
   createReactInlineContentSpec,
+  useComponentsContext,
+  usePortalElement,
 } from "@blocknote/react";
-import { useContext, useEffect, useMemo, useRef, useState } from "react";
+import {
+  type ReactNode,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import {
+  contentEmbedConfig,
+  contentReferenceConfig,
+  referenceCardConfig,
+} from "./reference-config";
 import {
   type ReferenceEmbedBlock,
   type ReferenceEmbedResult,
@@ -10,24 +24,9 @@ import {
   ReferenceRenderContext,
   type ReferenceRenderTarget,
 } from "./reference-context";
-import {
-  contentEmbedConfig,
-  contentReferenceConfig,
-  referenceCardConfig,
-} from "./reference-config";
-export { referenceProps } from "./reference-config";
+import { safeReferenceHref as safeHref } from "./reference-href";
 
-function safeHref(url: string) {
-  if (url.startsWith("/")) return url;
-  try {
-    const parsed = new URL(url);
-    return parsed.protocol === "https:" || parsed.protocol === "http:"
-      ? parsed.toString()
-      : "#";
-  } catch {
-    return "#";
-  }
-}
+export { referenceProps } from "./reference-config";
 
 function targetFromProps(
   props: Record<string, unknown>,
@@ -47,16 +46,13 @@ function targetFromProps(
         : {}),
     };
   }
-  if (props.targetKind === "external" && typeof props.url === "string") {
+  if (
+    props.targetKind === "external" &&
+    typeof props.url === "string" &&
+    safeHref(props.url) !== "#"
+  ) {
     try {
-      const url = new URL(props.url);
-      if (
-        (url.protocol === "https:" || url.protocol === "http:") &&
-        !url.username &&
-        !url.password
-      ) {
-        return { kind: "external", url: url.toString() };
-      }
+      return { kind: "external", url: new URL(props.url).toString() };
     } catch {
       return null;
     }
@@ -69,169 +65,258 @@ function usePreview(target: ReferenceRenderTarget | null, enabled: boolean) {
   const [preview, setPreview] = useState<ReferencePreviewData>();
   const [loading, setLoading] = useState(false);
   useEffect(() => {
-    if (!enabled || !target || !adapter) return;
+    setPreview(undefined);
+    if (!enabled || !target || !adapter) {
+      setLoading(false);
+      return;
+    }
     let active = true;
     setLoading(true);
-    void adapter
-      .loadPreview(target)
-      .then((result) => {
-        if (active) setPreview(result);
-      })
-      .catch(() => {
-        if (active) setPreview({ status: "unavailable" });
-      })
-      .finally(() => {
-        if (active) setLoading(false);
-      });
+    const receive = (result: ReferencePreviewData) => {
+      if (active) {
+        setPreview(result);
+        setLoading(false);
+      }
+    };
+    const unsubscribe = adapter.subscribePreview?.(target, receive);
+    if (!unsubscribe)
+      void adapter
+        .loadPreview(target)
+        .then(receive)
+        .catch(() => receive({ status: "unavailable" }));
     return () => {
       active = false;
+      unsubscribe?.();
     };
   }, [adapter, enabled, target]);
   return { adapter, loading, preview };
 }
 
+function ReferenceIcon({ target }: { target: ReferenceRenderTarget | null }) {
+  const github =
+    target?.kind === "external" &&
+    new URL(target.url).hostname === "github.com";
+  return (
+    <svg
+      className="content-reference-icon"
+      aria-hidden="true"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.7"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      {github ? (
+        <path d="M9 19c-4.3 1.3-4.3-2.5-6-3m12 6v-3.9a3.4 3.4 0 0 0-1-2.7c3.3-.4 6.8-1.6 6.8-7A5.4 5.4 0 0 0 19.3 5a5 5 0 0 0-.1-3.4s-1.2-.4-3.9 1.5a13.4 13.4 0 0 0-7 0C5.6 1.2 4.4 1.6 4.4 1.6A5 5 0 0 0 4.3 5a5.4 5.4 0 0 0-1.5 3.7c0 5.4 3.5 6.6 6.8 7a3.4 3.4 0 0 0-1 2.7V22" />
+      ) : target?.kind === "external" ? (
+        <>
+          <path d="M15 3h6v6M10 14 21 3" />
+          <path d="M21 14v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5" />
+        </>
+      ) : (
+        <>
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+          <path d="M14 2v6h6M8 13h8M8 17h6" />
+        </>
+      )}
+    </svg>
+  );
+}
+
+type Display = "contentEmbed" | "referenceCard" | "link";
+function DisplayMenu({
+  options,
+  onChange,
+}: {
+  options: Display[];
+  onChange: (display: Display) => void;
+}) {
+  const Components = useComponentsContext();
+  const portalElement = usePortalElement();
+  if (!Components || !options.length) return null;
+  const Menu = Components.Generic.Menu;
+  return (
+    <Menu.Root
+      portalElement={portalElement}
+      position="bottom-end"
+      preventFocusOnOpen
+    >
+      <Menu.Trigger>
+        <button
+          type="button"
+          className="content-reference-action"
+          aria-label="Reference display options"
+          title="Display as"
+        >
+          <svg aria-hidden="true" viewBox="0 0 24 24" fill="currentColor">
+            <circle cx="5" cy="12" r="1.8" />
+            <circle cx="12" cy="12" r="1.8" />
+            <circle cx="19" cy="12" r="1.8" />
+          </svg>
+        </button>
+      </Menu.Trigger>
+      <Menu.Dropdown>
+        <Menu.Label>Display as</Menu.Label>
+        {options.map((display) => (
+          <Menu.Item key={display} onClick={() => onChange(display)}>
+            {display === "contentEmbed"
+              ? "Embed"
+              : display === "referenceCard"
+                ? "Card"
+                : "Link"}
+          </Menu.Item>
+        ))}
+      </Menu.Dropdown>
+    </Menu.Root>
+  );
+}
+
+function fallbackTitle(target: ReferenceRenderTarget | null, url: string) {
+  if (target?.kind === "external") {
+    const parsed = new URL(target.url);
+    return parsed.hostname === "github.com"
+      ? `GitHub · ${parsed.pathname.slice(1) || "github.com"}`
+      : parsed.hostname;
+  }
+  return target ? "Referenced note" : url || "Referenced content";
+}
+
 function ReferenceBadge({
   props,
   contentRef,
+  readOnly = false,
 }: {
   props: Record<string, unknown>;
   contentRef: (element: HTMLElement | null) => void;
+  readOnly?: boolean;
 }) {
   const target = useMemo(() => targetFromProps(props), [props]);
   const elementRef = useRef<HTMLElement | null>(null);
   const [active, setActive] = useState(false);
-  const { adapter, loading, preview } = usePreview(target, active);
+  const Components = useComponentsContext();
+  const portalElement = usePortalElement();
+  const { adapter, loading, preview } = usePreview(target, true);
   const fallbackHref = typeof props.url === "string" ? props.url : "#";
-  const href =
-    preview?.status === "ready" ? (preview.href ?? fallbackHref) : undefined;
+  const href = safeHref(
+    preview?.status === "ready" ? (preview.href ?? fallbackHref) : fallbackHref,
+  );
+  const authoredLabel = typeof props.label === "string" ? props.label : "";
   const label =
-    typeof props.label === "string" && props.label
-      ? props.label
-      : preview?.status === "ready"
-        ? (preview.title ?? "Referenced content")
-        : target?.kind === "external"
-          ? new URL(target.url).hostname
-          : "Referenced note";
-  const registerElement = (element: HTMLElement | null) => {
-    elementRef.current = element;
-    contentRef(element);
+    authoredLabel ||
+    (preview?.status === "ready" ? preview.title : undefined) ||
+    fallbackTitle(target, fallbackHref);
+  const sourceBlockId = () =>
+    elementRef.current?.closest<HTMLElement>("[data-id]")?.dataset.id;
+  const convert = (display: Display) => {
+    const blockId = sourceBlockId();
+    const inlineRoot = elementRef.current?.closest(".bn-inline-content");
+    const badges = inlineRoot
+      ? [...inlineRoot.querySelectorAll(".content-reference-wrap")]
+      : [];
+    const occurrenceIndex = badges.indexOf(elementRef.current as HTMLElement);
+    if (blockId && target)
+      adapter?.convertInline(
+        blockId,
+        target,
+        display,
+        display === "link" ? label : authoredLabel,
+        href,
+        occurrenceIndex < 0 ? undefined : occurrenceIndex,
+      );
+    setActive(false);
   };
+  const badge = (
+    <a
+      className="content-reference"
+      href={href}
+      rel={target?.kind === "external" ? "noopener noreferrer" : undefined}
+      target={target?.kind === "external" ? "_blank" : undefined}
+      onMouseEnter={() => setActive(true)}
+      onClick={(event) => {
+        if (!event.metaKey && !event.ctrlKey) {
+          event.preventDefault();
+          setActive(true);
+        }
+      }}
+      aria-label={`${label} reference`}
+    >
+      <ReferenceIcon target={target} />
+      <span>{label}</span>
+    </a>
+  );
+  const blockId = sourceBlockId();
+  const canConvert = Boolean(blockId && adapter?.canConvertInline?.(blockId));
   return (
-    <span className="content-reference-wrap" ref={registerElement}>
-      <a
-        className="content-reference"
-        href={safeHref(href ?? fallbackHref)}
-        rel="noopener noreferrer"
-        target="_blank"
-        onMouseEnter={() => setActive(true)}
-        onFocus={() => setActive(true)}
-        onClick={() => setActive(true)}
-        onMouseLeave={(event) => {
-          if (
-            !event.currentTarget.parentElement?.contains(
-              event.relatedTarget as Node | null,
-            )
-          ) {
-            setActive(false);
-          }
-        }}
-        onBlur={(event) => {
-          if (
-            !event.currentTarget.parentElement?.contains(
-              event.relatedTarget as Node | null,
-            )
-          ) {
-            setActive(false);
-          }
-        }}
-        aria-label={`${label} reference`}
-      >
-        {label}
-      </a>
-      {active && (loading || preview) && (
-        <span
-          className="content-reference-preview"
-          role="dialog"
-          aria-label={`${label} preview`}
+    <span
+      className="content-reference-wrap"
+      ref={(element) => {
+        elementRef.current = element;
+        contentRef(element);
+      }}
+    >
+      {Components ? (
+        <Components.Generic.Popover.Root
+          open={active}
+          onOpenChange={setActive}
+          portalElement={portalElement}
         >
-          {loading
-            ? "Loading preview…"
-            : preview?.status === "unavailable"
-              ? "Content unavailable"
-              : `${preview?.title ?? label}${preview?.excerpt ? ` — ${preview.excerpt}` : ""}`}
-          {href && adapter && (
-            <button
-              type="button"
-              onMouseDown={(event) => event.preventDefault()}
-              onClick={() => target && adapter.openTarget(target, href)}
-            >
-              Open
-            </button>
-          )}
-          {target && adapter && (
-            <div className="content-reference-display-actions">
-              {target.kind === "document" && (
-                <button
-                  type="button"
-                  onMouseDown={(event) => event.preventDefault()}
-                  onClick={() => {
-                    const blockId =
-                      elementRef.current?.closest<HTMLElement>("[data-id]")
-                        ?.dataset.id;
-                    if (blockId)
-                      adapter.convertInline(
-                        blockId,
-                        target,
-                        "contentEmbed",
-                        label,
-                        href ?? fallbackHref,
-                      );
-                  }}
-                >
-                  Display as embed
-                </button>
-              )}
+          <Components.Generic.Popover.Trigger>
+            {badge}
+          </Components.Generic.Popover.Trigger>
+          <Components.Generic.Popover.Content
+            className="content-reference-preview"
+            variant="form-popover"
+          >
+            <div className="content-reference-card-heading">
+              <ReferenceIcon target={target} />
+              <strong>
+                {preview?.status === "ready" ? (preview.title ?? label) : label}
+              </strong>
               <button
+                className="content-reference-action"
                 type="button"
-                onMouseDown={(event) => event.preventDefault()}
-                onClick={() => {
-                  const blockId =
-                    elementRef.current?.closest<HTMLElement>("[data-id]")
-                      ?.dataset.id;
-                  if (blockId)
-                    adapter.convertInline(
-                      blockId,
-                      target,
-                      "referenceCard",
-                      label,
-                      href ?? fallbackHref,
-                    );
-                }}
+                aria-label="Close preview"
+                onClick={() => setActive(false)}
               >
-                Display as card
-              </button>
-              <button
-                type="button"
-                onMouseDown={(event) => event.preventDefault()}
-                onClick={() => {
-                  const blockId =
-                    elementRef.current?.closest<HTMLElement>("[data-id]")
-                      ?.dataset.id;
-                  if (blockId)
-                    adapter.convertInline(
-                      blockId,
-                      target,
-                      "link",
-                      label,
-                      href ?? fallbackHref,
-                    );
-                }}
-              >
-                Display as link
+                ×
               </button>
             </div>
-          )}
-        </span>
+            <p className="content-reference-card-excerpt">
+              {loading
+                ? "Loading preview…"
+                : preview?.status === "unavailable"
+                  ? "Content unavailable"
+                  : preview?.excerpt || ""}
+            </p>
+            <div className="content-reference-preview-footer">
+              {target && preview?.status === "ready" && (
+                <button
+                  className="content-reference-open"
+                  type="button"
+                  onClick={() => adapter?.openTarget(target, href)}
+                >
+                  Open {target.kind === "external" ? "link" : "note"}{" "}
+                  <span aria-hidden="true">↗</span>
+                </button>
+              )}
+              {target && adapter?.editable && !readOnly && (
+                <DisplayMenu
+                  options={[
+                    ...(canConvert && target.kind === "document"
+                      ? ["contentEmbed" as const]
+                      : []),
+                    ...(canConvert ? ["referenceCard" as const] : []),
+                    "link",
+                  ]}
+                  onChange={convert}
+                />
+              )}
+            </div>
+          </Components.Generic.Popover.Content>
+        </Components.Generic.Popover.Root>
+      ) : (
+        badge
       )}
     </span>
   );
@@ -240,108 +325,110 @@ function ReferenceBadge({
 function ReferenceCardView({
   block,
 }: {
-  block: { id: string; props: Record<string, unknown> };
+  block: { id?: string; props: Record<string, unknown> };
 }) {
   const props = block.props;
   const target = useMemo(() => targetFromProps(props), [props]);
   const { adapter, loading, preview } = usePreview(target, true);
-  const label = typeof props.label === "string" ? props.label : "";
+  const authoredLabel = typeof props.label === "string" ? props.label : "";
   const title =
-    ((preview?.status === "ready" ? preview.title : undefined) ?? label) ||
-    "Referenced content";
-  const href =
+    (preview?.status === "ready" ? preview.title : undefined) ||
+    authoredLabel ||
+    fallbackTitle(target, String(props.url ?? ""));
+  const href = safeHref(
     (preview?.status === "ready" ? preview.href : undefined) ??
-    safeHref(String(props.url ?? "#"));
+      String(props.url ?? "#"),
+  );
   return (
     <article
       className="content-reference-card"
       aria-label={`${title} reference card`}
     >
       <div className="content-reference-card-heading">
-        <span aria-hidden="true">
-          {target?.kind === "external" ? "↗" : "▤"}
-        </span>
-        <a href={href} rel="noopener noreferrer" target="_blank">
+        <ReferenceIcon target={target} />
+        <a
+          href={href}
+          rel={target?.kind === "external" ? "noopener noreferrer" : undefined}
+          target={target?.kind === "external" ? "_blank" : undefined}
+          onClick={(event) => {
+            if (adapter && target && !event.metaKey && !event.ctrlKey) {
+              event.preventDefault();
+              adapter.openTarget(target, href);
+            }
+          }}
+        >
           {title}
         </a>
+        {block.id && adapter?.editable && target && (
+          <DisplayMenu
+            options={[
+              ...(target.kind === "document" ? ["contentEmbed" as const] : []),
+              "link",
+            ]}
+            onChange={(display) =>
+              adapter.convertBlock(
+                block.id as string,
+                target,
+                display,
+                display === "link" ? title : authoredLabel,
+                href,
+              )
+            }
+          />
+        )}
       </div>
       <p className="content-reference-card-excerpt">
         {loading
           ? "Loading preview…"
           : preview?.status === "unavailable"
             ? "Content unavailable"
-            : preview?.excerpt ||
-              (typeof props.url === "string" ? props.url : "")}
+            : preview?.excerpt || String(props.url ?? "")}
       </p>
-      {preview?.status === "ready" && adapter && (
-        <button
-          type="button"
-          onMouseDown={(event) => event.preventDefault()}
-          onClick={() => target && adapter.openTarget(target, href)}
-        >
-          Open source
-        </button>
-      )}
-      {adapter && target && (
-        <div className="content-reference-display-actions">
-          {target.kind === "document" && (
-            <button
-              type="button"
-              onMouseDown={(event) => event.preventDefault()}
-              onClick={() =>
-                adapter.convertBlock(
-                  block.id,
-                  target,
-                  "contentEmbed",
-                  title,
-                  href,
-                )
-              }
-            >
-              Display as embed
-            </button>
-          )}
-          <button
-            type="button"
-            onMouseDown={(event) => event.preventDefault()}
-            onClick={() =>
-              adapter.convertBlock(block.id, target, "link", title, href)
-            }
-          >
-            Display as link
-          </button>
-        </div>
-      )}
+      <span className="content-reference-source">
+        {preview?.kind === "journal"
+          ? "Journal entry"
+          : preview?.kind === "page"
+            ? "Page"
+            : target?.kind === "external"
+              ? new URL(target.url).hostname
+              : "Note"}
+        {preview?.sourceStatus ? ` · ${preview.sourceStatus}` : ""}
+      </span>
     </article>
   );
 }
 
-function renderInline(value: unknown, key: number): React.ReactNode {
+function renderInline(value: unknown, key: number): ReactNode {
   if (typeof value === "string") return value;
-  if (Array.isArray(value)) {
+  if (Array.isArray(value))
     return value.map((child, index) => renderInline(child, index));
-  }
   if (!value || typeof value !== "object") return null;
   const record = value as Record<string, unknown>;
-  if (record.type === "text")
-    return <span key={key}>{String(record.text ?? "")}</span>;
-  if (record.type === "link") {
+  if (record.type === "text") {
+    const styles = (record.styles ?? {}) as Record<string, unknown>;
+    let text: ReactNode = String(record.text ?? "");
+    if (styles.bold) text = <strong>{text}</strong>;
+    if (styles.italic) text = <em>{text}</em>;
+    if (styles.underline) text = <u>{text}</u>;
+    if (styles.strike) text = <s>{text}</s>;
+    if (styles.code) text = <code>{text}</code>;
+    return <span key={key}>{text}</span>;
+  }
+  if (record.type === "link")
     return (
       <a key={key} href={safeHref(String(record.href ?? "#"))}>
         {renderInline(record.content, key + 1)}
       </a>
     );
-  }
-  if (record.type === "contentReference") {
+  if (record.type === "contentReference")
     return (
-      <span key={key}>
-        {String(
-          (record.props as Record<string, unknown> | undefined)?.label ??
-            "Referenced note",
-        )}
-      </span>
+      <ReferenceBadge
+        key={key}
+        props={(record.props ?? {}) as Record<string, unknown>}
+        contentRef={() => {}}
+        readOnly
+      />
     );
-  }
   return null;
 }
 
@@ -359,55 +446,98 @@ function ReadOnlyBlocks({
       {blocks.map((block, index) => {
         const key = block.id ?? `${block.type}-${index}`;
         const content = renderInline(block.content, index);
+        let element: ReactNode;
         if (block.type === "heading") {
           const level = Number(block.props?.level ?? 2);
-          if (level === 1) return <h1 key={key}>{content}</h1>;
-          if (level === 3) return <h3 key={key}>{content}</h3>;
-          return <h2 key={key}>{content}</h2>;
-        }
-        if (
+          element =
+            level === 1 ? (
+              <h1>{content}</h1>
+            ) : level === 3 ? (
+              <h3>{content}</h3>
+            ) : (
+              <h2>{content}</h2>
+            );
+        } else if (
           ["bulletListItem", "numberedListItem", "checkListItem"].includes(
             block.type,
           )
         ) {
-          return (
-            <div key={key} className="content-embed-list-item">
-              • {content}
+          const marker =
+            block.type === "checkListItem" ? (
+              <input
+                type="checkbox"
+                checked={Boolean(block.props?.checked)}
+                disabled
+                aria-label="Embedded checklist item"
+              />
+            ) : block.type === "numberedListItem" ? (
+              `${Number(block.props?.start ?? index + 1)}.`
+            ) : (
+              "•"
+            );
+          element = (
+            <div className="content-embed-list-item">
+              <span>{marker}</span>
+              <div>{content}</div>
             </div>
           );
-        }
-        if (block.type === "codeBlock")
-          return (
-            <pre key={key}>
-              <code>{String(block.content ?? "")}</code>
+        } else if (block.type === "codeBlock")
+          element = (
+            <pre>
+              <code>{content}</code>
             </pre>
           );
-        if (block.type === "quote")
-          return <blockquote key={key}>{content}</blockquote>;
-        if (block.type === "divider") return <hr key={key} />;
-        if (block.type === "contentEmbed") {
-          return (
+        else if (block.type === "quote")
+          element = <blockquote>{content}</blockquote>;
+        else if (block.type === "divider") element = <hr />;
+        else if (block.type === "contentEmbed")
+          element = (
             <ReferenceEmbedView
-              key={key}
               props={block.props ?? {}}
               depth={depth + 1}
               ancestorKeys={ancestorKeys}
             />
           );
-        }
-        if (block.type === "referenceCard") {
-          return (
-            <p key={key}>
-              {String(
-                block.props?.label ?? block.props?.url ?? "Referenced content",
-              )}
-            </p>
+        else if (block.type === "referenceCard")
+          element = <ReferenceCardView block={{ props: block.props ?? {} }} />;
+        else if (block.type === "table") {
+          const table = block.content as
+            | { rows?: Array<{ cells?: unknown[] }> }
+            | undefined;
+          element = (
+            <div className="content-embed-table">
+              <table>
+                <tbody>
+                  {table?.rows?.map((row, rowIndex) => (
+                    <tr key={`row-${rowIndex}`}>
+                      {row.cells?.map((cell, cellIndex) => (
+                        <td key={`cell-${cellIndex}`}>
+                          {renderInline(
+                            cell &&
+                              typeof cell === "object" &&
+                              !Array.isArray(cell)
+                              ? (cell as Record<string, unknown>).content
+                              : cell,
+                            cellIndex,
+                          )}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           );
-        }
+        } else element = <p>{content}</p>;
         return (
-          <p key={key}>
-            {content || (block.type === "table" ? "Table content" : "")}
-          </p>
+          <div
+            key={key}
+            style={{
+              paddingInlineStart: `${Math.min(block.depth ?? 0, 6) * 1.25}rem`,
+            }}
+          >
+            {element}
+          </div>
         );
       })}
     </div>
@@ -426,12 +556,14 @@ function ReferenceEmbedView({
   ancestorKeys: Set<string>;
 }) {
   const target = useMemo(() => targetFromProps(props), [props]);
-  const adapter = useContext(ReferenceRenderContext);
+  const { adapter, preview } = usePreview(target, true);
   const [expanded, setExpanded] = useState(false);
   const [content, setContent] = useState<ReferenceEmbedResult>();
   const [requestCursor, setRequestCursor] = useState<string>();
   const [nextCursor, setNextCursor] = useState<string>();
   const [loading, setLoading] = useState(false);
+  const [failed, setFailed] = useState(false);
+  const [retry, setRetry] = useState(0);
   const key =
     target?.kind === "document"
       ? `${target.documentId}#${target.blockId ?? ""}`
@@ -439,10 +571,15 @@ function ReferenceEmbedView({
   const circular = Boolean(key && ancestorKeys.has(key));
   const limitReached = depth > 2;
   useEffect(() => {
+    setContent(undefined);
+    setRequestCursor(undefined);
+    setNextCursor(undefined);
+    setExpanded(false);
+  }, [key]);
+  useEffect(() => {
     if (
       !expanded ||
-      !target ||
-      target.kind !== "document" ||
+      target?.kind !== "document" ||
       !adapter ||
       circular ||
       limitReached
@@ -450,113 +587,153 @@ function ReferenceEmbedView({
       return;
     let active = true;
     setLoading(true);
-    void adapter
-      .loadEmbedContent(target, requestCursor)
-      .then((result) => {
-        if (!active) return;
-        setContent((current) =>
-          result.status === "ready" && requestCursor
-            ? {
-                ...result,
-                blocks: [...(current?.blocks ?? []), ...(result.blocks ?? [])],
-              }
-            : result,
-        );
-        setNextCursor(result.nextCursor ?? undefined);
-      })
-      .finally(() => {
-        if (active) setLoading(false);
-      });
+    setFailed(false);
+    const receive = (result: ReferenceEmbedResult | null) => {
+      if (!active) return;
+      setLoading(false);
+      if (!result) {
+        setFailed(true);
+        return;
+      }
+      setContent((current) =>
+        result.status === "ready" &&
+        requestCursor &&
+        current?.contentUpdatedAt === result.contentUpdatedAt
+          ? {
+              ...result,
+              blocks: [
+                ...new Map(
+                  [...(current?.blocks ?? []), ...(result.blocks ?? [])].map(
+                    (block) => [block.id, block],
+                  ),
+                ).values(),
+              ],
+            }
+          : result,
+      );
+      setNextCursor(result.nextCursor ?? undefined);
+    };
+    const unsubscribe = adapter.subscribeEmbedContent?.(
+      target,
+      requestCursor,
+      receive,
+    );
+    if (!unsubscribe)
+      void adapter
+        .loadEmbedContent(target, requestCursor)
+        .then(receive)
+        .catch(() => receive(null));
     return () => {
       active = false;
+      unsubscribe?.();
     };
-  }, [adapter, circular, expanded, limitReached, requestCursor, target]);
+  }, [adapter, circular, expanded, limitReached, requestCursor, retry, target]);
+  const authoredLabel = typeof props.label === "string" ? props.label : "";
   const title =
-    typeof props.label === "string" && props.label
-      ? props.label
-      : "Embedded content";
-  if (target?.kind !== "document") {
+    content?.title ||
+    (preview?.status === "ready" ? preview.title : undefined) ||
+    authoredLabel ||
+    "Embedded note";
+  const href =
+    content?.href ?? (preview?.status === "ready" ? preview.href : undefined);
+  if (target?.kind !== "document")
     return <div className="content-embed-fallback">{title}</div>;
-  }
-  if (circular) {
+  if (circular || limitReached)
     return (
       <div className="content-embed-fallback">
-        Circular reference ·{" "}
-        <button type="button" onClick={() => adapter?.openTarget(target)}>
-          Open source
+        {circular ? "Circular reference" : title}
+        <button
+          className="content-reference-open"
+          type="button"
+          onClick={() => adapter?.openTarget(target, href)}
+        >
+          Open source ↗
         </button>
       </div>
     );
-  }
-  if (limitReached) {
-    return (
-      <div className="content-embed-fallback">
-        {title} ·{" "}
-        <button type="button" onClick={() => adapter?.openTarget(target)}>
-          Open source
-        </button>
-      </div>
-    );
-  }
   const nextAncestors = new Set(ancestorKeys);
   nextAncestors.add(key);
   return (
     <section className="content-embed" aria-label={`${title} live embed`}>
       <header className="content-embed-heading">
-        <strong>{content?.title ?? title}</strong>
         <button
+          className="content-embed-toggle"
           type="button"
+          aria-expanded={expanded}
           onMouseDown={(event) => event.preventDefault()}
-          onClick={() => setExpanded((value) => !value)}
+          onClick={() => {
+            setExpanded((value) => !value);
+            if (expanded) setRequestCursor(undefined);
+          }}
         >
-          {expanded ? "Collapse" : "Expand"}
+          <svg
+            aria-hidden="true"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            style={{ transform: expanded ? "rotate(90deg)" : undefined }}
+          >
+            <path d="m9 5 7 7-7 7" />
+          </svg>
+          <ReferenceIcon target={target} />
+          <strong>{title}</strong>
         </button>
         <button
+          className="content-reference-action"
           type="button"
+          aria-label="Open source note"
+          title="Open source note"
           onMouseDown={(event) => event.preventDefault()}
-          onClick={() => adapter?.openTarget(target, content?.href)}
+          onClick={() => adapter?.openTarget(target, href)}
         >
-          Open source
+          <svg
+            aria-hidden="true"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.7"
+          >
+            <path d="M15 3h6v6M10 14 21 3M21 14v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5" />
+          </svg>
         </button>
-        {blockId && adapter && (
-          <>
-            <button
-              type="button"
-              onMouseDown={(event) => event.preventDefault()}
-              onClick={() =>
-                adapter.convertBlock(
-                  blockId,
-                  target,
-                  "referenceCard",
-                  content?.title ?? title,
-                  content?.href ?? "",
-                )
-              }
-            >
-              Display as card
-            </button>
-            <button
-              type="button"
-              onMouseDown={(event) => event.preventDefault()}
-              onClick={() =>
-                adapter.convertBlock(
-                  blockId,
-                  target,
-                  "link",
-                  content?.title ?? title,
-                  content?.href ?? "",
-                )
-              }
-            >
-              Display as link
-            </button>
-          </>
+        {blockId && adapter?.editable && (
+          <DisplayMenu
+            options={["referenceCard", "link"]}
+            onChange={(display) =>
+              adapter.convertBlock(
+                blockId,
+                target,
+                display,
+                display === "link" ? title : authoredLabel,
+                href ?? String(props.url ?? ""),
+              )
+            }
+          />
         )}
       </header>
       {expanded && (
-        <>
-          {loading && !content && <p>Loading embedded content…</p>}
-          {content?.status === "unavailable" && <p>Content unavailable</p>}
+        <div className="content-embed-content">
+          {loading && !content && (
+            <p className="content-reference-status" role="status">
+              Loading embedded content…
+            </p>
+          )}
+          {failed && (
+            <p className="content-reference-status" role="status">
+              Could not load this note.{" "}
+              <button
+                className="content-reference-open"
+                type="button"
+                onClick={() => setRetry((value) => value + 1)}
+              >
+                Retry
+              </button>
+            </p>
+          )}
+          {content?.status === "unavailable" && (
+            <p className="content-reference-status">Content unavailable</p>
+          )}
           {content?.blocks && (
             <ReadOnlyBlocks
               blocks={content.blocks}
@@ -566,6 +743,7 @@ function ReferenceEmbedView({
           )}
           {nextCursor && (
             <button
+              className="content-reference-open"
               type="button"
               disabled={loading}
               onClick={() => setRequestCursor(nextCursor)}
@@ -573,7 +751,7 @@ function ReferenceEmbedView({
               {loading ? "Loading…" : "Load more"}
             </button>
           )}
-        </>
+        </div>
       )}
     </section>
   );
@@ -598,33 +776,27 @@ export const contentReference = createReactInlineContentSpec(
   },
 );
 
-export const referenceCard = createReactBlockSpec(
-  referenceCardConfig,
-  {
-    render: ({ block }) => <ReferenceCardView block={block} />,
-    toExternalHTML: ({ block }) => (
-      <a href={safeHref(block.props.url)}>
-        {block.props.label || block.props.url || "Referenced content"}
-      </a>
-    ),
-  },
-);
+export const referenceCard = createReactBlockSpec(referenceCardConfig, {
+  render: ({ block }) => <ReferenceCardView block={block} />,
+  toExternalHTML: ({ block }) => (
+    <a href={safeHref(block.props.url)}>
+      {block.props.label || block.props.url || "Referenced content"}
+    </a>
+  ),
+});
 
-export const contentEmbed = createReactBlockSpec(
-  contentEmbedConfig,
-  {
-    render: ({ block }) => (
-      <ReferenceEmbedView
-        blockId={block.id}
-        props={block.props}
-        depth={1}
-        ancestorKeys={new Set()}
-      />
-    ),
-    toExternalHTML: ({ block }) => (
-      <a href={safeHref(block.props.url)}>
-        {block.props.label || block.props.url || "Embedded content"}
-      </a>
-    ),
-  },
-);
+export const contentEmbed = createReactBlockSpec(contentEmbedConfig, {
+  render: ({ block }) => (
+    <ReferenceEmbedView
+      blockId={block.id}
+      props={block.props}
+      depth={1}
+      ancestorKeys={new Set()}
+    />
+  ),
+  toExternalHTML: ({ block }) => (
+    <a href={safeHref(block.props.url)}>
+      {block.props.label || block.props.url || "Embedded content"}
+    </a>
+  ),
+});

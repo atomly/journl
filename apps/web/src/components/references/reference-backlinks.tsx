@@ -1,9 +1,9 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import { ChevronDown, Network } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { Button } from "~/components/ui/button";
 import type { RouterOutputs } from "~/trpc";
 import { useTRPC } from "~/trpc/react";
 
@@ -78,28 +78,42 @@ function ReferenceBacklinksContent({
     ).values(),
   ];
   const nextCursor = pages.at(-1)?.data.nextCursor;
+  const panelId = `references-${documentId}-${blockId ?? "document"}`;
 
   return (
-    <section className="mx-auto my-6 w-full max-w-4xl rounded-xl border bg-card p-4">
-      <div className="flex flex-wrap items-center justify-between gap-2">
+    <section className="mx-auto mt-6 w-full max-w-4xl px-8 text-sm">
+      <div className="flex min-h-11 items-center justify-between gap-3 border-border/60 border-t">
         <button
           type="button"
-          className="font-medium focus-visible:outline-2 focus-visible:outline-ring"
+          className="flex min-h-11 min-w-0 items-center gap-2 rounded-md text-muted-foreground hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring"
           aria-expanded={open}
+          aria-controls={panelId}
           onClick={() => setOpen((value) => !value)}
         >
-          Referenced by
+          <ChevronDown
+            aria-hidden="true"
+            className={`size-4 shrink-0 transition-transform ${open ? "rotate-180" : ""}`}
+          />
+          <span className="font-medium">Referenced by</span>
+          {items.length > 0 && (
+            <span className="text-xs tabular-nums">
+              {items.length}
+              {nextCursor ? "+" : ""}
+            </span>
+          )}
         </button>
-        <Button variant="outline" size="sm" asChild>
+        {open && (
           <Link
+            className="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-md text-muted-foreground text-xs hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring"
             href={`/graph?documentId=${documentId}${blockId ? `&blockId=${blockId}` : ""}`}
           >
+            <Network aria-hidden="true" className="size-3.5" />
             Open graph
           </Link>
-        </Button>
+        )}
       </div>
       {open && (
-        <div className="mt-3">
+        <div className="pb-3 pl-6" id={panelId} aria-live="polite">
           {query.isPending ? (
             <p className="text-muted-foreground text-sm">Loading references…</p>
           ) : query.error ? (
@@ -111,25 +125,25 @@ function ReferenceBacklinksContent({
               {items.map((source) => (
                 <li
                   key={source.documentId}
-                  className="border-t pt-3 first:border-0 first:pt-0"
+                  className="border-border/60 border-l-2 py-2 pl-3 first:pt-0 last:pb-0"
                 >
                   <div className="flex items-center justify-between gap-2">
                     <Link
-                      className="font-medium underline-offset-4 hover:underline"
+                      className="min-w-0 truncate font-medium underline-offset-4 hover:underline"
                       href={source.href}
                     >
                       {source.title}
                     </Link>
-                    <span className="text-muted-foreground text-xs">
+                    <span className="shrink-0 text-muted-foreground text-xs">
                       {source.occurrenceCount} reference
                       {source.occurrenceCount === 1 ? "" : "s"}
                     </span>
                   </div>
-                  <ul className="mt-1 space-y-1">
+                  <ul className="mt-1 space-y-0.5">
                     {source.snippets.map((snippet) => (
                       <li key={`${snippet.sourceBlockId}-${snippet.snippet}`}>
                         <Link
-                          className="block truncate text-muted-foreground text-sm hover:text-foreground"
+                          className="block truncate text-muted-foreground text-xs hover:text-foreground"
                           href={snippet.href}
                         >
                           {snippet.snippet || "Open source block"}
@@ -146,14 +160,14 @@ function ReferenceBacklinksContent({
             </p>
           )}
           {nextCursor && (
-            <Button
-              className="mt-3"
-              variant="outline"
-              size="sm"
+            <button
+              type="button"
+              disabled={query.isFetching}
+              className="mt-3 text-muted-foreground text-xs underline-offset-4 hover:text-foreground hover:underline"
               onClick={() => setCursor(nextCursor)}
             >
-              Load more backlinks
-            </Button>
+              {query.isFetching ? "Loading…" : "Load more backlinks"}
+            </button>
           )}
         </div>
       )}

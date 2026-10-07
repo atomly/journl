@@ -77,12 +77,12 @@ function collectBlock(
 ) {
   if (!blocks) return [];
   type TreeBlock = (typeof blocks)[number];
-  const flattened: TreeBlock[] = [];
-  const visit = (block: TreeBlock) => {
-    flattened.push(block);
-    block.children?.forEach(visit);
+  const flattened: Array<TreeBlock & { depth: number }> = [];
+  const visit = (block: TreeBlock, depth = 0): void => {
+    flattened.push({ ...block, depth });
+    for (const child of block.children ?? []) visit(child, depth + 1);
   };
-  blocks.forEach(visit);
+  for (const block of blocks) visit(block);
   if (!blockId) return flattened;
   const targetIndex = flattened.findIndex((block) => block.id === blockId);
   if (targetIndex < 0) return [];
@@ -95,11 +95,11 @@ function collectBlock(
     return undefined;
   };
   const target = find(blocks);
-  const subtree: TreeBlock[] = [];
+  const subtree: Array<TreeBlock & { depth: number }> = [];
   if (target) {
-    const visitSubtree = (block: TreeBlock) => {
-      subtree.push(block);
-      block.children?.forEach(visitSubtree);
+    const visitSubtree = (block: TreeBlock, depth = 0): void => {
+      subtree.push({ ...block, depth });
+      for (const child of block.children ?? []) visitSubtree(child, depth + 1);
     };
     visitSubtree(target);
   }
@@ -213,7 +213,7 @@ async function resolveInternal(
   const content = blockSnippet(tree, target.blockId);
   const excerpt = truncate(content, 240);
   const title = page?.title ?? entry?.date ?? "Journal entry";
-  const kind = page ? "page" : "journal";
+  const kind = page ? ("page" as const) : ("journal" as const);
   const entityId = page?.id ?? entry?.id;
   const href = page
     ? `${env.PUBLIC_WEB_URL}/pages/${page.id}`
@@ -324,6 +324,7 @@ export const referencesRouter = {
           }
           const normalized = {
             content: block.content,
+            depth: block.depth,
             id: block.id,
             props: block.props,
             type: block.type,

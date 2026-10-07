@@ -701,11 +701,26 @@ export const referencesRouter = {
       const graphBlockById = new Map(
         graphBlocks.map((block) => [block.id, block]),
       );
+      const documentDates = docs.size
+        ? await ctx.db
+            .select({ id: Document.id, updatedAt: Document.updated_at })
+            .from(Document)
+            .where(
+              and(
+                eq(Document.user_id, ctx.session.user.id),
+                inArray(Document.id, [...docs.keys()]),
+              ),
+            )
+        : [];
+      const documentUpdatedAt = new Map(
+        documentDates.map((document) => [document.id, document.updatedAt]),
+      );
       type GraphNode = {
         key: string;
         target?: ReferenceTarget;
         title: string;
         href?: string;
+        updatedAt?: string;
         kind: "page" | "journal" | "block" | "external" | "unavailable";
       };
       const nodes = new Map<string, GraphNode>();
@@ -728,6 +743,7 @@ export const referencesRouter = {
           kind: note.kind,
           target: { documentId, kind: "document" },
           title: note.title,
+          updatedAt: documentUpdatedAt.get(documentId),
         });
       }
       const edgeMap = new Map<

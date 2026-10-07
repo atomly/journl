@@ -8,17 +8,18 @@ import { BlockNoteEditor } from "@blocknote/core";
 import { FormattingToolbar } from "@blocknote/react";
 import { BlockNoteView } from "@blocknote/shadcn";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { TextSelection } from "@tiptap/pm/state";
+import { NodeSelection, TextSelection } from "@tiptap/pm/state";
 import { act } from "react";
 import { createRoot } from "react-dom/client";
 import { afterEach, beforeAll, expect, test, vi } from "vitest";
-import { BlockEditorConvertLinkButton } from "../src/components/editor/block-editor-tools";
+import { BlockEditorFormattingItems } from "../src/components/editor/block-editor-tools";
 import {
   captureReferenceLink,
   convertCapturedReferenceLink,
 } from "../src/components/editor/reference-link-conversion";
 import { ReferenceRuntime } from "../src/components/references/reference-runtime";
 import * as DropdownMenu from "../src/components/ui/dropdown-menu";
+import * as Popover from "../src/components/ui/popover";
 
 const URL = "https://github.com/atomly/journl/pull/302";
 const mocks = vi.hoisted(() => ({
@@ -139,10 +140,10 @@ async function setup(initialContent?: EditorPartialBlock[]) {
             editor={editor}
             formattingToolbar={false}
             sideMenu={false}
-            shadCNComponents={{ DropdownMenu }}
+            shadCNComponents={{ DropdownMenu, Popover }}
           >
             <FormattingToolbar>
-              <BlockEditorConvertLinkButton />
+              <BlockEditorFormattingItems />
             </FormattingToolbar>
           </BlockNoteView>
         </ReferenceRuntime>
@@ -185,7 +186,7 @@ test("mounted link display menu converts at captured range after pointer focus m
   const original = editor.document;
   const card = await openDisplayMenu(host);
   // Native menu focus can collapse selection. This must not discard the captured link.
-  editor.setTextCursorPosition("child", "end");
+  await act(async () => editor.setTextCursorPosition("child", "end"));
   await click(card);
   await vi.waitFor(() =>
     expect(editor.document[1]?.type).toBe("referenceCard"),
@@ -220,7 +221,9 @@ test("mounted link display menu keeps the source link unchanged when target is u
 test("captured conversion refuses stale document after text changes rather than replacing unrelated content", async () => {
   const { editor } = await setup();
   const captured = required(captureReferenceLink(editor));
-  editor.updateBlock("child", { content: "Edited while loading" });
+  await act(async () =>
+    editor.updateBlock("child", { content: "Edited while loading" }),
+  );
   const adapter = { convertInline: vi.fn() };
   const result = await convertCapturedReferenceLink(
     editor,
@@ -439,5 +442,169 @@ test("mounted link conversion selects the second identical link without disturbi
   );
   expect(editor.document[2]?.content).toEqual([
     expect.objectContaining({ styles: { italic: true }, text: " suffix" }),
+  ]);
+});
+
+async function selectNode(
+  editor: EditorPrimitive,
+  type: string,
+  occurrence = 0,
+) {
+  let seen = 0;
+  let position: number | undefined;
+  editor.prosemirrorState.doc.descendants((node, pos) => {
+    if (node.type.name === type && seen++ === occurrence) position = pos;
+  });
+  await act(async () =>
+    editor.prosemirrorView.dispatch(
+      editor.prosemirrorState.tr.setSelection(
+        NodeSelection.create(editor.prosemirrorState.doc, required(position)),
+      ),
+    ),
+  );
+}
+async function openReferenceActions(host: HTMLElement) {
+  await click(
+    required(
+      host.querySelector<HTMLElement>('[aria-label="Reference actions"]'),
+    ),
+  );
+  return [...document.querySelectorAll<HTMLElement>('[role="menuitem"]')];
+}
+async function chooseReferenceDisplay(label: string) {
+  const display = required(
+    [...document.querySelectorAll<HTMLElement>('[role="menuitem"]')].find(
+      (item) => item.textContent === "Display as",
+    ),
+  );
+  await act(async () => {
+    display.focus();
+    display.dispatchEvent(
+      new KeyboardEvent("keydown", { bubbles: true, key: "ArrowRight" }),
+    );
+  });
+  let item: HTMLElement | undefined;
+  await vi.waitFor(() => {
+    item = [
+      ...document.querySelectorAll<HTMLElement>('[role="menuitem"]'),
+    ].find((node) => node.textContent === label);
+    expect(item).toBeDefined();
+  });
+  await click(required(item));
+}
+
+test("selected cards use reference actions instead of generic file controls", async () => {
+  const { editor, host } = await setup([
+    {
+      id: "card",
+      props: { label: "PR", targetKind: "external", url: URL },
+      type: "referenceCard",
+    },
+  ]);
+  await selectNode(editor, "referenceCard");
+  expect(host.querySelector('[aria-label="Reference actions"]')).not.toBeNull();
+  expect(
+    [...host.querySelectorAll("[aria-label]")]
+      .map((node) => node.getAttribute("aria-label"))
+      .join(" "),
+  ).not.toMatch(/(?:delete|replace|download) file/i);
+  const items = await openReferenceActions(host);
+  expect(items.map((item) => item.textContent)).toEqual(
+    expect.arrayContaining([
+      "Display as",
+      "Open source",
+      "Copy source link",
+      "Duplicate",
+      "Delete",
+    ]),
+  );
+  await chooseReferenceDisplay("Inline");
+  await vi.waitFor(() =>
+    expect(editor.getBlock("card")?.content).toEqual([
+      expect.objectContaining({
+        props: expect.objectContaining({ label: "PR", url: URL }),
+        type: "contentReference",
+      }),
+    ]),
+  );
+});
+
+test("selected inline badges offer the same actions and convert only the selected occurrence", async () => {
+  const props = { targetKind: "external" as const, url: URL };
+  const { editor, host } = await setup([
+    {
+      content: [
+        { props: { ...props, label: "First" }, type: "contentReference" },
+        { styles: {}, text: " between ", type: "text" },
+        { props: { ...props, label: "Second" }, type: "contentReference" },
+      ],
+      id: "source",
+      type: "paragraph",
+    } as never,
+  ]);
+  await selectNode(editor, "contentReference", 1);
+  expect(host.querySelector('[aria-label="Reference actions"]')).not.toBeNull();
+  const items = await openReferenceActions(host);
+  expect(items.map((item) => item.textContent)).toContain("Copy source link");
+  await chooseReferenceDisplay("Link");
+  await vi.waitFor(() =>
+    expect(editor.getBlock("source")?.content).toEqual([
+      expect.objectContaining({
+        props: expect.objectContaining({ label: "First" }),
+        type: "contentReference",
+      }),
+      expect.objectContaining({ text: " between ", type: "text" }),
+      expect.objectContaining({
+        content: [expect.objectContaining({ text: "Second" })],
+        href: URL,
+        type: "link",
+      }),
+    ]),
+  );
+});
+
+test("real file selections retain file controls", async () => {
+  const { editor, host } = await setup([
+    {
+      id: "file",
+      props: { name: "Report.pdf", url: "https://example.com/file.pdf" },
+      type: "file",
+    },
+  ]);
+  await selectNode(editor, "file");
+  const labels = [...host.querySelectorAll("[aria-label]")]
+    .map((node) => node.getAttribute("aria-label"))
+    .join(" ");
+  expect(labels).toMatch(/delete file/i);
+  expect(labels).toMatch(/download file/i);
+  expect(host.querySelector('[aria-label="Reference actions"]')).toBeNull();
+});
+
+test("an open reference actions menu refuses a changed source rather than converting an old badge index", async () => {
+  const { editor, host } = await setup([
+    {
+      content: [
+        {
+          props: { label: "Original", targetKind: "external", url: URL },
+          type: "contentReference",
+        },
+        { styles: {}, text: " after", type: "text" },
+      ],
+      id: "source",
+      type: "paragraph",
+    } as never,
+  ]);
+  await selectNode(editor, "contentReference");
+  await openReferenceActions(host);
+  await act(async () =>
+    editor.updateBlock("source", { content: "Changed while menu was open" }),
+  );
+  await chooseReferenceDisplay("Card");
+  expect(editor.document).toHaveLength(1);
+  expect(editor.getBlock("source")?.content).toEqual([
+    expect.objectContaining({
+      text: "Changed while menu was open",
+      type: "text",
+    }),
   ]);
 });

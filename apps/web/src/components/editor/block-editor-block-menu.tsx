@@ -179,7 +179,7 @@ export function inlineReferenceAction(
   };
 }
 
-function BlockActions({
+export function BlockActions({
   block,
   handle = false,
   inlineReference,
@@ -192,6 +192,20 @@ function BlockActions({
   const components = useComponentsContext();
   const portalElement = usePortalElement();
   const adapter = useContext(ReferenceRenderContext);
+  const documentWhenOpened = useRef(editor.prosemirrorState.doc).current;
+  function referenceStillCurrent() {
+    if (
+      editor.isEditable &&
+      editor.getBlock(block.id) &&
+      editor.prosemirrorState.doc.eq(documentWhenOpened)
+    )
+      return true;
+    toast.error(
+      "The reference changed. Select it again to change its display.",
+    );
+    return false;
+  }
+
   if (!components || !editor.isEditable) return null;
   const Menu = components.Generic.Menu;
   const target = inlineReference?.target ?? referenceTarget(block);
@@ -238,6 +252,7 @@ function BlockActions({
                     <Menu.Item
                       key={display}
                       onClick={() => {
+                        if (!referenceStillCurrent()) return;
                         if (inlineReference) {
                           adapter.convertInline(
                             block.id,
@@ -255,7 +270,8 @@ function BlockActions({
                         }
                         void referenceSourceHref(block, adapter)
                           .then((href) => {
-                            if (!href || !editor.getBlock(block.id)) {
+                            if (!referenceStillCurrent()) return;
+                            if (!href) {
                               toast.error("Source link is unavailable.");
                               return;
                             }

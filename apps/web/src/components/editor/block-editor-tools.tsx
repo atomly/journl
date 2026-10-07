@@ -18,6 +18,7 @@ import {
   SuggestionMenuController,
   useBlockNoteEditor,
   useComponentsContext,
+  useEditorState,
   useExtension,
   usePortalElement,
   useSelectedBlocks,
@@ -28,7 +29,14 @@ import {
   useAIDictionary,
 } from "@blocknote/xl-ai";
 import { useQueryClient } from "@tanstack/react-query";
-import { Check, Link2, MessageSquarePlus, Unlink } from "lucide-react";
+import {
+  Check,
+  Link2,
+  MessageSquarePlus,
+  MoreHorizontal,
+  PanelsTopLeft,
+  Unlink,
+} from "lucide-react";
 import { useContext, useRef, useState } from "react";
 import { RiSparkling2Fill } from "react-icons/ri";
 import removeMarkdown from "remove-markdown";
@@ -36,6 +44,7 @@ import { toast } from "sonner";
 import { useJournlAgent } from "~/hooks/use-journl-agent";
 import { useIsMobile } from "~/hooks/use-mobile";
 import { useTRPC } from "~/trpc/react";
+import { BlockActions, inlineReferenceAction } from "./block-editor-block-menu";
 import {
   type CapturedReferenceLink,
   captureReferenceLink,
@@ -59,8 +68,7 @@ export function BlockEditorFloatingToolbar() {
           <BlockEditorAIButton />
           <BlockEditorSelectionButton />
           <BlockEditorCopyBlockLinkButton />
-          <BlockEditorConvertLinkButton />
-          {getFormattingToolbarItems()}
+          <BlockEditorFormattingItems />
         </FormattingToolbar>
       )}
     />
@@ -83,12 +91,118 @@ export function BlockEditorStickyToolbar() {
             <BlockEditorAIButton />
             <BlockEditorSelectionButton />
             <BlockEditorCopyBlockLinkButton />
-            <BlockEditorConvertLinkButton />
           </>
         )}
-        {getFormattingToolbarItems()}
+        <BlockEditorFormattingItems />
       </FormattingToolbar>
     </div>
+  );
+}
+
+/** Reference blocks carry URLs but are not files. Keep their actions consistent
+ * with the context menu instead of inferring file controls from a URL prop. */
+export function BlockEditorFormattingItems() {
+  const editor = useBlockNoteEditor(schema);
+  const blocks = useSelectedBlocks(editor);
+  const badgeOnly = useEditorState({
+    editor,
+    selector: ({ editor }) => {
+      const { doc, selection } = editor.prosemirrorState;
+      return (
+        selection.to - selection.from === 1 &&
+        doc.nodeAt(selection.from)?.type.name === "contentReference"
+      );
+    },
+  });
+  const hasReferenceBlock = blocks.some(
+    (block) => block.type === "referenceCard" || block.type === "contentEmbed",
+  );
+  return (
+    <>
+      <BlockEditorReferenceActionsButton />
+      <BlockEditorConvertLinkButton />
+      {getFormattingToolbarItems().filter(
+        (item) =>
+          (!hasReferenceBlock || !/file/i.test(String(item.key))) &&
+          (!badgeOnly ||
+            /^(nestBlockButton|unnestBlockButton)$/.test(String(item.key))),
+      )}
+    </>
+  );
+}
+
+export function selectedReferenceAction(editor: EditorPrimitive) {
+  const { doc, selection } = editor.prosemirrorState;
+  if (selection.empty) return null;
+  let referencePos: number | undefined;
+  let count = 0;
+  doc.nodesBetween(selection.from, selection.to, (node, pos) => {
+    if (
+      node.type.name === "contentReference" &&
+      pos >= selection.from &&
+      pos + node.nodeSize <= selection.to
+    ) {
+      referencePos = pos;
+      count += 1;
+    }
+  });
+  if (count !== 1 || referencePos === undefined) return null;
+  const dom = editor.prosemirrorView.nodeDOM(referencePos);
+  if (!(dom instanceof Element)) return null;
+  const id = dom.closest<HTMLElement>("[data-id]")?.dataset.id;
+  const block = id ? editor.getBlock(id) : undefined;
+  const reference = dom.matches("[data-inline-content-type='contentReference']")
+    ? dom
+    : dom.querySelector("[data-inline-content-type='contentReference']");
+  if (!block || !reference) return null;
+  const inlineReference = inlineReferenceAction(reference, block);
+  return inlineReference ? { block, inlineReference } : null;
+}
+
+/** Shared source/display/block actions for a selected card or inline badge. */
+export function BlockEditorReferenceActionsButton() {
+  const editor = useBlockNoteEditor(schema);
+  const Components = useComponentsContext();
+  const portalElement = usePortalElement();
+  const blocks = useSelectedBlocks(editor);
+  // Changes within a paragraph do not necessarily change the selected blocks.
+  useEditorState({
+    editor,
+    selector: ({ editor }) => ({
+      from: editor.prosemirrorState.selection.from,
+      to: editor.prosemirrorState.selection.to,
+    }),
+  });
+  const [open, setOpen] = useState(false);
+  const current =
+    selectedReferenceAction(editor) ??
+    (blocks.length === 1 &&
+    (blocks[0]?.type === "referenceCard" || blocks[0]?.type === "contentEmbed")
+      ? { block: blocks[0] }
+      : null);
+  const saved = useRef(current);
+  if (!open) saved.current = current;
+  const selected = open ? saved.current : current;
+  if (!Components || !editor.isEditable || !selected) return null;
+  return (
+    <Components.Generic.Menu.Root
+      portalElement={portalElement}
+      position="bottom-start"
+      onOpenChange={setOpen}
+    >
+      <Components.Generic.Menu.Trigger>
+        <Components.FormattingToolbar.Button
+          label="Reference actions"
+          mainTooltip="Reference actions"
+          className="shrink-0"
+        >
+          <MoreHorizontal aria-hidden="true" />
+        </Components.FormattingToolbar.Button>
+      </Components.Generic.Menu.Trigger>
+      <Components.Generic.Menu.Dropdown>
+        <BlockActions {...selected} />
+      </Components.Generic.Menu.Dropdown>
+    </Components.Generic.Menu.Root>
   );
 }
 
@@ -130,6 +244,13 @@ function BlockEditorCopyBlockLinkButton() {
 
 export function BlockEditorConvertLinkButton() {
   const editor = useBlockNoteEditor(schema);
+  useEditorState({
+    editor,
+    selector: ({ editor }) => ({
+      from: editor.prosemirrorState.selection.from,
+      to: editor.prosemirrorState.selection.to,
+    }),
+  });
   const Components = useComponentsContext();
   const trpc = useTRPC();
   const queryClient = useQueryClient();
@@ -191,7 +312,7 @@ export function BlockEditorConvertLinkButton() {
           {converted ? (
             <Check aria-hidden="true" />
           ) : (
-            <Link2 aria-hidden="true" />
+            <PanelsTopLeft aria-hidden="true" />
           )}
         </Components.FormattingToolbar.Button>
       </Components.Generic.Menu.Trigger>

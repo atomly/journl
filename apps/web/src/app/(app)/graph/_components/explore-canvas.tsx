@@ -7,10 +7,12 @@ import {
   Globe,
   NotebookPen,
 } from "lucide-react";
+import { useId, useState } from "react";
 import {
   type ExploreEdge,
   type ExploreGraph,
   type ExploreNode,
+  getConnectedNotes,
   layoutExploreGraph,
 } from "~/references/explore-graph";
 
@@ -200,19 +202,92 @@ export function ExploreCanvas({
         </g>
       </svg>
       {layout.hiddenCount > 0 && focusKey && (
-        <div className="px-4 pb-4 text-center">
-          <button
-            type="button"
-            className="min-h-11 rounded-lg px-3 text-muted-foreground text-sm hover:bg-accent focus-visible:outline-2 focus-visible:outline-ring"
-            onClick={() => {
-              const root = byKey.get(focusKey);
-              if (root) onSelect(root);
-            }}
-          >
-            See all connections (
-            {layout.positions.size - 1 + layout.hiddenCount})
-          </button>
-        </div>
+        <CompleteConnections
+          key={focusKey}
+          nodes={getConnectedNotes(graph, focusKey)}
+          onSelect={(node) =>
+            onSelect(
+              node,
+              graph.edges.find(
+                (edge) =>
+                  (edge.fromKey === focusKey && edge.toKey === node.key) ||
+                  (edge.toKey === focusKey && edge.fromKey === node.key),
+              ),
+            )
+          }
+        />
+      )}
+    </div>
+  );
+}
+
+function CompleteConnections({
+  nodes,
+  onSelect,
+}: {
+  nodes: ExploreNode[];
+  onSelect(node: ExploreNode): void;
+}) {
+  const [expanded, setExpanded] = useState(false);
+  const id = useId();
+  return (
+    <div className="px-4 pb-4">
+      <div className="text-center">
+        <button
+          type="button"
+          aria-expanded={expanded}
+          aria-controls={expanded ? id : undefined}
+          className="min-h-11 rounded-lg px-3 text-muted-foreground text-sm hover:bg-accent focus-visible:outline-2 focus-visible:outline-ring"
+          onClick={() => setExpanded((value) => !value)}
+        >
+          {expanded
+            ? "Hide full connection list"
+            : `See all connections (${nodes.length})`}
+        </button>
+      </div>
+      {expanded && (
+        <section
+          id={id}
+          aria-label="All connections"
+          className="mt-2 max-h-80 overflow-y-auto overscroll-contain rounded-lg border border-border/70"
+        >
+          <ul className="divide-y divide-border/60">
+            {nodes.map((node) => (
+              <li key={node.key}>
+                <button
+                  type="button"
+                  aria-label={`Read ${node.title}`}
+                  className="flex min-h-11 w-full items-center gap-3 px-3 py-2 text-left hover:bg-accent focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-[-2px]"
+                  onClick={() => onSelect(node)}
+                >
+                  {node.kind === "external" ? (
+                    <Globe
+                      aria-hidden="true"
+                      className="size-4 shrink-0 text-muted-foreground"
+                    />
+                  ) : (
+                    <FileText
+                      aria-hidden="true"
+                      className="size-4 shrink-0 text-muted-foreground"
+                    />
+                  )}
+                  <span className="min-w-0">
+                    <span className="block break-words font-medium text-sm">
+                      {node.title}
+                    </span>
+                    <span className="block text-muted-foreground text-xs">
+                      {node.kind === "external"
+                        ? "Linked source"
+                        : node.kind === "journal"
+                          ? "Journal"
+                          : "Note"}
+                    </span>
+                  </span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </section>
       )}
     </div>
   );

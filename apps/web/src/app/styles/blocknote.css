@@ -441,7 +441,7 @@
 
 /* Range decorations are placed on the React node-view wrapper, and follow
    both whole-block and text selections. Focus controls only their visibility. */
-:where(.bn-editor:focus)
+:where(.bn-root:focus-within)
   [data-reference-selected="true"]
   > .bn-block-content
   > :is(.content-reference-card, .content-embed),
@@ -464,6 +464,24 @@
 .ProseMirror-selectednode
   > .bn-block-content[data-content-type="contentEmbed"]
   > *::after {
+  display: none;
+}
+
+/* Inline atoms use the same native selection outline as reference blocks. */
+:where(.bn-root:focus-within)
+  [data-reference-selected="true"]
+  .content-reference,
+[data-reference-selected="true"]:focus-within .content-reference {
+  outline: 2px solid var(--ring);
+  outline-offset: -2px;
+}
+
+.bn-inline-content
+  .ProseMirror-selectednode:has(
+    [data-inline-content-type="contentReference"]
+  )::after,
+.bn-inline-content
+  [data-inline-content-type="contentReference"].ProseMirror-selectednode::after {
   display: none;
 }
 

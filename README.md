@@ -76,6 +76,7 @@ and embeds are different presentations of the same relationship.
 - Paste a URL into text for an inline reference, or into an empty paragraph for a card.
 - Use the display menu to switch between **Inline**, **Card**, and **Link**; internal notes also support **Embed**.
   Select a regular link's text and use **Display link as** to restore its rich presentation.
+  Selected cards and inline badges offer **Reference actions**, using the same actions as their context menu.
   References within surrounding text can become cards without losing that text. Table cells support
   reversible Inline/Link display; cards and embeds stay outside cells.
 - Use `/Embed note` to insert a page or journal entry. Expand the embed to read its current content.
@@ -92,6 +93,8 @@ and embeds are different presentations of the same relationship.
   for its preview and linking passages; **Explore connections** follows the thread, and Back restores
   your earlier position. The sidebar **Explore** view at `/explore` groups connected notes and linked
   websites, keeping unlinked notes separate. Existing `/graph` links redirect with their context preserved.
+  Unlinked notes show their last edit date, newest first, with 12 notes per page and an oldest-first option.
+  **See all connections** opens the complete list of related notes and external sources.
   Pinch with two fingers or a trackpad to zoom the canvas. Desktop previews stay visible while scrolling;
   mobile previews keep a fixed height and scroll independently as content loads.
 - Public websites use page metadata when available, with URL fallback. Cards can show desktop thumbnails;

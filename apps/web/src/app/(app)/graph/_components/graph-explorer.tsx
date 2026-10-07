@@ -15,6 +15,13 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "~/components/ui/button";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "~/components/ui/select";
+import {
   Sheet,
   SheetContent,
   SheetDescription,
@@ -30,6 +37,11 @@ import {
   getNoteClusters,
   mergeGraphPages,
 } from "~/references/explore-graph";
+import {
+  EXPLORE_NOTES_PAGE_SIZE,
+  exploreUpdatedLabel,
+  sortExploreNotes,
+} from "~/references/explore-note-list";
 import { useTRPC } from "~/trpc/react";
 import {
   type ExploreCamera,
@@ -191,6 +203,9 @@ function ExploreView({
   const focusKey = documentId ? `document:${documentId}` : undefined;
   const [selectedKey, setSelectedKey] = useState(snapshot?.selectedKey);
   const [selectedEdge, setSelectedEdge] = useState(snapshot?.selectedEdge);
+  const [noteOrder, setNoteOrder] = useState<"latest" | "oldest">("latest");
+  const [notePage, setNotePage] = useState(0);
+  const unlinkedSection = useRef<HTMLElement>(null);
   const [camera, setCamera] = useState(snapshot?.camera ?? INITIAL_CAMERA);
   const viewport = useRef<HTMLDivElement>(null);
   const initialSnapshot = useRef(snapshot).current;
@@ -216,8 +231,23 @@ function ExploreView({
     [graphQuery.data],
   );
   const { clusters, unlinked } = useMemo(() => getNoteClusters(graph), [graph]);
+  const orderedUnlinked = useMemo(
+    () => sortExploreNotes(unlinked, noteOrder),
+    [unlinked, noteOrder],
+  );
+  const notePageCount = Math.max(
+    1,
+    Math.ceil(orderedUnlinked.length / EXPLORE_NOTES_PAGE_SIZE),
+  );
+  const currentNotePage = Math.min(notePage, notePageCount - 1);
+  const visibleUnlinked = orderedUnlinked.slice(
+    currentNotePage * EXPLORE_NOTES_PAGE_SIZE,
+    (currentNotePage + 1) * EXPLORE_NOTES_PAGE_SIZE,
+  );
   const root = graph.nodes.find((node) => node.key === focusKey);
-  const selected = graph.nodes.find((node) => node.key === selectedKey);
+  const selected =
+    graph.nodes.find((node) => node.key === selectedKey) ??
+    (!mobile ? root : undefined);
   const complete = !graphQuery.isPending && !hasNextPage;
   const rootTitle = root?.title;
   useEffect(() => {
@@ -276,7 +306,7 @@ function ExploreView({
         <div className="min-w-0 flex-1">
           <h1 className="break-words font-semibold text-2xl">
             {root
-              ? root.title
+              ? `Connections for ${root.title}`
               : documentId
                 ? "Explore this note"
                 : "Pick up a thread"}
@@ -400,7 +430,7 @@ function ExploreView({
                     graph={graph}
                     width={width}
                     focusKey={focusKey}
-                    selectedKey={selectedKey}
+                    selectedKey={selected?.key}
                     camera={camera}
                     onCamera={setCamera}
                     onSelect={select}
@@ -410,28 +440,135 @@ function ExploreView({
               </div>
             </section>
             {!documentId && unlinked.length > 0 && (
-              <section aria-label="Unlinked notes" className="space-y-3">
-                <div>
-                  <h2 className="font-medium text-sm">Unlinked notes</h2>
-                  <p className="mt-1 text-muted-foreground text-xs">
-                    These notes have no links to other notes yet.
-                  </p>
-                </div>
-                <div className="grid gap-2 sm:grid-cols-2">
-                  {unlinked.map((node) => (
-                    <button
-                      type="button"
-                      key={node.key}
-                      className="flex min-h-14 items-center justify-between gap-3 rounded-xl border px-4 py-3 text-left text-sm hover:bg-accent focus-visible:outline-2 focus-visible:outline-ring"
-                      onClick={() => select(node)}
+              <section
+                ref={unlinkedSection}
+                aria-label="Unlinked notes"
+                className="space-y-3"
+              >
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <h2 className="font-medium text-sm">Unlinked notes</h2>
+                    <p className="mt-1 text-muted-foreground text-xs">
+                      Notes with no connections yet. Preview one or continue
+                      exploring.
+                    </p>
+                  </div>
+                  <Select
+                    value={noteOrder}
+                    onValueChange={(value) => {
+                      if (value === "latest" || value === "oldest") {
+                        setNoteOrder(value);
+                        setNotePage(0);
+                      }
+                    }}
+                  >
+                    <SelectTrigger
+                      aria-label="Sort unlinked notes"
+                      className="min-h-11"
                     >
-                      <span className="line-clamp-2">{node.title}</span>
-                      <ChevronRight
-                        aria-hidden="true"
-                        className="size-4 shrink-0 text-muted-foreground"
-                      />
-                    </button>
-                  ))}
+                      <SelectValue>
+                        {noteOrder === "latest"
+                          ? "Latest first"
+                          : "Oldest first"}
+                      </SelectValue>
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="latest">Latest first</SelectItem>
+                      <SelectItem value="oldest">Oldest first</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <ul className="divide-y rounded-xl border">
+                  {visibleUnlinked.map((node) => {
+                    const updatedLabel = exploreUpdatedLabel(node.updatedAt);
+                    return (
+                      <li
+                        key={node.key}
+                        className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 px-4 py-2"
+                      >
+                        <button
+                          type="button"
+                          aria-label={`Preview ${node.title}`}
+                          className="min-h-11 min-w-0 flex-1 rounded-md py-1 text-left hover:text-primary focus-visible:outline-2 focus-visible:outline-ring"
+                          onClick={() => select(node)}
+                        >
+                          <span className="line-clamp-2 font-medium text-sm">
+                            {node.title}
+                          </span>
+                          <span className="mt-1 block text-muted-foreground text-xs">
+                            {node.kind === "journal" ? "Journal entry" : "Note"}
+                            {updatedLabel && (
+                              <>
+                                {" "}
+                                · Updated{" "}
+                                <time dateTime={node.updatedAt}>
+                                  {updatedLabel}
+                                </time>
+                              </>
+                            )}
+                          </span>
+                        </button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="min-h-11 text-muted-foreground"
+                          aria-label={`Explore connections for ${node.title}`}
+                          onClick={() => onExplore(node)}
+                        >
+                          Explore connections{" "}
+                          <ChevronRight aria-hidden="true" />
+                        </Button>
+                      </li>
+                    );
+                  })}
+                </ul>
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <p role="status" className="text-muted-foreground text-xs">
+                    {currentNotePage * EXPLORE_NOTES_PAGE_SIZE + 1}–
+                    {Math.min(
+                      (currentNotePage + 1) * EXPLORE_NOTES_PAGE_SIZE,
+                      orderedUnlinked.length,
+                    )}{" "}
+                    of {orderedUnlinked.length} notes
+                  </p>
+                  {notePageCount > 1 && (
+                    <nav
+                      aria-label="Unlinked notes pages"
+                      className="flex items-center gap-2"
+                    >
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="min-h-11"
+                        disabled={currentNotePage === 0}
+                        onClick={() => {
+                          setNotePage(currentNotePage - 1);
+                          unlinkedSection.current?.scrollIntoView?.({
+                            block: "start",
+                          });
+                        }}
+                      >
+                        Previous
+                      </Button>
+                      <span className="text-muted-foreground text-xs">
+                        {currentNotePage + 1} / {notePageCount}
+                      </span>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="min-h-11"
+                        disabled={currentNotePage + 1 >= notePageCount}
+                        onClick={() => {
+                          setNotePage(currentNotePage + 1);
+                          unlinkedSection.current?.scrollIntoView?.({
+                            block: "start",
+                          });
+                        }}
+                      >
+                        Next
+                      </Button>
+                    </nav>
+                  )}
                 </div>
               </section>
             )}

@@ -11,7 +11,7 @@ const mock = vi.hoisted(() => ({
   location: "",
   pushes: [] as string[],
 }));
-const nodes = [
+const baseNodes = [
   {
     href: "https://journl.example/pages/a",
     key: "document:a",
@@ -39,6 +39,7 @@ const nodes = [
     kind: "page",
     target: { documentId: "d", kind: "document" },
     title: "A separate thought",
+    updatedAt: "2026-10-07T12:00:00Z",
   },
   {
     href: "https://github.com/atomly/journl/pull/302",
@@ -47,6 +48,7 @@ const nodes = [
     title: "github.com/atomly/journl/pull/302",
   },
 ];
+let nodes = [...baseNodes];
 const edge = (from: string, to: string) => ({
   fromKey: `document:${from}`,
   occurrenceCount: 1,
@@ -196,6 +198,7 @@ beforeAll(() => {
 afterAll(() => vi.unstubAllGlobals());
 beforeEach(() => {
   mock.location = "";
+  nodes = [...baseNodes];
   mock.inputs.length = 0;
   mock.pushes.length = 0;
 });
@@ -293,7 +296,9 @@ test("exploring a note keeps a breadcrumb and restores selection and zoom on Bac
       ) ?? null,
     );
     expect(mock.location).toBe("documentId=b");
-    expect(container.querySelector("h1")?.textContent).toBe("Testing feedback");
+    expect(container.querySelector("h1")?.textContent).toBe(
+      "Connections for Testing feedback",
+    );
     expect(
       container.querySelector('[aria-label="Exploration trail"]')?.textContent,
     ).toContain("Explore");
@@ -332,7 +337,7 @@ test("a note without internal links stays available to preview and open", async 
   const { container, cleanup } = await setup();
   try {
     expect(container.querySelector("h1")?.textContent).toBe(
-      "A separate thought",
+      "Connections for A separate thought",
     );
     expect(container.textContent).toContain("0 connections");
     await click(
@@ -394,6 +399,68 @@ test("Explore uses the app search and keeps desktop context beside the canvas", 
       ].find((button) => button.textContent === "Explore connections") ?? null,
     );
     expect(mock.pushes.at(-1)).toBe("/explore?documentId=b");
+  } finally {
+    await cleanup();
+  }
+});
+
+test("unlinked discovery is newest first, bounded by page, and offers direct exploration", async () => {
+  for (let index = 1; index <= 13; index += 1)
+    nodes.push({
+      href: `https://journl.example/pages/unlinked-${index}`,
+      key: `document:unlinked-${index}`,
+      kind: "page",
+      target: { documentId: `unlinked-${index}`, kind: "document" },
+      title: index === 13 ? "Z newest note" : `A older note ${index}`,
+      updatedAt: `2026-10-${String(index).padStart(2, "0")}T12:00:00Z`,
+    });
+  const { container, cleanup } = await setup();
+  try {
+    const section = container.querySelector('[aria-label="Unlinked notes"]');
+    expect(section?.querySelectorAll("li")).toHaveLength(12);
+    expect(section?.querySelector("li")?.textContent).toContain(
+      "Z newest note",
+    );
+    expect(section?.textContent).toContain("Updated");
+    expect(section?.textContent).toContain("1–12 of 14 notes");
+    await click(
+      [...(section?.querySelectorAll("button") ?? [])].find(
+        (button) => button.textContent === "Next",
+      ) ?? null,
+    );
+    expect(section?.querySelectorAll("li")).toHaveLength(2);
+    expect(section?.textContent).toContain("13–14 of 14 notes");
+    await click(
+      [...(section?.querySelectorAll("button") ?? [])].find(
+        (button) => button.textContent === "Previous",
+      ) ?? null,
+    );
+    await click(
+      section?.querySelector('[aria-label="Sort unlinked notes"]') ?? null,
+    );
+    await click(
+      [...document.querySelectorAll('[role="option"]')].find(
+        (option) => option.textContent === "Oldest first",
+      ) ?? null,
+    );
+    expect(section?.querySelector("li")?.textContent).toContain(
+      "A older note 1",
+    );
+    expect(section?.textContent).toContain("1–12 of 14 notes");
+    await click(
+      section?.querySelector('[aria-label="Sort unlinked notes"]') ?? null,
+    );
+    await click(
+      [...document.querySelectorAll('[role="option"]')].find(
+        (option) => option.textContent === "Latest first",
+      ) ?? null,
+    );
+    await click(
+      section?.querySelector(
+        '[aria-label="Explore connections for Z newest note"]',
+      ) ?? null,
+    );
+    expect(mock.pushes.at(-1)).toBe("/explore?documentId=unlinked-13");
   } finally {
     await cleanup();
   }

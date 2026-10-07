@@ -107,7 +107,23 @@ function ReferenceIcon({ target }: { target: ReferenceRenderTarget | null }) {
       strokeLinecap="round"
       strokeLinejoin="round"
     >
-      {github ? (
+      {github &&
+      target?.kind === "external" &&
+      new URL(target.url).pathname.match(/^\/[^/]+\/[^/]+\/pull\/\d+/) ? (
+        <>
+          <circle cx="6" cy="5" r="2" />
+          <circle cx="6" cy="19" r="2" />
+          <circle cx="18" cy="19" r="2" />
+          <path d="M6 7v10M18 17V9a4 4 0 0 0-4-4h-2m2-2-2 2 2 2" />
+        </>
+      ) : github &&
+        target?.kind === "external" &&
+        new URL(target.url).pathname.match(/^\/[^/]+\/[^/]+\/issues\/\d+/) ? (
+        <>
+          <circle cx="12" cy="12" r="9" />
+          <path d="M12 8v4M12 16h.01" />
+        </>
+      ) : github ? (
         <path d="M9 19c-4.3 1.3-4.3-2.5-6-3m12 6v-3.9a3.4 3.4 0 0 0-1-2.7c3.3-.4 6.8-1.6 6.8-7A5.4 5.4 0 0 0 19.3 5a5 5 0 0 0-.1-3.4s-1.2-.4-3.9 1.5a13.4 13.4 0 0 0-7 0C5.6 1.2 4.4 1.6 4.4 1.6A5 5 0 0 0 4.3 5a5.4 5.4 0 0 0-1.5 3.7c0 5.4 3.5 6.6 6.8 7a3.4 3.4 0 0 0-1 2.7V22" />
       ) : target?.kind === "external" ? (
         <>
@@ -124,12 +140,14 @@ function ReferenceIcon({ target }: { target: ReferenceRenderTarget | null }) {
   );
 }
 
-type Display = "contentEmbed" | "referenceCard" | "link";
+type Display = "contentEmbed" | "contentReference" | "referenceCard" | "link";
 function DisplayMenu({
   options,
   onChange,
+  onInteract,
 }: {
   options: Display[];
+  onInteract?: () => void;
   onChange: (display: Display) => void;
 }) {
   const Components = useComponentsContext();
@@ -148,6 +166,7 @@ function DisplayMenu({
           className="content-reference-action"
           aria-label="Reference display options"
           title="Display as"
+          onClick={onInteract}
         >
           <svg aria-hidden="true" viewBox="0 0 24 24" fill="currentColor">
             <circle cx="5" cy="12" r="1.8" />
@@ -156,7 +175,7 @@ function DisplayMenu({
           </svg>
         </button>
       </Menu.Trigger>
-      <Menu.Dropdown>
+      <Menu.Dropdown className="content-reference-display-menu">
         <Menu.Label>Display as</Menu.Label>
         {options.map((display) => (
           <Menu.Item key={display} onClick={() => onChange(display)}>
@@ -164,7 +183,9 @@ function DisplayMenu({
               ? "Embed"
               : display === "referenceCard"
                 ? "Card"
-                : "Link"}
+                : display === "contentReference"
+                  ? "Inline"
+                  : "Link"}
           </Menu.Item>
         ))}
       </Menu.Dropdown>
@@ -177,9 +198,28 @@ function fallbackTitle(target: ReferenceRenderTarget | null, url: string) {
     const parsed = new URL(target.url);
     return parsed.hostname === "github.com"
       ? `GitHub · ${parsed.pathname.slice(1) || "github.com"}`
-      : parsed.hostname;
+      : `${parsed.hostname}${parsed.pathname === "/" ? "" : parsed.pathname}${parsed.search}${parsed.hash}`;
   }
   return target ? "Referenced note" : url || "Referenced content";
+}
+
+function inlineReferenceLabel(
+  target: ReferenceRenderTarget | null,
+  preview: ReferencePreviewData | undefined,
+) {
+  if (target?.kind === "external") {
+    const url = new URL(target.url);
+    const match =
+      url.hostname === "github.com"
+        ? url.pathname.match(
+            /^\/([^/]+)\/([^/]+)\/(pull|issues)\/(\d+)(?:\/|$)/,
+          )
+        : null;
+    if (match) return `${match[1]}/${match[2]} #${match[4]}`;
+  }
+  return preview?.status === "ready" && preview.metadataState !== "url-only"
+    ? preview.title
+    : undefined;
 }
 
 function ReferenceBadge({
@@ -193,7 +233,51 @@ function ReferenceBadge({
 }) {
   const target = useMemo(() => targetFromProps(props), [props]);
   const elementRef = useRef<HTMLElement | null>(null);
+  const previewRef = useRef<HTMLFieldSetElement | null>(null);
   const [active, setActive] = useState(false);
+  const pinned = useRef(false);
+  const closeTimer = useRef<ReturnType<typeof setTimeout> | undefined>(
+    undefined,
+  );
+  const clearClose = () => {
+    if (closeTimer.current) clearTimeout(closeTimer.current);
+    closeTimer.current = undefined;
+  };
+  const close = () => {
+    clearClose();
+    pinned.current = false;
+    setActive(false);
+  };
+  const enter = () => {
+    clearClose();
+    setActive(true);
+  };
+  const leave = () => {
+    if (pinned.current) return;
+    clearClose();
+    closeTimer.current = setTimeout(() => setActive(false), 160);
+  };
+  useEffect(() => () => clearClose(), []);
+  useEffect(() => {
+    if (!active) return;
+    const leaveFocus = (event: FocusEvent) => {
+      const next = event.target;
+      if (
+        next instanceof Node &&
+        !elementRef.current?.contains(next) &&
+        !previewRef.current?.contains(next) &&
+        !(
+          next instanceof Element &&
+          next.closest(".content-reference-display-menu")
+        )
+      ) {
+        pinned.current = false;
+        setActive(false);
+      }
+    };
+    document.addEventListener("focusin", leaveFocus);
+    return () => document.removeEventListener("focusin", leaveFocus);
+  }, [active]);
   const Components = useComponentsContext();
   const portalElement = usePortalElement();
   const { adapter, loading, preview } = usePreview(target, true);
@@ -204,7 +288,7 @@ function ReferenceBadge({
   const authoredLabel = typeof props.label === "string" ? props.label : "";
   const label =
     authoredLabel ||
-    (preview?.status === "ready" ? preview.title : undefined) ||
+    inlineReferenceLabel(target, preview) ||
     fallbackTitle(target, fallbackHref);
   const sourceBlockId = () =>
     elementRef.current?.closest<HTMLElement>("[data-id]")?.dataset.id;
@@ -224,7 +308,7 @@ function ReferenceBadge({
         href,
         occurrenceIndex < 0 ? undefined : occurrenceIndex,
       );
-    setActive(false);
+    close();
   };
   const badge = (
     <a
@@ -232,11 +316,13 @@ function ReferenceBadge({
       href={href}
       rel={target?.kind === "external" ? "noopener noreferrer" : undefined}
       target={target?.kind === "external" ? "_blank" : undefined}
-      onMouseEnter={() => setActive(true)}
+      onMouseEnter={enter}
+      onMouseLeave={leave}
       onClick={(event) => {
         if (!event.metaKey && !event.ctrlKey) {
           event.preventDefault();
-          setActive(true);
+          pinned.current = true;
+          enter();
         }
       }}
       aria-label={`${label} reference`}
@@ -258,7 +344,10 @@ function ReferenceBadge({
       {Components ? (
         <Components.Generic.Popover.Root
           open={active}
-          onOpenChange={setActive}
+          onOpenChange={(open) => {
+            if (!open) close();
+            else setActive(true);
+          }}
           portalElement={portalElement}
         >
           <Components.Generic.Popover.Trigger>
@@ -268,51 +357,65 @@ function ReferenceBadge({
             className="content-reference-preview"
             variant="form-popover"
           >
-            <div className="content-reference-card-heading">
-              <ReferenceIcon target={target} />
-              <strong>
-                {preview?.status === "ready" ? (preview.title ?? label) : label}
-              </strong>
-              <button
-                className="content-reference-action"
-                type="button"
-                aria-label="Close preview"
-                onClick={() => setActive(false)}
-              >
-                ×
-              </button>
-            </div>
-            <p className="content-reference-card-excerpt">
-              {loading
-                ? "Loading preview…"
-                : preview?.status === "unavailable"
-                  ? "Content unavailable"
-                  : preview?.excerpt || ""}
-            </p>
-            <div className="content-reference-preview-footer">
-              {target && preview?.status === "ready" && (
+            <fieldset
+              aria-label="Reference preview"
+              style={{ border: 0, margin: 0, minWidth: 0, padding: 0 }}
+              ref={previewRef}
+              onMouseEnter={clearClose}
+              onMouseLeave={leave}
+            >
+              <div className="content-reference-card-heading">
+                <ReferenceIcon target={target} />
+                <strong>
+                  {preview?.status === "ready"
+                    ? (preview.title ?? label)
+                    : label}
+                </strong>
                 <button
-                  className="content-reference-open"
+                  className="content-reference-action"
                   type="button"
-                  onClick={() => adapter?.openTarget(target, href)}
+                  aria-label="Close preview"
+                  onClick={close}
                 >
-                  Open {target.kind === "external" ? "link" : "note"}{" "}
-                  <span aria-hidden="true">↗</span>
+                  ×
                 </button>
-              )}
-              {target && adapter?.editable && !readOnly && (
-                <DisplayMenu
-                  options={[
-                    ...(canConvert && target.kind === "document"
-                      ? ["contentEmbed" as const]
-                      : []),
-                    ...(canConvert ? ["referenceCard" as const] : []),
-                    "link",
-                  ]}
-                  onChange={convert}
-                />
-              )}
-            </div>
+              </div>
+              <p className="content-reference-card-excerpt">
+                {loading
+                  ? "Loading preview…"
+                  : preview?.status === "unavailable"
+                    ? "Content unavailable"
+                    : preview?.excerpt || ""}
+              </p>
+              <div className="content-reference-preview-footer">
+                {target && preview?.status === "ready" && (
+                  <button
+                    className="content-reference-open"
+                    type="button"
+                    onClick={() => adapter?.openTarget(target, href)}
+                  >
+                    Open {target.kind === "external" ? "link" : "note"}{" "}
+                    <span aria-hidden="true">↗</span>
+                  </button>
+                )}
+                {target && adapter?.editable && !readOnly && (
+                  <DisplayMenu
+                    onInteract={() => {
+                      pinned.current = true;
+                      clearClose();
+                    }}
+                    options={[
+                      ...(canConvert && target.kind === "document"
+                        ? ["contentEmbed" as const]
+                        : []),
+                      ...(canConvert ? ["referenceCard" as const] : []),
+                      "link",
+                    ]}
+                    onChange={convert}
+                  />
+                )}
+              </div>
+            </fieldset>
           </Components.Generic.Popover.Content>
         </Components.Generic.Popover.Root>
       ) : (
@@ -344,6 +447,19 @@ function ReferenceCardView({
       className="content-reference-card"
       aria-label={`${title} reference card`}
     >
+      {preview?.status === "ready" && preview.imageUrl && (
+        <img
+          key={preview.imageUrl}
+          className="content-reference-thumbnail"
+          onError={(event) => {
+            event.currentTarget.style.display = "none";
+          }}
+          src={safeHref(preview.imageUrl)}
+          alt=""
+          loading="lazy"
+          referrerPolicy="no-referrer"
+        />
+      )}
       <div className="content-reference-card-heading">
         <ReferenceIcon target={target} />
         <a
@@ -363,6 +479,7 @@ function ReferenceCardView({
           <DisplayMenu
             options={[
               ...(target.kind === "document" ? ["contentEmbed" as const] : []),
+              "contentReference",
               "link",
             ]}
             onChange={(display) =>
@@ -699,7 +816,7 @@ function ReferenceEmbedView({
         </button>
         {blockId && adapter?.editable && (
           <DisplayMenu
-            options={["referenceCard", "link"]}
+            options={["referenceCard", "contentReference", "link"]}
             onChange={(display) =>
               adapter.convertBlock(
                 blockId,

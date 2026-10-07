@@ -68,11 +68,24 @@ If your local Postgres instance does not support TLS, set `POSTGRES_SSL_MODE=dis
 For database workflows, use root scripts (`pnpm db:push`, `pnpm db:studio`) or
 the dedicated utility app in [`apps/drizzle-studio`](./apps/drizzle-studio).
 
-Paste a plain URL into an empty paragraph to create a
-card, or into existing text to create a badge. Use `/Embed note`, select a page or
-journal entry, and expand the resulting embed to read its content. Existing saved
-links retain their original display; the reference backfill builds indexes without
-rewriting editor content.
+Content references cover both [rich linked-content previews (#291)](https://github.com/atomly/journl/issues/291)
+and [durable page, journal, and block references (#292)](https://github.com/atomly/journl/issues/292).
+References retain their target IDs across title changes; badges, cards, links,
+and embeds are different presentations of the same relationship.
+
+- Paste a URL into text for an inline reference, or into an empty paragraph for a card.
+- Use the display menu to switch between **Inline**, **Card**, and **Link**; internal notes also support **Embed**.
+  Select a regular link's text and use **Display link as** to restore its rich presentation.
+- Use `/Embed note` to insert a page or journal entry. Expand the embed to read its current content.
+- Select multiple blocks and use Tab/Shift+Tab to indent/outdent text, cards, and embeds together.
+  Tab from a reference's action controls moves keyboard focus normally.
+- Linked references load when the editor opens. The section appears only when references exist.
+- Public websites use page metadata when available, with URL fallback. Cards can show desktop thumbnails;
+  mobile keeps the compact text presentation. Metadata fetching has bounded, cached public-network requests.
+
+Existing saved links keep their authored display; backfill builds reference indexes
+without rewriting editor content. Implementation guidelines are [Logseq block references](https://discuss.logseq.com/t/the-basics-of-logseq-block-references/8458),
+[Logseq documentation](https://docs.logseq.com/), and [Obsidian internal links](https://obsidian.md/help/links).
 
 ---
 

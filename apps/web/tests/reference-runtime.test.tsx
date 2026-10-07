@@ -149,6 +149,112 @@ test("converting the second badge leaves the first occurrence intact", async () 
   );
 });
 
+test("card to inline badge to embed preserves aliases, target IDs and children", async () => {
+  const child = "40000000-0000-4000-8000-000000000004";
+  const blockTarget = {
+    ...target,
+    blockId: "50000000-0000-4000-8000-000000000005",
+  };
+  const { adapter, editor } = await setup([
+    {
+      children: [{ content: "Child", id: child, type: "paragraph" }],
+      id: SOURCE,
+      props: { ...props, blockId: blockTarget.blockId, label: "My alias" },
+      type: "referenceCard",
+    },
+  ]);
+  adapter.convertBlock(
+    SOURCE,
+    blockTarget,
+    "contentReference",
+    "My alias",
+    `/pages/${PAGE}#block=${blockTarget.blockId}`,
+  );
+  const badgeBlock = editor.getBlock(SOURCE);
+  expect(badgeBlock?.type).toBe("paragraph");
+  expect(badgeBlock?.children[0]?.id).toBe(child);
+  expect(badgeBlock?.content).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({
+        props: expect.objectContaining({
+          blockId: blockTarget.blockId,
+          documentId: DOCUMENT,
+          label: "My alias",
+        }),
+        type: "contentReference",
+      }),
+    ]),
+  );
+  adapter.convertInline(
+    SOURCE,
+    blockTarget,
+    "contentEmbed",
+    "My alias",
+    `/pages/${PAGE}#block=${blockTarget.blockId}`,
+  );
+  expect(editor.getBlock(SOURCE)?.type).toBe("contentEmbed");
+  expect(editor.getBlock(SOURCE)?.props).toEqual(
+    expect.objectContaining({
+      blockId: blockTarget.blockId,
+      documentId: DOCUMENT,
+      label: "My alias",
+    }),
+  );
+  expect(editor.getBlock(SOURCE)?.children[0]?.id).toBe(child);
+});
+
+test("extracting the second in-text badge preserves styled surrounding text, other badges and children", async () => {
+  const child = "40000000-0000-4000-8000-000000000004";
+  const { adapter, editor } = await setup([
+    {
+      children: [{ content: "Nested", id: child, type: "paragraph" }],
+      content: [
+        { styles: { bold: true }, text: "Before ", type: "text" },
+        { props: { ...props, label: "First" }, type: "contentReference" },
+        { styles: { italic: true }, text: " between ", type: "text" },
+        { props: { ...props, label: "Second" }, type: "contentReference" },
+        { styles: { underline: true }, text: " after", type: "text" },
+      ],
+      id: SOURCE,
+      type: "paragraph",
+    },
+  ]);
+  adapter.convertInline(
+    SOURCE,
+    target,
+    "referenceCard",
+    "Second",
+    `/pages/${PAGE}`,
+    1,
+  );
+  expect(editor.getBlock(SOURCE)?.children[0]?.id).toBe(child);
+  expect(editor.getBlock(SOURCE)?.content).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({
+        styles: { bold: true },
+        text: "Before ",
+        type: "text",
+      }),
+      expect.objectContaining({
+        props: expect.objectContaining({ label: "First" }),
+        type: "contentReference",
+      }),
+      expect.objectContaining({
+        styles: { italic: true },
+        text: " between ",
+        type: "text",
+      }),
+    ]),
+  );
+  expect(editor.document[1]?.type).toBe("referenceCard");
+  expect(editor.document[1]?.props).toEqual(
+    expect.objectContaining({ documentId: DOCUMENT, label: "Second" }),
+  );
+  expect(editor.document[2]?.content).toEqual([
+    expect.objectContaining({ styles: { underline: true }, text: " after" }),
+  ]);
+});
+
 test("opening an internal reference resolves the page entity route", async () => {
   const { adapter } = await setup([
     { content: "Text", id: SOURCE, type: "paragraph" },

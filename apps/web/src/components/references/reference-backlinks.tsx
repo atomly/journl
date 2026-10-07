@@ -44,7 +44,7 @@ function ReferenceBacklinksContent({
     documentId,
     limit: 20,
   });
-  const query = useQuery({ ...options, enabled: open });
+  const query = useQuery(options);
   useEffect(() => {
     setCursor(undefined);
     setPageCache({ pages: [], scope });
@@ -79,6 +79,8 @@ function ReferenceBacklinksContent({
   ];
   const nextCursor = pages.at(-1)?.data.nextCursor;
   const panelId = `references-${documentId}-${blockId ?? "document"}`;
+
+  if (!items.length) return null;
 
   return (
     <section className="mx-auto mt-6 w-full max-w-4xl px-8 text-sm">

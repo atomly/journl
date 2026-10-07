@@ -10,6 +10,8 @@ export type ReferencePreviewData = {
   href?: string;
   title?: string;
   excerpt?: string;
+  imageUrl?: string;
+  metadataState?: "enriched" | "url-only";
   truncated?: boolean;
   provider?: "github" | "generic";
   sourceStatus?: string;
@@ -40,14 +42,14 @@ export type ReferenceRenderAdapter = {
   convertBlock(
     blockId: string,
     target: ReferenceRenderTarget,
-    display: "contentEmbed" | "link" | "referenceCard",
+    display: "contentEmbed" | "contentReference" | "link" | "referenceCard",
     label: string,
     href: string,
   ): void;
   convertInline(
     blockId: string,
     target: ReferenceRenderTarget,
-    display: "contentEmbed" | "link" | "referenceCard",
+    display: "contentEmbed" | "contentReference" | "link" | "referenceCard",
     label: string,
     href: string,
     occurrenceIndex?: number,

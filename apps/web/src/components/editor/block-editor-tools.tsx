@@ -3,6 +3,7 @@
 import {
   type BlockPrimitive,
   type EditorPrimitive,
+  ReferenceRenderContext,
   schema,
 } from "@acme/blocknote/schema";
 import {
@@ -18,6 +19,7 @@ import {
   useBlockNoteEditor,
   useComponentsContext,
   useExtension,
+  usePortalElement,
   useSelectedBlocks,
 } from "@blocknote/react";
 import {
@@ -27,7 +29,7 @@ import {
 } from "@blocknote/xl-ai";
 import { useQueryClient } from "@tanstack/react-query";
 import { Check, Link2, MessageSquarePlus, Unlink } from "lucide-react";
-import { useState } from "react";
+import { useContext, useState } from "react";
 import { RiSparkling2Fill } from "react-icons/ri";
 import removeMarkdown from "remove-markdown";
 import { useJournlAgent } from "~/hooks/use-journl-agent";
@@ -126,11 +128,27 @@ function BlockEditorConvertLinkButton() {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const [converted, setConverted] = useState(false);
+  const adapter = useContext(ReferenceRenderContext);
+  const portalElement = usePortalElement();
   const tiptap = editor._tiptapEditor;
   const selection = tiptap.state.selection;
-  if (!Components || selection.empty) return null;
+  if (
+    !Components ||
+    !editor.isEditable ||
+    selection.empty ||
+    !selection.$from.sameParent(selection.$to)
+  )
+    return null;
   const linkMark = tiptap.schema.marks.link;
-  const link = selection.$from.marks().find((mark) => mark.type === linkMark);
+  let link = selection.$from.marks().find((mark) => mark.type === linkMark);
+  let allLinked = true;
+  tiptap.state.doc.nodesBetween(selection.from, selection.to, (node) => {
+    if (!node.isText) return;
+    const mark = node.marks.find((candidate) => candidate.type === linkMark);
+    if (!mark || (link && mark.attrs.href !== link.attrs.href))
+      allLinked = false;
+    else link = mark;
+  });
   const label = tiptap.state.doc.textBetween(
     selection.from,
     selection.to,
@@ -138,25 +156,49 @@ function BlockEditorConvertLinkButton() {
     "",
   );
   const href = typeof link?.attrs.href === "string" ? link.attrs.href : "";
-  if (!link || !href || !label.trim()) return null;
+  if (!link || !allLinked || !href || !label.trim()) return null;
 
   const captured = {
+    blockId: editor.getTextCursorPosition().block.id,
     from: selection.from,
     href,
     label,
     to: selection.to,
   };
-  async function convertLink() {
+  async function convertLink(
+    display: "contentReference" | "referenceCard" | "contentEmbed",
+  ) {
     try {
       const { items } = await queryClient.fetchQuery(
-        trpc.references.resolveUrls.queryOptions({ urls: [captured.href] }),
+        trpc.references.resolveUrls.queryOptions({
+          urls: [
+            (() => {
+              const url = new URL(captured.href, window.location.origin);
+              return url.origin === window.location.origin
+                ? `${url.pathname}${url.search}${url.hash}`
+                : captured.href;
+            })(),
+          ],
+        }),
       );
       const resolved = items[0];
       if (!resolved?.target) return;
       const current = editor._tiptapEditor.state.selection;
-      const currentLink = current.$from
-        .marks()
-        .find((mark) => mark.type === editor._tiptapEditor.schema.marks.link);
+      let currentHref: string | undefined;
+      let sameLink = true;
+      editor._tiptapEditor.state.doc.nodesBetween(
+        current.from,
+        current.to,
+        (node) => {
+          if (!node.isText) return;
+          const mark = node.marks.find(
+            (item) => item.type === editor._tiptapEditor.schema.marks.link,
+          );
+          if (!mark || (currentHref && mark.attrs.href !== currentHref))
+            sameLink = false;
+          else currentHref = mark.attrs.href;
+        },
+      );
       if (
         current.from !== captured.from ||
         current.to !== captured.to ||
@@ -166,16 +208,33 @@ function BlockEditorConvertLinkButton() {
           "",
           "",
         ) !== captured.label ||
-        currentLink?.attrs.href !== captured.href
+        !sameLink ||
+        currentHref !== captured.href
       )
         return;
       const target = resolved.target;
+      if (display === "contentEmbed" && target.kind !== "document") return;
+      let occurrenceIndex = 0;
+      current.$from.parent.nodesBetween(
+        0,
+        current.$from.parentOffset,
+        (node) => {
+          if (node.type.name === "contentReference") occurrenceIndex += 1;
+        },
+      );
+      const resolvedHref =
+        target.kind === "external"
+          ? target.url
+          : resolved.preview.status === "ready"
+            ? (resolved.preview.href ?? captured.href)
+            : captured.href;
+      const alias = captured.label === captured.href ? "" : captured.label;
       editor.insertInlineContent([
         {
           props: {
             blockId: target.kind === "document" ? (target.blockId ?? "") : "",
             documentId: target.kind === "document" ? target.documentId : "",
-            label: captured.label,
+            label: captured.label === captured.href ? "" : captured.label,
             resolutionToken: "",
             targetKind: target.kind,
             url:
@@ -189,6 +248,15 @@ function BlockEditorConvertLinkButton() {
           type: "contentReference",
         },
       ]);
+      if (display !== "contentReference")
+        adapter?.convertInline(
+          captured.blockId,
+          target,
+          display,
+          alias,
+          resolvedHref,
+          occurrenceIndex,
+        );
       setConverted(true);
       window.setTimeout(() => setConverted(false), 1500);
     } catch {
@@ -197,18 +265,49 @@ function BlockEditorConvertLinkButton() {
   }
 
   return (
-    <Components.FormattingToolbar.Button
-      label="Convert link to reference badge"
-      mainTooltip={
-        converted
-          ? "Link converted to reference"
-          : "Convert link to reference badge"
-      }
-      onClick={() => void convertLink()}
-      className="shrink-0"
+    <Components.Generic.Menu.Root
+      portalElement={portalElement}
+      position="bottom-start"
+      preventFocusOnOpen
     >
-      {converted ? <Check aria-hidden="true" /> : <Link2 aria-hidden="true" />}
-    </Components.FormattingToolbar.Button>
+      <Components.Generic.Menu.Trigger>
+        <Components.FormattingToolbar.Button
+          label="Reference display options"
+          mainTooltip={
+            converted ? "Link converted to reference" : "Display link as"
+          }
+          className="shrink-0"
+        >
+          {converted ? (
+            <Check aria-hidden="true" />
+          ) : (
+            <Link2 aria-hidden="true" />
+          )}
+        </Components.FormattingToolbar.Button>
+      </Components.Generic.Menu.Trigger>
+      <Components.Generic.Menu.Dropdown>
+        <Components.Generic.Menu.Label>
+          Display as
+        </Components.Generic.Menu.Label>
+        <Components.Generic.Menu.Item
+          onClick={() => void convertLink("contentReference")}
+        >
+          Inline
+        </Components.Generic.Menu.Item>
+        <Components.Generic.Menu.Item
+          onClick={() => void convertLink("referenceCard")}
+        >
+          Card
+        </Components.Generic.Menu.Item>
+        {/\/(pages\/|journal\/)/.test(href) && (
+          <Components.Generic.Menu.Item
+            onClick={() => void convertLink("contentEmbed")}
+          >
+            Embed
+          </Components.Generic.Menu.Item>
+        )}
+      </Components.Generic.Menu.Dropdown>
+    </Components.Generic.Menu.Root>
   );
 }
 

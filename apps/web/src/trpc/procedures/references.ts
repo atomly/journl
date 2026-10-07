@@ -25,6 +25,7 @@ import {
   normalizeExternalUrl,
   type ReferenceTarget,
 } from "~/references/reference-utils";
+import { getWebsiteMetadata } from "~/references/website-provider";
 import { protectedProcedure, type TRPCContext } from "../trpc";
 
 const zTarget = z.discriminatedUnion("kind", [
@@ -116,7 +117,10 @@ async function externalPreview(url: string, userId: string) {
   const parsed = new URL(url);
   const isGithub = parsed.hostname.toLowerCase() === "github.com";
   const segments = parsed.pathname.split("/").filter(Boolean);
-  const githubMetadata = isGithub ? await getGithubMetadata(userId, url) : null;
+  const [githubMetadata, websiteMetadata] = await Promise.all([
+    isGithub ? getGithubMetadata(userId, url) : Promise.resolve(null),
+    getWebsiteMetadata(userId, url),
+  ]);
   let title = parsed.hostname;
   let excerpt = parsed.href;
   if (isGithub && segments.length >= 2) {
@@ -129,6 +133,10 @@ async function externalPreview(url: string, userId: string) {
     }
     excerpt = `GitHub · ${title}`;
   }
+  if (websiteMetadata) {
+    title = websiteMetadata.title || title;
+    excerpt = websiteMetadata.excerpt || excerpt;
+  }
   if (githubMetadata) {
     title = githubMetadata.title;
     excerpt = githubMetadata.excerpt || excerpt;
@@ -137,14 +145,18 @@ async function externalPreview(url: string, userId: string) {
     excerpt,
     href: url,
     kind: "external" as const,
-    metadataState: githubMetadata
-      ? ("enriched" as const)
-      : ("url-only" as const),
+    metadataState:
+      githubMetadata || websiteMetadata
+        ? ("enriched" as const)
+        : ("url-only" as const),
     provider: isGithub ? ("github" as const) : ("generic" as const),
     status: "ready" as const,
     title,
     truncated: false,
     ...(githubMetadata?.status ? { sourceStatus: githubMetadata.status } : {}),
+    ...(websiteMetadata?.imageUrl
+      ? { imageUrl: websiteMetadata.imageUrl }
+      : {}),
   };
 }
 

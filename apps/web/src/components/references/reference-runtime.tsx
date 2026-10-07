@@ -27,7 +27,7 @@ export function ReferenceRuntime({
     () => ({
       canConvertInline(blockId) {
         const source = editor.getBlock(blockId);
-        return Array.isArray(source?.content) && source.content.length === 1;
+        return Array.isArray(source?.content);
       },
       convertBlock(blockId, target, display, label, href) {
         if (!editor.isEditable) return;
@@ -58,7 +58,12 @@ export function ReferenceRuntime({
           version: 1,
         } as const;
         if (display === "contentEmbed" && target.kind !== "document") return;
-        editor.updateBlock(blockId, { props, type: display });
+        if (display === "contentReference") {
+          editor.updateBlock(blockId, {
+            content: [{ props, type: "contentReference" }] as never,
+            type: "paragraph",
+          });
+        } else editor.updateBlock(blockId, { props, type: display });
       },
       convertInline(blockId, target, display, label, href, occurrenceIndex) {
         if (!editor.isEditable) return;
@@ -108,11 +113,7 @@ export function ReferenceRuntime({
           editor.updateBlock(blockId, { content: nextContent as never });
           return;
         }
-        if (
-          content.length !== 1 ||
-          (display === "contentEmbed" && target.kind !== "document")
-        )
-          return;
+        if (display === "contentEmbed" && target.kind !== "document") return;
         const props = {
           ...(target.kind === "document"
             ? {
@@ -126,7 +127,30 @@ export function ReferenceRuntime({
           url: target.kind === "external" ? target.url : href,
           version: 1,
         } as const;
-        editor.updateBlock(blockId, { props, type: display });
+        if (content.length > 1 && display !== "contentReference") {
+          const before = content.slice(0, index);
+          const after = content.slice(index + 1);
+          editor.transact(() => {
+            editor.updateBlock(blockId, { content: before as never });
+            editor.insertBlocks(
+              [
+                { props, type: display },
+                ...(after.length
+                  ? [{ content: after as never, type: "paragraph" as const }]
+                  : []),
+              ],
+              blockId,
+              "after",
+            );
+          });
+          return;
+        }
+        if (display === "contentReference") {
+          editor.updateBlock(blockId, {
+            content: [{ props, type: "contentReference" }] as never,
+            type: "paragraph",
+          });
+        } else editor.updateBlock(blockId, { props, type: display });
       },
       editable: editor.isEditable,
       async loadEmbedContent(target, cursor) {

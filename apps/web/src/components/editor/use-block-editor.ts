@@ -10,6 +10,7 @@ import type { EditorView } from "@tiptap/pm/view";
 import { DefaultChatTransport } from "ai-sdk-v6";
 import { getPlainUrlForAutomaticReference } from "~/references/reference-paste-url";
 import { useTRPC } from "~/trpc/react";
+import { preserveControlTabNavigation } from "./editor-tab-navigation";
 import {
   handleReferencePaste,
   insertReferenceUrl,
@@ -69,6 +70,7 @@ export function useBlockEditor({
             // Block single-click navigation for links in the editor.
             return true;
           },
+          handleDOMEvents: { keydown: preserveControlTabNavigation },
           handleDoubleClick: (_view, _pos, event) => {
             const anchor = getAnchorFromTarget(event.target);
 
@@ -151,6 +153,8 @@ export function useBlockEditor({
           ),
         ),
       schema,
+      // A selection opens the formatting toolbar; Tab should still indent its blocks.
+      tabBehavior: "prefer-indent",
     },
     [resetKey],
   );

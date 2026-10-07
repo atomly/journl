@@ -406,3 +406,42 @@
   --tw-shadow: 0 0 transparent;
   --tw-shadow-colored: 0 0 transparent;
 }
+
+/* Show node selection while the editor itself or that node owns focus.
+   Moving to another card or toolbar control must clear the old outline. */
+.bn-editor:not(:focus)
+  .bn-block-content[data-content-type="referenceCard"].ProseMirror-selectednode:not(
+    :focus-within
+  )
+  > *::after,
+.bn-editor:not(:focus)
+  .bn-block-content[data-content-type="contentEmbed"].ProseMirror-selectednode:not(
+    :focus-within
+  )
+  > *::after,
+.bn-editor:not(:focus)
+  .ProseMirror-selectednode:not(:focus-within)
+  > .bn-block-content[data-content-type="referenceCard"]
+  > *::after,
+.bn-editor:not(:focus)
+  .ProseMirror-selectednode:not(:focus-within)
+  > .bn-block-content[data-content-type="contentEmbed"]
+  > *::after {
+  display: none;
+}
+
+.content-reference-thumbnail {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .content-reference-thumbnail {
+    display: block;
+    float: right;
+    width: 5rem;
+    height: 3.75rem;
+    margin-left: 0.75rem;
+    border-radius: 0.35rem;
+    object-fit: cover;
+  }
+}

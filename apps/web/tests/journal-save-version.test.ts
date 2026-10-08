@@ -1,8 +1,15 @@
+vi.mock("~/explore/refresh", () => ({
+  lockExploreOwner: vi.fn(),
+  markExploreDirty: vi.fn(),
+}));
+
 import { Document } from "@acme/db/schema";
 import { initTRPC } from "@trpc/server";
 import { beforeEach, expect, test, vi } from "vitest";
 import { journalRouter } from "../src/trpc/procedures/journal";
 import type { TRPCContext } from "../src/trpc/trpc";
+
+vi.mock("~/env", () => ({ env: { PUBLIC_WEB_URL: "https://journl.example" } }));
 
 const mocks = vi.hoisted(() => ({ persist: vi.fn() }));
 vi.mock("@acme/blocknote/server", () => ({ blocknoteBlocks: vi.fn() }));
@@ -21,6 +28,10 @@ vi.mock("../src/trpc/trpc", async () => {
     usageGuard: t.middleware(({ next }) => next()),
   };
 });
+
+vi.mock("../src/explore/dispatch", () => ({
+  dispatchExploreRefresh: vi.fn(),
+}));
 
 const v1 = "2026-09-29 12:00:00.000001+00";
 const v2 = "2026-09-29 12:00:00.000002+00";

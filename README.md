@@ -89,16 +89,29 @@ and embeds are different presentations of the same relationship.
   on desktop right-click. Ordinary links and selected text keep native menus;
   touch devices keep native long-press behavior and the sticky toolbar.
 - Linked references load when the editor opens. The section appears only when references exist.
-- Use **Explore this note** beside a note or journal heading to follow its connections. Select a note
-  for its preview and linking passages; **Explore connections** follows the thread, and Back restores
-  your earlier position. The sidebar **Explore** view at `/explore` groups connected notes and linked
-  websites, keeping unlinked notes separate. Existing `/graph` links redirect with their context preserved.
-  Unlinked notes show their last edit date, newest first, with 12 notes per page and an oldest-first option.
-  **See all connections** opens the complete list of related notes and external sources.
-  Pinch with two fingers or a trackpad to zoom the canvas. Desktop previews stay visible while scrolling;
-  mobile previews keep a fixed height and scroll independently as content loads.
+- **Explore** at `/explore` starts with named threads of connected notes and shared sources.
+  Switch between the canvas and an accessible list, search threads, or browse recent notes
+  with newest/oldest sorting and an unlinked-only filter. Results load one page at a time.
+- Open a thread to browse its notes, related notes, and external sources. **Why here?** shows
+  the authored passages supporting membership; source pages show the notes that cite them.
+  Thread names can be edited and survive refreshes. **Explore this note** opens a focused
+  view of its actual connections. Breadcrumbs and Back restore the previous view.
+- Clusters are navigation aids, not new references. Seeded Leiden clustering weights direct
+  note references more strongly than shared URLs; repeated links and widely cited sources
+  cannot inflate similarity. Specific shared sources require two distinct URLs. Domains
+  alone never connect notes. Snapshots refresh in the background after edits and publish
+  atomically; the last complete view remains available while refreshing.
+- Pinch with two fingers or a trackpad to zoom the canvas. Desktop previews stay sticky;
+  mobile previews keep a bounded height and scroll independently. Existing `/graph` links
+  redirect with their context preserved.
 - Public websites use page metadata when available, with URL fallback. Cards can show desktop thumbnails;
   mobile keeps the compact text presentation. Metadata fetching has bounded, cached public-network requests.
+
+The additive Explore schema can be installed with `pnpm --filter @acme/web explore:setup`,
+then populated with `pnpm --filter @acme/web explore:backfill` (resumable with `--after=owner-id`).
+`explore:benchmark` checks a 10,000-note / 100,000-reference fixture. Algorithm parameters
+and their version live in `apps/web/src/explore/config.ts`; changing the version schedules
+fresh snapshots on the next Explore visit. The daily refresh cron uses the existing `CRON_SECRET`.
 
 Existing saved links keep their authored display; backfill builds reference indexes
 without rewriting editor content. Implementation guidelines are [Logseq block references](https://discuss.logseq.com/t/the-basics-of-logseq-block-references/8458),

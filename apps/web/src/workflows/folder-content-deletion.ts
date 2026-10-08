@@ -2,6 +2,8 @@ import { and, eq, inArray } from "@acme/db";
 import { Document, DocumentReference, Folder, TreeNode } from "@acme/db/schema";
 import { start } from "workflow/api";
 import { z } from "zod/v4";
+import { dispatchExploreRefresh } from "~/explore/dispatch";
+import { lockExploreOwner, markExploreDirty } from "~/explore/refresh";
 
 import { createTransaction } from "./utils/transaction";
 
@@ -49,6 +51,7 @@ export async function runFolderContentDeletion(
     userId: payload.userId,
   });
 
+  await dispatchRefresh(payload.userId);
   return {
     deletedDocuments,
     deletedFolders,
@@ -76,6 +79,7 @@ async function deleteDocuments(input: {
   }
 
   return await createTransaction(async (tx) => {
+    await lockExploreOwner(tx, input.userId);
     await tx
       .delete(DocumentReference)
       .where(
@@ -95,6 +99,7 @@ async function deleteDocuments(input: {
       )
       .returning({ id: Document.id });
 
+    if (deleted.length) await markExploreDirty(tx, input.userId);
     return { deletedDocuments: deleted.length };
   });
 }
@@ -151,3 +156,8 @@ async function deleteTreeNodes(input: {
   });
 }
 deleteTreeNodes.maxRetries = 3;
+
+async function dispatchRefresh(userId: string) {
+  "use step";
+  await dispatchExploreRefresh(userId);
+}

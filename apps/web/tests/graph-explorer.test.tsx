@@ -76,7 +76,10 @@ vi.mock("next/navigation", async () => {
       push: (href: string) => {
         mock.pushes.push(href);
         if (!href.startsWith("/explore")) return;
-        mock.location = href.split("?")[1] ?? "";
+        const note = /^\/explore\/notes\/([^?]+)/.exec(href);
+        mock.location = note
+          ? `documentId=${note[1]}`
+          : (href.split("?")[1] ?? "");
         for (const listener of mock.listeners) listener();
       },
     }),
@@ -99,6 +102,14 @@ vi.mock("next/link", () => ({
 }));
 vi.mock("../src/trpc/react", () => ({
   useTRPC: () => ({
+    explore: {
+      memberships: {
+        queryOptions: (input: unknown) => ({
+          queryFn: async () => [],
+          queryKey: ["memberships", input],
+        }),
+      },
+    },
     references: {
       getGraph: {
         infiniteQueryOptions: (
@@ -197,6 +208,7 @@ beforeAll(() => {
 });
 afterAll(() => vi.unstubAllGlobals());
 beforeEach(() => {
+  sessionStorage.clear();
   mock.location = "";
   nodes = [...baseNodes];
   mock.inputs.length = 0;
@@ -206,7 +218,7 @@ const settle = () =>
   act(async () => {
     await new Promise((resolve) => setTimeout(resolve, 40));
   });
-async function setup() {
+async function setup(loadRemaining = true) {
   const container = document.createElement("div");
   document.body.append(container);
   const root = createRoot(container);
@@ -222,6 +234,15 @@ async function setup() {
   );
   await settle();
   await settle();
+  if (loadRemaining) {
+    const load = [...container.querySelectorAll("button")].find(
+      (b) => b.textContent === "Load more connections",
+    );
+    if (load) {
+      await act(async () => load.click());
+      await settle();
+    }
+  }
   return {
     cleanup: async () => {
       await act(async () => root.unmount());
@@ -237,9 +258,15 @@ const click = async (element: Element | null) => {
   await settle();
 };
 
-test("automatically merges pages into one clustered canvas and separates unlinked notes", async () => {
-  const { container, cleanup } = await setup();
+test("loads further connections only on request and merges them without losing context", async () => {
+  const { container, cleanup } = await setup(false);
   try {
+    expect(mock.inputs.some((input) => input.cursor === "next")).toBe(false);
+    await click(
+      [...container.querySelectorAll("button")].find(
+        (b) => b.textContent === "Load more connections",
+      ) ?? null,
+    );
     expect(mock.inputs.some((input) => input.cursor === "next")).toBe(true);
     expect(container.textContent).not.toContain("Next graph view");
     expect(container.querySelectorAll("input[type=checkbox]")).toHaveLength(0);
@@ -398,7 +425,7 @@ test("Explore uses the app search and keeps desktop context beside the canvas", 
         ...container.querySelectorAll('[aria-label="Note preview"] button'),
       ].find((button) => button.textContent === "Explore connections") ?? null,
     );
-    expect(mock.pushes.at(-1)).toBe("/explore?documentId=b");
+    expect(mock.pushes.at(-1)).toBe("/explore/notes/b");
   } finally {
     await cleanup();
   }
@@ -460,7 +487,7 @@ test("unlinked discovery is newest first, bounded by page, and offers direct exp
         '[aria-label="Explore connections for Z newest note"]',
       ) ?? null,
     );
-    expect(mock.pushes.at(-1)).toBe("/explore?documentId=unlinked-13");
+    expect(mock.pushes.at(-1)).toBe("/explore/notes/unlinked-13");
   } finally {
     await cleanup();
   }

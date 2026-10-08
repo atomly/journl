@@ -10,6 +10,7 @@ import {
 import type { TRPCRouterRecord } from "@trpc/server";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod/v4";
+import { markExploreDirty } from "~/explore/refresh";
 import { startFolderContentDeletion } from "~/workflows/folder-content-deletion";
 import { protectedProcedure, type TRPCContext } from "../trpc";
 import {
@@ -143,6 +144,7 @@ export const treeRouter = {
       return await ctx.db.transaction(async (tx) => {
         const userId = ctx.session.user.id;
 
+        await markExploreDirty(tx, userId);
         const [document] = await tx
           .insert(Document)
           .values({

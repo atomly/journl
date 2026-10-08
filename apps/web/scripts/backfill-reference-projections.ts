@@ -6,6 +6,7 @@ import {
   Document,
   DocumentReference,
 } from "@acme/db/schema";
+import { lockExploreOwner } from "../src/explore/refresh";
 import { rebuildReferenceProjection } from "../src/trpc/shared/block-transaction";
 
 // Run the full owner-scoped backfill with `pnpm references:backfill`; resume
@@ -24,6 +25,18 @@ function argument(name: string) {
 
 async function rebuildDocument(documentId: string, expectedUserId?: string) {
   return db.transaction(async (tx) => {
+    const [owner] = await tx
+      .select({ userId: Document.user_id })
+      .from(Document)
+      .where(
+        and(
+          eq(Document.id, documentId),
+          expectedUserId ? eq(Document.user_id, expectedUserId) : undefined,
+        ),
+      )
+      .limit(1);
+    if (!owner) return null;
+    await lockExploreOwner(tx, owner.userId);
     const [source] = await tx
       .select({ id: Document.id, userId: Document.user_id })
       .from(Document)

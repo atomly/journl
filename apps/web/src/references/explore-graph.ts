@@ -257,3 +257,42 @@ export function layoutExploreGraph(
     width,
   };
 }
+
+/** Layout of an already computed server cluster; never recomputes membership. */
+export function layoutClusterGraph(
+  graph: ExploreGraph,
+  width: number,
+): ExploreLayout {
+  const columns = width >= 800 ? 3 : width >= 480 ? 2 : 1;
+  const positions = new Map<string, { x: number; y: number }>();
+  const notes = graph.nodes
+    .filter((n) => n.kind !== "external")
+    .sort((a, b) => a.key.localeCompare(b.key));
+  const sources = graph.nodes
+    .filter((n) => n.kind === "external")
+    .sort((a, b) => a.key.localeCompare(b.key));
+  notes.forEach((n, i) => {
+    positions.set(n.key, {
+      x: (((i % columns) + 0.5) * width) / columns,
+      y: 64 + Math.floor(i / columns) * 110,
+    });
+  });
+  const sourceTop = 90 + Math.ceil(notes.length / columns) * 110;
+  sources.forEach((n, i) => {
+    positions.set(n.key, {
+      x: (((i % columns) + 0.5) * width) / columns,
+      y: sourceTop + Math.floor(i / columns) * 110,
+    });
+  });
+  return {
+    cardWidth: Math.min(190, width / columns - 28),
+    groups: [],
+    height: Math.max(
+      360,
+      sourceTop + Math.ceil(sources.length / columns) * 110,
+    ),
+    hiddenCount: 0,
+    positions,
+    width,
+  };
+}

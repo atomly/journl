@@ -13,6 +13,7 @@ import {
 import { TRPCError } from "@trpc/server";
 import { z } from "zod/v4";
 import { env } from "../../env";
+import { lockExploreOwner, markExploreDirty } from "../../explore/refresh";
 import {
   extractReferenceOccurrences,
   getTargetKey,
@@ -99,9 +100,11 @@ export async function rebuildReferenceProjection(
 ) {
   const previousReferences = await db
     .select({
+      id: DocumentReference.id,
       occurrence_path: DocumentReference.occurrence_path,
       presentation: DocumentReference.presentation,
       source_block_id: DocumentReference.source_block_id,
+      target_identity: DocumentReference.target_identity,
       target_key: DocumentReference.target_key,
     })
     .from(DocumentReference)
@@ -116,6 +119,12 @@ export async function rebuildReferenceProjection(
       (reference) =>
         `${reference.source_block_id}|${reference.occurrence_path}|${reference.target_key}|${reference.presentation}`,
     ),
+  );
+  const previousIds = new Map(
+    previousReferences.map((reference) => [
+      `${reference.source_block_id}|${reference.occurrence_path}|${reference.target_key}|${reference.target_identity}`,
+      reference.id,
+    ]),
   );
   const occurrences: (typeof DocumentReference.$inferInsert)[] = [];
   let malformedCount = 0;
@@ -280,6 +289,9 @@ export async function rebuildReferenceProjection(
         }
       }
       occurrences.push({
+        id: previousIds.get(
+          `${block.id}|${occurrencePath}|${targetKey}|${occurrence.identity}`,
+        ),
         occurrence_path: occurrencePath,
         presentation: occurrence.presentation,
         source_block_id: block.id,
@@ -327,6 +339,7 @@ export async function rebuildReferenceProjection(
       })),
     );
   }
+  await markExploreDirty(db, userId);
   return {
     blockSearchTextCount: blocks.length,
     malformedCount,
@@ -398,6 +411,7 @@ export async function saveTransactions(
   const userId = ctx.session?.user?.id;
   if (!userId) throw new TRPCError({ code: "UNAUTHORIZED" });
 
+  await lockExploreOwner(ctx.db, userId);
   const [source] = await ctx.db
     .select({ id: Document.id })
     .from(Document)

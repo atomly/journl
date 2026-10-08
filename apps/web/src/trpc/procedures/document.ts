@@ -1,13 +1,16 @@
 import { and, eq } from "@acme/db";
 import { Document, DocumentReference, zDocument } from "@acme/db/schema";
 import type { TRPCRouterRecord } from "@trpc/server";
+import { dispatchExploreRefresh } from "~/explore/dispatch";
+import { lockExploreOwner, markExploreDirty } from "~/explore/refresh";
 import { protectedProcedure } from "../trpc";
 
 export const documentRouter = {
   delete: protectedProcedure
     .input(zDocument.pick({ id: true }))
     .mutation(async ({ ctx, input }) => {
-      return await ctx.db.transaction(async (tx) => {
+      const result = await ctx.db.transaction(async (tx) => {
+        await lockExploreOwner(tx, ctx.session.user.id);
         const [owned] = await tx
           .select({ id: Document.id })
           .from(Document)
@@ -29,6 +32,7 @@ export const documentRouter = {
               eq(DocumentReference.target_identity, "route"),
             ),
           );
+        await markExploreDirty(tx, ctx.session.user.id);
         return await tx
           .delete(Document)
           .where(
@@ -39,5 +43,7 @@ export const documentRouter = {
           )
           .returning();
       });
+      await dispatchExploreRefresh(ctx.session.user.id);
+      return result;
     }),
 } satisfies TRPCRouterRecord;

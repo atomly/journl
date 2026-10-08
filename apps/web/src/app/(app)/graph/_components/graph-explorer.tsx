@@ -1,6 +1,6 @@
 "use client";
 
-import { useInfiniteQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import {
   ArrowLeft,
   ChevronRight,
@@ -43,6 +43,7 @@ import {
   sortExploreNotes,
 } from "~/references/explore-note-list";
 import { useTRPC } from "~/trpc/react";
+import { useExploreState } from "../../explore/_components/explore-state";
 import {
   type ExploreCamera,
   ExploreCanvas,
@@ -63,10 +64,17 @@ const OVERVIEW: Step = {
   title: "Explore",
 };
 
-export function GraphExplorer() {
+export function GraphExplorer({
+  documentId: suppliedDocumentId,
+  parentClusterId,
+}: {
+  documentId?: string;
+  parentClusterId?: string;
+} = {}) {
   const params = useSearchParams();
   const router = useRouter();
-  const documentId = params.get("documentId") ?? undefined;
+  const documentId =
+    suppliedDocumentId ?? params.get("documentId") ?? undefined;
   const blockId = documentId ? (params.get("blockId") ?? undefined) : undefined;
   const scope = documentId ? `${documentId}:${blockId ?? ""}` : "overview";
   const snapshots = useRef(new Map<string, Snapshot>());
@@ -74,7 +82,7 @@ export function GraphExplorer() {
   const [trail, setTrail] = useState<Step[]>([]);
   useEffect(() => {
     const href = documentId
-      ? `/explore?documentId=${documentId}${blockId ? `&blockId=${blockId}` : ""}`
+      ? `/explore/notes/${documentId}${blockId ? `?blockId=${blockId}` : ""}`
       : "/explore";
     setTrail((previous) => {
       const existing = previous.findIndex((step) => step.scope === scope);
@@ -105,7 +113,7 @@ export function GraphExplorer() {
     const nextScope = `${node.target.documentId}:`;
     if (nextScope === scope) return;
     titles.current.set(nextScope, getExploreTitle(node));
-    router.push(`/explore?documentId=${node.target.documentId}`);
+    router.push(`/explore/notes/${node.target.documentId}`);
   }
   return (
     <main className="mx-auto flex min-h-full w-full max-w-7xl flex-col gap-5 px-4 py-6 md:px-8">
@@ -142,6 +150,7 @@ export function GraphExplorer() {
               />
             </>
           )}
+          {parentClusterId && <OriginThread clusterId={parentClusterId} />}
           {trail.map((step, index) => (
             <span key={step.scope} className="flex min-w-0 items-center gap-1">
               {index > 0 && (
@@ -201,14 +210,29 @@ function ExploreView({
   const router = useRouter();
   const mobile = useIsMobile();
   const focusKey = documentId ? `document:${documentId}` : undefined;
-  const [selectedKey, setSelectedKey] = useState(snapshot?.selectedKey);
-  const [selectedEdge, setSelectedEdge] = useState(snapshot?.selectedEdge);
+  const [stored, setStored] = useExploreState<Snapshot>(
+    `note:${documentId ?? "legacy-overview"}:${blockId ?? ""}`,
+    snapshot ?? { camera: INITIAL_CAMERA, scrollTop: 0 },
+  );
+  const selectedKey = stored.selectedKey;
+  const selectedEdge = stored.selectedEdge;
+  const setSelectedKey = (selectedKey?: string) =>
+    setStored((v) => ({ ...v, selectedKey }));
+  const setSelectedEdge = (selectedEdge?: string) =>
+    setStored((v) => ({ ...v, selectedEdge }));
   const [noteOrder, setNoteOrder] = useState<"latest" | "oldest">("latest");
   const [notePage, setNotePage] = useState(0);
   const unlinkedSection = useRef<HTMLElement>(null);
-  const [camera, setCamera] = useState(snapshot?.camera ?? INITIAL_CAMERA);
+  const camera = stored.camera;
+  const setCamera = useCallback(
+    (next: ExploreCamera | ((previous: ExploreCamera) => ExploreCamera)) =>
+      setStored((v) => ({
+        ...v,
+        camera: typeof next === "function" ? next(v.camera) : next,
+      })),
+    [setStored],
+  );
   const viewport = useRef<HTMLDivElement>(null);
-  const initialSnapshot = useRef(snapshot).current;
   const [width, setWidth] = useState(920);
   const graphQuery = useInfiniteQuery(
     trpc.references.getGraph.infiniteQueryOptions(
@@ -222,10 +246,6 @@ function ExploreView({
     ),
   );
   const { hasNextPage, isFetchingNextPage, fetchNextPage } = graphQuery;
-  useEffect(() => {
-    if (hasNextPage && !isFetchingNextPage && !graphQuery.isError)
-      void fetchNextPage();
-  }, [hasNextPage, isFetchingNextPage, fetchNextPage, graphQuery.isError]);
   const graph = useMemo(
     () => mergeGraphPages(graphQuery.data?.pages ?? []),
     [graphQuery.data],
@@ -248,7 +268,7 @@ function ExploreView({
   const selected =
     graph.nodes.find((node) => node.key === selectedKey) ??
     (!mobile ? root : undefined);
-  const complete = !graphQuery.isPending && !hasNextPage;
+  const complete = !graphQuery.isPending;
   const rootTitle = root?.title;
   useEffect(() => {
     if (rootTitle) onTitle(rootTitle);
@@ -265,18 +285,20 @@ function ExploreView({
     return () => observer.disconnect();
   }, [complete]);
   useEffect(() => {
-    if (complete && viewport.current && initialSnapshot)
-      viewport.current.scrollTop = initialSnapshot.scrollTop;
-  }, [complete, initialSnapshot]);
+    if (complete && viewport.current)
+      viewport.current.scrollTop = stored.scrollTop;
+  }, [complete, stored.scrollTop]);
   const saveSnapshot = useCallback(() => {
     if (!complete || !viewport.current) return;
+    const scrollTop = viewport.current.scrollTop;
+    setStored((v) => (v.scrollTop === scrollTop ? v : { ...v, scrollTop }));
     onSnapshot({
       camera,
       scrollTop: viewport.current.scrollTop,
       selectedEdge,
       selectedKey,
     });
-  }, [complete, onSnapshot, camera, selectedKey, selectedEdge]);
+  }, [complete, onSnapshot, camera, selectedKey, selectedEdge, setStored]);
   useEffect(() => {
     saveSnapshot();
   }, [saveSnapshot]);
@@ -302,6 +324,7 @@ function ExploreView({
     : 0;
   return (
     <>
+      {documentId && <NoteMemberships documentId={documentId} />}
       <header className="flex flex-wrap items-start justify-between gap-4">
         <div className="min-w-0 flex-1">
           <h1 className="break-words font-semibold text-2xl">
@@ -358,7 +381,7 @@ function ExploreView({
               <div className="flex min-h-14 items-center justify-between gap-3 border-b px-3 py-2">
                 <p className="pl-1 text-muted-foreground text-xs">
                   {documentId
-                    ? `${connectionCount} ${connectionCount === 1 ? "connection" : "connections"}`
+                    ? `${connectionCount} ${hasNextPage ? "connections shown" : connectionCount === 1 ? "connection" : "connections"}`
                     : `${clusters.length} ${clusters.length === 1 ? "thread" : "threads"}`}{" "}
                   · Select a note or source to read its context
                 </p>
@@ -439,6 +462,15 @@ function ExploreView({
                 )}
               </div>
             </section>
+            {hasNextPage && (
+              <Button
+                variant="outline"
+                disabled={isFetchingNextPage}
+                onClick={() => void fetchNextPage()}
+              >
+                Load more connections
+              </Button>
+            )}
             {!documentId && unlinked.length > 0 && (
               <section
                 ref={unlinkedSection}
@@ -639,6 +671,46 @@ function ExploreView({
           </div>
         </SheetContent>
       </Sheet>
+    </>
+  );
+}
+
+function NoteMemberships({ documentId }: { documentId: string }) {
+  const trpc = useTRPC();
+  const query = useQuery(trpc.explore.memberships.queryOptions({ documentId }));
+  if (!query.data?.length) return null;
+  return (
+    <div className="flex flex-wrap items-center gap-2 text-sm">
+      <span className="text-muted-foreground">Threads</span>
+      {query.data.map((c) => (
+        <Link
+          key={c.id}
+          href={`/explore/clusters/${c.id}`}
+          className="inline-flex min-h-11 items-center rounded-lg border px-3 hover:bg-accent/30"
+        >
+          {c.name ?? c.generatedName}
+          {c.role === "related" ? " · Related" : ""}
+        </Link>
+      ))}
+    </div>
+  );
+}
+
+function OriginThread({ clusterId }: { clusterId: string }) {
+  const trpc = useTRPC();
+  const query = useQuery(trpc.explore.getCluster.queryOptions({ clusterId }));
+  return (
+    <>
+      <Link
+        href={`/explore/clusters/${clusterId}`}
+        className="inline-flex min-h-11 max-w-48 items-center truncate rounded-md px-2 text-muted-foreground hover:text-foreground"
+      >
+        {query.data?.summary?.name ?? "Previous thread"}
+      </Link>
+      <ChevronRight
+        className="size-3 shrink-0 text-muted-foreground"
+        aria-hidden="true"
+      />
     </>
   );
 }

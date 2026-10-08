@@ -13,6 +13,7 @@ import {
   type ExploreGraph,
   type ExploreNode,
   getConnectedNotes,
+  layoutClusterGraph,
   layoutExploreGraph,
 } from "~/references/explore-graph";
 
@@ -22,6 +23,7 @@ export { type ExploreCamera, INITIAL_CAMERA } from "./use-explore-camera";
 
 export function ExploreCanvas({
   graph,
+  cluster = false,
   width,
   focusKey,
   selectedKey,
@@ -31,6 +33,7 @@ export function ExploreCanvas({
   onExplore,
 }: {
   graph: ExploreGraph;
+  cluster?: boolean;
   width: number;
   focusKey?: string;
   selectedKey?: string;
@@ -39,7 +42,9 @@ export function ExploreCanvas({
   onSelect(node: ExploreNode, edge?: ExploreEdge): void;
   onExplore(node: ExploreNode): void;
 }) {
-  const layout = layoutExploreGraph(graph, width, focusKey);
+  const layout = cluster
+    ? layoutClusterGraph(graph, width)
+    : layoutExploreGraph(graph, width, focusKey);
   const gestures = useExploreCamera(camera, onCamera, width, layout.height);
   const visibleNodes = graph.nodes.filter((node) =>
     layout.positions.has(node.key),
@@ -113,6 +118,7 @@ export function ExploreCanvas({
             if (!from || !to || edge.fromKey === edge.toKey) return null;
             const selected =
               selectedKey === edge.fromKey || selectedKey === edge.toKey;
+            if (cluster && !selected) return null;
             const label = `Read connection between ${byKey.get(edge.fromKey)?.title} and ${byKey.get(edge.toKey)?.title}`;
             return (
               <g key={`${edge.fromKey}|${edge.toKey}`}>

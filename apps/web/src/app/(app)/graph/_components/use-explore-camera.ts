@@ -157,7 +157,7 @@ export function useExploreCamera(
       if (
         event.pointerType !== "touch" &&
         (event.button !== 0 ||
-          (event.target as Element).closest("button, [role=button]"))
+          (event.target as Element).closest("button, a, [role=button]"))
       )
         return;
       if (!pointers.current.size) moved.current = false;
@@ -166,7 +166,7 @@ export function useExploreCamera(
         point(event.clientX, event.clientY),
       );
       if (
-        !(event.target as Element).closest("button, [role=button]") ||
+        !(event.target as Element).closest("button, a, [role=button]") ||
         pointers.current.size > 1
       ) {
         for (const id of pointers.current.keys())

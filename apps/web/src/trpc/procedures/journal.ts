@@ -21,6 +21,8 @@ import { TRPCError } from "@trpc/server";
 import { embed } from "ai";
 import { z } from "zod/v4";
 import { model } from "~/ai/providers/openai/embedding";
+import { dispatchExploreRefresh } from "~/explore/dispatch";
+import { lockExploreOwner } from "~/explore/refresh";
 import { startDocumentEmbedding } from "~/workflows/document-embedding";
 import {
   saveTransactions,
@@ -349,6 +351,7 @@ export const journalRouter = {
     .mutation(async ({ ctx, input }) => {
       try {
         const result = await ctx.db.transaction(async (tx) => {
+          await lockExploreOwner(tx, ctx.session.user.id);
           // Serialize creation and retries for a date, including when no row exists yet.
           await tx.execute(
             sql`select pg_advisory_xact_lock(hashtext(${ctx.session.user.id}), hashtext(${input.date}))`,
@@ -449,6 +452,7 @@ export const journalRouter = {
             error,
           });
         }
+        await dispatchExploreRefresh(ctx.session.user.id);
         return result.saved;
       } catch (error) {
         if (error instanceof TRPCError) {

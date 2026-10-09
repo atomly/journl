@@ -4,9 +4,10 @@
 
 @source "../../../../../node_modules/@blocknote/shadcn";
 
-/* Floating UI adds a portal wrapper when editor hover controls appear.
-   Keep that wrapper out of the editor's flex layout so it cannot add a gap. */
-.bn-container > [data-floating-ui-portal] {
+/* Floating UI and Base UI add portal wrappers for editor controls.
+   Keep them out of the themed root's flex layout so they cannot add a gap. */
+.bn-root > [data-floating-ui-portal],
+.bn-root > [data-base-ui-portal] {
   display: contents;
 }
 
@@ -35,6 +36,370 @@
   align-self: start;
   margin-right: 0.7rem;
   margin-top: 0.34375rem;
+}
+
+/* Reference controls share the editor's neutral surfaces and compact spacing. */
+.content-reference-wrap {
+  display: inline-flex;
+  max-width: 100%;
+  vertical-align: baseline;
+}
+
+.content-reference {
+  display: inline-flex;
+  max-width: 100%;
+  align-items: center;
+  gap: 0.3rem;
+  border: 1px solid var(--border);
+  border-radius: 0.4rem;
+  background: color-mix(in srgb, var(--muted) 65%, transparent);
+  padding: 0.05rem 0.4rem;
+  color: var(--foreground);
+  font-size: 0.9em;
+  line-height: 1.45;
+  text-decoration: none;
+}
+
+.content-reference > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.content-reference-icon {
+  width: 1em;
+  height: 1em;
+  flex-shrink: 0;
+  color: var(--muted-foreground);
+}
+
+.content-reference:hover {
+  background: var(--muted);
+}
+
+.content-reference:focus-visible,
+.content-reference-action:focus-visible,
+.content-reference-open:focus-visible,
+.content-embed-toggle:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+.content-reference-preview {
+  z-index: 50;
+  width: 21rem;
+  max-width: calc(100vw - 2rem);
+  gap: 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--popover);
+  padding: 0.85rem;
+  color: var(--popover-foreground);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 14%);
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.content-reference-preview-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.content-reference-action {
+  display: inline-flex;
+  width: 2.25rem;
+  height: 2.25rem;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--muted-foreground);
+  cursor: pointer;
+}
+
+.content-reference-action > svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.content-reference-action:hover,
+.content-reference-open:hover,
+.content-embed-toggle:hover {
+  background: var(--muted);
+  color: var(--foreground);
+}
+
+.content-reference-open {
+  display: inline-flex;
+  min-height: 2.25rem;
+  align-items: center;
+  gap: 0.4rem;
+  border-radius: 0.5rem;
+  padding: 0.25rem 0.5rem;
+  color: var(--muted-foreground);
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.content-reference-card,
+.content-embed {
+  min-width: 0;
+  width: 100%;
+  margin: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--card) 55%, transparent);
+  color: var(--foreground);
+  overflow-wrap: anywhere;
+}
+
+.content-reference-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.85rem;
+  padding: 0.75rem 1rem;
+}
+
+.content-reference-card-heading,
+.content-embed-heading {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.content-reference-card-heading > a,
+.content-reference-card-heading > strong {
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+  font-weight: 600;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-decoration: none;
+}
+
+.content-reference-card-body {
+  min-width: 0;
+  flex: 1;
+}
+
+.content-reference-card-heading > a {
+  flex: 0 1 auto;
+  width: fit-content;
+  max-width: 100%;
+}
+
+.content-reference-card-heading > .content-reference-action {
+  margin-inline-start: auto;
+}
+
+/* Compact editable surfaces move and select as blocks; source text in an
+   expanded embed retains normal selection and copying. */
+@media (hover: hover) and (pointer: fine) {
+  [data-block-surface="true"] {
+    user-select: none;
+  }
+  [data-block-surface="true"] .content-embed-content {
+    user-select: text;
+  }
+}
+
+.content-reference-card-heading > a:hover {
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+.content-reference-card-excerpt {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  margin: 0.25rem 0 0.5rem;
+  color: var(--muted-foreground);
+  font-size: 0.85rem;
+  line-height: 1.6;
+}
+
+.content-reference-source {
+  color: var(--muted-foreground);
+  font-size: 0.7rem;
+}
+
+.content-embed-heading {
+  padding: 0.35rem 0.5rem;
+}
+
+.content-embed-toggle {
+  display: flex;
+  min-width: 0;
+  min-height: 2.5rem;
+  flex: 1;
+  align-items: center;
+  gap: 0.5rem;
+  border-radius: 0.5rem;
+  padding: 0.3rem 0.5rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.content-embed-toggle > svg {
+  width: 0.9rem;
+  height: 0.9rem;
+  flex-shrink: 0;
+}
+
+.content-embed-toggle > strong {
+  min-width: 0;
+  overflow: hidden;
+  font-size: 0.9rem;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.content-embed-content {
+  border-top: 1px solid var(--border);
+  padding: 0.75rem 1rem;
+}
+
+.content-embed-body {
+  max-height: 28rem;
+  overflow: auto;
+  font-size: 0.9rem;
+  line-height: 1.65;
+}
+
+.content-embed-body p {
+  margin: 0;
+}
+
+.content-embed-body h1,
+.content-embed-body h2,
+.content-embed-body h3 {
+  margin: 0.6rem 0 0.3rem;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.content-embed-body h1 {
+  font-size: 1.4rem;
+}
+.content-embed-body h2 {
+  font-size: 1.15rem;
+}
+.content-embed-body h3 {
+  font-size: 1rem;
+}
+
+.content-embed-body a {
+  color: var(--primary);
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+.content-embed-body pre {
+  overflow: auto;
+  border-radius: 0.5rem;
+  background: var(--muted);
+  padding: 0.75rem;
+  white-space: pre;
+}
+
+.content-embed-body blockquote {
+  border-left: 2px solid var(--border);
+  padding-left: 0.75rem;
+  color: var(--muted-foreground);
+}
+
+.content-embed-list-item {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  padding-left: 0.25rem;
+}
+
+.content-embed-table {
+  overflow-x: auto;
+}
+
+.content-embed-table td {
+  border: 1px solid var(--border);
+  padding: 0.4rem 0.6rem;
+}
+
+.content-embed-fallback {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  border-left: 2px solid var(--border);
+  padding: 0.35rem 0.75rem;
+  color: var(--muted-foreground);
+  font-size: 0.85rem;
+}
+
+.content-reference-status {
+  color: var(--muted-foreground);
+  font-size: 0.85rem;
+}
+
+/* The BlockNote skin resets SVG dimensions and anchor colors. */
+.bn-shadcn svg.content-reference-icon {
+  width: 1em;
+  height: 1em;
+}
+
+.bn-shadcn .content-reference-action > svg {
+  pointer-events: none;
+  width: 1rem;
+  height: 1rem;
+}
+
+.bn-shadcn .content-embed-toggle > svg {
+  pointer-events: none;
+  width: 0.9rem;
+  height: 0.9rem;
+}
+
+.bn-shadcn .bn-editor .content-embed-body a {
+  color: var(--primary);
+  text-decoration: underline;
+}
+
+.bn-shadcn .bn-editor a.content-reference,
+.bn-shadcn .bn-editor .content-reference-card-heading > a {
+  color: var(--foreground);
+  text-decoration: none;
+}
+
+.reference-target-highlight {
+  outline: 2px solid var(--ring);
+  outline-offset: 0.35rem;
+  border-radius: 0.35rem;
+  animation: reference-target-fade 2.2s ease-out forwards;
+}
+
+@keyframes reference-target-fade {
+  0%,
+  70% {
+    background-color: color-mix(in srgb, var(--ring) 16%, transparent);
+  }
+  100% {
+    background-color: transparent;
+    outline-color: transparent;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reference-target-highlight {
+    animation: none;
+  }
 }
 
 /* AI suggestion combobox only (scoped by the AI menu id) */
@@ -72,4 +437,76 @@
   --tw-ring-offset-shadow: 0 0 transparent;
   --tw-shadow: 0 0 transparent;
   --tw-shadow-colored: 0 0 transparent;
+}
+
+/* Range decorations are placed on the React node-view wrapper, and follow
+   both whole-block and text selections. Focus controls only their visibility. */
+:where(.bn-root:focus-within)
+  [data-reference-selected="true"]
+  > .bn-block-content
+  > :is(.content-reference-card, .content-embed),
+[data-reference-selected="true"]:focus-within
+  > .bn-block-content
+  > :is(.content-reference-card, .content-embed) {
+  outline: 2px solid var(--ring);
+  outline-offset: -2px;
+}
+
+/* Replace the skin's default overlay with the same outline for every native
+   selection shape, and leave no stale highlight after focus moves elsewhere. */
+.bn-block-content[data-content-type="referenceCard"].ProseMirror-selectednode
+> *::after,
+.bn-block-content[data-content-type="contentEmbed"].ProseMirror-selectednode
+  > *::after,
+.ProseMirror-selectednode
+  > .bn-block-content[data-content-type="referenceCard"]
+  > *::after,
+.ProseMirror-selectednode
+  > .bn-block-content[data-content-type="contentEmbed"]
+  > *::after {
+  display: none;
+}
+
+/* Inline atoms use the same native selection outline as reference blocks. */
+:where(.bn-root:focus-within)
+  [data-reference-selected="true"]
+  .content-reference,
+[data-reference-selected="true"]:focus-within .content-reference {
+  outline: 2px solid var(--ring);
+  outline-offset: -2px;
+}
+
+.bn-inline-content
+  .ProseMirror-selectednode:has(
+    [data-inline-content-type="contentReference"]
+  )::after,
+.bn-inline-content
+  [data-inline-content-type="contentReference"].ProseMirror-selectednode::after {
+  display: none;
+}
+
+.content-reference-thumbnail {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .content-reference-thumbnail {
+    display: block;
+    flex-shrink: 0;
+    width: 5rem;
+    height: 3.75rem;
+
+    border-radius: 0.35rem;
+    object-fit: cover;
+  }
+}
+
+/* Native side-menu offsets cover text blocks. Reference controls align with
+   the first header row, after the card/embed's own internal padding. */
+[data-editor-side-menu-block="referenceCard"] {
+  transform: translateY(1.25rem);
+}
+
+[data-editor-side-menu-block="contentEmbed"] {
+  transform: translateY(0.9rem);
 }

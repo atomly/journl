@@ -92,26 +92,24 @@ export function HeaderSearchButton({
       </DialogTrigger>
       <DialogContent
         id={HEADER_SEARCH_DIALOG_CONTENT_ID}
-        className="gap-0 rounded-2xl border-4 border-muted bg-sidebar p-0"
+        className="gap-0 overflow-hidden rounded-2xl border-4 border-muted bg-sidebar p-0"
         data-state="open"
         showCloseButton={false}
       >
         <Command className="bg-transparent p-0" shouldFilter={false}>
-          <DialogHeader className="px-2 pt-2">
+          <DialogHeader className="px-2 pt-2 [&_[data-slot=command-input-wrapper]]:p-0 [&_[data-slot=input-group]]:h-10! [&_[data-slot=input-group]]:border-2 [&_[data-slot=input-group]]:bg-muted">
             <DialogTitle className="sr-only">
               Search pages and journal entries
             </DialogTitle>
-            <div className="flex w-full items-center gap-x-2 rounded-lg border-2 bg-muted px-2 [&>div]:w-full [&>div]:px-0">
-              <CommandInput
-                className="flex h-10 w-full rounded-md border-0 bg-transparent text-md outline-none placeholder:text-accent-foreground/80 focus-visible:ring-0 disabled:cursor-not-allowed disabled:opacity-50"
-                placeholder="Search notes..."
-                autoComplete="off"
-                autoCorrect="off"
-                spellCheck={false}
-                autoFocus
-                onValueChange={(value) => setQuery(value)}
-              />
-            </div>
+            <CommandInput
+              className="h-full min-w-0 flex-1 border-0 bg-transparent pr-2 text-md outline-none placeholder:text-accent-foreground/80 focus-visible:ring-0 disabled:cursor-not-allowed disabled:opacity-50"
+              placeholder="Search notes..."
+              autoComplete="off"
+              autoCorrect="off"
+              spellCheck={false}
+              autoFocus
+              onValueChange={(value) => setQuery(value)}
+            />
           </DialogHeader>
           <ScrollArea>
             <CommandList className="p-4">
@@ -197,7 +195,7 @@ export function HeaderSearchButton({
             </CommandList>
           </ScrollArea>
         </Command>
-        <DialogFooter className="flex flex-row items-center bg-muted p-1">
+        <DialogFooter className="mx-0 mb-0 flex flex-row items-center bg-muted p-1">
           {isMobile ? (
             <Button
               className="ms-auto bg-background py-1 text-background-foreground text-sm hover:bg-background/80 hover:text-background-foreground"

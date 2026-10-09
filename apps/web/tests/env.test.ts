@@ -20,5 +20,7 @@ test("validates app env schema with mocked variables", async () => {
   vi.stubEnv("PUBLIC_WEB_URL", "https://example.com");
   vi.stubEnv("SUPABASE_SECRET", "test-supabase-secret");
 
-  await expect(import("../src/env")).resolves.toBeDefined();
+  await expect(import("../src/env")).resolves.toMatchObject({
+    env: { PUBLIC_WEB_URL: "https://example.com" },
+  });
 });

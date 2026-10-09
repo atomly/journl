@@ -4,6 +4,10 @@
     {
       "path": "/api/cron/database-keepalive",
       "schedule": "0 6 * * *"
+    },
+    {
+      "path": "/api/cron/explore-refresh",
+      "schedule": "10 6 * * *"
     }
   ]
 }

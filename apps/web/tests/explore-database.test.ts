@@ -336,6 +336,8 @@ integration(
       .select()
       .from(ExploreState)
       .where(eq(ExploreState.user_id, owner));
+    const snapshotId = state?.active_snapshot_id;
+    if (!snapshotId) throw new Error("Fixture snapshot missing");
     await db
       .insert(ExploreCluster)
       .values([ancestor, ...successors].map((id) => ({ id, user_id: owner })));
@@ -346,7 +348,7 @@ integration(
         primary_count: 0,
         related_count: 0,
         representatives: [],
-        snapshot_id: state!.active_snapshot_id!,
+        snapshot_id: snapshotId,
         source_count: 0,
         user_id: owner,
       })),

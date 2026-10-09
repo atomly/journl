@@ -12,6 +12,8 @@ import {
 } from "react";
 import { BlockEditor } from "~/components/editor/block-editor";
 import { useBlockEditor } from "~/components/editor/use-block-editor";
+import { ExploreNoteLink } from "~/components/references/explore-note-link";
+import { ReferenceBacklinks } from "~/components/references/reference-backlinks";
 import { Button } from "~/components/ui/button";
 import { useJournlAgent } from "~/hooks/use-journl-agent";
 import { cn } from "~/lib/cn";
@@ -124,13 +126,14 @@ export function JournalEntryHeader({
   forceDate = false,
   ...rest
 }: JournalEntryHeaderProps) {
-  const { formattedDate, isToday } = useJournalEntry();
+  const { formattedDate, isToday, documentId } = useJournalEntry();
 
   return (
-    <div className={className} {...rest}>
-      <h2 className="font-semibold text-3xl text-muted-foreground md:text-4xl lg:text-5xl">
+    <div className={cn("flex items-start gap-3", className)} {...rest}>
+      <h2 className="min-w-0 flex-1 font-semibold text-3xl text-muted-foreground md:text-4xl lg:text-5xl">
         {isToday && !forceDate ? "Today" : formattedDate}
       </h2>
+      {documentId && <ExploreNoteLink documentId={documentId} />}
     </div>
   );
 }
@@ -165,7 +168,9 @@ export function JournalEntryEditor({
     resetKey: snapshot.resetKey,
   });
 
-  async function downloadDraft(blocks = editor.document as EditorPartialBlock[]) {
+  async function downloadDraft(
+    blocks = editor.document as EditorPartialBlock[],
+  ) {
     const markdown = await editor.blocksToMarkdownLossy(blocks);
     const url = URL.createObjectURL(
       new Blob([markdown], { type: "text/markdown" }),
@@ -209,6 +214,9 @@ export function JournalEntryEditor({
         slashMenu={false}
         {...rest}
       />
+      {snapshot.documentId && (
+        <ReferenceBacklinks documentId={snapshot.documentId} />
+      )}
       {Boolean(snapshot.error) && (
         <div
           role="alert"

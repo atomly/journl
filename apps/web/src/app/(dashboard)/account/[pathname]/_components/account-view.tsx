@@ -19,10 +19,7 @@ export async function AuthView({ pathname }: { pathname: string }) {
 
   return (
     <>
-      <Settings
-        className="z-10 w-full flex-col gap-6"
-        path={pathname}
-      />
+      <Settings className="z-10 w-full flex-col gap-6" path={pathname} />
       {pathname === "security" && env.NODE_ENV !== "production" && (
         <div className="w-full">
           <PasswordCard

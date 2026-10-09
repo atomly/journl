@@ -156,6 +156,16 @@ export function DeletePageDialog({
       },
       onSuccess: () => {
         deletePageContextRef.current = null;
+        for (const queryKey of [
+          trpc.references.getPreviews.queryKey(),
+          trpc.references.getEmbedContent.queryKey(),
+          trpc.references.listBacklinks.queryKey(),
+          trpc.references.listOccurrences.queryKey(),
+          trpc.references.queryNeighbors.queryKey(),
+          trpc.references.getGraph.infiniteQueryKey(),
+        ]) {
+          void queryClient.invalidateQueries({ queryKey });
+        }
 
         if (pathname === `/pages/${page.id}`) {
           router.push("/journal");

@@ -604,6 +604,7 @@ const toolActionMap: Record<string, string> = {
   createPage: "Creating page",
   navigateJournalEntry: "Opening journal",
   navigatePage: "Opening page",
+  queryNoteReferences: "Exploring note references",
   rejectChanges: "Rejecting changes",
   semanticJournalSearch: "Searching entries",
   semanticPageSearch: "Searching pages",

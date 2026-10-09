@@ -1,4 +1,4 @@
-import type { PartialBlock } from "@blocknote/core";
+import type { EditorPartialBlock } from "@acme/blocknote/schema";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import {
   type DraftInitial,
@@ -24,7 +24,7 @@ const saved = {
 const load = vi.fn<ConstructorParameters<typeof JournalEntryDraft>[3]>();
 const onSaved = vi.fn();
 
-function blocks(text: string): [PartialBlock] {
+function blocks(text: string): [EditorPartialBlock] {
   return [{ content: text, id: blockId, type: "paragraph" }];
 }
 

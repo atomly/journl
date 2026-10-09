@@ -1,8 +1,9 @@
 // @vitest-environment jsdom
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { act } from "react";
+import { act, useSyncExternalStore } from "react";
 import { createRoot } from "react-dom/client";
 import { afterAll, beforeAll, beforeEach, expect, test, vi } from "vitest";
+import { ExploreStateProvider } from "../src/app/(app)/explore/_components/explore-state-provider";
 import { GraphExplorer } from "../src/app/(app)/graph/_components/graph-explorer";
 
 const mock = vi.hoisted(() => ({
@@ -78,7 +79,7 @@ vi.mock("next/navigation", async () => {
         if (!href.startsWith("/explore")) return;
         const note = /^\/explore\/notes\/([^?]+)/.exec(href);
         mock.location = note
-          ? `documentId=${note[1]}`
+          ? `documentId=${note[1]}${href.includes("?") ? `&${href.split("?")[1]}` : ""}`
           : (href.split("?")[1] ?? "");
         for (const listener of mock.listeners) listener();
       },
@@ -103,6 +104,12 @@ vi.mock("next/link", () => ({
 vi.mock("../src/trpc/react", () => ({
   useTRPC: () => ({
     explore: {
+      getCluster: {
+        queryOptions: (input: unknown) => ({
+          queryFn: async () => ({ summary: { name: "Origin thread" } }),
+          queryKey: ["cluster", input],
+        }),
+      },
       memberships: {
         queryOptions: (input: unknown) => ({
           queryFn: async () => [],
@@ -218,6 +225,23 @@ const settle = () =>
   act(async () => {
     await new Promise((resolve) => setTimeout(resolve, 40));
   });
+function RoutedExplorer() {
+  const location = useSyncExternalStore(
+    (fn) => {
+      mock.listeners.add(fn);
+      return () => mock.listeners.delete(fn);
+    },
+    () => mock.location,
+  );
+  const params = new URLSearchParams(location);
+  return (
+    <GraphExplorer
+      key={params.get("documentId") ?? "overview"}
+      documentId={params.get("documentId") ?? undefined}
+      parentClusterId={params.get("thread") ?? undefined}
+    />
+  );
+}
 async function setup(loadRemaining = true) {
   const container = document.createElement("div");
   document.body.append(container);
@@ -228,7 +252,9 @@ async function setup(loadRemaining = true) {
   await act(async () =>
     root.render(
       <QueryClientProvider client={client}>
-        <GraphExplorer />
+        <ExploreStateProvider owner="test-owner">
+          <RoutedExplorer />
+        </ExploreStateProvider>
       </QueryClientProvider>,
     ),
   );
@@ -488,6 +514,33 @@ test("unlinked discovery is newest first, bounded by page, and offers direct exp
       ) ?? null,
     );
     expect(mock.pushes.at(-1)).toBe("/explore/notes/unlinked-13");
+  } finally {
+    await cleanup();
+  }
+});
+
+test("note route remount preserves originating thread and multi-note trail", async () => {
+  const thread = "00000000-0000-4000-8000-000000000001";
+  mock.location = `documentId=a&thread=${thread}`;
+  const { container, cleanup } = await setup();
+  try {
+    await click(
+      container.querySelector('[aria-label="Preview Testing feedback"]'),
+    );
+    const preview = container.querySelector('[aria-label="Note preview"]');
+    await click(
+      [...(preview?.querySelectorAll("button") ?? [])].find(
+        (button) => button.textContent === "Explore connections",
+      ) ?? null,
+    );
+    expect(mock.location).toBe(`documentId=b&thread=${thread}`);
+    expect(
+      container.querySelector('[aria-label="Exploration trail"]')?.textContent,
+    ).toContain("Editor improvements");
+    await click(
+      container.querySelector('[aria-label="Back to previous exploration"]'),
+    );
+    expect(mock.location).toBe(`documentId=a&thread=${thread}`);
   } finally {
     await cleanup();
   }

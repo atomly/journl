@@ -10,6 +10,7 @@ import {
 import type { TRPCRouterRecord } from "@trpc/server";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod/v4";
+import { dispatchExploreRefresh } from "~/explore/dispatch";
 import { markExploreDirty } from "~/explore/refresh";
 import { startFolderContentDeletion } from "~/workflows/folder-content-deletion";
 import { protectedProcedure, type TRPCContext } from "../trpc";
@@ -141,7 +142,7 @@ export const treeRouter = {
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      return await ctx.db.transaction(async (tx) => {
+      const result = await ctx.db.transaction(async (tx) => {
         const userId = ctx.session.user.id;
 
         await markExploreDirty(tx, userId);
@@ -213,6 +214,8 @@ export const treeRouter = {
           parent_node_id: edge.parent_node_id,
         };
       });
+      await dispatchExploreRefresh(ctx.session.user.id);
+      return result;
     }),
   deleteFolder: protectedProcedure
     .input(

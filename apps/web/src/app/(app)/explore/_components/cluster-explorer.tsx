@@ -33,6 +33,7 @@ import {
   type ExploreNode,
   getExploreTitle,
 } from "~/references/explore-graph";
+import { exploreUpdatedLabel } from "~/references/explore-note-list";
 import { useTRPC } from "~/trpc/react";
 import {
   ExploreCanvas,
@@ -56,12 +57,23 @@ export function ClusterExplorer({ clusterId }: { clusterId: string }) {
     scroll: 0,
     selected: undefined as string | undefined,
   });
+  const [successorView, setSuccessorView] = useExploreState(
+    `successors:${clusterId}`,
+    {
+      cursor: undefined as string | undefined,
+      history: [] as (string | undefined)[],
+    },
+  );
   const summary = useQuery(
     trpc.explore.getCluster.queryOptions(
-      { clusterId },
+      { clusterId, cursor: successorView.cursor },
       { refetchInterval: (q) => (q.state.data?.refreshing ? 3000 : false) },
     ),
   );
+  useEffect(() => {
+    if (summary.data?.restartRequired)
+      setSuccessorView({ cursor: undefined, history: [] });
+  }, [summary.data?.restartRequired, setSuccessorView]);
   const map = useQuery(
     trpc.explore.getClusterMap.queryOptions(
       { clusterId },
@@ -150,13 +162,22 @@ export function ClusterExplorer({ clusterId }: { clusterId: string }) {
       {summary.isPending ? (
         <Skeleton className="h-96 rounded-2xl" />
       ) : summary.isError ? (
-        <ExploreError retry={() => void summary.refetch()} />
+        <ExploreError
+          retry={() => {
+            if (successorView.cursor)
+              setSuccessorView({ cursor: undefined, history: [] });
+            else void summary.refetch();
+          }}
+        />
       ) : !thread ? (
         <section className="rounded-2xl border p-6">
           <h1 className="font-semibold text-xl">This thread has changed</h1>
           <p className="mt-2 text-muted-foreground text-sm">
             Its notes may now belong to other threads. Your notes remain
             available in Explore.
+          </p>
+          <p className="mt-2 text-muted-foreground text-sm">
+            {summary.data.successorTotal} current threads
           </p>
           <div className="mt-4 flex flex-col gap-2">
             {summary.data.successors.map((s) => (
@@ -172,6 +193,23 @@ export function ClusterExplorer({ clusterId }: { clusterId: string }) {
               Browse your threads →
             </Link>
           </div>
+          <PageButtons
+            history={successorView.history}
+            nextCursor={summary.data.nextSuccessorCursor}
+            busy={summary.isFetching}
+            onPrevious={() =>
+              setSuccessorView((v) => ({
+                cursor: v.history.at(-1),
+                history: v.history.slice(0, -1),
+              }))
+            }
+            onNext={() =>
+              setSuccessorView((v) => ({
+                cursor: summary.data.nextSuccessorCursor,
+                history: [...v.history, v.cursor],
+              }))
+            }
+          />
         </section>
       ) : (
         <>
@@ -181,11 +219,29 @@ export function ClusterExplorer({ clusterId }: { clusterId: string }) {
                 {thread.name}
               </h1>
               <p className="mt-2 text-muted-foreground text-sm">
-                {thread.primaryCount} notes · {thread.sourceCount} sources
+                {thread.primaryCount} notes · {thread.sourceCount}{" "}
+                {thread.sourceCount === 1 ? "source" : "sources"}
                 {thread.relatedCount > 0
                   ? ` · ${thread.relatedCount} related notes`
                   : ""}
               </p>
+              <p className="mt-2 text-muted-foreground text-xs">
+                {exploreUpdatedLabel(thread.lastActivity)}
+              </p>
+              <nav
+                className="mt-3 flex flex-wrap gap-2"
+                aria-label="Representative notes"
+              >
+                {thread.representatives.map((note) => (
+                  <Link
+                    key={note.id}
+                    href={`/explore/notes/${note.id}?thread=${clusterId}`}
+                    className="inline-flex min-h-11 items-center rounded-lg border px-3 text-sm hover:bg-accent"
+                  >
+                    {getExploreTitle(note)}
+                  </Link>
+                ))}
+              </nav>
             </div>
             <Button
               variant="ghost"
@@ -394,11 +450,14 @@ function ThreadItems({
 }) {
   const trpc = useTRPC();
   const [why, setWhy] = useState<string>();
-  const [view, setView] = useExploreState(`items:${clusterId}`, {
-    cursor: undefined as string | undefined,
-    history: [] as (string | undefined)[],
-    tab: "notes" as "notes" | "related" | "sources",
-  });
+  const [view, setView] = useExploreState(
+    `items:${clusterId}:${snapshotId ?? "pending"}`,
+    {
+      cursor: undefined as string | undefined,
+      history: [] as (string | undefined)[],
+      tab: "notes" as "notes" | "related" | "sources",
+    },
+  );
   const notes = useQuery(
     trpc.explore.listClusterMembers.queryOptions(
       {
@@ -458,7 +517,13 @@ function ThreadItems({
       {current.isPending ? (
         <Skeleton className="h-64 rounded-xl" />
       ) : current.isError ? (
-        <ExploreError retry={() => void current.refetch()} />
+        <ExploreError
+          retry={() => {
+            if (view.cursor)
+              setView((v) => ({ ...v, cursor: undefined, history: [] }));
+            else void current.refetch();
+          }}
+        />
       ) : (
         <>
           <div className="divide-y rounded-xl border">
@@ -601,16 +666,42 @@ function RelatedThreads({
 }) {
   const trpc = useTRPC();
   const cache = useQueryClient();
+  const [page, setPage] = useExploreState(
+    `connections:${clusterId}:${snapshotId ?? "pending"}`,
+    {
+      cursor: undefined as string | undefined,
+      history: [] as (string | undefined)[],
+    },
+  );
   const query = useQuery(
-    trpc.explore.listRelatedThreads.queryOptions({ clusterId }),
+    trpc.explore.listThreadConnections.queryOptions({
+      clusterId,
+      cursor: page.cursor,
+      limit: 20,
+      snapshotId: snapshotId ?? undefined,
+    }),
   );
   // biome-ignore lint/correctness/useExhaustiveDependencies: connections are derived from the newly published snapshot.
   useEffect(() => {
     void cache.invalidateQueries({
-      queryKey: trpc.explore.listRelatedThreads.queryKey({ clusterId }),
+      queryKey: trpc.explore.listThreadConnections.pathKey(),
     });
   }, [snapshotId, clusterId, cache, trpc]);
-  if (!query.data?.length) return null;
+  useEffect(() => {
+    if (query.data?.restartRequired)
+      setPage({ cursor: undefined, history: [] });
+  }, [query.data?.restartRequired, setPage]);
+  if (query.isPending) return <Skeleton className="h-24 rounded-xl" />;
+  if (query.isError)
+    return (
+      <ExploreError
+        retry={() => {
+          if (page.cursor) setPage({ cursor: undefined, history: [] });
+          else void query.refetch();
+        }}
+      />
+    );
+  if (!query.data?.total) return null;
   return (
     <section aria-label="Connected threads" className="space-y-2">
       <h2 className="font-medium text-sm">Where this thread leads</h2>
@@ -618,7 +709,7 @@ function RelatedThreads({
         References written between notes in different threads.
       </p>
       <div className="flex flex-wrap gap-2">
-        {query.data.map((thread) => (
+        {query.data.items.map((thread) => (
           <Link
             key={thread.id}
             href={`/explore/clusters/${thread.id}`}
@@ -631,6 +722,23 @@ function RelatedThreads({
           </Link>
         ))}
       </div>
+      <PageButtons
+        history={page.history}
+        nextCursor={query.data.nextCursor}
+        busy={query.isFetching}
+        onPrevious={() =>
+          setPage((v) => ({
+            cursor: v.history.at(-1),
+            history: v.history.slice(0, -1),
+          }))
+        }
+        onNext={() =>
+          setPage((v) => ({
+            cursor: query.data.nextCursor,
+            history: [...v.history, v.cursor],
+          }))
+        }
+      />
     </section>
   );
 }

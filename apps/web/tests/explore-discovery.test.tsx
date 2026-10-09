@@ -5,13 +5,17 @@ import { createRoot } from "react-dom/client";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import { ClusterExplorer } from "../src/app/(app)/explore/_components/cluster-explorer";
 import { ExploreOverview } from "../src/app/(app)/explore/_components/explore-overview";
+import { ExploreStateProvider } from "../src/app/(app)/explore/_components/explore-state-provider";
 import { SourceContexts } from "../src/app/(app)/explore/_components/source-contexts";
 
 const mock = vi.hoisted(() => ({
   calls: [] as { name: string; input: Record<string, unknown> }[],
+  connectionPages: false,
   fail: false,
+  failCursor: false,
   listeners: new Set<() => void>(),
   name: "Editor improvements",
+  retired: false,
   route: "/explore",
 }));
 const clusterId = "00000000-0000-4000-8000-000000000001";
@@ -77,25 +81,36 @@ vi.mock("../src/trpc/react", () => {
       queryFn: async () => {
         mock.calls.push({ input, name });
         await new Promise((r) => setTimeout(r, 8));
-        if (mock.fail) throw new Error("unavailable");
+        if (mock.fail || (mock.failCursor && input.cursor))
+          throw new Error("unavailable");
         return run(input);
       },
     }),
   });
   const trpc = {
     explore: {
-      getCluster: make("getCluster", () => ({
+      getCluster: make("getCluster", (input) => ({
         ...metadata,
-        successors: [],
-        summary: {
-          id: clusterId,
-          lastActivity: note.updatedAt,
-          name: mock.name,
-          primaryCount: 30,
-          relatedCount: 1,
-          representatives: [note],
-          sourceCount: 2,
-        },
+        nextSuccessorCursor:
+          mock.retired && !input.cursor ? "more-successors" : undefined,
+        successors: mock.retired
+          ? Array.from({ length: input.cursor ? 2 : 24 }, (_, i) => ({
+              id: `successor-${input.cursor ? i + 24 : i}`,
+              name: `Successor ${input.cursor ? i + 24 : i}`,
+            }))
+          : [],
+        successorTotal: mock.retired ? 26 : 0,
+        summary: mock.retired
+          ? null
+          : {
+              id: clusterId,
+              lastActivity: note.updatedAt,
+              name: mock.name,
+              primaryCount: 30,
+              relatedCount: 1,
+              representatives: [note],
+              sourceCount: 2,
+            },
       })),
       getClusterMap: make("getClusterMap", () => ({
         ...metadata,
@@ -177,6 +192,19 @@ vi.mock("../src/trpc/react", () => {
           },
         ],
       })),
+      listThreadConnections: make("listThreadConnections", (input) => ({
+        ...metadata,
+        items: [
+          {
+            connections: 2,
+            id: "00000000-0000-4000-8000-000000000009",
+            name: "Release planning",
+          },
+        ],
+        nextCursor:
+          mock.connectionPages && !input.cursor ? "connection-next" : undefined,
+        total: mock.connectionPages ? 2 : 1,
+      })),
       pathKey: () => ["explore"],
       renameCluster: {
         mutationOptions: (options: object) => ({
@@ -240,6 +268,10 @@ beforeEach(async () => {
   mock.name = "Editor improvements";
   mock.calls = [];
   mock.fail = false;
+  mock.failCursor = false;
+  mock.connectionPages = false;
+  mock.retired = false;
+  metadata.snapshotId = "00000000-0000-4000-8000-000000000003";
   class Observer {
     observe() {}
     disconnect() {}
@@ -254,7 +286,9 @@ beforeEach(async () => {
   await act(async () =>
     root.render(
       <QueryClientProvider client={client}>
-        <App />
+        <ExploreStateProvider owner="test-owner">
+          <App />
+        </ExploreStateProvider>
       </QueryClientProvider>,
     ),
   );
@@ -317,6 +351,11 @@ test("opening a thread makes all notes and sources accessible with context", asy
   expect(
     container.querySelector('a[href="/pages/decision#block=block"]'),
   ).not.toBeNull();
+  expect(
+    container.querySelector(
+      `a[href="/explore/notes/${noteId}?thread=${clusterId}"]`,
+    ),
+  ).not.toBeNull();
 });
 test("rename preserves the visible name and accessible note actions", async () => {
   await click(
@@ -374,4 +413,81 @@ test("failed requests retain a usable shell and retry succeeds", async () => {
   mock.fail = false;
   await click(button("Try again"));
   expect(container.textContent).toContain("Editor improvements");
+});
+
+test("selecting a thread exposes authored connections before opening it", async () => {
+  await click(
+    container.querySelector(
+      '[aria-label="Show connections for Editor improvements"]',
+    ),
+  );
+  const panel = container.querySelector('[aria-label="Thread connections"]');
+  expect(panel?.textContent).toContain("Release planning");
+  expect(panel?.textContent).toContain("2 references");
+  expect(
+    mock.calls.filter((call) => call.name === "listThreadConnections"),
+  ).toHaveLength(1);
+});
+
+test("published snapshot changes restart connection pagination without sending a mismatched cursor", async () => {
+  mock.connectionPages = true;
+  await click(
+    container.querySelector(
+      '[aria-label="Show connections for Editor improvements"]',
+    ),
+  );
+  await click(
+    [...container.querySelectorAll("button")].find(
+      (button) => button.textContent === "More connections",
+    ),
+  );
+  expect(
+    mock.calls.some(
+      (call) =>
+        call.name === "listThreadConnections" &&
+        call.input.cursor === "connection-next",
+    ),
+  ).toBe(true);
+  metadata.snapshotId = "00000000-0000-4000-8000-000000000004";
+  await act(async () => {
+    await client.invalidateQueries({ queryKey: ["explore", "listClusters"] });
+  });
+  await settle();
+  const refreshed = mock.calls.filter(
+    (call) =>
+      call.name === "listThreadConnections" &&
+      call.input.snapshotId === metadata.snapshotId,
+  );
+  expect(refreshed.length).toBeGreaterThan(0);
+  expect(refreshed.every((call) => call.input.cursor === undefined)).toBe(true);
+});
+test("retry clears a rejected pagination cursor rather than repeating it", async () => {
+  mock.failCursor = true;
+  await click(
+    [...container.querySelectorAll("button")].find(
+      (button) => button.textContent === "Next",
+    ),
+  );
+  await click(
+    [...container.querySelectorAll("button")].find(
+      (button) => button.textContent === "Try again",
+    ),
+  );
+  expect(
+    mock.calls.filter((call) => call.name === "listClusters").at(-1)?.input
+      .cursor,
+  ).toBeUndefined();
+});
+
+test("retired thread choices disclose counts and reach every successor", async () => {
+  mock.retired = true;
+  await act(async () => navigate(`/explore/clusters/${clusterId}`));
+  await settle();
+  expect(container.textContent).toContain("26 current threads");
+  expect(container.querySelectorAll('a[href*="successor-"]')).toHaveLength(24);
+  await click(button("Next"));
+  expect(container.querySelectorAll('a[href*="successor-"]')).toHaveLength(2);
+  expect(container.textContent).toContain("Successor 25");
+  await click(button("Previous"));
+  expect(container.querySelectorAll('a[href*="successor-"]')).toHaveLength(24);
 });

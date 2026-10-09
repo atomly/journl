@@ -50,7 +50,12 @@ export function SourceContexts({
       {query.isPending ? (
         <Skeleton className="h-80 rounded-xl" />
       ) : query.isError ? (
-        <ExploreError retry={() => void query.refetch()} />
+        <ExploreError
+          retry={() => {
+            if (view.cursor) setView({ cursor: undefined, history: [] });
+            else void query.refetch();
+          }}
+        />
       ) : (
         <>
           <div className="space-y-3">
@@ -60,7 +65,7 @@ export function SourceContexts({
                 className="space-y-3 rounded-xl border p-4"
               >
                 <Link
-                  href={`/explore/notes/${item.note.id}`}
+                  href={`/explore/notes/${item.note.id}?thread=${clusterId}`}
                   className="font-medium text-sm hover:underline"
                 >
                   {getExploreTitle(item.note)}

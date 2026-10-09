@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { and, eq, inArray, lt, or, sql } from "@acme/db";
+import { and, eq, inArray, lt, lte, or, sql } from "@acme/db";
 import { db } from "@acme/db/client";
 import {
   Document,
@@ -19,6 +19,7 @@ import {
   ALGORITHM_VERSION,
   buildClusters,
   type ClusterNote,
+  clusterLineage,
   matchClusterIdentities,
 } from "./clustering";
 
@@ -48,7 +49,19 @@ export async function refreshExploreSnapshot(userId: string) {
           .select()
           .from(ExploreState)
           .where(eq(ExploreState.user_id, userId));
-        if (state!.published_revision >= state!.source_revision) return null;
+        if (state!.published_revision >= state!.source_revision) {
+          // A read can recreate a request after publication removed it. Consume
+          // satisfied requests without removing a later edit's revision.
+          await tx
+            .delete(ExploreRefreshOutbox)
+            .where(
+              and(
+                eq(ExploreRefreshOutbox.user_id, userId),
+                lte(ExploreRefreshOutbox.revision, state!.published_revision),
+              ),
+            );
+          return null;
+        }
         const rows = await tx
           .select({
             date: JournalEntry.date,
@@ -245,8 +258,9 @@ export async function refreshExploreSnapshot(userId: string) {
         await tx
           .insert(ExploreClusterSource)
           .values(sourceRows.slice(offset, offset + 500));
+      const publishedIds = new Set(ids);
       const retired = input.previous
-        .filter((p) => !ids.includes(p.id))
+        .filter((p) => !publishedIds.has(p.id))
         .map((p) => p.id);
       if (retired.length)
         await tx
@@ -258,16 +272,22 @@ export async function refreshExploreSnapshot(userId: string) {
               inArray(ExploreCluster.id, retired),
             ),
           );
-      for (const overlap of overlaps) {
-        const from = input.previous[overlap.old]!.id;
-        const to = ids[overlap.next]!;
-        // Record transitions only out of retired identities, avoiding redirect cycles.
-        if (from !== to && retired.includes(from))
-          await tx
-            .insert(ExploreClusterLineage)
-            .values({ from_id: from, to_id: to, user_id: userId })
-            .onConflictDoNothing();
-      }
+      const lineage = clusterLineage(
+        overlaps,
+        input.previous.map((p) => p.id),
+        ids,
+      );
+      for (let offset = 0; offset < lineage.length; offset += 500)
+        await tx
+          .insert(ExploreClusterLineage)
+          .values(
+            lineage.slice(offset, offset + 500).map((row) => ({
+              ...row,
+              source_revision: input.revision,
+              user_id: userId,
+            })),
+          )
+          .onConflictDoNothing();
       await tx
         .update(ExploreState)
         .set({

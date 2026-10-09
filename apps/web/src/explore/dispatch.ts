@@ -6,36 +6,42 @@ import { runExploreRefresh } from "~/workflows/explore-refresh";
 
 /** Outbox survives enqueue failures. Reads and cron both recover abandoned requests. */
 export async function dispatchExploreRefresh(userId: string) {
-  const [request] = await db
-    .update(ExploreRefreshOutbox)
-    .set({ dispatched_at: sql`now()` })
-    .where(
-      and(
-        eq(ExploreRefreshOutbox.user_id, userId),
-        or(
-          sql`${ExploreRefreshOutbox.dispatched_at} is null`,
-          lt(
-            ExploreRefreshOutbox.dispatched_at,
-            sql`now() - interval '2 minutes'`,
-          ),
-        ),
-      ),
-    )
-    .returning();
-  if (!request) return;
   try {
-    await start(runExploreRefresh, [userId]);
-  } catch (error) {
-    await db
+    const [request] = await db
       .update(ExploreRefreshOutbox)
-      .set({ dispatched_at: null })
+      .set({ dispatched_at: sql`now()` })
       .where(
         and(
           eq(ExploreRefreshOutbox.user_id, userId),
-          eq(ExploreRefreshOutbox.revision, request.revision),
+          or(
+            sql`${ExploreRefreshOutbox.dispatched_at} is null`,
+            lt(
+              ExploreRefreshOutbox.dispatched_at,
+              sql`now() - interval '2 minutes'`,
+            ),
+          ),
         ),
-      );
-    console.error("Could not enqueue Explore refresh", { error });
+      )
+      .returning();
+    if (!request) return;
+    try {
+      await start(runExploreRefresh, [userId]);
+    } catch (error) {
+      await db
+        .update(ExploreRefreshOutbox)
+        .set({ dispatched_at: null })
+        .where(
+          and(
+            eq(ExploreRefreshOutbox.user_id, userId),
+            eq(ExploreRefreshOutbox.revision, request.revision),
+          ),
+        );
+      console.error("Could not enqueue Explore refresh", { error });
+    }
+  } catch (error) {
+    // The durable request already committed. An enqueue/connection failure must not
+    // make a successful document save look unsuccessful; reads/cron recover it.
+    console.error("Explore dispatch deferred to outbox recovery", { error });
   }
 }
 

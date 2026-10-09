@@ -27,7 +27,7 @@ export const pagesRouter = {
   create: protectedProcedure
     .input(zInsertPage.omit({ document_id: true, user_id: true }))
     .mutation(async ({ ctx, input }) => {
-      return await ctx.db.transaction(async (tx) => {
+      const result = await ctx.db.transaction(async (tx) => {
         await lockExploreOwner(tx, ctx.session.user.id);
         const [document] = await tx
           .insert(Document)
@@ -85,6 +85,8 @@ export const pagesRouter = {
         await markExploreDirty(tx, ctx.session.user.id);
         return page;
       });
+      await dispatchExploreRefresh(ctx.session.user.id);
+      return result;
     }),
   getById: protectedProcedure
     .input(z.object({ id: z.uuid() }))

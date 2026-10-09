@@ -79,22 +79,25 @@ export function GraphExplorer({
   const scope = documentId ? `${documentId}:${blockId ?? ""}` : "overview";
   const snapshots = useRef(new Map<string, Snapshot>());
   const titles = useRef(new Map<string, string>());
-  const [trail, setTrail] = useState<Step[]>([]);
+  const [trail, setTrail] = useExploreState<Step[]>("trail", []);
   useEffect(() => {
     const href = documentId
       ? `/explore/notes/${documentId}${blockId ? `?blockId=${blockId}` : ""}`
       : "/explore";
+    const targetHref = parentClusterId
+      ? `${href}${blockId ? "&" : "?"}thread=${parentClusterId}`
+      : href;
     setTrail((previous) => {
       const existing = previous.findIndex((step) => step.scope === scope);
       if (existing >= 0) return previous.slice(0, existing + 1);
       const step = {
-        href,
+        href: targetHref,
         scope,
         title: titles.current.get(scope) ?? (documentId ? "Note" : "Explore"),
       };
       return documentId ? [...previous, step] : [OVERVIEW];
     });
-  }, [scope, documentId, blockId]);
+  }, [scope, documentId, blockId, parentClusterId, setTrail]);
   const onTitle = useCallback(
     (title: string) => {
       titles.current.set(scope, title);
@@ -106,14 +109,19 @@ export function GraphExplorer({
         ),
       );
     },
-    [scope],
+    [scope, setTrail],
   );
   function explore(node: ExploreNode) {
     if (node.target?.kind !== "document") return;
     const nextScope = `${node.target.documentId}:`;
     if (nextScope === scope) return;
     titles.current.set(nextScope, getExploreTitle(node));
-    router.push(`/explore/notes/${node.target.documentId}`);
+    const href = `/explore/notes/${node.target.documentId}${parentClusterId ? `?thread=${parentClusterId}` : ""}`;
+    setTrail((previous) => [
+      ...previous,
+      { href, scope: nextScope, title: getExploreTitle(node) },
+    ]);
+    router.push(href);
   }
   return (
     <main className="mx-auto flex min-h-full w-full max-w-7xl flex-col gap-5 px-4 py-6 md:px-8">
@@ -300,8 +308,8 @@ function ExploreView({
     });
   }, [complete, onSnapshot, camera, selectedKey, selectedEdge, setStored]);
   useEffect(() => {
-    saveSnapshot();
-  }, [saveSnapshot]);
+    onSnapshot(stored);
+  }, [onSnapshot, stored]);
   const preview = selected ? (
     <ExplorePreview
       node={selected}

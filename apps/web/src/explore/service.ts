@@ -40,6 +40,7 @@ export async function exploreContext(
   userId: string,
   cursor: string | undefined,
   scope: string,
+  requestedSnapshot?: string,
 ) {
   const state = await ensureExploreState(database, userId);
   if (state.published_revision < state.source_revision) {
@@ -58,7 +59,14 @@ export async function exploreContext(
       message: "Invalid exploration cursor",
     });
   }
-  const snapshotId = decoded ? decoded.snapshot : state.active_snapshot_id;
+  if (decoded && requestedSnapshot && decoded.snapshot !== requestedSnapshot)
+    throw new TRPCError({
+      code: "BAD_REQUEST",
+      message: "Snapshot cursor mismatch",
+    });
+  const snapshotId = decoded
+    ? decoded.snapshot
+    : (requestedSnapshot ?? state.active_snapshot_id);
   if (snapshotId) {
     const [snapshot] = await database
       .select()
@@ -242,11 +250,12 @@ export async function getCluster(
   database: Database,
   userId: string,
   clusterId: string,
+  successorCursor?: string,
 ) {
   const context = await exploreContext(
     database,
     userId,
-    undefined,
+    successorCursor,
     `cluster:${clusterId}`,
   );
   const [identity] = await database
@@ -273,30 +282,52 @@ export async function getCluster(
     : [];
   // Follow retired identities through successive splits/merges, not only one generation.
   // UNION deduplicates identities, so even malformed cyclic lineage terminates.
-  const successors =
+  const descendants = sql`
+    with recursive descendants(id) as (
+      select to_id from explore_cluster_lineage
+      where user_id = ${userId} and from_id = ${clusterId}::uuid
+        and source_revision <= ${context.revision}
+      union
+      select l.to_id from explore_cluster_lineage l
+      join descendants d on l.from_id = d.id where l.user_id = ${userId}
+        and l.source_revision <= ${context.revision}
+    ), active as (
+      select c.id, coalesce(c.manual_name, s.generated_name) as name
+      from descendants d join explore_cluster c on c.id = d.id and c.user_id = ${userId}
+      join explore_cluster_snapshot s on s.cluster_id = c.id
+        and s.user_id = ${userId} and s.snapshot_id = ${context.snapshotId}::uuid
+    )`;
+  const successorRows =
     !summary && context.snapshotId
       ? [
-          ...(await database.execute<{ id: string; name: string }>(sql`
-        with recursive descendants(id) as (
-          select to_id from explore_cluster_lineage
-          where user_id = ${userId} and from_id = ${clusterId}::uuid
-          union
-          select l.to_id from explore_cluster_lineage l
-          join descendants d on l.from_id = d.id
-          where l.user_id = ${userId}
-        )
-        select c.id, coalesce(c.manual_name, s.generated_name) as name
-        from descendants d
-        join explore_cluster c on c.id = d.id and c.user_id = ${userId}
-        join explore_cluster_snapshot s on s.cluster_id = c.id
-          and s.user_id = ${userId} and s.snapshot_id = ${context.snapshotId}::uuid
-        order by c.id limit 24
-      `)),
+          ...(await database.execute<{
+            id: string;
+            name: string;
+          }>(sql`${descendants}
+      select * from active ${context.decoded ? sql`where id > ${context.decoded.after}::uuid` : sql``}
+      order by id limit 25`)),
         ]
       : [];
+  const successorCounts =
+    !summary && context.snapshotId
+      ? await database.execute<{ total: number }>(
+          sql`${descendants} select count(*)::int as total from active`,
+        )
+      : [];
+  const successors = successorRows.slice(0, 24);
   return {
     ...metadata(context),
+    nextSuccessorCursor:
+      successorRows.length > 24 && successors.at(-1) && context.snapshotId
+        ? encodeExploreCursor({
+            after: successors.at(-1)!.id,
+            owner: userId,
+            scope: `cluster:${clusterId}`,
+            snapshot: context.snapshotId,
+          })
+        : undefined,
     successors,
+    successorTotal: successorCounts[0]?.total ?? 0,
     summary: summary
       ? {
           id: clusterId,
@@ -365,42 +396,17 @@ export async function listClusterMembers(
   const evidenceIds = [
     ...new Set(visible.flatMap((member) => member.evidence_ids.slice(0, 3))),
   ];
-  const evidence = evidenceIds.length
+  // Bound each lookup before attaching content; broad multiway joins can scan the
+  // entire owner's reference graph under PostgreSQL's generic query plans.
+  const references = evidenceIds.length
     ? await database
         .select({
           blockId: DocumentReference.source_block_id,
-          date: JournalEntry.date,
-          excerpt: BlockSearchText.search_text,
+          documentId: DocumentReference.source_document_id,
           id: DocumentReference.id,
           kind: DocumentReference.target_kind,
-          pageId: Page.id,
         })
         .from(DocumentReference)
-        .innerJoin(
-          BlockSearchText,
-          and(
-            eq(BlockSearchText.user_id, userId),
-            eq(BlockSearchText.block_id, DocumentReference.source_block_id),
-            eq(
-              BlockSearchText.document_id,
-              DocumentReference.source_document_id,
-            ),
-          ),
-        )
-        .leftJoin(
-          Page,
-          and(
-            eq(Page.user_id, userId),
-            eq(Page.document_id, DocumentReference.source_document_id),
-          ),
-        )
-        .leftJoin(
-          JournalEntry,
-          and(
-            eq(JournalEntry.user_id, userId),
-            eq(JournalEntry.document_id, DocumentReference.source_document_id),
-          ),
-        )
         .where(
           and(
             eq(DocumentReference.user_id, userId),
@@ -408,18 +414,56 @@ export async function listClusterMembers(
           ),
         )
     : [];
-  const byEvidence = new Map(
-    evidence.map((r) => [
-      r.id,
-      {
-        excerpt: r.excerpt.slice(0, 240),
-        href: r.pageId
-          ? `/pages/${r.pageId}#block=${r.blockId}`
-          : `/journal/${r.date}#block=${r.blockId}`,
-        id: r.id,
-        kind: r.kind,
-      },
+  const sourceIds = [
+    ...new Set(references.map((reference) => reference.documentId)),
+  ];
+  const sourceBlocks = [
+    ...new Set(references.map((reference) => reference.blockId)),
+  ];
+  const passages = sourceBlocks.length
+    ? await database
+        .select({
+          blockId: BlockSearchText.block_id,
+          documentId: BlockSearchText.document_id,
+          excerpt: BlockSearchText.search_text,
+        })
+        .from(BlockSearchText)
+        .where(
+          and(
+            eq(BlockSearchText.user_id, userId),
+            inArray(BlockSearchText.block_id, sourceBlocks),
+            inArray(BlockSearchText.document_id, sourceIds),
+          ),
+        )
+    : [];
+  const sourceNotes = await loadNotes(database, userId, sourceIds);
+  const notesById = new Map(sourceNotes.map((note) => [note.id, note]));
+  const passagesByBlock = new Map(
+    passages.map((passage) => [
+      `${passage.documentId}|${passage.blockId}`,
+      passage.excerpt,
     ]),
+  );
+  const byEvidence = new Map(
+    references.flatMap((reference) => {
+      const note = notesById.get(reference.documentId);
+      const excerpt = passagesByBlock.get(
+        `${reference.documentId}|${reference.blockId}`,
+      );
+      return note && excerpt !== undefined
+        ? [
+            [
+              reference.id,
+              {
+                excerpt: excerpt.slice(0, 240),
+                href: `${note.href}#block=${reference.blockId}`,
+                id: reference.id,
+                kind: reference.kind,
+              },
+            ] as const,
+          ]
+        : [];
+    }),
   );
   const last = visible.at(-1);
   return {
@@ -829,29 +873,78 @@ export async function listRelatedThreads(
   userId: string,
   clusterId: string,
 ) {
+  return (
+    await listThreadConnections(database, userId, { clusterId, limit: 24 })
+  ).items;
+}
+
+/** All authored cross-thread references, paginated independently of the visible map. */
+export async function listThreadConnections(
+  database: Database,
+  userId: string,
+  input: ExploreInput & { clusterId: string; snapshotId?: string },
+) {
+  const scope = `bridges:${input.clusterId}`;
   const context = await exploreContext(
     database,
     userId,
-    undefined,
-    `bridges:${clusterId}`,
+    input.cursor,
+    scope,
+    input.snapshotId,
   );
-  if (!context.snapshotId) return [];
+  if (!context.snapshotId)
+    return {
+      ...metadata(context),
+      items: [],
+      nextCursor: undefined as string | undefined,
+      total: 0,
+    };
+  const bridges = sql`
+    with selected as materialized (
+      select document_id from explore_cluster_member
+      where user_id = ${userId} and snapshot_id = ${context.snapshotId}::uuid
+        and cluster_id = ${input.clusterId}::uuid and role = 'primary'
+    ), authored as materialized (
+      select r.id, r.target_document_id as neighbor
+      from selected s join document_reference r on r.source_document_id = s.document_id and r.user_id = ${userId}
+      where r.target_document_id is not null
+      union all
+      select r.id, r.source_document_id as neighbor
+      from selected s join document_reference r on r.target_document_id = s.document_id and r.user_id = ${userId}
+    ), bridges as materialized (
+      select m.cluster_id as other_id, r.id
+      from authored r join explore_cluster_member m on m.document_id = r.neighbor
+        and m.user_id = ${userId} and m.snapshot_id = ${context.snapshotId}::uuid and m.role = 'primary'
+      where m.cluster_id <> ${input.clusterId}::uuid
+    ), grouped as (
+      select c.id, coalesce(c.manual_name, s.generated_name) as name, count(distinct bridges.id)::int as connections
+      from bridges join explore_cluster c on c.id = bridges.other_id and c.user_id = ${userId}
+      join explore_cluster_snapshot s on s.cluster_id = c.id and s.user_id = ${userId} and s.snapshot_id = ${context.snapshotId}::uuid
+      group by c.id, c.manual_name, s.generated_name
+    )`;
+  const totals = await database.execute<{ total: number }>(
+    sql`${bridges} select count(*)::int as total from grouped`,
+  );
   const rows = await database.execute<{
     id: string;
     name: string;
     connections: number;
-  }>(sql`
-    with bridges as (
-      select case when a.cluster_id = ${clusterId}::uuid then b.cluster_id else a.cluster_id end as other_id, r.id
-      from document_reference r
-      join explore_cluster_member a on a.document_id = r.source_document_id and a.user_id = ${userId} and a.snapshot_id = ${context.snapshotId}::uuid and a.role = 'primary'
-      join explore_cluster_member b on b.document_id = r.target_document_id and b.user_id = ${userId} and b.snapshot_id = ${context.snapshotId}::uuid and b.role = 'primary'
-      where r.user_id = ${userId} and a.cluster_id <> b.cluster_id and (a.cluster_id = ${clusterId}::uuid or b.cluster_id = ${clusterId}::uuid)
-    )
-    select c.id, coalesce(c.manual_name, s.generated_name) as name, count(distinct bridges.id)::int as connections
-    from bridges join explore_cluster c on c.id = bridges.other_id and c.user_id = ${userId}
-    join explore_cluster_snapshot s on s.cluster_id = c.id and s.user_id = ${userId} and s.snapshot_id = ${context.snapshotId}::uuid
-    group by c.id, c.manual_name, s.generated_name order by connections desc, c.id limit 24
-  `);
-  return [...rows];
+  }>(sql`${bridges}
+    select * from grouped ${context.decoded ? sql`where id > ${context.decoded.after}::uuid` : sql``}
+    order by id limit ${input.limit + 1}`);
+  const items = [...rows].slice(0, input.limit);
+  return {
+    ...metadata(context),
+    items,
+    nextCursor:
+      rows.length > input.limit && items.at(-1)
+        ? encodeExploreCursor({
+            after: items.at(-1)!.id,
+            owner: userId,
+            scope,
+            snapshot: context.snapshotId,
+          })
+        : undefined,
+    total: totals[0]?.total ?? 0,
+  };
 }

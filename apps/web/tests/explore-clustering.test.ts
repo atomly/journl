@@ -3,6 +3,7 @@ import {
   buildClusters,
   type ClusterNote,
   type ClusterReference,
+  clusterLineage,
   matchClusterIdentities,
 } from "../src/explore/clustering";
 
@@ -123,4 +124,52 @@ test("related membership requires multiple distinct members and retains authored
     documentId: "a",
     evidenceIds: ["a:v", "a:w"],
   });
+});
+
+test("lineage records a surviving parent's split branch and both sides of a merge", () => {
+  expect(
+    clusterLineage(
+      [
+        { next: 0, old: 0, score: 0.5 },
+        { next: 1, old: 0, score: 0.5 },
+      ],
+      ["old"],
+      ["old", "child"],
+    ),
+  ).toEqual([{ from_id: "old", kind: "split", to_id: "child" }]);
+  expect(
+    clusterLineage(
+      [
+        { next: 0, old: 0, score: 0.5 },
+        { next: 0, old: 1, score: 0.5 },
+      ],
+      ["old", "other"],
+      ["old"],
+    ),
+  ).toEqual([{ from_id: "other", kind: "merge", to_id: "old" }]);
+});
+
+test("related evidence retains witnesses for distinct members even with repeated occurrences", () => {
+  const first = ["a", "b", "c", "d", "e"];
+  const second = ["v", "w", "x", "y", "z"];
+  const refs: ClusterReference[] = [];
+  for (const ids of [first, second])
+    for (let i = 0; i < ids.length; i++)
+      for (let j = i + 1; j < ids.length; j++)
+        refs.push(direct(ids[i]!, ids[j]!));
+  refs.push(
+    ...Array.from({ length: 20 }, (_, i) => ({
+      ...direct("a", "v"),
+      id: `00-${i}`,
+    })),
+    { ...direct("a", "w"), id: "99-w" },
+  );
+  const group = buildClusters([...first, ...second].map(note), refs).find((c) =>
+    c.primaryDocumentIds.includes("v"),
+  );
+  const evidence = group?.related.find(
+    (r) => r.documentId === "a",
+  )?.evidenceIds;
+  expect(evidence).toContain("99-w");
+  expect(evidence).toHaveLength(2);
 });

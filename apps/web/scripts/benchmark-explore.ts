@@ -40,9 +40,11 @@ if (
   throw new Error(`Unexpected membership: ${clusters.length}`);
 console.log(
   JSON.stringify({
+    budgets: { peakRssMB: 768, runtimeMilliseconds: 30000 },
     clusters: clusters.length,
     milliseconds: Math.round(elapsed),
     notes: notes.length,
+    peakRssMB: Math.round(process.resourceUsage().maxRSS / 1024),
     references: refs.length,
     rssGrowthMB: Math.round((process.memoryUsage().rss - before) / 1024 / 1024),
     rssMB: Math.round(process.memoryUsage().rss / 1024 / 1024),
@@ -50,3 +52,8 @@ console.log(
 );
 if (elapsed > 30000)
   throw new Error("Clustering exceeded the 30 second fixture budget");
+
+if (process.resourceUsage().maxRSS > 768 * 1024)
+  throw new Error(
+    "Clustering exceeded the isolated-process 768 MiB peak RSS budget",
+  );

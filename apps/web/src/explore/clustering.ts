@@ -148,7 +148,10 @@ export function buildClusters(
   });
   const relatedEvidence = new Map<
     string,
-    Map<number, { members: Set<string>; ids: Set<string> }>
+    Map<
+      number,
+      { members: Set<string>; ids: Set<string>; byMember: Map<string, string> }
+    >
   >();
   for (const r of references) {
     if (
@@ -166,11 +169,14 @@ export function buildClusters(
       if (cluster === undefined || primary.get(note!) === cluster) continue;
       const groups = relatedEvidence.get(note!) ?? new Map();
       const evidence = groups.get(cluster) ?? {
+        byMember: new Map<string, string>(),
         ids: new Set<string>(),
         members: new Set<string>(),
       };
       evidence.members.add(member!);
       evidence.ids.add(r.id);
+      const witness = evidence.byMember.get(member!);
+      if (!witness || r.id < witness) evidence.byMember.set(member!, r.id);
       groups.set(cluster, evidence);
       relatedEvidence.set(note!, groups);
     }
@@ -183,7 +189,11 @@ export function buildClusters(
     for (const [i, e] of eligible)
       candidates[i]!.related.push({
         documentId,
-        evidenceIds: [...e.ids].sort().slice(0, 3),
+        evidenceIds: [...e.byMember]
+          .sort(([a], [b]) => a.localeCompare(b))
+          .slice(0, 3)
+          .map(([, id]) => id)
+          .sort(),
       });
   }
   // Invert membership once: O(references + memberships), including high-degree sources.
@@ -305,4 +315,32 @@ export function matchClusterIdentities(
       used.add(entry.old);
     }
   return { assigned, overlaps };
+}
+
+/** Historical transitions include branches whose predecessor retained its identity. */
+export function clusterLineage(
+  overlaps: { next: number; old: number; score: number }[],
+  previousIds: string[],
+  nextIds: string[],
+) {
+  const children = new Map<number, Set<number>>();
+  const parents = new Map<number, Set<number>>();
+  for (const entry of overlaps) {
+    const c = children.get(entry.old) ?? new Set<number>();
+    c.add(entry.next);
+    children.set(entry.old, c);
+    const p = parents.get(entry.next) ?? new Set<number>();
+    p.add(entry.old);
+    parents.set(entry.next, p);
+  }
+  return overlaps.flatMap((entry) => {
+    const from = previousIds[entry.old]!;
+    const to = nextIds[entry.next]!;
+    if (from === to) return [];
+    const kinds: ("split" | "merge" | "replacement")[] = [];
+    if ((children.get(entry.old)?.size ?? 0) > 1) kinds.push("split");
+    if ((parents.get(entry.next)?.size ?? 0) > 1) kinds.push("merge");
+    if (!kinds.length) kinds.push("replacement");
+    return kinds.map((kind) => ({ from_id: from, kind, to_id: to }));
+  });
 }

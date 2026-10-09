@@ -16,7 +16,9 @@
     "with-env": "dotenv -e ../../.env --",
     "explore:backfill": "pnpm with-env jiti scripts/backfill-explore.ts",
     "explore:benchmark": "jiti scripts/benchmark-explore.ts",
-    "explore:setup": "pnpm with-env jiti scripts/setup-explore.ts"
+    "explore:setup": "pnpm with-env jiti scripts/setup-explore.ts",
+    "explore:benchmark:db": "pnpm with-env jiti scripts/benchmark-explore-database.ts --run-disposable-fixture",
+    "explore:test:browser": "pnpm with-env jiti scripts/test-explore-browser.ts"
   },
   "dependencies": {
     "@acme/auth": "workspace:*",

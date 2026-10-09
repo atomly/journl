@@ -29,6 +29,7 @@ export function ExploreOverview() {
     mode: "map" as "map" | "list",
     scroll: 0,
     search: "",
+    selected: undefined as string | undefined,
   });
   const [search, setSearch] = useState(view.search);
   const viewport = useRef<HTMLDivElement>(null);
@@ -72,6 +73,32 @@ export function ExploreOverview() {
     if (viewport.current) viewport.current.scrollTop = view.scroll;
   }, [view.scroll]);
   const threads = query.data?.items ?? [];
+  const [connectionCursor, setConnectionCursor] = useExploreState<
+    string | undefined
+  >(
+    `overview-connections:${view.selected ?? "none"}:${query.data?.snapshotId ?? "pending"}`,
+    undefined,
+  );
+  const connections = useQuery(
+    trpc.explore.listThreadConnections.queryOptions(
+      {
+        clusterId: view.selected ?? "00000000-0000-0000-0000-000000000000",
+        cursor: connectionCursor,
+        limit: 20,
+        snapshotId: query.data?.snapshotId ?? undefined,
+      },
+      { enabled: !!view.selected },
+    ),
+  );
+  useEffect(() => {
+    if (connections.data?.restartRequired) setConnectionCursor(undefined);
+  }, [connections.data?.restartRequired, setConnectionCursor]);
+  const selectedThread = threads.find((thread) => thread.id === view.selected);
+  function selectThread(id: string) {
+    setConnectionCursor(undefined);
+    setView((v) => ({ ...v, selected: id }));
+  }
+
   return (
     <main className="mx-auto flex min-h-full w-full max-w-6xl flex-col gap-6 px-4 py-6 md:px-8">
       <header>
@@ -174,29 +201,46 @@ export function ExploreOverview() {
             const scroll = e.currentTarget.scrollTop;
             setView((v) => ({ ...v, scroll }));
           }}
-          className="h-[min(65dvh,40rem)] min-h-96 overflow-auto bg-card/20"
+          className={
+            query.data?.total === 0 && !view.search
+              ? "min-h-48 overflow-auto bg-card/20"
+              : "h-[min(65dvh,40rem)] min-h-96 overflow-auto bg-card/20"
+          }
         >
           {query.isPending ? (
             <Skeleton className="m-4 h-80 rounded-xl" />
           ) : query.isError ? (
-            <ExploreError retry={() => void query.refetch()} />
+            <ExploreError
+              retry={() => {
+                if (view.cursor)
+                  setView((v) => ({ ...v, cursor: undefined, history: [] }));
+                else void query.refetch();
+              }}
+            />
           ) : threads.length ? (
             view.mode === "map" ? (
               <ThreadMap
                 threads={threads}
                 width={width}
                 camera={view.camera}
+                selectedId={view.selected}
+                connections={connections.data?.items ?? []}
+                onSelect={selectThread}
                 onCamera={(camera) => setView((v) => ({ ...v, camera }))}
               />
             ) : (
               <div className="grid gap-4 p-4 sm:grid-cols-2">
                 {threads.map((thread) => (
-                  <ThreadCard key={thread.id} thread={thread} />
+                  <ThreadCard
+                    key={thread.id}
+                    thread={thread}
+                    onSelect={selectThread}
+                  />
                 ))}
               </div>
             )
           ) : (
-            <div className="flex min-h-96 flex-col items-center justify-center gap-3 p-6 text-center">
+            <div className="flex min-h-48 flex-col items-center justify-center gap-3 p-6 text-center">
               <Compass className="size-7 text-muted-foreground" />
               <p className="font-medium">
                 {view.search
@@ -213,6 +257,74 @@ export function ExploreOverview() {
             </div>
           )}
         </div>
+        {(threads.length > 0 || view.selected) && (
+          <section
+            aria-label="Thread connections"
+            className="min-h-36 border-t p-4"
+          >
+            <h2 className="font-medium text-sm">
+              {selectedThread
+                ? `Where ${selectedThread.name} leads`
+                : "Choose a thread"}
+            </h2>
+            {!view.selected ? (
+              <p className="mt-2 text-muted-foreground text-sm">
+                Select a thread to find references connecting it to other ideas.
+              </p>
+            ) : connections.isPending ? (
+              <Skeleton className="mt-3 h-16" />
+            ) : connections.isError ? (
+              <ExploreError
+                retry={() => {
+                  if (connectionCursor) setConnectionCursor(undefined);
+                  else void connections.refetch();
+                }}
+              />
+            ) : (
+              <>
+                <p className="mt-2 text-muted-foreground text-xs">
+                  {connections.data?.total
+                    ? "Lines and links represent references written between notes in different threads."
+                    : "No references to another thread yet. Open this thread to explore its notes and sources."}
+                </p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {connections.data?.items.map((thread) => (
+                    <Link
+                      key={thread.id}
+                      href={`/explore/clusters/${thread.id}`}
+                      className="inline-flex min-h-11 items-center gap-2 rounded-lg border px-3 text-sm hover:bg-accent"
+                    >
+                      {thread.name}
+                      <span className="text-muted-foreground text-xs">
+                        {thread.connections} references →
+                      </span>
+                    </Link>
+                  ))}
+                </div>
+                {(connectionCursor || connections.data?.nextCursor) && (
+                  <div className="mt-3 flex gap-2">
+                    <Button
+                      variant="ghost"
+                      disabled={!connectionCursor}
+                      onClick={() => setConnectionCursor(undefined)}
+                    >
+                      First connections
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      disabled={!connections.data?.nextCursor}
+                      onClick={() =>
+                        setConnectionCursor(connections.data?.nextCursor)
+                      }
+                    >
+                      More connections
+                    </Button>
+                  </div>
+                )}
+              </>
+            )}
+          </section>
+        )}
         <div className="flex min-h-14 flex-wrap items-center justify-between gap-3 border-t px-4 py-2">
           <p role="status" className="text-muted-foreground text-xs">
             {query.data?.refreshing
@@ -358,7 +470,13 @@ function RecentNotes() {
       {query.isPending ? (
         <Skeleton className="h-48 rounded-xl" />
       ) : query.isError ? (
-        <ExploreError retry={() => void query.refetch()} />
+        <ExploreError
+          retry={() => {
+            if (view.cursor)
+              setView((v) => ({ ...v, cursor: undefined, history: [] }));
+            else void query.refetch();
+          }}
+        />
       ) : (
         <>
           <div className="grid gap-2 sm:grid-cols-2">

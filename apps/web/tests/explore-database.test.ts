@@ -328,6 +328,75 @@ integration(
   30000,
 );
 integration(
+  "retired threads paginate every successor with exact counts",
+  async () => {
+    const ancestor = randomUUID();
+    const successors = Array.from({ length: 26 }, () => randomUUID());
+    const [state] = await db
+      .select()
+      .from(ExploreState)
+      .where(eq(ExploreState.user_id, owner));
+    await db
+      .insert(ExploreCluster)
+      .values([ancestor, ...successors].map((id) => ({ id, user_id: owner })));
+    await db.insert(ExploreClusterSnapshot).values(
+      successors.map((id, i) => ({
+        cluster_id: id,
+        generated_name: `Successor ${i}`,
+        primary_count: 0,
+        related_count: 0,
+        representatives: [],
+        snapshot_id: state!.active_snapshot_id!,
+        source_count: 0,
+        user_id: owner,
+      })),
+    );
+    await db.insert(ExploreClusterLineage).values(
+      successors.map((id) => ({
+        from_id: ancestor,
+        kind: "split" as const,
+        to_id: id,
+        user_id: owner,
+      })),
+    );
+    const first = await getCluster(db, owner, ancestor);
+    expect(first.successorTotal).toBe(26);
+    expect(first.successors).toHaveLength(24);
+    expect(first.nextSuccessorCursor).toBeTruthy();
+    // Future seed and recursive transitions must not alter a cursor's snapshot.
+    await db.insert(ExploreClusterLineage).values([
+      {
+        from_id: ancestor,
+        kind: "merge",
+        source_revision: first.revision + 1,
+        to_id: clusterId,
+        user_id: owner,
+      },
+      {
+        from_id: successors[0]!,
+        kind: "merge",
+        source_revision: first.revision + 1,
+        to_id: clusterId,
+        user_id: owner,
+      },
+    ]);
+    const second = await getCluster(
+      db,
+      owner,
+      ancestor,
+      first.nextSuccessorCursor,
+    );
+    expect(second.successorTotal).toBe(26);
+    expect(second.successors).toHaveLength(2);
+    expect(second.nextSuccessorCursor).toBeUndefined();
+    expect(
+      new Set([...first.successors, ...second.successors].map((s) => s.id))
+        .size,
+    ).toBe(26);
+  },
+  30000,
+);
+integration(
   "document deletion clears memberships and authored evidence on refresh",
   async () => {
     await db.transaction(async (tx) => {

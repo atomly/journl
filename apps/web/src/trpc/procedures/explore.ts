@@ -16,6 +16,7 @@ import {
   listRecentNotes,
   listRelatedThreads,
   listSourceContexts,
+  listThreadConnections,
 } from "~/explore/service";
 import { protectedProcedure } from "../trpc";
 
@@ -25,9 +26,14 @@ const page = z.object({
 });
 export const exploreRouter = {
   getCluster: protectedProcedure
-    .input(z.object({ clusterId: z.uuid() }))
+    .input(
+      z.object({
+        clusterId: z.uuid(),
+        cursor: z.string().max(2048).optional(),
+      }),
+    )
     .query(({ ctx, input }) =>
-      getCluster(ctx.db, ctx.session.user.id, input.clusterId),
+      getCluster(ctx.db, ctx.session.user.id, input.clusterId, input.cursor),
     ),
   getClusterMap: protectedProcedure
     .input(z.object({ clusterId: z.uuid() }))
@@ -80,6 +86,13 @@ export const exploreRouter = {
     )
     .query(({ ctx, input }) =>
       listSourceContexts(ctx.db, ctx.session.user.id, input),
+    ),
+  listThreadConnections: protectedProcedure
+    .input(
+      page.extend({ clusterId: z.uuid(), snapshotId: z.uuid().optional() }),
+    )
+    .query(({ ctx, input }) =>
+      listThreadConnections(ctx.db, ctx.session.user.id, input),
     ),
   memberships: protectedProcedure
     .input(z.object({ documentId: z.uuid() }))

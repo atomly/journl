@@ -90,6 +90,7 @@ and embeds are different presentations of the same relationship.
   touch devices keep native long-press behavior and the sticky toolbar.
 - Linked references load when the editor opens. The section appears only when references exist.
 - **Explore** at `/explore` starts with named threads of connected notes and shared sources.
+  Select a thread to reveal its connections, then use **Explore thread** to open it.
   Switch between the canvas and an accessible list, search threads, or browse recent notes
   with newest/oldest sorting and an unlinked-only filter. Results load one page at a time.
 - Open a thread to browse its notes, related notes, and external sources. **Why here?** shows
@@ -109,7 +110,13 @@ and embeds are different presentations of the same relationship.
 
 The additive Explore schema can be installed with `pnpm --filter @acme/web explore:setup`,
 then populated with `pnpm --filter @acme/web explore:backfill` (resumable with `--after=owner-id`).
-`explore:benchmark` checks a 10,000-note / 100,000-reference fixture. Algorithm parameters
+`explore:benchmark` checks a 10,000-note / 100,000-reference calculation fixture.
+`explore:benchmark:db` measures publication and bounded API reads with a disposable database
+owner and cleans it up afterward. `explore:test:browser` checks an authenticated local
+production server on port 3001 using disposable owners; the server must use the script’s
+local test auth secret. Live database regression tests run with `EXPLORE_DB_TESTS=1`.
+The algorithm uses MIT-licensed `ngraph.leiden@0.3.0` and `ngraph.graph@20.1.2`,
+Leiden CPM resolution 0.5 and deterministic seed 42. Algorithm parameters
 and their version live in `apps/web/src/explore/config.ts`; changing the version schedules
 fresh snapshots on the next Explore visit. The daily refresh cron uses the existing `CRON_SECRET`.
 

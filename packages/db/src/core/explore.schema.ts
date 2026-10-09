@@ -49,9 +49,13 @@ export const ExploreSnapshot = pgTable(
     user_id: owner(),
     source_revision: integer().notNull(),
     algorithm_version: text().notNull(),
+    // Only complete calculations are persisted; failures leave the previous ready snapshot.
+    status: text().$type<"ready">().notNull().default("ready"),
     created_at: time(),
+    published_at: time(),
   },
   (t) => [
+    check("explore_snapshot_ready", sql`${t.status} = 'ready'`),
     uniqueIndex("explore_snapshot_owner_id").on(t.user_id, t.id),
     uniqueIndex("explore_snapshot_revision").on(
       t.user_id,
@@ -183,10 +187,23 @@ export const ExploreClusterLineage = pgTable(
     user_id: owner(),
     from_id: uuid().notNull(),
     to_id: uuid().notNull(),
+    source_revision: integer().notNull().default(0),
+    kind: text()
+      .$type<"split" | "merge" | "replacement">()
+      .notNull()
+      .default("replacement"),
     created_at: time(),
   },
   (t) => [
-    primaryKey({ columns: [t.from_id, t.to_id] }),
+    primaryKey({
+      name: "explore_cluster_lineage_revision_kind_pk",
+      columns: [t.from_id, t.to_id, t.source_revision, t.kind],
+    }),
+    index("explore_lineage_owner_from").on(t.user_id, t.from_id),
+    check(
+      "explore_lineage_kind",
+      sql`${t.kind} in ('split', 'merge', 'replacement')`,
+    ),
     foreignKey({
       columns: [t.user_id, t.from_id],
       foreignColumns: [ExploreCluster.user_id, ExploreCluster.id],

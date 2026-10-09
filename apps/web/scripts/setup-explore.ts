@@ -17,6 +17,32 @@ await db.transaction(async (tx) => {
       await tx.execute(
         sql`alter table explore_state add constraint explore_state_snapshot_owner_fk foreign key (user_id, active_snapshot_id) references explore_snapshot (user_id, id)`,
       );
+    const columns = await tx.execute(
+      sql`select 1 from information_schema.columns where table_name = 'explore_cluster_lineage' and table_schema = 'public' and column_name = 'kind'`,
+    );
+    if (!columns.length)
+      await tx.execute(
+        sql.raw(
+          await readFile(
+            new URL(
+              "../../../packages/db/sql/20261008_explore_lineage.sql",
+              import.meta.url,
+            ),
+            "utf8",
+          ),
+        ),
+      );
+    await tx.execute(
+      sql.raw(
+        await readFile(
+          new URL(
+            "../../../packages/db/sql/20261008_explore_snapshot_status.sql",
+            import.meta.url,
+          ),
+          "utf8",
+        ),
+      ),
+    );
     return;
   }
   if (rows[0]?.count)
@@ -31,6 +57,28 @@ await db.transaction(async (tx) => {
     "utf8",
   );
   await tx.execute(sql.raw(migration));
+  await tx.execute(
+    sql.raw(
+      await readFile(
+        new URL(
+          "../../../packages/db/sql/20261008_explore_lineage.sql",
+          import.meta.url,
+        ),
+        "utf8",
+      ),
+    ),
+  );
+  await tx.execute(
+    sql.raw(
+      await readFile(
+        new URL(
+          "../../../packages/db/sql/20261008_explore_snapshot_status.sql",
+          import.meta.url,
+        ),
+        "utf8",
+      ),
+    ),
+  );
 });
 console.log("Explore schema ready");
 process.exit(0);

@@ -1,5 +1,5 @@
 /** Version changes invalidate snapshots. CPM avoids global modularity's resolution limit. */
-export const ALGORITHM_VERSION = "leiden-cpm-v2";
+export const ALGORITHM_VERSION = "leiden-cpm-v3";
 export const CLUSTER_CONFIG = {
   directWeight: 3,
   relatedLimit: 3,

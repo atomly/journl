@@ -4,7 +4,7 @@ on:
   pull_request:
     branches: ["*"]
     # Re-evaluate eligibility when a PR is retargeted after the bottom merges.
-    types: [opened, synchronize, reopened, edited]
+    types: [opened, synchronize, edited]
   push:
     branches: ["main"]
   merge_group:

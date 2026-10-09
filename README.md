@@ -68,6 +68,62 @@ If your local Postgres instance does not support TLS, set `POSTGRES_SSL_MODE=dis
 For database workflows, use root scripts (`pnpm db:push`, `pnpm db:studio`) or
 the dedicated utility app in [`apps/drizzle-studio`](./apps/drizzle-studio).
 
+Content references cover both [rich linked-content previews (#291)](https://github.com/atomly/journl/issues/291)
+and [durable page, journal, and block references (#292)](https://github.com/atomly/journl/issues/292).
+References retain their target IDs across title changes; badges, cards, links,
+and embeds are different presentations of the same relationship.
+
+- Paste a URL into text for an inline reference, or into an empty paragraph for a card.
+- Use the display menu to switch between **Inline**, **Card**, and **Link**; internal notes also support **Embed**.
+  Select a regular link's text and use **Display link as** to restore its rich presentation.
+  Selected cards and inline badges offer **Reference actions**, using the same actions as their context menu.
+  References within surrounding text can become cards without losing that text. Table cells support
+  reversible Inline/Link display; cards and embeds stay outside cells.
+- Use `/Embed note` to insert a page or journal entry. Expand the embed to read its current content.
+- Select multiple blocks and use Tab/Shift+Tab to indent/outdent text, cards, and embeds together.
+  Tab from a reference's action controls moves keyboard focus normally.
+- Click a card background to select the whole block; drag its surface or handle to move it.
+  Desktop thumbnails appear on the left and disappear cleanly if unavailable.
+- Right-click a desktop block or press Shift+F10 for block actions. The drag-handle menu offers
+  the same display, copy, duplicate, and delete actions. Rich inline references also offer display actions
+  on desktop right-click. Ordinary links and selected text keep native menus;
+  touch devices keep native long-press behavior and the sticky toolbar.
+- Linked references load when the editor opens. The section appears only when references exist.
+- **Explore** at `/explore` starts with named threads of connected notes and shared sources.
+  Select a thread to reveal its connections, then use **Explore thread** to open it.
+  Switch between the canvas and an accessible list, search threads, or browse recent notes
+  with newest/oldest sorting and an unlinked-only filter. Results load one page at a time.
+- Open a thread to browse its notes, related notes, and external sources. **Why here?** shows
+  the authored passages supporting membership; source pages show the notes that cite them.
+  Thread names can be edited and survive refreshes. **Explore this note** opens a focused
+  view of its actual connections. Breadcrumbs and Back restore the previous view.
+- Clusters are navigation aids, not new references. Seeded Leiden clustering weights direct
+  note references more strongly than shared URLs; repeated links and widely cited sources
+  cannot inflate similarity. Specific shared sources require two distinct URLs. Domains
+  alone never connect notes. Snapshots refresh in the background after edits and publish
+  atomically; the last complete view remains available while refreshing.
+- Pinch with two fingers or a trackpad to zoom the canvas. Desktop previews stay sticky;
+  mobile previews keep a bounded height and scroll independently. Existing `/graph` links
+  redirect with their context preserved.
+- Public websites use page metadata when available, with URL fallback. Cards can show desktop thumbnails;
+  mobile keeps the compact text presentation. Metadata fetching has bounded, cached public-network requests.
+
+The additive Explore schema can be installed with `pnpm --filter @acme/web explore:setup`,
+then populated with `pnpm --filter @acme/web explore:backfill` (resumable with `--after=owner-id`).
+`explore:benchmark` checks a 10,000-note / 100,000-reference calculation fixture.
+`explore:benchmark:db` measures publication and bounded API reads with a disposable database
+owner and cleans it up afterward. `explore:test:browser` checks an authenticated local
+production server on port 3001 using disposable owners; the server must use the script’s
+local test auth secret. Live database regression tests run with `EXPLORE_DB_TESTS=1`.
+The algorithm uses MIT-licensed `ngraph.leiden@0.3.0` and `ngraph.graph@20.1.2`,
+Leiden CPM resolution 0.5 and deterministic seed 42. Algorithm parameters
+and their version live in `apps/web/src/explore/config.ts`; changing the version schedules
+fresh snapshots on the next Explore visit. The daily refresh cron uses the existing `CRON_SECRET`.
+
+Existing saved links keep their authored display; backfill builds reference indexes
+without rewriting editor content. Implementation guidelines are [Logseq block references](https://discuss.logseq.com/t/the-basics-of-logseq-block-references/8458),
+[Logseq documentation](https://docs.logseq.com/), and [Obsidian internal links](https://obsidian.md/help/links).
+
 ---
 
 ## License

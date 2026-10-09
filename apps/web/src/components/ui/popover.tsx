@@ -2,14 +2,29 @@
 
 import { Popover as PopoverPrimitive } from "@base-ui/react/popover";
 import { cn } from "cn";
-import type * as React from "react";
+import * as React from "react";
 
 function Popover({ ...props }: PopoverPrimitive.Root.Props) {
   return <PopoverPrimitive.Root data-slot="popover" {...props} />;
 }
 
-function PopoverTrigger({ ...props }: PopoverPrimitive.Trigger.Props) {
-  return <PopoverPrimitive.Trigger data-slot="popover-trigger" {...props} />;
+function PopoverTrigger({
+  render,
+  nativeButton,
+  ...props
+}: PopoverPrimitive.Trigger.Props) {
+  const elementType = React.isValidElement(render) ? render.type : undefined;
+  return (
+    <PopoverPrimitive.Trigger
+      data-slot="popover-trigger"
+      render={render}
+      nativeButton={
+        nativeButton ??
+        (typeof elementType === "string" ? elementType === "button" : undefined)
+      }
+      {...props}
+    />
+  );
 }
 
 function PopoverContent({
@@ -18,14 +33,16 @@ function PopoverContent({
   alignOffset = 0,
   side = "bottom",
   sideOffset = 4,
+  container,
   ...props
 }: PopoverPrimitive.Popup.Props &
   Pick<
     PopoverPrimitive.Positioner.Props,
     "align" | "alignOffset" | "side" | "sideOffset"
-  >) {
+  > &
+  Pick<PopoverPrimitive.Portal.Props, "container">) {
   return (
-    <PopoverPrimitive.Portal>
+    <PopoverPrimitive.Portal container={container}>
       <PopoverPrimitive.Positioner
         data-slot="popover-positioner"
         align={align}

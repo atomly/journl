@@ -41,6 +41,18 @@ export function JournalDraftsProvider({
           staleTime: 0,
         }),
       onSaved: (entry: Extract<JournalListEntry, { document_id: string }>) => {
+        if (trpc.references) {
+          for (const referenceQueryKey of [
+            trpc.references.getPreviews.queryKey(),
+            trpc.references.getEmbedContent.queryKey(),
+            trpc.references.listBacklinks.queryKey(),
+            trpc.references.listOccurrences.queryKey(),
+            trpc.references.queryNeighbors.queryKey(),
+            trpc.references.getGraph.infiniteQueryKey(),
+          ]) {
+            void queryClient.invalidateQueries({ queryKey: referenceQueryKey });
+          }
+        }
         // Keep cached remount data current without presenting unsaved edits as server data.
         for (const queryKey of [
           trpc.journal.getEntries.infiniteQueryKey(),

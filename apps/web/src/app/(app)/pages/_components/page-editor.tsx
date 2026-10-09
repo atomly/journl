@@ -1,13 +1,14 @@
 "use client";
 
-import type { Page } from "@acme/db/schema";
 import type { EditorPartialBlock } from "@acme/blocknote/schema";
-import { useMutation } from "@tanstack/react-query";
+import type { Page } from "@acme/db/schema";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { useDebouncedCallback } from "use-debounce";
 import { BlockEditor } from "~/components/editor/block-editor";
 import { BlockEditorErrorOverlay } from "~/components/editor/block-editor-error-overlay";
 import { useBlockEditor } from "~/components/editor/use-block-editor";
+import { ReferenceBacklinks } from "~/components/references/reference-backlinks";
 import { PageCreatedEvent } from "~/events/page-created-event";
 import { useAppEventHandler } from "~/hooks/use-app-event-handler";
 import { useJournlAgent } from "~/hooks/use-journl-agent";
@@ -32,6 +33,7 @@ export function PageEditor({
   ...rest
 }: PageEditorProps) {
   const trpc = useTRPC();
+  const queryClient = useQueryClient();
   const pendingChangesRef = useRef<BlockTransaction[]>([]);
   const { setEditor, unsetEditor, setView } = useJournlAgent();
   const editor = useBlockEditor({ initialBlocks });
@@ -58,6 +60,16 @@ export function PageEditor({
       handleError();
     },
     onSuccess: () => {
+      for (const queryKey of [
+        trpc.references.getPreviews.queryKey(),
+        trpc.references.getEmbedContent.queryKey(),
+        trpc.references.listBacklinks.queryKey(),
+        trpc.references.listOccurrences.queryKey(),
+        trpc.references.queryNeighbors.queryKey(),
+        trpc.references.getGraph.infiniteQueryKey(),
+      ]) {
+        void queryClient.invalidateQueries({ queryKey });
+      }
       if (pendingChangesRef.current.length > 0) {
         debouncedMutate();
       }
@@ -125,6 +137,7 @@ export function PageEditor({
         slashMenu={false}
         {...rest}
       />
+      <ReferenceBacklinks documentId={page.document_id} />
       <BlockEditorErrorOverlay isOpen={isOverlayOpen} />
     </>
   );

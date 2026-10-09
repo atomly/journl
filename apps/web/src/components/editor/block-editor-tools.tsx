@@ -1,6 +1,6 @@
 "use client";
 
-import type { BlockPrimitive, schema } from "@acme/blocknote/schema";
+import { type BlockPrimitive, schema } from "@acme/blocknote/schema";
 import {
   FormattingToolbarExtension,
   filterSuggestionItems,
@@ -75,7 +75,7 @@ export function BlockEditorStickyToolbar() {
 function BlockEditorAIButton() {
   const dict = useAIDictionary();
   const Components = useComponentsContext();
-  const editor = useBlockNoteEditor();
+  const editor = useBlockNoteEditor(schema);
   const ai = useExtension(AIExtension);
   const formattingToolbar = useExtension(FormattingToolbarExtension);
 
@@ -118,7 +118,7 @@ function BlockEditorAIButton() {
  * @returns The suggestion menu.
  */
 export function BlockEditorSlashMenu() {
-  const editor = useBlockNoteEditor();
+  const editor = useBlockNoteEditor(schema);
   return (
     <SuggestionMenuController
       triggerCharacter="/"
@@ -144,7 +144,7 @@ export function BlockEditorSlashMenu() {
  * Button to add a block selection.
  */
 function BlockEditorSelectionButton() {
-  const editor = useBlockNoteEditor();
+  const editor = useBlockNoteEditor(schema);
   const Components = useComponentsContext();
   const { setSelection, getSelection, unsetSelection } = useJournlAgent();
 

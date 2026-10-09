@@ -1,6 +1,5 @@
-import type { PartialBlock } from "@blocknote/core";
 import { ServerBlockNoteEditor } from "@blocknote/server-util";
-import { schema } from "../blocknote-schema";
+import { type EditorPartialBlock, serverSchema } from "./blocknote-schema";
 
 /**
  * Converts BlockNote blocks to Markdown.
@@ -8,10 +7,10 @@ import { schema } from "../blocknote-schema";
  * @returns The Markdown string.
  */
 export async function blocknoteMarkdown(
-  blocks: [PartialBlock, ...PartialBlock[]],
+  blocks: [EditorPartialBlock, ...EditorPartialBlock[]],
 ) {
   const editor = ServerBlockNoteEditor.create({
-    schema,
+    schema: serverSchema,
   });
   const markdown = blocks ? await editor.blocksToMarkdownLossy(blocks) : "";
   return markdown;

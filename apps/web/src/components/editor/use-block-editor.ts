@@ -1,7 +1,7 @@
 "use client";
 
 import { schema } from "@acme/blocknote/schema";
-import type { PartialBlock } from "@blocknote/core";
+import type { EditorPartialBlock } from "@acme/blocknote/schema";
 import { en } from "@blocknote/core/locales";
 import { useCreateBlockNote } from "@blocknote/react";
 import { AIExtension } from "@blocknote/xl-ai";
@@ -13,7 +13,7 @@ type UseBlockEditorOptions = {
    * The initial blocks to render in the editor.
    * @note The initial blocks must be a non-empty array.
    */
-  initialBlocks?: [PartialBlock, ...PartialBlock[]] | undefined;
+  initialBlocks?: [EditorPartialBlock, ...EditorPartialBlock[]] | undefined;
   resetKey?: number;
 };
 

@@ -1,6 +1,6 @@
 import type { BlockEdge, BlockNode } from "@acme/db/schema";
-import type { PartialBlock } from "@blocknote/core";
 import { z } from "zod/v4";
+import type { EditorPartialBlock } from "./blocknote-schema";
 
 // Simply using `any` types as we aren't really changing the BlockNote schema anywhere.
 const zBlockNoteBlockType = z.any();
@@ -15,7 +15,7 @@ const zBlockNoteBlockProps = z.any();
 export function blocknoteBlocks(
   blocks: BlockNode[],
   edges: BlockEdge[],
-): [PartialBlock, ...PartialBlock[]] | undefined {
+): [EditorPartialBlock, ...EditorPartialBlock[]] | undefined {
   if (!blocks || blocks.length === 0) {
     return undefined;
   }
@@ -132,7 +132,7 @@ export function blocknoteBlocks(
   /**
    * Recursively builds the document tree using a BFS approach.
    */
-  function buildDocumentBranch(blockId: string): PartialBlock {
+  function buildDocumentBranch(blockId: string): EditorPartialBlock {
     const block = blockMap.get(blockId);
 
     if (!block) {
@@ -162,13 +162,13 @@ export function blocknoteBlocks(
     );
 
     // Convert database block to PartialBlock format
-    const partialBlock: PartialBlock = {
+    const partialBlock: EditorPartialBlock = {
       children: children,
       content: blockData?.content || undefined,
       id: block.id,
       props: blockData?.props || {},
       type: blockData?.type || "paragraph",
-    };
+    } as EditorPartialBlock;
 
     partialBlock.content;
 

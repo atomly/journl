@@ -1,4 +1,4 @@
-import type { PartialBlock } from "@blocknote/core";
+import type { EditorPartialBlock } from "@acme/blocknote/schema";
 import type { BlockTransaction, JournalListEntry } from "~/trpc";
 
 type SaveInput = {
@@ -12,7 +12,7 @@ type CreatedEntry = Extract<JournalListEntry, { document_id: string }>;
 type Save = (input: SaveInput) => Promise<Omit<CreatedEntry, "blocks">>;
 
 export type DraftInitial = {
-  blocks: [PartialBlock, ...PartialBlock[]] | undefined;
+  blocks: [EditorPartialBlock, ...EditorPartialBlock[]] | undefined;
   documentId: string | null;
   updatedAt: string | null;
 };
@@ -92,7 +92,7 @@ export class JournalEntryDraft {
   }
 
   update(
-    blocks: PartialBlock[],
+    blocks: EditorPartialBlock[],
     transactions: BlockTransaction[],
     debounceTime: number,
     onCreate?: (entry: JournalListEntry) => void,

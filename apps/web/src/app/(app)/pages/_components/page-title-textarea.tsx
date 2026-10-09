@@ -40,7 +40,17 @@ export function PageTitleTextarea({
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const { mutate: updatePageTitle } = useMutation(
-    trpc.pages.updateTitle.mutationOptions({}),
+    trpc.pages.updateTitle.mutationOptions({
+      onSuccess: () => {
+        for (const queryKey of [
+          trpc.references.getPreviews.queryKey(),
+          trpc.references.getGraph.infiniteQueryKey(),
+          trpc.references.listBacklinks.queryKey(),
+        ]) {
+          void queryClient.invalidateQueries({ queryKey });
+        }
+      },
+    }),
   );
   const [title, setTitle] = useState(page.title);
   const treeQueryFilter = trpc.tree.getChildrenPaginated.infiniteQueryFilter();

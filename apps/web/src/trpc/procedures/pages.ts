@@ -13,6 +13,9 @@ import { TRPCError } from "@trpc/server";
 import { embed } from "ai";
 import { z } from "zod/v4";
 import { model } from "~/ai/providers/openai/embedding";
+import { dispatchExploreRefresh } from "~/explore/dispatch";
+import { lockExploreOwner, markExploreDirty } from "~/explore/refresh";
+import { startDocumentEmbedding } from "~/workflows/document-embedding";
 import {
   saveTransactions,
   zBlockTransactions,
@@ -24,7 +27,8 @@ export const pagesRouter = {
   create: protectedProcedure
     .input(zInsertPage.omit({ document_id: true, user_id: true }))
     .mutation(async ({ ctx, input }) => {
-      return await ctx.db.transaction(async (tx) => {
+      const result = await ctx.db.transaction(async (tx) => {
+        await lockExploreOwner(tx, ctx.session.user.id);
         const [document] = await tx
           .insert(Document)
           .values({
@@ -78,8 +82,11 @@ export const pagesRouter = {
           userId: ctx.session.user.id,
         });
 
+        await markExploreDirty(tx, ctx.session.user.id);
         return page;
       });
+      await dispatchExploreRefresh(ctx.session.user.id);
+      return result;
     }),
   getById: protectedProcedure
     .input(z.object({ id: z.uuid() }))
@@ -186,6 +193,7 @@ export const pagesRouter = {
         const distinctMatches = ctx.db
           .selectDistinctOn([DocumentEmbedding.document_id], {
             chunk_markdown_text: DocumentEmbedding.chunk_markdown_text,
+            document_id: DocumentEmbedding.document_id,
             page_id: Page.id,
             page_title: Page.title,
             similarity: embeddingSimilarity.as("similarity"),
@@ -199,6 +207,7 @@ export const pagesRouter = {
         return await ctx.db
           .select({
             chunk_markdown_text: distinctMatches.chunk_markdown_text,
+            document_id: distinctMatches.document_id,
             page_id: distinctMatches.page_id,
             page_title: distinctMatches.page_title,
             similarity: distinctMatches.similarity,
@@ -218,7 +227,23 @@ export const pagesRouter = {
   saveTransactions: protectedProcedure
     .input(zBlockTransactions)
     .mutation(async ({ ctx, input }) => {
-      return await saveTransactions(ctx, input);
+      const document = await ctx.db.transaction(async (tx) =>
+        saveTransactions({ ...ctx, db: tx }, input),
+      );
+      try {
+        await startDocumentEmbedding({
+          documentId: document.id,
+          documentUpdatedAt: document.updatedAt,
+          userId: ctx.session.user.id,
+        });
+      } catch (error) {
+        console.error("Failed to start document embedding workflow", {
+          documentId: document.id,
+          error,
+        });
+      }
+      await dispatchExploreRefresh(ctx.session.user.id);
+      return document;
     }),
   updateTitle: protectedProcedure
     .input(
@@ -228,20 +253,21 @@ export const pagesRouter = {
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const [updatedPage] = await ctx.db
-        .update(Page)
-        .set({ title: input.title })
-        .where(
-          and(eq(Page.id, input.id), eq(Page.user_id, ctx.session.user.id)),
-        )
-        .returning();
-
-      if (!updatedPage) {
-        throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "Page not found",
-        });
-      }
+      const updatedPage = await ctx.db.transaction(async (tx) => {
+        await lockExploreOwner(tx, ctx.session.user.id);
+        const [page] = await tx
+          .update(Page)
+          .set({ title: input.title })
+          .where(
+            and(eq(Page.id, input.id), eq(Page.user_id, ctx.session.user.id)),
+          )
+          .returning();
+        if (!page)
+          throw new TRPCError({ code: "NOT_FOUND", message: "Page not found" });
+        await markExploreDirty(tx, ctx.session.user.id);
+        return page;
+      });
+      await dispatchExploreRefresh(ctx.session.user.id);
 
       return updatedPage;
     }),

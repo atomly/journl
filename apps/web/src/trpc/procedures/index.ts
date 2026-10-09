@@ -1,6 +1,7 @@
 import { createTRPCRouter } from "../trpc";
 import { authRouter } from "./auth";
 import { documentRouter } from "./document";
+import { exploreRouter } from "./explore";
 import { foldersRouter } from "./folders";
 import { inviteRouter } from "./invite";
 import { journalRouter } from "./journal";
@@ -15,6 +16,7 @@ import { usageRouter } from "./usage";
 export const apiRouter = createTRPCRouter({
   auth: authRouter,
   document: documentRouter,
+  explore: exploreRouter,
   folders: foldersRouter,
   invite: inviteRouter,
   journal: journalRouter,

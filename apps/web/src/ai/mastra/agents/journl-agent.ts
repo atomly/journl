@@ -12,6 +12,7 @@ import { applyChanges } from "../../tools/apply-changes/tool";
 import { createPage } from "../../tools/create-page/tool";
 import { navigateJournalEntry } from "../../tools/navigate-journal-entry/tool";
 import { navigatePage } from "../../tools/navigate-page/tool";
+import { queryNoteReferences } from "../../tools/query-note-references";
 import { rejectChanges } from "../../tools/reject-changes/tool";
 import { semanticJournalSearch } from "../../tools/semantic-journal-search";
 import { semanticPageSearch } from "../../tools/semantic-page-search";
@@ -127,6 +128,7 @@ const tools = {
   createPage,
   navigateJournalEntry,
   navigatePage,
+  queryNoteReferences,
   rejectChanges,
   semanticJournalSearch,
   semanticPageSearch,

@@ -286,6 +286,16 @@ export function DeleteFolderDialog({
         {
           onSuccess: () => {
             deleteFolderContextRef.current = null;
+            for (const queryKey of [
+              trpc.references.getPreviews.queryKey(),
+              trpc.references.getEmbedContent.queryKey(),
+              trpc.references.listBacklinks.queryKey(),
+              trpc.references.listOccurrences.queryKey(),
+              trpc.references.queryNeighbors.queryKey(),
+              trpc.references.getGraph.infiniteQueryKey(),
+            ]) {
+              void queryClient.invalidateQueries({ queryKey });
+            }
 
             if (pathname === folderDetailsPath) {
               setDialogOpen(false);
@@ -303,8 +313,10 @@ export function DeleteFolderDialog({
     folderDetailsPath,
     folder.id,
     pathname,
+    queryClient,
     router,
     setDialogOpen,
+    trpc,
   ]);
 
   return (

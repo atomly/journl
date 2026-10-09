@@ -1,4 +1,4 @@
-import { Calendar } from "lucide-react";
+import { Calendar, Compass } from "lucide-react";
 import { type ComponentProps, Suspense } from "react";
 import { Separator } from "~/components/ui/separator";
 import {
@@ -26,6 +26,11 @@ const navigationItems = [
     isActive: true,
     title: "Journal",
     url: "/journal",
+  },
+  {
+    icon: <Compass />,
+    title: "Explore",
+    url: "/explore",
   },
 ] satisfies ComponentProps<typeof AppSidebarNavigation>["items"];
 

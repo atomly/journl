@@ -3,6 +3,8 @@ name: CI
 on:
   pull_request:
     branches: ["*"]
+    # Re-evaluate eligibility when a PR is retargeted after the bottom merges.
+    types: [opened, synchronize, reopened, edited]
   push:
     branches: ["main"]
   merge_group:
@@ -22,9 +24,21 @@ env:
   STRIPE_WEBHOOK_SECRET: 'whsec_build_placeholder'
 
 jobs:
+  # Native GitHub stacks: full CI runs only on the lowest unmerged PR.
+  # The required check job blocks every PR above it before checkout or setup.
+  # As the bottom merges, the next PR targets the stack base and becomes eligible.
+  # Standalone PRs, pushes, and merge groups run normally.
   check:
     runs-on: ubuntu-latest
     steps:
+      - name: Require the lowest unmerged PR in the stack
+        if: >-
+          github.event.pull_request.stack != null &&
+          github.event.pull_request.stack.base.ref != github.event.pull_request.base.ref
+        run: |
+          echo "::error::Merge the lowest unmerged PR first. Full CI will run here once this PR targets the stack base."
+          exit 1
+
       - uses: actions/checkout@v4
 
       - name: Setup
@@ -34,6 +48,9 @@ jobs:
         run: pnpm check
 
   typecheck:
+    if: >-
+      github.event.pull_request.stack == null ||
+      github.event.pull_request.stack.base.ref == github.event.pull_request.base.ref
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -45,6 +62,9 @@ jobs:
         run: pnpm typecheck
 
   build:
+    if: >-
+      github.event.pull_request.stack == null ||
+      github.event.pull_request.stack.base.ref == github.event.pull_request.base.ref
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

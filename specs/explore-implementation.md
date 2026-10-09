@@ -85,7 +85,7 @@ No inferred shared-source similarity lines. Show direct/shared/related explanati
   passed on isolated rerun); 16 live database tests include concurrency and stale-worker
   fencing. Production build and web/database typechecks pass.
 
-- Authenticated production-browser acceptance: 12 checks pass, including keyboard
+- Authenticated production-browser acceptance: 13 checks pass, including keyboard
   selection, authored cross-thread links, 20+2 note pagination, source passages opened in
   the actual editor, note navigation/Back, origin thread, rename, trackpad zoom, pinch,
   mobile sheet bounds/stability and owner-scoped search.

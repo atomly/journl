@@ -478,6 +478,16 @@ try {
     "Mobile preview height shifted after loading",
   );
   await screenshot("/tmp/journl-explore-v3-thread-mobile.png");
+  check(
+    await evaluate(
+      'document.querySelector("[data-slot=sheet-content]").querySelectorAll("[data-slot=sheet-close], button[aria-label=\\"Close preview\\"]").length === 1',
+    ),
+    "Mobile preview must have exactly one close button",
+  );
+  await evaluate(
+    'document.querySelector("[data-slot=sheet-content] button[aria-label=\\"Close preview\\"]").click()',
+  );
+  await wait('!document.querySelector("[data-slot=sheet-content]")');
   await navigate("/explore");
   await wait('document.querySelector("input[aria-label=\\"Find a thread\\"]")');
   await evaluate(
@@ -511,6 +521,7 @@ try {
         "thread origin",
         "rename",
         "mobile bounds",
+        "single mobile preview close button",
         "account isolation",
       ],
       failures,

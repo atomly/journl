@@ -20,6 +20,7 @@ Use when the user asks to:
     return results.map((result) => ({
       content: result.chunk_markdown_text,
       date: result.date,
+      document_id: result.document_id,
       link: `${env.PUBLIC_WEB_URL}/journal/${result.date}`,
       similarity: result.similarity,
     }));
@@ -37,6 +38,7 @@ Use when the user asks to:
     z.object({
       content: z.string(),
       date: z.string(),
+      document_id: z.string().uuid(),
       link: z.string(),
       similarity: z.number(),
     }),

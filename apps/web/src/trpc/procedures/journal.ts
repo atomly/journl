@@ -21,6 +21,9 @@ import { TRPCError } from "@trpc/server";
 import { embed } from "ai";
 import { z } from "zod/v4";
 import { model } from "~/ai/providers/openai/embedding";
+import { dispatchExploreRefresh } from "~/explore/dispatch";
+import { lockExploreOwner } from "~/explore/refresh";
+import { startDocumentEmbedding } from "~/workflows/document-embedding";
 import {
   saveTransactions,
   zBlockTransactions,
@@ -208,6 +211,7 @@ export const journalRouter = {
           .selectDistinctOn([DocumentEmbedding.document_id], {
             chunk_markdown_text: DocumentEmbedding.chunk_markdown_text,
             date: JournalEntry.date,
+            document_id: DocumentEmbedding.document_id,
             similarity: embeddingSimilarity.as("similarity"),
           })
           .from(DocumentEmbedding)
@@ -223,6 +227,7 @@ export const journalRouter = {
           .select({
             chunk_markdown_text: distinctMatches.chunk_markdown_text,
             date: distinctMatches.date,
+            document_id: distinctMatches.document_id,
             similarity: distinctMatches.similarity,
           })
           .from(distinctMatches)
@@ -345,7 +350,8 @@ export const journalRouter = {
     )
     .mutation(async ({ ctx, input }) => {
       try {
-        return await ctx.db.transaction(async (tx) => {
+        const result = await ctx.db.transaction(async (tx) => {
+          await lockExploreOwner(tx, ctx.session.user.id);
           // Serialize creation and retries for a date, including when no row exists yet.
           await tx.execute(
             sql`select pg_advisory_xact_lock(hashtext(${ctx.session.user.id}), hashtext(${input.date}))`,
@@ -407,7 +413,7 @@ export const journalRouter = {
             }
           }
 
-          await saveTransactions(
+          const document = await saveTransactions(
             { ...ctx, db: tx },
             {
               ...input,
@@ -432,8 +438,22 @@ export const journalRouter = {
               code: "NOT_FOUND",
               message: "Journal entry not found",
             });
-          return saved;
+          return { document, saved };
         });
+        try {
+          await startDocumentEmbedding({
+            documentId: result.document.id,
+            documentUpdatedAt: result.document.updatedAt,
+            userId: ctx.session.user.id,
+          });
+        } catch (error) {
+          console.error("Failed to start document embedding workflow", {
+            documentId: result.document.id,
+            error,
+          });
+        }
+        await dispatchExploreRefresh(ctx.session.user.id);
+        return result.saved;
       } catch (error) {
         if (error instanceof TRPCError) {
           throw error;

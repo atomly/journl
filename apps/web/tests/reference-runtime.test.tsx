@@ -1,0 +1,359 @@
+// @vitest-environment jsdom
+
+import {
+  type EditorPartialBlock,
+  type EditorPrimitive,
+  type ReferenceRenderAdapter,
+  ReferenceRenderContext,
+  schema,
+} from "@acme/blocknote/schema";
+import { BlockNoteEditor } from "@blocknote/core";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { act, useContext } from "react";
+import { createRoot } from "react-dom/client";
+import { afterEach, expect, test, vi } from "vitest";
+import { safeReferenceHref } from "../../../packages/blocknote/src/reference-href";
+import { ReferenceRuntime } from "../src/components/references/reference-runtime";
+
+const mocks = vi.hoisted(() => ({ push: vi.fn(), title: "First title" }));
+const DOCUMENT = "10000000-0000-4000-8000-000000000001";
+const SOURCE = "20000000-0000-4000-8000-000000000002";
+const PAGE = "30000000-0000-4000-8000-000000000003";
+const target = { documentId: DOCUMENT, kind: "document" as const };
+const props = {
+  blockId: "",
+  documentId: DOCUMENT,
+  label: "",
+  resolutionToken: "",
+  targetKind: "document" as const,
+  url: `/pages/${PAGE}`,
+  version: 1,
+};
+vi.mock("next/navigation", () => ({ useRouter: () => ({ push: mocks.push }) }));
+vi.mock("../src/trpc/react", () => ({
+  useTRPC: () => ({
+    references: {
+      getPreviews: {
+        queryOptions: (input: unknown) => ({
+          queryFn: async () => ({
+            items: [
+              {
+                preview: {
+                  href: `https://journl.example/pages/${PAGE}`,
+                  kind: "page",
+                  status: "ready",
+                  title: mocks.title,
+                },
+              },
+            ],
+          }),
+          queryKey: ["previews", input],
+        }),
+      },
+    },
+  }),
+}));
+const cleanups: Array<() => void> = [];
+afterEach(async () => {
+  await act(async () => {
+    for (const cleanup of cleanups.splice(0)) cleanup();
+  });
+  mocks.push.mockReset();
+  mocks.title = "First title";
+});
+
+async function setup(initialContent: EditorPartialBlock[]) {
+  const editor = BlockNoteEditor.create({
+    initialContent,
+    schema,
+  }) as EditorPrimitive;
+  const client = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  });
+  const element = document.createElement("div");
+  document.body.append(element);
+  const root = createRoot(element);
+  let adapter: ReferenceRenderAdapter | null = null;
+  function Capture() {
+    adapter = useContext(ReferenceRenderContext);
+    return null;
+  }
+  await act(async () => {
+    root.render(
+      <QueryClientProvider client={client}>
+        <ReferenceRuntime editor={editor}>
+          <Capture />
+        </ReferenceRuntime>
+      </QueryClientProvider>,
+    );
+  });
+  cleanups.push(() => {
+    root.unmount();
+    element.remove();
+    client.clear();
+  });
+  if (!adapter) throw new Error("Missing reference adapter");
+  return { adapter: adapter as ReferenceRenderAdapter, client, editor };
+}
+
+test("display conversions preserve the source block ID and its nested blocks", async () => {
+  const child = "40000000-0000-4000-8000-000000000004";
+  const { adapter, editor } = await setup([
+    {
+      children: [{ content: "Nested text", id: child, type: "paragraph" }],
+      id: SOURCE,
+      props,
+      type: "referenceCard",
+    },
+  ]);
+  adapter.convertBlock(SOURCE, target, "contentEmbed", "", `/pages/${PAGE}`);
+  expect(editor.getBlock(SOURCE)?.type).toBe("contentEmbed");
+  expect(editor.getBlock(SOURCE)?.children[0]?.id).toBe(child);
+  adapter.convertBlock(SOURCE, target, "link", "", `/pages/${PAGE}`);
+  expect(editor.getBlock(SOURCE)?.type).toBe("paragraph");
+  expect(editor.getBlock(SOURCE)?.children[0]?.id).toBe(child);
+  expect(editor.getBlock(SOURCE)?.content).toEqual([
+    expect.objectContaining({
+      content: [expect.objectContaining({ text: `/pages/${PAGE}` })],
+      type: "link",
+    }),
+  ]);
+});
+
+test("converting the second badge leaves the first occurrence intact", async () => {
+  const { adapter, editor } = await setup([
+    {
+      content: [
+        { props: { ...props, label: "First alias" }, type: "contentReference" },
+        { styles: {}, text: " and ", type: "text" },
+        {
+          props: { ...props, label: "Second alias" },
+          type: "contentReference",
+        },
+      ],
+      id: SOURCE,
+      type: "paragraph",
+    },
+  ]);
+  adapter.convertInline(
+    SOURCE,
+    target,
+    "link",
+    "Second alias",
+    `/pages/${PAGE}`,
+    1,
+  );
+  const content = editor.getBlock(SOURCE)?.content;
+  expect(content).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({
+        props: expect.objectContaining({ label: "First alias" }),
+        type: "contentReference",
+      }),
+      expect.objectContaining({ href: `/pages/${PAGE}`, type: "link" }),
+    ]),
+  );
+});
+
+test("card to inline badge to embed preserves aliases, target IDs and children", async () => {
+  const child = "40000000-0000-4000-8000-000000000004";
+  const blockTarget = {
+    ...target,
+    blockId: "50000000-0000-4000-8000-000000000005",
+  };
+  const { adapter, editor } = await setup([
+    {
+      children: [{ content: "Child", id: child, type: "paragraph" }],
+      id: SOURCE,
+      props: { ...props, blockId: blockTarget.blockId, label: "My alias" },
+      type: "referenceCard",
+    },
+  ]);
+  adapter.convertBlock(
+    SOURCE,
+    blockTarget,
+    "contentReference",
+    "My alias",
+    `/pages/${PAGE}#block=${blockTarget.blockId}`,
+  );
+  const badgeBlock = editor.getBlock(SOURCE);
+  expect(badgeBlock?.type).toBe("paragraph");
+  expect(badgeBlock?.children[0]?.id).toBe(child);
+  expect(badgeBlock?.content).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({
+        props: expect.objectContaining({
+          blockId: blockTarget.blockId,
+          documentId: DOCUMENT,
+          label: "My alias",
+        }),
+        type: "contentReference",
+      }),
+    ]),
+  );
+  adapter.convertInline(
+    SOURCE,
+    blockTarget,
+    "contentEmbed",
+    "My alias",
+    `/pages/${PAGE}#block=${blockTarget.blockId}`,
+  );
+  expect(editor.getBlock(SOURCE)?.type).toBe("contentEmbed");
+  expect(editor.getBlock(SOURCE)?.props).toEqual(
+    expect.objectContaining({
+      blockId: blockTarget.blockId,
+      documentId: DOCUMENT,
+      label: "My alias",
+    }),
+  );
+  expect(editor.getBlock(SOURCE)?.children[0]?.id).toBe(child);
+});
+
+test("extracting the second in-text badge preserves styled surrounding text, other badges and children", async () => {
+  const child = "40000000-0000-4000-8000-000000000004";
+  const { adapter, editor } = await setup([
+    {
+      children: [{ content: "Nested", id: child, type: "paragraph" }],
+      content: [
+        { styles: { bold: true }, text: "Before ", type: "text" },
+        { props: { ...props, label: "First" }, type: "contentReference" },
+        { styles: { italic: true }, text: " between ", type: "text" },
+        { props: { ...props, label: "Second" }, type: "contentReference" },
+        { styles: { underline: true }, text: " after", type: "text" },
+      ],
+      id: SOURCE,
+      type: "paragraph",
+    },
+  ]);
+  adapter.convertInline(
+    SOURCE,
+    target,
+    "referenceCard",
+    "Second",
+    `/pages/${PAGE}`,
+    1,
+  );
+  expect(editor.getBlock(SOURCE)?.children[0]?.id).toBe(child);
+  expect(editor.getBlock(SOURCE)?.content).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({
+        styles: { bold: true },
+        text: "Before ",
+        type: "text",
+      }),
+      expect.objectContaining({
+        props: expect.objectContaining({ label: "First" }),
+        type: "contentReference",
+      }),
+      expect.objectContaining({
+        styles: { italic: true },
+        text: " between ",
+        type: "text",
+      }),
+    ]),
+  );
+  expect(editor.document[1]?.type).toBe("referenceCard");
+  expect(editor.document[1]?.props).toEqual(
+    expect.objectContaining({ documentId: DOCUMENT, label: "Second" }),
+  );
+  expect(editor.document[2]?.content).toEqual([
+    expect.objectContaining({ styles: { underline: true }, text: " after" }),
+  ]);
+});
+
+test("opening an internal reference resolves the page entity route", async () => {
+  const { adapter } = await setup([
+    { content: "Text", id: SOURCE, type: "paragraph" },
+  ]);
+  adapter.openTarget(target);
+  await vi.waitFor(() =>
+    expect(mocks.push).toHaveBeenCalledWith(`/pages/${PAGE}`),
+  );
+  expect(mocks.push).not.toHaveBeenCalledWith(`/pages/${DOCUMENT}`);
+});
+
+test("preview subscribers receive fresh titles after query invalidation", async () => {
+  const { adapter, client } = await setup([
+    { content: "Text", id: SOURCE, type: "paragraph" },
+  ]);
+  const listener = vi.fn();
+  const unsubscribe = adapter.subscribePreview?.(target, listener);
+  cleanups.push(() => unsubscribe?.());
+  await vi.waitFor(() =>
+    expect(listener).toHaveBeenCalledWith(
+      expect.objectContaining({ title: "First title" }),
+    ),
+  );
+  mocks.title = "Renamed note";
+  await client.invalidateQueries({ queryKey: ["previews"] });
+  expect(listener).toHaveBeenCalledWith(
+    expect.objectContaining({ title: "Renamed note" }),
+  );
+});
+
+test("rendered reference links reject script, credential, and remote relative URLs", () => {
+  for (const url of [
+    "javascript:alert(1)",
+    "//evil.example/path",
+    "/\\evil.example/path",
+    "https://user:password@example.com/path",
+  ])
+    expect(safeReferenceHref(url)).toBe("#");
+  expect(safeReferenceHref("/pages/abc#block=123")).toBe(
+    "/pages/abc#block=123",
+  );
+  expect(safeReferenceHref("https://github.com/atomly/journl")).toBe(
+    "https://github.com/atomly/journl",
+  );
+});
+
+test("table-cell badge to link conversion preserves table shape and chooses the second occurrence", async () => {
+  const { adapter, editor } = await setup([
+    {
+      content: {
+        rows: [
+          {
+            cells: [
+              [
+                {
+                  props: { ...props, label: "First cell alias" },
+                  type: "contentReference",
+                },
+              ],
+              [
+                { styles: { bold: true }, text: "Before ", type: "text" },
+                {
+                  props: { ...props, label: "Second cell alias" },
+                  type: "contentReference",
+                },
+                { styles: { italic: true }, text: " after", type: "text" },
+              ],
+            ],
+          },
+        ],
+        type: "tableContent",
+      } as never,
+      id: SOURCE,
+      type: "table",
+    },
+  ]);
+  adapter.convertInline(
+    SOURCE,
+    target,
+    "link",
+    "Second cell alias",
+    `/pages/${PAGE}`,
+    1,
+  );
+  const block = editor.getBlock(SOURCE);
+  if (block?.type !== "table") throw new Error("Expected a table");
+  expect(block.content.rows).toHaveLength(1);
+  expect(block.content.rows[0]?.cells).toHaveLength(2);
+  const stored = JSON.stringify(block.content);
+  expect(stored).toContain('"type":"contentReference"');
+  expect(stored).toContain("First cell alias");
+  expect(stored).toContain('"type":"link"');
+  expect(stored).toContain("Second cell alias");
+  expect(stored).toContain('"bold":true');
+  expect(stored).toContain('"italic":true');
+});

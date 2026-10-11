@@ -24,8 +24,6 @@ import {
 import { layoutExploreGraph } from "~/references/explore-layout";
 import { type ExploreCamera, ExploreFlow } from "./explore-flow";
 
-export { type ExploreCamera, INITIAL_CAMERA } from "./explore-flow";
-
 type NoteNode = Node<{ note: ExploreNode; focused: boolean }, "note">;
 type ReferenceEdge = Edge<{ reference: ExploreEdge }>;
 const nodeTypes = { note: NoteCard };

@@ -2,10 +2,8 @@
 import { act, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
-import {
-  type ExploreCamera,
-  ExploreCanvas,
-} from "../src/app/(app)/graph/_components/explore-canvas";
+import { ExploreCanvas } from "../src/app/(app)/graph/_components/explore-canvas";
+import type { ExploreCamera } from "../src/app/(app)/graph/_components/explore-flow";
 import type { ExploreGraph } from "../src/references/explore-graph";
 import { mockFlowDom } from "./explore-flow-test-dom";
 

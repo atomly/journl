@@ -27,10 +27,8 @@ import {
 } from "~/references/explore-graph";
 import { exploreUpdatedLabel } from "~/references/explore-note-list";
 import { useTRPC } from "~/trpc/react";
-import {
-  ExploreCanvas,
-  INITIAL_CAMERA,
-} from "../../graph/_components/explore-canvas";
+import { ExploreCanvas } from "../../graph/_components/explore-canvas";
+import type { ExploreCamera } from "../../graph/_components/explore-flow";
 import {
   ExplorePreview,
   noteRoute,
@@ -44,7 +42,7 @@ export function ClusterExplorer({ clusterId }: { clusterId: string }) {
   const cache = useQueryClient();
   const mobile = useIsMobile();
   const [view, setView] = useExploreState(`cluster:${clusterId}:flow-v1`, {
-    camera: INITIAL_CAMERA,
+    camera: undefined as ExploreCamera,
     edge: undefined as string | undefined,
     scroll: 0,
     selected: undefined as string | undefined,

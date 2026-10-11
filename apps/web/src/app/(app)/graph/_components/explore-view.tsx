@@ -35,11 +35,8 @@ import {
 } from "~/references/explore-note-list";
 import { useTRPC } from "~/trpc/react";
 import { useExploreState } from "../../explore/_components/explore-state";
-import {
-  type ExploreCamera,
-  ExploreCanvas,
-  INITIAL_CAMERA,
-} from "./explore-canvas";
+import { ExploreCanvas } from "./explore-canvas";
+import type { ExploreCamera } from "./explore-flow";
 import { ExplorePreview, noteRoute } from "./explore-preview";
 
 export type Snapshot = {
@@ -69,7 +66,7 @@ export function ExploreView({
   const focusKey = documentId ? `document:${documentId}` : undefined;
   const [stored, setStored] = useExploreState<Snapshot>(
     `note:${documentId ?? "legacy-overview"}:${blockId ?? ""}:flow-v1`,
-    snapshot ?? { camera: INITIAL_CAMERA, scrollTop: 0 },
+    snapshot ?? { camera: undefined, scrollTop: 0 },
   );
   const selectedKey = stored.selectedKey;
   const selectedEdge = stored.selectedEdge;

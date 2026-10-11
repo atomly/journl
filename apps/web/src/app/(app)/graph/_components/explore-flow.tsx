@@ -14,7 +14,6 @@ import "@xyflow/react/dist/style.css";
 import "./explore-flow.css";
 
 export type ExploreCamera = Viewport | undefined;
-export const INITIAL_CAMERA: ExploreCamera = undefined;
 
 /** React Flow owns gestures, keyboard selection, hit areas, and viewport controls. */
 export function ExploreFlow<N extends Node, E extends Edge>({

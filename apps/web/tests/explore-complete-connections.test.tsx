@@ -2,10 +2,7 @@
 import { act } from "react";
 import { createRoot } from "react-dom/client";
 import { expect, test, vi } from "vitest";
-import {
-  ExploreCanvas,
-  INITIAL_CAMERA,
-} from "../src/app/(app)/graph/_components/explore-canvas";
+import { ExploreCanvas } from "../src/app/(app)/graph/_components/explore-canvas";
 import type {
   ExploreGraph,
   ExploreNode,
@@ -60,7 +57,7 @@ for (const width of [340, 900])
             graph={graph}
             width={width}
             focusKey={focusKey}
-            camera={INITIAL_CAMERA}
+            camera={undefined}
             onCamera={() => {}}
             onSelect={select}
           />,

@@ -9,14 +9,14 @@ import { Skeleton } from "~/components/ui/skeleton";
 import { getExploreTitle } from "~/references/explore-graph";
 import { exploreUpdatedLabel } from "~/references/explore-note-list";
 import { useTRPC } from "~/trpc/react";
-import { INITIAL_CAMERA } from "../../graph/_components/explore-flow";
+import type { ExploreCamera } from "../../graph/_components/explore-flow";
 import { useExploreState } from "./explore-state";
 import { ThreadCard, ThreadMap } from "./thread-map";
 
 export function ExploreOverview() {
   const trpc = useTRPC();
   const [view, setView] = useExploreState("overview:flow-v1", {
-    camera: INITIAL_CAMERA,
+    camera: undefined as ExploreCamera,
     cursor: undefined as string | undefined,
     history: [] as (string | undefined)[],
     mode: "map" as "map" | "list",

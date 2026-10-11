@@ -66,10 +66,7 @@ export function ThreadCard({
   );
 }
 
-type ThreadNode = Node<
-  { thread: Thread; linked: boolean; onSelect(id: string): void },
-  "thread"
->;
+type ThreadNode = Node<{ thread: Thread; linked: boolean }, "thread">;
 const nodeTypes = { thread: MapThreadCard };
 function MapThreadCard({
   data,
@@ -88,7 +85,6 @@ function MapThreadCard({
           aria-pressed={selected}
           aria-label={`Show connections for ${data.thread.name}`}
           className="min-h-11 text-left focus-visible:outline-2 focus-visible:outline-ring"
-          onClick={() => data.onSelect(data.thread.id)}
         >
           {data.thread.name}
         </button>
@@ -161,7 +157,6 @@ export function ThreadMap({
     ariaLabel: `Thread ${thread.name}`,
     data: {
       linked: connections.some((connection) => connection.id === thread.id),
-      onSelect,
       thread,
     },
     height: 230,

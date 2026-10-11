@@ -6,6 +6,8 @@ import { afterAll, beforeAll, beforeEach, expect, test, vi } from "vitest";
 import { ExploreStateProvider } from "../src/app/(app)/explore/_components/explore-state-provider";
 import { GraphExplorer } from "../src/app/(app)/graph/_components/graph-explorer";
 
+import { mockFlowDom } from "./explore-flow-test-dom";
+
 const mock = vi.hoisted(() => ({
   inputs: [] as Array<{ seedDocumentId?: string; cursor?: string }>,
   listeners: new Set<() => void>(),
@@ -203,6 +205,7 @@ vi.mock("../src/trpc/react", () => ({
 }));
 
 beforeAll(() => {
+  mockFlowDom();
   vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
   vi.stubGlobal(
     "matchMedia",
@@ -301,12 +304,12 @@ test("loads further connections only on request and merges them without losing c
     expect(unlinked?.textContent).not.toContain("Editor improvements");
     expect(
       container.querySelector(
-        'svg button[aria-label="Preview A separate thought"]',
+        '.react-flow__node[aria-label="Preview A separate thought"]',
       ),
     ).toBeNull();
     expect(
       container.querySelector(
-        'svg button[aria-label="Preview github.com/atomly/journl/pull/302"]',
+        '.react-flow__node[aria-label="Preview github.com/atomly/journl/pull/302"]',
       ),
     ).not.toBeNull();
     await click(
@@ -337,6 +340,9 @@ test("exploring a note keeps a breadcrumb and restores selection and zoom on Bac
       container.querySelector('[aria-label="Preview Testing feedback"]'),
     );
     await click(container.querySelector('[aria-label="Zoom in"]'));
+    const zoomedTransform = container
+      .querySelector(".react-flow__viewport")
+      ?.getAttribute("style");
     const canvasViewport = container.querySelector(
       '[aria-label="Explore connected notes"] > div:last-child',
     ) as HTMLDivElement;
@@ -370,8 +376,8 @@ test("exploring a note keeps a breadcrumb and restores selection and zoom on Bac
       container.querySelector('[aria-label="Note preview"]')?.textContent,
     ).toContain("Testing feedback");
     expect(
-      container.querySelector("svg > g")?.getAttribute("transform"),
-    ).toContain("scale(1.25)");
+      container.querySelector(".react-flow__viewport")?.getAttribute("style"),
+    ).toBe(zoomedTransform);
     await click(
       [
         ...container.querySelectorAll(

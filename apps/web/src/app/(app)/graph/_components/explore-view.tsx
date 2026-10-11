@@ -1,15 +1,7 @@
 "use client";
 
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
-import {
-  ArrowLeft,
-  ChevronRight,
-  Compass,
-  Maximize2,
-  Minus,
-  Plus,
-  X,
-} from "lucide-react";
+import { ArrowLeft, ChevronRight, Compass, X } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -76,7 +68,7 @@ export function ExploreView({
   const mobile = useIsMobile();
   const focusKey = documentId ? `document:${documentId}` : undefined;
   const [stored, setStored] = useExploreState<Snapshot>(
-    `note:${documentId ?? "legacy-overview"}:${blockId ?? ""}`,
+    `note:${documentId ?? "legacy-overview"}:${blockId ?? ""}:flow-v1`,
     snapshot ?? { camera: INITIAL_CAMERA, scrollTop: 0 },
   );
   const selectedKey = stored.selectedKey;
@@ -250,48 +242,6 @@ export function ExploreView({
                     : `${clusters.length} ${clusters.length === 1 ? "thread" : "threads"}`}{" "}
                   · Select a note or source to read its context
                 </p>
-                <div className="flex shrink-0 items-center gap-0.5">
-                  <Button
-                    variant="ghost"
-                    size="icon-sm"
-                    className="pointer-coarse:size-11"
-                    aria-label="Zoom out"
-                    onClick={() =>
-                      setCamera((previous) => ({
-                        ...previous,
-                        zoom: Math.max(0.75, previous.zoom - 0.25),
-                      }))
-                    }
-                  >
-                    <Minus aria-hidden="true" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon-sm"
-                    className="pointer-coarse:size-11"
-                    aria-label="Zoom in"
-                    onClick={() =>
-                      setCamera((previous) => ({
-                        ...previous,
-                        zoom: Math.min(2, previous.zoom + 0.25),
-                      }))
-                    }
-                  >
-                    <Plus aria-hidden="true" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon-sm"
-                    className="pointer-coarse:size-11"
-                    aria-label="Fit connected notes"
-                    onClick={() => {
-                      setCamera(INITIAL_CAMERA);
-                      if (viewport.current) viewport.current.scrollTop = 0;
-                    }}
-                  >
-                    <Maximize2 aria-hidden="true" />
-                  </Button>
-                </div>
               </div>
               <div
                 ref={viewport}
@@ -318,11 +268,15 @@ export function ExploreView({
                     graph={graph}
                     width={width}
                     focusKey={focusKey}
-                    selectedKey={selected?.key}
+                    selectedKey={selectedKey}
+                    selectedEdgeKey={selectedEdge}
                     camera={camera}
                     onCamera={setCamera}
                     onSelect={select}
-                    onExplore={onExplore}
+                    onDeselect={() => {
+                      setSelectedKey(undefined);
+                      setSelectedEdge(undefined);
+                    }}
                   />
                 )}
               </div>

@@ -8,6 +8,8 @@ import { ExploreOverview } from "../src/app/(app)/explore/_components/explore-ov
 import { ExploreStateProvider } from "../src/app/(app)/explore/_components/explore-state-provider";
 import { SourceContexts } from "../src/app/(app)/explore/_components/source-contexts";
 
+import { mockFlowDom } from "./explore-flow-test-dom";
+
 const mock = vi.hoisted(() => ({
   calls: [] as { name: string; input: Record<string, unknown> }[],
   connectionPages: false,
@@ -272,11 +274,7 @@ beforeEach(async () => {
   mock.connectionPages = false;
   mock.retired = false;
   metadata.snapshotId = "00000000-0000-4000-8000-000000000003";
-  class Observer {
-    observe() {}
-    disconnect() {}
-  }
-  vi.stubGlobal("ResizeObserver", Observer);
+  mockFlowDom();
   client = new QueryClient({
     defaultOptions: { mutations: { retry: false }, queries: { retry: false } },
   });
@@ -329,6 +327,9 @@ test("opening a thread makes all notes and sources accessible with context", asy
     "Editor improvements",
   );
   expect(container.textContent).toContain("Browse every note and source below");
+  expect(container.textContent).toContain(
+    "28 notes and 1 source outside this map.",
+  );
   const list = container.querySelector('[aria-label="All notes and sources"]')!;
   expect(list.querySelectorAll('a[href^="/explore/notes/"]')).toHaveLength(20);
   await click(button("Why here?", list));

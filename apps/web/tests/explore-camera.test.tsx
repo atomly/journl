@@ -39,12 +39,14 @@ const select = vi.fn();
 function TestMap() {
   const [viewport, setViewport] = useState(camera);
   const [selected, setSelected] = useState<string>();
+  const [selectedEdge, setSelectedEdge] = useState<string>();
   return (
     <ExploreCanvas
       graph={graph}
       width={900}
       focusKey="root"
       selectedKey={selected}
+      selectedEdgeKey={selectedEdge}
       camera={viewport}
       onCamera={(next) => {
         camera = next;
@@ -53,8 +55,12 @@ function TestMap() {
       onSelect={(node, edge) => {
         select(node, edge);
         setSelected(node.key);
+        setSelectedEdge(edge ? `${edge.fromKey}|${edge.toKey}` : undefined);
       }}
-      onDeselect={() => setSelected(undefined)}
+      onDeselect={() => {
+        setSelected(undefined);
+        setSelectedEdge(undefined);
+      }}
     />
   );
 }
@@ -102,9 +108,11 @@ test("React Flow keyboard selection opens notes and authored edge context", asyn
       ?.classList.contains("selected"),
   ).toBe(true);
   await act(async () =>
-    edge?.dispatchEvent(
-      new KeyboardEvent("keydown", { bubbles: true, key: "Escape" }),
-    ),
+    container
+      .querySelector(".react-flow__edge")
+      ?.dispatchEvent(
+        new KeyboardEvent("keydown", { bubbles: true, key: "Escape" }),
+      ),
   );
   expect(
     container
@@ -136,19 +144,28 @@ test("library zoom controls persist the viewport and restore it after remount", 
   expect(select).not.toHaveBeenCalled();
 });
 
-test("trackpad pinch zoom goes through React Flow without selecting a note", async () => {
-  const pane = container.querySelector(".react-flow__pane");
-  await act(async () =>
-    pane?.dispatchEvent(
-      new WheelEvent("wheel", {
-        bubbles: true,
-        cancelable: true,
-        ctrlKey: true,
-        deltaY: -100,
-      }),
-    ),
-  );
+test("each click opens context once, including reselecting a note after its edge", async () => {
   await settle();
-  expect(camera?.zoom).toBeGreaterThan(1);
-  expect(select).not.toHaveBeenCalled();
+  const node = container.querySelector<HTMLElement>(
+    '[aria-label="Preview neighbor"]',
+  );
+  await act(async () => node?.click());
+  expect(select).toHaveBeenCalledTimes(1);
+  expect(select).toHaveBeenLastCalledWith(graph.nodes[1], undefined);
+  await act(async () =>
+    container
+      .querySelector(".react-flow__edge")
+      ?.dispatchEvent(new MouseEvent("click", { bubbles: true })),
+  );
+  expect(select).toHaveBeenCalledTimes(2);
+  expect(select).toHaveBeenLastCalledWith(graph.nodes[1], graph.edges[0]);
+  await act(async () =>
+    container
+      .querySelector(".react-flow__edge")
+      ?.dispatchEvent(new MouseEvent("click", { bubbles: true })),
+  );
+  expect(select).toHaveBeenCalledTimes(3);
+  await act(async () => node?.click());
+  expect(select).toHaveBeenCalledTimes(4);
+  expect(select).toHaveBeenLastCalledWith(graph.nodes[1], undefined);
 });

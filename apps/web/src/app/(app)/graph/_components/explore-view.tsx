@@ -79,10 +79,10 @@ export function ExploreView({
   const unlinkedSection = useRef<HTMLElement>(null);
   const camera = stored.camera;
   const setCamera = useCallback(
-    (next: ExploreCamera | ((previous: ExploreCamera) => ExploreCamera)) =>
+    (next: ExploreCamera) =>
       setStored((v) => ({
         ...v,
-        camera: typeof next === "function" ? next(v.camera) : next,
+        camera: next,
       })),
     [setStored],
   );

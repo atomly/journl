@@ -61,8 +61,15 @@ export function ExploreFlow<N extends Node, E extends Edge>({
         nodeTypes={nodeTypes}
         viewport={camera ?? initial}
         onViewportChange={onCamera}
-        onNodeClick={(_event, node) => onSelect(node)}
-        onEdgeClick={(_event, edge) => onSelectEdge?.(edge)}
+        // New selections arrive through change handlers. Repeat clicks reopen context.
+        // Edge selection internally deselects nodes, even if the preview keeps one highlighted.
+        onNodeClick={(_event, node) => {
+          if (node.selected && !edges.some((edge) => edge.selected))
+            onSelect(node);
+        }}
+        onEdgeClick={(_event, edge) => {
+          if (edge.selected) onSelectEdge?.(edge);
+        }}
         onPaneClick={onDeselect}
         onKeyDown={(event) => {
           if (event.key === "Escape") onDeselect?.();

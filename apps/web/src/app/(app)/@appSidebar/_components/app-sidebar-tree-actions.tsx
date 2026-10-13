@@ -381,7 +381,7 @@ export function AppSidebarTreeActions({
         sideOffset={6}
       >
         <DropdownMenuItem
-          onSelect={() => {
+          onClick={() => {
             handleCreatePage();
           }}
           disabled={showLoading}
@@ -390,7 +390,7 @@ export function AppSidebarTreeActions({
           New page
         </DropdownMenuItem>
         <DropdownMenuItem
-          onSelect={() => {
+          onClick={() => {
             handleCreateFolder();
           }}
           disabled={showLoading}
@@ -401,7 +401,7 @@ export function AppSidebarTreeActions({
         {kind === "folder" ? (
           <DropdownMenuItem
             variant="destructive"
-            onSelect={() => {
+            onClick={() => {
               setIsDeleteDialogOpen(true);
             }}
           >

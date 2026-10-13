@@ -869,14 +869,13 @@ function SidebarTreeRows({
         </SidebarMenuSubItem>
       ) : null}
       {treeData.items.length > 0 ? (
-        <SidebarMenuSubItem
-          className={cn(DEFAULT_TREE_ITEM_CLASSNAME, "flex min-h-7 flex-1")}
-        >
-          <TreeEndDropTarget
-            parentNodeId={parentNodeId}
-            active={isDnDEnabled && !!activeDragId}
-          />
-        </SidebarMenuSubItem>
+        <TreeEndDropTarget
+          as="li"
+          className={DEFAULT_TREE_ITEM_CLASSNAME}
+          fill={parentNodeId === null}
+          parentNodeId={parentNodeId}
+          active={isDnDEnabled && activeDragId !== null}
+        />
       ) : null}
     </>
   );

@@ -1295,12 +1295,11 @@ function FolderTreeRows({
         </div>
       ) : null}
       {treeData.items.length > 0 ? (
-        <div className={itemIndentClassName}>
-          <TreeEndDropTarget
-            parentNodeId={parentNodeId}
-            active={isDnDEnabled && !!activeDragId}
-          />
-        </div>
+        <TreeEndDropTarget
+          className={itemIndentClassName}
+          parentNodeId={parentNodeId}
+          active={isDnDEnabled && activeDragId !== null}
+        />
       ) : null}
     </>
   );

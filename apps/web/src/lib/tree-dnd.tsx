@@ -8,6 +8,7 @@ import {
   TouchSensor,
   useDroppable,
 } from "@dnd-kit/core";
+import { cn } from "~/lib/cn";
 
 function canStartTreeDrag(target: EventTarget | null) {
   if (!(target instanceof Element)) {
@@ -111,19 +112,43 @@ export const treeCollisionDetection = createTreeCollisionDetection();
 export function TreeEndDropTarget({
   parentNodeId,
   active,
+  as: Tag = "div",
+  className,
+  fill = false,
 }: {
   parentNodeId: string | null;
   active: boolean;
+  as?: "div" | "li";
+  className?: string;
+  fill?: boolean;
 }) {
   const { isOver, setNodeRef } = useDroppable({
+    disabled: !active,
     id: `drop:end:${parentNodeId ?? "root"}`,
   });
   return (
-    <div
-      ref={setNodeRef}
-      data-slot="tree-end-drop-target"
-      className={`min-h-7 flex-1 rounded-md ${active ? "pointer-events-auto" : "pointer-events-none"} ${active && isOver ? "border border-primary border-dashed bg-primary/10" : ""}`}
-    />
+    <Tag
+      data-slot="tree-end-drop-zone"
+      data-active={active}
+      aria-hidden={!active}
+      className={cn(
+        "relative grid min-h-0 transition-[grid-template-rows,flex-grow] duration-200 ease-out motion-reduce:transition-none",
+        active ? "grid-rows-[1fr]" : "pointer-events-none grid-rows-[0fr]",
+        fill && (active ? "grow" : "grow-0"),
+        className,
+      )}
+    >
+      <div className="min-h-0 overflow-hidden">
+        <div
+          ref={setNodeRef}
+          data-slot="tree-end-drop-target"
+          className={cn(
+            "h-full min-h-7 rounded-md border border-transparent border-dashed transition-colors duration-200 motion-reduce:transition-none",
+            active && isOver && "border-primary bg-primary/10",
+          )}
+        />
+      </div>
+    </Tag>
   );
 }
 

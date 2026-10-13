@@ -366,14 +366,29 @@ test("a quick full swipe still opens deletion confirmation without moving a page
 
 test("dropping in the space below the list requests true-tail placement", async () => {
   await render();
+  expect(
+    container
+      .querySelector("[data-slot=tree-end-drop-zone]")
+      ?.getAttribute("data-active"),
+  ).toBe("false");
   await mouse(pageLink("page"), "mousedown", 18);
   await mouse(document, "mousemove", 24);
+  expect(
+    container
+      .querySelector("[data-slot=tree-end-drop-zone]")
+      ?.getAttribute("data-active"),
+  ).toBe("true");
   await mouse(document, "mousemove", 120);
   await mouse(document, "mouseup", 120);
   expect(fixture.move).toHaveBeenCalledExactlyOnceWith({
     destination: { parent_node_id: null, position: "after" },
     node_id: "page-node",
   });
+  expect(
+    container
+      .querySelector("[data-slot=tree-end-drop-zone]")
+      ?.getAttribute("data-active"),
+  ).toBe("false");
 });
 
 test("holding before dragging disables swipe deletion and moves the page", async () => {

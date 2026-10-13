@@ -221,6 +221,29 @@ export function useTreeController() {
             over
               ? `Saving the new position of ${active.data.current?.label ?? "item"}.`
               : "Move cancelled.",
+          onDragOver: ({ over }: DragOverEvent) => {
+            const target = parseDropTarget(over?.id);
+            if (!target) return "Outside the drop area.";
+            const anchor =
+              "anchorEdgeId" in target
+                ? loadedItems().find(
+                    (item) => item.edge_id === target.anchorEdgeId,
+                  )
+                : undefined;
+            const folder = loadedItems().find(
+              (item) => item.node_id === target.parentNodeId,
+            );
+            const label = anchor
+              ? anchor.kind === "folder"
+                ? anchor.folder.name
+                : anchor.page.title
+              : folder?.kind === "folder"
+                ? folder.folder.name
+                : "Library";
+            return anchor
+              ? `Place ${target.type} ${label || "item"}.`
+              : `Place in ${label || "folder"}.`;
+          },
           onDragStart: ({ active }: DragStartEvent) =>
             `Picked up ${active.data.current?.label ?? "item"}.`,
         },

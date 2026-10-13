@@ -18,7 +18,8 @@
     "explore:benchmark": "jiti scripts/benchmark-explore.ts",
     "explore:setup": "pnpm with-env jiti scripts/setup-explore.ts",
     "explore:benchmark:db": "pnpm with-env jiti scripts/benchmark-explore-database.ts --run-disposable-fixture",
-    "explore:test:browser": "pnpm with-env jiti scripts/test-explore-browser.ts"
+    "explore:test:browser": "pnpm with-env jiti scripts/test-explore-browser.ts",
+    "folder-cleanup:setup": "pnpm with-env jiti scripts/setup-folder-cleanup.ts"
   },
   "dependencies": {
     "@acme/auth": "workspace:*",
@@ -41,8 +42,6 @@
     "@blocknote/xl-ai": "~0.55.0",
     "@captchafox/react": "^1.13.0",
     "@dnd-kit/core": "^6.3.1",
-    "@dnd-kit/sortable": "^10.0.0",
-    "@dnd-kit/utilities": "^3.2.2",
     "@hookform/resolvers": "~5.9.1",
     "@marsidev/react-turnstile": "^1.6.1",
     "@mastra/ai-sdk": "~1.10.6",

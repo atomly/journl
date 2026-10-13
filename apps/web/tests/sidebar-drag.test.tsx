@@ -55,6 +55,7 @@ vi.mock("~/app/(app)/@appSidebar/_components/delete-page-button", async () => {
 });
 vi.mock("~/trpc/react", () => ({
   useTRPC: () => ({
+    folders: { getByUser: { queryOptions: () => ({}) } },
     tree: {
       getAncestorPath: { queryOptions: () => ({}) },
       getChildrenPaginated: {
@@ -63,7 +64,7 @@ vi.mock("~/trpc/react", () => ({
         infiniteQueryOptions: (input: { parent_node_id: string | null }) =>
           input,
       },
-      moveItem: { mutationOptions: () => ({}) },
+      moveItem: { mutationKey: () => [], mutationOptions: () => ({}) },
     },
   }),
 }));
@@ -125,9 +126,10 @@ vi.mock("@tanstack/react-query", () => ({
     isPending: false,
   }),
   useIsFetching: () => 0,
+  useIsMutating: () => 0,
   useMutation: () => ({ mutate: fixture.move }),
   useQuery: () => ({}),
-  useQueryClient: () => ({}),
+  useQueryClient: () => ({ getQueriesData: () => [] }),
 }));
 
 let container: HTMLDivElement;
@@ -273,7 +275,7 @@ test.each(["page", "folder"])(
       kind === "page"
         ? pageLink("page")
         : container.querySelector<HTMLElement>(
-            "button[aria-label='Expand folder']",
+            "button[aria-label='Expand Target folder']",
           );
     if (!source) throw new Error("Drag source missing");
     const y = kind === "page" ? 18 : 54;
@@ -421,7 +423,7 @@ test("holding before dragging disables swipe deletion and moves the page", async
 test("touch dragging a folder still reorders pages", async () => {
   await render(true);
   const source = container.querySelector<HTMLElement>(
-    "button[aria-label='Expand folder']",
+    "button[aria-label='Expand Target folder']",
   );
   if (!source) throw new Error("Folder drag source missing");
   await touch(source, "touchstart", 80, 54);

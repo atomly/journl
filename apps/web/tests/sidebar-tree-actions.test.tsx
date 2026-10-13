@@ -19,21 +19,25 @@ vi.mock("~/components/events/app-event-context", () => ({
 }));
 vi.mock("~/trpc/react", () => ({
   useTRPC: () => ({
+    folders: { getByUser: { queryOptions: () => ({}) } },
     tree: {
       createFolder: {
         mutationOptions: () => ({ mutate: fixture.createFolder }),
       },
       createPage: { mutationOptions: () => ({ mutate: fixture.createPage }) },
       getChildrenPaginated: { infiniteQueryFilter: () => ({}) },
+      moveItem: { mutationKey: () => [], mutationOptions: () => ({}) },
     },
   }),
 }));
 vi.mock("@tanstack/react-query", () => ({
+  useIsMutating: () => 0,
   useMutation: (options: { mutate: unknown }) => ({
     isPending: false,
     mutate: options.mutate,
   }),
-  useQueryClient: () => ({}),
+  useQuery: () => ({}),
+  useQueryClient: () => ({ getQueriesData: () => [] }),
 }));
 vi.mock("~/app/(app)/@appSidebar/_components/delete-folder-button", () => ({
   DeleteFolderDialog: () => null,

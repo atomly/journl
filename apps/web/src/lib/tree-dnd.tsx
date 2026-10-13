@@ -9,6 +9,7 @@ import {
   useDroppable,
 } from "@dnd-kit/core";
 import { cn } from "~/lib/cn";
+import { parseDropTarget } from "~/lib/tree-model";
 
 function canStartTreeDrag(target: EventTarget | null) {
   if (!(target instanceof Element)) {
@@ -84,9 +85,11 @@ export function prioritizeTreeCollisions(collisions: Collision[]) {
 export function createTreeCollisionDetection({
   detectByPointer = pointerWithin,
   detectByRect = rectIntersection,
+  isValidDestination,
 }: {
   detectByPointer?: CollisionDetection;
   detectByRect?: CollisionDetection;
+  isValidDestination?: (nodeId: string, parentId: string | null) => boolean;
 } = {}): CollisionDetection {
   return (args) => {
     const activeData = args.active.data.current;
@@ -97,6 +100,14 @@ export function createTreeCollisionDetection({
     return prioritizeTreeCollisions(
       collisions.filter(({ id }) => {
         if (typeof id !== "string") return false;
+        const target = parseDropTarget(id);
+        if (
+          target &&
+          activeData?.item?.kind === "folder" &&
+          isValidDestination &&
+          !isValidDestination(activeData.item.nodeId, target.parentNodeId)
+        )
+          return false;
         const [, type, , edgeId] = id.split(":");
         if (type === "before" || type === "after") {
           return edgeId !== activeData?.edgeId;

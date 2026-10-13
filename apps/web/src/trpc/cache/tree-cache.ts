@@ -22,11 +22,6 @@ export type TreeDestination = {
   position?: "after" | "before";
 };
 
-export type QuerySnapshot = {
-  data: unknown;
-  queryKey: QueryKey;
-};
-
 export function getEmptyTreeChildrenData(): TreeChildrenInfiniteData {
   return {
     pageParams: [undefined],
@@ -34,6 +29,7 @@ export function getEmptyTreeChildrenData(): TreeChildrenInfiniteData {
       {
         items: [],
         nextCursor: undefined,
+        resetRequired: false,
       },
     ],
   };
@@ -113,7 +109,11 @@ function insertItemInData({
     // the moved item ahead of unseen siblings or skipping them with its cursor.
     if (baseData.pages.at(-1)?.nextCursor) return baseData;
     const pages = [...baseData.pages];
-    const lastPage = pages.at(-1) ?? { items: [], nextCursor: undefined };
+    const lastPage = pages.at(-1) ?? {
+      items: [],
+      nextCursor: undefined,
+      resetRequired: false,
+    };
     pages[Math.max(0, pages.length - 1)] = {
       ...lastPage,
       items: [...lastPage.items, item],
@@ -131,6 +131,7 @@ function insertItemInData({
           {
             items: [item],
             nextCursor: undefined,
+            resetRequired: false,
           },
         ],
       };
@@ -183,6 +184,33 @@ function insertItemInData({
   return baseData;
 }
 
+export function restartTreePagination(
+  data: TreeChildrenInfiniteData,
+): TreeChildrenInfiniteData {
+  const resetIndex = data.pages.reduce(
+    (last, page, index) => (page.resetRequired ? index : last),
+    -1,
+  );
+  if (resetIndex <= 0) return data;
+  const pages = data.pages
+    .slice(resetIndex)
+    .map((page) => ({ ...page, resetRequired: false }));
+  return {
+    pageParams: pages.map((_, index) =>
+      index === 0 ? data.pageParams[0] : pages[index - 1]?.nextCursor,
+    ),
+    pages,
+  };
+}
+
+function revisionedCursor(
+  edgeId: string | undefined,
+  previous: string | undefined,
+) {
+  const revision = previous?.split("|")[1];
+  return edgeId && revision ? `${edgeId}|${revision}` : edgeId;
+}
+
 function normalizeTreePagination(
   data: TreeChildrenInfiniteData,
 ): TreeChildrenInfiniteData {
@@ -194,7 +222,11 @@ function normalizeTreePagination(
     ...page,
     nextCursor:
       index < sourcePages.length - 1 || hasMore
-        ? page.items.at(-1)?.edge_id
+        ? revisionedCursor(
+            page.items.at(-1)?.edge_id,
+            page.nextCursor ??
+              data.pages.find((source) => source.nextCursor)?.nextCursor,
+          )
         : undefined,
   }));
   return {
@@ -523,41 +555,4 @@ export function updatePageTitleInNestedPages({
       })),
     };
   });
-}
-
-export function snapshotQueries({
-  queryClient,
-  queryFilter,
-}: {
-  queryClient: QueryClient;
-  queryFilter: QueryFilters;
-}): QuerySnapshot[] {
-  return queryClient
-    .getQueriesData(queryFilter)
-    .map(([queryKey, data]) => ({ data, queryKey }));
-}
-
-export function restoreQueries({
-  queryClient,
-  snapshots,
-}: {
-  queryClient: QueryClient;
-  snapshots: QuerySnapshot[];
-}) {
-  for (const snapshot of snapshots) {
-    queryClient.setQueryData(snapshot.queryKey, snapshot.data);
-  }
-}
-
-export function snapshotQuery({
-  queryClient,
-  queryKey,
-}: {
-  queryClient: QueryClient;
-  queryKey: QueryKey;
-}): QuerySnapshot {
-  return {
-    data: queryClient.getQueryData(queryKey),
-    queryKey,
-  };
 }

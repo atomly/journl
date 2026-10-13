@@ -1,23 +1,7 @@
 "use client";
 
-import type { Folder, Page } from "@acme/db/schema";
-import {
-  DndContext,
-  type DragCancelEvent,
-  type DragEndEvent,
-  type DragOverEvent,
-  type DragStartEvent,
-  useDndContext,
-  useDraggable,
-  useDroppable,
-  useSensor,
-  useSensors,
-} from "@dnd-kit/core";
-import {
-  useInfiniteQuery,
-  useMutation,
-  useQueryClient,
-} from "@tanstack/react-query";
+import { DndContext, useDraggable, useDroppable } from "@dnd-kit/core";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   ArrowRight,
   ChevronRight,
@@ -40,7 +24,7 @@ import {
   useRef,
   useState,
 } from "react";
-import { toast } from "sonner";
+import { TreeInsertDropBands } from "~/components/tree-insert-drop-bands";
 import { Button } from "~/components/ui/button";
 import { Collapsible, CollapsibleContent } from "~/components/ui/collapsible";
 import {
@@ -52,28 +36,33 @@ import {
 import { Input } from "~/components/ui/input";
 import { useSidebar } from "~/components/ui/sidebar";
 import { Skeleton } from "~/components/ui/skeleton";
+import { useTreeChildren } from "~/hooks/use-tree-children";
+import { useTreeController } from "~/hooks/use-tree-controller";
+import {
+  TreeMoveProvider,
+  useTreeItemMoves,
+} from "~/hooks/use-tree-item-moves";
 import { cn } from "~/lib/cn";
 import {
   TREE_INSIDE_DROP_ZONE_CLASSNAME,
-  TREE_REORDER_AFTER_BAND_CLASSNAME,
-  TREE_REORDER_AFTER_LINE_CLASSNAME,
-  TREE_REORDER_BEFORE_BAND_CLASSNAME,
-  TREE_REORDER_BEFORE_LINE_CLASSNAME,
   TreeDragOverlay,
   TreeEndDropTarget,
-  TreeMouseSensor,
-  TreeTouchSensor,
-  treeCollisionDetection,
 } from "~/lib/tree-dnd";
 import {
-  moveNode as moveTreeNode,
-  type QuerySnapshot,
-  restoreQueries,
-  snapshotQueries,
+  getBeforeDropId,
+  getDragId,
+  getInsideDropId,
+  getParentDropId,
+  type TreeDragData,
+  type TreeFolder,
+  type TreeItem,
+  type TreeItemRef,
+  type TreePage,
+} from "~/lib/tree-model";
+import {
   updateNode,
   updatePageTitleInNestedPages,
 } from "~/trpc/cache/tree-cache";
-import { getInfiniteSidebarTreeQueryOptions } from "~/trpc/options/sidebar-tree-query-options";
 import { useTRPC } from "~/trpc/react";
 import { AppSidebarTreeActions } from "../../@appSidebar/_components/app-sidebar-tree-actions";
 import { DeleteFolderDialog } from "../../@appSidebar/_components/delete-folder-button";
@@ -98,11 +87,6 @@ function useFolderTreeInteractions(): FolderTreeInteractions {
 
 const TREE_ROW_CLASSNAME =
   "group/tree-row flex min-h-9 items-center gap-1.5 rounded-lg px-2 py-1 transition-colors";
-const TREE_DROP_LINE_CLASSNAME =
-  "absolute right-0 left-1 h-0.5 rounded-full bg-primary";
-const INFINITE_SCROLL_ROOT_MARGIN = "120px 0px";
-const DRAG_CLICK_SUPPRESSION_MS = 200;
-const ROOT_PARENT_KEY = "root";
 const MAX_PAGE_TITLE_LENGTH = 500;
 const MAX_FOLDER_TITLE_LENGTH = 500;
 const PAGE_DATE_FORMATTER = new Intl.DateTimeFormat(undefined, {
@@ -111,42 +95,8 @@ const PAGE_DATE_FORMATTER = new Intl.DateTimeFormat(undefined, {
   year: "numeric",
 });
 
-type TreeFolder = Folder & {
-  edge_id: string;
-  node_id: string;
-  parent_node_id: string | null;
-};
-
-type TreePage = Page & {
-  edge_id: string;
-  node_id: string;
-  parent_node_id: string | null;
-};
-
-type TreeItem =
-  | {
-      edge_id: string;
-      folder: TreeFolder;
-      kind: "folder";
-      node_id: string;
-      pending?: boolean;
-      parent_node_id: string | null;
-    }
-  | {
-      edge_id: string;
-      kind: "page";
-      node_id: string;
-      pending?: boolean;
-      page: TreePage;
-      parent_node_id: string | null;
-    };
-
 type FolderNestedPagesListProps = {
   rootParentNodeId?: string | null;
-};
-
-type MoveMutationContext = {
-  treeSnapshots: QuerySnapshot[];
 };
 
 type TreeLevelProps = {
@@ -155,7 +105,6 @@ type TreeLevelProps = {
   enabled?: boolean;
   itemIndentClassName: string;
   isDnDEnabled: boolean;
-  onFolderInsideHover: (folderNodeId: string) => void;
   openFolders: Record<string, boolean>;
   parentNodeId: string | null;
   setFolderOpen: (folderNodeId: string, open: boolean) => void;
@@ -169,229 +118,6 @@ type FolderTreeData = {
   shouldRenderNestedContent: boolean;
   shouldShowInitialSkeleton: boolean;
 };
-
-type FolderTreeItemRef = {
-  kind: "folder" | "page";
-  nodeId: string;
-};
-
-type FolderTreeDragData = {
-  edgeId: string;
-  item: FolderTreeItemRef;
-  label: string;
-  parentNodeId: string | null;
-};
-
-type DropTarget =
-  | {
-      parentNodeId: string | null;
-      type: "inside" | "parent" | "end";
-    }
-  | {
-      anchorEdgeId: string;
-      parentNodeId: string | null;
-      type: "after" | "before";
-    };
-
-function encodeParentKey(parentNodeId: string | null) {
-  return parentNodeId ?? ROOT_PARENT_KEY;
-}
-
-function decodeParentKey(parentKey: string) {
-  return parentKey === ROOT_PARENT_KEY ? null : parentKey;
-}
-
-function getDragId(item: FolderTreeItemRef) {
-  return `drag:${item.kind}:${item.nodeId}`;
-}
-
-function getBeforeDropId({
-  anchorEdgeId,
-  parentNodeId,
-}: {
-  anchorEdgeId: string;
-  parentNodeId: string | null;
-}) {
-  return `drop:before:${encodeParentKey(parentNodeId)}:${anchorEdgeId}`;
-}
-
-function getAfterDropId({
-  anchorEdgeId,
-  parentNodeId,
-}: {
-  anchorEdgeId: string;
-  parentNodeId: string | null;
-}) {
-  return `drop:after:${encodeParentKey(parentNodeId)}:${anchorEdgeId}`;
-}
-
-function getInsideDropId(nodeId: string) {
-  return `drop:inside:${nodeId}`;
-}
-
-function getParentDropId(parentNodeId: string | null) {
-  return `drop:parent:${encodeParentKey(parentNodeId)}`;
-}
-
-function parseDropTarget(id: unknown): DropTarget | null {
-  if (typeof id !== "string") {
-    return null;
-  }
-
-  const parts = id.split(":");
-  if (parts[0] !== "drop") {
-    return null;
-  }
-
-  if (parts[1] === "inside") {
-    const nodeId = parts[2];
-    if (!nodeId) {
-      return null;
-    }
-
-    return {
-      parentNodeId: nodeId,
-      type: "inside",
-    };
-  }
-
-  if (parts[1] === "parent" || parts[1] === "end") {
-    const parentKey = parts[2];
-    if (!parentKey) {
-      return null;
-    }
-
-    return {
-      parentNodeId: decodeParentKey(parentKey),
-      type: parts[1],
-    };
-  }
-
-  const position = parts[1];
-  const parentKey = parts[2];
-  const anchorEdgeId = parts[3];
-
-  if (!parentKey || !anchorEdgeId) {
-    return null;
-  }
-
-  if (position !== "before" && position !== "after") {
-    return null;
-  }
-
-  return {
-    anchorEdgeId,
-    parentNodeId: decodeParentKey(parentKey),
-    type: position,
-  };
-}
-
-function FolderTreeInsertDropBand({
-  activeDragId,
-  bandClassName,
-  dropId,
-  isDnDEnabled,
-  isSiblingOver = false,
-  lineClassName,
-  showLine = true,
-}: {
-  activeDragId: string | null;
-  bandClassName: string;
-  dropId: string;
-  isDnDEnabled: boolean;
-  isSiblingOver?: boolean;
-  lineClassName?: string;
-  showLine?: boolean;
-}) {
-  const { isOver, setNodeRef } = useDroppable({
-    id: dropId,
-  });
-  const isDragActive = isDnDEnabled && !!activeDragId;
-
-  return (
-    <div
-      ref={setNodeRef}
-      className={cn(
-        "absolute inset-x-0 z-20",
-        bandClassName,
-        isDragActive ? "pointer-events-auto" : "pointer-events-none",
-      )}
-    >
-      <div
-        className={cn(
-          TREE_DROP_LINE_CLASSNAME,
-          lineClassName,
-          isDragActive && (isOver || isSiblingOver) && showLine
-            ? "opacity-100"
-            : "opacity-0",
-        )}
-      />
-    </div>
-  );
-}
-
-function FolderTreeInsertDropBands({
-  afterBandClassName = TREE_REORDER_AFTER_BAND_CLASSNAME,
-  afterLineClassName = TREE_REORDER_AFTER_LINE_CLASSNAME,
-  afterSiblingDropId,
-  activeDragId,
-  anchorEdgeId,
-  beforeBandClassName = TREE_REORDER_BEFORE_BAND_CLASSNAME,
-  beforeLineClassName = TREE_REORDER_BEFORE_LINE_CLASSNAME,
-  isDnDEnabled,
-  parentNodeId,
-  showAfter = true,
-  showBefore = true,
-  showBeforeLine = true,
-}: {
-  afterBandClassName?: string;
-  afterLineClassName?: string;
-  afterSiblingDropId?: string;
-  activeDragId: string | null;
-  anchorEdgeId: string;
-  beforeBandClassName?: string;
-  beforeLineClassName?: string;
-  isDnDEnabled: boolean;
-  parentNodeId: string | null;
-  showAfter?: boolean;
-  showBefore?: boolean;
-  showBeforeLine?: boolean;
-}) {
-  const { over } = useDndContext();
-  const isAfterSiblingOver =
-    !!afterSiblingDropId && over?.id === afterSiblingDropId;
-
-  return (
-    <>
-      {showBefore ? (
-        <FolderTreeInsertDropBand
-          activeDragId={activeDragId}
-          bandClassName={beforeBandClassName}
-          dropId={getBeforeDropId({
-            anchorEdgeId,
-            parentNodeId,
-          })}
-          isDnDEnabled={isDnDEnabled}
-          lineClassName={beforeLineClassName}
-          showLine={showBeforeLine}
-        />
-      ) : null}
-      {showAfter ? (
-        <FolderTreeInsertDropBand
-          activeDragId={activeDragId}
-          bandClassName={afterBandClassName}
-          dropId={getAfterDropId({
-            anchorEdgeId,
-            parentNodeId,
-          })}
-          isDnDEnabled={isDnDEnabled}
-          isSiblingOver={isAfterSiblingOver}
-          lineClassName={afterLineClassName}
-        />
-      ) : null}
-    </>
-  );
-}
 
 function RootFolderEmptyState({
   isDnDEnabled,
@@ -461,11 +187,16 @@ function DraggablePageRow({
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [draftTitle, setDraftTitle] = useState(page.title);
   const shouldSkipBlurCommitRef = useRef(false);
-  const itemRef: FolderTreeItemRef = {
+  const itemRef: TreeItemRef = {
     kind: "page",
     nodeId: page.node_id,
   };
   const draggableId = getDragId(itemRef);
+  const moves = useTreeItemMoves({
+    label: page.title || "New page",
+    node_id: page.node_id,
+    parent_node_id: parentNodeId,
+  });
   const pageHref = `/pages/${page.id}`;
   const isActive = pathname === pageHref;
   const treeQueryFilter = trpc.tree.getChildrenPaginated.infiniteQueryFilter();
@@ -480,7 +211,7 @@ function DraggablePageRow({
       item: itemRef,
       label: page.title || "New page",
       parentNodeId,
-    } satisfies FolderTreeDragData,
+    } satisfies TreeDragData,
     disabled: !isDnDEnabled || isEditing,
     id: draggableId,
   });
@@ -567,7 +298,7 @@ function DraggablePageRow({
     >
       <div className={itemIndentClassName}>
         <div ref={setNodeRef} className="relative py-1">
-          <FolderTreeInsertDropBands
+          <TreeInsertDropBands
             beforeBandClassName="top-0 h-1/2"
             afterBandClassName="bottom-0 h-1/2"
             activeDragId={activeDragId}
@@ -715,6 +446,7 @@ function DraggablePageRow({
                   <Trash2 className="size-3.5" />
                   Delete
                 </DropdownMenuItem>
+                {moves.menuItems}
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
@@ -731,7 +463,6 @@ function DraggableFolderRow({
   isPending = false,
   itemIndentClassName,
   nextEdgeId,
-  onFolderInsideHover,
   openFolders,
   parentNodeId,
   setFolderOpen,
@@ -743,7 +474,6 @@ function DraggableFolderRow({
   isPending?: boolean;
   itemIndentClassName: string;
   nextEdgeId?: string;
-  onFolderInsideHover: (folderNodeId: string) => void;
   openFolders: Record<string, boolean>;
   parentNodeId: string | null;
   setFolderOpen: (folderNodeId: string, open: boolean) => void;
@@ -758,11 +488,16 @@ function DraggableFolderRow({
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [draftName, setDraftName] = useState(folder.name);
   const shouldSkipBlurCommitRef = useRef(false);
-  const itemRef: FolderTreeItemRef = {
+  const itemRef: TreeItemRef = {
     kind: "folder",
     nodeId: folder.node_id,
   };
   const draggableId = getDragId(itemRef);
+  const moves = useTreeItemMoves({
+    label: folder.name || "New folder",
+    node_id: folder.node_id,
+    parent_node_id: parentNodeId,
+  });
   const folderHref = `/folders/${folder.id}`;
   const isActive = pathname === folderHref;
   const isOpen = openFolders[folder.node_id] ?? false;
@@ -772,7 +507,7 @@ function DraggableFolderRow({
       item: itemRef,
       label: folder.name,
       parentNodeId,
-    } satisfies FolderTreeDragData,
+    } satisfies TreeDragData,
     disabled: !isDnDEnabled || isEditing || isPending,
     id: draggableId,
   });
@@ -781,7 +516,7 @@ function DraggableFolderRow({
     useDroppable({
       id: insideDropId,
     });
-  const treeData = useFolderTreeData({
+  const treeData = useTreeChildren({
     enabled: isOpen,
     parentNodeId: folder.node_id,
   });
@@ -789,12 +524,6 @@ function DraggableFolderRow({
   const afterSiblingDropId = nextEdgeId
     ? getBeforeDropId({ anchorEdgeId: nextEdgeId, parentNodeId })
     : undefined;
-
-  useEffect(() => {
-    if (isOverInside) {
-      onFolderInsideHover(folder.node_id);
-    }
-  }, [folder.node_id, isOverInside, onFolderInsideHover]);
 
   useEffect(() => {
     setDraftName(folder.name);
@@ -924,7 +653,7 @@ function DraggableFolderRow({
               event.stopPropagation();
             }}
           >
-            <FolderTreeInsertDropBands
+            <TreeInsertDropBands
               activeDragId={activeDragId}
               afterSiblingDropId={afterSiblingDropId}
               anchorEdgeId={folder.edge_id}
@@ -1010,7 +739,7 @@ function DraggableFolderRow({
                   data-tree-drag-handle
                   type="button"
                   aria-expanded={isOpen}
-                  aria-label={isOpen ? "Collapse folder" : "Expand folder"}
+                  aria-label={`${isOpen ? "Collapse" : "Expand"} ${folder.name || "New folder"}`}
                   onClick={handleFolderToggle}
                   className="flex w-full min-w-0 items-center gap-1.5 text-left"
                 >
@@ -1040,7 +769,7 @@ function DraggableFolderRow({
                   ) : (
                     <Link
                       href={folderHref}
-                      aria-label="Open folder"
+                      aria-label={`Open ${folder.name || "New folder"}`}
                       onPointerDown={(event) => {
                         event.stopPropagation();
                       }}
@@ -1050,7 +779,7 @@ function DraggableFolderRow({
                           setOpenMobile(false);
                         }
                       }}
-                      className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground opacity-0 transition-opacity hover:bg-muted hover:text-foreground focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-ring group-focus-within/folder-navigation:opacity-100 group-hover/folder-navigation:opacity-100"
+                      className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground opacity-100 transition-opacity hover:bg-muted hover:text-foreground focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-ring group-focus-within/folder-navigation:opacity-100 group-hover/folder-navigation:opacity-100 md:opacity-0"
                     >
                       <ArrowRight className="size-4" />
                     </Link>
@@ -1096,6 +825,7 @@ function DraggableFolderRow({
                       <Trash2 className="size-3.5" />
                       Delete
                     </DropdownMenuItem>
+                    {moves.menuItems}
                   </DropdownMenuContent>
                 </DropdownMenu>
 
@@ -1119,13 +849,13 @@ function DraggableFolderRow({
           {treeData.shouldRenderNestedContent ? (
             <>
               <CollapsibleContent
+                animateHeight
                 className={cn(treeData.items.length > 0 && "pt-1")}
               >
                 <FolderTreeRows
                   activeDragId={activeDragId}
                   itemIndentClassName="ml-3 pl-2"
                   isDnDEnabled={isDnDEnabled}
-                  onFolderInsideHover={onFolderInsideHover}
                   openFolders={openFolders}
                   parentNodeId={folder.node_id}
                   setFolderOpen={setFolderOpen}
@@ -1133,7 +863,7 @@ function DraggableFolderRow({
                 />
               </CollapsibleContent>
               <div className="relative h-1">
-                <FolderTreeInsertDropBands
+                <TreeInsertDropBands
                   activeDragId={activeDragId}
                   afterSiblingDropId={afterSiblingDropId}
                   anchorEdgeId={folder.edge_id}
@@ -1152,84 +882,10 @@ function DraggableFolderRow({
   );
 }
 
-function useFolderTreeData({
-  enabled = true,
-  parentNodeId,
-}: {
-  enabled?: boolean;
-  parentNodeId: string | null;
-}): FolderTreeData {
-  const trpc = useTRPC();
-  const loadMoreRef = useRef<HTMLDivElement | null>(null);
-  const queryOptions = trpc.tree.getChildrenPaginated.infiniteQueryOptions(
-    getInfiniteSidebarTreeQueryOptions(parentNodeId),
-    {
-      getNextPageParam: ({ nextCursor }) => {
-        return nextCursor ?? undefined;
-      },
-    },
-  );
-
-  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isPending } =
-    useInfiniteQuery({
-      ...queryOptions,
-      enabled,
-    });
-
-  const items = (data?.pages.flatMap((page) => page.items) ?? []) as TreeItem[];
-  const shouldShowInitialSkeleton = items.length === 0 && isPending;
-  const shouldRenderNestedContent =
-    shouldShowInitialSkeleton ||
-    items.length > 0 ||
-    isFetchingNextPage ||
-    !!hasNextPage;
-
-  useEffect(() => {
-    if (!hasNextPage || isFetchingNextPage) {
-      return;
-    }
-
-    if (typeof IntersectionObserver === "undefined") {
-      return;
-    }
-
-    const target = loadMoreRef.current;
-    if (!target) {
-      return;
-    }
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry?.isIntersecting) {
-          void fetchNextPage();
-        }
-      },
-      {
-        rootMargin: INFINITE_SCROLL_ROOT_MARGIN,
-      },
-    );
-
-    observer.observe(target);
-    return () => {
-      observer.disconnect();
-    };
-  }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
-
-  return {
-    hasNextPage: !!hasNextPage,
-    isFetchingNextPage,
-    items,
-    loadMoreRef,
-    shouldRenderNestedContent,
-    shouldShowInitialSkeleton,
-  };
-}
-
 function FolderTreeRows({
   activeDragId,
   itemIndentClassName,
   isDnDEnabled,
-  onFolderInsideHover,
   openFolders,
   parentNodeId,
   setFolderOpen,
@@ -1250,6 +906,12 @@ function FolderTreeRows({
       {treeData.items.map((item, index) => {
         const isFirst = index === 0;
         const nextEdgeId = treeData.items[index + 1]?.edge_id;
+        if (item.pending && item.kind === "page")
+          return (
+            <div key={item.node_id} className={itemIndentClassName}>
+              <Skeleton className="my-1 h-9 w-full rounded-lg" />
+            </div>
+          );
         return item.kind === "folder" ? (
           <DraggableFolderRow
             key={`${item.kind}-${item.node_id}`}
@@ -1259,7 +921,6 @@ function FolderTreeRows({
             isPending={item.pending}
             itemIndentClassName={itemIndentClassName}
             nextEdgeId={nextEdgeId}
-            onFolderInsideHover={onFolderInsideHover}
             openFolders={openFolders}
             parentNodeId={parentNodeId}
             setFolderOpen={setFolderOpen}
@@ -1311,12 +972,11 @@ function FolderTreeLevel({
   enabled = true,
   itemIndentClassName,
   isDnDEnabled,
-  onFolderInsideHover,
   openFolders,
   parentNodeId,
   setFolderOpen,
 }: TreeLevelProps) {
-  const treeData = useFolderTreeData({
+  const treeData = useTreeChildren({
     enabled,
     parentNodeId,
   });
@@ -1339,7 +999,6 @@ function FolderTreeLevel({
       activeDragId={activeDragId}
       itemIndentClassName={itemIndentClassName}
       isDnDEnabled={isDnDEnabled}
-      onFolderInsideHover={onFolderInsideHover}
       openFolders={openFolders}
       parentNodeId={parentNodeId}
       setFolderOpen={setFolderOpen}
@@ -1351,285 +1010,18 @@ function FolderTreeLevel({
 export function FolderNestedPagesList({
   rootParentNodeId = null,
 }: FolderNestedPagesListProps) {
-  const trpc = useTRPC();
-  const queryClient = useQueryClient();
+  const _trpc = useTRPC();
+  const _queryClient = useQueryClient();
 
-  const [openFolders, setOpenFolders] = useState<Record<string, boolean>>({});
-  const [activeDragId, setActiveDragId] = useState<string | null>(null);
-  const [activeDragLabel, setActiveDragLabel] = useState<string | null>(null);
-  const hoverExpandTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
-    null,
-  );
-  const hoverFolderIdRef = useRef<string | null>(null);
-  const dragStartOpenFoldersRef = useRef<Record<string, boolean>>({});
-  const dragAutoExpandedFoldersRef = useRef<Set<string>>(new Set());
-  const moveMutationContextRef = useRef<MoveMutationContext | null>(null);
-  const recentDragUntilRef = useRef(0);
-  const treeQueryFilter = trpc.tree.getChildrenPaginated.infiniteQueryFilter();
-  const getContainerQueryKey = (targetParentNodeId: string | null) => {
-    return trpc.tree.getChildrenPaginated.infiniteQueryKey(
-      getInfiniteSidebarTreeQueryOptions(targetParentNodeId),
-    );
-  };
-
-  const { mutate: moveItem, isPending: isMovingItem } = useMutation(
-    trpc.tree.moveItem.mutationOptions({
-      onError: () => {
-        toast.error("Couldn't save the item order. Please try again.");
-        const context = moveMutationContextRef.current;
-        if (!context) {
-          return;
-        }
-
-        restoreQueries({
-          queryClient,
-          snapshots: context.treeSnapshots,
-        });
-        moveMutationContextRef.current = null;
-      },
-      onMutate: async (variables) => {
-        await queryClient.cancelQueries(treeQueryFilter);
-
-        const treeSnapshots = snapshotQueries({
-          queryClient,
-          queryFilter: treeQueryFilter,
-        });
-
-        moveTreeNode({
-          destination: variables.destination,
-          getContainerQueryKey,
-          nodeId: variables.node_id,
-          queryClient,
-          queryFilter: treeQueryFilter,
-        });
-
-        moveMutationContextRef.current = {
-          treeSnapshots,
-        };
-      },
-      onSettled: () => queryClient.invalidateQueries(treeQueryFilter),
-      onSuccess: (result) => {
-        updateNode({
-          nodeId: result.node_id,
-          queryClient,
-          queryFilter: treeQueryFilter,
-          updater: (item) =>
-            item.kind === "folder"
-              ? {
-                  ...item,
-                  edge_id: result.edge_id,
-                  folder: {
-                    ...item.folder,
-                    edge_id: result.edge_id,
-                    parent_node_id: result.parent_node_id,
-                  },
-                  parent_node_id: result.parent_node_id,
-                }
-              : {
-                  ...item,
-                  edge_id: result.edge_id,
-                  page: {
-                    ...item.page,
-                    edge_id: result.edge_id,
-                    parent_node_id: result.parent_node_id,
-                  },
-                  parent_node_id: result.parent_node_id,
-                },
-        });
-        moveMutationContextRef.current = null;
-      },
-    }),
-  );
-
-  const clearHoverExpandTimeout = useCallback(() => {
-    if (hoverExpandTimeoutRef.current) {
-      clearTimeout(hoverExpandTimeoutRef.current);
-      hoverExpandTimeoutRef.current = null;
-    }
-    hoverFolderIdRef.current = null;
-  }, []);
-
-  useEffect(() => {
-    return () => {
-      clearHoverExpandTimeout();
-    };
-  }, [clearHoverExpandTimeout]);
-
-  const setFolderOpen = useCallback((folderNodeId: string, open: boolean) => {
-    setOpenFolders((previous) => {
-      if (previous[folderNodeId] === open) {
-        return previous;
-      }
-
-      return {
-        ...previous,
-        [folderNodeId]: open,
-      };
-    });
-  }, []);
-
-  const markRecentDrag = useCallback(() => {
-    recentDragUntilRef.current = Date.now() + DRAG_CLICK_SUPPRESSION_MS;
-  }, []);
-
-  const shouldSuppressClick = useCallback(() => {
-    return Date.now() < recentDragUntilRef.current;
-  }, []);
-
-  const resetDragFolderState = useCallback(() => {
-    dragStartOpenFoldersRef.current = {};
-    dragAutoExpandedFoldersRef.current.clear();
-  }, []);
-
-  const isDnDEnabled = !isMovingItem;
-  const mouseSensor = useSensor(TreeMouseSensor, {
-    activationConstraint: { distance: 5 },
-  });
-  const touchSensor = useSensor(TreeTouchSensor, {
-    activationConstraint: { delay: 300, tolerance: 8 },
-  });
-  const sensors = useSensors(mouseSensor, touchSensor);
-
-  const handleDragStart = useCallback(
-    (event: DragStartEvent) => {
-      navigator.vibrate?.(50);
-      markRecentDrag();
-      dragStartOpenFoldersRef.current = { ...openFolders };
-      dragAutoExpandedFoldersRef.current.clear();
-      setActiveDragId(String(event.active.id));
-      const dragData = event.active.data.current as
-        | FolderTreeDragData
-        | undefined;
-      setActiveDragLabel(dragData?.label ?? null);
-    },
-    [markRecentDrag, openFolders],
-  );
-
-  const handleDragCancel = useCallback(
-    (_event: DragCancelEvent) => {
-      clearHoverExpandTimeout();
-      markRecentDrag();
-      setActiveDragId(null);
-      setActiveDragLabel(null);
-      resetDragFolderState();
-    },
-    [clearHoverExpandTimeout, markRecentDrag, resetDragFolderState],
-  );
-
-  const handleFolderInsideHover = useCallback(
-    (folderNodeId: string) => {
-      if (!isDnDEnabled) {
-        return;
-      }
-
-      if (openFolders[folderNodeId]) {
-        clearHoverExpandTimeout();
-        return;
-      }
-
-      if (hoverFolderIdRef.current === folderNodeId) {
-        return;
-      }
-
-      clearHoverExpandTimeout();
-      hoverFolderIdRef.current = folderNodeId;
-      hoverExpandTimeoutRef.current = setTimeout(() => {
-        dragAutoExpandedFoldersRef.current.add(folderNodeId);
-        setFolderOpen(folderNodeId, true);
-      }, 700);
-    },
-    [clearHoverExpandTimeout, openFolders, setFolderOpen, isDnDEnabled],
-  );
-
-  const handleDragOver = useCallback(
-    (event: DragOverEvent) => {
-      if (!isDnDEnabled) {
-        return;
-      }
-
-      const dropTarget = parseDropTarget(event.over?.id);
-      if (dropTarget?.type !== "inside" || !dropTarget.parentNodeId) {
-        clearHoverExpandTimeout();
-        return;
-      }
-
-      handleFolderInsideHover(dropTarget.parentNodeId);
-    },
-    [clearHoverExpandTimeout, handleFolderInsideHover, isDnDEnabled],
-  );
-
-  const handleDragEnd = useCallback(
-    (event: DragEndEvent) => {
-      clearHoverExpandTimeout();
-      markRecentDrag();
-      setActiveDragId(null);
-      setActiveDragLabel(null);
-
-      if (!isDnDEnabled) {
-        return;
-      }
-
-      const activeData = event.active.data.current as
-        | FolderTreeDragData
-        | undefined;
-      if (!activeData?.item) {
-        return;
-      }
-
-      const dropTarget = parseDropTarget(event.over?.id);
-      if (!dropTarget) {
-        resetDragFolderState();
-        return;
-      }
-
-      if (dropTarget.type === "inside" && dropTarget.parentNodeId) {
-        const targetFolderNodeId = dropTarget.parentNodeId;
-        const didAutoExpand =
-          dragAutoExpandedFoldersRef.current.has(targetFolderNodeId);
-        const wasOpenAtDragStart =
-          dragStartOpenFoldersRef.current[targetFolderNodeId] ?? false;
-
-        setFolderOpen(targetFolderNodeId, didAutoExpand || wasOpenAtDragStart);
-      }
-
-      resetDragFolderState();
-
-      const destination =
-        dropTarget.type === "before" || dropTarget.type === "after"
-          ? {
-              anchor_edge_id: dropTarget.anchorEdgeId,
-              parent_node_id: dropTarget.parentNodeId,
-              position: dropTarget.type,
-            }
-          : {
-              parent_node_id: dropTarget.parentNodeId,
-              ...(dropTarget.type === "end"
-                ? { position: "after" as const }
-                : {}),
-            };
-
-      if (
-        activeData.item.kind === "folder" &&
-        destination.parent_node_id === activeData.item.nodeId
-      ) {
-        return;
-      }
-
-      moveItem({
-        destination,
-        node_id: activeData.item.nodeId,
-      });
-    },
-    [
-      clearHoverExpandTimeout,
-      markRecentDrag,
-      moveItem,
-      resetDragFolderState,
-      setFolderOpen,
-      isDnDEnabled,
-    ],
-  );
-
+  const {
+    openFolders,
+    setFolderOpen,
+    activeDragId,
+    activeDragLabel,
+    isDnDEnabled,
+    shouldSuppressClick,
+    dndContextProps,
+  } = useTreeController();
   return (
     <section className="flex flex-col gap-2">
       <div className="flex items-center justify-between gap-2">
@@ -1646,28 +1038,24 @@ export function FolderNestedPagesList({
         />
       </div>
 
-      <DndContext
-        collisionDetection={treeCollisionDetection}
-        onDragCancel={handleDragCancel}
-        onDragEnd={handleDragEnd}
-        onDragOver={handleDragOver}
-        onDragStart={handleDragStart}
-        sensors={sensors}
-      >
-        <FolderTreeInteractionsContext.Provider value={{ shouldSuppressClick }}>
-          <div className="overflow-x-clip rounded-3xl border bg-background/80 p-2 shadow-xs">
-            <FolderTreeLevel
-              activeDragId={activeDragId}
-              emptyStateVariant="root"
-              itemIndentClassName=""
-              isDnDEnabled={isDnDEnabled}
-              onFolderInsideHover={handleFolderInsideHover}
-              openFolders={openFolders}
-              parentNodeId={rootParentNodeId}
-              setFolderOpen={setFolderOpen}
-            />
-          </div>
-        </FolderTreeInteractionsContext.Provider>
+      <DndContext {...dndContextProps}>
+        <TreeMoveProvider>
+          <FolderTreeInteractionsContext.Provider
+            value={{ shouldSuppressClick }}
+          >
+            <div className="overflow-x-clip rounded-3xl border bg-background/80 p-2 shadow-xs">
+              <FolderTreeLevel
+                activeDragId={activeDragId}
+                emptyStateVariant="root"
+                itemIndentClassName=""
+                isDnDEnabled={isDnDEnabled}
+                openFolders={openFolders}
+                parentNodeId={rootParentNodeId}
+                setFolderOpen={setFolderOpen}
+              />
+            </div>
+          </FolderTreeInteractionsContext.Provider>
+        </TreeMoveProvider>
         <TreeDragOverlay label={activeDragLabel} />
       </DndContext>
     </section>

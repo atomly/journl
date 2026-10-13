@@ -2,9 +2,15 @@
 
 import type { Folder } from "@acme/db/schema";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { FilePlus2, FolderPlus, Plus, Trash2 } from "lucide-react";
+import {
+  FilePlus2,
+  FolderPlus,
+  MoreHorizontal,
+  Plus,
+  Trash2,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useRef, useState, useTransition } from "react";
+import { useState, useTransition } from "react";
 import { useAppEventEmitter } from "~/components/events/app-event-context";
 import { Button } from "~/components/ui/button";
 import {
@@ -15,14 +21,13 @@ import {
 } from "~/components/ui/dropdown-menu";
 import { useSidebar } from "~/components/ui/sidebar";
 import { PageCreatedEvent } from "~/events/page-created-event";
+import { useTreeItemMoves } from "~/hooks/use-tree-item-moves";
 import { cn } from "~/lib/cn";
 import {
   findNodeInQueries,
   insertItem,
-  type QuerySnapshot,
-  restoreQueries,
+  removeNode,
   seedEmptyContainer,
-  snapshotQueries,
   type TreeItem,
   updateNode,
 } from "~/trpc/cache/tree-cache";
@@ -42,11 +47,6 @@ type AppSidebarTreeActionsProps = {
   triggerVariant?: "empty-state" | "inline" | "sidebar";
 };
 
-type CreateMutationContext = {
-  optimisticNodeId: string;
-  treeSnapshots: QuerySnapshot[];
-};
-
 export function AppSidebarTreeActions({
   className,
   disabled = false,
@@ -63,11 +63,18 @@ export function AppSidebarTreeActions({
   const queryClient = useQueryClient();
   const [isPending, startTransition] = useTransition();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const createFolderContextRef = useRef<CreateMutationContext | null>(null);
-  const createPageContextRef = useRef<CreateMutationContext | null>(null);
   const { isMobile, setOpenMobile } = useSidebar();
   const treeQueryFilter = trpc.tree.getChildrenPaginated.infiniteQueryFilter();
   const eventEmitter = useAppEventEmitter();
+  const moves = useTreeItemMoves(
+    folder?.node_id
+      ? {
+          label: folder.name || "New folder",
+          node_id: folder.node_id,
+          parent_node_id: folder.parent_node_id ?? null,
+        }
+      : undefined,
+  );
 
   const getContainerQueryKey = (targetParentNodeId: string | null) => {
     return trpc.tree.getChildrenPaginated.infiniteQueryKey(
@@ -76,26 +83,20 @@ export function AppSidebarTreeActions({
   };
 
   const { mutate: createFolder, isPending: isCreatingFolder } = useMutation(
-    trpc.tree.createFolder.mutationOptions({
-      onError: (error) => {
-        const context = createFolderContextRef.current;
+    trpc.tree.createFolder.mutationOptions<{ optimisticNodeId: string }>({
+      onError: (error, _variables, context) => {
         if (context) {
-          restoreQueries({
+          removeNode({
+            nodeId: context.optimisticNodeId,
             queryClient,
-            snapshots: context.treeSnapshots,
+            queryFilter: treeQueryFilter,
           });
         }
-        createFolderContextRef.current = null;
 
         console.error("Failed to create folder:", error);
       },
       onMutate: async (variables) => {
         await queryClient.cancelQueries(treeQueryFilter);
-
-        const treeSnapshots = snapshotQueries({
-          queryClient,
-          queryFilter: treeQueryFilter,
-        });
 
         const optimisticNodeId = crypto.randomUUID();
         const optimisticEdgeId = crypto.randomUUID();
@@ -133,13 +134,14 @@ export function AppSidebarTreeActions({
           queryKey: getContainerQueryKey(optimisticNodeId),
         });
 
-        createFolderContextRef.current = {
-          optimisticNodeId,
-          treeSnapshots,
-        };
+        return { optimisticNodeId };
       },
-      onSuccess: (newFolder, variables) => {
-        const context = createFolderContextRef.current;
+      onSettled: () =>
+        Promise.all([
+          queryClient.invalidateQueries(treeQueryFilter),
+          queryClient.invalidateQueries({ queryKey: trpc.folders.pathKey() }),
+        ]),
+      onSuccess: (newFolder, variables, context) => {
         if (context) {
           const optimisticNode = findNodeInQueries({
             nodeId: context.optimisticNodeId,
@@ -166,7 +168,6 @@ export function AppSidebarTreeActions({
             });
           }
         }
-        createFolderContextRef.current = null;
 
         seedEmptyContainer({
           queryClient,
@@ -177,26 +178,20 @@ export function AppSidebarTreeActions({
   );
 
   const { mutate: createPage, isPending: isCreatingPage } = useMutation(
-    trpc.tree.createPage.mutationOptions({
-      onError: (error) => {
-        const context = createPageContextRef.current;
+    trpc.tree.createPage.mutationOptions<{ optimisticNodeId: string }>({
+      onError: (error, _variables, context) => {
         if (context) {
-          restoreQueries({
+          removeNode({
+            nodeId: context.optimisticNodeId,
             queryClient,
-            snapshots: context.treeSnapshots,
+            queryFilter: treeQueryFilter,
           });
         }
-        createPageContextRef.current = null;
 
         console.error("Failed to create page:", error);
       },
       onMutate: async (variables) => {
         await queryClient.cancelQueries(treeQueryFilter);
-
-        const treeSnapshots = snapshotQueries({
-          queryClient,
-          queryFilter: treeQueryFilter,
-        });
 
         const optimisticNodeId = crypto.randomUUID();
         const optimisticEdgeId = crypto.randomUUID();
@@ -221,6 +216,7 @@ export function AppSidebarTreeActions({
             user_id: "",
           },
           parent_node_id: parentId,
+          pending: true,
         } satisfies TreeItem;
 
         insertItem({
@@ -231,13 +227,14 @@ export function AppSidebarTreeActions({
           queryKey: getContainerQueryKey(parentId),
         });
 
-        createPageContextRef.current = {
-          optimisticNodeId,
-          treeSnapshots,
-        };
+        return { optimisticNodeId };
       },
-      onSuccess: (newPage, variables) => {
-        const context = createPageContextRef.current;
+      onSettled: () =>
+        Promise.all([
+          queryClient.invalidateQueries(treeQueryFilter),
+          queryClient.invalidateQueries({ queryKey: trpc.folders.pathKey() }),
+        ]),
+      onSuccess: (newPage, variables, context) => {
         if (context) {
           const optimisticNode = findNodeInQueries({
             nodeId: context.optimisticNodeId,
@@ -271,7 +268,6 @@ export function AppSidebarTreeActions({
             }),
           );
         }
-        createPageContextRef.current = null;
       },
     }),
   );
@@ -352,65 +348,74 @@ export function AppSidebarTreeActions({
   }
 
   const menu = (
-    <DropdownMenu modal={false}>
-      <DropdownMenuTrigger asChild>
-        <Button
-          aria-label="Add item"
-          variant="ghost"
-          size={triggerVariant === "empty-state" ? "default" : "sm"}
-          className={cn(
-            triggerVariant === "sidebar"
-              ? "absolute top-1/2 right-1.5 z-10 h-6 w-6 -translate-y-1/2 rounded-sm p-0 text-sidebar-foreground transition-opacity hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:bg-sidebar-accent focus-visible:text-sidebar-accent-foreground group-data-[collapsible=icon]:hidden md:pointer-events-none md:opacity-0 md:group-hover/tree-row:pointer-events-auto md:group-hover/tree-row:opacity-100 md:group-focus-within/tree-row:pointer-events-auto md:group-focus-within/tree-row:opacity-100"
-              : triggerVariant === "empty-state"
-                ? "h-10 rounded-full px-4 text-muted-foreground hover:bg-accent/50 hover:text-foreground"
-                : "h-8 w-8 rounded-md p-0",
-            className,
-          )}
-          onClick={(event) => {
-            event.stopPropagation();
-          }}
-          disabled={showLoading}
-        >
-          <Plus className="size-3.5" />
-          {triggerVariant === "empty-state" ? <span>Add content</span> : null}
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent
-        align="end"
-        side={isMobile ? "bottom" : "right"}
-        sideOffset={6}
-      >
-        <DropdownMenuItem
-          onClick={() => {
-            handleCreatePage();
-          }}
-          disabled={showLoading}
-        >
-          <FilePlus2 />
-          New page
-        </DropdownMenuItem>
-        <DropdownMenuItem
-          onClick={() => {
-            handleCreateFolder();
-          }}
-          disabled={showLoading}
-        >
-          <FolderPlus />
-          New folder
-        </DropdownMenuItem>
-        {kind === "folder" ? (
-          <DropdownMenuItem
-            variant="destructive"
-            onClick={() => {
-              setIsDeleteDialogOpen(true);
+    <>
+      <DropdownMenu modal={false}>
+        <DropdownMenuTrigger asChild>
+          <Button
+            aria-label={
+              folder ? `Actions for ${folder.name || "New folder"}` : "Add item"
+            }
+            variant="ghost"
+            size={triggerVariant === "empty-state" ? "default" : "sm"}
+            className={cn(
+              triggerVariant === "sidebar"
+                ? "absolute top-1/2 right-1.5 z-10 h-6 w-6 -translate-y-1/2 rounded-sm p-0 text-sidebar-foreground transition-opacity hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:bg-sidebar-accent focus-visible:text-sidebar-accent-foreground group-data-[collapsible=icon]:hidden md:pointer-events-none md:opacity-0 md:group-hover/tree-row:pointer-events-auto md:group-hover/tree-row:opacity-100 md:group-focus-within/tree-row:pointer-events-auto md:group-focus-within/tree-row:opacity-100"
+                : triggerVariant === "empty-state"
+                  ? "h-10 rounded-full px-4 text-muted-foreground hover:bg-accent/50 hover:text-foreground"
+                  : "h-8 w-8 rounded-md p-0",
+              className,
+            )}
+            onClick={(event) => {
+              event.stopPropagation();
             }}
+            disabled={showLoading}
           >
-            <Trash2 />
-            Delete folder
+            {folder ? (
+              <MoreHorizontal className="size-3.5" />
+            ) : (
+              <Plus className="size-3.5" />
+            )}
+            {triggerVariant === "empty-state" ? <span>Add content</span> : null}
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent
+          align="end"
+          side={isMobile ? "bottom" : "right"}
+          sideOffset={6}
+        >
+          <DropdownMenuItem
+            onClick={() => {
+              handleCreatePage();
+            }}
+            disabled={showLoading}
+          >
+            <FilePlus2 />
+            New page
           </DropdownMenuItem>
-        ) : null}
-      </DropdownMenuContent>
-    </DropdownMenu>
+          <DropdownMenuItem
+            onClick={() => {
+              handleCreateFolder();
+            }}
+            disabled={showLoading}
+          >
+            <FolderPlus />
+            New folder
+          </DropdownMenuItem>
+          {moves.menuItems}
+          {kind === "folder" ? (
+            <DropdownMenuItem
+              variant="destructive"
+              onClick={() => {
+                setIsDeleteDialogOpen(true);
+              }}
+            >
+              <Trash2 />
+              Delete folder
+            </DropdownMenuItem>
+          ) : null}
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </>
   );
 
   if (kind !== "folder" || !folder) {

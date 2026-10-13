@@ -42,13 +42,13 @@ vi.mock("~/app/(app)/@appSidebar/_components/delete-page-button", () => ({
 }));
 vi.mock("~/trpc/react", () => ({
   useTRPC: () => {
-    const mutation = { mutationOptions: () => ({}) };
+    const mutation = { mutationKey: () => [], mutationOptions: () => ({}) };
     const query = {
       infiniteQueryFilter: () => ({}),
       infiniteQueryOptions: (input: { parent_node_id: string | null }) => input,
     };
     return {
-      folders: { rename: mutation },
+      folders: { getByUser: { queryOptions: () => ({}) }, rename: mutation },
       pages: { updateTitle: mutation },
       tree: {
         getChildrenPaginated: query,
@@ -103,8 +103,10 @@ vi.mock("@tanstack/react-query", () => ({
     isFetchingNextPage: false,
     isPending: false,
   }),
+  useIsMutating: () => 0,
   useMutation: () => ({ mutate: vi.fn() }),
-  useQueryClient: () => ({}),
+  useQuery: () => ({}),
+  useQueryClient: () => ({ getQueriesData: () => [] }),
 }));
 
 let container: HTMLDivElement;

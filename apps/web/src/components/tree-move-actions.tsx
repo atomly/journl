@@ -1,7 +1,7 @@
 "use client";
 
 import { ArrowDown, ArrowUp, FolderInput } from "lucide-react";
-import { useEffect, useId, useState } from "react";
+import { type ComponentProps, useEffect, useId, useState } from "react";
 import { Button } from "~/components/ui/button";
 import {
   Dialog,
@@ -57,6 +57,7 @@ export function TreeMoveDialog({
   currentParentNodeId,
   pending = false,
   onMove,
+  finalFocus,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -64,6 +65,7 @@ export function TreeMoveDialog({
   destinations: TreeMoveDestination[];
   currentParentNodeId: string | null;
   pending?: boolean;
+  finalFocus?: ComponentProps<typeof DialogContent>["finalFocus"];
   onMove: (parentNodeId: string | null) => void;
 }) {
   const searchId = useId();
@@ -77,7 +79,7 @@ export function TreeMoveDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent finalFocus={finalFocus}>
         <DialogHeader>
           <DialogTitle>Move {itemLabel}</DialogTitle>
           <DialogDescription>

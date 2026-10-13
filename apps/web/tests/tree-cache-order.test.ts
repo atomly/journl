@@ -3,6 +3,7 @@ import { expect, test } from "vitest";
 import {
   insertItem,
   moveNode,
+  removeNode,
   type TreeChildrenInfiniteData,
   type TreeItem,
 } from "~/trpc/cache/tree-cache";
@@ -33,8 +34,12 @@ function fixture(hasMore = true) {
   queryClient.setQueryData<TreeChildrenInfiniteData>(queryKey, {
     pageParams: [undefined, "B"],
     pages: [
-      { items: [item("A"), item("B")], nextCursor: "B" },
-      { items: [item("C"), item("D")], nextCursor: hasMore ? "D" : undefined },
+      { items: [item("A"), item("B")], nextCursor: "B", resetRequired: false },
+      {
+        items: [item("C"), item("D")],
+        nextCursor: hasMore ? "D" : undefined,
+        resetRequired: false,
+      },
     ],
   });
   return {
@@ -120,4 +125,25 @@ test("an anchored insertion defaults to before, matching server placement", () =
       .getQueryData<TreeChildrenInfiniteData>(setup.queryKey)
       ?.pages.flatMap((page) => page.items.map((value) => value.node_id)),
   ).toEqual(["A", "B", "X", "C", "D"]);
+});
+
+test("optimistic pagination boundaries retain the server's order revision", () => {
+  const { queryClient, queryKey, queryFilter } = fixture();
+  const data = queryClient.getQueryData<TreeChildrenInfiniteData>(queryKey);
+  if (!data) throw new Error("Missing fixture");
+  queryClient.setQueryData(queryKey, {
+    ...data,
+    pages: data.pages.map((page) => ({
+      ...page,
+      nextCursor: `${page.nextCursor}|revision`,
+    })),
+  });
+  removeNode({ nodeId: "B", queryClient, queryFilter });
+  expect(
+    queryClient.getQueryData<TreeChildrenInfiniteData>(queryKey)?.pages[0]
+      ?.nextCursor,
+  ).toBe("A|revision");
+  expect(
+    queryClient.getQueryData<TreeChildrenInfiniteData>(queryKey)?.pageParams[1],
+  ).toBe("A|revision");
 });

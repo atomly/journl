@@ -557,7 +557,9 @@ export const treeRouter = {
     )
     .query(async ({ ctx, input }) => {
       const userId = ctx.session.user.id;
-      await recoverFolderDeletionOutbox(userId);
+      if (!input.parent_node_id && !input.cursor && !input.cursor_edge_id) {
+        await recoverFolderDeletionOutbox(userId);
+      }
       const { edges, nextCursor, resetRequired } = await orderedChildren({
         cursorEdgeId: input.cursor ?? input.cursor_edge_id,
         db: ctx.db,

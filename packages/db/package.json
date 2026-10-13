@@ -23,7 +23,7 @@
   },
   "dependencies": {
     "@t3-oss/env-nextjs": "~0.13.11",
-    "drizzle-orm": "~0.45.3",
+    "drizzle-orm": "~0.45.4",
     "drizzle-zod": "~0.8.3",
     "postgres": "~3.4.9",
     "zod": "~4.6.5"
@@ -33,7 +33,7 @@
     "dotenv-cli": "~11.0.0",
     "drizzle-kit": "~0.31.11",
     "pg": "^8.23.1",
-    "stripe": "~22.6.2",
+    "stripe": "~23.0.0",
     "typescript": "~7.0.2"
   }
 }

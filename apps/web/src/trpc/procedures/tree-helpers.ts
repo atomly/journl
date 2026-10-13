@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { and, eq, inArray, isNull, ne } from "@acme/db";
 import { Page, TreeEdge, TreeNode, user } from "@acme/db/schema";
 import { TRPCError } from "@trpc/server";
@@ -262,7 +263,25 @@ async function writeEdgePlacement({
   return insertedEdge;
 }
 
-export async function insertEdgeAtPosition({
+export async function insertEdgeAtPosition(
+  input: Parameters<typeof insertPreparedEdge>[0],
+) {
+  await lockTreeOwner(input.db, input.userId);
+  await assertDestinationParent({
+    db: input.db,
+    parentNodeId: input.parentNodeId,
+    userId: input.userId,
+  });
+  await repairSiblingOrder(
+    input.db,
+    input.userId,
+    input.parentNodeId,
+    input.edgeId,
+  );
+  return insertPreparedEdge(input);
+}
+
+async function insertPreparedEdge({
   anchorEdgeId,
   db,
   edgeId,
@@ -279,13 +298,6 @@ export async function insertEdgeAtPosition({
   position?: "after" | "before";
   userId: string;
 }) {
-  await lockTreeOwner(db, userId);
-  await assertDestinationParent({
-    db,
-    parentNodeId,
-    userId,
-  });
-  await repairSiblingOrder(db, userId, parentNodeId, edgeId);
   let placingEdgeId = edgeId;
   if (!placingEdgeId) {
     const [insertedEdge] = await db
@@ -473,6 +485,16 @@ export async function detachEdge({
 
   await repairSiblingOrder(db, userId, edge.parent_node_id);
   const currentEdge = (await getEdgeById({ db, edgeId, userId })) ?? edge;
+
+  return detachPreparedEdge(db, currentEdge, userId);
+}
+
+async function detachPreparedEdge(
+  db: Db,
+  currentEdge: OrderedEdge,
+  userId: string,
+) {
+  const edgeId = currentEdge.id;
 
   await db
     .update(TreeEdge)
@@ -686,13 +708,17 @@ export async function moveNode({
     }
   }
 
-  await detachEdge({
+  await assertDestinationParent({
     db,
-    edgeId: existingEdge.id,
+    parentNodeId: destination.parent_node_id,
     userId,
   });
+  if (destination.parent_node_id !== existingEdge.parent_node_id) {
+    await repairSiblingOrder(db, userId, destination.parent_node_id);
+  }
+  await detachPreparedEdge(db, existingEdge, userId);
 
-  return await insertEdgeAtPosition({
+  return await insertPreparedEdge({
     anchorEdgeId: destination.anchor_edge_id,
     db,
     edgeId: existingEdge.id,
@@ -735,24 +761,34 @@ export async function orderedChildren({
     )
     .orderBy(TreeEdge.created_at, TreeEdge.id);
 
-  if (edges.length === 0) {
-    return {
-      edges: [] as OrderedEdge[],
-      nextCursor: undefined as string | undefined,
-    };
-  }
-
   const ordered = orderSiblingEdges(edges);
+  return paginateOrderedEdges(ordered, cursorEdgeId, limit);
+}
 
-  const startIndex = cursorEdgeId
-    ? Math.max(0, ordered.findIndex((edge) => edge.id === cursorEdgeId) + 1)
-    : 0;
+/** Cursor revision detects changes between requests, including moves in another tab. */
+export function paginateOrderedEdges<T extends { id: string }>(
+  ordered: T[],
+  cursor: string | undefined,
+  limit: number,
+) {
+  const revision = createHash("sha256")
+    .update(ordered.map((edge) => edge.id).join(","))
+    .digest("hex");
+  const [edgeId, cursorRevision] = cursor?.split("|") ?? [];
+  const cursorIndex = edgeId
+    ? ordered.findIndex((edge) => edge.id === edgeId)
+    : -1;
+  const resetRequired =
+    !!cursor &&
+    (cursorIndex < 0 || (!!cursorRevision && cursorRevision !== revision));
+  const startIndex = cursor && !resetRequired ? cursorIndex + 1 : 0;
   const paginated = ordered.slice(startIndex, startIndex + limit + 1);
   const hasNextPage = paginated.length > limit;
   const items = hasNextPage ? paginated.slice(0, limit) : paginated;
 
   return {
     edges: items,
-    nextCursor: hasNextPage ? items.at(-1)?.id : undefined,
+    nextCursor: hasNextPage ? `${items.at(-1)?.id}|${revision}` : undefined,
+    resetRequired,
   };
 }

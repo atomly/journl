@@ -10,6 +10,7 @@ import {
   moveNode,
   orderedChildren,
 } from "~/trpc/procedures/tree-helpers";
+import { queueFolderDeletionCleanup } from "~/workflows/folder-deletion-queue";
 
 // biome-ignore lint/style/noProcessEnv: opt-in disposable PostgreSQL integration fixture.
 const url = process.env.TREE_TEST_POSTGRES_URL;
@@ -19,7 +20,12 @@ const client = postgres(url ?? "postgres://localhost/unused", {
   connection: { search_path: namespace },
   max: 8,
 });
-const db = drizzle(client, { casing: "snake_case", schema });
+const queries: string[] = [];
+const db = drizzle(client, {
+  casing: "snake_case",
+  logger: { logQuery: (query) => queries.push(query) },
+  schema,
+});
 const owner = "tree-order-fixture";
 const ids = [randomUUID(), randomUUID(), randomUUID(), randomUUID()];
 const folderId = randomUUID();
@@ -34,6 +40,8 @@ beforeAll(async () => {
     CREATE TABLE page (id uuid PRIMARY KEY, document_id uuid NOT NULL REFERENCES document ON DELETE CASCADE,
       user_id text NOT NULL REFERENCES "user", title text NOT NULL, created_at timestamptz DEFAULT now(), updated_at timestamptz DEFAULT now());
     CREATE TABLE folder (id uuid PRIMARY KEY);
+    CREATE TABLE folder_deletion_outbox (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), user_id text NOT NULL REFERENCES "user" ON DELETE CASCADE,
+      payload jsonb NOT NULL, requested_at timestamptz NOT NULL DEFAULT now(), dispatched_at timestamptz);
     CREATE TABLE tree_node (id uuid PRIMARY KEY, user_id text NOT NULL REFERENCES "user", node_type text NOT NULL,
       page_id uuid REFERENCES page ON DELETE CASCADE, folder_id uuid REFERENCES folder ON DELETE CASCADE,
       created_at timestamptz DEFAULT now(), updated_at timestamptz DEFAULT now());
@@ -50,7 +58,7 @@ beforeAll(async () => {
 beforeEach(async () => {
   if (!url) return;
   await client.unsafe(
-    'TRUNCATE tree_edge, tree_node, page, document, folder, "user" CASCADE',
+    'TRUNCATE tree_edge, tree_node, page, document, folder, folder_deletion_outbox, "user" CASCADE',
   );
   await client`INSERT INTO "user" VALUES (${owner})`;
   await client`INSERT INTO folder VALUES (${folderId})`;
@@ -90,6 +98,107 @@ async function read(parentNodeId: string | null = null) {
   }
   return edges;
 }
+
+integration(
+  "a healthy move locks once and repairs each affected container once",
+  async () => {
+    for (const parentNodeId of [null, folderId]) {
+      queries.length = 0;
+      await db.transaction((tx) =>
+        moveNode({
+          db: tx,
+          destination: { parent_node_id: parentNodeId, position: "after" },
+          nodeId: ids[0] ?? "",
+          userId: owner,
+        }),
+      );
+      expect(
+        queries.filter((query) => query.includes("for no key update")),
+      ).toHaveLength(1);
+      expect(
+        queries.filter((query) =>
+          query.includes('order by "tree_edge"."created_at"'),
+        ),
+      ).toHaveLength(parentNodeId === null ? 1 : 2);
+    }
+  },
+);
+
+integration(
+  "deletion and its durable cleanup request commit or roll back together",
+  async () => {
+    const documentId = ids[0] ?? "";
+    await expect(
+      db.transaction(async (tx) => {
+        await detachDocumentPageEdges(tx, documentId, owner);
+        await tx
+          .delete(schema.TreeEdge)
+          .where(eq(schema.TreeEdge.node_id, documentId));
+        await queueFolderDeletionCleanup(
+          tx,
+          {
+            documentIds: [documentId],
+            folderIds: [],
+            subtreeNodeIds: [documentId],
+          },
+          owner,
+        );
+        throw new Error("Injected transaction failure");
+      }),
+    ).rejects.toThrow("Injected transaction failure");
+    expect((await read()).map((edge) => edge.node_id)).toEqual(ids);
+    expect(await db.select().from(schema.FolderDeletionOutbox)).toEqual([]);
+    await db.transaction(async (tx) => {
+      await detachDocumentPageEdges(tx, documentId, owner);
+      await tx
+        .delete(schema.TreeEdge)
+        .where(eq(schema.TreeEdge.node_id, documentId));
+      await queueFolderDeletionCleanup(
+        tx,
+        {
+          documentIds: [documentId],
+          folderIds: [],
+          subtreeNodeIds: [documentId],
+        },
+        owner,
+      );
+    });
+    expect((await read()).map((edge) => edge.node_id)).toEqual(ids.slice(1));
+    const jobs = await db.select().from(schema.FolderDeletionOutbox);
+    expect(jobs).toHaveLength(1);
+    expect(jobs[0]?.payload.documentIds).toEqual([documentId]);
+    expect(jobs[0]?.dispatched_at).toBeNull();
+  },
+);
+
+integration(
+  "a concurrent reorder invalidates the next page cursor",
+  async () => {
+    const first = await orderedChildren({
+      db,
+      limit: 2,
+      parentNodeId: null,
+      userId: owner,
+    });
+    await db.transaction((tx) =>
+      moveNode({
+        db: tx,
+        destination: { parent_node_id: null, position: "after" },
+        nodeId: ids[1] ?? "",
+        userId: owner,
+      }),
+    );
+    const second = await orderedChildren({
+      cursorEdgeId: first.nextCursor,
+      db,
+      limit: 2,
+      parentNodeId: null,
+      userId: owner,
+    });
+    expect(second.resetRequired).toBe(true);
+    expect(second.edges.map((edge) => edge.node_id)).toEqual([ids[0], ids[2]]);
+  },
+);
 
 integration(
   "paginating a fresh read after a bottom move yields every node exactly once",

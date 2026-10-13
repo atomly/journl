@@ -1,5 +1,11 @@
 import { and, eq, inArray } from "@acme/db";
-import { Document, DocumentReference, Folder, TreeNode } from "@acme/db/schema";
+import {
+  Document,
+  DocumentReference,
+  Folder,
+  FolderDeletionOutbox,
+  TreeNode,
+} from "@acme/db/schema";
 import { start } from "workflow/api";
 import { z } from "zod/v4";
 import { dispatchExploreRefresh } from "~/explore/dispatch";
@@ -10,6 +16,7 @@ import { createTransaction } from "./utils/transaction";
 const zFolderContentDeletionInput = z.object({
   documentIds: z.array(z.uuid()),
   folderIds: z.array(z.uuid()),
+  jobId: z.uuid().optional(),
   subtreeNodeIds: z.array(z.uuid()),
   userId: z.string().min(1),
 });
@@ -52,12 +59,27 @@ export async function runFolderContentDeletion(
   });
 
   await dispatchRefresh(payload.userId);
+  if (payload.jobId) await completeCleanup(payload.jobId, payload.userId);
   return {
     deletedDocuments,
     deletedFolders,
     deletedTreeNodes,
     success: true,
   };
+}
+
+async function completeCleanup(jobId: string, userId: string) {
+  "use step";
+  await createTransaction(async (tx) => {
+    await tx
+      .delete(FolderDeletionOutbox)
+      .where(
+        and(
+          eq(FolderDeletionOutbox.id, jobId),
+          eq(FolderDeletionOutbox.user_id, userId),
+        ),
+      );
+  });
 }
 
 async function validateInput(

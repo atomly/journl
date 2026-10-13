@@ -40,6 +40,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { toast } from "sonner";
 import { Button } from "~/components/ui/button";
 import { Collapsible, CollapsibleContent } from "~/components/ui/collapsible";
 import {
@@ -59,6 +60,7 @@ import {
   TREE_REORDER_BEFORE_BAND_CLASSNAME,
   TREE_REORDER_BEFORE_LINE_CLASSNAME,
   TreeDragOverlay,
+  TreeEndDropTarget,
   TreeMouseSensor,
   TreeTouchSensor,
   treeCollisionDetection,
@@ -183,7 +185,7 @@ type FolderTreeDragData = {
 type DropTarget =
   | {
       parentNodeId: string | null;
-      type: "inside" | "parent";
+      type: "inside" | "parent" | "end";
     }
   | {
       anchorEdgeId: string;
@@ -253,7 +255,7 @@ function parseDropTarget(id: unknown): DropTarget | null {
     };
   }
 
-  if (parts[1] === "parent") {
+  if (parts[1] === "parent" || parts[1] === "end") {
     const parentKey = parts[2];
     if (!parentKey) {
       return null;
@@ -261,7 +263,7 @@ function parseDropTarget(id: unknown): DropTarget | null {
 
     return {
       parentNodeId: decodeParentKey(parentKey),
-      type: "parent",
+      type: parts[1],
     };
   }
 
@@ -1292,6 +1294,14 @@ function FolderTreeRows({
           </div>
         </div>
       ) : null}
+      {treeData.items.length > 0 ? (
+        <div className={itemIndentClassName}>
+          <TreeEndDropTarget
+            parentNodeId={parentNodeId}
+            active={isDnDEnabled && !!activeDragId}
+          />
+        </div>
+      ) : null}
     </>
   );
 }
@@ -1363,9 +1373,10 @@ export function FolderNestedPagesList({
     );
   };
 
-  const { mutate: moveItem } = useMutation(
+  const { mutate: moveItem, isPending: isMovingItem } = useMutation(
     trpc.tree.moveItem.mutationOptions({
       onError: () => {
+        toast.error("Couldn't save the item order. Please try again.");
         const context = moveMutationContextRef.current;
         if (!context) {
           return;
@@ -1397,6 +1408,7 @@ export function FolderNestedPagesList({
           treeSnapshots,
         };
       },
+      onSettled: () => queryClient.invalidateQueries(treeQueryFilter),
       onSuccess: (result) => {
         updateNode({
           nodeId: result.node_id,
@@ -1470,7 +1482,7 @@ export function FolderNestedPagesList({
     dragAutoExpandedFoldersRef.current.clear();
   }, []);
 
-  const isDnDEnabled = true;
+  const isDnDEnabled = !isMovingItem;
   const mouseSensor = useSensor(TreeMouseSensor, {
     activationConstraint: { distance: 5 },
   });
@@ -1527,7 +1539,7 @@ export function FolderNestedPagesList({
         setFolderOpen(folderNodeId, true);
       }, 700);
     },
-    [clearHoverExpandTimeout, openFolders, setFolderOpen],
+    [clearHoverExpandTimeout, openFolders, setFolderOpen, isDnDEnabled],
   );
 
   const handleDragOver = useCallback(
@@ -1544,7 +1556,7 @@ export function FolderNestedPagesList({
 
       handleFolderInsideHover(dropTarget.parentNodeId);
     },
-    [clearHoverExpandTimeout, handleFolderInsideHover],
+    [clearHoverExpandTimeout, handleFolderInsideHover, isDnDEnabled],
   );
 
   const handleDragEnd = useCallback(
@@ -1592,6 +1604,9 @@ export function FolderNestedPagesList({
             }
           : {
               parent_node_id: dropTarget.parentNodeId,
+              ...(dropTarget.type === "end"
+                ? { position: "after" as const }
+                : {}),
             };
 
       if (
@@ -1612,6 +1627,7 @@ export function FolderNestedPagesList({
       moveItem,
       resetDragFolderState,
       setFolderOpen,
+      isDnDEnabled,
     ],
   );
 

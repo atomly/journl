@@ -68,6 +68,11 @@ If your local Postgres instance does not support TLS, set `POSTGRES_SSL_MODE=dis
 For database workflows, use root scripts (`pnpm db:push`, `pnpm db:studio`) or
 the dedicated utility app in [`apps/drizzle-studio`](./apps/drizzle-studio).
 
+Tree-order database regressions run with
+`TREE_TEST_POSTGRES_URL=... pnpm --filter @acme/web exec vitest run tests/tree-order-database.test.ts`.
+They create and remove an isolated PostgreSQL schema; without this variable,
+the database cases are skipped.
+
 Content references cover both [rich linked-content previews (#291)](https://github.com/atomly/journl/issues/291)
 and [durable page, journal, and block references (#292)](https://github.com/atomly/journl/issues/292).
 References retain their target IDs across title changes; badges, cards, links,

@@ -6,6 +6,7 @@ import {
   pointerWithin,
   rectIntersection,
   TouchSensor,
+  useDroppable,
 } from "@dnd-kit/core";
 
 function canStartTreeDrag(target: EventTarget | null) {
@@ -106,6 +107,25 @@ export function createTreeCollisionDetection({
 }
 
 export const treeCollisionDetection = createTreeCollisionDetection();
+
+export function TreeEndDropTarget({
+  parentNodeId,
+  active,
+}: {
+  parentNodeId: string | null;
+  active: boolean;
+}) {
+  const { isOver, setNodeRef } = useDroppable({
+    id: `drop:end:${parentNodeId ?? "root"}`,
+  });
+  return (
+    <div
+      ref={setNodeRef}
+      data-slot="tree-end-drop-target"
+      className={`min-h-7 flex-1 rounded-md ${active ? "pointer-events-auto" : "pointer-events-none"} ${active && isOver ? "border border-primary border-dashed bg-primary/10" : ""}`}
+    />
+  );
+}
 
 export function TreeDragOverlay({ label }: { label: string | null }) {
   return (

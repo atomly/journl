@@ -38,6 +38,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { toast } from "sonner";
 import {
   Collapsible,
   CollapsibleContent,
@@ -58,6 +59,7 @@ import {
   TREE_REORDER_BEFORE_BAND_CLASSNAME,
   TREE_REORDER_BEFORE_LINE_CLASSNAME,
   TreeDragOverlay,
+  TreeEndDropTarget,
   TreeMouseSensor,
   TreeTouchSensor,
   treeCollisionDetection,
@@ -147,7 +149,7 @@ type SidebarTreeData = {
 type DropTarget =
   | {
       parentNodeId: string | null;
-      type: "inside" | "parent";
+      type: "inside" | "parent" | "end";
     }
   | {
       anchorEdgeId: string;
@@ -242,7 +244,7 @@ function parseDropTarget(id: unknown): DropTarget | null {
     };
   }
 
-  if (parts[1] === "parent") {
+  if (parts[1] === "parent" || parts[1] === "end") {
     const parentKey = parts[2];
     if (!parentKey) {
       return null;
@@ -250,7 +252,7 @@ function parseDropTarget(id: unknown): DropTarget | null {
 
     return {
       parentNodeId: decodeParentKey(parentKey),
-      type: "parent",
+      type: parts[1],
     };
   }
 
@@ -866,6 +868,16 @@ function SidebarTreeRows({
           <div ref={treeData.loadMoreRef} className="h-px w-full" />
         </SidebarMenuSubItem>
       ) : null}
+      {treeData.items.length > 0 ? (
+        <SidebarMenuSubItem
+          className={cn(DEFAULT_TREE_ITEM_CLASSNAME, "flex min-h-7 flex-1")}
+        >
+          <TreeEndDropTarget
+            parentNodeId={parentNodeId}
+            active={isDnDEnabled && !!activeDragId}
+          />
+        </SidebarMenuSubItem>
+      ) : null}
     </>
   );
 }
@@ -983,9 +995,10 @@ export const AppSidebarPages = ({
     });
   }, [ancestorPath, pathname]);
 
-  const { mutate: moveItem } = useMutation(
+  const { mutate: moveItem, isPending: isMovingItem } = useMutation(
     trpc.tree.moveItem.mutationOptions({
       onError: () => {
+        toast.error("Couldn't save the item order. Please try again.");
         const context = moveMutationContextRef.current;
         if (!context) {
           return;
@@ -1017,6 +1030,7 @@ export const AppSidebarPages = ({
           treeSnapshots,
         };
       },
+      onSettled: () => queryClient.invalidateQueries(treeQueryFilter),
       onSuccess: (result) => {
         updateNode({
           nodeId: result.node_id,
@@ -1102,7 +1116,7 @@ export const AppSidebarPages = ({
     }
   };
 
-  const isDnDEnabled = true;
+  const isDnDEnabled = !isMovingItem;
   const mouseSensor = useSensor(TreeMouseSensor, {
     activationConstraint: { distance: 5 },
   });
@@ -1159,7 +1173,7 @@ export const AppSidebarPages = ({
         setFolderOpen(folderNodeId, true);
       }, 700);
     },
-    [clearHoverExpandTimeout, openFolders, setFolderOpen],
+    [clearHoverExpandTimeout, openFolders, setFolderOpen, isDnDEnabled],
   );
 
   const handleDragOver = useCallback(
@@ -1176,7 +1190,7 @@ export const AppSidebarPages = ({
 
       handleFolderInsideHover(dropTarget.parentNodeId);
     },
-    [clearHoverExpandTimeout, handleFolderInsideHover],
+    [clearHoverExpandTimeout, handleFolderInsideHover, isDnDEnabled],
   );
 
   const handleDragEnd = useCallback(
@@ -1224,6 +1238,9 @@ export const AppSidebarPages = ({
             }
           : {
               parent_node_id: dropTarget.parentNodeId,
+              ...(dropTarget.type === "end"
+                ? { position: "after" as const }
+                : {}),
             };
 
       if (
@@ -1244,6 +1261,7 @@ export const AppSidebarPages = ({
       moveItem,
       resetDragFolderState,
       setFolderOpen,
+      isDnDEnabled,
     ],
   );
 

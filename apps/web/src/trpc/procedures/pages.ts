@@ -21,13 +21,14 @@ import {
   zBlockTransactions,
 } from "../shared/block-transaction";
 import { protectedProcedure, usageGuard } from "../trpc";
-import { insertEdgeAtPosition } from "./tree-helpers";
+import { insertEdgeAtPosition, lockTreeOwner } from "./tree-helpers";
 
 export const pagesRouter = {
   create: protectedProcedure
     .input(zInsertPage.omit({ document_id: true, user_id: true }))
     .mutation(async ({ ctx, input }) => {
       const result = await ctx.db.transaction(async (tx) => {
+        await lockTreeOwner(tx, ctx.session.user.id);
         await lockExploreOwner(tx, ctx.session.user.id);
         const [document] = await tx
           .insert(Document)

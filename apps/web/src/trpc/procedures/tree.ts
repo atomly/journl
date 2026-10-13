@@ -17,6 +17,7 @@ import { protectedProcedure, type TRPCContext } from "../trpc";
 import {
   detachEdge,
   insertEdgeAtPosition,
+  lockTreeOwner,
   moveNode,
   orderedChildren,
   type TreeDestination,
@@ -79,6 +80,8 @@ export const treeRouter = {
     .mutation(async ({ ctx, input }) => {
       return await ctx.db.transaction(async (tx) => {
         const userId = ctx.session.user.id;
+
+        await lockTreeOwner(tx, userId);
 
         const [folder] = await tx
           .insert(Folder)
@@ -144,6 +147,8 @@ export const treeRouter = {
     .mutation(async ({ ctx, input }) => {
       const result = await ctx.db.transaction(async (tx) => {
         const userId = ctx.session.user.id;
+
+        await lockTreeOwner(tx, userId);
 
         await markExploreDirty(tx, userId);
         const [document] = await tx
@@ -227,6 +232,7 @@ export const treeRouter = {
       // Phase 1: Synchronous — detach edges so subtree is invisible
       const asyncPayload = await ctx.db.transaction(async (tx) => {
         const userId = ctx.session.user.id;
+        await lockTreeOwner(tx, userId);
         const folderNode = await getFolderNodeByFolderId({
           db: tx,
           folderId: input.folder_id,

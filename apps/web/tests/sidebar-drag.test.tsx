@@ -148,7 +148,13 @@ beforeEach(() => {
           ? 36
           : 72;
       let height = 36;
-      if (this.classList.contains("h-1/2")) {
+      if (
+        this.getAttribute("data-slot") === "tree-end-drop-target" ||
+        row?.querySelector("[data-slot=tree-end-drop-target]")
+      ) {
+        top = 108;
+        height = 28;
+      } else if (this.classList.contains("h-1/2")) {
         height = 18;
         if (this.classList.contains("bottom-0")) top += 18;
       } else if (this.classList.contains("h-2")) {
@@ -318,8 +324,8 @@ test("dropping outside the tree does not move a page", async () => {
   await render();
   await mouse(pageLink("page"), "mousedown", 18);
   await mouse(document, "mousemove", 24);
-  await mouse(document, "mousemove", 120);
-  await mouse(document, "mouseup", 120);
+  await mouse(document, "mousemove", 180);
+  await mouse(document, "mouseup", 180);
   expect(fixture.move).not.toHaveBeenCalled();
 });
 
@@ -356,6 +362,18 @@ test("a quick full swipe still opens deletion confirmation without moving a page
     "Confirm delete",
   );
   expect(fixture.move).not.toHaveBeenCalled();
+});
+
+test("dropping in the space below the list requests true-tail placement", async () => {
+  await render();
+  await mouse(pageLink("page"), "mousedown", 18);
+  await mouse(document, "mousemove", 24);
+  await mouse(document, "mousemove", 120);
+  await mouse(document, "mouseup", 120);
+  expect(fixture.move).toHaveBeenCalledExactlyOnceWith({
+    destination: { parent_node_id: null, position: "after" },
+    node_id: "page-node",
+  });
 });
 
 test("holding before dragging disables swipe deletion and moves the page", async () => {

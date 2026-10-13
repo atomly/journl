@@ -29,7 +29,7 @@ export type QuerySnapshot = {
 
 export function getEmptyTreeChildrenData(): TreeChildrenInfiniteData {
   return {
-    pageParams: [],
+    pageParams: [undefined],
     pages: [
       {
         items: [],
@@ -108,7 +108,20 @@ function insertItemInData({
 }) {
   const baseData = data ?? getEmptyTreeChildrenData();
 
-  if (!anchorEdgeId || !position) {
+  if (!anchorEdgeId && position === "after") {
+    // The true tail is not loaded yet; refetch after saving rather than placing
+    // the moved item ahead of unseen siblings or skipping them with its cursor.
+    if (baseData.pages.at(-1)?.nextCursor) return baseData;
+    const pages = [...baseData.pages];
+    const lastPage = pages.at(-1) ?? { items: [], nextCursor: undefined };
+    pages[Math.max(0, pages.length - 1)] = {
+      ...lastPage,
+      items: [...lastPage.items, item],
+    };
+    return normalizeTreePagination({ ...baseData, pages });
+  }
+
+  if (!anchorEdgeId) {
     const [firstPage, ...restPages] = baseData.pages;
 
     if (!firstPage) {
@@ -123,7 +136,7 @@ function insertItemInData({
       };
     }
 
-    return {
+    return normalizeTreePagination({
       ...baseData,
       pages: [
         {
@@ -132,7 +145,7 @@ function insertItemInData({
         },
         ...restPages,
       ],
-    };
+    });
   }
 
   let inserted = false;
@@ -149,7 +162,7 @@ function insertItemInData({
       return page;
     }
 
-    const insertAt = position === "before" ? anchorIndex : anchorIndex + 1;
+    const insertAt = position !== "after" ? anchorIndex : anchorIndex + 1;
     const nextItems = [...page.items];
     nextItems.splice(insertAt, 0, item);
     inserted = true;
@@ -161,16 +174,36 @@ function insertItemInData({
   });
 
   if (inserted) {
-    return {
+    return normalizeTreePagination({
       ...baseData,
       pages,
-    };
+    });
   }
 
-  return insertItemInData({
-    data: baseData,
-    item,
-  });
+  return baseData;
+}
+
+function normalizeTreePagination(
+  data: TreeChildrenInfiniteData,
+): TreeChildrenInfiniteData {
+  const nonemptyPages = data.pages.filter((page) => page.items.length > 0);
+  const sourcePages =
+    nonemptyPages.length > 0 ? nonemptyPages : data.pages.slice(0, 1);
+  const hasMore = data.pages.at(-1)?.nextCursor !== undefined;
+  const pages = sourcePages.map((page, index) => ({
+    ...page,
+    nextCursor:
+      index < sourcePages.length - 1 || hasMore
+        ? page.items.at(-1)?.edge_id
+        : undefined,
+  }));
+  return {
+    ...data,
+    pageParams: pages.map((_, index) =>
+      index === 0 ? data.pageParams[0] : pages[index - 1]?.nextCursor,
+    ),
+    pages,
+  };
 }
 
 function removeNodeFromData({
@@ -202,10 +235,10 @@ function removeNodeFromData({
     return data;
   }
 
-  return {
+  return normalizeTreePagination({
     ...data,
     pages,
-  };
+  });
 }
 
 function updateNodeInData({

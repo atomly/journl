@@ -37,7 +37,7 @@ jobs:
           echo "::error::Merge the lowest unmerged PR first. Full CI will run here once this PR targets the stack base."
           exit 1
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Setup
         uses: ./tooling/github/setup
@@ -51,7 +51,7 @@ jobs:
       github.event.pull_request.stack.base.ref == github.event.pull_request.base.ref
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Setup
         uses: ./tooling/github/setup
@@ -65,7 +65,7 @@ jobs:
       github.event.pull_request.stack.base.ref == github.event.pull_request.base.ref
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Setup
         uses: ./tooling/github/setup

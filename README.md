@@ -68,12 +68,6 @@ If your local Postgres instance does not support TLS, set `POSTGRES_SSL_MODE=dis
 For database workflows, use root scripts (`pnpm db:push`, `pnpm db:studio`) or
 the dedicated utility app in [`apps/drizzle-studio`](./apps/drizzle-studio).
 
-Before deploying the folder cleanup outbox changes, run
-`pnpm --filter @acme/web folder-cleanup:setup` against the deployment database
-(or apply `packages/db/sql/20261013_folder_deletion_outbox.sql`). This additive
-migration stores cleanup requests in the same transaction as folder deletion;
-sidebar reads and the existing recovery cron retry interrupted dispatches.
-
 Tree-order database regressions run with
 `TREE_TEST_POSTGRES_URL=... pnpm --filter @acme/web exec vitest run tests/tree-order-database.test.ts`.
 They create and remove an isolated PostgreSQL schema; without this variable,

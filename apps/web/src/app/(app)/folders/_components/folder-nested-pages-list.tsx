@@ -690,7 +690,7 @@ function DraggablePageRow({
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem
-                  onSelect={() => {
+                  onClick={() => {
                     setDraftTitle(page.title);
                     setIsEditing(true);
                   }}
@@ -700,7 +700,7 @@ function DraggablePageRow({
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   variant="destructive"
-                  onSelect={() => {
+                  onClick={() => {
                     setIsDeleteDialogOpen(true);
                   }}
                 >
@@ -1069,7 +1069,7 @@ function DraggableFolderRow({
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
                     <DropdownMenuItem
-                      onSelect={() => {
+                      onClick={() => {
                         setDraftName(folder.name);
                         setIsEditing(true);
                       }}
@@ -1079,7 +1079,7 @@ function DraggableFolderRow({
                     </DropdownMenuItem>
                     <DropdownMenuItem
                       variant="destructive"
-                      onSelect={() => {
+                      onClick={() => {
                         setIsDeleteDialogOpen(true);
                       }}
                     >

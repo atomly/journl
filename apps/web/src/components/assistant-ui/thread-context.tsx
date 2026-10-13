@@ -33,6 +33,7 @@ export function ComposerReasoning({ children }: ComposerReasoningProps) {
 
   return (
     <Select
+      items={REASONING_MODE_LABELS}
       disabled={Boolean(exceeded)}
       value={getReasoning()}
       onValueChange={(value) => {

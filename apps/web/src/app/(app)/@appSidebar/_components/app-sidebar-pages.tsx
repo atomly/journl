@@ -7,8 +7,6 @@ import {
   type DragEndEvent,
   type DragOverEvent,
   type DragStartEvent,
-  MouseSensor,
-  TouchSensor,
   useDndContext,
   useDraggable,
   useDroppable,
@@ -60,6 +58,8 @@ import {
   TREE_REORDER_BEFORE_BAND_CLASSNAME,
   TREE_REORDER_BEFORE_LINE_CLASSNAME,
   TreeDragOverlay,
+  TreeMouseSensor,
+  TreeTouchSensor,
   treeCollisionDetection,
 } from "~/lib/tree-dnd";
 import {
@@ -129,6 +129,7 @@ type SidebarTreeItemRef = {
 };
 
 type SidebarTreeDragData = {
+  edgeId: string;
   item: SidebarTreeItemRef;
   label: string;
   parentNodeId: string | null;
@@ -438,6 +439,7 @@ function DraggablePageRow({
   const draggableId = getDragId(itemRef);
   const { attributes, listeners, setNodeRef } = useDraggable({
     data: {
+      edgeId: page.edge_id,
       item: itemRef,
       label: page.title || "New page",
       parentNodeId,
@@ -460,6 +462,8 @@ function DraggablePageRow({
       }
       dropOverlay={
         <SidebarTreeInsertDropBands
+          beforeBandClassName="top-0 h-1/2"
+          afterBandClassName="bottom-0 h-1/2"
           activeDragId={activeDragId}
           afterSiblingDropId={
             nextEdgeId
@@ -595,11 +599,12 @@ function DraggableFolderRow({
   const isOpen = openFolders[folder.node_id] ?? false;
   const { attributes, listeners, setNodeRef } = useDraggable({
     data: {
+      edgeId: folder.edge_id,
       item: itemRef,
       label: folder.name,
       parentNodeId,
     } satisfies SidebarTreeDragData,
-    disabled: !isDnDEnabled,
+    disabled: !isDnDEnabled || isPending,
     id: draggableId,
   });
   const insideDropId = getInsideDropId(folder.node_id);
@@ -680,7 +685,7 @@ function DraggableFolderRow({
                 }
               : undefined)}
             className={cn(
-              "min-h-7 rounded-md",
+              "min-h-7 select-none rounded-md",
               "group/folder-navigation relative z-10 flex min-w-0 items-center gap-0.5",
               isOverInside &&
                 isDragActive &&
@@ -694,6 +699,7 @@ function DraggableFolderRow({
             >
               <button
                 type="button"
+                data-tree-drag-handle
                 aria-expanded={isOpen}
                 aria-label={isOpen ? "Collapse folder" : "Expand folder"}
                 onClick={handleFolderToggle}
@@ -1097,10 +1103,10 @@ export const AppSidebarPages = ({
   };
 
   const isDnDEnabled = true;
-  const mouseSensor = useSensor(MouseSensor, {
+  const mouseSensor = useSensor(TreeMouseSensor, {
     activationConstraint: { distance: 5 },
   });
-  const touchSensor = useSensor(TouchSensor, {
+  const touchSensor = useSensor(TreeTouchSensor, {
     activationConstraint: { delay: 300, tolerance: 8 },
   });
   const sensors = useSensors(mouseSensor, touchSensor);

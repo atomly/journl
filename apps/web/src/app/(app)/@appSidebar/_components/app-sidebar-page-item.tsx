@@ -79,6 +79,7 @@ export function AppSidebarPageItem({
             onOpenChange={setIsDeleteDialogOpen}
           >
             <SwipeAction
+              disabled={isDragging}
               className="rounded-md md:hidden"
               onFullSwipe={() => {
                 setIsDeleteDialogOpen(true);
@@ -104,6 +105,8 @@ export function AppSidebarPageItem({
                   className="min-h-7 rounded-md group-data-[state=open]/swipe-content:rounded-r-none"
                 >
                   <Link
+                    draggable={false}
+                    data-tree-drag-handle
                     href={`/pages/${page?.id}`}
                     onClick={handlePageNavigationClick}
                     className="line-clamp-1 min-w-0 flex-1 truncate hover:underline"
@@ -120,10 +123,12 @@ export function AppSidebarPageItem({
             >
               <div
                 {...dragActivatorProps}
-                className="group/page-item hidden items-center md:flex"
+                className="group/page-item hidden select-none items-center md:flex"
               >
                 <div className="relative min-w-0 flex-1">
                   <Link
+                    draggable={false}
+                    data-tree-drag-handle
                     href={`/pages/${page?.id}`}
                     onClick={handlePageNavigationClick}
                     className="block w-full min-w-0 truncate hover:underline"

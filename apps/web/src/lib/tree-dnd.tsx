@@ -2,9 +2,40 @@ import {
   type Collision,
   type CollisionDetection,
   DragOverlay,
+  MouseSensor,
   pointerWithin,
   rectIntersection,
+  TouchSensor,
 } from "@dnd-kit/core";
+
+function canStartTreeDrag(target: EventTarget | null) {
+  if (!(target instanceof Element)) {
+    return false;
+  }
+
+  const control = target.closest(
+    "button, a, input, textarea, select, [contenteditable=true], [draggable=true]",
+  );
+  return !control || control.hasAttribute("data-tree-drag-handle");
+}
+
+export class TreeMouseSensor extends MouseSensor {
+  static activators = MouseSensor.activators.map((activator) => ({
+    ...activator,
+    handler: (...args: Parameters<typeof activator.handler>) =>
+      canStartTreeDrag(args[0].nativeEvent.target) &&
+      activator.handler(...args),
+  }));
+}
+
+export class TreeTouchSensor extends TouchSensor {
+  static activators = TouchSensor.activators.map((activator) => ({
+    ...activator,
+    handler: (...args: Parameters<typeof activator.handler>) =>
+      canStartTreeDrag(args[0].nativeEvent.target) &&
+      activator.handler(...args),
+  }));
+}
 
 export const TREE_REORDER_BEFORE_BAND_CLASSNAME = "top-0 h-2";
 export const TREE_REORDER_AFTER_BAND_CLASSNAME = "bottom-0 h-2";
@@ -56,12 +87,21 @@ export function createTreeCollisionDetection({
   detectByRect?: CollisionDetection;
 } = {}): CollisionDetection {
   return (args) => {
-    const pointerCollisions = prioritizeTreeCollisions(detectByPointer(args));
-    if (pointerCollisions.length > 0) {
-      return pointerCollisions;
-    }
+    const activeData = args.active.data.current;
+    const collisions = args.pointerCoordinates
+      ? detectByPointer(args)
+      : detectByRect(args);
 
-    return prioritizeTreeCollisions(detectByRect(args));
+    return prioritizeTreeCollisions(
+      collisions.filter(({ id }) => {
+        if (typeof id !== "string") return false;
+        const [, type, , edgeId] = id.split(":");
+        if (type === "before" || type === "after") {
+          return edgeId !== activeData?.edgeId;
+        }
+        return id !== `drop:inside:${activeData?.item?.nodeId}`;
+      }),
+    );
   };
 }
 

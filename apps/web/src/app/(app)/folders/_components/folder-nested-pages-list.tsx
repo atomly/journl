@@ -7,8 +7,6 @@ import {
   type DragEndEvent,
   type DragOverEvent,
   type DragStartEvent,
-  MouseSensor,
-  TouchSensor,
   useDndContext,
   useDraggable,
   useDroppable,
@@ -61,6 +59,8 @@ import {
   TREE_REORDER_BEFORE_BAND_CLASSNAME,
   TREE_REORDER_BEFORE_LINE_CLASSNAME,
   TreeDragOverlay,
+  TreeMouseSensor,
+  TreeTouchSensor,
   treeCollisionDetection,
 } from "~/lib/tree-dnd";
 import {
@@ -174,6 +174,7 @@ type FolderTreeItemRef = {
 };
 
 type FolderTreeDragData = {
+  edgeId: string;
   item: FolderTreeItemRef;
   label: string;
   parentNodeId: string | null;
@@ -473,6 +474,7 @@ function DraggablePageRow({
   );
   const { attributes, listeners, setNodeRef } = useDraggable({
     data: {
+      edgeId: page.edge_id,
       item: itemRef,
       label: page.title || "New page",
       parentNodeId,
@@ -564,6 +566,8 @@ function DraggablePageRow({
       <div className={itemIndentClassName}>
         <div ref={setNodeRef} className="relative py-1">
           <FolderTreeInsertDropBands
+            beforeBandClassName="top-0 h-1/2"
+            afterBandClassName="bottom-0 h-1/2"
             activeDragId={activeDragId}
             afterSiblingDropId={
               nextEdgeId
@@ -578,7 +582,7 @@ function DraggablePageRow({
           <div
             className={cn(
               TREE_ROW_CLASSNAME,
-              "relative z-10 hover:bg-muted/60",
+              "relative z-10 select-none hover:bg-muted/60",
               isActive && "bg-primary/5 ring-1 ring-primary/20",
               activeDragId === draggableId && "opacity-60",
             )}
@@ -652,6 +656,8 @@ function DraggablePageRow({
               </div>
             ) : (
               <Link
+                draggable={false}
+                data-tree-drag-handle
                 href={pageHref}
                 className="flex min-w-0 flex-1 items-center justify-between gap-2"
               >
@@ -760,11 +766,12 @@ function DraggableFolderRow({
   const isOpen = openFolders[folder.node_id] ?? false;
   const { attributes, listeners, setNodeRef } = useDraggable({
     data: {
+      edgeId: folder.edge_id,
       item: itemRef,
       label: folder.name,
       parentNodeId,
     } satisfies FolderTreeDragData,
-    disabled: !isDnDEnabled || isEditing,
+    disabled: !isDnDEnabled || isEditing || isPending,
     id: draggableId,
   });
   const insideDropId = getInsideDropId(folder.node_id);
@@ -998,6 +1005,7 @@ function DraggableFolderRow({
                 </span>
               ) : (
                 <button
+                  data-tree-drag-handle
                   type="button"
                   aria-expanded={isOpen}
                   aria-label={isOpen ? "Collapse folder" : "Expand folder"}
@@ -1463,10 +1471,10 @@ export function FolderNestedPagesList({
   }, []);
 
   const isDnDEnabled = true;
-  const mouseSensor = useSensor(MouseSensor, {
+  const mouseSensor = useSensor(TreeMouseSensor, {
     activationConstraint: { distance: 5 },
   });
-  const touchSensor = useSensor(TouchSensor, {
+  const touchSensor = useSensor(TreeTouchSensor, {
     activationConstraint: { delay: 300, tolerance: 8 },
   });
   const sensors = useSensors(mouseSensor, touchSensor);

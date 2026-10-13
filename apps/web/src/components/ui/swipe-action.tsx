@@ -93,12 +93,6 @@ function SwipeAction({
     [actionWidth, onOpenChange],
   );
 
-  React.useEffect(() => {
-    if (disabled) {
-      setOpen(false);
-    }
-  }, [disabled, setOpen]);
-
   const resetDragState = React.useCallback(() => {
     dragStateRef.current = {
       hasLockedDirection: false,
@@ -113,6 +107,17 @@ function SwipeAction({
     };
     setIsDragging(false);
   }, [actionWidth]);
+
+  React.useEffect(() => {
+    if (disabled) {
+      const dragState = dragStateRef.current;
+      if (dragState.hasPointerCapture) {
+        contentElementRef.current?.releasePointerCapture(dragState.pointerId);
+      }
+      setOpen(false);
+      resetDragState();
+    }
+  }, [disabled, resetDragState, setOpen]);
 
   const handlePointerDown = React.useCallback(
     (event: React.PointerEvent<HTMLDivElement>) => {

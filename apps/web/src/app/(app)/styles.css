@@ -1,5 +1,12 @@
 @import "../styles/blocknote.css";
 
+/* Let tree handles own long presses instead of Safari's link preview or selection. */
+[data-tree-drag-handle] {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
 /* App animations. */
 @keyframes animate-text-shimmer {
   0% {

@@ -1,8 +1,8 @@
+import type { ReactNode } from "react";
 import { ReferenceBadge } from "./reference-badge";
 import { ReferenceCardView } from "./reference-card";
+import type { ReferenceEmbedBlock } from "./reference-context";
 import { ReferenceEmbedView } from "./reference-embed";
-import { type ReactNode } from "react";
-import { type ReferenceEmbedBlock } from "./reference-context";
 import { safeReferenceHref as safeHref } from "./reference-href";
 
 export { referenceProps } from "./reference-config";
@@ -118,8 +118,10 @@ export function ReadOnlyBlocks({
               <table>
                 <tbody>
                   {table?.rows?.map((row, rowIndex) => (
+                    // biome-ignore lint/suspicious/noArrayIndexKey: read-only table snapshots have positional rows, not persistent row IDs.
                     <tr key={`row-${rowIndex}`}>
                       {row.cells?.map((cell, cellIndex) => (
+                        // biome-ignore lint/suspicious/noArrayIndexKey: persisted table cells are identified by their column position.
                         <td key={`cell-${cellIndex}`}>
                           {renderInline(
                             cell &&

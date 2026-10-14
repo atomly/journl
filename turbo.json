@@ -54,7 +54,7 @@
     },
     "test:integration": {
       "cache": false,
-      "env": ["TEST_DATABASE_URL"]
+      "passThroughEnv": ["DOCKER_*", "TESTCONTAINERS_*"]
     },
     "topo": {
       "dependsOn": ["^topo"]

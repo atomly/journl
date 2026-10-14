@@ -5,6 +5,7 @@ export default defineConfig({
   ...base,
   test: {
     exclude: ["**/node_modules/**", "**/.next/**"],
+    globalSetup: ["./tests/helpers/postgres-global-setup.ts"],
     include: ["tests/integration/**/*.test.ts"],
     maxWorkers: 2,
     testTimeout: 30000,

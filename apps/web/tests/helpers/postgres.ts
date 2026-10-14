@@ -4,19 +4,22 @@ import { generateDrizzleJson, generateMigration } from "drizzle-kit/api";
 import { isPgEnum } from "drizzle-orm/pg-core";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
-import { afterAll, beforeAll } from "vitest";
+import { afterAll, beforeAll, inject } from "vitest";
 
-/** One disposable database per suite; never falls back to the application URL. */
+declare module "vitest" {
+  export interface ProvidedContext {
+    postgresUrl: string;
+  }
+}
+
+/** One isolated database per suite on the automatically provisioned test server. */
 export function createPostgresFixture(tables: Record<string, unknown>) {
-  // biome-ignore lint/style/noProcessEnv: explicit integration-test connection only.
-  const url = process.env.TEST_DATABASE_URL;
+  const url = inject("postgresUrl");
   if (!url)
     throw new Error(
-      "Integration tests require TEST_DATABASE_URL pointing to a test database whose role can create databases.",
+      "PostgreSQL fixture requires the integration test configuration and its global setup.",
     );
   const connection = new URL(url);
-  if (!connection.pathname.endsWith("_test"))
-    throw new Error("TEST_DATABASE_URL must name a database ending in _test.");
   const name = `journl_integration_${randomUUID().replaceAll("-", "")}`;
   const admin = postgres(url, {
     max: 1,

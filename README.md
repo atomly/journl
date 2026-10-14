@@ -77,20 +77,27 @@ cleanup requests in the Drizzle-defined `folder_deletion_outbox` table within
 the deletion transaction. The existing Vercel Workflow handles cleanup; initial
 Library reads and the scheduled recovery workflow retry interrupted dispatches.
 
-Tests are colocated with their source modules as `.spec.ts` or `.spec.tsx`. Run
-unit and UI tests across packages with `pnpm test`. Database suites use
-`.integration.spec.ts` and run with `pnpm test:integration`. A running Docker-compatible container runtime is
-required. Vitest global setup uses Testcontainers to start PostgreSQL 17 on a
-random port, passes its connection to the shared fixture through Vitest's
-provided context, and stops the container after the run. No database URL or
-application environment file is needed locally or in CI.
+Tests are colocated with their source modules as `.spec.ts` or `.spec.tsx`;
+database suites use `.integration.spec.ts`.
+
+- `pnpm test`: run all unit, UI, and database integration tests.
+- `pnpm test:unit`: run unit and UI tests without Docker.
+- `pnpm test:integration`: run database integration tests only.
+
+The full suite and integration shortcut require a running Docker-compatible
+container runtime, such as Docker Desktop or Colima. They fail if it is unavailable
+rather than skipping database tests. Vitest global setup uses Testcontainers to
+start PostgreSQL 17 on a random port, passes its connection to the shared fixture
+through Vitest's provided context, and stops the container after the run. No
+database URL or application environment file is needed locally or in CI.
 
 Each suite uses `src/testing/postgres.ts` to create a unique disposable database,
 build its tables from the actual Drizzle definitions, and drop it afterward,
 including when setup fails. Select the tables and foreign-key dependencies needed
 by the suite; keep queries and transactions real, and mock external providers and
-queue dispatch. Default Vitest runs exclude integration suites. CI runs the same
-integration command without a separately configured database service.
+queue dispatch. The unit configuration excludes integration suites. CI runs both
+shortcuts in separate jobs, using the same commands as local development without
+a separately configured database service. Integration tasks are never cached.
 
 Content references cover both [rich linked-content previews (#291)](https://github.com/atomly/journl/issues/291)
 and [durable page, journal, and block references (#292)](https://github.com/atomly/journl/issues/292).

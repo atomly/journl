@@ -52,12 +52,12 @@
       "cache": false,
       "persistent": true
     },
-    "test": {
-      "dependsOn": ["^topo"]
-    },
     "test:integration": {
       "cache": false,
       "passThroughEnv": ["DOCKER_*", "TESTCONTAINERS_*"]
+    },
+    "test:unit": {
+      "dependsOn": ["^topo"]
     },
     "topo": {
       "dependsOn": ["^topo"]

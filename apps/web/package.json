@@ -20,7 +20,7 @@
     "explore:benchmark:db": "pnpm with-env jiti scripts/benchmark-explore-database.ts --run-disposable-fixture",
     "explore:test:browser": "pnpm with-env jiti scripts/test-explore-browser.ts",
     "test:integration": "vitest run --config vitest.integration.config.ts",
-    "test": "vitest run --maxWorkers=4"
+    "test:unit": "vitest run --maxWorkers=4"
   },
   "dependencies": {
     "@acme/auth": "workspace:*",

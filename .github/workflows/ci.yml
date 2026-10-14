@@ -83,7 +83,7 @@ jobs:
       - name: Setup
         uses: ./tooling/github/setup
       - name: Unit and UI tests
-        run: pnpm test
+        run: pnpm test:unit
 
   integration:
     if: >-

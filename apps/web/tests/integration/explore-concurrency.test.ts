@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { eq, sql } from "@acme/db";
-import { db } from "@acme/db/client";
+import * as schema from "@acme/db/schema";
 import {
   BlockNode,
   BlockSearchText,
@@ -15,13 +15,39 @@ import {
   user,
 } from "@acme/db/schema";
 import { afterEach, expect, test, vi } from "vitest";
-import { lockExploreOwner, markExploreDirty } from "../src/explore/refresh";
-import { listClusterMembers, listClusters } from "../src/explore/service";
-import { refreshExploreSnapshot } from "../src/explore/snapshots";
+import { lockExploreOwner, markExploreDirty } from "../../src/explore/refresh";
+import { listClusterMembers, listClusters } from "../../src/explore/service";
+import { refreshExploreSnapshot } from "../../src/explore/snapshots";
+import { createPostgresFixture } from "../helpers/postgres";
 
-vi.mock("../src/explore/dispatch", () => ({ dispatchExploreRefresh: vi.fn() }));
-// biome-ignore lint/style/noProcessEnv: disposable database fixtures are explicitly opt-in.
-const integration = test.skipIf(process.env.EXPLORE_DB_TESTS !== "1");
+vi.mock("../../src/explore/dispatch", () => ({
+  dispatchExploreRefresh: vi.fn(),
+}));
+const database = vi.hoisted(() => ({ db: null as unknown }));
+vi.mock("@acme/db/client", () => ({
+  get db() {
+    return database.db;
+  },
+}));
+const { db } = createPostgresFixture(
+  Object.fromEntries(
+    Object.entries(schema).filter(
+      ([name]) =>
+        name.startsWith("Explore") ||
+        [
+          "user",
+          "Document",
+          "Page",
+          "JournalEntry",
+          "BlockNode",
+          "BlockSearchText",
+          "DocumentReference",
+        ].includes(name),
+    ),
+  ),
+);
+database.db = db;
+const integration = test;
 const owners: string[] = [];
 afterEach(async () => {
   vi.restoreAllMocks();

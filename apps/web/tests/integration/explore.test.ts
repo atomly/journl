@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { and, eq, sql } from "@acme/db";
-import { db } from "@acme/db/client";
+import * as schema from "@acme/db/schema";
 import {
   BlockNode,
   BlockSearchText,
@@ -16,8 +16,8 @@ import {
   Page,
   user,
 } from "@acme/db/schema";
-import { afterAll, beforeAll, expect, test, vi } from "vitest";
-import { markExploreDirty } from "../src/explore/refresh";
+import { beforeAll, expect, test, vi } from "vitest";
+import { markExploreDirty } from "../../src/explore/refresh";
 import {
   getCluster,
   getClusterMap,
@@ -26,15 +26,38 @@ import {
   listClusters,
   listRecentNotes,
   listSourceContexts,
-} from "../src/explore/service";
-import { refreshExploreSnapshot } from "../src/explore/snapshots";
+} from "../../src/explore/service";
+import { refreshExploreSnapshot } from "../../src/explore/snapshots";
+import { createPostgresFixture } from "../helpers/postgres";
 
-vi.mock("../src/explore/dispatch", () => ({
+vi.mock("../../src/explore/dispatch", () => ({
   dispatchExploreRefresh: vi.fn(),
 }));
-// biome-ignore lint/style/noProcessEnv: explicit opt-in for disposable live database fixtures, never an application feature flag.
-const databaseTestsEnabled = process.env.EXPLORE_DB_TESTS === "1";
-const integration = test.skipIf(!databaseTestsEnabled);
+const fixture = vi.hoisted(() => ({ db: null as unknown }));
+vi.mock("@acme/db/client", () => ({
+  get db() {
+    return fixture.db;
+  },
+}));
+const { db } = createPostgresFixture({
+  BlockNode,
+  BlockSearchText,
+  Document,
+  DocumentReference,
+  ExploreCluster,
+  ExploreClusterLineage,
+  ExploreClusterMember,
+  ExploreClusterSnapshot,
+  ExploreClusterSource: schema.ExploreClusterSource,
+  ExploreRefreshOutbox,
+  ExploreSnapshot,
+  ExploreState,
+  JournalEntry: schema.JournalEntry,
+  Page,
+  user,
+});
+fixture.db = db;
+const integration = test;
 const owner = `explore-test-${randomUUID()}`;
 const other = `explore-test-${randomUUID()}`;
 const ids = Array.from({ length: 4 }, () => randomUUID());
@@ -43,7 +66,6 @@ const sourceKey = "external:test-resource";
 let clusterId = "";
 let originalSnapshot = "";
 beforeAll(async () => {
-  if (!databaseTestsEnabled) return;
   await db.transaction(async (tx) => {
     await tx.insert(user).values(
       [owner, other].map((id) => ({
@@ -104,10 +126,6 @@ beforeAll(async () => {
     ]);
     await markExploreDirty(tx, owner);
   });
-}, 30000);
-afterAll(async () => {
-  if (databaseTestsEnabled)
-    await db.delete(user).where(sql`${user.id} in (${owner}, ${other})`);
 }, 30000);
 
 integration(

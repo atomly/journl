@@ -77,10 +77,17 @@ cleanup requests in the Drizzle-defined `folder_deletion_outbox` table within
 the deletion transaction. The existing Vercel Workflow handles cleanup; initial
 Library reads and the scheduled recovery workflow retry interrupted dispatches.
 
-Tree-order database regressions run with
-`TREE_TEST_POSTGRES_URL=... pnpm --filter @acme/web exec vitest run tests/tree-order-database.test.ts`.
-They create and remove an isolated PostgreSQL schema; without this variable,
-the database cases are skipped.
+Database integration tests live in `apps/web/tests/integration/*.test.ts` and run
+with `TEST_DATABASE_URL=postgres://.../journl_test pnpm test:integration`.
+The test connection must name a database ending in `_test`, and its role must be
+able to create databases. Each suite uses `tests/helpers/postgres.ts` to create a
+unique disposable database, build its tables from the actual Drizzle definitions,
+and drop it afterward, including when tests fail. Each suite selects the tables
+it needs and their foreign-key dependencies. Keep queries and transactions real;
+mock external providers and queue dispatch. Add new database suites using this
+fixture; do not use `POSTGRES_URL` or feature-specific opt-in flags.
+The default Vitest run excludes integration suites; the integration command fails
+when its database URL is missing. CI provides disposable PostgreSQL automatically.
 
 Content references cover both [rich linked-content previews (#291)](https://github.com/atomly/journl/issues/291)
 and [durable page, journal, and block references (#292)](https://github.com/atomly/journl/issues/292).
@@ -128,7 +135,7 @@ then populated with `pnpm --filter @acme/web explore:backfill` (resumable with `
 `explore:benchmark:db` measures publication and bounded API reads with a disposable database
 owner and cleans it up afterward. `explore:test:browser` checks an authenticated local
 production server on port 3001 using disposable owners; the server must use the script’s
-local test auth secret. Live database regression tests run with `EXPLORE_DB_TESTS=1`.
+local test auth secret. Explore database regressions use the shared integration test command above.
 The algorithm uses MIT-licensed `ngraph.leiden@0.3.0` and `ngraph.graph@20.1.2`,
 Leiden CPM resolution 0.5 and deterministic seed 42. Algorithm parameters
 and their version live in `apps/web/src/explore/config.ts`; changing the version schedules

@@ -18,7 +18,8 @@
     "explore:benchmark": "jiti scripts/benchmark-explore.ts",
     "explore:setup": "pnpm with-env jiti scripts/setup-explore.ts",
     "explore:benchmark:db": "pnpm with-env jiti scripts/benchmark-explore-database.ts --run-disposable-fixture",
-    "explore:test:browser": "pnpm with-env jiti scripts/test-explore-browser.ts"
+    "explore:test:browser": "pnpm with-env jiti scripts/test-explore-browser.ts",
+    "test:integration": "vitest run --config vitest.integration.config.ts"
   },
   "dependencies": {
     "@acme/auth": "workspace:*",
@@ -113,6 +114,7 @@
     "react-dom": "~19.3.0",
     "tailwindcss": "~4.3.3",
     "vite": "^8.3.2",
-    "vitest": "^5.0.3"
+    "vitest": "^5.0.3",
+    "drizzle-kit": "~0.31.11"
   }
 }

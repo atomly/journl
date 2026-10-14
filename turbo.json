@@ -52,6 +52,10 @@
       "cache": false,
       "persistent": true
     },
+    "test:integration": {
+      "cache": false,
+      "env": ["TEST_DATABASE_URL"]
+    },
     "topo": {
       "dependsOn": ["^topo"]
     },

@@ -2,18 +2,24 @@ import { vi } from "vitest";
 
 /** jsdom has no layout; supply the DOM measurements React Flow reads. */
 export function mockFlowDom() {
-  class Observer {
+  class Observer implements ResizeObserver {
     constructor(private callback: ResizeObserverCallback) {}
     observe(target: Element) {
       queueMicrotask(() =>
         this.callback(
           [
             {
-              contentRect: { height: 520, width: 900 },
+              borderBoxSize: [{ blockSize: 520, inlineSize: 900 }],
+              contentBoxSize: [{ blockSize: 520, inlineSize: 900 }],
+              contentRect: DOMRectReadOnly.fromRect({
+                height: 520,
+                width: 900,
+              }),
+              devicePixelContentBoxSize: [{ blockSize: 520, inlineSize: 900 }],
               target,
-            } as ResizeObserverEntry,
+            } satisfies ResizeObserverEntry,
           ],
-          this as unknown as ResizeObserver,
+          this,
         ),
       );
     }

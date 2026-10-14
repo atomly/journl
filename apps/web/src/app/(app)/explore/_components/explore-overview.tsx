@@ -13,16 +13,32 @@ import type { ExploreCamera } from "../../graph/_components/explore-flow";
 import { useExploreState } from "./explore-state";
 import { ThreadCard, ThreadMap } from "./thread-map";
 
+type OverviewState = {
+  camera: ExploreCamera;
+  cursor: string | undefined;
+  history: (string | undefined)[];
+  mode: "map" | "list";
+  scroll: number;
+  search: string;
+  selected: string | undefined;
+};
+type RecentNotesState = {
+  cursor: string | undefined;
+  history: (string | undefined)[];
+  sort: "latest" | "oldest";
+  unlinkedOnly: boolean;
+};
+
 export function ExploreOverview() {
   const trpc = useTRPC();
-  const [view, setView] = useExploreState("overview:flow-v1", {
-    camera: undefined as ExploreCamera,
-    cursor: undefined as string | undefined,
-    history: [] as (string | undefined)[],
-    mode: "map" as "map" | "list",
+  const [view, setView] = useExploreState<OverviewState>("overview:flow-v1", {
+    camera: undefined,
+    cursor: undefined,
+    history: [],
+    mode: "map",
     scroll: 0,
     search: "",
-    selected: undefined as string | undefined,
+    selected: undefined,
   });
   const [search, setSearch] = useState(view.search);
   const viewport = useRef<HTMLDivElement>(null);
@@ -351,10 +367,10 @@ export function PageButtons({
 }
 function RecentNotes() {
   const trpc = useTRPC();
-  const [view, setView] = useExploreState("recent", {
-    cursor: undefined as string | undefined,
-    history: [] as (string | undefined)[],
-    sort: "latest" as "latest" | "oldest",
+  const [view, setView] = useExploreState<RecentNotesState>("recent", {
+    cursor: undefined,
+    history: [],
+    sort: "latest",
     unlinkedOnly: false,
   });
   const query = useQuery(
@@ -400,7 +416,7 @@ function RecentNotes() {
                 ...v,
                 cursor: undefined,
                 history: [],
-                sort: e.target.value as "latest" | "oldest",
+                sort: e.target.value === "oldest" ? "oldest" : "latest",
               }))
             }
             className="min-h-11 rounded-lg border bg-background px-3"

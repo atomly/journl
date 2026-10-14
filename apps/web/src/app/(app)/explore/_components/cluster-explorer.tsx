@@ -36,22 +36,37 @@ import {
 import { RelatedThreads, ThreadItems } from "./cluster-items";
 import { ExploreError, PageButtons } from "./explore-overview";
 import { useExploreState } from "./explore-state";
+
+type ClusterViewState = {
+  camera: ExploreCamera;
+  edge: string | undefined;
+  scroll: number;
+  selected: string | undefined;
+};
+type SuccessorViewState = {
+  cursor: string | undefined;
+  history: (string | undefined)[];
+};
+
 export function ClusterExplorer({ clusterId }: { clusterId: string }) {
   const trpc = useTRPC();
   const router = useRouter();
   const cache = useQueryClient();
   const mobile = useIsMobile();
-  const [view, setView] = useExploreState(`cluster:${clusterId}:flow-v1`, {
-    camera: undefined as ExploreCamera,
-    edge: undefined as string | undefined,
-    scroll: 0,
-    selected: undefined as string | undefined,
-  });
-  const [successorView, setSuccessorView] = useExploreState(
+  const [view, setView] = useExploreState<ClusterViewState>(
+    `cluster:${clusterId}:flow-v1`,
+    {
+      camera: undefined,
+      edge: undefined,
+      scroll: 0,
+      selected: undefined,
+    },
+  );
+  const [successorView, setSuccessorView] = useExploreState<SuccessorViewState>(
     `successors:${clusterId}`,
     {
-      cursor: undefined as string | undefined,
-      history: [] as (string | undefined)[],
+      cursor: undefined,
+      history: [],
     },
   );
   const summary = useQuery(

@@ -22,7 +22,8 @@
     "supabase:start": "supabase start",
     "supabase:stop": "supabase stop",
     "supabase:status": "supabase status",
-    "test:integration": "turbo run test:integration"
+    "test:integration": "turbo run test:integration",
+    "test": "turbo run test"
   },
   "devDependencies": {
     "@biomejs/biome": "~2.5.15",

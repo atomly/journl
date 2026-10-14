@@ -77,14 +77,15 @@ cleanup requests in the Drizzle-defined `folder_deletion_outbox` table within
 the deletion transaction. The existing Vercel Workflow handles cleanup; initial
 Library reads and the scheduled recovery workflow retry interrupted dispatches.
 
-Database integration tests live in `apps/web/tests/integration/*.test.ts` and run
-with `pnpm test:integration`. A running Docker-compatible container runtime is
+Tests are colocated with their source modules as `.spec.ts` or `.spec.tsx`. Run
+unit and UI tests across packages with `pnpm test`. Database suites use
+`.integration.spec.ts` and run with `pnpm test:integration`. A running Docker-compatible container runtime is
 required. Vitest global setup uses Testcontainers to start PostgreSQL 17 on a
 random port, passes its connection to the shared fixture through Vitest's
 provided context, and stops the container after the run. No database URL or
 application environment file is needed locally or in CI.
 
-Each suite uses `tests/helpers/postgres.ts` to create a unique disposable database,
+Each suite uses `src/testing/postgres.ts` to create a unique disposable database,
 build its tables from the actual Drizzle definitions, and drop it afterward,
 including when setup fails. Select the tables and foreign-key dependencies needed
 by the suite; keep queries and transactions real, and mock external providers and

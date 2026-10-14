@@ -5,6 +5,11 @@ export default defineConfig({
   oxc: { jsx: { runtime: "automatic" } },
   resolve: { alias: { "~": fileURLToPath(new URL("./src", import.meta.url)) } },
   test: {
-    exclude: ["**/node_modules/**", "**/.next/**", "tests/integration/**"],
+    exclude: [
+      "**/node_modules/**",
+      "**/.next/**",
+      "src/**/*.integration.spec.{ts,tsx}",
+    ],
+    include: ["src/**/*.spec.{ts,tsx}"],
   },
 });

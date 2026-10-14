@@ -22,18 +22,14 @@ export type TreeDestination = {
   position?: "after" | "before";
 };
 
-export type QuerySnapshot = {
-  data: unknown;
-  queryKey: QueryKey;
-};
-
 export function getEmptyTreeChildrenData(): TreeChildrenInfiniteData {
   return {
-    pageParams: [],
+    pageParams: [undefined],
     pages: [
       {
         items: [],
         nextCursor: undefined,
+        resetRequired: false,
       },
     ],
   };
@@ -108,7 +104,24 @@ function insertItemInData({
 }) {
   const baseData = data ?? getEmptyTreeChildrenData();
 
-  if (!anchorEdgeId || !position) {
+  if (!anchorEdgeId && position === "after") {
+    // The true tail is not loaded yet; refetch after saving rather than placing
+    // the moved item ahead of unseen siblings or skipping them with its cursor.
+    if (baseData.pages.at(-1)?.nextCursor) return baseData;
+    const pages = [...baseData.pages];
+    const lastPage = pages.at(-1) ?? {
+      items: [],
+      nextCursor: undefined,
+      resetRequired: false,
+    };
+    pages[Math.max(0, pages.length - 1)] = {
+      ...lastPage,
+      items: [...lastPage.items, item],
+    };
+    return normalizeTreePagination({ ...baseData, pages });
+  }
+
+  if (!anchorEdgeId) {
     const [firstPage, ...restPages] = baseData.pages;
 
     if (!firstPage) {
@@ -118,12 +131,13 @@ function insertItemInData({
           {
             items: [item],
             nextCursor: undefined,
+            resetRequired: false,
           },
         ],
       };
     }
 
-    return {
+    return normalizeTreePagination({
       ...baseData,
       pages: [
         {
@@ -132,7 +146,7 @@ function insertItemInData({
         },
         ...restPages,
       ],
-    };
+    });
   }
 
   let inserted = false;
@@ -149,7 +163,7 @@ function insertItemInData({
       return page;
     }
 
-    const insertAt = position === "before" ? anchorIndex : anchorIndex + 1;
+    const insertAt = position !== "after" ? anchorIndex : anchorIndex + 1;
     const nextItems = [...page.items];
     nextItems.splice(insertAt, 0, item);
     inserted = true;
@@ -161,16 +175,67 @@ function insertItemInData({
   });
 
   if (inserted) {
-    return {
+    return normalizeTreePagination({
       ...baseData,
       pages,
-    };
+    });
   }
 
-  return insertItemInData({
-    data: baseData,
-    item,
-  });
+  return baseData;
+}
+
+export function restartTreePagination(
+  data: TreeChildrenInfiniteData,
+): TreeChildrenInfiniteData {
+  const resetIndex = data.pages.reduce(
+    (last, page, index) => (page.resetRequired ? index : last),
+    -1,
+  );
+  if (resetIndex <= 0) return data;
+  const pages = data.pages
+    .slice(resetIndex)
+    .map((page) => ({ ...page, resetRequired: false }));
+  return {
+    pageParams: pages.map((_, index) =>
+      index === 0 ? data.pageParams[0] : pages[index - 1]?.nextCursor,
+    ),
+    pages,
+  };
+}
+
+function revisionedCursor(
+  edgeId: string | undefined,
+  previous: string | undefined,
+) {
+  const revision = previous?.split("|")[1];
+  return edgeId && revision ? `${edgeId}|${revision}` : edgeId;
+}
+
+function normalizeTreePagination(
+  data: TreeChildrenInfiniteData,
+): TreeChildrenInfiniteData {
+  const nonemptyPages = data.pages.filter((page) => page.items.length > 0);
+  const sourcePages =
+    nonemptyPages.length > 0 ? nonemptyPages : data.pages.slice(0, 1);
+  const hasMore = data.pages.at(-1)?.nextCursor !== undefined;
+  const pages = sourcePages.map((page, index) => ({
+    ...page,
+    nextCursor:
+      index < sourcePages.length - 1 || hasMore
+        ? revisionedCursor(
+            page.items.at(-1)?.edge_id,
+            page.nextCursor ??
+              data.pages.find((source) => source.nextCursor)?.nextCursor,
+          )
+        : undefined,
+  }));
+  return {
+    ...data,
+    pageParams: pages.map((_, index) =>
+      index === 0 ? data.pageParams[0] : pages[index - 1]?.nextCursor,
+    ),
+    pages,
+  };
 }
 
 function removeNodeFromData({
@@ -202,10 +267,10 @@ function removeNodeFromData({
     return data;
   }
 
-  return {
+  return normalizeTreePagination({
     ...data,
     pages,
-  };
+  });
 }
 
 function updateNodeInData({
@@ -490,41 +555,4 @@ export function updatePageTitleInNestedPages({
       })),
     };
   });
-}
-
-export function snapshotQueries({
-  queryClient,
-  queryFilter,
-}: {
-  queryClient: QueryClient;
-  queryFilter: QueryFilters;
-}): QuerySnapshot[] {
-  return queryClient
-    .getQueriesData(queryFilter)
-    .map(([queryKey, data]) => ({ data, queryKey }));
-}
-
-export function restoreQueries({
-  queryClient,
-  snapshots,
-}: {
-  queryClient: QueryClient;
-  snapshots: QuerySnapshot[];
-}) {
-  for (const snapshot of snapshots) {
-    queryClient.setQueryData(snapshot.queryKey, snapshot.data);
-  }
-}
-
-export function snapshotQuery({
-  queryClient,
-  queryKey,
-}: {
-  queryClient: QueryClient;
-  queryKey: QueryKey;
-}): QuerySnapshot {
-  return {
-    data: queryClient.getQueryData(queryKey),
-    queryKey,
-  };
 }

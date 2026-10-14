@@ -1,9 +1,36 @@
-import { and, eq, isNull, ne } from "@acme/db";
-import { TreeEdge, TreeNode } from "@acme/db/schema";
+import { createHash } from "node:crypto";
+import { and, eq, inArray, isNull, ne } from "@acme/db";
+import { Page, TreeEdge, TreeNode, user } from "@acme/db/schema";
 import { TRPCError } from "@trpc/server";
 import type { TRPCContext } from "../trpc";
 
 type Db = TRPCContext["db"];
+
+/** Call within a transaction, before other owner/document locks or tree reads. */
+export async function lockTreeOwner(db: Db, userId: string) {
+  await db
+    .select({ id: user.id })
+    .from(user)
+    .where(eq(user.id, userId))
+    .for("no key update");
+}
+
+export async function detachDocumentPageEdges(
+  db: Db,
+  documentId: string,
+  userId: string,
+) {
+  await lockTreeOwner(db, userId);
+  const pageEdges = await db
+    .select({ id: TreeEdge.id })
+    .from(TreeEdge)
+    .innerJoin(TreeNode, eq(TreeNode.id, TreeEdge.node_id))
+    .innerJoin(Page, eq(Page.id, TreeNode.page_id))
+    .where(and(eq(Page.document_id, documentId), eq(TreeEdge.user_id, userId)));
+  for (const edge of pageEdges) {
+    await detachEdge({ db, edgeId: edge.id, userId });
+  }
+}
 
 export type TreeDestination = {
   anchor_edge_id?: string;
@@ -15,6 +42,78 @@ type OrderedEdge = Pick<
   typeof TreeEdge.$inferSelect,
   "id" | "next_edge_id" | "node_id" | "parent_node_id" | "prev_edge_id"
 >;
+
+function orderSiblingEdges(edges: OrderedEdge[]) {
+  const byId = new Map(edges.map((edge) => [edge.id, edge]));
+  const visited = new Set<string>();
+  const ordered: OrderedEdge[] = [];
+  // Preserve intact strands, including multiple heads left by old cascade deletes.
+  for (const start of [
+    ...edges.filter((edge) => edge.prev_edge_id === null),
+    ...edges,
+  ]) {
+    let edge: OrderedEdge | undefined = start;
+    while (edge && !visited.has(edge.id)) {
+      visited.add(edge.id);
+      ordered.push(edge);
+      edge = edge.next_edge_id ? byId.get(edge.next_edge_id) : undefined;
+    }
+  }
+  return ordered;
+}
+
+async function repairSiblingOrder(
+  db: Db,
+  userId: string,
+  parentNodeId: string | null,
+  excludeEdgeId?: string,
+) {
+  const edges = await db
+    .select()
+    .from(TreeEdge)
+    .where(
+      and(
+        eq(TreeEdge.user_id, userId),
+        parentNodeId === null
+          ? isNull(TreeEdge.parent_node_id)
+          : eq(TreeEdge.parent_node_id, parentNodeId),
+        excludeEdgeId ? ne(TreeEdge.id, excludeEdgeId) : undefined,
+      ),
+    )
+    .orderBy(TreeEdge.created_at, TreeEdge.id);
+  const ordered = orderSiblingEdges(edges);
+  if (
+    ordered.every(
+      (edge, index) =>
+        edge.prev_edge_id === (ordered[index - 1]?.id ?? null) &&
+        edge.next_edge_id === (ordered[index + 1]?.id ?? null),
+    )
+  )
+    return;
+
+  // Clear both directions first to respect the immediate unique-pointer indexes.
+  await db
+    .update(TreeEdge)
+    .set({ next_edge_id: null, prev_edge_id: null })
+    .where(
+      and(
+        eq(TreeEdge.user_id, userId),
+        inArray(
+          TreeEdge.id,
+          ordered.map((edge) => edge.id),
+        ),
+      ),
+    );
+  for (const [index, edge] of ordered.entries()) {
+    await db
+      .update(TreeEdge)
+      .set({
+        next_edge_id: ordered[index + 1]?.id ?? null,
+        prev_edge_id: ordered[index - 1]?.id ?? null,
+      })
+      .where(and(eq(TreeEdge.id, edge.id), eq(TreeEdge.user_id, userId)));
+  }
+}
 
 async function getNodeById({
   db,
@@ -164,7 +263,25 @@ async function writeEdgePlacement({
   return insertedEdge;
 }
 
-export async function insertEdgeAtPosition({
+export async function insertEdgeAtPosition(
+  input: Parameters<typeof insertPreparedEdge>[0],
+) {
+  await lockTreeOwner(input.db, input.userId);
+  await assertDestinationParent({
+    db: input.db,
+    parentNodeId: input.parentNodeId,
+    userId: input.userId,
+  });
+  await repairSiblingOrder(
+    input.db,
+    input.userId,
+    input.parentNodeId,
+    input.edgeId,
+  );
+  return insertPreparedEdge(input);
+}
+
+async function insertPreparedEdge({
   anchorEdgeId,
   db,
   edgeId,
@@ -181,11 +298,6 @@ export async function insertEdgeAtPosition({
   position?: "after" | "before";
   userId: string;
 }) {
-  await assertDestinationParent({
-    db,
-    parentNodeId,
-    userId,
-  });
   let placingEdgeId = edgeId;
   if (!placingEdgeId) {
     const [insertedEdge] = await db
@@ -212,29 +324,46 @@ export async function insertEdgeAtPosition({
   }
 
   if (!anchorEdgeId) {
-    const headEdge = await findHeadEdge({
-      db,
-      excludeEdgeId: placingEdgeId,
-      parentNodeId,
-      userId,
-    });
+    const boundaryEdge =
+      position === "after"
+        ? await db.query.TreeEdge.findFirst({
+            columns: { id: true },
+            where: and(
+              eq(TreeEdge.user_id, userId),
+              isNull(TreeEdge.next_edge_id),
+              parentNodeId === null
+                ? isNull(TreeEdge.parent_node_id)
+                : eq(TreeEdge.parent_node_id, parentNodeId),
+              ne(TreeEdge.id, placingEdgeId),
+            ),
+          })
+        : await findHeadEdge({
+            db,
+            excludeEdgeId: placingEdgeId,
+            parentNodeId,
+            userId,
+          });
 
-    if (headEdge) {
+    if (boundaryEdge) {
       await db
         .update(TreeEdge)
         .set({
-          prev_edge_id: placingEdgeId,
+          ...(position === "after"
+            ? { next_edge_id: placingEdgeId }
+            : { prev_edge_id: placingEdgeId }),
         })
-        .where(and(eq(TreeEdge.id, headEdge.id), eq(TreeEdge.user_id, userId)));
+        .where(
+          and(eq(TreeEdge.id, boundaryEdge.id), eq(TreeEdge.user_id, userId)),
+        );
     }
 
     return await writeEdgePlacement({
       db,
       edgeId: placingEdgeId,
-      nextEdgeId: headEdge?.id ?? null,
+      nextEdgeId: position === "after" ? null : (boundaryEdge?.id ?? null),
       nodeId,
       parentNodeId,
-      prevEdgeId: null,
+      prevEdgeId: position === "after" ? (boundaryEdge?.id ?? null) : null,
       userId,
     });
   }
@@ -340,6 +469,7 @@ export async function detachEdge({
   edgeId: string;
   userId: string;
 }) {
+  await lockTreeOwner(db, userId);
   const edge = await getEdgeById({
     db,
     edgeId,
@@ -353,6 +483,19 @@ export async function detachEdge({
     });
   }
 
+  await repairSiblingOrder(db, userId, edge.parent_node_id);
+  const currentEdge = (await getEdgeById({ db, edgeId, userId })) ?? edge;
+
+  return detachPreparedEdge(db, currentEdge, userId);
+}
+
+async function detachPreparedEdge(
+  db: Db,
+  currentEdge: OrderedEdge,
+  userId: string,
+) {
+  const edgeId = currentEdge.id;
+
   await db
     .update(TreeEdge)
     .set({
@@ -362,25 +505,31 @@ export async function detachEdge({
     })
     .where(and(eq(TreeEdge.id, edgeId), eq(TreeEdge.user_id, userId)));
 
-  if (edge.prev_edge_id) {
+  if (currentEdge.prev_edge_id) {
     await db
       .update(TreeEdge)
       .set({
-        next_edge_id: edge.next_edge_id,
+        next_edge_id: currentEdge.next_edge_id,
       })
       .where(
-        and(eq(TreeEdge.id, edge.prev_edge_id), eq(TreeEdge.user_id, userId)),
+        and(
+          eq(TreeEdge.id, currentEdge.prev_edge_id),
+          eq(TreeEdge.user_id, userId),
+        ),
       );
   }
 
-  if (edge.next_edge_id) {
+  if (currentEdge.next_edge_id) {
     await db
       .update(TreeEdge)
       .set({
-        prev_edge_id: edge.prev_edge_id,
+        prev_edge_id: currentEdge.prev_edge_id,
       })
       .where(
-        and(eq(TreeEdge.id, edge.next_edge_id), eq(TreeEdge.user_id, userId)),
+        and(
+          eq(TreeEdge.id, currentEdge.next_edge_id),
+          eq(TreeEdge.user_id, userId),
+        ),
       );
   }
 
@@ -404,7 +553,7 @@ export async function detachEdge({
       and(eq(TreeEdge.prev_edge_id, edgeId), eq(TreeEdge.user_id, userId)),
     );
 
-  return edge;
+  return currentEdge;
 }
 
 async function isNodeDescendantOf({
@@ -460,6 +609,7 @@ export async function moveNode({
   nodeId: string;
   userId: string;
 }) {
+  await lockTreeOwner(db, userId);
   const node = await getNodeById({
     db,
     nodeId,
@@ -473,7 +623,7 @@ export async function moveNode({
     });
   }
 
-  const existingEdge = await db.query.TreeEdge.findFirst({
+  let existingEdge = await db.query.TreeEdge.findFirst({
     where: and(eq(TreeEdge.user_id, userId), eq(TreeEdge.node_id, nodeId)),
   });
 
@@ -483,6 +633,11 @@ export async function moveNode({
       message: "Tree node edge not found",
     });
   }
+
+  await repairSiblingOrder(db, userId, existingEdge.parent_node_id);
+  existingEdge =
+    (await getEdgeById({ db, edgeId: existingEdge.id, userId })) ??
+    existingEdge;
 
   if (node.node_type === "folder" && destination.parent_node_id) {
     if (destination.parent_node_id === nodeId) {
@@ -510,7 +665,9 @@ export async function moveNode({
   const isNoopMove =
     !destination.anchor_edge_id &&
     existingEdge.parent_node_id === destination.parent_node_id &&
-    existingEdge.prev_edge_id === null;
+    (destination.position === "after"
+      ? existingEdge.next_edge_id === null
+      : existingEdge.prev_edge_id === null);
   if (isNoopMove) {
     return existingEdge;
   }
@@ -551,13 +708,17 @@ export async function moveNode({
     }
   }
 
-  await detachEdge({
+  await assertDestinationParent({
     db,
-    edgeId: existingEdge.id,
+    parentNodeId: destination.parent_node_id,
     userId,
   });
+  if (destination.parent_node_id !== existingEdge.parent_node_id) {
+    await repairSiblingOrder(db, userId, destination.parent_node_id);
+  }
+  await detachPreparedEdge(db, existingEdge, userId);
 
-  return await insertEdgeAtPosition({
+  return await insertPreparedEdge({
     anchorEdgeId: destination.anchor_edge_id,
     db,
     edgeId: existingEdge.id,
@@ -597,55 +758,37 @@ export async function orderedChildren({
           ? isNull(TreeEdge.parent_node_id)
           : eq(TreeEdge.parent_node_id, parentNodeId),
       ),
-    );
+    )
+    .orderBy(TreeEdge.created_at, TreeEdge.id);
 
-  if (edges.length === 0) {
-    return {
-      edges: [] as OrderedEdge[],
-      nextCursor: undefined as string | undefined,
-    };
-  }
+  const ordered = orderSiblingEdges(edges);
+  return paginateOrderedEdges(ordered, cursorEdgeId, limit);
+}
 
-  const edgeById = new Map(edges.map((edge) => [edge.id, edge]));
-  const head = edges.find((edge) => edge.prev_edge_id === null);
-  if (!head) {
-    throw new TRPCError({
-      code: "INTERNAL_SERVER_ERROR",
-      message: "Invalid tree state: missing sibling head edge",
-    });
-  }
-
-  const visited = new Set<string>();
-  const ordered: OrderedEdge[] = [];
-  let currentEdge: OrderedEdge | undefined = head;
-
-  while (currentEdge && !visited.has(currentEdge.id)) {
-    visited.add(currentEdge.id);
-    ordered.push(currentEdge);
-    currentEdge = currentEdge.next_edge_id
-      ? edgeById.get(currentEdge.next_edge_id)
-      : undefined;
-  }
-
-  if (ordered.length < edges.length) {
-    for (const edge of edges) {
-      if (visited.has(edge.id)) {
-        continue;
-      }
-
-      ordered.push(edge);
-    }
-  }
-
-  const startIndex = cursorEdgeId
-    ? Math.max(0, ordered.findIndex((edge) => edge.id === cursorEdgeId) + 1)
-    : 0;
+/** Cursor revision detects changes between requests, including moves in another tab. */
+export function paginateOrderedEdges<T extends { id: string }>(
+  ordered: T[],
+  cursor: string | undefined,
+  limit: number,
+) {
+  const revision = createHash("sha256")
+    .update(ordered.map((edge) => edge.id).join(","))
+    .digest("hex");
+  const [edgeId, cursorRevision] = cursor?.split("|") ?? [];
+  const cursorIndex = edgeId
+    ? ordered.findIndex((edge) => edge.id === edgeId)
+    : -1;
+  const resetRequired =
+    !!cursor &&
+    (cursorIndex < 0 || (!!cursorRevision && cursorRevision !== revision));
+  const startIndex = cursor && !resetRequired ? cursorIndex + 1 : 0;
   const paginated = ordered.slice(startIndex, startIndex + limit + 1);
   const hasNextPage = paginated.length > limit;
   const items = hasNextPage ? paginated.slice(0, limit) : paginated;
 
   return {
     edges: items,
-    nextCursor: hasNextPage ? items.at(-1)?.id : undefined,
+    nextCursor: hasNextPage ? `${items.at(-1)?.id}|${revision}` : undefined,
+    resetRequired,
   };
 }

@@ -5,7 +5,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Loader2, Trash2 } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import type { ComponentProps, ReactNode } from "react";
-import { useCallback, useMemo, useRef, useState, useTransition } from "react";
+import { useCallback, useMemo, useState, useTransition } from "react";
 import { Button } from "~/components/ui/button";
 import {
   Dialog,
@@ -16,14 +16,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "~/components/ui/dialog";
-import {
-  type QuerySnapshot,
-  removeNode,
-  removePageFromNestedPages,
-  restoreQueries,
-  snapshotQueries,
-  snapshotQuery,
-} from "~/trpc/cache/tree-cache";
+import { removeNode, removePageFromNestedPages } from "~/trpc/cache/tree-cache";
 import { useTRPC } from "~/trpc/react";
 
 type DeletePageDialogProps = {
@@ -36,12 +29,6 @@ type DeletePageDialogProps = {
 type DeletePageDialogTriggerProps = ComponentProps<typeof DialogTrigger>;
 
 type DeletePageButtonProps = ComponentProps<typeof Button>;
-
-type DeletePageMutationContext = {
-  pageSnapshot: QuerySnapshot;
-  nestedSnapshots: QuerySnapshot[];
-  treeSnapshots: QuerySnapshot[];
-};
 
 export function DeletePageButton({
   className,
@@ -84,7 +71,6 @@ export function DeletePageDialog({
   const queryClient = useQueryClient();
   const [isPending, startTransition] = useTransition();
   const [uncontrolledOpen, setUncontrolledOpen] = useState(false);
-  const deletePageContextRef = useRef<DeletePageMutationContext | null>(null);
   const treeQueryFilter = trpc.tree.getChildrenPaginated.infiniteQueryFilter();
   const nestedFolderPagesQueryFilter =
     trpc.tree.getNestedPagesPaginated.infiniteQueryFilter();
@@ -93,23 +79,6 @@ export function DeletePageDialog({
   const { mutate: deletePage, isPending: isDeleting } = useMutation(
     trpc.document.delete.mutationOptions({
       onError: (error) => {
-        const context = deletePageContextRef.current;
-        if (context) {
-          restoreQueries({
-            queryClient,
-            snapshots: context.treeSnapshots,
-          });
-          restoreQueries({
-            queryClient,
-            snapshots: context.nestedSnapshots,
-          });
-          restoreQueries({
-            queryClient,
-            snapshots: [context.pageSnapshot],
-          });
-        }
-        deletePageContextRef.current = null;
-
         console.error("Failed to delete page:", error);
       },
       onMutate: async () => {
@@ -118,19 +87,6 @@ export function DeletePageDialog({
           queryClient.cancelQueries(nestedFolderPagesQueryFilter),
           queryClient.cancelQueries({ queryKey: pageQueryKey }),
         ]);
-
-        const treeSnapshots = snapshotQueries({
-          queryClient,
-          queryFilter: treeQueryFilter,
-        });
-        const nestedSnapshots = snapshotQueries({
-          queryClient,
-          queryFilter: nestedFolderPagesQueryFilter,
-        });
-        const pageSnapshot = snapshotQuery({
-          queryClient,
-          queryKey: pageQueryKey,
-        });
 
         if (page.node_id) {
           removeNode({
@@ -147,15 +103,16 @@ export function DeletePageDialog({
         });
 
         queryClient.removeQueries({ exact: true, queryKey: pageQueryKey });
-
-        deletePageContextRef.current = {
-          nestedSnapshots,
-          pageSnapshot,
-          treeSnapshots,
-        };
       },
+      onSettled: () =>
+        Promise.all([
+          queryClient.invalidateQueries({ queryKey: trpc.tree.pathKey() }),
+          queryClient.invalidateQueries({ queryKey: trpc.folders.pathKey() }),
+          queryClient.invalidateQueries({
+            queryKey: trpc.pages.getById.pathKey(),
+          }),
+        ]),
       onSuccess: () => {
-        deletePageContextRef.current = null;
         for (const queryKey of [
           trpc.references.getPreviews.queryKey(),
           trpc.references.getEmbedContent.queryKey(),

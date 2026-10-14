@@ -1,6 +1,7 @@
 import { useComponentsContext, usePortalElement } from "@blocknote/react";
 import {
   type MouseEvent as ReactMouseEvent,
+  useCallback,
   useEffect,
   useMemo,
   useRef,
@@ -12,12 +13,12 @@ export { referenceProps } from "./reference-config";
 
 import {
   type Display,
-  targetFromProps,
-  usePreview,
-  ReferenceIcon,
   DisplayMenu,
   fallbackTitle,
   inlineReferenceLabel,
+  ReferenceIcon,
+  targetFromProps,
+  usePreview,
 } from "./reference-render-helpers";
 export function ReferenceBadge({
   props,
@@ -39,14 +40,14 @@ export function ReferenceBadge({
   const openTimer = useRef<ReturnType<typeof setTimeout> | undefined>(
     undefined,
   );
-  const clearOpen = () => {
+  const clearOpen = useCallback(() => {
     clearTimeout(openTimer.current);
     openTimer.current = undefined;
-  };
-  const clearClose = () => {
+  }, []);
+  const clearClose = useCallback(() => {
     if (closeTimer.current) clearTimeout(closeTimer.current);
     closeTimer.current = undefined;
-  };
+  }, []);
   const close = () => {
     clearOpen();
     clearClose();
@@ -101,7 +102,7 @@ export function ReferenceBadge({
       document.removeEventListener("dragstart", cancel);
       document.removeEventListener("pointerdown", pointer);
     };
-  }, []);
+  }, [clearOpen, clearClose]);
   useEffect(() => {
     if (!active) return;
     const leaveFocus = (event: FocusEvent) => {

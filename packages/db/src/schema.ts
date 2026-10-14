@@ -13,6 +13,7 @@ export * from "./core/document-embedding.schema.ts";
 export * from "./core/document-reference.schema.ts";
 export * from "./core/explore.schema.ts";
 export * from "./core/folder.schema.ts";
+export * from "./core/folder-deletion-outbox.schema.ts";
 export * from "./core/journal-entry.schema.ts";
 export * from "./core/page.schema.ts";
 export * from "./core/tree-edge.schema.ts";

@@ -68,6 +68,37 @@ If your local Postgres instance does not support TLS, set `POSTGRES_SSL_MODE=dis
 For database workflows, use root scripts (`pnpm db:push`, `pnpm db:studio`) or
 the dedicated utility app in [`apps/drizzle-studio`](./apps/drizzle-studio).
 
+Database schema changes live in [`packages/db/src`](./packages/db/src) and are
+applied through `pnpm db:push`, which runs Drizzle Kit's schema comparison and
+update flow.
+
+Library items use linked sibling ordering. Folder deletion records background
+cleanup requests in the Drizzle-defined `folder_deletion_outbox` table within
+the deletion transaction. The existing Vercel Workflow handles cleanup; initial
+Library reads and the scheduled recovery workflow retry interrupted dispatches.
+
+Tests are colocated with their source modules as `.spec.ts` or `.spec.tsx`;
+database suites use `.integration.spec.ts`.
+
+- `pnpm test`: run all unit, UI, and database integration tests.
+- `pnpm test:unit`: run unit and UI tests without Docker.
+- `pnpm test:integration`: run database integration tests only.
+
+The full suite and integration shortcut require a running Docker-compatible
+container runtime, such as Docker Desktop or Colima. They fail if it is unavailable
+rather than skipping database tests. Vitest global setup uses Testcontainers to
+start PostgreSQL 17 on a random port, passes its connection to the shared fixture
+through Vitest's provided context, and stops the container after the run. No
+database URL or application environment file is needed locally or in CI.
+
+Each suite uses `src/testing/postgres.ts` to create a unique disposable database,
+build its tables from the actual Drizzle definitions, and drop it afterward,
+including when setup fails. Select the tables and foreign-key dependencies needed
+by the suite; keep queries and transactions real, and mock external providers and
+queue dispatch. The unit configuration excludes integration suites. CI runs both
+shortcuts in separate jobs, using the same commands as local development without
+a separately configured database service. Integration tasks are never cached.
+
 Content references cover both [rich linked-content previews (#291)](https://github.com/atomly/journl/issues/291)
 and [durable page, journal, and block references (#292)](https://github.com/atomly/journl/issues/292).
 References retain their target IDs across title changes; badges, cards, links,
@@ -114,7 +145,7 @@ then populated with `pnpm --filter @acme/web explore:backfill` (resumable with `
 `explore:benchmark:db` measures publication and bounded API reads with a disposable database
 owner and cleans it up afterward. `explore:test:browser` checks an authenticated local
 production server on port 3001 using disposable owners; the server must use the script’s
-local test auth secret. Live database regression tests run with `EXPLORE_DB_TESTS=1`.
+local test auth secret. Explore database regressions use the shared integration test command above.
 The algorithm uses MIT-licensed `ngraph.leiden@0.3.0` and `ngraph.graph@20.1.2`,
 Leiden CPM resolution 0.5 and deterministic seed 42. Algorithm parameters
 and their version live in `apps/web/src/explore/config.ts`; changing the version schedules

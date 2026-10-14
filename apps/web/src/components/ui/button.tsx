@@ -48,15 +48,31 @@ function Button({
   size = "default",
   asChild = false,
   children,
+  render,
+  nativeButton,
   ...props
 }: ButtonPrimitive.Props &
   VariantProps<typeof buttonVariants> & { asChild?: boolean }) {
+  const buttonRender = asChild
+    ? (React.Children.only(children) as React.ReactElement)
+    : render;
+  const elementType = React.isValidElement(buttonRender)
+    ? buttonRender.type
+    : undefined;
+  const isLinkRender =
+    React.isValidElement<{ href?: unknown }>(buttonRender) &&
+    buttonRender.props.href != null;
+
   return (
     <ButtonPrimitive
-      render={
-        asChild
-          ? (React.Children.only(children) as React.ReactElement)
-          : undefined
+      render={buttonRender}
+      nativeButton={
+        nativeButton ??
+        (typeof elementType === "string"
+          ? elementType === "button"
+          : isLinkRender
+            ? false
+            : undefined)
       }
       data-slot="button"
       className={cn(buttonVariants({ className, size, variant }))}

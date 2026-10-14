@@ -10,12 +10,12 @@ import { safeReferenceHref as safeHref } from "./reference-href";
 export { referenceProps } from "./reference-config";
 
 import {
-  targetFromProps,
-  usePreview,
-  ReferenceIcon,
+  blockSurface,
   DisplayMenu,
   fallbackTitle,
-  blockSurface,
+  ReferenceIcon,
+  targetFromProps,
+  usePreview,
 } from "./reference-render-helpers";
 export function ReferenceCardView<
   BS extends BlockSchema,

@@ -3,7 +3,7 @@
 import { X } from "lucide-react";
 import { type BlockSelection, useJournlAgent } from "~/hooks/use-journl-agent";
 import { Badge } from "../ui/badge";
-import { Button } from "../ui/button";
+import { Button, buttonVariants } from "../ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -70,7 +70,7 @@ export function ComposerSources({ className }: ComposerContextProps) {
       })}
       {dropdown.length > 0 && (
         <DropdownMenu>
-          <DropdownMenuTrigger>
+          <DropdownMenuTrigger asChild>
             <Button
               variant="outline"
               size="icon"
@@ -85,20 +85,17 @@ export function ComposerSources({ className }: ComposerContextProps) {
               {dropdown.map((source) => {
                 return (
                   <DropdownMenuItem
-                    className="!px-1 !py-1.5 h-auto w-full max-w-72 cursor-pointer justify-between gap-x-1.5 text-xs"
+                    className={cn(
+                      buttonVariants({ variant: "outline" }),
+                      "!px-1 !py-1.5 h-auto w-full max-w-72 cursor-pointer justify-between gap-x-1.5 text-xs",
+                    )}
                     key={source.id}
-                    // Prevent the dropdown from closing
-                    onSelect={(e) => e.preventDefault()}
-                    asChild
+                    closeOnClick={false}
+                    onClick={() => unsetSelection(source.selection)}
+                    aria-label="Remove selection"
                   >
-                    <Button
-                      variant="outline"
-                      onClick={() => unsetSelection(source.selection)}
-                      aria-label="Remove selection"
-                    >
-                      <span className="truncate">{source.displayText}</span>
-                      <X className="size-4" />
-                    </Button>
+                    <span className="truncate">{source.displayText}</span>
+                    <X className="size-4" />
                   </DropdownMenuItem>
                 );
               })}

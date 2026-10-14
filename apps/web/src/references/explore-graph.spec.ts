@@ -3,9 +3,10 @@ import {
   type ExploreEdge,
   type ExploreNode,
   getNoteClusters,
-  layoutExploreGraph,
   mergeGraphPages,
 } from "./explore-graph";
+
+import { layoutExploreGraph, layoutMap } from "./explore-layout";
 
 const note = (id: string): ExploreNode => ({
   key: id,
@@ -82,12 +83,8 @@ test("clusters include authored source URLs and keep independent and self-linked
   ]);
   expect(grouped.unlinked.map((node) => node.key)).toEqual(["f"]);
   const layout = layoutExploreGraph(graph, 900);
-  expect(layout.groups).toHaveLength(3);
   expect(layout.positions.has("e")).toBe(true);
   expect(layout.positions.has("url")).toBe(true);
-  const first = layout.groups[0];
-  const second = layout.groups[1];
-  expect((first?.x ?? 0) + (first?.width ?? 0)).toBeLessThan(second?.x ?? 0);
 });
 
 test("a focused note has readable mobile cards and only its immediate neighbors on the canvas", () => {
@@ -98,11 +95,10 @@ test("a focused note has readable mobile cards and only its immediate neighbors 
   const layout = layoutExploreGraph(graph, 340, "a");
   expect([...layout.positions.keys()]).toEqual(["a", "b"]);
   expect(layout.cardWidth).toBeGreaterThan(120);
-  expect(layout.positions.get("a")).toEqual({ x: 170, y: 78 });
-  for (const point of layout.positions.values()) {
-    expect(point.x - layout.cardWidth / 2).toBeGreaterThanOrEqual(0);
-    expect(point.x + layout.cardWidth / 2).toBeLessThanOrEqual(340);
-  }
+  const a = layout.positions.get("a")!;
+  const b = layout.positions.get("b")!;
+  expect(b.y).toBeGreaterThanOrEqual(a.y + 68);
+  expect(Number.isFinite(a.x)).toBe(true);
 });
 
 test("one shared external URL joins its actual source notes and focused view includes that source", () => {
@@ -152,4 +148,71 @@ test("linked sources remain visible in compact previews when many note connectio
   expect(
     layoutExploreGraph(graph, 900, "root").positions.has(external.key),
   ).toBe(true);
+});
+
+test("automatic layout is deterministic, does not overlap cards, and ignores missing/self edges", () => {
+  const nodes = Array.from({ length: 24 }, (_, i) => ({
+    height: 68,
+    id: `node-${i}`,
+    width: 190,
+  }));
+  const edges = nodes
+    .slice(1)
+    .map((node) => ({ source: "node-0", target: node.id }));
+  for (const mobile of [false, true]) {
+    const positions = layoutMap(
+      nodes,
+      [
+        ...edges,
+        { source: "missing", target: "node-0" },
+        { source: "node-0", target: "node-0" },
+      ],
+      mobile ? "TB" : "LR",
+    );
+    expect(positions).toEqual(
+      layoutMap(
+        [...nodes].reverse(),
+        [...edges].reverse(),
+        mobile ? "TB" : "LR",
+      ),
+    );
+    for (const a of nodes)
+      for (const b of nodes) {
+        if (a.id === b.id) continue;
+        const p = positions.get(a.id)!;
+        const q = positions.get(b.id)!;
+        expect(
+          p.x + a.width <= q.x ||
+            q.x + b.width <= p.x ||
+            p.y + a.height <= q.y ||
+            q.y + b.height <= p.y,
+        ).toBe(true);
+      }
+  }
+});
+
+test("automatic layout handles authored cycles, shared sources, and disconnected notes", () => {
+  const nodes = ["a", "b", "c", "shared", "unlinked"].map((id) => ({
+    height: 68,
+    id,
+    width: 190,
+  }));
+  const edges = [
+    ["a", "b"],
+    ["b", "c"],
+    ["c", "a"],
+    ["a", "shared"],
+    ["b", "shared"],
+  ].map(([source, target]) => ({ source: source ?? "", target: target ?? "" }));
+  for (const mobile of [false, true]) {
+    const positions = layoutMap(nodes, edges, mobile ? "TB" : "LR");
+    expect(positions.size).toBe(5);
+    for (const point of positions.values()) {
+      expect(Number.isFinite(point.x) && Number.isFinite(point.y)).toBe(true);
+    }
+    expect(
+      new Set([...positions.values()].map((point) => `${point.x}|${point.y}`))
+        .size,
+    ).toBe(5);
+  }
 });

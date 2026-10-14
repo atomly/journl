@@ -6,7 +6,8 @@ import type {
   ExploreGraph,
   ExploreNode,
 } from "../../../../references/explore-graph";
-import { ExploreCanvas, INITIAL_CAMERA } from "./explore-canvas";
+import { mockFlowDom } from "../../../../testing/explore-flow-dom";
+import { ExploreCanvas } from "./explore-canvas";
 
 const note = (key: string): ExploreNode => ({
   key,
@@ -43,6 +44,7 @@ const graph: ExploreGraph = {
 for (const width of [340, 900])
   test(`See all reveals every note and source beyond the ${width < 640 ? 6 : 8}-node canvas cap and resets on scope change`, async () => {
     vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
+    mockFlowDom();
     const element = document.createElement("div");
     document.body.append(element);
     const root = createRoot(element);
@@ -54,10 +56,9 @@ for (const width of [340, 900])
             graph={graph}
             width={width}
             focusKey={focusKey}
-            camera={INITIAL_CAMERA}
+            camera={undefined}
             onCamera={() => {}}
             onSelect={select}
-            onExplore={() => {}}
           />,
         ),
       );
@@ -65,7 +66,7 @@ for (const width of [340, 900])
     try {
       await render("root");
       expect(
-        element.querySelectorAll("svg [aria-label^='Preview ']"),
+        element.querySelectorAll(".react-flow__node[aria-label^='Preview ']"),
       ).toHaveLength(width < 640 ? 7 : 9);
       const toggle = Array.from(element.querySelectorAll("button")).find(
         (button) => button.textContent?.includes("See all connections (15)"),
@@ -97,5 +98,6 @@ for (const width of [340, 900])
       await act(async () => root.unmount());
       element.remove();
       vi.unstubAllGlobals();
+      vi.restoreAllMocks();
     }
   });

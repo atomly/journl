@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { act, useSyncExternalStore } from "react";
 import { createRoot } from "react-dom/client";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
+import { mockFlowDom } from "../../../../testing/explore-flow-dom";
 import { ClusterExplorer } from "./cluster-explorer";
 import { ExploreOverview } from "./explore-overview";
 import { ExploreStateProvider } from "./explore-state-provider";
@@ -272,11 +273,7 @@ beforeEach(async () => {
   mock.connectionPages = false;
   mock.retired = false;
   metadata.snapshotId = "00000000-0000-4000-8000-000000000003";
-  class Observer {
-    observe() {}
-    disconnect() {}
-  }
-  vi.stubGlobal("ResizeObserver", Observer);
+  mockFlowDom();
   client = new QueryClient({
     defaultOptions: { mutations: { retry: false }, queries: { retry: false } },
   });
@@ -329,6 +326,9 @@ test("opening a thread makes all notes and sources accessible with context", asy
     "Editor improvements",
   );
   expect(container.textContent).toContain("Browse every note and source below");
+  expect(container.textContent).toContain(
+    "28 notes and 1 source outside this map.",
+  );
   const list = container.querySelector('[aria-label="All notes and sources"]')!;
   expect(list.querySelectorAll('a[href^="/explore/notes/"]')).toHaveLength(20);
   await click(button("Why here?", list));

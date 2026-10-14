@@ -1,13 +1,6 @@
 "use client";
 import { useQuery } from "@tanstack/react-query";
-import {
-  Compass,
-  List,
-  Map as MapIcon,
-  Maximize2,
-  Minus,
-  Plus,
-} from "lucide-react";
+import { Compass, List, Map as MapIcon } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "~/components/ui/button";
@@ -16,20 +9,36 @@ import { Skeleton } from "~/components/ui/skeleton";
 import { getExploreTitle } from "~/references/explore-graph";
 import { exploreUpdatedLabel } from "~/references/explore-note-list";
 import { useTRPC } from "~/trpc/react";
-import { INITIAL_CAMERA } from "../../graph/_components/use-explore-camera";
+import type { ExploreCamera } from "../../graph/_components/explore-flow";
 import { useExploreState } from "./explore-state";
 import { ThreadCard, ThreadMap } from "./thread-map";
 
+type OverviewState = {
+  camera: ExploreCamera;
+  cursor: string | undefined;
+  history: (string | undefined)[];
+  mode: "map" | "list";
+  scroll: number;
+  search: string;
+  selected: string | undefined;
+};
+type RecentNotesState = {
+  cursor: string | undefined;
+  history: (string | undefined)[];
+  sort: "latest" | "oldest";
+  unlinkedOnly: boolean;
+};
+
 export function ExploreOverview() {
   const trpc = useTRPC();
-  const [view, setView] = useExploreState("overview", {
-    camera: INITIAL_CAMERA,
-    cursor: undefined as string | undefined,
-    history: [] as (string | undefined)[],
-    mode: "map" as "map" | "list",
+  const [view, setView] = useExploreState<OverviewState>("overview:flow-v1", {
+    camera: undefined,
+    cursor: undefined,
+    history: [],
+    mode: "map",
     scroll: 0,
     search: "",
-    selected: undefined as string | undefined,
+    selected: undefined,
   });
   const [search, setSearch] = useState(view.search);
   const viewport = useRef<HTMLDivElement>(null);
@@ -140,59 +149,6 @@ export function ExploreOverview() {
             >
               <List />
             </Button>
-            {view.mode === "map" && (
-              <>
-                <Button
-                  variant="ghost"
-                  size="icon-sm"
-                  className="pointer-coarse:size-11"
-                  aria-label="Zoom out"
-                  onClick={() =>
-                    setView((v) => ({
-                      ...v,
-                      camera: {
-                        ...v.camera,
-                        zoom: Math.max(0.75, v.camera.zoom - 0.25),
-                      },
-                    }))
-                  }
-                >
-                  <Minus />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon-sm"
-                  className="pointer-coarse:size-11"
-                  aria-label="Zoom in"
-                  onClick={() =>
-                    setView((v) => ({
-                      ...v,
-                      camera: {
-                        ...v.camera,
-                        zoom: Math.min(2, v.camera.zoom + 0.25),
-                      },
-                    }))
-                  }
-                >
-                  <Plus />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon-sm"
-                  className="pointer-coarse:size-11"
-                  aria-label="Fit threads"
-                  onClick={() =>
-                    setView((v) => ({
-                      ...v,
-                      camera: INITIAL_CAMERA,
-                      scroll: 0,
-                    }))
-                  }
-                >
-                  <Maximize2 />
-                </Button>
-              </>
-            )}
           </div>
         </div>
         <div
@@ -225,6 +181,9 @@ export function ExploreOverview() {
                 camera={view.camera}
                 selectedId={view.selected}
                 connections={connections.data?.items ?? []}
+                onDeselect={() =>
+                  setView((v) => ({ ...v, selected: undefined }))
+                }
                 onSelect={selectThread}
                 onCamera={(camera) => setView((v) => ({ ...v, camera }))}
               />
@@ -408,10 +367,10 @@ export function PageButtons({
 }
 function RecentNotes() {
   const trpc = useTRPC();
-  const [view, setView] = useExploreState("recent", {
-    cursor: undefined as string | undefined,
-    history: [] as (string | undefined)[],
-    sort: "latest" as "latest" | "oldest",
+  const [view, setView] = useExploreState<RecentNotesState>("recent", {
+    cursor: undefined,
+    history: [],
+    sort: "latest",
     unlinkedOnly: false,
   });
   const query = useQuery(
@@ -457,7 +416,7 @@ function RecentNotes() {
                 ...v,
                 cursor: undefined,
                 history: [],
-                sort: e.target.value as "latest" | "oldest",
+                sort: e.target.value === "oldest" ? "oldest" : "latest",
               }))
             }
             className="min-h-11 rounded-lg border bg-background px-3"

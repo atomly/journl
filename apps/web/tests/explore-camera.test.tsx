@@ -1,179 +1,171 @@
 // @vitest-environment jsdom
 import { act, useState } from "react";
 import { createRoot } from "react-dom/client";
-import { expect, test, vi } from "vitest";
-import {
-  type ExploreCamera,
-  INITIAL_CAMERA,
-  useExploreCamera,
-  zoomExploreAt,
-} from "../src/app/(app)/graph/_components/use-explore-camera";
+import { afterEach, beforeEach, expect, test, vi } from "vitest";
+import { ExploreCanvas } from "../src/app/(app)/graph/_components/explore-canvas";
+import type { ExploreCamera } from "../src/app/(app)/graph/_components/explore-flow";
+import type { ExploreGraph } from "../src/references/explore-graph";
+import { mockFlowDom } from "./explore-flow-test-dom";
 
-async function setup() {
-  vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
-  const container = document.createElement("div");
-  document.body.append(container);
-  const root = createRoot(container);
-  let camera = INITIAL_CAMERA;
-  function Canvas() {
-    const [state, setState] = useState<ExploreCamera>(INITIAL_CAMERA);
-    camera = state;
-    const events = useExploreCamera(state, setState, 800, 400);
-    return (
-      <svg {...events}>
-        <title>Explore camera test canvas</title>
-        <foreignObject>
-          <button type="button">Note</button>
-        </foreignObject>
-      </svg>
-    );
-  }
-  await act(async () => root.render(<Canvas />));
-  const svg = container.querySelector("svg") as SVGSVGElement;
-  svg.getBoundingClientRect = () => new DOMRect(0, 0, 800, 400);
-  svg.setPointerCapture = vi.fn();
-  async function pointer(
-    type: string,
-    id: number,
-    x: number,
-    y: number,
-    target: Element = svg,
-  ) {
-    await act(async () => {
-      const event = new MouseEvent(type, {
-        bubbles: true,
-        button: 0,
-        cancelable: true,
-        clientX: x,
-        clientY: y,
-      });
-      Object.defineProperties(event, {
-        pointerId: { value: id },
-        pointerType: { value: "touch" },
-      });
-      target.dispatchEvent(event);
-    });
-  }
-  return {
-    camera: () => camera,
-    cleanup: async () => {
-      await act(async () => root.unmount());
-      container.remove();
-      vi.unstubAllGlobals();
+const graph: ExploreGraph = {
+  edges: [
+    {
+      fromKey: "root",
+      occurrenceCount: 1,
+      occurrenceIds: ["passage"],
+      presentations: ["link"],
+      sourceBlocks: ["passage"],
+      sources: [
+        {
+          blockId: "passage",
+          excerpt: "Authored evidence",
+          href: "/pages/root#block=passage",
+        },
+      ],
+      toKey: "neighbor",
     },
-    pointer,
-    svg,
-  };
+  ],
+  nodes: ["root", "neighbor"].map((key) => ({
+    key,
+    kind: "page",
+    target: { documentId: key, kind: "document" },
+    title: key,
+  })),
+};
+let container: HTMLDivElement;
+let root: ReturnType<typeof createRoot>;
+let camera: ExploreCamera;
+const select = vi.fn();
+function TestMap() {
+  const [viewport, setViewport] = useState(camera);
+  const [selected, setSelected] = useState<string>();
+  const [selectedEdge, setSelectedEdge] = useState<string>();
+  return (
+    <ExploreCanvas
+      graph={graph}
+      width={900}
+      focusKey="root"
+      selectedKey={selected}
+      selectedEdgeKey={selectedEdge}
+      camera={viewport}
+      onCamera={(next) => {
+        camera = next;
+        setViewport(next);
+      }}
+      onSelect={(node, edge) => {
+        select(node, edge);
+        setSelected(node.key);
+        setSelectedEdge(edge ? `${edge.fromKey}|${edge.toKey}` : undefined);
+      }}
+      onDeselect={() => {
+        setSelected(undefined);
+        setSelectedEdge(undefined);
+      }}
+    />
+  );
 }
-
-test("zoom keeps the content point under the gesture anchor and clamps bounds", () => {
-  const camera = { x: 30, y: -10, zoom: 1 };
-  const anchor = { x: 120, y: 160 };
-  const center = { x: 400, y: 200 };
-  const next = zoomExploreAt(camera, 1.5, anchor, center);
-  expect((anchor.x - center.x - next.x) / next.zoom).toBeCloseTo(
-    (anchor.x - center.x - camera.x) / camera.zoom,
-  );
-  expect((anchor.y - center.y - next.y) / next.zoom).toBeCloseTo(
-    (anchor.y - center.y - camera.y) / camera.zoom,
-  );
-  expect(zoomExploreAt(camera, 10, anchor, center).zoom).toBe(2);
-  expect(zoomExploreAt(camera, 0.1, anchor, center).zoom).toBe(0.75);
-});
-
-test("two touch pointers pinch from first movement, preserve midpoint, and allow remaining-finger pan", async () => {
-  const view = await setup();
-  try {
-    await view.pointer(
-      "pointerdown",
-      1,
-      200,
-      200,
-      view.svg.querySelector("button") as Element,
-    );
-    await view.pointer("pointerdown", 2, 400, 200);
-    await view.pointer("pointermove", 1, 100, 200);
-    expect(view.camera()).toEqual({ x: 0, y: 0, zoom: 1.5 });
-    await view.pointer("pointermove", 2, 500, 200);
-    expect(view.camera()).toEqual({ x: 100, y: 0, zoom: 2 });
-    await view.pointer("pointerup", 2, 500, 200);
-    await view.pointer("pointermove", 1, 130, 210);
-    expect(view.camera()).toEqual({ x: 130, y: 10, zoom: 2 });
-    await view.pointer("pointercancel", 1, 130, 210);
-    await view.pointer("pointermove", 1, 500, 300);
-    expect(view.camera()).toEqual({ x: 130, y: 10, zoom: 2 });
-  } finally {
-    await view.cleanup();
-  }
-});
-
-test("trackpad pinch cancels native zoom only on the canvas; ordinary wheel and outside pinch stay native", async () => {
-  const view = await setup();
-  try {
-    const normal = new WheelEvent("wheel", {
-      bubbles: true,
-      cancelable: true,
-      deltaY: -20,
-    });
-    view.svg.dispatchEvent(normal);
-    expect(normal.defaultPrevented).toBe(false);
-    expect(view.camera().zoom).toBe(1);
-    const pinch = new WheelEvent("wheel", {
-      bubbles: true,
-      cancelable: true,
-      clientX: 120,
-      clientY: 160,
-      ctrlKey: true,
-      deltaY: -20,
-    });
-    await act(async () => {
-      view.svg.dispatchEvent(pinch);
-    });
-    expect(pinch.defaultPrevented).toBe(true);
-    expect(view.camera().zoom).toBeCloseTo(Math.exp(0.2));
-    expect(view.camera().x).toBeGreaterThan(0);
-    const outside = new WheelEvent("wheel", {
-      bubbles: true,
-      cancelable: true,
-      ctrlKey: true,
-      deltaY: -20,
-    });
-    document.body.dispatchEvent(outside);
-    expect(outside.defaultPrevented).toBe(false);
-  } finally {
-    await view.cleanup();
-  }
-});
-
-test("Safari gesture events zoom in the canvas and listeners are cleaned on unmount", async () => {
-  const view = await setup();
-  const svg = view.svg;
-  try {
-    function gesture(type: string, scale: number) {
-      const event = new Event(type, { bubbles: true, cancelable: true });
-      Object.defineProperties(event, {
-        clientX: { value: 400 },
-        clientY: { value: 200 },
-        scale: { value: scale },
-      });
-      return event;
-    }
-    const start = gesture("gesturestart", 1);
-    svg.dispatchEvent(start);
-    expect(start.defaultPrevented).toBe(true);
-    const change = gesture("gesturechange", 1.5);
-    await act(async () => {
-      svg.dispatchEvent(change);
-    });
-    expect(view.camera().zoom).toBe(1.5);
-  } finally {
-    await view.cleanup();
-  }
-  const wheel = new WheelEvent("wheel", {
-    cancelable: true,
-    ctrlKey: true,
-    deltaY: -20,
+const settle = () =>
+  act(async () => {
+    await new Promise((resolve) => setTimeout(resolve, 350));
   });
-  svg.dispatchEvent(wheel);
-  expect(wheel.defaultPrevented).toBe(false);
+beforeEach(async () => {
+  vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
+  mockFlowDom();
+  camera = undefined;
+  select.mockClear();
+  container = document.createElement("div");
+  document.body.append(container);
+  root = createRoot(container);
+  await act(async () => root.render(<TestMap />));
+});
+afterEach(async () => {
+  await act(async () => root.unmount());
+  container.remove();
+  vi.unstubAllGlobals();
+  vi.restoreAllMocks();
+});
+
+test("React Flow keyboard selection opens notes and authored edge context", async () => {
+  const node = container.querySelector('[aria-label="Preview neighbor"]');
+  await act(async () =>
+    node?.dispatchEvent(
+      new KeyboardEvent("keydown", { bubbles: true, key: "Enter" }),
+    ),
+  );
+  expect(select).toHaveBeenLastCalledWith(graph.nodes[1], undefined);
+  await settle();
+  const edge = container.querySelector(".react-flow__edge");
+  expect(edge).not.toBeNull();
+  await act(async () =>
+    edge?.dispatchEvent(
+      new KeyboardEvent("keydown", { bubbles: true, key: " " }),
+    ),
+  );
+  expect(select).toHaveBeenLastCalledWith(graph.nodes[1], graph.edges[0]);
+  expect(
+    container
+      .querySelector('[aria-label="Preview neighbor"]')
+      ?.classList.contains("selected"),
+  ).toBe(true);
+  await act(async () =>
+    container
+      .querySelector(".react-flow__edge")
+      ?.dispatchEvent(
+        new KeyboardEvent("keydown", { bubbles: true, key: "Escape" }),
+      ),
+  );
+  expect(
+    container
+      .querySelector('[aria-label="Preview neighbor"]')
+      ?.classList.contains("selected"),
+  ).toBe(false);
+});
+
+test("library zoom controls persist the viewport and restore it after remount", async () => {
+  await act(async () =>
+    container
+      .querySelector<HTMLButtonElement>('[aria-label="Zoom in"]')
+      ?.click(),
+  );
+  await settle();
+  expect(camera?.zoom).toBeGreaterThan(1);
+  const saved = camera;
+  await act(async () => root.render(<TestMap key="restored" />));
+  expect(
+    container.querySelector(".react-flow__viewport")?.getAttribute("style"),
+  ).toContain(`scale(${saved?.zoom})`);
+  await act(async () =>
+    container
+      .querySelector<HTMLButtonElement>('[aria-label="Fit map"]')
+      ?.click(),
+  );
+  await settle();
+  expect(camera?.zoom).toBeGreaterThan(0);
+  expect(select).not.toHaveBeenCalled();
+});
+
+test("each click opens context once, including reselecting a note after its edge", async () => {
+  await settle();
+  const node = container.querySelector<HTMLElement>(
+    '[aria-label="Preview neighbor"]',
+  );
+  await act(async () => node?.click());
+  expect(select).toHaveBeenCalledTimes(1);
+  expect(select).toHaveBeenLastCalledWith(graph.nodes[1], undefined);
+  await act(async () =>
+    container
+      .querySelector(".react-flow__edge")
+      ?.dispatchEvent(new MouseEvent("click", { bubbles: true })),
+  );
+  expect(select).toHaveBeenCalledTimes(2);
+  expect(select).toHaveBeenLastCalledWith(graph.nodes[1], graph.edges[0]);
+  await act(async () =>
+    container
+      .querySelector(".react-flow__edge")
+      ?.dispatchEvent(new MouseEvent("click", { bubbles: true })),
+  );
+  expect(select).toHaveBeenCalledTimes(3);
+  await act(async () => node?.click());
+  expect(select).toHaveBeenCalledTimes(4);
+  expect(select).toHaveBeenLastCalledWith(graph.nodes[1], undefined);
 });

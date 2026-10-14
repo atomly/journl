@@ -1,6 +1,6 @@
 "use client";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Maximize2, Minus, Pencil, Plus, X } from "lucide-react";
+import { ArrowLeft, Pencil, X } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
@@ -27,34 +27,46 @@ import {
 } from "~/references/explore-graph";
 import { exploreUpdatedLabel } from "~/references/explore-note-list";
 import { useTRPC } from "~/trpc/react";
-import {
-  ExploreCanvas,
-  INITIAL_CAMERA,
-} from "../../graph/_components/explore-canvas";
+import { ExploreCanvas } from "../../graph/_components/explore-canvas";
+import type { ExploreCamera } from "../../graph/_components/explore-flow";
 import {
   ExplorePreview,
   noteRoute,
 } from "../../graph/_components/explore-preview";
+import { RelatedThreads, ThreadItems } from "./cluster-items";
 import { ExploreError, PageButtons } from "./explore-overview";
 import { useExploreState } from "./explore-state";
 
-import { ThreadItems, RelatedThreads } from "./cluster-items";
+type ClusterViewState = {
+  camera: ExploreCamera;
+  edge: string | undefined;
+  scroll: number;
+  selected: string | undefined;
+};
+type SuccessorViewState = {
+  cursor: string | undefined;
+  history: (string | undefined)[];
+};
+
 export function ClusterExplorer({ clusterId }: { clusterId: string }) {
   const trpc = useTRPC();
   const router = useRouter();
   const cache = useQueryClient();
   const mobile = useIsMobile();
-  const [view, setView] = useExploreState(`cluster:${clusterId}`, {
-    camera: INITIAL_CAMERA,
-    edge: undefined as string | undefined,
-    scroll: 0,
-    selected: undefined as string | undefined,
-  });
-  const [successorView, setSuccessorView] = useExploreState(
+  const [view, setView] = useExploreState<ClusterViewState>(
+    `cluster:${clusterId}:flow-v1`,
+    {
+      camera: undefined,
+      edge: undefined,
+      scroll: 0,
+      selected: undefined,
+    },
+  );
+  const [successorView, setSuccessorView] = useExploreState<SuccessorViewState>(
     `successors:${clusterId}`,
     {
-      cursor: undefined as string | undefined,
-      history: [] as (string | undefined)[],
+      cursor: undefined,
+      history: [],
     },
   );
   const summary = useQuery(
@@ -259,57 +271,6 @@ export function ClusterExplorer({ clusterId }: { clusterId: string }) {
                   <p className="text-muted-foreground text-xs">
                     Select a note or source to reveal its connections
                   </p>
-                  <div className="flex shrink-0">
-                    <Button
-                      variant="ghost"
-                      size="icon-sm"
-                      className="pointer-coarse:size-11"
-                      aria-label="Zoom out"
-                      onClick={() =>
-                        setView((v) => ({
-                          ...v,
-                          camera: {
-                            ...v.camera,
-                            zoom: Math.max(0.75, v.camera.zoom - 0.25),
-                          },
-                        }))
-                      }
-                    >
-                      <Minus />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon-sm"
-                      className="pointer-coarse:size-11"
-                      aria-label="Zoom in"
-                      onClick={() =>
-                        setView((v) => ({
-                          ...v,
-                          camera: {
-                            ...v.camera,
-                            zoom: Math.min(2, v.camera.zoom + 0.25),
-                          },
-                        }))
-                      }
-                    >
-                      <Plus />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon-sm"
-                      className="pointer-coarse:size-11"
-                      aria-label="Fit thread"
-                      onClick={() =>
-                        setView((v) => ({
-                          ...v,
-                          camera: INITIAL_CAMERA,
-                          scroll: 0,
-                        }))
-                      }
-                    >
-                      <Maximize2 />
-                    </Button>
-                  </div>
                 </div>
                 <div
                   ref={viewport}
@@ -329,10 +290,17 @@ export function ClusterExplorer({ clusterId }: { clusterId: string }) {
                       graph={graph}
                       width={width}
                       selectedKey={selected?.key}
+                      selectedEdgeKey={view.edge}
                       camera={view.camera}
                       onCamera={(camera) => setView((v) => ({ ...v, camera }))}
                       onSelect={select}
-                      onExplore={explore}
+                      onDeselect={() =>
+                        setView((v) => ({
+                          ...v,
+                          edge: undefined,
+                          selected: undefined,
+                        }))
+                      }
                     />
                   )}
                 </div>
@@ -341,7 +309,7 @@ export function ClusterExplorer({ clusterId }: { clusterId: string }) {
                   (map.data.omittedNotes > 0 ||
                     map.data.omittedSources > 0 ||
                     map.data.hasMoreConnections)
-                    ? "A selection is shown on the map. Browse every note and source below."
+                    ? `${map.data.omittedNotes} ${map.data.omittedNotes === 1 ? "note" : "notes"} and ${map.data.omittedSources} ${map.data.omittedSources === 1 ? "source" : "sources"} outside this map.${map.data.hasMoreConnections ? " More connections are available." : ""} Browse every note and source below.`
                     : "Lines show references written in your notes."}
                   {summary.data.refreshing && (
                     <span role="status"> Updating this thread…</span>

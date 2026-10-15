@@ -22,13 +22,28 @@ import {
 } from "~/lib/tree-model";
 
 const DRAG_CLICK_SUPPRESSION_MS = 200;
-export function useTreeController() {
+export function useTreeController(expansion?: {
+  openFolders: Record<string, boolean>;
+  setFolderOpen(id: string, open: boolean): void;
+}) {
   const {
     mutate: moveItem,
     isPending: isMovingItem,
     loadedItems,
   } = useMoveTreeItem();
-  const [openFolders, setOpenFolders] = useState<Record<string, boolean>>({});
+  const [localOpenFolders, setOpenFolders] = useState<Record<string, boolean>>(
+    {},
+  );
+  const [hoverOpenFolders, setHoverOpenFolders] = useState<
+    Record<string, boolean>
+  >({});
+  const openFolders = useMemo(
+    () => ({
+      ...(expansion?.openFolders ?? localOpenFolders),
+      ...hoverOpenFolders,
+    }),
+    [expansion?.openFolders, localOpenFolders, hoverOpenFolders],
+  );
   const [activeDragId, setActiveDragId] = useState<string | null>(null);
   const [activeDragLabel, setActiveDragLabel] = useState<string | null>(null);
   const hoverExpandTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
@@ -50,18 +65,23 @@ export function useTreeController() {
     };
   }, [clearHoverExpandTimeout]);
 
-  const setFolderOpen = useCallback((folderNodeId: string, open: boolean) => {
-    setOpenFolders((previous) => {
-      if (previous[folderNodeId] === open) {
-        return previous;
-      }
+  const setLocalFolderOpen = useCallback(
+    (folderNodeId: string, open: boolean) => {
+      setOpenFolders((previous) => {
+        if (previous[folderNodeId] === open) {
+          return previous;
+        }
 
-      return {
-        ...previous,
-        [folderNodeId]: open,
-      };
-    });
-  }, []);
+        return {
+          ...previous,
+          [folderNodeId]: open,
+        };
+      });
+    },
+    [],
+  );
+
+  const setFolderOpen = expansion?.setFolderOpen ?? setLocalFolderOpen;
 
   const markRecentDrag = useCallback(() => {
     recentDragUntilRef.current = Date.now() + DRAG_CLICK_SUPPRESSION_MS;
@@ -95,6 +115,7 @@ export function useTreeController() {
     (_event: DragCancelEvent) => {
       clearHoverExpandTimeout();
       markRecentDrag();
+      setHoverOpenFolders({});
       setActiveDragId(null);
       setActiveDragLabel(null);
     },
@@ -119,10 +140,13 @@ export function useTreeController() {
       clearHoverExpandTimeout();
       hoverFolderIdRef.current = folderNodeId;
       hoverExpandTimeoutRef.current = setTimeout(() => {
-        setFolderOpen(folderNodeId, true);
+        setHoverOpenFolders((previous) => ({
+          ...previous,
+          [folderNodeId]: true,
+        }));
       }, 700);
     },
-    [clearHoverExpandTimeout, openFolders, setFolderOpen, isDnDEnabled],
+    [clearHoverExpandTimeout, openFolders, isDnDEnabled],
   );
 
   const handleDragOver = useCallback(
@@ -146,6 +170,7 @@ export function useTreeController() {
     (event: DragEndEvent) => {
       clearHoverExpandTimeout();
       markRecentDrag();
+      setHoverOpenFolders({});
       setActiveDragId(null);
       setActiveDragLabel(null);
 
@@ -263,7 +288,6 @@ export function useTreeController() {
     isDnDEnabled,
     openFolders,
     setFolderOpen,
-    setOpenFolders,
     shouldSuppressClick,
   };
 }

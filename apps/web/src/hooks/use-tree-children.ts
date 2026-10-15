@@ -24,6 +24,7 @@ export function useTreeChildren({
     getInfiniteSidebarTreeQueryOptions(parentNodeId),
     {
       getNextPageParam: ({ nextCursor }) => nextCursor ?? undefined,
+      staleTime: 30_000,
     },
   );
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isPending } =
@@ -44,6 +45,7 @@ export function useTreeChildren({
   const shouldShowInitialSkeleton = items.length === 0 && isPending;
   useEffect(() => {
     if (
+      !enabled ||
       !hasNextPage ||
       isFetchingNextPage ||
       typeof IntersectionObserver === "undefined" ||
@@ -58,7 +60,7 @@ export function useTreeChildren({
     );
     observer.observe(loadMoreRef.current);
     return () => observer.disconnect();
-  }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
+  }, [enabled, fetchNextPage, hasNextPage, isFetchingNextPage]);
   return {
     hasNextPage: !!hasNextPage,
     isFetchingNextPage,

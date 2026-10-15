@@ -18,6 +18,7 @@ import {
 } from "~/workflows/folder-deletion-outbox";
 import { queueFolderDeletionCleanup } from "~/workflows/folder-deletion-queue";
 import { protectedProcedure, type TRPCContext } from "../trpc";
+import { ancestorNodeIds as readAncestorNodeIds } from "./tree-ancestors";
 import {
   detachEdge,
   insertEdgeAtPosition,
@@ -432,33 +433,11 @@ export const treeRouter = {
         return [];
       }
 
-      // 2. Load all edges for this user and build a parent map in memory
-      const edges = await ctx.db
-        .select({
-          node_id: TreeEdge.node_id,
-          parent_node_id: TreeEdge.parent_node_id,
-        })
-        .from(TreeEdge)
-        .where(eq(TreeEdge.user_id, userId));
-
-      const parentByNodeId = new Map<string, string | null>();
-      for (const edge of edges) {
-        parentByNodeId.set(edge.node_id, edge.parent_node_id);
-      }
-
-      // 3. Walk up the chain to collect ancestor node IDs
-      const ancestorNodeIds: string[] = [];
-      let currentNodeId: string | null = startNodeId;
-      const visited = new Set<string>();
-
-      while (currentNodeId) {
-        if (visited.has(currentNodeId)) {
-          break;
-        }
-        visited.add(currentNodeId);
-        ancestorNodeIds.push(currentNodeId);
-        currentNodeId = parentByNodeId.get(currentNodeId) ?? null;
-      }
+      const ancestorNodeIds = await readAncestorNodeIds(
+        ctx.db,
+        userId,
+        startNodeId,
+      );
 
       if (ancestorNodeIds.length === 0) {
         return [];

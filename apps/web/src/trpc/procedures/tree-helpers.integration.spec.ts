@@ -10,6 +10,7 @@ import {
 } from "~/trpc/procedures/tree-helpers";
 import { queueFolderDeletionCleanup } from "~/workflows/folder-deletion-queue";
 import { createPostgresFixture } from "../../testing/postgres";
+import { ancestorNodeIds } from "./tree-ancestors";
 
 const { client, db, queries } = createPostgresFixture({
   Document: schema.Document,
@@ -349,5 +350,39 @@ integration(
     expect(edges).toHaveLength(4);
     expect(new Set(edges.map((edge) => edge.node_id))).toEqual(new Set(ids));
     expect(edges[0]?.node_id).toBe(ids[3]);
+  },
+);
+
+integration(
+  "ancestor reads stay on the owned chain after moves and deletion",
+  async () => {
+    await db.transaction((tx) =>
+      moveNode({
+        db: tx,
+        destination: { parent_node_id: folderId },
+        nodeId: ids[0]!,
+        userId: owner,
+      }),
+    );
+    expect(await ancestorNodeIds(db, owner, ids[0]!)).toEqual([
+      ids[0],
+      folderId,
+    ]);
+    expect(await ancestorNodeIds(db, "other-owner", ids[0]!)).toEqual([]);
+    queries.length = 0;
+    expect(await ancestorNodeIds(db, owner, folderId)).toEqual([folderId]);
+    expect(queries).toHaveLength(1);
+    expect(queries[0]).toContain("WITH RECURSIVE");
+    await db.transaction((tx) =>
+      moveNode({
+        db: tx,
+        destination: { parent_node_id: null },
+        nodeId: ids[0]!,
+        userId: owner,
+      }),
+    );
+    expect(await ancestorNodeIds(db, owner, ids[0]!)).toEqual([ids[0]]);
+    await db.delete(schema.TreeNode).where(eq(schema.TreeNode.id, folderId));
+    expect(await ancestorNodeIds(db, owner, folderId)).toEqual([]);
   },
 );

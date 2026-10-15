@@ -15,6 +15,12 @@ test("Explore supports keyboard selection, search, thread navigation, and respon
   await thread.focus();
   await page.keyboard.press("Enter");
   await expect(
+    page.getByRole("heading", {
+      exact: true,
+      name: "Where Browser thread leads",
+    }),
+  ).toBeVisible();
+  await expect(
     page.getByRole("link", { name: /Explore thread/ }).first(),
   ).toBeVisible();
   await page

@@ -1,3 +1,5 @@
+export { getConnectedNotes, getNoteClusters } from "@acme/graph/connections";
+
 import type { RouterOutputs } from "~/trpc";
 
 type GraphPage = RouterOutputs["references"]["getGraph"];
@@ -60,99 +62,4 @@ export function getExploreTitle(node: Pick<ExploreNode, "kind" | "title">) {
         dateStyle: "medium",
         timeZone: "UTC",
       }).format(date);
-}
-
-export function getConnectedNotes(graph: ExploreGraph, key: string) {
-  const adjacent = new Set(
-    graph.edges.flatMap((edge) =>
-      edge.fromKey === key
-        ? [edge.toKey]
-        : edge.toKey === key
-          ? [edge.fromKey]
-          : [],
-    ),
-  );
-  return graph.nodes
-    .filter(
-      (node) =>
-        (isNote(node) || node.kind === "external") &&
-        node.key !== key &&
-        adjacent.has(node.key),
-    )
-    .sort((a, b) => a.title.localeCompare(b.title));
-}
-
-/** Clusters describe authored note links, never proximity or inferred similarity. */
-export function getNoteClusters(graph: ExploreGraph) {
-  const notes = graph.nodes
-    .filter((node) => isNote(node) || node.kind === "external")
-    .sort(
-      (a, b) => a.title.localeCompare(b.title) || a.key.localeCompare(b.key),
-    );
-  const byKey = new Map(notes.map((node) => [node.key, node]));
-  const neighbors = new Map(notes.map((node) => [node.key, new Set<string>()]));
-  for (const edge of graph.edges) {
-    if (
-      !byKey.has(edge.fromKey) ||
-      !byKey.has(edge.toKey) ||
-      edge.fromKey === edge.toKey
-    )
-      continue;
-    neighbors.get(edge.fromKey)?.add(edge.toKey);
-    neighbors.get(edge.toKey)?.add(edge.fromKey);
-  }
-  const visited = new Set<string>();
-  const clusters: ExploreNode[][] = [];
-  const unlinked: ExploreNode[] = [];
-  for (const note of notes) {
-    if (visited.has(note.key)) continue;
-    if (!neighbors.get(note.key)?.size) {
-      if (isNote(note)) unlinked.push(note);
-      visited.add(note.key);
-      continue;
-    }
-    const component: ExploreNode[] = [];
-    const queue = [note.key];
-    while (queue.length) {
-      const key = queue.shift();
-      if (!key || visited.has(key)) continue;
-      visited.add(key);
-      const node = byKey.get(key);
-      if (node) component.push(node);
-      queue.push(...(neighbors.get(key) ?? []));
-    }
-    const root = [...component].sort(
-      (a, b) =>
-        Number(isNote(b)) - Number(isNote(a)) ||
-        (neighbors.get(b.key)?.size ?? 0) - (neighbors.get(a.key)?.size ?? 0) ||
-        a.title.localeCompare(b.title),
-    )[0];
-    if (!root) continue;
-    // A breadth-first preview keeps visible paths intact when a cluster is large.
-    const ordered: ExploreNode[] = [];
-    const seen = new Set<string>();
-    const next = [root.key];
-    while (next.length) {
-      const key = next.shift();
-      if (!key || seen.has(key)) continue;
-      seen.add(key);
-      const node = byKey.get(key);
-      if (node) ordered.push(node);
-      const adjacent = [...(neighbors.get(key) ?? [])].sort(
-        (a, b) =>
-          Number(byKey.get(b)?.kind === "external") -
-            Number(byKey.get(a)?.kind === "external") || a.localeCompare(b),
-      );
-      next.push(...adjacent);
-    }
-    clusters.push(ordered);
-  }
-  return {
-    clusters: clusters.sort(
-      (a, b) =>
-        b.length - a.length ||
-        (a[0]?.title ?? "").localeCompare(b[0]?.title ?? ""),
-    ),
-    unlinked,
-  };
 }

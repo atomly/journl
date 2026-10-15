@@ -1,9 +1,10 @@
+/// <reference path="./ngraph-leiden.d.ts" />
 import createGraph from "ngraph.graph";
 import { detectClusters } from "ngraph.leiden";
 
-import { CLUSTER_CONFIG } from "./config";
+import { CLUSTER_CONFIG } from "./config.js";
 
-export { ALGORITHM_VERSION, CLUSTER_CONFIG } from "./config";
+export { ALGORITHM_VERSION, CLUSTER_CONFIG } from "./config.js";
 export type ClusterNote = {
   id: string;
   title: string;
@@ -28,12 +29,13 @@ export type ClusterCandidate = {
   sources: { key: string; url: string; documentCount: number }[];
 };
 
+/** Discover threads without turning shared sources into authored links. */
 export function buildClusters(
   notes: ClusterNote[],
   references: ClusterReference[],
 ): ClusterCandidate[] {
   const byId = new Map(notes.map((n) => [n.id, n]));
-  const direct = new Map<string, Set<string>>();
+  const direct = new Set<string>();
   const shared = new Map<string, { count: number; weight: number }>();
   const sources = new Map<string, { url: string; documents: Set<string> }>();
   const pair = (a: string, b: string) => (a < b ? `${a}|${b}` : `${b}|${a}`);
@@ -41,9 +43,7 @@ export function buildClusters(
     if (!byId.has(r.source)) continue;
     if (r.target && byId.has(r.target) && r.source !== r.target) {
       const key = pair(r.source, r.target);
-      const evidence = direct.get(key) ?? new Set<string>();
-      evidence.add(r.id);
-      direct.set(key, evidence);
+      direct.add(key);
     } else if (r.sourceKey && r.url) {
       const source = sources.get(r.sourceKey) ?? {
         documents: new Set<string>(),
@@ -67,7 +67,7 @@ export function buildClusters(
   }
   const graph = createGraph<undefined, { weight: number }>();
   const weights = new Map<string, number>();
-  for (const key of new Set([...direct.keys(), ...shared.keys()])) {
+  for (const key of new Set([...direct, ...shared.keys()])) {
     const evidence = shared.get(key);
     const weight =
       (direct.has(key) ? CLUSTER_CONFIG.directWeight : 0) +
@@ -265,6 +265,7 @@ export function buildClusters(
   return candidates;
 }
 
+/** Match the strongest overlaps one-to-one, carrying user names across refreshes. */
 export function matchClusterIdentities(
   candidates: ClusterCandidate[],
   previous: { id: string; members: string[]; name: string }[],

@@ -3,7 +3,7 @@ import {
   buildClusters,
   type ClusterNote,
   type ClusterReference,
-} from "../src/explore/clustering";
+} from "@acme/graph/clustering";
 
 const notes: ClusterNote[] = Array.from({ length: 10000 }, (_, i) => ({
   href: `/pages/${i}`,

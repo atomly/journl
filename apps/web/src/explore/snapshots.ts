@@ -1,3 +1,10 @@
+import {
+  ALGORITHM_VERSION,
+  buildClusters,
+  type ClusterNote,
+  clusterLineage,
+  matchClusterIdentities,
+} from "@acme/graph/clustering";
 import { randomUUID } from "node:crypto";
 import { and, eq, inArray, lt, lte, or, sql } from "@acme/db";
 import { db } from "@acme/db/client";
@@ -15,13 +22,7 @@ import {
   JournalEntry,
   Page,
 } from "@acme/db/schema";
-import {
-  ALGORITHM_VERSION,
-  buildClusters,
-  type ClusterNote,
-  clusterLineage,
-  matchClusterIdentities,
-} from "./clustering";
+
 
 export async function refreshExploreSnapshot(userId: string) {
   const token = randomUUID();

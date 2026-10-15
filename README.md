@@ -148,7 +148,7 @@ production server on port 3001 using disposable owners; the server must use the 
 local test auth secret. Explore database regressions use the shared integration test command above.
 The algorithm uses MIT-licensed `ngraph.leiden@0.3.0` and `ngraph.graph@20.1.2`,
 Leiden CPM resolution 0.5 and deterministic seed 42. Algorithm parameters
-and their version live in `apps/web/src/explore/config.ts`; changing the version schedules
+and their version live in `packages/graph/src/config.ts`; changing the version schedules
 fresh snapshots on the next Explore visit. The daily refresh cron uses the existing `CRON_SECRET`.
 
 Existing saved links keep their authored display; backfill builds reference indexes

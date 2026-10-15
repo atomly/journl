@@ -5,7 +5,7 @@ import {
   type ClusterReference,
   clusterLineage,
   matchClusterIdentities,
-} from "./clustering";
+} from "./clustering.ts";
 
 const note = (id: string): ClusterNote => ({
   href: `/pages/${id}`,

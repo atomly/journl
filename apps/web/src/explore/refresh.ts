@@ -5,7 +5,7 @@ import {
   ExploreState,
 } from "@acme/db/schema";
 import type { TRPCContext } from "~/trpc/trpc";
-import { ALGORITHM_VERSION } from "./config";
+import { ALGORITHM_VERSION } from "@acme/graph/config";
 
 /** Must run in the same transaction as the authored change. */
 export async function markExploreDirty(tx: TRPCContext["db"], userId: string) {

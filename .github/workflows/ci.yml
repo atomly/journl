@@ -2,7 +2,7 @@ name: CI
 
 on:
   pull_request:
-    branches: ["*"]
+    branches: ["**"]
   push:
     branches: ["main"]
   merge_group:
@@ -96,3 +96,25 @@ jobs:
         uses: ./tooling/github/setup
       - name: Database integration tests
         run: pnpm test:integration
+
+  browser:
+    if: >-
+      github.event.pull_request.stack == null ||
+      github.event.pull_request.stack.base.ref == github.event.pull_request.base.ref
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup
+        uses: ./tooling/github/setup
+      - name: Install Playwright browsers
+        run: pnpm --filter @acme/web exec playwright install --with-deps chromium webkit
+      - name: Browser acceptance
+        run: pnpm test:browser
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-results
+          path: |
+            apps/web/playwright-report/
+            apps/web/test-results/
+          retention-days: 7

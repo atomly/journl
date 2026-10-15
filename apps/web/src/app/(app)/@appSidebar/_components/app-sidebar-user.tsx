@@ -32,24 +32,26 @@ export async function AppSidebarUser() {
     <SidebarMenu>
       <SidebarMenuItem>
         <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <SidebarMenuButton
-              size="lg"
-              className="data-[popup-open]:bg-sidebar-accent data-[popup-open]:text-sidebar-accent-foreground"
-            >
-              <Avatar className="h-8 w-8 rounded-lg">
-                {user.image ? (
-                  <AvatarImage src={user.image} alt={user.name} />
-                ) : (
-                  <AppSidebarUserInformation name={user.name} />
-                )}
-              </Avatar>
-              <div className="grid flex-1 text-left text-sm leading-tight">
-                <AppSidebarUsername name={user.name} />
-                <AppSidebarUserEmail email={user.email} />
-              </div>
-              <ChevronsUpDown className="ml-auto size-4" />
-            </SidebarMenuButton>
+          <DropdownMenuTrigger
+            render={
+              <SidebarMenuButton
+                size="lg"
+                className="data-[popup-open]:bg-sidebar-accent data-[popup-open]:text-sidebar-accent-foreground"
+              />
+            }
+          >
+            <Avatar className="h-8 w-8 rounded-lg">
+              {user.image ? (
+                <AvatarImage src={user.image} alt={user.name} />
+              ) : (
+                <AppSidebarUserInformation name={user.name} />
+              )}
+            </Avatar>
+            <div className="grid flex-1 text-left text-sm leading-tight">
+              <AppSidebarUsername name={user.name} />
+              <AppSidebarUserEmail email={user.email} />
+            </div>
+            <ChevronsUpDown className="ml-auto size-4" />
           </DropdownMenuTrigger>
           <AppSidebarUserMenu
             data-name="app-sidebar-user-menu"

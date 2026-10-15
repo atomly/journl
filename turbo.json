@@ -52,6 +52,10 @@
       "cache": false,
       "persistent": true
     },
+    "test:browser": {
+      "cache": false,
+      "passThroughEnv": ["DOCKER_*", "TESTCONTAINERS_*", "PLAYWRIGHT_*"]
+    },
     "test:integration": {
       "cache": false,
       "passThroughEnv": ["DOCKER_*", "TESTCONTAINERS_*"]

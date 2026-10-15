@@ -14,23 +14,31 @@ import { env } from "~/env";
 import type { ApiRouter } from "~/trpc";
 import { createQueryClient } from "./query-client";
 
-let clientQueryClientSingleton: QueryClient | undefined;
-const getQueryClient = () => {
+let clientQueryClientSingleton:
+  | { owner: string; client: QueryClient }
+  | undefined;
+const getQueryClient = (owner?: string) => {
   if (typeof window === "undefined") {
     // Server: always make a new query client
     return createQueryClient();
   }
-  if (!clientQueryClientSingleton) {
-    // Browser: use singleton pattern to keep the same query client
-    clientQueryClientSingleton = createQueryClient();
+  if (
+    !clientQueryClientSingleton ||
+    clientQueryClientSingleton.owner !== owner
+  ) {
+    // Keep one cache through navigation, replacing it when the authenticated owner changes.
+    clientQueryClientSingleton = { client: createQueryClient(), owner };
   }
-  return clientQueryClientSingleton;
+  return clientQueryClientSingleton.client;
 };
 
 export const { useTRPC, TRPCProvider } = createTRPCContext<ApiRouter>();
 
-export function TRPCReactProvider(props: { children: React.ReactNode }) {
-  const queryClient = getQueryClient();
+export function TRPCReactProvider(props: {
+  children: React.ReactNode;
+  owner?: string;
+}) {
+  const queryClient = getQueryClient(props.owner);
 
   const [trpcClient] = useState(() =>
     createTRPCClient<ApiRouter>({

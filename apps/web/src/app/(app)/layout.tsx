@@ -1,4 +1,5 @@
 import { withAuth } from "~/app/_guards/page-guards";
+import { getUser } from "~/auth/server";
 import { SidebarInset } from "~/components/ui/sidebar";
 import { Toaster } from "~/components/ui/toast";
 import { getAppPreferences } from "~/preferences/get-preferences";
@@ -29,10 +30,13 @@ async function AppLayout({
   header,
   subscriptionModal,
 }: AppLayoutProps) {
-  const preferences = await getAppPreferences();
+  const [preferences, owner] = await Promise.all([
+    getAppPreferences(),
+    getUser(),
+  ]);
 
   return (
-    <AppProviders initialPreferences={preferences}>
+    <AppProviders initialPreferences={preferences} owner={owner.id}>
       <AppProgressBar className="fixed top-0 left-0 z-7000 h-1 w-full" />
       <ChatSidebarProvider className="flex min-h-screen-safe flex-col">
         <div className="flex flex-1">

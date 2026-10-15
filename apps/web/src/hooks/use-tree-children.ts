@@ -24,7 +24,6 @@ export function useTreeChildren({
     getInfiniteSidebarTreeQueryOptions(parentNodeId),
     {
       getNextPageParam: ({ nextCursor }) => nextCursor ?? undefined,
-      staleTime: 30_000,
     },
   );
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isPending } =

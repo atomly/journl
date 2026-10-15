@@ -46,7 +46,7 @@ test("cold reads and return navigation reuse fresh first pages; collapsed folder
   );
   fixture.requests = [];
   const client = new QueryClient({
-    defaultOptions: { queries: { retry: false } },
+    defaultOptions: { queries: { retry: false, staleTime: 30_000 } },
   });
   const container = document.createElement("div");
   const root = createRoot(container);
@@ -123,7 +123,7 @@ test("prefetching just the three active ancestors removes the nested reveal wate
     for (const prefetch of [false, true]) {
       fixture.requests = [];
       const client = new QueryClient({
-        defaultOptions: { queries: { retry: false } },
+        defaultOptions: { queries: { retry: false, staleTime: 30_000 } },
       });
       const container = document.createElement("div");
       const root = createRoot(container);

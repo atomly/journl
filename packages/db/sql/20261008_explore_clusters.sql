@@ -1,4 +1,4 @@
--- Additive Explore migration. Apply atomically through explore:setup.
+-- Historical additive Explore migration. Current schema is managed by Drizzle.
 CREATE UNIQUE INDEX IF NOT EXISTS document_owner_id ON document (user_id, id);
 CREATE INDEX IF NOT EXISTS document_owner_activity ON document (user_id, updated_at DESC, id);
 CREATE TABLE "explore_cluster" (

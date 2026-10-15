@@ -10,12 +10,9 @@
     "dev": "NODE_ENV=development pnpm with-env next dev --turbopack",
     "shadcn": "pnpm dlx shadcn@latest add && pnpm check --write --unsafe",
     "start": "NODE_ENV=production pnpm with-env next start",
-    "references:backfill": "pnpm with-env jiti scripts/backfill-reference-projections.ts",
     "test:env": "NODE_ENV=development vitest run ./src/env.spec.ts",
     "typecheck": "tsc --noEmit",
     "with-env": "dotenv -e ../../.env --",
-    "explore:backfill": "pnpm with-env jiti scripts/backfill-explore.ts",
-    "explore:setup": "pnpm with-env jiti scripts/setup-explore.ts",
     "test:integration": "vitest run --config vitest.integration.config.ts",
     "test:unit": "vitest run --maxWorkers=4",
     "test:browser": "playwright test"

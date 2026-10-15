@@ -14,9 +14,12 @@ test("Library expansion reveals a paginated folder and keyboard actions remain a
     exact: true,
     name: "Expand Browser folder",
   });
-  await folder.focus();
   const started = Date.now();
-  await page.keyboard.press("Enter");
+  if (info.project.name === "mobile-webkit") await folder.tap();
+  else {
+    await folder.focus();
+    await page.keyboard.press("Enter");
+  }
   await expect(
     page.getByRole("link", { exact: true, name: "Browser note 01" }),
   ).toBeVisible();
@@ -27,8 +30,11 @@ test("Library expansion reveals a paginated folder and keyboard actions remain a
     exact: true,
     name: "Actions for Browser note 01",
   });
-  await actions.focus();
-  await page.keyboard.press("Enter");
+  if (info.project.name === "mobile-webkit") await actions.tap();
+  else {
+    await actions.focus();
+    await page.keyboard.press("Enter");
+  }
   await expect(
     page.getByRole("menuitem", { exact: true, name: "Move down" }),
   ).toBeEnabled();

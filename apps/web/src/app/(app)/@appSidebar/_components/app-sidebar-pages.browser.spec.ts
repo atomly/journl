@@ -24,6 +24,19 @@ test("Library expansion reveals a paginated folder and keyboard actions remain a
   await expect(
     page.getByRole("button", { exact: true, name: "Collapse Browser folder" }),
   ).toBeVisible();
+  const actions = page.getByRole("button", {
+    exact: true,
+    name: "Actions for Browser note 01",
+  });
+  await actions.focus();
+  await page.keyboard.press("Enter");
+  await expect(
+    page.getByRole("menuitem", { exact: true, name: "Move down" }),
+  ).toBeEnabled();
+  await expect(
+    page.getByRole("menuitem", { exact: true, name: "Move to…" }),
+  ).toBeEnabled();
+  await page.keyboard.press("Escape");
   await info.attach("folder-reveal", {
     body: JSON.stringify({ childRequests, milliseconds: Date.now() - started }),
     contentType: "application/json",
@@ -52,11 +65,19 @@ test("explicit expansion survives navigation/reload and stays scoped to its owne
   await expect(
     page.getByRole("link", { exact: true, name: "Browser note 01" }),
   ).toBeVisible();
+  const reloadStarted = Date.now();
   await page.reload();
   await showSidebar();
   await expect(
     page.getByRole("button", { exact: true, name: "Collapse Browser folder" }),
   ).toBeVisible();
+  await expect(
+    page.getByRole("link", { exact: true, name: "Browser note 01" }),
+  ).toBeVisible();
+  await info.attach("sidebar-restoration", {
+    body: JSON.stringify({ reloadMilliseconds: Date.now() - reloadStarted }),
+    contentType: "application/json",
+  });
   await page.goto(`/explore/clusters/${browserFixture.cluster}`);
   await showSidebar();
   await expect(

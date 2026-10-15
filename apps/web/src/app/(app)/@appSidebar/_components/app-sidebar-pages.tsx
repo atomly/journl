@@ -1,7 +1,7 @@
 "use client";
 
 import { DndContext, useDraggable, useDroppable } from "@dnd-kit/core";
-import { useIsFetching, useQuery } from "@tanstack/react-query";
+import { useIsFetching, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ArrowRight,
   BookOpen,
@@ -17,7 +17,6 @@ import {
   useCallback,
   useContext,
   useEffect,
-  useRef,
   useState,
 } from "react";
 import { TreeEmptyDropTarget } from "~/components/tree-empty-drop-target";
@@ -34,6 +33,7 @@ import {
   SidebarMenuSubItem,
   useSidebar,
 } from "~/components/ui/sidebar";
+import { useSidebarExpansion } from "~/hooks/use-sidebar-expansion";
 import { useTreeChildren } from "~/hooks/use-tree-children";
 import { useTreeController } from "~/hooks/use-tree-controller";
 import { TreeMoveProvider } from "~/hooks/use-tree-item-moves";
@@ -62,6 +62,7 @@ import { AppSidebarTreeActions } from "./app-sidebar-tree-actions";
 
 type AppSidebarPagesProps = {
   defaultOpen?: boolean;
+  owner?: string;
 };
 
 type SidebarTreeProps = {
@@ -542,6 +543,7 @@ function SidebarTree({
 
 export const AppSidebarPages = ({
   defaultOpen = true,
+  owner,
 }: AppSidebarPagesProps) => {
   const pathname = usePathname();
   const params = useParams<{ id?: string }>();
@@ -550,16 +552,6 @@ export const AppSidebarPages = ({
   const isPagesRoute =
     pathname.startsWith("/pages") || pathname.startsWith("/folders");
   const [isOpen, setIsOpen] = useState(defaultOpen);
-  const {
-    openFolders,
-    setOpenFolders,
-    setFolderOpen,
-    activeDragId,
-    activeDragLabel,
-    isDnDEnabled,
-    shouldSuppressClick,
-    dndContextProps,
-  } = useTreeController();
   const rootTreeQueryKey = trpc.tree.getChildrenPaginated.infiniteQueryKey(
     getInfiniteSidebarTreeQueryOptions(null),
   );
@@ -580,42 +572,48 @@ export const AppSidebarPages = ({
     ...trpc.tree.getAncestorPath.queryOptions(ancestorQueryInput ?? {}),
     enabled: !!ancestorQueryInput,
   });
-  const lastExpandedPathRef = useRef<string | null>(null);
-
+  const ancestorIds = (ancestorPath ?? [])
+    .filter((a) => a.node_type === "folder")
+    .map((a) => a.node_id);
+  const expansion = useSidebarExpansion(owner, pathname, ancestorIds);
+  const {
+    openFolders,
+    setFolderOpen,
+    activeDragId,
+    activeDragLabel,
+    isDnDEnabled,
+    shouldSuppressClick,
+    dndContextProps,
+  } = useTreeController(expansion);
+  const queryClient = useQueryClient();
   useEffect(() => {
-    if (!ancestorPath || ancestorPath.length === 0) {
-      return;
-    }
-
-    // Only auto-expand once per pathname to avoid fighting user collapse
-    if (
-      lastExpandedPathRef.current ===
-      `${pathname}:${ancestorPath.map((a) => a.node_id).join("/")}`
-    ) {
-      return;
-    }
-    lastExpandedPathRef.current = `${pathname}:${ancestorPath.map((a) => a.node_id).join("/")}`;
-
-    const folderAncestorNodeIds = ancestorPath
-      .filter((a) => a.node_type === "folder")
-      .map((a) => a.node_id);
-
-    if (folderAncestorNodeIds.length === 0) {
-      return;
-    }
-
-    setOpenFolders((previous) => {
-      const next = { ...previous };
-      let changed = false;
-      for (const nodeId of folderAncestorNodeIds) {
-        if (!next[nodeId]) {
-          next[nodeId] = true;
-          changed = true;
-        }
+    // Fetch only the active path's first pages. Four in flight avoids a depth waterfall
+    // without warming unrelated saved folders or downloading subsequent pages.
+    let cancelled = false;
+    const parents = [null, ...ancestorIds] as (string | null)[];
+    async function prefetchPath() {
+      for (let offset = 0; offset < parents.length && !cancelled; offset += 4) {
+        await Promise.all(
+          parents.slice(offset, offset + 4).map((parent) =>
+            queryClient.prefetchInfiniteQuery({
+              ...trpc.tree.getChildrenPaginated.infiniteQueryOptions(
+                getInfiniteSidebarTreeQueryOptions(parent),
+                {
+                  getNextPageParam: ({ nextCursor }) => nextCursor ?? undefined,
+                },
+              ),
+              pages: 1,
+              staleTime: 30_000,
+            }),
+          ),
+        );
       }
-      return changed ? next : previous;
-    });
-  }, [ancestorPath, pathname, setOpenFolders]);
+    }
+    if (ancestorPath?.length) void prefetchPath();
+    return () => {
+      cancelled = true;
+    };
+  }, [ancestorPath, queryClient, trpc, ancestorIds]);
 
   const handlePagesClick = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -694,6 +692,24 @@ export const AppSidebarPages = ({
             />
           </div>
         ) : null}
+        {ancestorPath && ancestorPath.length > 0 && (
+          <nav
+            aria-label="Current Library location"
+            className="min-w-0 space-y-1 px-4 pb-2 text-xs"
+          >
+            {ancestorPath.slice(-3).map((item) => (
+              <Link
+                key={item.node_id}
+                href={`/${item.node_type === "folder" ? "folders" : "pages"}/${item.id}`}
+                aria-current={item.id === params.id ? "page" : undefined}
+                className="block truncate rounded py-1 text-muted-foreground hover:text-foreground focus-visible:ring-2 focus-visible:ring-sidebar-ring"
+              >
+                {item.name ||
+                  (item.node_type === "folder" ? "New folder" : "New page")}
+              </Link>
+            ))}
+          </nav>
+        )}
         <DndContext {...dndContextProps}>
           <TreeMoveProvider>
             <SidebarTreeInteractionsContext.Provider

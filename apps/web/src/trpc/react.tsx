@@ -15,7 +15,7 @@ import type { ApiRouter } from "~/trpc";
 import { createQueryClient } from "./query-client";
 
 let clientQueryClientSingleton:
-  | { owner: string; client: QueryClient }
+  | { owner?: string; client: QueryClient }
   | undefined;
 const getQueryClient = (owner?: string) => {
   if (typeof window === "undefined") {

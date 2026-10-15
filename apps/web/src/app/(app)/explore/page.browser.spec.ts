@@ -1,4 +1,4 @@
-import { browserFixture } from "~/testing/browser/data";
+import { browserFixture, fixtureId } from "~/testing/browser/data";
 import { expect, test } from "~/testing/browser/fixtures";
 
 test("Explore supports keyboard selection, search, thread navigation, and responsive context", async ({
@@ -33,6 +33,25 @@ test("Explore supports keyboard selection, search, thread navigation, and respon
     page.getByRole("heading", { exact: true, name: "Browser thread" }),
   ).toBeVisible();
   await expect(page.getByText("Browser note 01").first()).toBeVisible();
+  const note = page.getByRole("button", {
+    exact: true,
+    name: "Preview Browser note 01",
+  });
+  await expect(note).toBeVisible();
+  if (info.project.name === "mobile-webkit") await note.tap();
+  else {
+    await note.focus();
+    await page.keyboard.press("Enter");
+  }
+  const preview = page.getByRole("region", {
+    exact: true,
+    name: "Note preview",
+  });
+  await expect(preview).toBeVisible();
+  await expect(
+    preview.getByRole("link", { name: /Read passage/ }).first(),
+  ).toHaveAttribute("href", new RegExp(fixtureId(101)));
+
   await expect
     .poll(() =>
       page.evaluate(

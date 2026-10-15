@@ -87,7 +87,9 @@ test.describe("owner isolation", () => {
     );
     await page.goto(`/explore/clusters/${browserFixture.cluster}`);
     await expect(
-      page.getByRole("heading", { name: "This thread has changed" }),
+      page
+        .getByRole("alert")
+        .getByText("Could not load this exploration.", { exact: true }),
     ).toBeVisible();
     await expect(
       page.getByText("Browser note 01", { exact: true }),

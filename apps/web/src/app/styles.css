@@ -194,11 +194,11 @@
   body {
     @apply bg-background text-foreground;
   }
-}
 
-@media (display-mode: standalone) {
-  html {
-    /* Keep installed-app scrolling while preventing browser pinch/double-tap zoom. */
-    touch-action: pan-x pan-y;
+  @media (display-mode: standalone) {
+    :where(html, html *) {
+      /* Cover nested scrollers/tap targets; component-specific gesture rules win. */
+      touch-action: pan-x pan-y;
+    }
   }
 }

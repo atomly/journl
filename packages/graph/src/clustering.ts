@@ -2,9 +2,9 @@
 import createGraph from "ngraph.graph";
 import { detectClusters } from "ngraph.leiden";
 
-import { CLUSTER_CONFIG } from "./config.js";
+import { CLUSTER_CONFIG } from "./config.ts";
 
-export { ALGORITHM_VERSION, CLUSTER_CONFIG } from "./config.js";
+export { ALGORITHM_VERSION, CLUSTER_CONFIG } from "./config.ts";
 export type ClusterNote = {
   id: string;
   title: string;

@@ -4,7 +4,7 @@ import {
   buildClusters,
   type ClusterNote,
   type ClusterReference,
-} from "./clustering.js";
+} from "./clustering.ts";
 
 test("10,000 notes and 100,000 occurrences stay bounded, including a high-degree source", () => {
   const notes: ClusterNote[] = Array.from({ length: 10000 }, (_, i) => ({

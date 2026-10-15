@@ -1,7 +1,10 @@
 {
   "extends": "@acme/tsconfig/tsconfig.nodejs.json",
   "compilerOptions": {
-    "noEmit": true
+    "noEmit": true,
+    "allowImportingTsExtensions": true
   },
-  "include": ["src"]
+  "include": [
+    "src"
+  ]
 }

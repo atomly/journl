@@ -1,5 +1,5 @@
 import { expect, test } from "vitest";
-import { getConnectedNotes, getNoteClusters } from "./connections.js";
+import { getConnectedNotes, getNoteClusters } from "./connections.ts";
 
 test("bounded payloads ignore missing nodes and self edges, deduplicate occurrences, and keep sources", () => {
   const nodes = ["a", "b", "c", "unlinked", "source"].map((key) => ({

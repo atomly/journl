@@ -110,9 +110,8 @@ refuses to reuse an existing server. Reports and failure traces are ignored arti
 `pnpm test` includes browser acceptance as well as unit and database tests; install
 its browser dependencies before running it. Unit tests remain Docker-free.
 
-One-time `explore:setup`, `explore:backfill`, and `references:backfill` commands are
-retained pending recorded production completion evidence. Recurring Explore refresh
-and folder cleanup recovery jobs remain required runtime functionality.
+Recurring Explore refresh and folder cleanup recovery jobs remain required
+runtime functionality.
 
 ---
 

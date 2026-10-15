@@ -33,6 +33,10 @@ test("Safari standalone zoom guard covers nested targets without blocking taps",
     name: "Expand Browser folder",
   });
   await expect(folder).toHaveCSS("touch-action", "pan-x pan-y");
+  await expect(page.locator(".touch-pan-y").first()).toHaveCSS(
+    "touch-action",
+    "pan-y",
+  );
   if (info.project.name === "mobile-webkit") await folder.tap();
   else await folder.click();
   await expect(

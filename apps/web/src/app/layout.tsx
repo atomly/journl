@@ -7,7 +7,6 @@ import { getPublicWebUrl } from "~/lib/public-web-url";
 import "~/app/styles.css";
 
 import { BetterAuthProvider } from "../components/auth/better-auth-provider";
-import { PwaZoomGuard } from "../components/pwa-zoom-guard";
 
 const publicWebUrl = getPublicWebUrl();
 
@@ -68,7 +67,6 @@ export default function RootLayout({
           geistMono.variable,
         )}
       >
-        <PwaZoomGuard />
         <BetterAuthProvider
           passwordSignIn={
             env.VERCEL_ENV === "preview" || env.NODE_ENV === "development"

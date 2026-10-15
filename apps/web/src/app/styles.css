@@ -195,8 +195,10 @@
     @apply bg-background text-foreground;
   }
 
-  :where([data-pwa-standalone], [data-pwa-standalone] *) {
-    /* Include nested scrollers/tap targets; component-specific gesture rules win. */
-    touch-action: pan-x pan-y;
+  @media (display-mode: standalone) {
+    :where(html, html *) {
+      /* Cover nested scrollers/tap targets; component-specific gesture rules win. */
+      touch-action: pan-x pan-y;
+    }
   }
 }

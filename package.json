@@ -24,7 +24,8 @@
     "supabase:status": "supabase status",
     "test:integration": "turbo run test:integration",
     "test:unit": "turbo run test:unit",
-    "test": "turbo run test:unit test:integration"
+    "test": "turbo run test:unit test:integration test:browser",
+    "test:browser": "turbo run test:browser"
   },
   "devDependencies": {
     "@biomejs/biome": "~2.5.15",

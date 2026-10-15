@@ -7,6 +7,7 @@ export default defineConfig({
   test: {
     exclude: [
       "**/node_modules/**",
+      "**/*.browser.spec.ts",
       "**/.next/**",
       "src/**/*.integration.spec.{ts,tsx}",
     ],

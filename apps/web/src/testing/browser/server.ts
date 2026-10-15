@@ -218,7 +218,7 @@ try {
         STRIPE_SECRET_KEY: "sk_test_placeholder_for_build",
         STRIPE_WEBHOOK_SECRET: "whsec_build_placeholder",
         VERCEL_BRANCH_URL: "",
-        VERCEL_ENV: "",
+        VERCEL_ENV: "development",
         VERCEL_PROJECT_PRODUCTION_URL: "",
         VERCEL_URL: "",
       },

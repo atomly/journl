@@ -24,6 +24,7 @@ test("Library expansion reveals a paginated folder and keyboard actions remain a
   await expect(
     page.getByRole("link", { exact: true, name: "Browser note 01" }),
   ).toBeVisible();
+  const reveal = { childRequests, milliseconds: Date.now() - started };
   await expect(
     page.getByRole("button", { exact: true, name: "Collapse Browser folder" }),
   ).toBeVisible();
@@ -44,7 +45,7 @@ test("Library expansion reveals a paginated folder and keyboard actions remain a
   ).toBeEnabled();
   await page.keyboard.press("Escape");
   await info.attach("folder-reveal", {
-    body: JSON.stringify({ childRequests, milliseconds: Date.now() - started }),
+    body: JSON.stringify(reveal),
     contentType: "application/json",
   });
   await info.attach("library-layout", {

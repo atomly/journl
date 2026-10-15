@@ -1,12 +1,21 @@
 "use client";
+import {
+  type Edge,
+  Handle,
+  type Node,
+  type NodeProps,
+  Position,
+} from "@xyflow/react";
 import Link from "next/link";
+import { useMemo } from "react";
 import { getExploreTitle } from "~/references/explore-graph";
+import { layoutMap } from "~/references/explore-layout";
 import { exploreUpdatedLabel } from "~/references/explore-note-list";
 import type { RouterOutputs } from "~/trpc";
 import {
   type ExploreCamera,
-  useExploreCamera,
-} from "../../graph/_components/use-explore-camera";
+  ExploreFlow,
+} from "../../graph/_components/explore-flow";
 
 type Thread = RouterOutputs["explore"]["listClusters"]["items"][number];
 export function ThreadCard({
@@ -56,6 +65,59 @@ export function ThreadCard({
     </div>
   );
 }
+
+type ThreadNode = Node<{ thread: Thread; linked: boolean }, "thread">;
+const nodeTypes = { thread: MapThreadCard };
+function MapThreadCard({
+  data,
+  selected,
+  sourcePosition,
+  targetPosition,
+}: NodeProps<ThreadNode>) {
+  return (
+    <div
+      className={`h-[230px] rounded-[2.5rem] border p-4 ${selected ? "border-primary bg-primary/10 ring-2 ring-primary/50" : data.linked ? "border-primary/50 bg-card" : "border-border/70 bg-card/60"}`}
+    >
+      <Handle type="target" position={targetPosition ?? Position.Left} />
+      <h2 className="line-clamp-2 font-medium text-base">
+        <button
+          type="button"
+          aria-pressed={selected}
+          aria-label={`Show connections for ${data.thread.name}`}
+          className="min-h-11 text-left focus-visible:outline-2 focus-visible:outline-ring"
+        >
+          {data.thread.name}
+        </button>
+      </h2>
+      <p className="text-muted-foreground text-xs">
+        {data.thread.primaryCount} notes · {data.thread.sourceCount}{" "}
+        {data.thread.sourceCount === 1 ? "source" : "sources"}
+      </p>
+      <ul className="mt-3 space-y-1 text-muted-foreground text-sm">
+        {data.thread.representatives.slice(0, 3).map((note) => (
+          <li key={note.id} className="truncate">
+            <span aria-hidden="true" className="mr-2 text-primary">
+              ·
+            </span>
+            {getExploreTitle(note)}
+          </li>
+        ))}
+      </ul>
+      <div className="mt-3 flex items-center justify-between gap-2 text-xs">
+        <span className="text-muted-foreground">
+          {exploreUpdatedLabel(data.thread.lastActivity)}
+        </span>
+        <Link
+          className="inline-flex min-h-11 items-center text-primary"
+          href={`/explore/clusters/${data.thread.id}`}
+        >
+          Explore thread →
+        </Link>
+      </div>
+      <Handle type="source" position={sourcePosition ?? Position.Right} />
+    </div>
+  );
+}
 export function ThreadMap({
   threads,
   width,
@@ -64,6 +126,7 @@ export function ThreadMap({
   selectedId,
   connections,
   onSelect,
+  onDeselect,
 }: {
   threads: Thread[];
   width: number;
@@ -71,118 +134,66 @@ export function ThreadMap({
   onCamera(camera: ExploreCamera): void;
   selectedId?: string;
   connections: { id: string; connections: number }[];
+  onDeselect?(): void;
   onSelect(id: string): void;
 }) {
-  const columns = width >= 650 ? 2 : 1;
-  const rowHeight = 280;
-  const height = Math.max(
-    400,
-    Math.ceil(threads.length / columns) * rowHeight + 60,
+  const mobile = width < 640;
+  const cardWidth = mobile ? 280 : 320;
+  const positions = useMemo(
+    () =>
+      layoutMap(
+        threads.map((thread) => ({
+          height: 230,
+          id: thread.id,
+          width: cardWidth,
+        })),
+        [],
+        // Unconnected cards are arranged perpendicular to the rank direction.
+        mobile ? "LR" : "TB",
+      ),
+    [threads, cardWidth, mobile],
   );
-  const gestures = useExploreCamera(camera, onCamera, width, height);
-  const cellWidth = (width - 48) / columns;
-  const ordered = [...threads].sort((a, b) => a.id.localeCompare(b.id));
-  const position = (index: number) => ({
-    x: 24 + (index % columns) * cellWidth,
-    y:
-      30 +
-      Math.floor(index / columns) * rowHeight +
-      (columns > 1 && index % 2 ? 30 : 0),
-  });
-  const selectedIndex = ordered.findIndex((thread) => thread.id === selectedId);
+  const nodes: ThreadNode[] = threads.map((thread) => ({
+    ariaLabel: `Thread ${thread.name}`,
+    data: {
+      linked: connections.some((connection) => connection.id === thread.id),
+      thread,
+    },
+    height: 230,
+    id: thread.id,
+    position: positions.get(thread.id) ?? { x: 0, y: 0 },
+    selected: selectedId === thread.id,
+    sourcePosition: mobile ? Position.Bottom : Position.Right,
+    targetPosition: mobile ? Position.Top : Position.Left,
+    type: "thread",
+    width: cardWidth,
+  }));
+  const edges: Edge[] = selectedId
+    ? connections
+        .filter(
+          (connection) =>
+            connection.id !== selectedId && positions.has(connection.id),
+        )
+        .map((connection) => ({
+          ariaLabel: `${connection.connections} authored references`,
+          id: `${selectedId}|${connection.id}`,
+          source: selectedId,
+          style: { stroke: "var(--primary)" },
+          target: connection.id,
+        }))
+    : [];
   return (
-    <svg
+    <ExploreFlow
+      nodes={nodes}
+      edges={edges}
+      nodeTypes={nodeTypes}
       width={width}
-      height={height}
-      viewBox={`0 0 ${width} ${height}`}
-      className="block w-full touch-none select-none"
-      aria-label="Your threads. Select a thread to reveal its connections, then open it to read its notes."
-      {...gestures}
-    >
-      <g
-        transform={`translate(${width / 2 + camera.x} ${height / 2 + camera.y}) scale(${camera.zoom}) translate(${-width / 2} ${-height / 2})`}
-      >
-        {selectedIndex >= 0 &&
-          connections.map((connection) => {
-            const index = ordered.findIndex(
-              (thread) => thread.id === connection.id,
-            );
-            if (index < 0) return null;
-            const from = position(selectedIndex);
-            const to = position(index);
-            return (
-              <line
-                key={connection.id}
-                x1={from.x + (cellWidth - 20) / 2}
-                y1={from.y + 110}
-                x2={to.x + (cellWidth - 20) / 2}
-                y2={to.y + 110}
-                stroke="var(--primary)"
-                strokeWidth="2"
-                opacity="0.55"
-              >
-                <title>{connection.connections} authored references</title>
-              </line>
-            );
-          })}
-        {ordered.map((thread, index) => {
-          const point = position(index);
-          const selected = selectedId === thread.id;
-          const linked = connections.some(
-            (connection) => connection.id === thread.id,
-          );
-          return (
-            <foreignObject
-              key={thread.id}
-              x={point.x}
-              y={point.y}
-              width={cellWidth - 20}
-              height={230}
-            >
-              <div
-                className={`h-full rounded-[2.5rem] border p-4 ${selected ? "border-primary bg-primary/10 ring-2 ring-primary/50" : linked ? "border-primary/50 bg-card" : "border-border/70 bg-card/60"}`}
-              >
-                <h2 className="line-clamp-2 font-medium text-base">
-                  <button
-                    type="button"
-                    aria-pressed={selected}
-                    aria-label={`Show connections for ${thread.name}`}
-                    onClick={() => onSelect(thread.id)}
-                    className="min-h-11 text-left focus-visible:outline-2 focus-visible:outline-ring"
-                  >
-                    {thread.name}
-                  </button>
-                </h2>
-                <p className="text-muted-foreground text-xs">
-                  {thread.primaryCount} notes · {thread.sourceCount}{" "}
-                  {thread.sourceCount === 1 ? "source" : "sources"}
-                </p>
-                <ul className="mt-3 space-y-1 text-muted-foreground text-sm">
-                  {thread.representatives.slice(0, 3).map((note) => (
-                    <li key={note.id} className="truncate">
-                      <span aria-hidden className="mr-2 text-primary">
-                        ·
-                      </span>
-                      {getExploreTitle(note)}
-                    </li>
-                  ))}
-                </ul>
-                <div className="mt-3 flex items-center justify-between gap-2 text-xs">
-                  <span className="text-muted-foreground">
-                    {exploreUpdatedLabel(thread.lastActivity)}
-                  </span>
-                  <Link
-                    className="inline-flex min-h-11 items-center text-primary"
-                    href={`/explore/clusters/${thread.id}`}
-                  >
-                    Explore thread →
-                  </Link>
-                </div>
-              </div>
-            </foreignObject>
-          );
-        })}
-      </g>
-    </svg>
+      initialVisibleCount={mobile ? 1 : 3}
+      camera={camera}
+      onCamera={onCamera}
+      label="Your threads. Select a thread to reveal its connections, then open it to read its notes."
+      onDeselect={onDeselect}
+      onSelect={(node) => onSelect(node.id)}
+    />
   );
 }

@@ -12,17 +12,19 @@ import { TRPCReactProvider } from "~/trpc/react";
 
 type AppProvidersProps = {
   children: React.ReactNode;
+  owner: string;
   initialPreferences: AppPreferences;
 };
 
 export function AppProviders({
   children,
+  owner,
   initialPreferences,
 }: AppProvidersProps) {
   return (
     <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
       <AppEventProvider>
-        <TRPCReactProvider>
+        <TRPCReactProvider key={owner} owner={owner}>
           <AppPreferencesProvider initialPreferences={initialPreferences}>
             <DrawerProvider>
               <JournlAgentProvider>

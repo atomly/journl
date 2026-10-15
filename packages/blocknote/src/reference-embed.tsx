@@ -5,18 +5,18 @@ import type {
   StyleSchema,
 } from "@blocknote/core";
 import { useEffect, useMemo, useState } from "react";
-import { type ReferenceEmbedResult } from "./reference-context";
+import type { ReferenceEmbedResult } from "./reference-context";
 
 export { referenceProps } from "./reference-config";
 
+import { ReadOnlyBlocks } from "./reference-read-only";
 import {
+  blockSurface,
+  DisplayMenu,
+  ReferenceIcon,
   targetFromProps,
   usePreview,
-  ReferenceIcon,
-  DisplayMenu,
-  blockSurface,
 } from "./reference-render-helpers";
-import { ReadOnlyBlocks } from "./reference-read-only";
 export function ReferenceEmbedView<
   BS extends BlockSchema,
   IS extends InlineContentSchema,
@@ -49,12 +49,14 @@ export function ReferenceEmbedView<
       : "";
   const circular = Boolean(key && ancestorKeys.has(key));
   const limitReached = depth > 2;
+  // biome-ignore lint/correctness/useExhaustiveDependencies: target identity changes intentionally reset the view.
   useEffect(() => {
     setContent(undefined);
     setRequestCursor(undefined);
     setNextCursor(undefined);
     setExpanded(false);
   }, [key]);
+  // biome-ignore lint/correctness/useExhaustiveDependencies: retry is an explicit reload trigger after a failed request.
   useEffect(() => {
     if (
       !expanded ||

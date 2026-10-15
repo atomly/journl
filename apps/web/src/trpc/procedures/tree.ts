@@ -12,11 +12,17 @@ import { TRPCError } from "@trpc/server";
 import { z } from "zod/v4";
 import { dispatchExploreRefresh } from "~/explore/dispatch";
 import { markExploreDirty } from "~/explore/refresh";
-import { startFolderContentDeletion } from "~/workflows/folder-content-deletion";
+import {
+  dispatchFolderDeletionCleanup,
+  recoverFolderDeletionOutbox,
+} from "~/workflows/folder-deletion-outbox";
+import { queueFolderDeletionCleanup } from "~/workflows/folder-deletion-queue";
 import { protectedProcedure, type TRPCContext } from "../trpc";
+import { ancestorNodeIds as readAncestorNodeIds } from "./tree-ancestors";
 import {
   detachEdge,
   insertEdgeAtPosition,
+  lockTreeOwner,
   moveNode,
   orderedChildren,
   type TreeDestination,
@@ -79,6 +85,8 @@ export const treeRouter = {
     .mutation(async ({ ctx, input }) => {
       return await ctx.db.transaction(async (tx) => {
         const userId = ctx.session.user.id;
+
+        await lockTreeOwner(tx, userId);
 
         const [folder] = await tx
           .insert(Folder)
@@ -144,6 +152,8 @@ export const treeRouter = {
     .mutation(async ({ ctx, input }) => {
       const result = await ctx.db.transaction(async (tx) => {
         const userId = ctx.session.user.id;
+
+        await lockTreeOwner(tx, userId);
 
         await markExploreDirty(tx, userId);
         const [document] = await tx
@@ -225,8 +235,9 @@ export const treeRouter = {
     )
     .mutation(async ({ ctx, input }) => {
       // Phase 1: Synchronous — detach edges so subtree is invisible
-      const asyncPayload = await ctx.db.transaction(async (tx) => {
+      const cleanupJobId = await ctx.db.transaction(async (tx) => {
         const userId = ctx.session.user.id;
+        await lockTreeOwner(tx, userId);
         const folderNode = await getFolderNodeByFolderId({
           db: tx,
           folderId: input.folder_id,
@@ -367,38 +378,18 @@ export const treeRouter = {
         );
         const innerFolderIds = folderIds.filter((id) => id !== input.folder_id);
 
-        return { documentIds, folderIds: innerFolderIds, innerNodeIds };
+        return queueFolderDeletionCleanup(
+          tx,
+          {
+            documentIds,
+            folderIds: innerFolderIds,
+            subtreeNodeIds: innerNodeIds,
+          },
+          userId,
+        );
       });
 
-      // Phase 2: Async — delegate content cleanup to background workflow
-      const userId = ctx.session.user.id;
-      const { documentIds, folderIds, innerNodeIds } = asyncPayload;
-
-      if (
-        documentIds.length > 0 ||
-        folderIds.length > 0 ||
-        innerNodeIds.length > 0
-      ) {
-        try {
-          await startFolderContentDeletion({
-            documentIds,
-            folderIds,
-            subtreeNodeIds: innerNodeIds,
-            userId,
-          });
-        } catch (error) {
-          console.error(
-            "Failed to start folder content deletion workflow:",
-            error,
-          );
-          throw new TRPCError({
-            cause: error,
-            code: "INTERNAL_SERVER_ERROR",
-            message:
-              "Folder was removed from the tree but cleanup could not be queued. Please contact support if descendant content is missing.",
-          });
-        }
-      }
+      if (cleanupJobId) await dispatchFolderDeletionCleanup(cleanupJobId);
 
       return {
         deleted_folder_id: input.folder_id,
@@ -442,33 +433,11 @@ export const treeRouter = {
         return [];
       }
 
-      // 2. Load all edges for this user and build a parent map in memory
-      const edges = await ctx.db
-        .select({
-          node_id: TreeEdge.node_id,
-          parent_node_id: TreeEdge.parent_node_id,
-        })
-        .from(TreeEdge)
-        .where(eq(TreeEdge.user_id, userId));
-
-      const parentByNodeId = new Map<string, string | null>();
-      for (const edge of edges) {
-        parentByNodeId.set(edge.node_id, edge.parent_node_id);
-      }
-
-      // 3. Walk up the chain to collect ancestor node IDs
-      const ancestorNodeIds: string[] = [];
-      let currentNodeId: string | null = startNodeId;
-      const visited = new Set<string>();
-
-      while (currentNodeId) {
-        if (visited.has(currentNodeId)) {
-          break;
-        }
-        visited.add(currentNodeId);
-        ancestorNodeIds.push(currentNodeId);
-        currentNodeId = parentByNodeId.get(currentNodeId) ?? null;
-      }
+      const ancestorNodeIds = await readAncestorNodeIds(
+        ctx.db,
+        userId,
+        startNodeId,
+      );
 
       if (ancestorNodeIds.length === 0) {
         return [];
@@ -559,7 +528,7 @@ export const treeRouter = {
   getChildrenPaginated: protectedProcedure
     .input(
       z.object({
-        cursor: z.uuid().optional(),
+        cursor: z.string().max(128).optional(),
         cursor_edge_id: z.uuid().optional(),
         limit: z.number().min(1).max(50).default(10),
         parent_node_id: z.uuid().nullable().default(null),
@@ -567,7 +536,10 @@ export const treeRouter = {
     )
     .query(async ({ ctx, input }) => {
       const userId = ctx.session.user.id;
-      const { edges, nextCursor } = await orderedChildren({
+      if (!input.parent_node_id && !input.cursor && !input.cursor_edge_id) {
+        await recoverFolderDeletionOutbox(userId);
+      }
+      const { edges, nextCursor, resetRequired } = await orderedChildren({
         cursorEdgeId: input.cursor ?? input.cursor_edge_id,
         db: ctx.db,
         limit: input.limit,
@@ -579,6 +551,7 @@ export const treeRouter = {
         return {
           items: [],
           nextCursor: undefined,
+          resetRequired,
         };
       }
 
@@ -671,6 +644,7 @@ export const treeRouter = {
       return {
         items,
         nextCursor,
+        resetRequired,
       };
     }),
   getNestedPagesPaginated: protectedProcedure

@@ -1,6 +1,7 @@
 "use client";
 
 import type { Page } from "@acme/db/schema";
+import { MoreHorizontal } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type {
@@ -10,6 +11,12 @@ import type {
   ReactNode,
 } from "react";
 import { useState } from "react";
+import { Button } from "~/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from "~/components/ui/dropdown-menu";
 import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
@@ -20,6 +27,7 @@ import {
   SwipeActionContent,
   SwipeActionReveal,
 } from "~/components/ui/swipe-action";
+import { useTreeItemMoves } from "~/hooks/use-tree-item-moves";
 import { cn } from "~/lib/cn";
 import {
   DeletePageButton,
@@ -52,6 +60,32 @@ export function AppSidebarPageItem({
   const { isMobile, setOpenMobile } = useSidebar();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
+  const moves = useTreeItemMoves(
+    page.node_id
+      ? {
+          label: page.title || "New page",
+          node_id: page.node_id,
+          parent_node_id: page.parent_node_id ?? null,
+        }
+      : undefined,
+  );
+  const moveMenu = (
+    <DropdownMenu modal={false}>
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant="ghost"
+          size="icon"
+          aria-label={`Actions for ${page.title || "New page"}`}
+          className="size-7 shrink-0"
+          onPointerDown={(event) => event.stopPropagation()}
+        >
+          <MoreHorizontal className="size-3.5" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">{moves.menuItems}</DropdownMenuContent>
+    </DropdownMenu>
+  );
+
   const isActive = pathname.includes(page?.id ?? "");
   const handlePageNavigationClick = () => {
     if (isMobile) {
@@ -79,6 +113,7 @@ export function AppSidebarPageItem({
             onOpenChange={setIsDeleteDialogOpen}
           >
             <SwipeAction
+              disabled={isDragging}
               className="rounded-md md:hidden"
               onFullSwipe={() => {
                 setIsDeleteDialogOpen(true);
@@ -95,7 +130,7 @@ export function AppSidebarPageItem({
                 </DeletePageDialogTrigger>
               </SwipeActionReveal>
               <SwipeActionContent
-                className="group/swipe-content rounded-md"
+                className="group/swipe-content flex items-center rounded-md"
                 {...dragActivatorProps}
               >
                 <SidebarMenuSubButton
@@ -104,6 +139,8 @@ export function AppSidebarPageItem({
                   className="min-h-7 rounded-md group-data-[state=open]/swipe-content:rounded-r-none"
                 >
                   <Link
+                    draggable={false}
+                    data-tree-drag-handle
                     href={`/pages/${page?.id}`}
                     onClick={handlePageNavigationClick}
                     className="line-clamp-1 min-w-0 flex-1 truncate hover:underline"
@@ -111,6 +148,7 @@ export function AppSidebarPageItem({
                     {page?.title || "New page"}
                   </Link>
                 </SidebarMenuSubButton>
+                {moveMenu}
               </SwipeActionContent>
             </SwipeAction>
             <SidebarMenuSubButton
@@ -120,10 +158,12 @@ export function AppSidebarPageItem({
             >
               <div
                 {...dragActivatorProps}
-                className="group/page-item hidden items-center md:flex"
+                className="group/page-item hidden select-none items-center md:flex"
               >
                 <div className="relative min-w-0 flex-1">
                   <Link
+                    draggable={false}
+                    data-tree-drag-handle
                     href={`/pages/${page?.id}`}
                     onClick={handlePageNavigationClick}
                     className="block w-full min-w-0 truncate hover:underline"
@@ -163,6 +203,7 @@ export function AppSidebarPageItem({
                     </DeletePageDialogTrigger>
                   )}
                 </div>
+                {moveMenu}
               </div>
             </SidebarMenuSubButton>
           </DeletePageDialog>

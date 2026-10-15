@@ -5,7 +5,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Loader2, Trash2 } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import type { ComponentProps, ReactNode } from "react";
-import { useCallback, useMemo, useRef, useState, useTransition } from "react";
+import { useCallback, useMemo, useState, useTransition } from "react";
 import { Button } from "~/components/ui/button";
 import {
   Dialog,
@@ -20,11 +20,7 @@ import {
   collectDescendantNodeIds,
   getLoadedTreeItems,
   type NestedPagesInfiniteData,
-  type QuerySnapshot,
   removeNode,
-  restoreQueries,
-  snapshotQueries,
-  snapshotQuery,
 } from "~/trpc/cache/tree-cache";
 import { getInfiniteSidebarTreeQueryOptions } from "~/trpc/options/sidebar-tree-query-options";
 import { useTRPC } from "~/trpc/react";
@@ -39,13 +35,6 @@ type DeleteFolderDialogProps = {
 type DeleteFolderDialogTriggerProps = ComponentProps<typeof DialogTrigger>;
 
 type DeleteFolderButtonProps = ComponentProps<typeof Button>;
-
-type DeleteFolderMutationContext = {
-  folderByIdSnapshot: QuerySnapshot;
-  foldersByUserSnapshot: QuerySnapshot;
-  nestedSnapshots: QuerySnapshot[];
-  treeSnapshots: QuerySnapshot[];
-};
 
 export function DeleteFolderButton({
   className,
@@ -90,9 +79,6 @@ export function DeleteFolderDialog({
   const queryClient = useQueryClient();
   const [isPending, startTransition] = useTransition();
   const [uncontrolledOpen, setUncontrolledOpen] = useState(false);
-  const deleteFolderContextRef = useRef<DeleteFolderMutationContext | null>(
-    null,
-  );
   const treeQueryFilter = trpc.tree.getChildrenPaginated.infiniteQueryFilter();
   const nestedFolderPagesQueryFilter =
     trpc.tree.getNestedPagesPaginated.infiniteQueryFilter();
@@ -110,26 +96,6 @@ export function DeleteFolderDialog({
   const { mutate: deleteFolder, isPending: isDeleting } = useMutation(
     trpc.tree.deleteFolder.mutationOptions({
       onError: (error) => {
-        const context = deleteFolderContextRef.current;
-        if (context) {
-          restoreQueries({
-            queryClient,
-            snapshots: context.treeSnapshots,
-          });
-          restoreQueries({
-            queryClient,
-            snapshots: context.nestedSnapshots,
-          });
-          restoreQueries({
-            queryClient,
-            snapshots: [
-              context.foldersByUserSnapshot,
-              context.folderByIdSnapshot,
-            ],
-          });
-        }
-        deleteFolderContextRef.current = null;
-
         console.error("Failed to delete folder:", error);
       },
       onMutate: async () => {
@@ -139,23 +105,6 @@ export function DeleteFolderDialog({
           queryClient.cancelQueries({ queryKey: foldersByUserQueryKey }),
           queryClient.cancelQueries({ queryKey: folderByIdQueryKey }),
         ]);
-
-        const treeSnapshots = snapshotQueries({
-          queryClient,
-          queryFilter: treeQueryFilter,
-        });
-        const nestedSnapshots = snapshotQueries({
-          queryClient,
-          queryFilter: nestedFolderPagesQueryFilter,
-        });
-        const foldersByUserSnapshot = snapshotQuery({
-          queryClient,
-          queryKey: foldersByUserQueryKey,
-        });
-        const folderByIdSnapshot = snapshotQuery({
-          queryClient,
-          queryKey: folderByIdQueryKey,
-        });
 
         const folderNodeId = folder.node_id ?? null;
 
@@ -171,13 +120,6 @@ export function DeleteFolderDialog({
             exact: true,
             queryKey: folderByIdQueryKey,
           });
-
-          deleteFolderContextRef.current = {
-            folderByIdSnapshot,
-            foldersByUserSnapshot,
-            nestedSnapshots,
-            treeSnapshots,
-          };
           return;
         }
 
@@ -246,13 +188,34 @@ export function DeleteFolderDialog({
           exact: true,
           queryKey: folderByIdQueryKey,
         });
+      },
+      onSettled: () =>
+        Promise.all([
+          queryClient.invalidateQueries({ queryKey: trpc.tree.pathKey() }),
+          queryClient.invalidateQueries({ queryKey: trpc.folders.pathKey() }),
+          queryClient.invalidateQueries({
+            queryKey: trpc.pages.getById.pathKey(),
+          }),
+        ]),
+      onSuccess: () => {
+        for (const queryKey of [
+          trpc.references.getPreviews.queryKey(),
+          trpc.references.getEmbedContent.queryKey(),
+          trpc.references.listBacklinks.queryKey(),
+          trpc.references.listOccurrences.queryKey(),
+          trpc.references.queryNeighbors.queryKey(),
+          trpc.references.getGraph.infiniteQueryKey(),
+        ]) {
+          void queryClient.invalidateQueries({ queryKey });
+        }
 
-        deleteFolderContextRef.current = {
-          folderByIdSnapshot,
-          foldersByUserSnapshot,
-          nestedSnapshots,
-          treeSnapshots,
-        };
+        if (pathname === `/folders/${folder.id}`) {
+          setDialogOpen(false);
+          router.push("/journal");
+          return;
+        }
+
+        setDialogOpen(false);
       },
     }),
   );
@@ -275,49 +238,9 @@ export function DeleteFolderDialog({
     () => isPending || isDeleting,
     [isDeleting, isPending],
   );
-  const folderDetailsPath = `/folders/${folder.id}`;
-
   const confirmDelete = useCallback(() => {
-    startTransition(() => {
-      deleteFolder(
-        {
-          folder_id: folder.id,
-        },
-        {
-          onSuccess: () => {
-            deleteFolderContextRef.current = null;
-            for (const queryKey of [
-              trpc.references.getPreviews.queryKey(),
-              trpc.references.getEmbedContent.queryKey(),
-              trpc.references.listBacklinks.queryKey(),
-              trpc.references.listOccurrences.queryKey(),
-              trpc.references.queryNeighbors.queryKey(),
-              trpc.references.getGraph.infiniteQueryKey(),
-            ]) {
-              void queryClient.invalidateQueries({ queryKey });
-            }
-
-            if (pathname === folderDetailsPath) {
-              setDialogOpen(false);
-              router.push("/journal");
-              return;
-            }
-
-            setDialogOpen(false);
-          },
-        },
-      );
-    });
-  }, [
-    deleteFolder,
-    folderDetailsPath,
-    folder.id,
-    pathname,
-    queryClient,
-    router,
-    setDialogOpen,
-    trpc,
-  ]);
+    startTransition(() => deleteFolder({ folder_id: folder.id }));
+  }, [deleteFolder, folder.id]);
 
   return (
     <Dialog open={isDialogOpen} onOpenChange={setDialogOpen}>

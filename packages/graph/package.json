@@ -1,0 +1,26 @@
+{
+  "name": "@acme/graph",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./clustering": "./src/clustering.ts",
+    "./config": "./src/config.ts",
+    "./connections": "./src/connections.ts"
+  },
+  "scripts": {
+    "check": "biome check",
+    "typecheck": "tsc --noEmit",
+    "test:unit": "vitest run --maxWorkers=2"
+  },
+  "dependencies": {
+    "ngraph.graph": "20.1.2",
+    "ngraph.leiden": "0.3.0"
+  },
+  "devDependencies": {
+    "@acme/tsconfig": "workspace:*",
+    "@types/node": "~26.6.5",
+    "typescript": "~7.0.2",
+    "vitest": "^5.0.3"
+  }
+}

@@ -1,0 +1,25 @@
+.explore-flow {
+  --xy-controls-button-background-color: var(--card);
+  --xy-controls-button-background-color-hover: var(--accent);
+  --xy-controls-button-color: var(--foreground);
+  --xy-controls-button-border-color: var(--border);
+  --xy-edge-stroke: var(--muted-foreground);
+  --xy-edge-stroke-selected: var(--primary);
+  --xy-attribution-background-color: var(--card);
+}
+
+.explore-flow .react-flow__controls-button {
+  width: 44px;
+  height: 44px;
+}
+
+.explore-flow .react-flow__handle {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.explore-flow .react-flow__node:focus-visible,
+.explore-flow .react-flow__edge:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 3px;
+}

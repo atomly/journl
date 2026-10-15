@@ -27,5 +27,8 @@ export async function runExploreOutboxRecovery() {
 async function recoverOutbox() {
   "use step";
   const { recoverExploreOutbox } = await import("~/explore/dispatch");
-  await recoverExploreOutbox();
+  const { recoverFolderDeletionOutbox } = await import(
+    "~/workflows/folder-deletion-outbox"
+  );
+  await Promise.all([recoverExploreOutbox(), recoverFolderDeletionOutbox()]);
 }

@@ -1,5 +1,6 @@
 import { Calendar, Compass } from "lucide-react";
 import { type ComponentProps, Suspense } from "react";
+import { getUser } from "~/auth/server";
 import { Separator } from "~/components/ui/separator";
 import {
   Sidebar,
@@ -34,7 +35,8 @@ const navigationItems = [
   },
 ] satisfies ComponentProps<typeof AppSidebarNavigation>["items"];
 
-export default function AppSidebar() {
+export default async function AppSidebar() {
+  const owner = await getUser();
   prefetch(
     trpc.tree.getChildrenPaginated.infiniteQueryOptions(
       infiniteSidebarTreeQueryOptions,
@@ -57,7 +59,7 @@ export default function AppSidebar() {
           <SidebarGroupLabel>Navigation</SidebarGroupLabel>
           <AppSidebarNavigation items={navigationItems} />
           <Suspense fallback={<AppSidebarPagesSkeleton />}>
-            <AppSidebarPages />
+            <AppSidebarPages key={owner.id} owner={owner.id} />
           </Suspense>
         </SidebarGroup>
       </SidebarContent>

@@ -4,12 +4,14 @@ import type { TRPCRouterRecord } from "@trpc/server";
 import { dispatchExploreRefresh } from "~/explore/dispatch";
 import { lockExploreOwner, markExploreDirty } from "~/explore/refresh";
 import { protectedProcedure } from "../trpc";
+import { detachDocumentPageEdges, lockTreeOwner } from "./tree-helpers";
 
 export const documentRouter = {
   delete: protectedProcedure
     .input(zDocument.pick({ id: true }))
     .mutation(async ({ ctx, input }) => {
       const result = await ctx.db.transaction(async (tx) => {
+        await lockTreeOwner(tx, ctx.session.user.id);
         await lockExploreOwner(tx, ctx.session.user.id);
         const [owned] = await tx
           .select({ id: Document.id })
@@ -22,6 +24,9 @@ export const documentRouter = {
           )
           .for("update");
         if (!owned) return [];
+
+        // Cascading deletion clears foreign keys but cannot reconnect sibling edges.
+        await detachDocumentPageEdges(tx, input.id, ctx.session.user.id);
 
         await tx
           .delete(DocumentReference)

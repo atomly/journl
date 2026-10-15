@@ -4,7 +4,7 @@ import type { TRPCRouterRecord } from "@trpc/server";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod/v4";
 import { protectedProcedure, type TRPCContext } from "../trpc";
-import { insertEdgeAtPosition } from "./tree-helpers";
+import { insertEdgeAtPosition, lockTreeOwner } from "./tree-helpers";
 
 async function getFolderNode({
   db,
@@ -29,6 +29,7 @@ export const foldersRouter = {
     .input(zInsertFolder)
     .mutation(async ({ ctx, input }) => {
       return await ctx.db.transaction(async (tx) => {
+        await lockTreeOwner(tx, ctx.session.user.id);
         const [folder] = await tx
           .insert(Folder)
           .values({

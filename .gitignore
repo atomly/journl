@@ -49,3 +49,8 @@ tsconfig.tsbuildinfo
 # mastra
 .mastra
 mastra.db*
+
+# Playwright traces, reports, screenshots, and private browser state
+**/test-results/
+**/playwright-report/
+**/playwright/.auth/

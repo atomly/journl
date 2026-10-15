@@ -17,7 +17,9 @@
       "!**/.next",
       "!**/.turbo",
       "!**/.mastra",
-      "!**/.well-known"
+      "!**/.well-known",
+      "!**/playwright-report",
+      "!**/test-results"
     ]
   },
   "formatter": {

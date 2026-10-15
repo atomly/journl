@@ -39,7 +39,7 @@ vi.mock("@acme/db/client", () => ({
     return fixture.db;
   },
 }));
-const { db } = createPostgresFixture({
+const { db, queries } = createPostgresFixture({
   BlockNode,
   BlockSearchText,
   Document,
@@ -416,6 +416,32 @@ integration(
   },
   30000,
 );
+integration(
+  "Explore reads retain response and query-count budgets",
+  async () => {
+    for (const read of [
+      () => listClusters(db, owner, { limit: 12 }),
+      () => getClusterMap(db, owner, clusterId),
+      () =>
+        listClusterMembers(db, owner, {
+          clusterId,
+          limit: 10,
+          role: "primary",
+        }),
+    ]) {
+      queries.length = 0;
+      const started = performance.now();
+      const response = await read();
+      expect(queries.length).toBeLessThanOrEqual(20);
+      expect(Buffer.byteLength(JSON.stringify(response))).toBeLessThan(
+        128 * 1024,
+      );
+      expect(performance.now() - started).toBeLessThan(5000);
+    }
+  },
+  30000,
+);
+
 integration(
   "document deletion clears memberships and authored evidence on refresh",
   async () => {

@@ -15,12 +15,10 @@
     "typecheck": "tsc --noEmit",
     "with-env": "dotenv -e ../../.env --",
     "explore:backfill": "pnpm with-env jiti scripts/backfill-explore.ts",
-    "explore:benchmark": "jiti scripts/benchmark-explore.ts",
     "explore:setup": "pnpm with-env jiti scripts/setup-explore.ts",
-    "explore:benchmark:db": "pnpm with-env jiti scripts/benchmark-explore-database.ts --run-disposable-fixture",
-    "explore:test:browser": "pnpm with-env jiti scripts/test-explore-browser.ts",
     "test:integration": "vitest run --config vitest.integration.config.ts",
-    "test:unit": "vitest run --maxWorkers=4"
+    "test:unit": "vitest run --maxWorkers=4",
+    "test:browser": "playwright test"
   },
   "dependencies": {
     "@acme/auth": "workspace:*",
@@ -104,6 +102,7 @@
   },
   "devDependencies": {
     "@acme/tsconfig": "workspace:*",
+    "@playwright/test": "^1.64.1",
     "@tailwindcss/postcss": "~4.3.3",
     "@testcontainers/postgresql": "^12.2.1",
     "@types/json-schema": "~7.0.15",

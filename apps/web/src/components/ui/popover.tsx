@@ -13,6 +13,8 @@ function PopoverTrigger({
   nativeButton,
   ...props
 }: PopoverPrimitive.Trigger.Props) {
+  // Base UI defaults to a native button; intrinsic non-buttons need its keyboard/role adapter.
+  // Opaque custom components must supply nativeButton explicitly when they render non-buttons.
   const elementType = React.isValidElement(render) ? render.type : undefined;
   return (
     <PopoverPrimitive.Trigger

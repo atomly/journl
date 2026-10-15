@@ -1,10 +1,9 @@
 import { randomUUID } from "node:crypto";
 import * as schema from "@acme/db/schema";
-import { generateDrizzleJson, generateMigration } from "drizzle-kit/api";
-import { isPgEnum } from "drizzle-orm/pg-core";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import { afterAll, beforeAll, inject } from "vitest";
+import { createTestTables } from "./postgres-schema";
 
 declare module "vitest" {
   export interface ProvidedContext {
@@ -43,33 +42,7 @@ export function createPostgresFixture(tables: Record<string, unknown>) {
     try {
       await admin.unsafe(`CREATE DATABASE ${name}`);
       created = true;
-      const statements = await generateMigration(
-        generateDrizzleJson({}),
-        generateDrizzleJson(
-          {
-            ...Object.fromEntries(
-              Object.entries(schema).filter(([, value]) => isPgEnum(value)),
-            ),
-            ...tables,
-          },
-          undefined,
-          undefined,
-          "snake_case",
-        ),
-      );
-      await client.begin(async (tx) => {
-        // Composite foreign keys may reference unique indexes emitted after them.
-        const priority = (statement: string) =>
-          /^ALTER TABLE/.test(statement)
-            ? 2
-            : /^CREATE (UNIQUE )?INDEX/.test(statement)
-              ? 1
-              : 0;
-        for (const statement of statements.sort(
-          (a, b) => priority(a) - priority(b),
-        ))
-          await tx.unsafe(statement);
-      });
+      await createTestTables(client, tables);
     } catch (error) {
       await cleanup();
       throw error;

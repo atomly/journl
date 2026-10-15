@@ -5,10 +5,10 @@ import * as schema from "@acme/db/schema";
 import { ALGORITHM_VERSION } from "@acme/graph/config";
 import { PostgreSqlContainer } from "@testcontainers/postgresql";
 import { hashPassword } from "better-auth/crypto";
-import { generateDrizzleJson, generateMigration } from "drizzle-kit/api";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import { insertEdgeAtPosition } from "../../trpc/procedures/tree-helpers";
+import { createTestTables } from "../postgres-schema";
 import { browserFixture as data, fixtureId } from "./data";
 
 // No environment file or supplied database URL is consulted. This server owns its database.
@@ -40,14 +40,7 @@ process.once("SIGINT", () => {
 });
 try {
   await client.unsafe("CREATE EXTENSION IF NOT EXISTS vector");
-  const statements = await generateMigration(
-    generateDrizzleJson({}),
-    generateDrizzleJson(schema, undefined, undefined, "snake_case"),
-  );
-  const priority = (s: string) =>
-    /^ALTER TABLE/.test(s) ? 2 : /^CREATE (UNIQUE )?INDEX/.test(s) ? 1 : 0;
-  for (const statement of statements.sort((a, b) => priority(a) - priority(b)))
-    await client.unsafe(statement);
+  await createTestTables(client, schema);
   const db = drizzle(client, { casing: "snake_case", schema });
   const password = await hashPassword(data.password);
   await db.insert(schema.user).values([

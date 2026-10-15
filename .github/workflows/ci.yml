@@ -111,7 +111,7 @@ jobs:
       - name: Browser acceptance
         run: pnpm test:browser
       - uses: actions/upload-artifact@v4
-        if: failure()
+        if: always()
         with:
           name: playwright-results
           path: |

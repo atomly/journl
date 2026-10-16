@@ -3,12 +3,7 @@ import { blocknoteBlocks, serverSchema } from "@acme/blocknote/server";
 import { ServerBlockNoteEditor } from "@blocknote/server-util";
 import { expect, test } from "vitest";
 import acceptedSchema from "./accepted-schema.json";
-import {
-  historicalFixtures,
-  inventoryId,
-  largeDocument,
-  parityBlocks,
-} from "./fixtures";
+import { historicalFixtures, inventoryId, parityBlocks } from "./fixtures";
 
 const editor = ServerBlockNoteEditor.create({ schema: serverSchema });
 function walk(
@@ -140,15 +135,6 @@ test("unknown blocks and unreachable children remain raw recovery specimens, not
   expect(JSON.stringify(unreachable.nodes)).toContain(
     "Unreachable child must remain recoverable",
   );
-});
-
-test("performance documents have stable identity and exact declared sizes", () => {
-  for (const count of [50, 500, 2000]) {
-    const blocks = largeDocument(count);
-    expect(blocks).toHaveLength(count);
-    expect(new Set(ids(blocks)).size).toBe(count);
-    expect(largeDocument(count)).toEqual(blocks);
-  }
 });
 
 test.each(["missing-props", "empty-object-default"])(

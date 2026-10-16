@@ -424,22 +424,3 @@ export const historicalFixtures = [
     ],
   },
 ] as const;
-
-/** Deterministic workloads; these are performance fixtures, not production distribution claims. */
-export function largeDocument(
-  blockCount: number,
-): [EditorPartialBlock, ...EditorPartialBlock[]] {
-  if (!Number.isInteger(blockCount) || blockCount < 1)
-    throw new Error("Expected a positive block count");
-  const blocks = Array.from(
-    { length: blockCount },
-    (_, index): EditorPartialBlock => ({
-      content: `Synthetic passage ${index + 1}. ${"Writing stays readable while editing, navigating, and scrolling. ".repeat(3)}`,
-      id: inventoryId(1000 + index),
-      type: index % 20 === 0 ? "heading" : "paragraph",
-    }),
-  );
-  const [first, ...rest] = blocks;
-  if (!first) throw new Error("Missing first block");
-  return [first, ...rest];
-}

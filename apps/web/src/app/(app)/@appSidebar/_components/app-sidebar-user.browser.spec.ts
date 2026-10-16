@@ -92,3 +92,46 @@ test("shipped account dropdown hosts the shipped theme control and signs out", a
   expect(await session.json()).toBeNull();
   expect(errors).toEqual([]);
 });
+
+test("shipped Appearance card and account dropdown share the persisted theme", async ({
+  page,
+}, info) => {
+  await page.goto("/account/settings");
+  await expect(
+    page.getByRole("heading", { exact: true, name: "Appearance" }),
+  ).toBeVisible();
+  await page.getByRole("radio", { exact: true, name: "Light" }).click();
+  await expect(page.locator("html")).toHaveClass(/\blight\b/);
+  await page.goto("/journal");
+  if (info.project.name === "mobile-webkit")
+    await page.getByRole("button", { name: "Toggle Sidebar" }).first().click();
+  await page
+    .locator('[data-sidebar="header"] button[aria-haspopup="menu"]')
+    .click();
+  await expect(
+    page.getByRole("tab", { exact: true, name: "Light" }),
+  ).toHaveAttribute("aria-selected", "true");
+  await page.getByRole("tab", { exact: true, name: "Dark" }).click();
+  await page.getByRole("menuitem", { exact: true, name: "Settings" }).click();
+  await expect(
+    page.getByRole("radio", { exact: true, name: "Dark" }),
+  ).toBeChecked();
+  await expect(page.locator("html")).toHaveClass(/\bdark\b/);
+});
+
+test("shipped account dropdown works in the collapsed desktop sidebar", async ({
+  page,
+}, info) => {
+  test.skip(
+    info.project.name === "mobile-webkit",
+    "Mobile uses the sidebar sheet rather than the desktop rail",
+  );
+  await page.goto("/journal");
+  await page.getByRole("button", { name: "Toggle Sidebar" }).first().click();
+  await page.getByRole("button", { exact: true, name: "Account" }).click();
+  await expect(
+    page.getByRole("tab", { exact: true, name: "Light" }),
+  ).toBeVisible();
+  await page.getByRole("tab", { exact: true, name: "Light" }).click();
+  await expect(page.locator("html")).toHaveClass(/\blight\b/);
+});

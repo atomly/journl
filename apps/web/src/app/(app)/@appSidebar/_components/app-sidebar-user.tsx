@@ -1,71 +1,7 @@
-import { ChevronsUpDown } from "lucide-react";
-import { getUser } from "~/auth/server";
-import { Avatar, AvatarImage } from "~/components/ui/avatar";
-import {
-  DropdownMenu,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "~/components/ui/dropdown-menu";
-import {
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-} from "~/components/ui/sidebar";
 import { api } from "~/trpc/server";
-import { AppSidebarManageSubscription } from "./app-sidebar-manage-subscription";
-import {
-  AppSidebarUserEmail,
-  AppSidebarUserInformation,
-  AppSidebarUsername,
-} from "./app-sidebar-user-information";
-import { AppSidebarUserMenu } from "./app-sidebar-user-menu";
-import { AppSidebarUserSettings } from "./app-sidebar-user-settings";
-import { AppSidebarUserSignOut } from "./app-sidebar-user-sign-out";
+import { AppSidebarUserDropdown } from "./app-sidebar-user-dropdown";
 
 export async function AppSidebarUser() {
-  const [user, subscription] = await Promise.all([
-    getUser(),
-    api.subscription.getSubscription(),
-  ]);
-
-  return (
-    <SidebarMenu>
-      <SidebarMenuItem>
-        <DropdownMenu>
-          <DropdownMenuTrigger
-            render={
-              <SidebarMenuButton
-                size="lg"
-                className="data-[popup-open]:bg-sidebar-accent data-[popup-open]:text-sidebar-accent-foreground"
-              />
-            }
-          >
-            <Avatar className="h-8 w-8 rounded-lg">
-              {user.image ? (
-                <AvatarImage src={user.image} alt={user.name} />
-              ) : (
-                <AppSidebarUserInformation name={user.name} />
-              )}
-            </Avatar>
-            <div className="grid flex-1 text-left text-sm leading-tight">
-              <AppSidebarUsername name={user.name} />
-              <AppSidebarUserEmail email={user.email} />
-            </div>
-            <ChevronsUpDown className="ml-auto size-4" />
-          </DropdownMenuTrigger>
-          <AppSidebarUserMenu
-            data-name="app-sidebar-user-menu"
-            className="w-(--anchor-width) min-w-56 rounded-lg"
-            align="end"
-            sideOffset={4}
-          >
-            <AppSidebarUserSettings />
-            <AppSidebarManageSubscription subscription={subscription} />
-            <DropdownMenuSeparator />
-            <AppSidebarUserSignOut />
-          </AppSidebarUserMenu>
-        </DropdownMenu>
-      </SidebarMenuItem>
-    </SidebarMenu>
-  );
+  const subscription = await api.subscription.getSubscription();
+  return <AppSidebarUserDropdown hasSubscription={Boolean(subscription)} />;
 }

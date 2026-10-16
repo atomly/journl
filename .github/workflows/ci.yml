@@ -73,6 +73,17 @@ jobs:
       - name: Build
         run: pnpm build
 
+      # Reuse the real app build for local browser QA without recompiling it.
+      - uses: actions/upload-artifact@v4
+        if: github.event_name == 'pull_request'
+        with:
+          name: web-preview-build
+          include-hidden-files: true
+          path: |
+            apps/web/.next/
+            !apps/web/.next/cache/
+          retention-days: 1
+
   unit:
     if: >-
       github.event.pull_request.stack == null ||

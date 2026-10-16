@@ -1,5 +1,4 @@
 import { Suspense } from "react";
-import { HeaderThemeToggle } from "~/app/(app)/@header/_components/header-theme-toggle";
 import { SidebarTrigger } from "~/components/ui/sidebar";
 import { AppHeader } from "./_components/app-header";
 import { HeaderJournalButton } from "./_components/header-journal-button";
@@ -24,7 +23,6 @@ export default function JournalHeader() {
             <HeaderSearchButton>
               <HeaderSearchTrigger />
             </HeaderSearchButton>
-            <HeaderThemeToggle />
           </div>
         </div>
       </div>

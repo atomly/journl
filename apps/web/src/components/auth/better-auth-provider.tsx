@@ -3,6 +3,7 @@
 import { QueryClientProvider } from "@tanstack/react-query";
 import NextLink from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { useTheme } from "next-themes";
 import {
   type ComponentProps,
   createContext,
@@ -12,6 +13,7 @@ import {
 } from "react";
 import { authClient } from "~/auth/client";
 import { AuthProvider } from "~/components/auth/auth-provider";
+import { themePlugin } from "~/lib/auth/theme-plugin";
 import { createQueryClient } from "~/trpc/query-client";
 
 type AuthProviderProps = {
@@ -68,6 +70,7 @@ export function BetterAuthProvider({
       <PasswordSignInContext value={allowPasswordSignIn}>
         <AuthProvider
           authClient={authClient}
+          plugins={[themePlugin({ useTheme })]}
           avatar={{ enabled: true, extension: "webp", size: 256 }}
           basePaths={{ auth: "/auth", settings: "/account" }}
           emailAndPassword={{
@@ -81,9 +84,14 @@ export function BetterAuthProvider({
               signUp: "Sign up",
             },
           }}
-          navigate={({ to, replace }) =>
-            replace ? router.replace(to) : router.push(to)
-          }
+          navigate={({ to, replace }) => {
+            // Signing out must leave the authenticated shell and its private caches.
+            if (to === "/auth/sign-out") {
+              window.location.assign(to);
+              return;
+            }
+            replace ? router.replace(to) : router.push(to);
+          }}
           redirectTo="/journal"
           socialProviders={["google", "github"]}
           socialSignInMode="redirect"

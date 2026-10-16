@@ -5,8 +5,8 @@ built on save-safety commit `93b18ad` ([#368](https://github.com/atomly/journl/i
 It inventories the installed BlockNote **0.55.0** behavior. It selects neither a
 replacement editor nor storage, and changes no live document or editor behavior.
 
-The source audit, synthetic content checks, and isolated Chromium measurements are
-recorded here. Production content has **not** been inspected. Mobile WebKit, real-device
+The source audit and content checks are recorded here. Performance baselines
+must be measured in the running Journl app; none are certified yet. Production content has **not** been inspected. Mobile WebKit, real-device
 keyboard/selection checks, and full Next.js route timings remain open. Performance
 limits below are **proposed, awaiting owner agreement**; a suggested option in chat
 is not approval. This inventory is usable for the design proof, but these open gates
@@ -17,25 +17,19 @@ must not be represented as a completed migration/parity sign-off.
 - [Accepted schema snapshot](../../packages/blocknote/src/inventory/accepted-schema.json) records every block/inline/style config, including property defaults and values. `fixtures.spec.ts` compares both client and server schemas to it; dependency changes require an explicit inventory review.
 - [Synthetic fixtures](../../packages/blocknote/src/inventory/fixtures.ts) include all accepted block types and text styles, nested writing, both table cell encodings, stable IDs, internal/external/block references, unavailable targets, Unicode and incomplete historical-shaped rows. Every name, ID, URL and passage is synthetic.
 - [Executable content checks](../../packages/blocknote/src/inventory/fixtures.spec.ts) exercise the installed server editor and real row reconstruction. They check accepted shapes, ProseMirror JSON round trips, identities/nesting, readable lossy exports, and raw recovery specimens. They do not implement a migration codec.
-- [Baseline report](baseline.json) records browser/version, viewport, sample counts, measurement scope, source hashes and results. [The isolated runner](../../apps/web/src/testing/editor-inventory/run.ts) mounts the actual `BlockEditor`, `useBlockEditor`, schema, transaction diff and custom reference runtime. References resolve locally to deterministic fake metadata; routing, environment and a fixed light theme are explicit harness stand-ins.
 - [Read-only aggregate SQL](production-shapes.sql) is ready for a separately identified production inventory. Its integration test uses disposable PostgreSQL and checks that reports contain counts/shapes rather than authored passages, titles, target URLs or IDs.
 
 Run from the repository root:
 
 ```sh
 pnpm --filter @acme/blocknote test:unit
-pnpm --filter @acme/web exec playwright install --with-deps chromium webkit
-pnpm test:editor-inventory -- --runs=5
-# Explicit partial capture when only Chromium is available:
-pnpm test:editor-inventory -- --browser=chromium --runs=5
+pnpm test:browser
 ```
 
-The benchmark owns `127.0.0.1:3209`, refuses a conflicting listener, does not load an
-application `.env`, and blocks outbound browser traffic. It needs no Docker, SQL,
-authentication or model key. Runtime errors fail the run; partial reports are marked
-incomplete. `--output=/absolute/path/report.json` preserves the checked-in baseline.
-Compare on the same browser build, hardware limits, viewport, build mode, fonts and
-workload. Never replace the baseline merely to make a regression pass.
+Browser acceptance must run the actual Next.js app, authentication, routes, editor,
+and storage. Do not substitute a standalone editor screen or fake application
+layout for product validation. Keep benchmark evidence tied to the tested commit,
+route, browser, viewport, build mode, and data set.
 
 ## Accepted content: preserve even when its control is hidden
 
@@ -180,34 +174,14 @@ No source URLs, document IDs, user IDs or writing should be checked into this in
 
 ## Performance baseline and proposed limits
 
-The checked-in report is an **isolated, warm-module, development-React baseline**.
-It measures mount through nonempty/stable rendered editors (three stable frames),
-real `beforeinput` capture through the next animation-frame callback, and 120 scripted
-scroll frames. It includes Journl's transaction diff (not the retained document-session/save queue); it excludes compilation/module
-fetch, authentication, SQL/save acknowledgement, remote previews, model calls, device
-keyboard and GPU paint/INP. Five mount trials and 41 typing events are a reproducible
-starting sample, not a statistically precise release percentile.
+There is no accepted performance baseline yet. The former standalone benchmark
+and its measurements were removed because they did not validate the running app.
 
-Workloads: 50/500/2,000-block documents; 200 reference-bearing blocks (including cards);
-100 journal entry rows with 10 blocks each; 365 timeline rows with a 50-block first day
-and small later days; and the mixed read-only fixture. Fixture sizes are stress cases,
-not production-size claims. The harness uses the existing editor, not a replacement.
-
-| Workload (Chromium, isolated) | Median mount ms | Typing p95 ms | Scroll p95 ms | Frames >50 ms |
-| --- | ---: | ---: | ---: | ---: |
-| Page, 50 blocks | 81.3 | 15.5 | 16.7 | 0/120 |
-| Page, 500 blocks | 149.7 | 16.7 | 16.8 | 0/120 |
-| Page, 2000 blocks | 434.7 | 19 | 16.8 | 0/120 |
-| 200 reference-bearing blocks | 287.3 | 16.5 | 16.7 | 0/120 |
-| 100 journal entry rows | 115.6 | 19.9 | 50 | 4/120 |
-| 365 journal timeline rows | 114.2 | 15.8 | 33.4 | 2/120 |
-| Mixed read-only fixture | 68.2 | n/a | 16.7 | 0/120 |
-
-Use [baseline.json](baseline.json) for exact values and source hashes. Chromium desktop
-coverage can run here. Mobile WebKit was downloaded, but this host lacks its GTK,
-GStreamer, ICU and other shared libraries; there is no mobile measurement to invent.
-Full Next.js route compilation exceeded this container's memory in #368; time-to-usable
-page and real-device baselines remain release gates, separate from isolated mount time.
+Measure the actual Journl routes with Playwright/Chromium: 50/500/2,000-block
+writing, reference-heavy documents, long journal entries and timelines, and
+read-only previews. Record route load, typing responsiveness, scrolling, and save
+acknowledgement while checking that no content is lost or replaced. Include
+mobile browser runs and real-device keyboard/selection checks before rollout.
 
 Proposed limits (owner approval pending): candidate measurements must satisfy **both**
 `candidate <= baseline × 1.20` on the same environment and the ceilings below. Repeat a
@@ -231,7 +205,7 @@ rebaselining is not an exemption.
 Mobile WebKit uses its own baseline, never the Chromium numbers. Real mobile Safari
 selection/keyboard/IME must be checked manually. Full route loading, cold start and
 save latency need a fixed deployment/data fixture and separate agreed budgets before
-rollout; this local editor report does not substitute for them.
+rollout.
 
 ## Scope boundaries and exit checklist
 
@@ -251,9 +225,9 @@ Exit state for #369:
 - [x] Installed accepted content, visible controls, keyboard/clipboard, reference, mobile, undo, AI and consumer surfaces enumerated with preserve/check contracts.
 - [x] Synthetic accepted-content and historical recovery fixtures plus schema drift checks committed for repeatable comparison.
 - [x] Production uncertainty and a privacy-preserving read-only inventory procedure recorded; no production-content inspection claimed.
-- [x] Reproducible isolated editor performance harness; raw Chromium measurements recorded with source/environment provenance.
+- [ ] Real-app performance baseline recorded with source/environment provenance.
 - [ ] Mobile WebKit/system dependency baseline, real-device checks and full app route measurements completed on a suitable runner.
 - [ ] Performance limits explicitly agreed by the owner; then freeze the approved limits with the baseline.
 
-The final two checks remain open. The design proof may use this inventory immediately;
+The final three checks remain open. The design proof may use this inventory immediately;
 no default cutover or silent feature removal is authorized by a checked-in document.

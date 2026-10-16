@@ -55,8 +55,8 @@ Use these paths as the fastest way to understand the product and core systems.
 
 The [editor feature/content inventory](docs/editor-inventory/README.md) records the
 installed editor contract, synthetic recovery fixtures, remaining production
-uncertainty, and reproducible performance measurements. Run
-`pnpm test:editor-inventory -- --browser=chromium` for an isolated local baseline.
+uncertainty, and the required performance measurements in the running app.
+Content checks run with `pnpm --filter @acme/blocknote test:unit`.
 
 ## Development Workflow
 

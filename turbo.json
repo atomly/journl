@@ -56,10 +56,6 @@
       "cache": false,
       "passThroughEnv": ["DOCKER_*", "TESTCONTAINERS_*", "PLAYWRIGHT_*"]
     },
-    "test:editor-inventory": {
-      "cache": false,
-      "passThroughEnv": ["PLAYWRIGHT_*", "NODE_OPTIONS", "LD_LIBRARY_PATH"]
-    },
     "test:integration": {
       "cache": false,
       "passThroughEnv": ["DOCKER_*", "TESTCONTAINERS_*"]

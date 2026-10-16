@@ -15,8 +15,7 @@
     "with-env": "dotenv -e ../../.env --",
     "test:integration": "vitest run --config vitest.integration.config.ts",
     "test:unit": "vitest run --maxWorkers=4",
-    "test:browser": "playwright test",
-    "test:editor-inventory": "jiti src/testing/editor-inventory/run.ts"
+    "test:browser": "playwright test"
   },
   "dependencies": {
     "@acme/auth": "workspace:*",

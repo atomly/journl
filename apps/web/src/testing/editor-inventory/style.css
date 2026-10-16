@@ -1,0 +1,22 @@
+html,
+body {
+  margin: 0;
+  height: 100%;
+}
+[data-scroll] {
+  height: 100vh;
+  overflow: auto;
+}
+#root {
+  max-width: 960px;
+  margin: 0 auto;
+}
+.inventory-row {
+  min-height: 320px;
+  border-bottom: 1px solid #ddd;
+  padding-block: 24px;
+}
+.inventory-row h2 {
+  padding-inline: 48px;
+  font-size: 24px;
+}

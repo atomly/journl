@@ -6,7 +6,9 @@
   "exports": {
     "./ai": "./src/blocknote-ai.ts",
     "./server": "./src/server/index.ts",
-    "./schema": "./src/blocknote-schema.ts"
+    "./schema": "./src/blocknote-schema.ts",
+    "./inventory": "./src/inventory/fixtures.ts",
+    "./read-only": "./src/reference-read-only.tsx"
   },
   "scripts": {
     "check": "biome check",

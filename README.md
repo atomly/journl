@@ -51,6 +51,13 @@ Use these paths as the fastest way to understand the product and core systems.
 
 ---
 
+## Editor parity inventory
+
+The [editor feature/content inventory](docs/editor-inventory/README.md) records the
+installed editor contract, synthetic recovery fixtures, remaining production
+uncertainty, and reproducible performance measurements. Run
+`pnpm test:editor-inventory -- --browser=chromium` for an isolated local baseline.
+
 ## Development Workflow
 
 Use the scripts in [`package.json`](./package.json) as the canonical source for

@@ -25,7 +25,8 @@
     "test:integration": "turbo run test:integration",
     "test:unit": "turbo run test:unit",
     "test": "turbo run test:unit test:integration test:browser",
-    "test:browser": "turbo run test:browser"
+    "test:browser": "turbo run test:browser",
+    "test:editor-inventory": "turbo run test:editor-inventory"
   },
   "devDependencies": {
     "@biomejs/biome": "~2.5.15",

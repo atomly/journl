@@ -71,7 +71,7 @@ export function HeaderSubscriptionButton({
       onClick={handleClick}
       disabled={isUpgrading || isOpeningBillingPortal}
       size="sm"
-      className="rounded-md border"
+      className="hidden rounded-md border sm:inline-flex"
       variant="background"
     >
       {subscription ? (

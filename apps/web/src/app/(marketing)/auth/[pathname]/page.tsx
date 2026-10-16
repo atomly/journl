@@ -28,6 +28,13 @@ async function AuthPage({
   );
 }
 
-export default withoutAuth(AuthPage, {
+const SignedOutAuthPage = withoutAuth(AuthPage, {
   redirectTo: "/account/settings",
 });
+
+export default async function AuthRoute(props: Parameters<typeof AuthPage>[0]) {
+  // The shipped UserButton reaches this view while the user is still signed in.
+  if ((await props.params).pathname === "sign-out")
+    return <AuthPage {...props} />;
+  return <SignedOutAuthPage {...props} />;
+}

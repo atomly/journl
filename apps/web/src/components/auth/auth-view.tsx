@@ -19,7 +19,7 @@ export function AuthView({
   classNames,
   inviteCode,
 }: AuthViewProps) {
-  if (!IDENTITY_VIEWS.has(pathname)) {
+  if (!IDENTITY_VIEWS.has(pathname) && pathname !== "sign-out") {
     redirect("/");
   }
   if (pathname === "sign-up" && !normalizeInviteCode(inviteCode)) {

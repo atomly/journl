@@ -84,7 +84,7 @@ test("shipped account dropdown hosts the shipped theme control and signs out", a
   // The shipped control forwards Up/Down back to neighboring menu items.
   await page.keyboard.press("ArrowDown");
   await expect(
-    page.getByRole("menuitem", { exact: true, name: "Sign out" }),
+    page.getByRole("menuitem", { name: /^sign out$/i }),
   ).toBeFocused();
   await page.keyboard.press("Enter");
   await expect(page).toHaveURL(/\/auth\/sign-in(?:[?#].*)?$/);
@@ -96,11 +96,12 @@ test("shipped account dropdown hosts the shipped theme control and signs out", a
 test("shipped Appearance card and account dropdown share the persisted theme", async ({
   page,
 }, info) => {
-  await page.goto("/account/settings");
+  await page.goto("/auth/sign-in");
+  await expect(page).toHaveURL("/account/settings");
   await expect(
     page.getByRole("heading", { exact: true, name: "Appearance" }),
   ).toBeVisible();
-  await page.getByRole("radio", { exact: true, name: "Light" }).click();
+  await page.getByRole("radio", { name: /^Light\b/ }).click();
   await expect(page.locator("html")).toHaveClass(/\blight\b/);
   await page.goto("/journal");
   if (info.project.name === "mobile-webkit")
@@ -113,9 +114,7 @@ test("shipped Appearance card and account dropdown share the persisted theme", a
   ).toHaveAttribute("aria-selected", "true");
   await page.getByRole("tab", { exact: true, name: "Dark" }).click();
   await page.getByRole("menuitem", { exact: true, name: "Settings" }).click();
-  await expect(
-    page.getByRole("radio", { exact: true, name: "Dark" }),
-  ).toBeChecked();
+  await expect(page.getByRole("radio", { name: /^Dark\b/ })).toBeChecked();
   await expect(page.locator("html")).toHaveClass(/\bdark\b/);
 });
 

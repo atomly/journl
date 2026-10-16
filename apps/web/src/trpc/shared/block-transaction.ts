@@ -23,6 +23,7 @@ import type { TRPCContext } from "../trpc";
 
 export const zBlockTransactions = z.object({
   document_id: z.uuid(),
+  expected_updated_at: z.string().nullable(),
   transactions: z.array(
     z.discriminatedUnion("type", [
       z.object({
@@ -422,6 +423,31 @@ export async function saveTransactions(
   if (!source)
     throw new TRPCError({ code: "NOT_FOUND", message: "Document not found" });
 
+  const [page] = await ctx.db
+    .select()
+    .from(Page)
+    .where(
+      and(eq(Page.document_id, input.document_id), eq(Page.user_id, userId)),
+    );
+  const [entry] = await ctx.db
+    .select()
+    .from(JournalEntry)
+    .where(
+      and(
+        eq(JournalEntry.document_id, input.document_id),
+        eq(JournalEntry.user_id, userId),
+      ),
+    );
+  if (
+    (page?.updated_at ?? entry?.updated_at ?? null) !==
+    input.expected_updated_at
+  ) {
+    throw new TRPCError({
+      code: "CONFLICT",
+      message: "This document changed elsewhere. Your draft has been kept.",
+    });
+  }
+
   for (const change of input.transactions) {
     if (change.type === "edge_remove") {
       await ctx.db
@@ -560,7 +586,9 @@ export async function saveTransactions(
 
   const [document] = await ctx.db
     .update(Document)
-    .set({ updated_at: sql`now()` })
+    .set({
+      updated_at: sql`greatest(clock_timestamp(), ${Document.updated_at} + interval '1 microsecond', ${input.expected_updated_at}::timestamptz + interval '1 microsecond')`,
+    })
     .where(
       and(eq(Document.id, input.document_id), eq(Document.user_id, userId)),
     )
@@ -578,5 +606,16 @@ export async function saveTransactions(
       ),
     );
   await rebuildReferenceProjection(ctx.db, userId, input.document_id, blocks);
+  if (page) {
+    const [saved] = await ctx.db
+      .update(Page)
+      .set({
+        updated_at: document.updatedAt,
+      })
+      .where(eq(Page.id, page.id))
+      .returning();
+    if (!saved)
+      throw new TRPCError({ code: "NOT_FOUND", message: "Page not found" });
+  }
   return document;
 }

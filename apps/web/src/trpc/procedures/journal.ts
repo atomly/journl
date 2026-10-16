@@ -345,7 +345,7 @@ export const journalRouter = {
       zBlockTransactions.extend({
         date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
         document_id: z.uuid().nullable(),
-        expected_updated_at: z.string().nullable().optional(),
+        expected_updated_at: z.string().nullable(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -362,10 +362,7 @@ export const journalRouter = {
               eq(JournalEntry.date, input.date),
             ),
           });
-          if (
-            input.expected_updated_at !== undefined &&
-            (current?.updated_at ?? null) !== input.expected_updated_at
-          ) {
+          if ((current?.updated_at ?? null) !== input.expected_updated_at) {
             throw new TRPCError({
               code: "CONFLICT",
               message: "This entry has changed since it was loaded.",
@@ -378,6 +375,7 @@ export const journalRouter = {
             });
           }
           let documentId = input.document_id;
+          let expectedUpdatedAt = input.expected_updated_at;
 
           if (!documentId) {
             const [document] = await tx
@@ -405,6 +403,7 @@ export const journalRouter = {
               })
               .returning();
 
+            expectedUpdatedAt = entry?.updated_at ?? null;
             if (!entry) {
               throw new TRPCError({
                 code: "INTERNAL_SERVER_ERROR",
@@ -418,13 +417,14 @@ export const journalRouter = {
             {
               ...input,
               document_id: documentId,
+              expected_updated_at: expectedUpdatedAt,
             },
           );
 
           const [saved] = await tx
             .update(JournalEntry)
             .set({
-              updated_at: sql`greatest(clock_timestamp(), ${JournalEntry.updated_at} + interval '1 microsecond')`,
+              updated_at: document.updatedAt,
             })
             .where(
               and(

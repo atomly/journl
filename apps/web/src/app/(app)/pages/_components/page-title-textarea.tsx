@@ -1,18 +1,12 @@
 "use client";
 
 import type { Page } from "@acme/db/schema";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useRef, useState } from "react";
-import { useDebouncedCallback } from "use-debounce";
+import { useRef, useSyncExternalStore } from "react";
+import { usePageEditorDraft } from "~/components/editor/page-drafts-provider";
 import { ExpandingTextarea } from "~/components/ui/expanding-textarea";
 import { PageCreatedEvent } from "~/events/page-created-event";
 import { useAppEventHandler } from "~/hooks/use-app-event-handler";
 import { cn } from "~/lib/cn";
-import {
-  updateNode,
-  updatePageTitleInNestedPages,
-} from "~/trpc/cache/tree-cache";
-import { useTRPC } from "~/trpc/react";
 
 const DEFAULT_PLACEHOLDER = "New page";
 const DEFAULT_DEBOUNCE_TIME = 1000;
@@ -37,87 +31,16 @@ export function PageTitleTextarea({
   ...rest
 }: PageEditorTitleProps) {
   const ref = useRef<HTMLTextAreaElement | null>(null);
-  const trpc = useTRPC();
-  const queryClient = useQueryClient();
-  const { mutate: updatePageTitle } = useMutation(
-    trpc.pages.updateTitle.mutationOptions({
-      onSuccess: () => {
-        for (const queryKey of [
-          trpc.references.getPreviews.queryKey(),
-          trpc.references.getGraph.infiniteQueryKey(),
-          trpc.references.listBacklinks.queryKey(),
-        ]) {
-          void queryClient.invalidateQueries({ queryKey });
-        }
-      },
-    }),
+  const { draft, retainDraft } = usePageEditorDraft();
+  const snapshot = useSyncExternalStore(
+    draft.subscribe,
+    draft.getSnapshot,
+    draft.getSnapshot,
   );
-  const [title, setTitle] = useState(page.title);
-  const treeQueryFilter = trpc.tree.getChildrenPaginated.infiniteQueryFilter();
-  const nestedFolderPagesQueryFilter =
-    trpc.tree.getNestedPagesPaginated.infiniteQueryFilter();
-
-  // Debounced API call for page title updates
-  const debouncedUpdate = useDebouncedCallback((newTitle: string) => {
-    // Optimistically update the cache
-    queryClient.setQueryData(
-      trpc.pages.getById.queryOptions({ id: page.id }).queryKey,
-      (old) => {
-        if (!old) return old;
-        return {
-          ...old,
-          title: newTitle,
-          updatedAt: new Date().toISOString(),
-        };
-      },
-    );
-
-    if (page.node_id) {
-      updateNode({
-        nodeId: page.node_id,
-        queryClient,
-        queryFilter: treeQueryFilter,
-        updater: (item) =>
-          item.kind === "page"
-            ? {
-                ...item,
-                page: {
-                  ...item.page,
-                  title: newTitle,
-                },
-              }
-            : item,
-      });
-    }
-
-    updatePageTitleInNestedPages({
-      pageId: page.id,
-      queryClient,
-      queryFilter: nestedFolderPagesQueryFilter,
-      title: newTitle,
-    });
-
-    // Execute the mutation
-    updatePageTitle(
-      { id: page.id, title: newTitle },
-      {
-        onError: () => {
-          // If the mutation fails, invalidate queries to refetch correct data
-          queryClient.invalidateQueries({
-            queryKey: trpc.pages.getById.queryOptions({ id: page.id }).queryKey,
-          });
-          queryClient.invalidateQueries(treeQueryFilter);
-          void queryClient.invalidateQueries(nestedFolderPagesQueryFilter);
-        },
-      },
-    );
-  }, debounceTime);
-
   function handleChange(e: React.ChangeEvent<HTMLTextAreaElement>) {
-    const newTitle = e.target.value;
-    setTitle(newTitle);
-    onTitleChange?.(newTitle);
-    debouncedUpdate(newTitle);
+    retainDraft(page.id);
+    draft.updateTitle(e.target.value, debounceTime);
+    onTitleChange?.(e.target.value);
   }
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
@@ -136,7 +59,7 @@ export function PageTitleTextarea({
   return (
     <ExpandingTextarea
       ref={ref}
-      value={title}
+      value={snapshot.title ?? page.title}
       rows={1}
       maxLength={MAX_TITLE_LENGTH}
       onChange={handleChange}

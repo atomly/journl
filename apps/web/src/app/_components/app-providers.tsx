@@ -1,7 +1,10 @@
 "use client";
 
 import { ThemeProvider } from "next-themes";
+import { JournalDraftsProvider } from "~/app/(app)/journal/_components/journal-drafts-provider";
 import { ThreadRuntime } from "~/components/assistant-ui/thread-runtime";
+import { DraftActivityProvider } from "~/components/editor/draft-activity-provider";
+import { PageDraftsProvider } from "~/components/editor/page-drafts-provider";
 import { AppEventProvider } from "~/components/events/app-event-context";
 import { AppPreferencesProvider } from "~/components/preferences/app-preferences-provider";
 import { DrawerProvider } from "~/components/ui/drawer";
@@ -34,7 +37,13 @@ export function AppProviders({
                   }}
                   messages={[]}
                 >
-                  <ThreadRuntime>{children}</ThreadRuntime>
+                  <DraftActivityProvider>
+                    <PageDraftsProvider>
+                      <JournalDraftsProvider>
+                        <ThreadRuntime>{children}</ThreadRuntime>
+                      </JournalDraftsProvider>
+                    </PageDraftsProvider>
+                  </DraftActivityProvider>
                 </JournlChatProvider>
               </JournlAgentProvider>
             </DrawerProvider>

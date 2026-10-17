@@ -226,11 +226,33 @@ export const pagesRouter = {
       }
     }),
   saveTransactions: protectedProcedure
-    .input(zBlockTransactions)
+    .input(zBlockTransactions.extend({ title: z.string().max(255).optional() }))
     .mutation(async ({ ctx, input }) => {
-      const document = await ctx.db.transaction(async (tx) =>
-        saveTransactions({ ...ctx, db: tx }, input),
-      );
+      const document = await ctx.db.transaction(async (tx) => {
+        const saved = await saveTransactions({ ...ctx, db: tx }, input);
+        if (input.title !== undefined)
+          await tx
+            .update(Page)
+            .set({ title: input.title, updated_at: saved.updatedAt })
+            .where(
+              and(
+                eq(Page.document_id, input.document_id),
+                eq(Page.user_id, ctx.session.user.id),
+              ),
+            );
+        const [page] = await tx
+          .select({ title: Page.title })
+          .from(Page)
+          .where(
+            and(
+              eq(Page.document_id, input.document_id),
+              eq(Page.user_id, ctx.session.user.id),
+            ),
+          );
+        if (!page)
+          throw new TRPCError({ code: "NOT_FOUND", message: "Page not found" });
+        return { ...saved, title: page.title };
+      });
       try {
         await startDocumentEmbedding({
           documentId: document.id,
@@ -249,6 +271,7 @@ export const pagesRouter = {
   updateTitle: protectedProcedure
     .input(
       z.object({
+        expected_updated_at: z.string(),
         id: z.uuid(),
         title: z.string().max(255),
       }),
@@ -256,9 +279,26 @@ export const pagesRouter = {
     .mutation(async ({ ctx, input }) => {
       const updatedPage = await ctx.db.transaction(async (tx) => {
         await lockExploreOwner(tx, ctx.session.user.id);
+        const [current] = await tx
+          .select()
+          .from(Page)
+          .where(
+            and(eq(Page.id, input.id), eq(Page.user_id, ctx.session.user.id)),
+          )
+          .for("update");
+        if (!current)
+          throw new TRPCError({ code: "NOT_FOUND", message: "Page not found" });
+        if (current.updated_at !== input.expected_updated_at)
+          throw new TRPCError({
+            code: "CONFLICT",
+            message: "This page changed elsewhere. Your title has been kept.",
+          });
         const [page] = await tx
           .update(Page)
-          .set({ title: input.title })
+          .set({
+            title: input.title,
+            updated_at: sql`greatest(clock_timestamp(), ${Page.updated_at} + interval '1 microsecond')`,
+          })
           .where(
             and(eq(Page.id, input.id), eq(Page.user_id, ctx.session.user.id)),
           )

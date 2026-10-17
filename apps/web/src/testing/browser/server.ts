@@ -68,6 +68,47 @@ try {
       userId: id,
     })),
   );
+  // A real stored long document keeps browser acceptance focused on editing,
+  // scrolling and persistence instead of racing dozens of synthetic key presses.
+  const longDocumentId = fixtureId(700);
+  await db
+    .insert(schema.Document)
+    .values({ id: longDocumentId, user_id: data.owner });
+  await db.insert(schema.JournalEntry).values({
+    date: data.longJournalDate,
+    document_id: longDocumentId,
+    user_id: data.owner,
+  });
+  const journalBlocks = Array.from({ length: 60 }, (_, index) =>
+    fixtureId(701 + index),
+  );
+  await db.insert(schema.BlockNode).values(
+    journalBlocks.map((id, index) => ({
+      data: {
+        content: [
+          {
+            styles: {},
+            text: `Paragraph ${index + 1}: a long journal entry for real editor acceptance.`,
+            type: "text",
+          },
+        ],
+        props: {},
+        type: "paragraph",
+      },
+      document_id: longDocumentId,
+      id,
+      user_id: data.owner,
+    })),
+  );
+  await db.insert(schema.BlockEdge).values(
+    journalBlocks.slice(1).map((id, index) => ({
+      document_id: longDocumentId,
+      from_id: fixtureId(701 + index),
+      to_id: id,
+      type: "sibling" as const,
+      user_id: data.owner,
+    })),
+  );
   const notes = Array.from({ length: 28 }, (_, n) => fixtureId(n + 1));
   await db
     .insert(schema.Document)

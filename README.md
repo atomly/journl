@@ -72,6 +72,22 @@ Database schema changes live in [`packages/db/src`](./packages/db/src) and are
 applied through `pnpm db:push`, which runs Drizzle Kit's schema comparison and
 update flow.
 
+Page and journal content saves require the version loaded by the editor. The
+version check and write run in one transaction, including the first journal
+entry for a date. Versions advance monotonically; retries keep the original
+version so a lost response cannot apply a batch twice. Both editors retain local
+drafts and pending saves across app navigation and journal row unmounts, warn
+before leaving with unsaved changes, and offer retry, draft download, and explicit
+conflict recovery. Page titles share the content save queue. A small header icon shows autosave status. A persistent notice identifies offline edits and save failures and offers
+recovery at any scroll position and across navigation. Saving resumes on
+reconnection; confirmed conflicts always require explicit recovery. Draft recovery keeps exact rich copies before
+loading a newer saved version, with read-only viewing/copying and complete JSON
+backup downloads. These copies live in the current tab, not durable browser
+storage; importing backup files is not yet supported.
+
+Run `pnpm test:browser` to exercise the running Next.js application with
+Playwright, including real journal/page editors and save recovery.
+
 Library items use linked sibling ordering. Folder deletion records background
 cleanup requests in the Drizzle-defined `folder_deletion_outbox` table within
 the deletion transaction. The existing Vercel Workflow handles cleanup; initial

@@ -42,7 +42,7 @@ async function AppLayout({
         <div className="flex flex-1">
           <AppSidebarProvider>
             {appSidebar}
-            <SidebarInset className="flex max-h-dvh min-w-sm flex-col gap-y-2">
+            <SidebarInset className="flex max-h-dvh min-w-0 flex-col gap-y-2">
               <AppLayoutProvider>
                 {header}
                 <AppContainer className="min-h-0 min-w-54 flex-1 overflow-auto [--app-header-offset:4rem] peer-[[data-hidden=true]:not(:has(:focus-visible))]/app-header:[--app-header-offset:0px] md:[--app-header-offset:0px]">

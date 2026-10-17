@@ -5,7 +5,8 @@ import {
   useMutation,
   useQueryClient,
 } from "@tanstack/react-query";
-import { createContext, useContext, useMemo, useState } from "react";
+import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { useDraftActivity } from "~/components/editor/draft-activity-provider";
 import type { JournalListEntry } from "~/trpc";
 import { useTRPC } from "~/trpc/react";
 import { JournalEntryDraft } from "./journal-entry-draft";
@@ -27,6 +28,16 @@ export function JournalDraftsProvider({
   children: React.ReactNode;
 }) {
   const [drafts] = useState(() => new Map<string, JournalEntryDraft>());
+  useEffect(() => {
+    const beforeUnload = (event: BeforeUnloadEvent) => {
+      if ([...drafts.values()].some((draft) => draft.hasUnsavedChanges())) {
+        event.preventDefault();
+        event.returnValue = "";
+      }
+    };
+    window.addEventListener("beforeunload", beforeUnload);
+    return () => window.removeEventListener("beforeunload", beforeUnload);
+  }, [drafts]);
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const { mutateAsync } = useMutation(
@@ -95,6 +106,7 @@ export function useJournalEntryDraft(
   initial: ConstructorParameters<typeof JournalEntryDraft>[1],
 ) {
   const context = useContext(JournalDraftsContext);
+  const activity = useDraftActivity();
   if (!context)
     throw new Error("Journal editors require JournalDraftsProvider");
   const { drafts, save, load, onSaved } = context;
@@ -113,6 +125,14 @@ export function useJournalEntryDraft(
   return {
     draft,
     // Only edited entries need to outlive their row; untouched entries can refetch normally.
-    retainDraft: () => drafts.set(date, draft),
+    retainDraft: () => {
+      drafts.set(date, draft);
+      activity?.register({
+        draft,
+        href: `/journal/${date}`,
+        key: `journal:${date}`,
+        label: `Journal · ${date}`,
+      });
+    },
   };
 }

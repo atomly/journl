@@ -2,18 +2,18 @@
 
 import type { EditorPartialBlock } from "@acme/blocknote/schema";
 import type { Page } from "@acme/db/schema";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useRef, useState } from "react";
-import { useDebouncedCallback } from "use-debounce";
+import { useEffect, useSyncExternalStore } from "react";
 import { BlockEditor } from "~/components/editor/block-editor";
-import { BlockEditorErrorOverlay } from "~/components/editor/block-editor-error-overlay";
+import {
+  PageEditorDraftContext,
+  usePageDraft,
+} from "~/components/editor/page-drafts-provider";
 import { useBlockEditor } from "~/components/editor/use-block-editor";
 import { ReferenceBacklinks } from "~/components/references/reference-backlinks";
 import { PageCreatedEvent } from "~/events/page-created-event";
 import { useAppEventHandler } from "~/hooks/use-app-event-handler";
 import { useJournlAgent } from "~/hooks/use-journl-agent";
 import type { BlockTransaction } from "~/trpc";
-import { useTRPC } from "~/trpc/react";
 
 const DEFAULT_DEBOUNCE_TIME = 1000;
 
@@ -21,7 +21,7 @@ type PageEditorProps = Omit<
   React.ComponentProps<typeof BlockEditor>,
   "editor" | "onChange" | "formattingToolbar" | "slashMenu"
 > & {
-  page: Pick<Page, "id" | "title" | "document_id">;
+  page: Page;
   initialBlocks: [EditorPartialBlock, ...EditorPartialBlock[]] | undefined;
   debounceTime?: number;
 };
@@ -32,62 +32,33 @@ export function PageEditor({
   debounceTime = DEFAULT_DEBOUNCE_TIME,
   ...rest
 }: PageEditorProps) {
-  const trpc = useTRPC();
-  const queryClient = useQueryClient();
-  const pendingChangesRef = useRef<BlockTransaction[]>([]);
-  const { setEditor, unsetEditor, setView } = useJournlAgent();
-  const editor = useBlockEditor({ initialBlocks });
-  const [isOverlayOpen, setOverlayOpen] = useState(false);
-
-  /**
-   * Handles the error state of the editor.
-   *
-   * @privateRemarks
-   *
-   * Using replace() to avoid creating a new history entry
-   */
-  function handleError() {
-    setOverlayOpen(true);
-    requestAnimationFrame(() => {
-      location.replace(location.href);
-    });
-  }
-
-  const { mutate, isPending } = useMutation({
-    ...trpc.pages.saveTransactions.mutationOptions({}),
-    onError: (error) => {
-      console.error("[PageEditor] error 👀", error);
-      handleError();
-    },
-    onSuccess: () => {
-      for (const queryKey of [
-        trpc.references.getPreviews.queryKey(),
-        trpc.references.getEmbedContent.queryKey(),
-        trpc.references.listBacklinks.queryKey(),
-        trpc.references.listOccurrences.queryKey(),
-        trpc.references.queryNeighbors.queryKey(),
-        trpc.references.getGraph.infiniteQueryKey(),
-      ]) {
-        void queryClient.invalidateQueries({ queryKey });
-      }
-      if (pendingChangesRef.current.length > 0) {
-        debouncedMutate();
-      }
-    },
+  const { draft, retainDraft } = usePageDraft(page, {
+    blocks: initialBlocks,
+    documentId: page.document_id,
+    title: page.title,
+    updatedAt: page.updated_at,
   });
-
-  const debouncedMutate = useDebouncedCallback(() => {
-    if (isPending) return;
-    const transactions = pendingChangesRef.current;
-    pendingChangesRef.current = [];
-    mutate({ document_id: page.document_id, transactions });
-  }, debounceTime);
-
+  const snapshot = useSyncExternalStore(
+    draft.subscribe,
+    draft.getSnapshot,
+    draft.getSnapshot,
+  );
+  const { setEditor, unsetEditor, setView } = useJournlAgent();
+  const editor = useBlockEditor({
+    initialBlocks: snapshot.blocks,
+    resetKey: snapshot.resetKey,
+  });
   function handleEditorChange(transactions: BlockTransaction[]) {
-    pendingChangesRef.current.push(...transactions);
-
-    debouncedMutate();
+    retainDraft();
+    draft.update(editor.document, transactions, debounceTime);
   }
+
+  useEffect(
+    () => () => {
+      void draft.flush();
+    },
+    [draft],
+  );
 
   useEffect(() => {
     setView({
@@ -127,8 +98,9 @@ export function PageEditor({
   );
 
   return (
-    <>
+    <PageEditorDraftContext.Provider value={draft}>
       <BlockEditor
+        key={snapshot.resetKey}
         editor={editor}
         onChange={handleEditorChange}
         // Disabling the default because we're using a formatting toolbar with the AI option.
@@ -138,7 +110,6 @@ export function PageEditor({
         {...rest}
       />
       <ReferenceBacklinks documentId={page.document_id} />
-      <BlockEditorErrorOverlay isOpen={isOverlayOpen} />
-    </>
+    </PageEditorDraftContext.Provider>
   );
 }

@@ -14,7 +14,6 @@ import { BlockEditor } from "~/components/editor/block-editor";
 import { useBlockEditor } from "~/components/editor/use-block-editor";
 import { ExploreNoteLink } from "~/components/references/explore-note-link";
 import { ReferenceBacklinks } from "~/components/references/reference-backlinks";
-import { Button } from "~/components/ui/button";
 import { useJournlAgent } from "~/hooks/use-journl-agent";
 import { cn } from "~/lib/cn";
 import { formatDate } from "~/lib/format-date";
@@ -168,20 +167,6 @@ export function JournalEntryEditor({
     resetKey: snapshot.resetKey,
   });
 
-  async function downloadDraft(
-    blocks = editor.document as EditorPartialBlock[],
-  ) {
-    const markdown = await editor.blocksToMarkdownLossy(blocks);
-    const url = URL.createObjectURL(
-      new Blob([markdown], { type: "text/markdown" }),
-    );
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `journal-${date}-draft.md`;
-    link.click();
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
-  }
-
   function handleEditorChange(transactions: BlockTransaction[]) {
     retainDraft();
     draft.update(editor.document, transactions, debounceTime, onCreateAction);
@@ -216,51 +201,6 @@ export function JournalEntryEditor({
       />
       {snapshot.documentId && (
         <ReferenceBacklinks documentId={snapshot.documentId} />
-      )}
-      {Boolean(snapshot.error) && (
-        <div
-          role="alert"
-          className="mx-8 mt-4 rounded-md border border-destructive/50 p-3 text-sm"
-        >
-          <p>
-            {snapshot.conflict
-              ? "This entry changed elsewhere. Your draft is still here; download it before loading the saved entry."
-              : "Your latest changes haven’t been saved. Your draft is still here."}
-          </p>
-          <div className="mt-2 flex gap-2">
-            <Button
-              type="button"
-              size="sm"
-              disabled={snapshot.isSaving}
-              onClick={() => void draft.retry()}
-            >
-              {snapshot.isSaving ? "Retrying…" : "Retry save"}
-            </Button>
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              onClick={() => void downloadDraft()}
-            >
-              Download draft
-            </Button>
-            {snapshot.conflict && (
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                disabled={snapshot.isSaving}
-                onClick={async () => {
-                  const blocks = draft.getSnapshot().blocks;
-                  await downloadDraft(blocks);
-                  await draft.loadSaved(blocks);
-                }}
-              >
-                Download draft and load saved entry
-              </Button>
-            )}
-          </div>
-        </div>
       )}
     </>
   );

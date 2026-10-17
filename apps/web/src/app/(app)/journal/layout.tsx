@@ -1,15 +1,7 @@
-import { JournalDraftsProvider } from "./_components/journal-drafts-provider";
-
-type AppLayoutProps = {
+export default function JournalLayout({
+  children,
+}: {
   children: React.ReactNode;
-};
-
-function JournalLayout({ children }: AppLayoutProps) {
-  return (
-    <JournalDraftsProvider>
-      <main className="h-full w-full">{children}</main>
-    </JournalDraftsProvider>
-  );
+}) {
+  return <main className="h-full w-full">{children}</main>;
 }
-
-export default JournalLayout;

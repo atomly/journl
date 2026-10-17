@@ -186,7 +186,9 @@ function DraggablePageRow({
   const [isEditing, setIsEditing] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [draftTitle, setDraftTitle] = useState(page.title);
+  const [titleError, setTitleError] = useState(false);
   const shouldSkipBlurCommitRef = useRef(false);
+  const titleVersionRef = useRef(page.updated_at);
   const itemRef: TreeItemRef = {
     kind: "page",
     nodeId: page.node_id,
@@ -217,62 +219,77 @@ function DraggablePageRow({
   });
 
   useEffect(() => {
-    setDraftTitle(page.title);
-  }, [page.title]);
+    if (!isEditing && !titleError) setDraftTitle(page.title);
+  }, [page.title, titleError, isEditing]);
 
   const commitTitle = useCallback(
     (nextTitle: string) => {
+      setTitleError(false);
       if (nextTitle === page.title) {
         return;
       }
 
-      queryClient.setQueryData(
-        trpc.pages.getById.queryOptions({ id: page.id }).queryKey,
-        (old) => {
-          if (!old) {
-            return old;
-          }
+      const updateCaches = (saved: { updated_at: string }) => {
+        queryClient.setQueryData(
+          trpc.pages.getById.queryOptions({ id: page.id }).queryKey,
+          (old) => {
+            if (!old) {
+              return old;
+            }
 
-          return {
-            ...old,
-            title: nextTitle,
-            updated_at: new Date().toISOString(),
-          };
-        },
-      );
+            return {
+              ...old,
+              title: nextTitle,
+              updated_at: saved.updated_at,
+            };
+          },
+        );
 
-      updateNode({
-        nodeId: page.node_id,
-        queryClient,
-        queryFilter: treeQueryFilter,
-        updater: (item) =>
-          item.kind === "page"
-            ? {
-                ...item,
-                page: {
-                  ...item.page,
-                  title: nextTitle,
-                },
-              }
-            : item,
-      });
+        updateNode({
+          nodeId: page.node_id,
+          queryClient,
+          queryFilter: treeQueryFilter,
+          updater: (item) =>
+            item.kind === "page"
+              ? {
+                  ...item,
+                  page: {
+                    ...item.page,
+                    title: nextTitle,
+                    updated_at: saved.updated_at,
+                  },
+                }
+              : item,
+        });
 
-      updatePageTitleInNestedPages({
-        pageId: page.id,
-        queryClient,
-        queryFilter: nestedFolderPagesQueryFilter,
-        title: nextTitle,
-      });
-
+        updatePageTitleInNestedPages({
+          pageId: page.id,
+          queryClient,
+          queryFilter: nestedFolderPagesQueryFilter,
+          title: nextTitle,
+        });
+      };
       updatePageTitle(
-        { id: page.id, title: nextTitle },
+        {
+          expected_updated_at: titleVersionRef.current,
+          id: page.id,
+          title: nextTitle,
+        },
         {
           onError: () => {
+            setDraftTitle(nextTitle);
+            setIsEditing(true);
+            setTitleError(true);
             void queryClient.invalidateQueries({
               queryKey: trpc.pages.getById.queryOptions({ id: page.id })
                 .queryKey,
             });
             void queryClient.invalidateQueries(treeQueryFilter);
+            void queryClient.invalidateQueries(nestedFolderPagesQueryFilter);
+          },
+          onSuccess: (saved) => {
+            titleVersionRef.current = saved.updated_at;
+            updateCaches(saved);
             void queryClient.invalidateQueries(nestedFolderPagesQueryFilter);
           },
         },
@@ -344,6 +361,12 @@ function DraggablePageRow({
                   <span className="inline-flex size-6 shrink-0 items-center justify-center rounded-md border bg-background">
                     <FileText className="size-3 text-muted-foreground" />
                   </span>
+                  {titleError && (
+                    <span role="alert" className="text-destructive text-xs">
+                      Title not saved. Your draft is kept; copy it before
+                      leaving.
+                    </span>
+                  )}
                   <Input
                     autoFocus
                     maxLength={MAX_PAGE_TITLE_LENGTH}
@@ -430,6 +453,8 @@ function DraggablePageRow({
               <DropdownMenuContent align="end">
                 <DropdownMenuItem
                   onClick={() => {
+                    titleVersionRef.current = page.updated_at;
+                    setTitleError(false);
                     setDraftTitle(page.title);
                     setIsEditing(true);
                   }}

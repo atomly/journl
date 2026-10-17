@@ -20,6 +20,8 @@ export default async function Page({
     notFound();
   }
 
+  const { blocks, ...pageDetails } = page;
+
   return (
     <Suspense
       fallback={
@@ -34,14 +36,7 @@ export default async function Page({
         }}
         className="mx-auto flex min-h-full max-w-5xl flex-col gap-4 pt-8 pb-52"
       >
-        <DynamicPageEditor
-          page={{
-            document_id: page.document_id,
-            id: page.id,
-            title: page.title,
-          }}
-          initialBlocks={page.blocks}
-        >
+        <DynamicPageEditor page={pageDetails} initialBlocks={blocks}>
           <div className="flex items-start gap-3 px-8">
             <PageTitleTextarea
               page={{

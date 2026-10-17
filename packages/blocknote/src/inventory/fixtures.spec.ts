@@ -127,9 +127,7 @@ test.each(
 
 test.each(
   historicalFixtures.filter(
-    (fixture) =>
-      fixture.disposition === "preserve-raw" &&
-      fixture.name !== "missing-props",
+    (fixture) => fixture.disposition === "preserve-raw",
   ),
 )(
   "reports $name with original recovery data instead of partial reconstruction",

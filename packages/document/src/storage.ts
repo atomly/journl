@@ -65,7 +65,7 @@ export function documentBlocks(
     nodes.set(row.id, { ...parsed.data, children: [], id: row.id });
     const ancestors = new Set([row.id]);
     let parent = row.parent_id;
-    while (parent) {
+    while (parent !== null) {
       if (ancestors.has(parent)) {
         diagnostics.push({ blockId: row.id, reason: "Parent cycle" });
         break;
@@ -140,7 +140,7 @@ export function documentBlocks(
     return node;
   };
   for (const [parent, ids] of ordered)
-    if (parent) {
+    if (parent !== null) {
       const node = nodes.get(parent);
       if (node) node.children = ids.map(getNode);
     }

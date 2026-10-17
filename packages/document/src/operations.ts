@@ -1,27 +1,40 @@
-import { type BlockData, type DocumentBlock, parseBlock } from "./schema";
+import { z } from "zod/v4";
+import {
+  type DocumentBlock,
+  parseBlock,
+  zBlockData,
+  zDocumentBlock,
+} from "./schema";
 import { documentRows } from "./storage";
 
-export type DocumentOperation =
-  | {
-      type: "insert";
-      block: DocumentBlock;
-      parentId: string | null;
-      afterId: string | null;
-    }
-  | { type: "update"; id: string; data: BlockData }
-  | { type: "remove"; id: string }
-  | {
-      type: "move";
-      id: string;
-      parentId: string | null;
-      afterId: string | null;
-    };
+export const zDocumentOperation = z.discriminatedUnion("type", [
+  z.strictObject({
+    afterId: z.string().min(1).nullable(),
+    block: zDocumentBlock,
+    parentId: z.string().min(1).nullable(),
+    type: z.literal("insert"),
+  }),
+  z.strictObject({
+    data: zBlockData,
+    id: z.string().min(1),
+    type: z.literal("update"),
+  }),
+  z.strictObject({ id: z.string().min(1), type: z.literal("remove") }),
+  z.strictObject({
+    afterId: z.string().min(1).nullable(),
+    id: z.string().min(1),
+    parentId: z.string().min(1).nullable(),
+    type: z.literal("move"),
+  }),
+]);
+export type DocumentOperation = z.infer<typeof zDocumentOperation>;
 
 /** Immutable headless edits; all operations succeed together or leave input intact. */
 export function applyDocumentOperations(
   input: readonly DocumentBlock[],
   operations: readonly DocumentOperation[],
 ): DocumentBlock[] {
+  const validated = z.array(zDocumentOperation).parse(operations);
   const blocks = input.map(parseBlock);
   documentRows(blocks);
   function locate(
@@ -48,7 +61,7 @@ export function applyDocumentOperations(
     }
     return undefined;
   }
-  for (const operation of operations) {
+  for (const operation of validated) {
     if (operation.type === "remove") {
       const target = locate(operation.id);
       target.siblings.splice(target.index, 1);

@@ -9,6 +9,7 @@ import {
   duplicateBlock,
   parseBlock,
   zDocument,
+  zDocumentOperation,
 } from "./index";
 
 const paragraph = (id: string, content = id) =>
@@ -214,4 +215,24 @@ test("versioned wire input validates content and fails unknown versions without 
       version: 1,
     }).success,
   ).toBe(false);
+});
+
+test("headless operation inputs reject unknown actions and fields before applying anything", () => {
+  expect(
+    zDocumentOperation.safeParse({ type: "delete-everything" }).success,
+  ).toBe(false);
+  expect(
+    zDocumentOperation.safeParse({
+      extra: "discarded command",
+      id: "a",
+      type: "remove",
+    }).success,
+  ).toBe(false);
+  const input = [paragraph("a")];
+  expect(() =>
+    applyDocumentOperations(input, [
+      { extra: true, id: "a", type: "remove" } as never,
+    ]),
+  ).toThrow();
+  expect(input).toEqual([paragraph("a")]);
 });

@@ -5,6 +5,7 @@
   "type": "module",
   "exports": {
     "./ai": "./src/blocknote-ai.ts",
+    "./inventory": "./src/inventory/fixtures.ts",
     "./server": "./src/server/index.ts",
     "./schema": "./src/blocknote-schema.ts"
   },

@@ -1,0 +1,363 @@
+{
+  "blockSchema": {
+    "audio": {
+      "content": "none",
+      "propSchema": {
+        "backgroundColor": {
+          "default": "default"
+        },
+        "caption": {
+          "default": ""
+        },
+        "name": {
+          "default": ""
+        },
+        "showPreview": {
+          "default": true
+        },
+        "url": {
+          "default": ""
+        }
+      },
+      "type": "audio"
+    },
+    "bulletListItem": {
+      "content": "inline",
+      "propSchema": {
+        "backgroundColor": {
+          "default": "default"
+        },
+        "textAlignment": {
+          "default": "left",
+          "values": ["left", "center", "right", "justify"]
+        },
+        "textColor": {
+          "default": "default"
+        }
+      },
+      "type": "bulletListItem"
+    },
+    "checkListItem": {
+      "content": "inline",
+      "propSchema": {
+        "backgroundColor": {
+          "default": "default"
+        },
+        "checked": {
+          "default": false,
+          "type": "boolean"
+        },
+        "textAlignment": {
+          "default": "left",
+          "values": ["left", "center", "right", "justify"]
+        },
+        "textColor": {
+          "default": "default"
+        }
+      },
+      "type": "checkListItem"
+    },
+    "codeBlock": {
+      "content": "plain",
+      "propSchema": {
+        "language": {
+          "default": "text"
+        }
+      },
+      "type": "codeBlock"
+    },
+    "contentEmbed": {
+      "content": "none",
+      "propSchema": {
+        "blockId": {
+          "default": ""
+        },
+        "documentId": {
+          "default": ""
+        },
+        "label": {
+          "default": ""
+        },
+        "resolutionToken": {
+          "default": ""
+        },
+        "targetKind": {
+          "default": "document",
+          "values": ["document", "external"]
+        },
+        "url": {
+          "default": ""
+        },
+        "version": {
+          "default": 1
+        }
+      },
+      "type": "contentEmbed"
+    },
+    "divider": {
+      "content": "none",
+      "propSchema": {},
+      "type": "divider"
+    },
+    "file": {
+      "content": "none",
+      "propSchema": {
+        "backgroundColor": {
+          "default": "default"
+        },
+        "caption": {
+          "default": ""
+        },
+        "name": {
+          "default": ""
+        },
+        "url": {
+          "default": ""
+        }
+      },
+      "type": "file"
+    },
+    "heading": {
+      "content": "inline",
+      "propSchema": {
+        "backgroundColor": {
+          "default": "default"
+        },
+        "isToggleable": {
+          "default": false,
+          "optional": true
+        },
+        "level": {
+          "default": 1,
+          "values": [1, 2, 3, 4, 5, 6]
+        },
+        "textAlignment": {
+          "default": "left",
+          "values": ["left", "center", "right", "justify"]
+        },
+        "textColor": {
+          "default": "default"
+        }
+      },
+      "type": "heading"
+    },
+    "image": {
+      "content": "none",
+      "propSchema": {
+        "backgroundColor": {
+          "default": "default"
+        },
+        "caption": {
+          "default": ""
+        },
+        "name": {
+          "default": ""
+        },
+        "previewWidth": {
+          "type": "number"
+        },
+        "showPreview": {
+          "default": true
+        },
+        "textAlignment": {
+          "default": "left",
+          "values": ["left", "center", "right", "justify"]
+        },
+        "url": {
+          "default": ""
+        }
+      },
+      "type": "image"
+    },
+    "numberedListItem": {
+      "content": "inline",
+      "propSchema": {
+        "backgroundColor": {
+          "default": "default"
+        },
+        "start": {
+          "type": "number"
+        },
+        "textAlignment": {
+          "default": "left",
+          "values": ["left", "center", "right", "justify"]
+        },
+        "textColor": {
+          "default": "default"
+        }
+      },
+      "type": "numberedListItem"
+    },
+    "paragraph": {
+      "content": "inline",
+      "propSchema": {
+        "backgroundColor": {
+          "default": "default"
+        },
+        "textAlignment": {
+          "default": "left",
+          "values": ["left", "center", "right", "justify"]
+        },
+        "textColor": {
+          "default": "default"
+        }
+      },
+      "type": "paragraph"
+    },
+    "quote": {
+      "content": "inline",
+      "propSchema": {
+        "backgroundColor": {
+          "default": "default"
+        },
+        "textColor": {
+          "default": "default"
+        }
+      },
+      "type": "quote"
+    },
+    "referenceCard": {
+      "content": "none",
+      "propSchema": {
+        "blockId": {
+          "default": ""
+        },
+        "documentId": {
+          "default": ""
+        },
+        "label": {
+          "default": ""
+        },
+        "resolutionToken": {
+          "default": ""
+        },
+        "targetKind": {
+          "default": "document",
+          "values": ["document", "external"]
+        },
+        "url": {
+          "default": ""
+        },
+        "version": {
+          "default": 1
+        }
+      },
+      "type": "referenceCard"
+    },
+    "table": {
+      "content": "table",
+      "propSchema": {
+        "textColor": {
+          "default": "default"
+        }
+      },
+      "type": "table"
+    },
+    "toggleListItem": {
+      "content": "inline",
+      "propSchema": {
+        "backgroundColor": {
+          "default": "default"
+        },
+        "textAlignment": {
+          "default": "left",
+          "values": ["left", "center", "right", "justify"]
+        },
+        "textColor": {
+          "default": "default"
+        }
+      },
+      "type": "toggleListItem"
+    },
+    "video": {
+      "content": "none",
+      "propSchema": {
+        "backgroundColor": {
+          "default": "default"
+        },
+        "caption": {
+          "default": ""
+        },
+        "name": {
+          "default": ""
+        },
+        "previewWidth": {
+          "type": "number"
+        },
+        "showPreview": {
+          "default": true
+        },
+        "textAlignment": {
+          "default": "left",
+          "values": ["left", "center", "right", "justify"]
+        },
+        "url": {
+          "default": ""
+        }
+      },
+      "type": "video"
+    }
+  },
+  "inlineContentSchema": {
+    "contentReference": {
+      "content": "none",
+      "propSchema": {
+        "blockId": {
+          "default": ""
+        },
+        "documentId": {
+          "default": ""
+        },
+        "label": {
+          "default": ""
+        },
+        "resolutionToken": {
+          "default": ""
+        },
+        "targetKind": {
+          "default": "document",
+          "values": ["document", "external"]
+        },
+        "url": {
+          "default": ""
+        },
+        "version": {
+          "default": 1
+        }
+      },
+      "type": "contentReference"
+    },
+    "link": "link",
+    "text": "text"
+  },
+  "styleSchema": {
+    "backgroundColor": {
+      "propSchema": "string",
+      "type": "backgroundColor"
+    },
+    "bold": {
+      "propSchema": "boolean",
+      "type": "bold"
+    },
+    "code": {
+      "propSchema": "boolean",
+      "type": "code"
+    },
+    "italic": {
+      "propSchema": "boolean",
+      "type": "italic"
+    },
+    "strike": {
+      "propSchema": "boolean",
+      "type": "strike"
+    },
+    "textColor": {
+      "propSchema": "string",
+      "type": "textColor"
+    },
+    "underline": {
+      "propSchema": "boolean",
+      "type": "underline"
+    }
+  }
+}

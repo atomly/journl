@@ -1,6 +1,7 @@
 "use client";
 
-import type { EditorPartialBlock } from "@acme/blocknote/schema";
+import { fromBlockNoteBlocks } from "@acme/blocknote/adapter";
+import type { DocumentBlock } from "@acme/document";
 import Link from "next/link";
 import {
   type ComponentProps,
@@ -27,7 +28,7 @@ type JournalEntryContextValue = {
   updatedAt: string | null;
   date: string;
   formattedDate: string;
-  initialBlocks: [EditorPartialBlock, ...EditorPartialBlock[]] | undefined;
+  initialBlocks: [DocumentBlock, ...DocumentBlock[]] | undefined;
   isToday: boolean;
 };
 
@@ -169,7 +170,12 @@ export function JournalEntryEditor({
 
   function handleEditorChange(transactions: BlockTransaction[]) {
     retainDraft();
-    draft.update(editor.document, transactions, debounceTime, onCreateAction);
+    draft.update(
+      fromBlockNoteBlocks(editor.document),
+      transactions,
+      debounceTime,
+      onCreateAction,
+    );
   }
 
   useEffect(

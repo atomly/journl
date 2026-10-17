@@ -10,6 +10,7 @@ import {
   zInsertBlockEdge,
   zInsertBlockNode,
 } from "@acme/db/schema";
+import { zBlockData } from "@acme/document";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod/v4";
 import { env } from "../../env";
@@ -41,10 +42,17 @@ export const zBlockTransactions = z.object({
         type: z.literal("edge_insert"),
       }),
       z.object({
-        args: zInsertBlockNode.omit({
-          document_id: true,
-          user_id: true,
-        }),
+        args: zInsertBlockNode
+          .omit({
+            document_id: true,
+            user_id: true,
+          })
+          .extend({
+            data: zInsertBlockNode.shape.data.refine(
+              (value) => zBlockData.safeParse(value).success,
+              "Unsupported Journl block payload",
+            ),
+          }),
         type: z.literal("block_upsert"),
       }),
       z.object({

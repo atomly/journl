@@ -1,7 +1,9 @@
 import { schema } from "@acme/blocknote/schema";
-import { blocknoteBlocks, serverSchema } from "@acme/blocknote/server";
+import { serverSchema } from "@acme/blocknote/server";
+import { DocumentReadError, documentBlocks } from "@acme/document";
 import { ServerBlockNoteEditor } from "@blocknote/server-util";
 import { expect, test } from "vitest";
+import { toBlockNoteBlocks } from "../document-adapter";
 import acceptedSchema from "./accepted-schema.json";
 import { historicalFixtures, inventoryId, parityBlocks } from "./fixtures";
 
@@ -63,7 +65,9 @@ test("synthetic examples cover every accepted block, inline node and text style"
 });
 
 test("the installed editor accepts the fixture and retains identities, nesting, table spans and reference targets", () => {
-  const node = editor._blocksToProsemirrorNode(parityBlocks);
+  const node = editor._blocksToProsemirrorNode(
+    toBlockNoteBlocks(parityBlocks) ?? [],
+  );
   const normalized = editor._prosemirrorJSONToBlocks(node.toJSON());
   expect(ids(normalized)).toEqual(ids(parityBlocks));
   expect(normalized[0]).toMatchObject(parityBlocks[0]);
@@ -90,7 +94,9 @@ test("the installed editor accepts the fixture and retains identities, nesting, 
 });
 
 test("current export is explicitly lossy: references retain readable URLs and labels, not live presentation", async () => {
-  const markdown = await editor.blocksToMarkdownLossy(parityBlocks);
+  const markdown = await editor.blocksToMarkdownLossy(
+    toBlockNoteBlocks(parityBlocks) ?? [],
+  );
   expect(markdown).toContain("Synthetic referenced note");
   expect(markdown).toContain("example.invalid/reference");
   expect(markdown).toContain("Numbered child");
@@ -101,10 +107,10 @@ test.each(
   historicalFixtures.filter((fixture) => fixture.disposition === "load"),
 )("loads the documented historical shape: $name", (fixture) => {
   const original = JSON.stringify(fixture);
-  const blocks = blocknoteBlocks([...fixture.nodes], [...fixture.edges]);
+  const blocks = documentBlocks([...fixture.nodes], [...fixture.edges]);
   expect(blocks).toBeDefined();
   const normalized = editor._prosemirrorJSONToBlocks(
-    editor._blocksToProsemirrorNode(blocks ?? []).toJSON(),
+    editor._blocksToProsemirrorNode(toBlockNoteBlocks(blocks) ?? []).toJSON(),
   );
   expect(ids(normalized).sort()).toEqual(
     fixture.nodes.map((node) => node.id).sort(),
@@ -119,31 +125,34 @@ test.each(
   }
 });
 
-test("unknown blocks and unreachable children remain raw recovery specimens, not silently certified conversions", () => {
-  const unknown = historicalFixtures.find(
-    (fixture) => fixture.name === "unknown-block",
-  );
-  const unreachable = historicalFixtures.find(
-    (fixture) => fixture.name === "missing-parent",
-  );
-  if (!unknown || !unreachable) throw new Error("Missing historical specimens");
-  const blocks = blocknoteBlocks([...unknown.nodes], []);
-  expect(() => editor._blocksToProsemirrorNode(blocks ?? [])).toThrow();
-  // Current reconstruction cannot expose a child whose parent is outside this document.
-  // Preserve this input for the future migration/quarantine decision; do not bless its loss.
-  expect(blocknoteBlocks([...unreachable.nodes], [])).toBeUndefined();
-  expect(JSON.stringify(unreachable.nodes)).toContain(
-    "Unreachable child must remain recoverable",
-  );
-});
-
-test.each(["missing-props", "empty-object-default"])(
-  "records the current reconstruction rejection for %s without normalizing away raw data",
-  (name) => {
-    const fixture = historicalFixtures.find((entry) => entry.name === name);
-    if (!fixture) throw new Error("Missing raw fixture");
-    const raw = JSON.stringify(fixture.nodes);
-    expect(() => blocknoteBlocks([...fixture.nodes], [])).toThrow();
-    expect(JSON.stringify(fixture.nodes)).toBe(raw);
+test.each(
+  historicalFixtures.filter(
+    (fixture) =>
+      fixture.disposition === "preserve-raw" &&
+      fixture.name !== "missing-props",
+  ),
+)(
+  "reports $name with original recovery data instead of partial reconstruction",
+  (fixture) => {
+    expect(() => documentBlocks(fixture.nodes, fixture.edges)).toThrow(
+      DocumentReadError,
+    );
   },
 );
+
+test("explicit legacy reader now accepts omitted props without mutating the original payload", () => {
+  const fixture = historicalFixtures.find(
+    (entry) => entry.name === "missing-props",
+  );
+  if (!fixture) throw new Error("Missing historical fixture");
+  const original = JSON.stringify(fixture.nodes);
+  const blocks = documentBlocks(fixture.nodes, fixture.edges);
+  expect(blocks?.[0]).toMatchObject({
+    content: "Props were omitted",
+    type: "paragraph",
+  });
+  expect(
+    editor._blocksToProsemirrorNode(toBlockNoteBlocks(blocks) ?? []),
+  ).toBeDefined();
+  expect(JSON.stringify(fixture.nodes)).toBe(original);
+});

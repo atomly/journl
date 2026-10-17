@@ -37,7 +37,15 @@ function makeEditor() {
       },
       {
         id: "card",
-        props: { url: "https://github.com/atomly/journl/pull/302" },
+        props: {
+          blockId: "",
+          documentId: "",
+          label: "",
+          resolutionToken: "",
+          targetKind: "external",
+          url: "https://github.com/atomly/journl/pull/302",
+          version: 1,
+        },
         type: "referenceCard",
       },
       { content: "Last", id: "last", type: "paragraph" },
@@ -135,7 +143,15 @@ test.each(["referenceCard", "contentEmbed"] as const)(
           {
             children: [{ content: "Child", id: "child", type: "paragraph" }],
             id: "card",
-            props: { url: "https://github.com/atomly/journl/pull/302" },
+            props: {
+              blockId: "",
+              documentId: "",
+              label: "",
+              resolutionToken: "",
+              targetKind: "external",
+              url: "https://github.com/atomly/journl/pull/302",
+              version: 1,
+            },
             type: referenceType,
           },
           { content: "Last", id: "last", type: "paragraph" },

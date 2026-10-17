@@ -1,4 +1,3 @@
-import { blocknoteBlocks } from "@acme/blocknote/server";
 import { and, cosineDistance, desc, eq, gt, gte, lte, sql } from "@acme/db";
 import {
   Document,
@@ -8,6 +7,7 @@ import {
   TreeNode,
   zInsertPage,
 } from "@acme/db/schema";
+import { documentBlocks } from "@acme/document";
 import type { TRPCRouterRecord } from "@trpc/server";
 import { TRPCError } from "@trpc/server";
 import { embed } from "ai";
@@ -126,7 +126,7 @@ export const pagesRouter = {
       const { block_nodes, block_edges, ...page } = result;
       return {
         ...page,
-        blocks: blocknoteBlocks(block_nodes, block_edges),
+        blocks: documentBlocks(block_nodes, block_edges),
         edge_id: edge?.id ?? null,
         node_id: node?.id ?? null,
         parent_node_id: edge?.parent_node_id ?? null,

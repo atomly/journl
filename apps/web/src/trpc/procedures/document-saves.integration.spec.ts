@@ -237,3 +237,113 @@ test("requests without a version fail before touching the database", async () =>
   ).rejects.toMatchObject({ code: "BAD_REQUEST" });
   expect(await db.select().from(schema.BlockNode)).toHaveLength(0);
 });
+
+test("Journl content survives the existing save/read API with nested IDs and JSON-null table widths", async () => {
+  const page = await pageFixture();
+  const parent = randomUUID();
+  const child = randomUUID();
+  const table = randomUUID();
+  const tableData = {
+    content: {
+      columnWidths: [null, 140],
+      headerRows: 1,
+      rows: [
+        {
+          cells: [
+            {
+              content: [
+                { styles: { bold: true }, text: "Stored cell", type: "text" },
+              ],
+              props: { colspan: 1, rowspan: 1 },
+              type: "tableCell",
+            },
+            { content: "Legacy text", type: "tableCell" },
+          ],
+        },
+      ],
+      type: "tableContent",
+    },
+    props: {},
+    type: "table",
+  };
+  await caller.pages.saveTransactions({
+    document_id: page.document_id,
+    expected_updated_at: page.updated_at,
+    transactions: [
+      ...changes(parent, "Parent"),
+      {
+        args: {
+          data: { content: "Nested writing", props: {}, type: "paragraph" },
+          id: child,
+          parent_id: parent,
+        },
+        type: "block_upsert",
+      },
+      {
+        args: { data: tableData, id: table, parent_id: null },
+        type: "block_upsert",
+      },
+      {
+        args: { from_id: parent, to_id: table, type: "sibling" },
+        type: "edge_insert",
+      },
+    ],
+  });
+  const saved = await caller.pages.getById({ id: page.id });
+  expect(saved?.blocks?.map((block) => block.id)).toEqual([parent, table]);
+  expect(saved?.blocks?.[0].children?.[0]).toMatchObject({
+    content: "Nested writing",
+    id: child,
+  });
+  expect(saved?.blocks?.[1]).toMatchObject({
+    content: {
+      columnWidths: [undefined, 140],
+      headerRows: 1,
+      rows: [
+        {
+          cells: [
+            { content: [{ styles: { bold: true }, text: "Stored cell" }] },
+            { content: "Legacy text" },
+          ],
+        },
+      ],
+    },
+  });
+  const [stored] = await db
+    .select()
+    .from(schema.BlockNode)
+    .where(eq(schema.BlockNode.id, table));
+  expect(stored?.data).toEqual(tableData);
+});
+
+test("unsupported content is rejected at the save boundary without changing blocks or version", async () => {
+  const page = await pageFixture();
+  for (const data of [
+    { content: "Keep raw writing", props: {}, type: "unknown-plugin-block" },
+    {
+      content: "Writing",
+      props: { unknownPluginProperty: "Do not strip" },
+      type: "paragraph",
+    },
+    { content: { malformed: "Do not drop" }, props: {}, type: "paragraph" },
+  ]) {
+    await expect(
+      caller.pages.saveTransactions({
+        document_id: page.document_id,
+        expected_updated_at: page.updated_at,
+        transactions: [
+          {
+            args: { data, id: randomUUID(), parent_id: null },
+            type: "block_upsert",
+          },
+        ],
+      }),
+    ).rejects.toMatchObject({ code: "BAD_REQUEST" });
+  }
+  expect(await db.select().from(schema.BlockNode)).toHaveLength(0);
+  const [unchanged] = await db
+    .select()
+    .from(schema.Page)
+    .where(eq(schema.Page.id, page.id));
+  expect(unchanged?.updated_at).toBe(page.updated_at);
+});

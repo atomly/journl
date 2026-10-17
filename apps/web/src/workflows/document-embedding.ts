@@ -1,4 +1,3 @@
-import { blocknoteBlocks, blocknoteMarkdown } from "@acme/blocknote/server";
 import { and, eq } from "@acme/db";
 import { db } from "@acme/db/client";
 import {
@@ -7,6 +6,7 @@ import {
   type zInsertDocumentEmbedding,
 } from "@acme/db/schema";
 import { USAGE_UNITS } from "@acme/db/usage";
+import { documentBlocks, documentMarkdown } from "@acme/document";
 import { type ChunkParams, MDocument } from "@mastra/rag";
 import { embedMany } from "ai";
 import removeMarkdown from "remove-markdown";
@@ -138,8 +138,8 @@ async function embedDocument(
 ): Promise<{ reason?: string }> {
   "use step";
 
-  const blocks = blocknoteBlocks(document.block_nodes, document.block_edges);
-  const markdown = blocks ? await blocknoteMarkdown(blocks) : "";
+  const blocks = documentBlocks(document.block_nodes, document.block_edges);
+  const markdown = blocks ? await documentMarkdown(blocks) : "";
 
   if (!removeMarkdown(markdown, REMOVE_MARKDOWN_PARAMS)) {
     await clearEmbeddings(document.id);

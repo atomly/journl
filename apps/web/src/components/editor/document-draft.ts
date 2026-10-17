@@ -1,4 +1,4 @@
-import type { EditorPartialBlock } from "@acme/blocknote/schema";
+import type { DocumentBlock } from "@acme/document";
 import type { BlockTransaction } from "~/trpc";
 
 type SaveInput = {
@@ -13,7 +13,7 @@ type WithBlocks<T> = T & { blocks: DraftInitial["blocks"] };
 export type Save<T extends SavedDocument> = (input: SaveInput) => Promise<T>;
 
 export type DraftInitial = {
-  blocks: [EditorPartialBlock, ...EditorPartialBlock[]] | undefined;
+  blocks: [DocumentBlock, ...DocumentBlock[]] | undefined;
   documentId: string | null;
   updatedAt: string | null;
   title?: string;
@@ -120,7 +120,7 @@ export class DocumentDraft<T extends SavedDocument> {
   }
 
   update(
-    blocks: EditorPartialBlock[],
+    blocks: DocumentBlock[],
     transactions: BlockTransaction[],
     debounceTime: number,
     onCreate?: (entry: WithBlocks<T>) => void,

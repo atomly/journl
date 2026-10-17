@@ -1,7 +1,8 @@
 "use client";
 
-import type { EditorPartialBlock } from "@acme/blocknote/schema";
+import { fromBlockNoteBlocks } from "@acme/blocknote/adapter";
 import type { Page } from "@acme/db/schema";
+import type { DocumentBlock } from "@acme/document";
 import { useEffect, useSyncExternalStore } from "react";
 import { BlockEditor } from "~/components/editor/block-editor";
 import {
@@ -22,7 +23,7 @@ type PageEditorProps = Omit<
   "editor" | "onChange" | "formattingToolbar" | "slashMenu"
 > & {
   page: Page;
-  initialBlocks: [EditorPartialBlock, ...EditorPartialBlock[]] | undefined;
+  initialBlocks: [DocumentBlock, ...DocumentBlock[]] | undefined;
   debounceTime?: number;
 };
 
@@ -50,7 +51,11 @@ export function PageEditor({
   });
   function handleEditorChange(transactions: BlockTransaction[]) {
     retainDraft();
-    draft.update(editor.document, transactions, debounceTime);
+    draft.update(
+      fromBlockNoteBlocks(editor.document),
+      transactions,
+      debounceTime,
+    );
   }
 
   useEffect(

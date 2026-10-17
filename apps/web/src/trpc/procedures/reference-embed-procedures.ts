@@ -1,6 +1,6 @@
-import { blocknoteBlocks } from "@acme/blocknote/server";
 import { and, eq } from "@acme/db";
 import { BlockEdge, BlockNode, JournalEntry, Page } from "@acme/db/schema";
+import { documentBlocks } from "@acme/document";
 import type { TRPCRouterRecord } from "@trpc/server";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod/v4";
@@ -14,10 +14,10 @@ import {
 import { protectedProcedure } from "../trpc";
 
 import {
-  zTarget,
   collectBlock,
   externalPreview,
   resolveInternal,
+  zTarget,
 } from "./reference-api-helpers";
 
 export const referenceEmbedProcedures = {
@@ -94,7 +94,7 @@ export const referenceEmbedProcedures = {
               ),
             ),
         ]);
-        const tree = blocknoteBlocks(blocks, edges);
+        const tree = documentBlocks(blocks, edges);
         const content = collectBlock(tree, target.blockId);
         const savedOffset = cursorData.offsets?.[key];
         const offset =

@@ -9,7 +9,13 @@ const config: NextConfig = {
   /** @see https://nextjs.org/docs/app/api-reference/config/next-config-js/serverExternalPackages */
   serverExternalPackages: ["@blocknote/server-util"],
   /** Enables hot reloading for local packages without a build step */
-  transpilePackages: ["@acme/auth", "@acme/blocknote", "@acme/db", "@acme/graph"],
+  transpilePackages: [
+    "@acme/auth",
+    "@acme/blocknote",
+    "@acme/db",
+    "@acme/document",
+    "@acme/graph",
+  ],
   typescript: { ignoreBuildErrors: true },
 };
 

@@ -1,4 +1,4 @@
-import { blocknoteMarkdown } from "@acme/blocknote/server";
+import { documentMarkdown } from "@acme/document";
 import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
 import { env } from "~/env";
@@ -22,7 +22,7 @@ Compose with semantic search when topical filtering is also needed.`,
     return await Promise.all(
       results.map(async (result) => {
         const markdown = result.blocks
-          ? await blocknoteMarkdown(result.blocks)
+          ? await documentMarkdown(result.blocks)
           : "";
         return {
           content: markdown,

@@ -55,7 +55,8 @@ Use these paths as the fastest way to understand the product and core systems.
 
 The [editor feature/content inventory](docs/editor-inventory/README.md) records the
 installed editor contract, synthetic recovery fixtures, remaining production
-uncertainty, and the required performance measurements in the running app.
+uncertainty, and preservation checks for the Tiptap frontend migration on Journl-owned
+block documents. Performance benchmarks are outside this migration scope.
 Content checks run with `pnpm --filter @acme/blocknote test:unit`.
 
 ## Development Workflow

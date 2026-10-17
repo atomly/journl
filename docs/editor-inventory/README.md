@@ -1,16 +1,17 @@
 # Editor feature and content inventory (#369)
 
 This is the parity contract for [#369](https://github.com/atomly/journl/issues/369),
-built on save-safety commit `93b18ad` ([#368](https://github.com/atomly/journl/issues/368)).
-It inventories the installed BlockNote **0.55.0** behavior. It selects neither a
-replacement editor nor storage, and changes no live document or editor behavior.
+built on save safety ([#368](https://github.com/atomly/journl/issues/368)).
+It inventories the installed BlockNote **0.55.0** behavior for the selected Tiptap
+frontend migration. Journl owns the framework-independent content contract; the
+existing backend block document remains authoritative. This inventory changes no
+live document or editor behavior.
 
-The source audit and content checks are recorded here. Performance baselines
-must be measured in the running Journl app; none are certified yet. Production content has **not** been inspected. Mobile WebKit, real-device
-keyboard/selection checks, and full Next.js route timings remain open. Performance
-limits below are **proposed, awaiting owner agreement**; a suggested option in chat
-is not approval. This inventory is usable for the design proof, but these open gates
-must not be represented as a completed migration/parity sign-off.
+The source audit and content checks are recorded here. Production content has
+**not** been inspected. Functional mobile keyboard/selection/IME checks belong to
+the implementation acceptance in #373. Performance benchmarks and numeric budgets
+are outside this migration's scope. This checklist does not certify that the
+replacement editor, adapter, or AI implementation has passed compatibility checks.
 
 ## Evidence and reproducibility
 
@@ -28,7 +29,7 @@ pnpm test:browser
 
 Browser acceptance must run the actual Next.js app, authentication, routes, editor,
 and storage. Do not substitute a standalone editor screen or fake application
-layout for product validation. Keep benchmark evidence tied to the tested commit,
+layout for product validation. Keep functional evidence tied to the tested commit,
 route, browser, viewport, build mode, and data set.
 
 ## Accepted content: preserve even when its control is hidden
@@ -80,10 +81,10 @@ behavior or record an explicit accepted adaptation before cutover.
 | U14 | Async bare-URL paste/drop resolution | An unselected plain HTTP(S) URL becomes a card in an empty root paragraph (with trailing writing paragraph) or an inline reference elsewhere. Preserve native HTML/selected-label paste. Failed/stale resolution restores/keeps the URL and cannot resurrect a removed node or hijack later edits. Existing insertion/drop tests. |
 | U15 | Internal block drag and Library page drag | BlockNote owns internal moves; Journl does not reinterpret their URLs. `application/x-journl-page-reference` payloads validate page UUID and drop coordinates. Malformed custom data falls back to native behavior. Existing reference-drag tests; actual pointer/touch drag check open. |
 | U16 | Clipboard MIME priority and copy output | Paste prefers `vscode-editor-data`, `blocknote/html`, `text/markdown`, `text/html`, `text/plain`, `Files`; plain text may be interpreted as Markdown, code blocks paste plain source. Copy/drag emits `blocknote/html`, external `text/html` and Markdown as `text/plain`. Check styled range, nested blocks, table selection, links and reference atoms between two editors and an external app. |
-| U17 | Import/export surfaces and loss | No document import/export screen is configured. Clipboard parsing and editor/server Markdown/HTML APIs exist; draft recovery downloads lossy Markdown. Reference exports become readable links, not live embeds; colors, merged table structure and identity are not guaranteed by Markdown. Keep source JSON/IDs as migration recovery evidence. Existing Markdown test plus fixtures. |
+| U17 | Import/export surfaces and loss | No document import/export screen is configured. Clipboard parsing and editor/server Markdown/HTML APIs exist; draft recovery downloads full rich blocks and title as JSON, with no import UI. Markdown reference exports become readable links, not live embeds; colors, merged table structure and identity are not guaranteed by Markdown. Keep source JSON/IDs as migration recovery evidence. Existing Markdown test plus fixtures. |
 | U18 | File/media insertion limits | URL-backed persisted media is supported. Journl supplies no `uploadFile` handler: local file paste/drop/upload is not a working uploaded-media feature merely because upstream has a panel. Keep supported URL/embed/file controls; adding uploads needs a separate product decision. |
-| U19 | Save/debounce/error/conflict recovery | Required original version per batch, serialized title/body queue, dirty draft retention on navigation/virtualization, same guarded retry after ambiguous response, backup-before-load and explicit conflict controls; never introduce a reload on save error. #368 unit/UI and PostgreSQL tests; full browser suite still needs a viable runtime. |
-| U20 | Mobile writing and accessibility | Real iOS Safari/WebKit: text handles, long press/native menus, software keyboard, composition/IME, accents/emoji, focus restore, viewport/sticky toolbar offsets, touch scroll, orientation and keyboard navigation to noneditable reference controls. Desktop reference keyboard tests exist; real-device check remains open. App does not explicitly configure `interactive-widget` in root viewport. |
+| U19 | Save/debounce/error/conflict recovery | Required original version per batch, serialized title/body queue, dirty draft retention on navigation/virtualization, same guarded retry after ambiguous response, backup-before-load and explicit conflict controls; never introduce a reload on save error. Preserve #368's engine, PostgreSQL and real-app browser contracts. #372 also covers leaving the editor layout with unresolved drafts. |
+| U20 | Mobile writing and accessibility | Real iOS Safari/WebKit: text handles, long press/native menus, software keyboard, composition/IME, accents/emoji, focus restore, viewport/sticky toolbar offsets, touch scroll, orientation and keyboard navigation to noneditable reference controls. Desktop reference keyboard tests exist; real-device check remains open. Root viewport configures `interactive-widget: resizes-content`; preserve keyboard-aware save/recovery visibility. |
 | U21 | No configured comments/collaborative presence | Generic upstream comment buttons are extension-gated; no comments store/provider or Yjs collaboration is configured in `useBlockEditor`. Preserve content semantics without silently adding/removing a claimed product feature that does not exist. Sharing/presence and new comment UI require their own scope. |
 
 Installed-source evidence is in `node_modules/@blocknote/core/src/blocks/defaultBlocks.ts`,
@@ -172,40 +173,28 @@ coverage. Production scale, rare/plugin-era shapes, invalid or unavailable targe
 old AI attribution payloads, malformed tables and media lifetime remain unknown now.
 No source URLs, document IDs, user IDs or writing should be checked into this inventory.
 
-## Performance baseline and proposed limits
+## Implementation acceptance
 
-There is no accepted performance baseline yet. The former standalone benchmark
-and its measurements were removed because they did not validate the running app.
+Use these fixtures and behavior contracts to validate the Journl content package
+(#371), the Tiptap frontend adapter (#370), save-session integration (#372), and
+actual-app editor parity (#373). The adapter must preserve existing meaning, IDs,
+formatting, nesting/order, and reference targets. Backend entities and operations
+remain independent of editor frameworks; Tiptap JSON/positions are frontend details.
 
-Measure the actual Journl routes with Playwright/Chromium: 50/500/2,000-block
-writing, reference-heavy documents, long journal entries and timelines, and
-read-only previews. Record route load, typing responsiveness, scrolling, and save
-acknowledgement while checking that no content is lost or replaced. Include
-mobile browser runs and real-device keyboard/selection checks before rollout.
+Exercise real Journl pages, journals, and read-only consumers with desktop Chromium
+and mobile WebKit. Check touch selection, software keyboard, and IME on real devices
+where automation is insufficient. Long documents and virtualized journal rows remain
+functional correctness cases, not benchmark workloads. Pure codecs/operations and
+PostgreSQL persistence have separate meaningful tests; Storybook is suitable for
+pure components/user stories, not substitute application acceptance.
 
-Proposed limits (owner approval pending): candidate measurements must satisfy **both**
-`candidate <= baseline × 1.20` on the same environment and the ceilings below. Repeat a
-suspected regression in three independent runs without unrelated jobs. Do not average
-away a typing or scrolling regression using a faster mount. If the current baseline
-already breaches a ceiling, record performance debt and obtain an explicit resolution;
-rebaselining is not an exemption.
+Owned AI proposal state (#374) and streaming/review/cancel/accept/reject/undo (#376)
+are required before rollout (#375). Unaccepted proposals stay outside accepted
+content and ordinary autosaves. No paid editor AI dependency is required.
 
-| Metric | Proposed ceiling | Verification |
-| --- | --- | --- |
-| Median editor mount, 50 blocks | 500 ms | Same fixture, viewport and five mount trials. |
-| Median mount, 500 blocks / reference-heavy | 1,000 ms | Compare workload separately. |
-| Median mount, 2,000 blocks | 2,500 ms | Also compare typing and block count; no dropping offscreen content to fake a pass. |
-| Median mounted journal list / preview | 500 ms | Wait for actual visible editors/content, not an empty virtualizer shell. |
-| Typing p95, ordinary/reference/list workloads | 50 ms to next frame | At least 40 beforeinput events; retain all characters and actual transaction generation. |
-| Typing p95, 2,000 blocks | 100 ms to next frame | Large-case allowance is a proposed guardrail; 50 ms remains an improvement target, not a claim about today. |
-| Scroll p95 | 66.7 ms per sampled frame | Same 120-frame trajectory; compare virtualized and single-document cases separately. |
-| Frames over 50 ms | At most 10%, and at most +2 percentage points over baseline | Check for blank rows and expanding mounted-editor counts as functional failures, not acceptable speed tradeoffs. |
-| Data integrity / editing correctness | Zero lost content/IDs/targets; zero silent stale overwrites | Functional gates always win over performance numbers. |
-
-Mobile WebKit uses its own baseline, never the Chromium numbers. Real mobile Safari
-selection/keyboard/IME must be checked manually. Full route loading, cold start and
-save latency need a fixed deployment/data fixture and separate agreed budgets before
-rollout.
+Performance baselines, numeric budgets, editor comparisons, and new collaboration
+infrastructure are excluded. Live synchronization/sharing is later work in #377;
+the current migration keeps the existing authoritative backend block structure.
 
 ## Scope boundaries and exit checklist
 
@@ -216,18 +205,17 @@ with hidden/disabled controls. Proposed product improvements are separate:
 - Stable app URLs/block-target enhancements: #352; current IDs and authored URLs remain recoverable.
 - Dedicated mobile Undo/Redo buttons: #378; current undo shortcuts/history remain parity.
 - Entry-to-page conversion: #379; new calendar/date-navigation UX: #380.
-- Richer AI editing: #376; multi-user sharing/presence/permissions: #377.
+- Owned AI proposal engine and tools: #374; streaming editor UX: #376. Both are required before rollout.
+- Later live collaboration, automatic convergence, sharing/presence/permissions: #377.
 - New upload service, comments, math/callout/multi-column extensions or additional table controls are not implied by this inventory.
-- Storage/schema/collaboration choices belong to #370–#372; current-content projections to #353; existing AI compatibility to #374; conversion/rollout to #375.
+- Journl-owned content contract/backend consumers: #371; frontend Tiptap adapter: #370; existing guarded save sessions: #372; reference/search freshness: #353; compatible rollout and BlockNote removal: #375.
 
 Exit state for #369:
 
 - [x] Installed accepted content, visible controls, keyboard/clipboard, reference, mobile, undo, AI and consumer surfaces enumerated with preserve/check contracts.
 - [x] Synthetic accepted-content and historical recovery fixtures plus schema drift checks committed for repeatable comparison.
 - [x] Production uncertainty and a privacy-preserving read-only inventory procedure recorded; no production-content inspection claimed.
-- [ ] Real-app performance baseline recorded with source/environment provenance.
-- [ ] Mobile WebKit/system dependency baseline, real-device checks and full app route measurements completed on a suitable runner.
-- [ ] Performance limits explicitly agreed by the owner; then freeze the approved limits with the baseline.
 
-The final three checks remain open. The design proof may use this inventory immediately;
-no default cutover or silent feature removal is authorized by a checked-in document.
+Implementation acceptance remains in #370–#376 rather than an inventory completion
+claim. Tiptap must preserve the checklist before default cutover; this document
+does not authorize silent feature removal or certify unimplemented adapters.

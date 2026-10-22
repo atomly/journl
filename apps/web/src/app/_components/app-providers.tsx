@@ -4,6 +4,7 @@ import { ThemeProvider } from "next-themes";
 import { JournalDraftsProvider } from "~/app/(app)/journal/_components/journal-drafts-provider";
 import { ThreadRuntime } from "~/components/assistant-ui/thread-runtime";
 import { DraftActivityProvider } from "~/components/editor/draft-activity-provider";
+import { DraftOwnerProvider } from "~/components/editor/draft-sessions-provider";
 import { EditorFrontendProvider } from "~/components/editor/editor-frontend-provider";
 import { PageDraftsProvider } from "~/components/editor/page-drafts-provider";
 import { AppEventProvider } from "~/components/events/app-event-context";
@@ -31,35 +32,37 @@ export function AppProviders({
 }: AppProvidersProps) {
   return (
     <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
-      <AppEventProvider>
-        <TRPCReactProvider key={owner} owner={owner}>
-          <AppPreferencesProvider initialPreferences={initialPreferences}>
-            <DrawerProvider>
-              <JournlAgentProvider>
-                <JournlChatProvider
-                  transport={{
-                    api: "/api/ai/journl-agent",
-                  }}
-                  messages={[]}
-                >
-                  <DraftActivityProvider>
-                    <PageDraftsProvider>
-                      <JournalDraftsProvider>
-                        <EditorFrontendProvider
-                          enabled={editorPreviewEnabled}
-                          tiptap={tiptap}
-                        >
-                          <ThreadRuntime>{children}</ThreadRuntime>
-                        </EditorFrontendProvider>
-                      </JournalDraftsProvider>
-                    </PageDraftsProvider>
-                  </DraftActivityProvider>
-                </JournlChatProvider>
-              </JournlAgentProvider>
-            </DrawerProvider>
-          </AppPreferencesProvider>
-        </TRPCReactProvider>
-      </AppEventProvider>
+      <DraftOwnerProvider owner={owner}>
+        <AppEventProvider>
+          <TRPCReactProvider key={owner} owner={owner}>
+            <AppPreferencesProvider initialPreferences={initialPreferences}>
+              <DrawerProvider>
+                <JournlAgentProvider>
+                  <JournlChatProvider
+                    transport={{
+                      api: "/api/ai/journl-agent",
+                    }}
+                    messages={[]}
+                  >
+                    <DraftActivityProvider>
+                      <PageDraftsProvider>
+                        <JournalDraftsProvider>
+                          <EditorFrontendProvider
+                            enabled={editorPreviewEnabled}
+                            tiptap={tiptap}
+                          >
+                            <ThreadRuntime>{children}</ThreadRuntime>
+                          </EditorFrontendProvider>
+                        </JournalDraftsProvider>
+                      </PageDraftsProvider>
+                    </DraftActivityProvider>
+                  </JournlChatProvider>
+                </JournlAgentProvider>
+              </DrawerProvider>
+            </AppPreferencesProvider>
+          </TRPCReactProvider>
+        </AppEventProvider>
+      </DraftOwnerProvider>
     </ThemeProvider>
   );
 }

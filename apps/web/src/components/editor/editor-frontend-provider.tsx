@@ -1,6 +1,7 @@
 "use client";
 import { createContext, useContext } from "react";
 import { Button } from "~/components/ui/button";
+import { useTrackedDrafts } from "./draft-activity-provider";
 
 const Context = createContext({ enabled: false, tiptap: false });
 export function EditorFrontendProvider({
@@ -21,9 +22,20 @@ export function EditorFrontendProvider({
 export const useTiptapPreview = () => useContext(Context).tiptap;
 export function EditorPreviewSwitch() {
   const { enabled, tiptap } = useContext(Context);
+  const drafts = useTrackedDrafts();
+  const unsaved = drafts.some(({ draft }) => {
+    const snapshot = draft.getSnapshot();
+    return snapshot.isDirty || snapshot.recoveryCopies.length > 0;
+  });
   if (!enabled) return null;
   return (
     <Button
+      disabled={unsaved}
+      title={
+        unsaved
+          ? "Save or download your drafts before switching editors"
+          : undefined
+      }
       size="sm"
       variant="ghost"
       onClick={() => {

@@ -12,6 +12,7 @@ import {
   useSyncExternalStore,
 } from "react";
 import { BlockEditor } from "~/components/editor/block-editor";
+import { acceptedDocumentChange } from "~/components/editor/document-save-adapter";
 import { useTiptapPreview } from "~/components/editor/editor-frontend-provider";
 import { TiptapEditor } from "~/components/editor/tiptap-editor";
 import { useBlockEditor } from "~/components/editor/use-block-editor";
@@ -149,14 +150,58 @@ type JournalEntryEditorProps = Omit<
 };
 
 export function JournalEntryEditor(props: JournalEntryEditorProps) {
-  const tiptap = useTiptapPreview();
-  const { initialBlocks } = useJournalEntry();
-  return tiptap ? (
-    <TiptapEditor initialBlocks={initialBlocks} className={props.className}>
-      {props.children}
-    </TiptapEditor>
+  return useTiptapPreview() ? (
+    <TiptapJournalEntryEditor {...props} />
   ) : (
     <BlockNoteJournalEntryEditor {...props} />
+  );
+}
+
+function TiptapJournalEntryEditor(props: JournalEntryEditorProps) {
+  const { initialBlocks, documentId, updatedAt, date } = useJournalEntry();
+  const { draft, retainDraft } = useJournalEntryDraft(date, {
+    blocks: initialBlocks,
+    documentId,
+    updatedAt,
+  });
+  const snapshot = useSyncExternalStore(
+    draft.subscribe,
+    draft.getSnapshot,
+    draft.getSnapshot,
+  );
+  useEffect(
+    () => () => {
+      void draft.flush();
+    },
+    [draft],
+  );
+  return (
+    <>
+      <TiptapEditor
+        key={snapshot.resetKey}
+        initialBlocks={snapshot.blocks}
+        className={props.className}
+        onCommit={(blocks, operations) => {
+          const change = acceptedDocumentChange(
+            draft.getSnapshot().blocks ?? [],
+            blocks,
+            operations,
+          );
+          retainDraft();
+          draft.update(
+            change.blocks,
+            change.transactions,
+            props.debounceTime ?? DEFAULT_DEBOUNCE_TIME,
+            props.onCreateAction,
+          );
+        }}
+      >
+        {props.children}
+      </TiptapEditor>
+      {snapshot.documentId && (
+        <ReferenceBacklinks documentId={snapshot.documentId} />
+      )}
+    </>
   );
 }
 

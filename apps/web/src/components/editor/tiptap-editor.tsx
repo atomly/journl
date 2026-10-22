@@ -225,9 +225,8 @@ export function TiptapEditor({
             onMouseDown={(event) => event.preventDefault()}
             onClick={() =>
               run((value) => {
-                const tr = duplicateSelectedBlock(
-                  value.state,
-                  crypto.randomUUID,
+                const tr = duplicateSelectedBlock(value.state, () =>
+                  crypto.randomUUID(),
                 );
                 if (tr) value.view.dispatch(tr);
               })
@@ -357,10 +356,8 @@ export function TiptapEditor({
               onMouseDown={(event) => event.preventDefault()}
               onClick={() =>
                 run((value) => {
-                  const tr = convertReference(
-                    value.state,
-                    display,
-                    crypto.randomUUID,
+                  const tr = convertReference(value.state, display, () =>
+                    crypto.randomUUID(),
                   );
                   if (tr) value.view.dispatch(tr);
                 })

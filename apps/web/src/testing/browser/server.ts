@@ -56,9 +56,15 @@ try {
       id: data.otherOwner,
       name: "Other owner",
     },
+    {
+      email: data.paginationEmail,
+      emailVerified: true,
+      id: data.paginationOwner,
+      name: "Pagination owner",
+    },
   ]);
   await db.insert(schema.account).values(
-    [data.owner, data.otherOwner].map((id) => ({
+    [data.owner, data.otherOwner, data.paginationOwner].map((id) => ({
       accountId: id,
       createdAt: new Date(),
       id,
@@ -68,6 +74,28 @@ try {
       userId: id,
     })),
   );
+  // The second Entries page contains a real unsupported stored document, followed
+  // by healthy content. It must not fail the page or mount an empty writable editor.
+  for (let index = 0; index < 12; index++) {
+    const documentId = fixtureId(900 + index);
+    await db
+      .insert(schema.Document)
+      .values({ id: documentId, user_id: data.paginationOwner });
+    await db.insert(schema.JournalEntry).values({
+      date: `2020-01-${String(31 - index).padStart(2, "0")}`,
+      document_id: documentId,
+      user_id: data.paginationOwner,
+    });
+    await db.insert(schema.BlockNode).values({
+      data: {
+        content: `Pagination entry ${index + 1}`,
+        type: index === 10 ? "futureBlock" : "paragraph",
+      },
+      document_id: documentId,
+      id: fixtureId(950 + index),
+      user_id: data.paginationOwner,
+    });
+  }
   // A real stored long document keeps browser acceptance focused on editing,
   // scrolling and persistence instead of racing dozens of synthetic key presses.
   const longDocumentId = fixtureId(700);

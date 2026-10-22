@@ -142,3 +142,95 @@ test("a document ID must belong to the requested journal entry", async () => {
   ).rejects.toMatchObject({ code: "NOT_FOUND" });
   expect(mocks.persist).not.toHaveBeenCalled();
 });
+
+test("Entries pagination continues past an unreadable older document without dropping healthy entries", async () => {
+  const entry = (date: string, supported = true) => ({
+    ...metadata,
+    block_edges: [],
+    block_nodes: [
+      {
+        data: {
+          content: "Original saved writing",
+          type: supported ? "paragraph" : "futureBlock",
+        },
+        document_id: metadata.document_id,
+        id: "stored-block",
+        parent_id: null,
+        user_id: metadata.user_id,
+      },
+    ],
+    date,
+  });
+  const newer = entry("2026-09-29");
+  const unreadable = entry("2026-09-28", false);
+  const older = entry("2026-09-27");
+  const original = structuredClone(unreadable);
+  const findMany = vi
+    .fn()
+    .mockResolvedValueOnce([newer, unreadable])
+    .mockResolvedValueOnce([unreadable, older])
+    .mockResolvedValueOnce([older]);
+  const caller = initTRPC
+    .context<TRPCContext>()
+    .create()
+    .router(journalRouter)
+    .createCaller({
+      db: { query: { JournalEntry: { findMany } } },
+      session: { user: { id: "user" } },
+    } as unknown as TRPCContext);
+  const first = await caller.getEntries({ limit: 1 });
+  expect(first.nextPage).toBe(newer.date);
+  expect(first.timeline.find((row) => row.date === newer.date)).toMatchObject({
+    blocks: expect.any(Array),
+  });
+  const second = await caller.getEntries({ cursor: first.nextPage, limit: 1 });
+  expect(second.nextPage).toBe(unreadable.date);
+  expect(second.timeline).toEqual([
+    { ...metadata, contentReadError: true, date: unreadable.date },
+  ]);
+  expect(second.timeline[0]).not.toHaveProperty("blocks");
+  expect(JSON.stringify(second)).not.toContain("Original saved writing");
+  const third = await caller.getEntries({ cursor: second.nextPage, limit: 1 });
+  expect(third.nextPage).toBeNull();
+  expect(third.timeline[0]).toMatchObject({
+    blocks: expect.any(Array),
+    date: older.date,
+  });
+  expect(unreadable).toEqual(original);
+});
+
+test("Timeline isolates unreadable saved entries instead of treating them as empty days", async () => {
+  const findMany = vi.fn().mockResolvedValue([
+    {
+      ...metadata,
+      block_edges: [],
+      block_nodes: [
+        {
+          data: { type: "futureBlock" },
+          document_id: metadata.document_id,
+          id: "stored-block",
+          parent_id: null,
+          user_id: metadata.user_id,
+        },
+      ],
+    },
+  ]);
+  const caller = initTRPC
+    .context<TRPCContext>()
+    .create()
+    .router(journalRouter)
+    .createCaller({
+      db: { query: { JournalEntry: { findMany } } },
+      session: { user: { id: "user" } },
+    } as unknown as TRPCContext);
+  const result = await caller.getTimeline({
+    cursor: new Date(`${metadata.date}T12:00:00`).getTime(),
+    limit: 2,
+  });
+  expect(result.timeline[0]).toMatchObject({
+    contentReadError: true,
+    date: metadata.date,
+  });
+  expect(result.timeline[0]).not.toHaveProperty("blocks");
+  expect(result.timeline[1]).toEqual({ date: "2026-09-28" });
+});

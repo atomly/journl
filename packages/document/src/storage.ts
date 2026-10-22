@@ -117,7 +117,10 @@ export function documentBlocks(
   for (const [parent, ids] of groups) {
     const seen = new Set<string>();
     const result: string[] = [];
-    for (const head of ids.filter((id) => !previous.has(id))) {
+    const heads = ids.filter((id) => !previous.has(id));
+    if (heads.length > 1)
+      diagnostics.push({ reason: "Disconnected sibling ordering" });
+    for (const head of heads) {
       let id: string | undefined = head;
       while (id && !seen.has(id)) {
         seen.add(id);

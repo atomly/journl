@@ -87,6 +87,9 @@ describe("invalid storage is recoverable as a complete original snapshot, never 
     ],
     [[stored("a"), { ...stored("b"), user_id: "other" }], []],
     [[stored("a"), stored("a")], []],
+    [[stored("a"), stored("b")], []],
+    [[stored("a"), stored("b"), stored("c")], [edge("a", "b")]],
+    [[stored("parent"), stored("a", "parent"), stored("b", "parent")], []],
     [
       [
         stored("a", null, {

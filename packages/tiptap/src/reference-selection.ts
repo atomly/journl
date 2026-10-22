@@ -38,6 +38,21 @@ export function referenceSelectionPlugin(): Plugin {
         });
         return DecorationSet.create(doc, decorations);
       },
+      handleDOMEvents: {
+        keydown(view, event) {
+          // A handled DOM event does not cancel browser focus traversal.
+          return (
+            event.key === "Tab" &&
+            event.target instanceof Element &&
+            event.target !== view.dom &&
+            Boolean(
+              event.target.closest(
+                "button, input, select, textarea, a[href], [role='button']",
+              ),
+            )
+          );
+        },
+      },
     },
   });
 }

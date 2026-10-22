@@ -12,6 +12,8 @@ import {
   useSyncExternalStore,
 } from "react";
 import { BlockEditor } from "~/components/editor/block-editor";
+import { useTiptapPreview } from "~/components/editor/editor-frontend-provider";
+import { TiptapEditor } from "~/components/editor/tiptap-editor";
 import { useBlockEditor } from "~/components/editor/use-block-editor";
 import { ExploreNoteLink } from "~/components/references/explore-note-link";
 import { ReferenceBacklinks } from "~/components/references/reference-backlinks";
@@ -146,7 +148,19 @@ type JournalEntryEditorProps = Omit<
   onCreateAction?: (newEntry: JournalListEntry) => void;
 };
 
-export function JournalEntryEditor({
+export function JournalEntryEditor(props: JournalEntryEditorProps) {
+  const tiptap = useTiptapPreview();
+  const { initialBlocks } = useJournalEntry();
+  return tiptap ? (
+    <TiptapEditor initialBlocks={initialBlocks} className={props.className}>
+      {props.children}
+    </TiptapEditor>
+  ) : (
+    <BlockNoteJournalEntryEditor {...props} />
+  );
+}
+
+function BlockNoteJournalEntryEditor({
   debounceTime = DEFAULT_DEBOUNCE_TIME,
   onCreateAction,
   ...rest

@@ -19,6 +19,19 @@ export const atomBlockTypes = [
   "contentEmbed",
 ] as const;
 
+export function safeEditorUrl(value: string): string {
+  return /^(https?:\/\/|mailto:|\/(?!\/)|#)/i.test(value) &&
+    !/[\s]/.test(value) &&
+    ![...value].some(
+      (char) => char.charCodeAt(0) < 32 || char.charCodeAt(0) === 127,
+    )
+    ? value
+    : "";
+}
+const color = (value: unknown) =>
+  typeof value === "string" && /^[a-zA-Z0-9#(),.% -]+$/.test(value)
+    ? value
+    : "inherit";
 const parseAttrs = (element: HTMLElement) => {
   const value = element.getAttribute("data-journl-attrs");
   return value ? JSON.parse(value) : null;
@@ -38,6 +51,7 @@ export function documentExtensions(): Extensions {
     Node.create({ name: "text", group: "inline" }),
     Node.create({
       name: "journlBlock",
+      draggable: true,
       content: "journlBody journlChildren?",
       defining: true,
       addAttributes: () => ({
@@ -79,11 +93,33 @@ export function documentExtensions(): Extensions {
             getAttrs: parseAttrs,
             preserveWhitespace: "full",
           },
+          ...(name === "paragraph"
+            ? [
+                {
+                  tag: "p:not([data-journl-body])",
+                  preserveWhitespace: "full" as const,
+                },
+              ]
+            : []),
+          ...(name === "heading"
+            ? [1, 2, 3, 4, 5, 6].map((level) => ({
+                tag: `h${level}`,
+                preserveWhitespace: "full" as const,
+                getAttrs: () => ({ props: { level } }),
+              }))
+            : []),
         ],
         renderHTML: ({ node }) => [
-          name === "quote" ? "blockquote" : "p",
+          name === "quote"
+            ? "blockquote"
+            : name === "heading"
+              ? `h${node.attrs.props?.level ?? 1}`
+              : "p",
           {
             "data-journl-body": name,
+            style: `text-align:${node.attrs.props?.textAlignment ?? "left"};color:${color(node.attrs.props?.textColor)};background-color:${color(node.attrs.props?.backgroundColor)}`,
+            "data-checked": node.attrs.props?.checked ? "true" : "false",
+            "data-start": node.attrs.props?.start ?? 1,
             ...htmlAttrs(node.attrs),
           },
           0,
@@ -110,19 +146,62 @@ export function documentExtensions(): Extensions {
         addAttributes: propsAttribute,
         parseHTML: () => [
           { tag: `[data-journl-body="${name}"]`, getAttrs: parseAttrs },
+          ...(["image", "video", "audio"].includes(name)
+            ? [
+                {
+                  tag: `${name === "image" ? "img" : name}[src]`,
+                  getAttrs: (element: HTMLElement) => ({
+                    props: {
+                      url: element.getAttribute("src") ?? "",
+                      ...(name === "image"
+                        ? { caption: element.getAttribute("alt") ?? "" }
+                        : {}),
+                    },
+                  }),
+                },
+              ]
+            : []),
         ],
-        renderHTML: ({ node }) => [
-          "div",
-          { "data-journl-body": name, ...htmlAttrs(node.attrs) },
-          name === "divider"
-            ? "—"
-            : String(
-                node.attrs.props?.label ??
-                  node.attrs.props?.caption ??
-                  node.attrs.props?.name ??
-                  name,
-              ),
-        ],
+        renderHTML: ({ node }) => {
+          const props = node.attrs.props ?? {};
+          const attrs = { "data-journl-body": name, ...htmlAttrs(node.attrs) };
+          const url = safeEditorUrl(props.url ?? "");
+          if (name === "divider") return ["div", attrs, ["hr"]];
+          if (name === "image")
+            return [
+              "figure",
+              attrs,
+              [
+                "img",
+                {
+                  src: url,
+                  alt: props.caption || props.name || "Image",
+                  width: props.previewWidth,
+                },
+              ],
+              ["figcaption", {}, props.caption ?? ""],
+            ];
+          if (name === "video" || name === "audio")
+            return [
+              "figure",
+              attrs,
+              [name, { src: url, controls: "", preload: "none" }],
+              ["figcaption", {}, props.caption ?? props.name ?? ""],
+            ];
+          return [
+            "div",
+            attrs,
+            [
+              "a",
+              { ...(url ? { href: url } : {}), rel: "noopener noreferrer" },
+              props.label ||
+                props.caption ||
+                props.name ||
+                props.url ||
+                "Reference",
+            ],
+          ];
+        },
       }),
     ),
     Node.create({
@@ -177,7 +256,7 @@ export function documentExtensions(): Extensions {
       renderHTML: ({ node }) => [
         "span",
         { "data-journl-reference": "", ...htmlAttrs(node.attrs) },
-        String(node.attrs.props?.label ?? "Reference"),
+        String(node.attrs.props?.label || node.attrs.props?.url || "Reference"),
       ],
     }),
     ...(["bold", "italic", "underline", "strike", "code"] as const).map(
@@ -223,12 +302,22 @@ export function documentExtensions(): Extensions {
       inclusive: false,
       addAttributes: () => ({ href: { default: "", rendered: false } }),
       parseHTML: () => [
-        { tag: "span[data-journl-link]", getAttrs: parseAttrs },
+        { tag: "[data-journl-link]", getAttrs: parseAttrs },
+        {
+          tag: "a[href]",
+          getAttrs: (element) => ({ href: element.getAttribute("href") ?? "" }),
+        },
       ],
-      // Links are rendered as text here; the app supplies guarded navigation.
+      // The app handles internal navigation; unsafe authored schemes remain text.
       renderHTML: ({ mark }) => [
-        "span",
-        { "data-journl-link": "", ...htmlAttrs(mark.attrs) },
+        "a",
+        {
+          "data-journl-link": "",
+          ...(safeEditorUrl(mark.attrs.href)
+            ? { href: safeEditorUrl(mark.attrs.href) }
+            : {}),
+          ...htmlAttrs(mark.attrs),
+        },
         0,
       ],
     }),

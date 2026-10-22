@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { EditorPreviewSwitch } from "~/components/editor/editor-frontend-provider";
 import { SaveStatus } from "~/components/editor/save-status";
 import { SidebarTrigger } from "~/components/ui/sidebar";
 import { AppHeader } from "./_components/app-header";
@@ -21,6 +22,7 @@ export default function JournalHeader() {
             <Suspense>
               <HeaderSubscriptionButton />
             </Suspense>
+            <EditorPreviewSwitch />
             <SaveStatus />
             <HeaderSearchButton>
               <HeaderSearchTrigger />

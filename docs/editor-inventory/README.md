@@ -55,7 +55,7 @@ type is not permission to drop saved content of that type.
 | C13 | `contentReference` inline atom | Preserve version, target kind, document ID, optional block ID, authored URL, label and the transient resolution token's meaning. Keep occurrences in paragraphs, lists and table cells. | Custom config, fixture internal/external/block/table references; existing selection/insertion tests. |
 | C14 | `referenceCard` block, internal or external | Preserve target identity, authored URL/label and surrounding sibling/child structure. A URL prop does not make this a file block. | Fixture; formatting-item filter and block action tests. |
 | C15 | `contentEmbed` block, internal document/block target | Keep live reference identity, recursion/cycle limits, pagination and unavailable states. External embeds are not accepted as a new equivalent. | Fixture; `ReferenceEmbedView`, runtime/procedure tests; browser expansion, Show more and deleted-target checks. |
-| C16 | Stable document/block IDs and linked sibling order | Moves keep IDs; duplicate recursively generates new block IDs; reference target props currently remain as authored (including targets in the original subtree). Copies and moves must not be conflated. | `cloneBlockForDuplicate`, block/node schemas, `blocknoteBlocks`; fixture IDs and ordering checks; #370 must prove split/join/paste semantics before changing them. |
+| C16 | Stable document/block IDs and linked sibling order | Moves keep IDs; duplicate recursively generates new block IDs; reference target props currently remain as authored (including targets in the original subtree). Copies and moves must not be conflated. | `cloneBlockForDuplicate`, block/node schemas, `documentBlocks`; fixture IDs and ordering checks; #370 must prove split/join/paste semantics before changing them. |
 
 ## Visible interaction and editing checklist
 
@@ -129,14 +129,15 @@ Preserve the configured commands that are actually offered for the current selec
 Source: `apps/web/src/ai/tools/{write,apply-changes,reject-changes}/client.ts`,
 `components/editor/block-editor-utils.ts`, `use-block-editor.ts` and installed
 `@blocknote/xl-ai/src/AIExtension.ts`. No paid/real model call is needed for these checks.
-New AI proposal UX/expanded operations remain #376; preserving this flow is #374.
+Owned AI proposal/tool replacement is #374 and streaming/review UX is #376; both precede rollout.
 
 ## Historical content and production uncertainty
 
 `block_node.data` is JSONB with a size constraint, not a versioned closed document
 schema. `parent_id` and `block_edge` reconstruct hierarchy/order. A valid foreign key
 does not prove the parent is in the same document/owner, nor that sibling edges form
-one acyclic chain. Reconstruction uses broad block data and a cast; code inspection
+one acyclic chain. Journl now validates supported payloads independently of the editor
+and reports unsupported data/graph structure with original recovery rows. Code inspection
 alone cannot establish the production population.
 
 | Synthetic specimen | Observed/required disposition |
@@ -144,11 +145,11 @@ alone cannot establish the production population.
 | Omitted `content`, with type/props present | Current reconstruction and editor load; retain the empty block and ID. |
 | String-shaped paragraph content | Current partial-block input accepts it; normalize only through an explicit codec and preserve original payload for migration recovery. |
 | Nested rows returned out of order with a sibling edge | Current reconstruction restores root order and parent/child identity; fixture verifies exact IDs. |
-| Omitted `props`, or `{}` JSONB default | Current Zod reconstruction rejects required fields. Keep raw rows available; do not “repair” by discarding or claiming they are certified empty text. |
-| Unknown block type | Raw row can exist but installed editor conversion rejects it. Quarantine/report and retain original writing rather than coercing to paragraph or dropping the block. |
+| Omitted `props`, or `{}` JSONB default | The explicit Journl legacy reader accepts omitted optional paragraph props without changing raw rows. A missing block type (`{}`) still requires recovery; do not infer empty text. |
+| Unknown block type | Raw row can exist; Journl reports it before editor conversion. Quarantine/report and retain original writing rather than coercing to paragraph or dropping the block. |
 | Unexpected content object | Raw recovery specimen; requires shape-specific investigation before conversion. |
-| Parent absent from the document being reconstructed | Current reconstruction returns no visible root for that row. The global FK can still point to a parent in another document; retain raw data and investigate ownership/membership. |
-| Cyclic/branched/partial sibling relationships | Ordering may be ambiguous or fall back to input order. Preserve nodes/edges and flag for investigation; do not certify a lossy rewrite. |
+| Parent absent from the document being reconstructed | Journl reconstruction reports the missing parent and retains all original rows. The global FK can still point to a parent in another document; investigate ownership/membership. |
+| Cyclic/branched/partial sibling relationships | Cycles and branches are reported with original nodes/edges. Disconnected chains retain source-row order between heads. Do not certify malformed graphs as a lossy rewrite. |
 | Old/new table cells, nondefault headings, reference props and opaque media URLs | Covered synthetically, not established as present/absent in production. Preserve all accepted configurations regardless of observed frequency. |
 
 The editor schema and save boundary are not identical validators. Current reference
@@ -156,9 +157,9 @@ writes require `version: 1`, string target IDs, a document/external target kind,
 up to 255 characters and URLs up to 2,048 characters; ownership/block membership and
 new-target validity are checked in the save transaction. JSONB block payloads also have
 a 10,485,760-character serialized-text limit (`length(data::text)`, not a byte ceiling).
-Other broad/unknown block JSON may reach storage and fail only during reconstruction
-or rendering. Preserve those failures as evidence rather than declaring every raw row
-valid merely because the installed editor has a default for it.
+New content saves validate the Journl block contract at entry. Existing broad/unknown
+JSONB can still be present; reads report it with an original recovery snapshot instead
+of handing partial content to the editor. Preserve those failures as evidence.
 
 The aggregate SQL can quantify known/missing/unknown block types, basic legacy shapes,
 document sizes, deeper/toggle headings, table spans, projected reference forms, nesting

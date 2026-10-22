@@ -7,7 +7,8 @@
     "./ai": "./src/blocknote-ai.ts",
     "./inventory": "./src/inventory/fixtures.ts",
     "./server": "./src/server/index.ts",
-    "./schema": "./src/blocknote-schema.ts"
+    "./schema": "./src/blocknote-schema.ts",
+    "./adapter": "./src/document-adapter.ts"
   },
   "scripts": {
     "check": "biome check",
@@ -25,6 +26,7 @@
   },
   "dependencies": {
     "@acme/db": "workspace:*",
+    "@acme/document": "workspace:*",
     "@ai-sdk/openai": "~4.0.84",
     "ai": "~7.0.128",
     "zod": "~4.6.5"

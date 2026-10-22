@@ -1,14 +1,11 @@
 import { createHash } from "node:crypto";
-import { z } from "zod/v4";
+import { zReferenceProps as zDocumentReferenceProps } from "@acme/document";
 
-export const zReferenceProps = z.object({
-  blockId: z.string(),
-  documentId: z.string(),
-  label: z.string().max(255),
-  targetKind: z.enum(["document", "external"]),
-  url: z.string().max(2048),
-  version: z.literal(1),
-});
+// Storage validation and reference projection share Journl's reference contract.
+// The short-lived resolution token is consumed separately, not persisted in projections.
+export const zReferenceProps = zDocumentReferenceProps
+  .omit({ resolutionToken: true })
+  .strip();
 
 export type InternalReferenceTarget = {
   kind: "document";

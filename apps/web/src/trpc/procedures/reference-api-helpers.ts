@@ -1,19 +1,19 @@
-import { blocknoteBlocks } from "@acme/blocknote/server";
 import { and, eq } from "@acme/db";
 import {
   BlockEdge,
   BlockNode,
   Document,
-  DocumentReference,
+  type DocumentReference,
   JournalEntry,
   Page,
 } from "@acme/db/schema";
+import { documentBlocks } from "@acme/document";
 import { z } from "zod/v4";
 import { env } from "~/env";
 import { getGithubMetadata } from "~/references/github-provider";
-import { type ReferenceTarget } from "~/references/reference-utils";
+import type { ReferenceTarget } from "~/references/reference-utils";
 import { getWebsiteMetadata } from "~/references/website-provider";
-import { type TRPCContext } from "../trpc";
+import type { TRPCContext } from "../trpc";
 
 export const zTarget = z.discriminatedUnion("kind", [
   z.object({
@@ -121,7 +121,7 @@ export function addGraphOccurrence(
 }
 
 export function collectBlock(
-  blocks: ReturnType<typeof blocknoteBlocks>,
+  blocks: ReturnType<typeof documentBlocks>,
   blockId?: string,
 ) {
   if (!blocks) return [];
@@ -156,7 +156,7 @@ export function collectBlock(
 }
 
 export function blockSnippet(
-  blocks: ReturnType<typeof blocknoteBlocks>,
+  blocks: ReturnType<typeof documentBlocks>,
   blockId?: string,
 ) {
   const selected = collectBlock(blocks, blockId);
@@ -266,7 +266,7 @@ export async function resolveInternal(
         eq(BlockEdge.document_id, document.id),
       ),
     );
-  const tree = blocknoteBlocks(blocks, edges);
+  const tree = documentBlocks(blocks, edges);
   const content = blockSnippet(tree, target.blockId);
   const excerpt = truncate(content, 240);
   const title = page?.title ?? entry?.date ?? "Journal entry";

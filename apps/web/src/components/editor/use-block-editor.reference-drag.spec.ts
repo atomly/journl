@@ -94,11 +94,23 @@ async function setup(
           id: "reference",
           props:
             referenceType === "referenceCard"
-              ? { targetKind: "external", url }
+              ? {
+                  blockId: "",
+                  documentId: "",
+                  label: "",
+                  resolutionToken: "",
+                  targetKind: "external",
+                  url,
+                  version: 1,
+                }
               : {
+                  blockId: "",
                   documentId: "10000000-0000-4000-8000-000000000001",
+                  label: "",
+                  resolutionToken: "",
                   targetKind: "document",
                   url: "/pages/source",
+                  version: 1,
                 },
           type: referenceType,
         },

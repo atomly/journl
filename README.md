@@ -30,7 +30,8 @@ This is a monorepo powered by [Turborepo](https://turborepo.dev/) and
 - **Web app:** [`apps/web`](./apps/web), including marketing pages,
   authenticated journaling views, API routes, and editor UI.
 - **Shared packages:** [`packages`](./packages) for auth, database access,
-  usage domain logic, and BlockNote integration.
+  usage domain logic, the framework-independent [`document contract`](packages/document/README.md),
+  and the current BlockNote frontend adapter.
 - **Local dev utilities:** [`apps/drizzle-studio`](./apps/drizzle-studio) and
   [`apps/stripe`](./apps/stripe).
 - **Agents & Contributor guidance:** [`AGENTS.md`](./AGENTS.md).

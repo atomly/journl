@@ -1,6 +1,6 @@
-import { blocknoteBlocks } from "@acme/blocknote/server";
 import { eq } from "@acme/db";
 import { Document } from "@acme/db/schema";
+import { documentBlocks } from "@acme/document";
 import { TRPCError, type TRPCRouterRecord } from "@trpc/server";
 import z from "zod/v4";
 import { publicProcedure } from "../trpc";
@@ -24,7 +24,7 @@ export const documentRouter = {
 
         return {
           ...document,
-          blocks: blocknoteBlocks(document.block_nodes, document.block_edges),
+          blocks: documentBlocks(document.block_nodes, document.block_edges),
         };
       } catch (error) {
         if (error instanceof TRPCError) {

@@ -4,6 +4,7 @@ import { Editor } from "@tiptap/core";
 import { NodeSelection, TextSelection } from "@tiptap/pm/state";
 import { expect, test } from "vitest";
 import {
+  applyAcceptedOperations,
   blockAt,
   captureLink,
   convertReference,
@@ -224,6 +225,32 @@ test("formatting across a reference styles only text and preserves the complete 
             typeof item === "object" && item.type === "contentReference",
         ),
     ).toEqual({ props, type: "contentReference" });
+  } finally {
+    editor.destroy();
+  }
+});
+
+test("accepted domain proposals form one undo event", () => {
+  const { editor, blocks } = setup();
+  try {
+    applyAcceptedOperations(editor, [
+      {
+        data: { content: "Accepted writing", type: "paragraph" },
+        id: "a",
+        type: "update",
+      },
+    ]);
+    expect(JSON.stringify(blocks()[0])).toContain("Accepted writing");
+    editor.view.dom.dispatchEvent(
+      new KeyboardEvent("keydown", {
+        bubbles: true,
+        cancelable: true,
+        ctrlKey: true,
+        key: "z",
+      }),
+    );
+    expect(blocks()[0]?.id).toBe("a");
+    expect(JSON.stringify(blocks()[0])).toContain("abcdef");
   } finally {
     editor.destroy();
   }

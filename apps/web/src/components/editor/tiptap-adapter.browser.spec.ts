@@ -47,3 +47,70 @@ test("the actual page route loads every inventory block through the Tiptap switc
   await expect(page.locator(".bn-editor")).toBeVisible();
   await expect(page.locator(".bn-editor")).toContainText("Styled writing 世界");
 });
+
+test("split, duplicate, nest, undo and reload preserve committed block identities", async ({
+  page,
+}, info) => {
+  const marker = `Split writing persisted ${info.project.name}`;
+  await page
+    .context()
+    .addCookies([
+      { name: "journl-editor", url: "http://127.0.0.1:3100", value: "tiptap" },
+    ]);
+  await page.goto(`/pages/${fixtureId(982)}`);
+  const editor = page.locator(".journl-tiptap");
+  const original = fixtureId(983);
+  const heading = editor
+    .locator(`[data-block-id="${original}"] [data-journl-body]`)
+    .first();
+  await heading.click();
+  await page.keyboard.press("End");
+  await page.keyboard.press("Enter");
+  await page.keyboard.insertText(marker);
+  const split = editor
+    .locator("[data-block-id]")
+    .filter({ hasText: marker })
+    .first();
+  const splitId = await split.getAttribute("data-block-id");
+  expect(splitId).not.toBe(original);
+  await page
+    .getByRole("button", { exact: true, name: "Duplicate block" })
+    .click();
+  const copies = editor
+    .locator('[data-journl-body="heading"]')
+    .filter({ hasText: marker });
+  await expect(copies).toHaveCount(2);
+  await page.getByRole("button", { exact: true, name: "Indent" }).click();
+  const nested = split.locator("[data-block-id]");
+  await expect(nested).toHaveCount(1);
+  const copyId = await nested.getAttribute("data-block-id");
+  expect(copyId).not.toBe(splitId);
+  await page.getByRole("button", { exact: true, name: "Undo" }).click();
+  await expect(nested).toHaveCount(0);
+  await page.getByRole("button", { exact: true, name: "Redo" }).click();
+  await expect(nested).toHaveCount(1);
+  await expect(page.locator("[data-save-status]")).toContainText("Saved");
+  const ids = await editor
+    .locator("[data-block-id]")
+    .evaluateAll((items) =>
+      items.map((item) => item.getAttribute("data-block-id")),
+    );
+  expect(new Set(ids).size).toBe(ids.length);
+  await expect(editor).toContainText("Stored reference");
+  await expect(
+    editor.locator(
+      `[data-block-id="${fixtureId(984)}"] [data-block-id="${fixtureId(985)}"]`,
+    ),
+  ).toHaveCount(1);
+  await page.reload();
+  await expect(
+    editor.locator(`[data-block-id="${splitId}"] [data-block-id="${copyId}"]`),
+  ).toHaveCount(1);
+  expect(
+    await editor
+      .locator("[data-block-id]")
+      .evaluateAll((items) =>
+        items.map((item) => item.getAttribute("data-block-id")),
+      ),
+  ).toEqual(ids);
+});

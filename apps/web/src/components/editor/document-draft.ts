@@ -1,4 +1,5 @@
 import type { DocumentBlock } from "@acme/document";
+import { documentRows } from "@acme/document";
 import type { BlockTransaction } from "~/trpc";
 
 type SaveInput = {
@@ -54,7 +55,10 @@ function canonical(value: unknown): unknown {
 }
 
 function sameBlocks(a: DraftInitial["blocks"], b: DraftInitial["blocks"]) {
-  return JSON.stringify(canonical(a)) === JSON.stringify(canonical(b));
+  return (
+    JSON.stringify(canonical(documentRows(a ?? []))) ===
+    JSON.stringify(canonical(documentRows(b ?? [])))
+  );
 }
 
 /** Owns the draft and save queue independently of a virtualized editor's lifetime. */

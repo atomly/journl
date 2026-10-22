@@ -238,3 +238,80 @@ test("queued saves never briefly publish a saved status before the final batch",
     statuses.slice(0, -1).every((status) => status.isDirty || status.isSaving),
   ).toBe(true);
 });
+
+test("lost response recognizes storage-normalized empty children", async () => {
+  const { draft, save, load } = fixture();
+  const blocks = [
+    {
+      content: [{ styles: {}, text: "Saved writing", type: "text" as const }],
+      id: "paragraph",
+      type: "paragraph" as const,
+    },
+  ] as [import("@acme/document").DocumentBlock];
+  save.mockRejectedValueOnce(new Error("Response lost"));
+  load.mockResolvedValue({
+    ...saved,
+    blocks: [{ ...blocks[0], children: [] }],
+    title: initial.title,
+  });
+  draft.update(
+    blocks,
+    [
+      {
+        args: {
+          data: { content: blocks[0].content, props: {}, type: "paragraph" },
+          id: "paragraph",
+          parent_id: null,
+        },
+        type: "block_upsert",
+      },
+    ],
+    60_000,
+  );
+  await draft.flush();
+  await draft.retry();
+  expect(save).toHaveBeenCalledTimes(1);
+  expect(draft.getSnapshot()).toMatchObject({
+    error: null,
+    isDirty: false,
+    updatedAt: "v2",
+  });
+});
+
+test.each(["UNAUTHORIZED", "FORBIDDEN", "NOT_FOUND"])(
+  "%s keeps writing recoverable when reload and retry are rejected",
+  async (code) => {
+    const { draft, save, load } = fixture();
+    const blocks: NonNullable<DraftInitial["blocks"]> = [
+      {
+        children: [
+          { content: "Keep nesting", id: "nested-local", type: "paragraph" },
+        ],
+        content: "Recover this writing",
+        id: "local",
+        type: "paragraph",
+      },
+    ];
+    save.mockRejectedValue(Object.assign(new Error(code), { code }));
+    load.mockRejectedValue(Object.assign(new Error(code), { code }));
+    draft.update(
+      blocks,
+      [{ args: { id: "previous" }, type: "block_remove" }],
+      60_000,
+    );
+    draft.updateTitle("Recover this title", 60_000);
+    await draft.flush();
+    await draft.retry();
+    await draft.loadSaved();
+    expect(draft.getSnapshot()).toMatchObject({
+      blocks,
+      isDirty: true,
+      recoveryCopies: [],
+      title: "Recover this title",
+    });
+    expect(JSON.parse(JSON.stringify(draft.getSnapshot().blocks))).toEqual(
+      blocks,
+    );
+    expect(save).toHaveBeenCalledTimes(1);
+  },
+);

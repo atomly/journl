@@ -6,6 +6,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { signOutAction } from "~/app/_actions/sign-out.action";
 import { authClient } from "~/auth/client";
+import { SaveStatus } from "~/components/editor/save-status";
 import { Button } from "~/components/ui/button";
 
 import {
@@ -67,6 +68,7 @@ export function DashboardHeader({ className }: UserHeaderProps) {
             </NavigationMenuItem>
           </SessionGate>
           <SessionGate authenticated>
+            <SaveStatus />
             <NavigationMenuItem>
               <NavigationMenuLink
                 asChild

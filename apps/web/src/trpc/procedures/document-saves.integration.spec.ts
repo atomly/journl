@@ -437,3 +437,51 @@ test("unsupported content is rejected at the save boundary without changing bloc
     .where(eq(schema.Page.id, page.id));
   expect(unchanged?.updated_at).toBe(page.updated_at);
 });
+
+test("Tiptap save adapter retains a moved child when its former parent is removed", async () => {
+  const { applyDocumentOperations, parseBlock } = await import(
+    "@acme/document"
+  );
+  const { documentSaveTransactions } = await import(
+    "~/components/editor/document-save-adapter"
+  );
+  const page = await pageFixture();
+  const parent = randomUUID();
+  const child = randomUUID();
+  const sibling = randomUUID();
+  const before = [
+    parseBlock({
+      children: [{ content: "Child writing", id: child, type: "paragraph" }],
+      content: "Parent",
+      id: parent,
+      type: "paragraph",
+    }),
+    parseBlock({ content: "Sibling", id: sibling, type: "paragraph" }),
+  ];
+  const first = await caller.pages.saveTransactions({
+    document_id: page.document_id,
+    expected_updated_at: page.updated_at,
+    transactions: documentSaveTransactions([], before),
+  });
+  const after = applyDocumentOperations(before, [
+    { afterId: sibling, id: child, parentId: null, type: "move" },
+    { id: parent, type: "remove" },
+  ]);
+  await caller.pages.saveTransactions({
+    document_id: page.document_id,
+    expected_updated_at: first.updatedAt,
+    transactions: documentSaveTransactions(before, after),
+  });
+  const read = await caller.pages.getById({ id: page.id });
+  expect(read?.blocks?.map((block) => block.id)).toEqual([sibling, child]);
+  expect(read?.blocks?.[1]).toMatchObject({
+    content: "Child writing",
+    id: child,
+  });
+  expect(
+    await db
+      .select()
+      .from(schema.BlockNode)
+      .where(eq(schema.BlockNode.id, parent)),
+  ).toHaveLength(0);
+});

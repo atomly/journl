@@ -7,6 +7,7 @@ import {
 } from "@tanstack/react-query";
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { useDraftActivity } from "~/components/editor/draft-activity-provider";
+import { useDraftSession } from "~/components/editor/draft-sessions-provider";
 import type { JournalListEntry, RouterOutputs } from "~/trpc";
 import { useTRPC } from "~/trpc/react";
 import { JournalEntryDraft } from "./journal-entry-draft";
@@ -27,7 +28,8 @@ export function JournalDraftsProvider({
 }: {
   children: React.ReactNode;
 }) {
-  const [drafts] = useState(() => new Map<string, JournalEntryDraft>());
+  const [local] = useState(() => new Map<string, JournalEntryDraft>());
+  const drafts = useDraftSession()?.journals ?? local;
   useEffect(() => {
     const beforeUnload = (event: BeforeUnloadEvent) => {
       if ([...drafts.values()].some((draft) => draft.hasUnsavedChanges())) {

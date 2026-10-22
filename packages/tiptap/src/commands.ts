@@ -238,3 +238,12 @@ export function editingExtension(createId: IdFactory) {
     priority: 1000,
   });
 }
+
+/** Accepted proposals use normal document transactions and one isolated undo event. */
+export function applyAcceptedOperations(
+  editor: import("@tiptap/core").Editor,
+  operations: DocumentOperation[],
+) {
+  editor.view.dispatch(editBlocks(editor.state.tr, operations));
+  editor.view.dispatch(closeHistory(editor.state.tr));
+}

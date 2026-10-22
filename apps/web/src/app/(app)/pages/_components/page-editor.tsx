@@ -5,6 +5,7 @@ import type { Page } from "@acme/db/schema";
 import type { DocumentBlock } from "@acme/document";
 import { useEffect, useSyncExternalStore } from "react";
 import { BlockEditor } from "~/components/editor/block-editor";
+import { acceptedDocumentChange } from "~/components/editor/document-save-adapter";
 import { useTiptapPreview } from "~/components/editor/editor-frontend-provider";
 import {
   PageEditorDraftContext,
@@ -38,20 +39,46 @@ export function PageEditor(props: PageEditorProps) {
 }
 
 function TiptapPagePreview(props: PageEditorProps) {
-  const { draft } = usePageDraft(props.page, {
+  const { draft, retainDraft } = usePageDraft(props.page, {
     blocks: props.initialBlocks,
     documentId: props.page.document_id,
     title: props.page.title,
     updatedAt: props.page.updated_at,
   });
+  const snapshot = useSyncExternalStore(
+    draft.subscribe,
+    draft.getSnapshot,
+    draft.getSnapshot,
+  );
+  useEffect(
+    () => () => {
+      void draft.flush();
+    },
+    [draft],
+  );
   return (
     <PageEditorDraftContext.Provider value={draft}>
       <TiptapEditor
-        initialBlocks={props.initialBlocks}
+        key={snapshot.resetKey}
+        initialBlocks={snapshot.blocks}
+        onCommit={(blocks, operations) => {
+          const change = acceptedDocumentChange(
+            draft.getSnapshot().blocks ?? [],
+            blocks,
+            operations,
+          );
+          retainDraft();
+          draft.update(
+            change.blocks,
+            change.transactions,
+            props.debounceTime ?? DEFAULT_DEBOUNCE_TIME,
+          );
+        }}
         className={props.className}
       >
         {props.children}
       </TiptapEditor>
+      <ReferenceBacklinks documentId={props.page.document_id} />
     </PageEditorDraftContext.Provider>
   );
 }

@@ -65,6 +65,28 @@ try {
       name: "Pagination owner",
     },
   ]);
+  await db.insert(schema.Plan).values({
+    displayName: "Browser Pro",
+    id: "browser-pro",
+    name: "browser-pro",
+    quota: 1000000,
+  });
+  await db.insert(schema.Price).values({
+    currency: "usd",
+    id: "browser-pro-price",
+    planId: "browser-pro",
+    recurring: { interval: "month", intervalCount: 1 },
+    type: "recurring",
+    unitAmount: 1000,
+  });
+  await db.insert(schema.Subscription).values({
+    id: "browser-subscription",
+    periodEnd: new Date("2099-01-01"),
+    periodStart: new Date("2026-01-01"),
+    planName: "browser-pro",
+    referenceId: data.owner,
+    status: "active",
+  });
   await db.insert(schema.account).values(
     [data.owner, data.otherOwner, data.paginationOwner].map((id) => ({
       accountId: id,
@@ -133,6 +155,73 @@ try {
     inventory.edges.map((edge) => ({
       ...edge,
       document_id: inventoryId,
+      user_id: data.paginationOwner,
+    })),
+  );
+  const structuralId = fixtureId(982);
+  await db
+    .insert(schema.Document)
+    .values({ id: structuralId, user_id: data.paginationOwner });
+  await db.insert(schema.Page).values({
+    document_id: structuralId,
+    id: structuralId,
+    title: "Structural editing",
+    user_id: data.paginationOwner,
+  });
+  await db.insert(schema.TreeNode).values({
+    id: structuralId,
+    node_type: "page",
+    page_id: structuralId,
+    user_id: data.paginationOwner,
+  });
+  await db.transaction((tx) =>
+    insertEdgeAtPosition({
+      db: tx,
+      nodeId: structuralId,
+      parentNodeId: null,
+      position: "after",
+      userId: data.paginationOwner,
+    }),
+  );
+  const structural = documentRows([
+    {
+      content: "Original heading",
+      id: fixtureId(983),
+      props: { level: 1 },
+      type: "heading",
+    },
+    {
+      children: [
+        { content: "Existing child", id: fixtureId(985), type: "paragraph" },
+      ],
+      content: [
+        {
+          props: {
+            blockId: parityBlocks[0].id,
+            documentId: inventoryId,
+            label: "Stored reference",
+            resolutionToken: "",
+            targetKind: "document",
+            url: `/pages/${inventoryId}#block=${parityBlocks[0].id}`,
+            version: 1,
+          },
+          type: "contentReference",
+        },
+      ],
+      id: fixtureId(984),
+      type: "paragraph",
+    },
+  ]);
+  for (const block of structural.blocks)
+    await db.insert(schema.BlockNode).values({
+      ...block,
+      document_id: structuralId,
+      user_id: data.paginationOwner,
+    });
+  await db.insert(schema.BlockEdge).values(
+    structural.edges.map((edge) => ({
+      ...edge,
+      document_id: structuralId,
       user_id: data.paginationOwner,
     })),
   );

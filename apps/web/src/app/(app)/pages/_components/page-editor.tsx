@@ -5,10 +5,12 @@ import type { Page } from "@acme/db/schema";
 import type { DocumentBlock } from "@acme/document";
 import { useEffect, useSyncExternalStore } from "react";
 import { BlockEditor } from "~/components/editor/block-editor";
+import { useTiptapPreview } from "~/components/editor/editor-frontend-provider";
 import {
   PageEditorDraftContext,
   usePageDraft,
 } from "~/components/editor/page-drafts-provider";
+import { TiptapEditor } from "~/components/editor/tiptap-editor";
 import { useBlockEditor } from "~/components/editor/use-block-editor";
 import { ReferenceBacklinks } from "~/components/references/reference-backlinks";
 import { PageCreatedEvent } from "~/events/page-created-event";
@@ -27,7 +29,34 @@ type PageEditorProps = Omit<
   debounceTime?: number;
 };
 
-export function PageEditor({
+export function PageEditor(props: PageEditorProps) {
+  return useTiptapPreview() ? (
+    <TiptapPagePreview {...props} />
+  ) : (
+    <BlockNotePageEditor {...props} />
+  );
+}
+
+function TiptapPagePreview(props: PageEditorProps) {
+  const { draft } = usePageDraft(props.page, {
+    blocks: props.initialBlocks,
+    documentId: props.page.document_id,
+    title: props.page.title,
+    updatedAt: props.page.updated_at,
+  });
+  return (
+    <PageEditorDraftContext.Provider value={draft}>
+      <TiptapEditor
+        initialBlocks={props.initialBlocks}
+        className={props.className}
+      >
+        {props.children}
+      </TiptapEditor>
+    </PageEditorDraftContext.Provider>
+  );
+}
+
+function BlockNotePageEditor({
   page,
   initialBlocks,
   debounceTime = DEFAULT_DEBOUNCE_TIME,

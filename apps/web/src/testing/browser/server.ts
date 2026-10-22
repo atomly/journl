@@ -1,7 +1,9 @@
 import { spawn } from "node:child_process";
 import { once } from "node:events";
 import { createRequire } from "node:module";
+import { parityBlocks } from "@acme/blocknote/inventory";
 import * as schema from "@acme/db/schema";
+import { documentRows } from "@acme/document";
 import { ALGORITHM_VERSION } from "@acme/graph/config";
 import { PostgreSqlContainer } from "@testcontainers/postgresql";
 import { hashPassword } from "better-auth/crypto";
@@ -99,6 +101,41 @@ try {
   // A real stored long document keeps browser acceptance focused on editing,
   // scrolling and persistence instead of racing dozens of synthetic key presses.
   const longDocumentId = fixtureId(700);
+  const inventoryId = fixtureId(980);
+  await db
+    .insert(schema.Document)
+    .values({ id: inventoryId, user_id: data.paginationOwner });
+  await db.insert(schema.Page).values({
+    document_id: inventoryId,
+    id: inventoryId,
+    title: "Tiptap preservation inventory",
+    user_id: data.paginationOwner,
+  });
+  await db.insert(schema.TreeNode).values({
+    id: inventoryId,
+    node_type: "page",
+    page_id: inventoryId,
+    user_id: data.paginationOwner,
+  });
+  await db.insert(schema.TreeEdge).values({
+    id: fixtureId(981),
+    node_id: inventoryId,
+    user_id: data.paginationOwner,
+  });
+  const inventory = documentRows(parityBlocks);
+  for (const block of inventory.blocks)
+    await db.insert(schema.BlockNode).values({
+      ...block,
+      document_id: inventoryId,
+      user_id: data.paginationOwner,
+    });
+  await db.insert(schema.BlockEdge).values(
+    inventory.edges.map((edge) => ({
+      ...edge,
+      document_id: inventoryId,
+      user_id: data.paginationOwner,
+    })),
+  );
   await db
     .insert(schema.Document)
     .values({ id: longDocumentId, user_id: data.owner });

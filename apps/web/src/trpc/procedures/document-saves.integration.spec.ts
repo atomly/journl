@@ -71,6 +71,81 @@ beforeEach(async () => {
     .values({ email: "save@example.invalid", id: owner, name: "Save fixture" });
 });
 
+test("real Entries pagination isolates ambiguous sibling ordering without rewriting saved rows", async () => {
+  const docs = [randomUUID(), randomUUID(), randomUUID()];
+  for (const [index, documentId] of docs.entries()) {
+    await db.insert(schema.Document).values({ id: documentId, user_id: owner });
+    await db.insert(schema.JournalEntry).values({
+      date: `2020-01-${31 - index}`,
+      document_id: documentId,
+      user_id: owner,
+    });
+    const blocks = Array.from({ length: index === 1 ? 3 : 1 }, () =>
+      randomUUID(),
+    );
+    await db.insert(schema.BlockNode).values(
+      blocks.map((id) => ({
+        data: { content: "Original stored writing", type: "paragraph" },
+        document_id: documentId,
+        id,
+        user_id: owner,
+      })),
+    );
+    if (index === 1)
+      await db.insert(schema.BlockEdge).values([
+        {
+          document_id: documentId,
+          from_id: blocks[0] as string,
+          to_id: blocks[1] as string,
+          type: "sibling",
+          user_id: owner,
+        },
+        {
+          document_id: documentId,
+          from_id: blocks[0] as string,
+          to_id: blocks[2] as string,
+          type: "sibling",
+          user_id: owner,
+        },
+      ]);
+  }
+  const originalNodes = await db
+    .select()
+    .from(schema.BlockNode)
+    .orderBy(schema.BlockNode.id);
+  const originalEdges = await db
+    .select()
+    .from(schema.BlockEdge)
+    .orderBy(schema.BlockEdge.to_id);
+  const first = await caller.journal.getEntries({ limit: 1 });
+  expect(first.nextPage).toBe("2020-01-31");
+  const second = await caller.journal.getEntries({
+    cursor: first.nextPage,
+    limit: 1,
+  });
+  expect(second.nextPage).toBe("2020-01-30");
+  expect(second.timeline[0]).toMatchObject({
+    contentReadError: true,
+    date: "2020-01-30",
+  });
+  expect(second.timeline[0]).not.toHaveProperty("blocks");
+  const third = await caller.journal.getEntries({
+    cursor: second.nextPage,
+    limit: 1,
+  });
+  expect(third.timeline[0]).toMatchObject({
+    blocks: expect.any(Array),
+    date: "2020-01-29",
+  });
+  expect(third.nextPage).toBeNull();
+  expect(
+    await db.select().from(schema.BlockNode).orderBy(schema.BlockNode.id),
+  ).toEqual(originalNodes);
+  expect(
+    await db.select().from(schema.BlockEdge).orderBy(schema.BlockEdge.to_id),
+  ).toEqual(originalEdges);
+});
+
 async function pageFixture() {
   const [document] = await db
     .insert(schema.Document)

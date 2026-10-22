@@ -7,6 +7,7 @@ import { Virtuoso } from "react-virtuoso";
 import { useDebouncedCallback } from "use-debounce";
 import { useAppLayout } from "~/app/_components/app-layout-provider";
 import { useAppPreferences } from "~/components/preferences/app-preferences-provider";
+import { Button } from "~/components/ui/button";
 import { useJournlAgent } from "~/hooks/use-journl-agent";
 import type { JournalListEntry } from "~/trpc";
 import {
@@ -223,7 +224,7 @@ function VirtualizedJournalList({
     );
   }
 
-  if (status === "error") {
+  if (status === "error" && !data) {
     return (
       <div className="mx-auto flex h-full max-w-4xl flex-1 flex-col items-center justify-center gap-y-6 text-center md:gap-y-8">
         <div>
@@ -235,6 +236,7 @@ function VirtualizedJournalList({
             Error: {error?.message}
           </code>
         )}
+        <Button onClick={() => void fetchNextPage()}>Try again</Button>
       </div>
     );
   }
@@ -245,7 +247,7 @@ function VirtualizedJournalList({
       customScrollParent={scrollElement ?? undefined}
       data={entries}
       endReached={() => {
-        if (hasNextPage) {
+        if (hasNextPage && !isFetching && !error) {
           debouncedFetchNextPage();
         }
       }}
@@ -253,11 +255,21 @@ function VirtualizedJournalList({
       itemContent={(_, entry) => (
         <JournalEntryProvider entry={entry}>
           <JournalEntryWrapper className="mx-auto max-w-4xl border-b pt-8 pb-20">
-            <DynamicJournalEntryEditor onCreateAction={onCreateAction}>
-              <JournalEntryLink>
-                <JournalEntryHeader className="px-8" />
-              </JournalEntryLink>
-            </DynamicJournalEntryEditor>
+            {"contentReadError" in entry && entry.contentReadError ? (
+              <div className="space-y-4 px-8" data-journal-content-unavailable>
+                <JournalEntryHeader />
+                <p role="status" className="text-muted-foreground text-sm">
+                  This entry could not be opened safely. Its saved content is
+                  unchanged. Other entries are still available.
+                </p>
+              </div>
+            ) : (
+              <DynamicJournalEntryEditor onCreateAction={onCreateAction}>
+                <JournalEntryLink>
+                  <JournalEntryHeader className="px-8" />
+                </JournalEntryLink>
+              </DynamicJournalEntryEditor>
+            )}
           </JournalEntryWrapper>
         </JournalEntryProvider>
       )}
@@ -267,6 +279,8 @@ function VirtualizedJournalList({
             className="mx-auto mt-8 max-w-4xl pb-24"
             hasNextPage={hasNextPage}
             isFetching={isFetching}
+            error={error}
+            onRetry={() => void fetchNextPage()}
           />
         ),
       }}
@@ -278,13 +292,34 @@ function VirtualizedJournalList({
 type JournalListFooterProps = Omit<React.ComponentProps<"div">, "children"> & {
   hasNextPage: boolean;
   isFetching: boolean;
+  error: { message?: string } | null;
+  onRetry: () => void;
 };
 
 function JournalListFooter({
   hasNextPage,
   isFetching,
+  error,
+  onRetry,
   ...rest
 }: JournalListFooterProps) {
+  if (error) {
+    return (
+      <div {...rest}>
+        <div
+          role="status"
+          className="flex flex-col items-center gap-3 text-center"
+        >
+          <p>
+            Couldn’t load older entries. Your loaded entries are still here.
+          </p>
+          <Button disabled={isFetching} onClick={onRetry}>
+            {isFetching ? "Retrying…" : "Try again"}
+          </Button>
+        </div>
+      </div>
+    );
+  }
   if (isFetching && hasNextPage) {
     return <JournalEntrySkeleton hasContent {...rest} />;
   }

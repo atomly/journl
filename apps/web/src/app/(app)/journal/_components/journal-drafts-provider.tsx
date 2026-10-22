@@ -7,14 +7,14 @@ import {
 } from "@tanstack/react-query";
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { useDraftActivity } from "~/components/editor/draft-activity-provider";
-import type { JournalListEntry } from "~/trpc";
+import type { JournalListEntry, RouterOutputs } from "~/trpc";
 import { useTRPC } from "~/trpc/react";
 import { JournalEntryDraft } from "./journal-entry-draft";
 
 type JournalDraftsContextValue = {
   drafts: Map<string, JournalEntryDraft>;
   save: ConstructorParameters<typeof JournalEntryDraft>[2];
-  load: (date: string) => Promise<JournalListEntry>;
+  load: (date: string) => Promise<RouterOutputs["journal"]["getByDate"]>;
   onSaved: ConstructorParameters<typeof JournalEntryDraft>[4];
 };
 
@@ -51,7 +51,11 @@ export function JournalDraftsProvider({
           ...trpc.journal.getByDate.queryOptions({ date }),
           staleTime: 0,
         }),
-      onSaved: (entry: Extract<JournalListEntry, { document_id: string }>) => {
+      onSaved: (
+        entry: Parameters<
+          ConstructorParameters<typeof JournalEntryDraft>[4]
+        >[0],
+      ) => {
         if (trpc.references) {
           for (const referenceQueryKey of [
             trpc.references.getPreviews.queryKey(),

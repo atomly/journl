@@ -31,6 +31,9 @@ const { db, client } = createPostgresFixture(
           "user",
           "Document",
           "Page",
+          "Folder",
+          "TreeNode",
+          "TreeEdge",
           "JournalEntry",
           "BlockNode",
           "BlockEdge",
@@ -79,6 +82,16 @@ async function pageFixture() {
     .values({ document_id: document.id, title: "Before", user_id: owner })
     .returning();
   if (!page) throw new Error("Page fixture missing");
+  const [node] = await db
+    .insert(schema.TreeNode)
+    .values({
+      node_type: "page",
+      page_id: page.id,
+      user_id: owner,
+    })
+    .returning();
+  if (!node) throw new Error("Page tree node fixture missing");
+  await db.insert(schema.TreeEdge).values({ node_id: node.id, user_id: owner });
   return page;
 }
 
@@ -290,6 +303,8 @@ test("Journl content survives the existing save/read API with nested IDs and JSO
     ],
   });
   const saved = await caller.pages.getById({ id: page.id });
+  expect(saved?.node_id).toEqual(expect.any(String));
+  expect(saved?.edge_id).toEqual(expect.any(String));
   expect(saved?.blocks?.map((block) => block.id)).toEqual([parent, table]);
   expect(saved?.blocks?.[0].children?.[0]).toMatchObject({
     content: "Nested writing",

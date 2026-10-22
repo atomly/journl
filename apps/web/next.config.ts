@@ -15,6 +15,7 @@ const config: NextConfig = {
     "@acme/db",
     "@acme/document",
     "@acme/graph",
+    "@acme/tiptap",
   ],
   typescript: { ignoreBuildErrors: true },
 };

@@ -4,8 +4,12 @@
 It has no runtime dependency on BlockNote or the database. Its tests reuse the
 content inventory from `@acme/blocknote/inventory`.
 
-This is the first implementation layer for #370. Page and journal editors still
-use BlockNote. This package does not complete #370 or authorize rollout.
+The adapter is available in actual page and journal routes behind a preview-only
+switch. Select “Try Tiptap editor” in the header of a development or Vercel preview
+build. The server reads the `journl-editor=tiptap` cookie before rendering, so the
+selected frontend is consistent through hydration and ordinary navigation.
+Production keeps the current editor until #375's rollout. #372 connects editable
+views to the existing draft/save sessions.
 
 ## Content boundary
 
@@ -58,18 +62,25 @@ existing storage/save adapter. Never persist editor JSON, positions, or steps.
 behavior without BlockNote document or DOM assumptions. The BlockNote frontend
 now wraps this shared plugin.
 
-## Remaining integration
+## Frontend integration
 
-Before this adapter replaces an editor surface, add the development switch in
-the actual page/journal routes. Connect the existing draft/save sessions under
-#372. Port block targeting, link conversion, reference insertion, and drag UI
-that still depend on BlockNote. Complete the actual-route checks required by
-#370 and the editor UI parity work in #373.
+`editingExtension()` wires native split/join, indentation, text formatting, and
+history. Structural commands use the Journl operation boundary. `captureLink()`
+and `convertReference()` support selection-based display changes while preserving
+surrounding text and children. Clipboard/drop identity handling and reference
+selection use the owned wrappers rather than BlockNote's DOM or document layout.
+Text marks skip reference atoms because the domain contract styles text only.
 
-The schema's DOM output is a basic representation. It does not yet supply the
-app's media views, reference resolution, toolbar, table controls, or keyboard
-commands. Split/join functions are ready for those commands to call. The
-Journl-owned AI proposal and streaming work remains in #374 and #376.
+The app's Tiptap URL insertion follows resolution tokens after caret movement.
+Deleted references are not resurrected by a late resolver. A failed resolution
+restores the original selected alias and styling. Reference and media properties
+remain in Journl payloads; previews and resolved rendering can evolve under #373.
+
+Actual-route inventory acceptance covers the complete installed content inventory,
+block identity/order, tables, media, and references in the new view, then opens
+the same saved document through BlockNote. Neither frontend changes stored rows
+just by opening the document. Full UI parity remains in #373. The Journl-owned
+AI proposal and streaming work remains in #374 and #376, before rollout.
 
 ## Checks
 

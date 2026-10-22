@@ -1,6 +1,7 @@
 import { Extension } from "@tiptap/core";
 import { Fragment, type Node, Slice } from "@tiptap/pm/model";
 import {
+  NodeSelection,
   Plugin,
   Selection,
   TextSelection,
@@ -106,6 +107,38 @@ export function identityPlugin(createId: IdFactory): Plugin {
       return transaction.docChanged ? transaction : null;
     },
     props: {
+      handleDOMEvents: {
+        dragstart(view, event) {
+          if (
+            !(event.target instanceof Element) ||
+            event.target.closest("a[href]")
+          )
+            return false;
+          const body = event.target.closest("[data-journl-body]");
+          if (
+            !body ||
+            ![
+              "referenceCard",
+              "contentEmbed",
+              "image",
+              "video",
+              "audio",
+              "file",
+              "divider",
+            ].includes(body.getAttribute("data-journl-body") ?? "")
+          )
+            return false;
+          const wrapper = body.closest<HTMLElement>("[data-block-id]");
+          if (!wrapper?.dataset.blockId) return false;
+          const target = blockAt(view.state.doc, wrapper.dataset.blockId);
+          view.dispatch(
+            view.state.tr.setSelection(
+              NodeSelection.create(view.state.doc, target.pos),
+            ),
+          );
+          return false;
+        },
+      },
       handleDrop(view, event, slice, moved) {
         if (moved) return false; // Native move deletes/reinserts the same identities.
         const target = view.posAtCoords({

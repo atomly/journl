@@ -1,7 +1,9 @@
+import { cookies } from "next/headers";
 import { withAuth } from "~/app/_guards/page-guards";
 import { getUser } from "~/auth/server";
 import { SidebarInset } from "~/components/ui/sidebar";
 import { Toaster } from "~/components/ui/toast";
+import { env } from "~/env";
 import { getAppPreferences } from "~/preferences/get-preferences";
 import "./styles.css";
 import { AppLayoutProvider } from "../_components/app-layout-provider";
@@ -35,8 +37,16 @@ async function AppLayout({
     getUser(),
   ]);
 
+  const tiptap = (await cookies()).get("journl-editor")?.value === "tiptap";
+  const editorPreviewEnabled =
+    env.NODE_ENV === "development" || env.VERCEL_ENV === "preview";
   return (
-    <AppProviders initialPreferences={preferences} owner={owner.id}>
+    <AppProviders
+      initialPreferences={preferences}
+      owner={owner.id}
+      tiptap={tiptap}
+      editorPreviewEnabled={editorPreviewEnabled}
+    >
       <AppProgressBar className="fixed top-0 left-0 z-7000 h-1 w-full" />
       <ChatSidebarProvider className="flex min-h-screen-safe flex-col">
         <div className="flex flex-1">

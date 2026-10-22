@@ -692,24 +692,6 @@ export const AppSidebarPages = ({
             />
           </div>
         ) : null}
-        {ancestorPath && ancestorPath.length > 0 && (
-          <nav
-            aria-label="Current Library location"
-            className="min-w-0 space-y-1 px-4 pb-2 text-xs"
-          >
-            {ancestorPath.slice(-3).map((item) => (
-              <Link
-                key={item.node_id}
-                href={`/${item.node_type === "folder" ? "folders" : "pages"}/${item.id}`}
-                aria-current={item.id === params.id ? "page" : undefined}
-                className="block truncate rounded py-1 text-muted-foreground hover:text-foreground focus-visible:ring-2 focus-visible:ring-sidebar-ring"
-              >
-                {item.name ||
-                  (item.node_type === "folder" ? "New folder" : "New page")}
-              </Link>
-            ))}
-          </nav>
-        )}
         <DndContext {...dndContextProps}>
           <TreeMoveProvider>
             <SidebarTreeInteractionsContext.Provider

@@ -2,30 +2,29 @@
 
 import type { DocumentBlock, DocumentOperation } from "@acme/document";
 import {
-  captureLink,
-  convertReference,
   documentChanges,
   documentExtensions,
-  duplicateSelectedBlock,
   editingExtension,
   fromTiptapDocument,
   identityExtension,
-  indentBlock,
   referenceSelectionPlugin,
-  selectedBlock,
-  toggleTextMark,
+  safeEditorUrl,
+  suggestionExtension,
   toTiptapDocument,
+  writingExtension,
 } from "@acme/tiptap";
 import { useQueryClient } from "@tanstack/react-query";
 import { Editor, Extension } from "@tiptap/core";
-import { redo, undo } from "@tiptap/pm/history";
 import { TextSelection } from "@tiptap/pm/state";
-import { useEffect, useRef, useState } from "react";
-import { Button } from "~/components/ui/button";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { cn } from "~/lib/cn";
 import { getPlainUrlForAutomaticReference } from "~/references/reference-paste-url";
 import { useTRPC } from "~/trpc/react";
+import { referenceViewStore, TiptapReferenceViews } from "./tiptap-node-views";
 import { insertTiptapReference } from "./tiptap-reference-insertion";
+import { TiptapSideMenu } from "./tiptap-side-menu";
+import { TiptapToolbar } from "./tiptap-toolbar";
+import { TiptapContextMenu, TiptapSlashMenu } from "./tiptap-writing-controls";
 import "./tiptap-editor.css";
 
 export type TiptapCommit = (
@@ -51,7 +50,6 @@ export function TiptapEditor({
     queryClient.fetchQuery(
       trpc.references.resolveUrls.queryOptions({ urls: [url] }),
     );
-  const [referenceUrl, setReferenceUrl] = useState("");
   const initial = useRef(initialBlocks);
   const resolver = useRef(resolveUrl);
   resolver.current = resolveUrl;
@@ -59,6 +57,7 @@ export function TiptapEditor({
   const commit = useRef(onCommit);
   commit.current = onCommit;
   const [editor, setEditor] = useState<Editor>();
+  const referenceViews = useMemo(referenceViewStore, []);
   const [error, setError] = useState(false);
   useEffect(() => {
     if (!host.current) return;
@@ -75,10 +74,43 @@ export function TiptapEditor({
         editable: Boolean(commit.current),
         editorProps: {
           attributes: {
-            "aria-label": "Document editor",
-            "aria-multiline": "true",
-            class: "journl-tiptap min-h-32 px-8 py-3 outline-none",
-            role: "textbox",
+            "aria-label": commit.current
+              ? "Document editor"
+              : "Document content",
+            ...(commit.current ? { "aria-multiline": "true" } : {}),
+            class: "journl-tiptap min-h-32 outline-none",
+            role: commit.current ? "textbox" : "document",
+          },
+          handleDOMEvents: {
+            click: (view, event) => {
+              if (
+                !view.editable ||
+                event.metaKey ||
+                event.ctrlKey ||
+                event.shiftKey ||
+                event.altKey ||
+                !(event.target instanceof Element) ||
+                !event.target.closest("a[data-journl-link]")
+              )
+                return false;
+              event.preventDefault();
+              return true;
+            },
+            dblclick: (view, event) => {
+              if (!view.editable || !(event.target instanceof Element))
+                return false;
+              const anchor = event.target.closest<HTMLAnchorElement>(
+                "a[data-journl-link]",
+              );
+              const href =
+                anchor && safeEditorUrl(anchor.getAttribute("href") ?? "");
+              if (!href) return false;
+              event.preventDefault();
+              window.open(href, "_blank", "noopener,noreferrer");
+              return true;
+            },
+            keydown: (view, event) =>
+              view.composing || event.isComposing || event.keyCode === 229,
           },
           handleDrop: (view, event, _slice, moved) => {
             if (moved) return false;
@@ -120,7 +152,10 @@ export function TiptapEditor({
         enableContentCheck: true,
         extensions: [
           ...documentExtensions(),
+          referenceViews.extension,
           editingExtension(() => crypto.randomUUID()),
+          writingExtension(() => crypto.randomUUID()),
+          suggestionExtension(() => crypto.randomUUID()),
           identityExtension(() => crypto.randomUUID()),
           Extension.create({
             addProseMirrorPlugins: () => [referenceSelectionPlugin()],
@@ -157,14 +192,20 @@ export function TiptapEditor({
       current?.destroy();
     };
     // A draft reset remounts this view. Acknowledged saves must not reset selection/history.
-  }, []);
-  const run = (action: (editor: Editor) => void) => {
-    if (!editor || error) return;
-    action(editor);
-    editor.view.focus();
-  };
+  }, [referenceViews.extension]);
   return (
-    <section className={cn("min-w-0", className)} data-editor-frontend="tiptap">
+    <section
+      className={cn("journl-editor-shell min-w-0", className)}
+      data-editor-frontend="tiptap"
+    >
+      {onCommit && editor && !error && (
+        <TiptapToolbar
+          editor={editor}
+          insertReference={(url, label, display) => {
+            insertTiptapReference(editor.view, url, resolveUrl, label, display);
+          }}
+        />
+      )}
       {children}
       {error && (
         <p role="alert" className="px-8 text-destructive">
@@ -172,209 +213,19 @@ export function TiptapEditor({
           still available in save details.
         </p>
       )}
-      {onCommit && (
-        <div
-          className="flex flex-wrap items-center gap-1 px-8"
-          role="toolbar"
-          aria-label="Editor controls"
-        >
-          {(["bold", "italic", "underline", "strike", "code"] as const).map(
-            (mark) => (
-              <Button
-                key={mark}
-                size="sm"
-                variant="ghost"
-                disabled={error || !editor}
-                onMouseDown={(event) => event.preventDefault()}
-                onClick={() =>
-                  run((value) => {
-                    const transaction = toggleTextMark(value.state, mark);
-                    if (transaction) value.view.dispatch(transaction);
-                  })
-                }
-              >
-                {mark.charAt(0).toUpperCase() + mark.slice(1)}
-              </Button>
-            ),
+      <div ref={host} className="journl-tiptap-host" />
+      <TiptapReferenceViews store={referenceViews} />
+      {onCommit && !error && (
+        <>
+          {editor && (
+            <>
+              <TiptapSideMenu editor={editor} />
+            </>
           )}
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={() =>
-              run((value) => {
-                undo(value.state, value.view.dispatch);
-              })
-            }
-          >
-            Undo
-          </Button>
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={() =>
-              run((value) => {
-                redo(value.state, value.view.dispatch);
-              })
-            }
-          >
-            Redo
-          </Button>
-          <Button
-            size="sm"
-            variant="ghost"
-            onMouseDown={(event) => event.preventDefault()}
-            onClick={() =>
-              run((value) => {
-                const tr = duplicateSelectedBlock(value.state, () =>
-                  crypto.randomUUID(),
-                );
-                if (tr) value.view.dispatch(tr);
-              })
-            }
-          >
-            Duplicate block
-          </Button>
-          <Button
-            size="sm"
-            variant="ghost"
-            onMouseDown={(event) => event.preventDefault()}
-            onClick={() =>
-              run((value) => {
-                const tr = indentBlock(value.state);
-                if (tr) value.view.dispatch(tr);
-              })
-            }
-          >
-            Indent
-          </Button>
-          <Button
-            size="sm"
-            variant="ghost"
-            onMouseDown={(event) => event.preventDefault()}
-            onClick={() =>
-              run((value) => {
-                const tr = indentBlock(value.state, true);
-                if (tr) value.view.dispatch(tr);
-              })
-            }
-          >
-            Outdent
-          </Button>
-          <select
-            aria-label="Block type"
-            className="rounded border bg-background p-1 text-sm"
-            disabled={error || !editor}
-            onChange={(event) =>
-              run((value) => {
-                const target = selectedBlock(value.state);
-                const type = value.schema.nodes[event.target.value];
-                if (!target?.node.firstChild?.isTextblock || !type) return;
-                const props =
-                  event.target.value === "heading" ? { level: 2 } : null;
-                const content =
-                  event.target.value === "codeBlock"
-                    ? target.node.firstChild.textContent
-                      ? value.schema.text(target.node.firstChild.textContent)
-                      : undefined
-                    : target.node.firstChild.content;
-                value.view.dispatch(
-                  value.state.tr.replaceWith(
-                    target.pos + 1,
-                    target.pos + target.node.firstChild.nodeSize + 1,
-                    type.createChecked({ props }, content),
-                  ),
-                );
-              })
-            }
-            defaultValue="paragraph"
-          >
-            {[
-              "paragraph",
-              "heading",
-              "bulletListItem",
-              "numberedListItem",
-              "checkListItem",
-              "toggleListItem",
-              "quote",
-              "codeBlock",
-            ].map((type) => (
-              <option key={type} value={type}>
-                {type}
-              </option>
-            ))}
-          </select>
-          <input
-            aria-label="Reference URL"
-            className="min-w-0 rounded border bg-background p-1 text-sm"
-            type="url"
-            value={referenceUrl}
-            onChange={(event) => setReferenceUrl(event.target.value)}
-          />
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={() =>
-              run((value) => {
-                if (insertTiptapReference(value.view, referenceUrl, resolveUrl))
-                  setReferenceUrl("");
-              })
-            }
-          >
-            Insert reference
-          </Button>
-          <Button
-            size="sm"
-            variant="ghost"
-            onMouseDown={(event) => event.preventDefault()}
-            onClick={() =>
-              run((value) => {
-                const link = captureLink(value.state);
-                if (link)
-                  insertTiptapReference(
-                    value.view,
-                    link.href,
-                    resolveUrl,
-                    link.label,
-                  );
-              })
-            }
-          >
-            Convert selected link
-          </Button>
-          {(
-            [
-              "contentReference",
-              "referenceCard",
-              "contentEmbed",
-              "link",
-            ] as const
-          ).map((display) => (
-            <Button
-              key={display}
-              size="sm"
-              variant="ghost"
-              onMouseDown={(event) => event.preventDefault()}
-              onClick={() =>
-                run((value) => {
-                  const tr = convertReference(value.state, display, () =>
-                    crypto.randomUUID(),
-                  );
-                  if (tr) value.view.dispatch(tr);
-                })
-              }
-            >
-              {display === "contentReference"
-                ? "Badge"
-                : display === "referenceCard"
-                  ? "Card"
-                  : display === "contentEmbed"
-                    ? "Embed"
-                    : "Link"}
-            </Button>
-          ))}
-        </div>
+          <TiptapSlashMenu editor={editor} />
+          <TiptapContextMenu editor={editor} />
+        </>
       )}
-      <div ref={host} />
     </section>
   );
 }

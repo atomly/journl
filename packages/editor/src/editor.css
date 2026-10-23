@@ -411,3 +411,26 @@
   background: var(--ring);
   pointer-events: none;
 }
+
+.journl-side-menu[data-touch="true"] button {
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  touch-action: manipulation;
+}
+.journl-side-menu[data-touch="true"] button svg {
+  width: 22px;
+  height: 22px;
+}
+.journl-block-drop-indicator {
+  position: fixed;
+  height: 2px;
+  background: var(--ring);
+  border-radius: 2px;
+  z-index: 60;
+  pointer-events: none;
+}
+.journl-tiptap .ProseMirror-noderangeselection {
+  outline: 1px solid color-mix(in srgb, var(--ring), transparent 55%);
+  border-radius: 6px;
+}

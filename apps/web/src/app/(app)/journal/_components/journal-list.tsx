@@ -17,7 +17,6 @@ import {
 import { useTRPC } from "~/trpc/react";
 import {
   JournalEntryHeader,
-  JournalEntryLink,
   JournalEntryProvider,
   JournalEntryWrapper,
 } from "./journal-entry-editor";
@@ -265,9 +264,7 @@ function VirtualizedJournalList({
               </div>
             ) : (
               <DynamicJournalEntryEditor onCreateAction={onCreateAction}>
-                <JournalEntryLink>
-                  <JournalEntryHeader className="px-8" />
-                </JournalEntryLink>
+                <JournalEntryHeader className="px-8" linkDate />
               </DynamicJournalEntryEditor>
             )}
           </JournalEntryWrapper>

@@ -66,6 +66,18 @@ export function identityPlugin(createId: IdFactory): Plugin {
   return new Plugin({
     appendTransaction(transactions, oldState, state) {
       if (!transactions.some((tr) => tr.docChanged)) return null;
+      // ProseMirror permits an empty root; the writing surface still needs a caret.
+      if (!state.doc.childCount) {
+        const wrapper = state.schema.nodes.journlBlock;
+        const paragraph = state.schema.nodes.paragraph;
+        if (!wrapper || !paragraph) return null;
+        const tr = state.tr.insert(
+          0,
+          wrapper.createChecked({ id: createId() }, paragraph.create()),
+        );
+        return tr.setSelection(TextSelection.create(tr.doc, 2));
+      }
+
       const preferred = new Map<string, number>();
       oldState.doc.descendants((node, start) => {
         if (node.type.name !== "journlBlock" || !node.attrs.id) return;

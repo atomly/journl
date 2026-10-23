@@ -1,4 +1,5 @@
 "use client";
+import { SquarePen } from "lucide-react";
 import { createContext, useContext } from "react";
 import { Button } from "~/components/ui/button";
 import { useTrackedDrafts } from "./draft-activity-provider";
@@ -28,13 +29,16 @@ export function EditorPreviewSwitch() {
     return snapshot.isDirty || snapshot.recoveryCopies.length > 0;
   });
   if (!enabled) return null;
+  const label = tiptap ? "Use current editor" : "Try Tiptap editor";
   return (
     <Button
+      aria-label={label}
+      className="shrink-0 max-md:size-8 max-md:p-0"
       disabled={unsaved}
       title={
         unsaved
           ? "Save or download your drafts before switching editors"
-          : undefined
+          : label
       }
       size="sm"
       variant="ghost"
@@ -44,7 +48,8 @@ export function EditorPreviewSwitch() {
         window.location.reload();
       }}
     >
-      {tiptap ? "Use current editor" : "Try Tiptap editor"}
+      <SquarePen aria-hidden="true" className="size-4 md:hidden" />
+      <span className="hidden md:inline">{label}</span>
     </Button>
   );
 }

@@ -9,5 +9,11 @@
       "path": "/api/cron/explore-refresh",
       "schedule": "10 6 * * *"
     }
-  ]
+  ],
+  "git": {
+    "deploymentEnabled": {
+      "**": false,
+      "main": true
+    }
+  }
 }

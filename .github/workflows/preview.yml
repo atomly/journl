@@ -1,0 +1,75 @@
+name: Preview deployment
+
+on:
+  # Use trusted workflow code from the base branch. Never check out PR code here.
+  pull_request_target:
+    types: [opened, reopened, synchronize, ready_for_review, converted_to_draft, closed]
+
+permissions:
+  pull-requests: read
+
+concurrency:
+  group: vercel-preview-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  preview:
+    if: >-
+      github.event.pull_request.state == 'open' &&
+      github.event.pull_request.draft == false &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Request a Vercel preview for the current PR commit
+        uses: actions/github-script@v8
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
+          VERCEL_TEAM_ID: ${{ vars.VERCEL_TEAM_ID }}
+        with:
+          script: |
+            const { data: pr } = await github.rest.pulls.get({
+              ...context.repo,
+              pull_number: context.payload.pull_request.number,
+            });
+            // Events can queue while a PR changes. Recheck live state and SHA.
+            if (pr.state !== "open" || pr.draft ||
+                pr.head.repo?.full_name !== context.payload.repository.full_name ||
+                pr.head.sha !== context.payload.pull_request.head.sha) {
+              core.info("Skipping: PR is draft, closed, external, or has a newer commit.");
+              return;
+            }
+            const { VERCEL_TOKEN, VERCEL_PROJECT_ID, VERCEL_TEAM_ID } = process.env;
+            if (!VERCEL_TOKEN || !VERCEL_PROJECT_ID) {
+              throw new Error("Configure the VERCEL_TOKEN secret and VERCEL_PROJECT_ID variable. See docs/preview-deployments.md.");
+            }
+            const endpoint = new URL("https://api.vercel.com/v13/deployments");
+            if (VERCEL_TEAM_ID) endpoint.searchParams.set("teamId", VERCEL_TEAM_ID);
+            const response = await fetch(endpoint, {
+              method: "POST",
+              headers: {
+                Authorization: `Bearer ${VERCEL_TOKEN}`,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                name: context.repo.repo,
+                project: VERCEL_PROJECT_ID,
+                gitSource: {
+                  type: "github",
+                  repoId: pr.head.repo.id,
+                  ref: pr.head.ref,
+                  sha: pr.head.sha,
+                },
+              }),
+              signal: AbortSignal.timeout(30_000),
+            });
+            if (!response.ok) {
+              throw new Error(`Vercel rejected the preview request (HTTP ${response.status}).`);
+            }
+            const deployment = await response.json();
+            if (!deployment.url) throw new Error("Vercel returned no deployment URL.");
+            // Creation queues the build; this does not claim it has passed.
+            await core.summary
+              .addLink("Vercel preview (build queued)", `https://${deployment.url}`)
+              .write();

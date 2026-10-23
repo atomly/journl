@@ -215,7 +215,7 @@ export function joinBlocks(
     left.pos + left.node.nodeSize !== right.pos ||
     !a.isTextblock ||
     !b.isTextblock ||
-    a.type !== b.type
+    !a.type.validContent(a.content.append(b.content))
   )
     throw new Error("Blocks cannot be joined");
   const children = (

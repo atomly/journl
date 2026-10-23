@@ -206,7 +206,7 @@ function ResolvedReference({
     (preview?.status === "ready" ? preview.title : undefined) ||
     props.label ||
     (target?.kind === "external"
-      ? new URL(target.url).hostname
+      ? describeExternal(target.url)?.sourceLabel || "External link"
       : "Referenced note");
   const href = safeEditorUrl(
     (preview?.status === "ready" ? preview.href : undefined) || props.url,
@@ -429,7 +429,9 @@ function ResolvedReference({
               ? "Journal entry"
               : preview.kind === "page"
                 ? "Page"
-                : (preview.sourceLabel ?? new URL(props.url).hostname)
+                : (preview.sourceLabel ??
+                  (describeExternal(props.url)?.sourceLabel ||
+                    "Referenced note"))
             : ""}
           {preview?.sourceStatus ? ` · ${preview.sourceStatus}` : ""}
         </div>

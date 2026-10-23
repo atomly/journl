@@ -1,4 +1,7 @@
-import { type Extensions, Mark, Node } from "@tiptap/core";
+import { Extension, type Extensions, Mark, Node } from "@tiptap/core";
+import { all, createLowlight } from "lowlight";
+import { createHighlightPlugin } from "prosemirror-highlight";
+import { createParser } from "prosemirror-highlight/lowlight";
 import { blockView } from "./block-view";
 import { editorColor as color } from "./colors";
 import { tableExtension, tableNodeView } from "./tables";
@@ -41,6 +44,8 @@ const htmlAttrs = (attrs: Record<string, unknown>) => ({
   "data-journl-attrs": JSON.stringify(attrs),
 });
 
+const highlight = createParser(createLowlight(all));
+
 const propsAttribute = () => ({
   props: { default: null, rendered: false },
 });
@@ -49,6 +54,16 @@ const propsAttribute = () => ({
 export function documentExtensions(): Extensions {
   return [
     tableExtension(),
+    Extension.create({
+      name: "journlSyntaxHighlight",
+      addProseMirrorPlugins: () => [
+        createHighlightPlugin({
+          parser: highlight,
+          nodeTypes: ["codeBlock"],
+          languageExtractor: (node) => node.attrs.props?.language || "text",
+        }),
+      ],
+    }),
     Node.create({ name: "doc", topNode: true, content: "journlBlock*" }),
     Node.create({ name: "text", group: "inline" }),
     Node.create({

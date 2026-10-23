@@ -1,7 +1,3 @@
-import {
-  getNodeRangeDecorations,
-  NodeRangeSelection,
-} from "@tiptap/extension-node-range";
 import { NodeSelection, Plugin, TextSelection } from "@tiptap/pm/state";
 import { Decoration, DecorationSet } from "@tiptap/pm/view";
 
@@ -24,10 +20,7 @@ export function referenceSelectionPlugin(): Plugin {
     props: {
       decorations({ doc, selection }) {
         if (selection.empty) return DecorationSet.empty;
-        const decorations: Decoration[] =
-          selection instanceof NodeRangeSelection
-            ? getNodeRangeDecorations([...selection.ranges]).find()
-            : [];
+        const decorations: Decoration[] = [];
         doc.nodesBetween(selection.from, selection.to, (node, pos) => {
           if (
             ["referenceCard", "contentEmbed", "contentReference"].includes(

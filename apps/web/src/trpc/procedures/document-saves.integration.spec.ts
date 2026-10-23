@@ -485,3 +485,122 @@ test("Tiptap save adapter retains a moved child when its former parent is remove
       .where(eq(schema.BlockNode.id, parent)),
   ).toHaveLength(0);
 });
+
+test("moving a journal entry transfers its document and leaves an indexed page reference atomically", async () => {
+  const first = randomUUID();
+  const child = randomUUID();
+  const second = randomUUID();
+  const saved = await caller.journal.saveTransactions({
+    date,
+    document_id: null,
+    expected_updated_at: null,
+    transactions: [
+      ...changes(first, "First"),
+      {
+        args: {
+          data: { content: "Nested", type: "paragraph" },
+          id: child,
+          parent_id: first,
+        },
+        type: "block_upsert",
+      },
+      ...changes(second, "Second"),
+      {
+        args: { from_id: first, to_id: second, type: "sibling" },
+        type: "edge_insert",
+      },
+    ],
+  });
+  const originalNodes = await db.select().from(schema.BlockNode);
+  const originalEdges = await db.select().from(schema.BlockEdge);
+  const moved = await caller.journal.moveToPage({
+    date,
+    documentId: saved.document_id,
+    expectedUpdatedAt: saved.updated_at,
+    title: "Moved writing",
+  });
+  expect(moved.page.document_id).toBe(saved.document_id);
+  expect(moved.entry.document_id).not.toBe(saved.document_id);
+  expect(
+    await db
+      .select()
+      .from(schema.BlockNode)
+      .where(eq(schema.BlockNode.document_id, saved.document_id)),
+  ).toEqual(expect.arrayContaining(originalNodes));
+  expect(
+    await db
+      .select()
+      .from(schema.BlockEdge)
+      .where(eq(schema.BlockEdge.document_id, saved.document_id)),
+  ).toEqual(originalEdges);
+  expect(moved.entry.blocks[0]).toMatchObject({
+    props: { documentId: saved.document_id, url: `/pages/${moved.page.id}` },
+    type: "referenceCard",
+  });
+  expect(await caller.pages.getById({ id: moved.page.id })).toMatchObject({
+    blocks: [{ children: [{ id: child }], id: first }, { id: second }],
+    node_id: expect.any(String),
+  });
+  const refs = await db
+    .select()
+    .from(schema.DocumentReference)
+    .where(
+      eq(schema.DocumentReference.source_document_id, moved.entry.document_id),
+    );
+  expect(refs).toHaveLength(1);
+  expect(refs[0]?.target_document_id).toBe(saved.document_id);
+  await expect(
+    caller.journal.moveToPage({
+      date,
+      documentId: saved.document_id,
+      expectedUpdatedAt: saved.updated_at,
+      title: "Duplicate",
+    }),
+  ).rejects.toMatchObject({ code: "CONFLICT" });
+  expect(await db.select().from(schema.Page)).toHaveLength(1);
+});
+
+test("stale and foreign journal moves cannot create a page or overwrite the entry", async () => {
+  const saved = await caller.journal.saveTransactions({
+    date,
+    document_id: null,
+    expected_updated_at: null,
+    transactions: changes(randomUUID(), "Original"),
+  });
+  await db
+    .insert(schema.user)
+    .values({
+      email: "other@example.invalid",
+      id: "other-owner",
+      name: "Other",
+    });
+  const [foreign] = await db
+    .insert(schema.Document)
+    .values({ user_id: "other-owner" })
+    .returning();
+  if (!foreign) throw new Error("Missing foreign document");
+  await db
+    .insert(schema.JournalEntry)
+    .values({ date, document_id: foreign.id, user_id: "other-owner" });
+  await expect(
+    caller.journal.moveToPage({
+      date,
+      documentId: foreign.id,
+      expectedUpdatedAt: saved.updated_at,
+      title: "Foreign",
+    }),
+  ).rejects.toMatchObject({ code: "CONFLICT" });
+  await expect(
+    caller.journal.moveToPage({
+      date,
+      documentId: saved.document_id,
+      expectedUpdatedAt: "old-version",
+      title: "Stale",
+    }),
+  ).rejects.toMatchObject({ code: "CONFLICT" });
+  expect(await db.select().from(schema.Page)).toHaveLength(0);
+  expect(await db.select().from(schema.Document)).toHaveLength(2);
+  expect(await caller.journal.getByDate({ date })).toMatchObject({
+    document_id: saved.document_id,
+  });
+});

@@ -13,7 +13,10 @@ import {
   TreeMoveMenuItems,
 } from "~/components/tree-move-actions";
 import { useMoveTreeItem } from "~/hooks/use-move-tree-item";
-import { isValidTreeDestination } from "~/lib/tree-model";
+import {
+  folderDestinationLabel,
+  isValidTreeDestination,
+} from "~/lib/tree-model";
 import { useTRPC } from "~/trpc/react";
 
 type MovingItem = {
@@ -39,22 +42,6 @@ export function TreeMoveProvider({ children }: { children: ReactNode }) {
       ? [{ ...folder, node_id: folder.node_id }]
       : [],
   );
-  const parentMap = new Map(
-    destinations.map((folder) => [folder.node_id, folder]),
-  );
-  const folderLabel = (nodeId: string) => {
-    const names: string[] = [];
-    const visited = new Set<string>();
-    let current: string | null = nodeId;
-    while (current && !visited.has(current)) {
-      visited.add(current);
-      const folder = parentMap.get(current);
-      if (!folder) break;
-      names.unshift(folder.name || "New folder");
-      current = folder.parent_node_id;
-    }
-    return names.join(" / ");
-  };
   return (
     <MoveContext.Provider value={setItem}>
       <section
@@ -87,7 +74,7 @@ export function TreeMoveProvider({ children }: { children: ReactNode }) {
                 ),
             )
             .map((folder) => ({
-              label: folderLabel(folder.node_id),
+              label: folderDestinationLabel(folder.node_id, destinations),
               nodeId: folder.node_id,
             }))
             .sort((a, b) => a.label.localeCompare(b.label)),

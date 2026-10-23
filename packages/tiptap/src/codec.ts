@@ -6,7 +6,8 @@ import {
   type TableContent,
 } from "@acme/document";
 import { getSchema } from "@tiptap/core";
-import type { Mark, Node, Schema } from "@tiptap/pm/model";
+import { Fragment, type Mark, type Node, type Schema } from "@tiptap/pm/model";
+import { TableMap } from "@tiptap/pm/tables";
 import { required } from "./required";
 import { documentExtensions } from "./schema";
 
@@ -64,8 +65,16 @@ function tableRows(content: TableContent | undefined, schema: Schema): Node[] {
       row.cells.map((cell) => {
         const structured = typeof cell === "object" && !Array.isArray(cell);
         return required(schema.nodes.tableCell).createChecked(
-          { props: structured ? (cell.props ?? null) : null },
-          inlineNodes(structured ? cell.content : cell, schema),
+          {
+            colspan: structured ? (cell.props?.colspan ?? 1) : 1,
+            colwidth: null,
+            props: structured ? (cell.props ?? null) : null,
+            rowspan: structured ? (cell.props?.rowspan ?? 1) : 1,
+          },
+          required(schema.nodes.tableParagraph).createChecked(
+            null,
+            inlineNodes(structured ? cell.content : cell, schema),
+          ),
         );
       }),
     );
@@ -95,6 +104,29 @@ export function toTiptapDocument(
           },
           tableRows(block.content, schema),
         );
+        const map = TableMap.get(body);
+        const rows: Node[] = [];
+        body.forEach((row, rowOffset) => {
+          const cells: Node[] = [];
+          row.forEach((cell, cellOffset) => {
+            const left = map.findCell(rowOffset + 1 + cellOffset).left;
+            const widths = Array.from(
+              { length: cell.attrs.colspan },
+              (_, i) => block.content?.columnWidths?.[left + i] ?? 0,
+            );
+            cells.push(
+              cell.type.create(
+                {
+                  ...cell.attrs,
+                  colwidth: widths.some(Boolean) ? widths : null,
+                },
+                cell.content,
+              ),
+            );
+          });
+          rows.push(row.copy(Fragment.fromArray(cells)));
+        });
+        body = body.copy(Fragment.fromArray(rows));
       } else if (block.type === "codeBlock") {
         const text =
           typeof block.content === "string"
@@ -137,7 +169,7 @@ export function toTiptapDocument(
   }
 }
 
-function readInline(node: Node): InlineContent {
+function readInline(node: Node): Exclude<InlineContent, string> {
   const result: Exclude<InlineContent, string> = [];
   node.forEach((child) => {
     if (child.type.name === "contentReference") {
@@ -198,13 +230,24 @@ export function fromTiptapDocument(doc: Node): DocumentBlock[] {
             >[] = [];
             const legacyCells: InlineContent[] = [];
             row.forEach((cell) => {
-              const content = readInline(cell);
+              // The editor library may concatenate paragraphs when merging cells.
+              // Journl cells own inline content, so retain paragraph boundaries as newlines.
+              const content: Exclude<InlineContent, string> = [];
+              cell.forEach((paragraph, _offset, index) => {
+                if (index)
+                  content.push({ styles: {}, text: "\n", type: "text" });
+                content.push(...readInline(paragraph));
+              });
+              const props = { ...cell.attrs.props };
+              for (const key of ["colspan", "rowspan"] as const)
+                if (cell.attrs[key] !== (props[key] ?? 1))
+                  props[key] = cell.attrs[key];
               cells.push({
                 content,
                 type: "tableCell",
-                ...(cell.attrs.props === null
+                ...(cell.attrs.props === null && !Object.keys(props).length
                   ? {}
-                  : { props: structuredClone(cell.attrs.props) }),
+                  : { props: structuredClone(props) }),
               });
               legacyCells.push(content);
             });
@@ -215,6 +258,25 @@ export function fromTiptapDocument(doc: Node): DocumentBlock[] {
                   : cells,
             });
           });
+          const widths: (number | null)[] = [];
+          const map = TableMap.get(body);
+          body.forEach((row, rowOffset) => {
+            row.forEach((cell, cellOffset) => {
+              const col = map.findCell(rowOffset + 1 + cellOffset).left;
+              for (let i = 0; i < cell.attrs.colspan; i++) {
+                if (cell.attrs.colwidth?.[i])
+                  widths[col + i] = cell.attrs.colwidth[i];
+              }
+            });
+            while (widths.length < map.width) widths.push(null);
+          });
+          const columnWidths = widths.map((width) => width ?? null);
+          const authored = body.attrs.columnWidths;
+          const widthsChanged =
+            columnWidths.some(
+              (width, i) => width !== (authored?.[i] ?? null),
+            ) ||
+            (authored && authored.length !== columnWidths.length);
           data.content = {
             rows,
             type: "tableContent",
@@ -223,6 +285,7 @@ export function fromTiptapDocument(doc: Node): DocumentBlock[] {
                 .filter((key) => body.attrs[key] !== null)
                 .map((key) => [key, structuredClone(body.attrs[key])]),
             ),
+            ...(widthsChanged ? { columnWidths } : {}),
           };
         }
       } else if (type === "codeBlock") data.content = body.textContent;

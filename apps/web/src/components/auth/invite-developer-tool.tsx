@@ -1,9 +1,9 @@
 "use client";
 
+import { Button } from "@acme/ui/button";
 import { useMutation } from "@tanstack/react-query";
 import { Copy } from "lucide-react";
 import { useMemo, useState } from "react";
-import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { env } from "~/env";
 import { cn } from "~/lib/cn";

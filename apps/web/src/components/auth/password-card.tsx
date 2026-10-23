@@ -1,7 +1,7 @@
 "use client";
 
+import { Button } from "@acme/ui/button";
 import { useActionState } from "react";
-import { Button } from "~/components/ui/button";
 import {
   Card,
   CardContent,

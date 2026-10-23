@@ -1,7 +1,7 @@
 "use client";
 
+import { Button } from "@acme/ui/button";
 import { useState, useSyncExternalStore } from "react";
-import { Button } from "~/components/ui/button";
 import type { TrackedDraft } from "./draft-activity-provider";
 
 type Draft = TrackedDraft["draft"];

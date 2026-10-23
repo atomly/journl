@@ -13,6 +13,25 @@ import {
   textMarkActive,
   toggleTextMark,
 } from "@acme/tiptap";
+import { Button } from "@acme/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuTrigger,
+} from "@acme/ui/dropdown-menu";
+import { Popover, PopoverContent, PopoverTrigger } from "@acme/ui/popover";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@acme/ui/select";
+import { TooltipProvider } from "@acme/ui/tooltip";
+import { useIsMobile } from "@acme/ui/use-mobile";
 import { Toolbar } from "@base-ui/react/toolbar";
 import type { Editor } from "@tiptap/core";
 import { TextSelection } from "@tiptap/pm/state";
@@ -34,29 +53,6 @@ import {
 import { type ReactNode, useEffect, useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { toast } from "sonner";
-import { Button } from "~/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
-  DropdownMenuTrigger,
-} from "~/components/ui/dropdown-menu";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "~/components/ui/popover";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "~/components/ui/select";
-import { TooltipProvider } from "~/components/ui/tooltip";
-import { useIsMobile } from "~/hooks/use-mobile";
 import {
   EditorHint,
   EditorMenuItem,

@@ -1,16 +1,17 @@
 "use client";
 
+import { Button } from "@acme/ui/button";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useRef } from "react";
-import { Button } from "~/components/ui/button";
 import { type ExploreNode, getExploreTitle } from "~/references/explore-graph";
 import { useTRPC } from "~/trpc/react";
 import { useExploreState } from "../../explore/_components/explore-state";
 
 import { ExploreView, type Snapshot } from "./explore-view";
+
 type Step = { scope: string; href: string; title: string };
 const OVERVIEW: Step = {
   href: "/explore",

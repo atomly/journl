@@ -1,5 +1,5 @@
+import { Button } from "@acme/ui/button";
 import { Search } from "lucide-react";
-import { Button } from "~/components/ui/button";
 import { cn } from "~/lib/cn";
 
 export function HeaderSearchTrigger({

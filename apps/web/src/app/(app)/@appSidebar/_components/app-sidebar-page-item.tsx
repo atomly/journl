@@ -1,6 +1,12 @@
 "use client";
 
 import type { Page } from "@acme/db/schema";
+import { Button } from "@acme/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from "@acme/ui/dropdown-menu";
 import { MoreHorizontal } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -11,12 +17,6 @@ import type {
   ReactNode,
 } from "react";
 import { useState } from "react";
-import { Button } from "~/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuTrigger,
-} from "~/components/ui/dropdown-menu";
 import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,

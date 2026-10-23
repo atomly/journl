@@ -1,5 +1,6 @@
 "use client";
 
+import { Button } from "@acme/ui/button";
 import {
   type AuthResult,
   getAuthResultMessage,
@@ -8,8 +9,6 @@ import {
 import { useAuth } from "@better-auth-ui/react";
 import { CircleCheckIcon, CircleXIcon, TriangleAlertIcon } from "lucide-react";
 import { useEffect, useState } from "react";
-
-import { Button } from "~/components/ui/button";
 import {
   Card,
   CardContent,

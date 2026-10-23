@@ -1,15 +1,15 @@
 "use client";
 
-import { X } from "lucide-react";
-import { type BlockSelection, useJournlAgent } from "~/hooks/use-journl-agent";
-import { Badge } from "../ui/badge";
-import { Button, buttonVariants } from "../ui/button";
+import { Button, buttonVariants } from "@acme/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "../ui/dropdown-menu";
+} from "@acme/ui/dropdown-menu";
+import { X } from "lucide-react";
+import { type BlockSelection, useJournlAgent } from "~/hooks/use-journl-agent";
+import { Badge } from "../ui/badge";
 import { ScrollArea } from "../ui/scroll-area";
 import { cn } from "../utils";
 

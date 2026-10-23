@@ -1,7 +1,7 @@
 "use client";
 
+import { useIsMobile } from "@acme/ui/use-mobile";
 import { useEffect, useState } from "react";
-import { useIsMobile } from "~/hooks/use-mobile";
 import { cn } from "~/lib/cn";
 import { useAppLayout } from "../../../_components/app-layout-provider";
 

@@ -2,6 +2,16 @@
 
 // Source: https://better-auth-ui.com/r/base-nova/user-button.json
 
+import { buttonVariants } from "@acme/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@acme/ui/dropdown-menu";
 import type { MultiSessionAuthClient } from "@better-auth-ui/core/plugins/multi-session";
 import { useAuth, useSession } from "@better-auth-ui/react";
 import { useSetActiveSession } from "@better-auth-ui/react/plugins/multi-session";
@@ -14,16 +24,6 @@ import {
   UserPlus2,
 } from "lucide-react";
 import { isValidElement, type ReactElement, type ReactNode } from "react";
-import { buttonVariants } from "~/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "~/components/ui/dropdown-menu";
 import { UserAvatar } from "./user-avatar";
 import { UserView } from "./user-view";
 

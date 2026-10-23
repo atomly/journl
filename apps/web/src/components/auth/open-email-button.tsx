@@ -1,5 +1,12 @@
 "use client";
 
+import { buttonVariants } from "@acme/ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@acme/ui/tooltip";
 import {
   createQrCodeSvgData,
   getEmailProviderLink,
@@ -8,14 +15,6 @@ import { useAuth } from "@better-auth-ui/react";
 import type { VariantProps } from "class-variance-authority";
 import { QrCode } from "lucide-react";
 import { useMemo } from "react";
-
-import { buttonVariants } from "~/components/ui/button";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "~/components/ui/tooltip";
 import { cn } from "~/lib/cn";
 
 export type OpenEmailButtonProps = {

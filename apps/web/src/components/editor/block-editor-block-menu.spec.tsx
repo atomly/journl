@@ -1,13 +1,13 @@
 // @vitest-environment jsdom
 
 import { type ReferenceRenderAdapter, schema } from "@acme/blocknote/schema";
+import * as DropdownMenu from "@acme/ui/dropdown-menu";
 import { BlockNoteEditor } from "@blocknote/core";
 import { BlockNoteView } from "@blocknote/shadcn";
 import { NodeSelection } from "@tiptap/pm/state";
 import { act } from "react";
 import { createRoot } from "react-dom/client";
 import { afterEach, expect, test, vi } from "vitest";
-import * as DropdownMenu from "../ui/dropdown-menu";
 import {
   BlockEditorContextMenu,
   cloneBlockForDuplicate,

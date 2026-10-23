@@ -58,16 +58,16 @@ import {
   EditorMenuItem,
   EditorToolbarControl,
   restoreEditorFocus,
-} from "./tiptap-controls";
+} from "./controls";
 import {
   type InsertReference,
   ReferenceDisplayControl,
   ReferenceDisplayItems,
-} from "./tiptap-reference-display";
-import { TableMenuItems } from "./tiptap-table-controls";
-import { BlockActions, useTiptapState } from "./tiptap-writing-controls";
+} from "./reference-display";
+import { TableMenuItems } from "./table-controls";
+import { BlockActions, useTiptapState } from "./writing-controls";
 
-export function EditorTool({
+function EditorTool({
   label,
   children,
   active,
@@ -149,7 +149,7 @@ function BlockTypeMenu({ editor }: { editor: Editor }) {
   );
 }
 
-export function BlockTypeSelector({ editor }: { editor: Editor }) {
+function BlockTypeSelector({ editor }: { editor: Editor }) {
   const state = useTiptapState(editor);
   const mobile = useIsMobile();
   const body = state && selectedBlock(state)?.node.firstChild;

@@ -8,10 +8,11 @@ import {
   Page,
 } from "@acme/db/schema";
 import { documentBlocks } from "@acme/document";
+import type { ReferenceTarget } from "@acme/references";
 import { z } from "zod/v4";
 import { env } from "~/env";
 import { externalPreviews } from "~/references/external-preview";
-import type { ReferenceTarget } from "~/references/reference-utils";
+
 import type { TRPCContext } from "../trpc";
 
 export const zTarget = z.discriminatedUnion("kind", [

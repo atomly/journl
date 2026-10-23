@@ -11,8 +11,6 @@ import {
 import { DraftActivity, type TrackedDraft } from "./draft-activity";
 import { useDraftSession } from "./draft-sessions-provider";
 
-export { DraftActivity, type TrackedDraft } from "./draft-activity";
-
 const Context = createContext<DraftActivity | null>(null);
 
 export function DraftActivityProvider({

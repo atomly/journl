@@ -7,6 +7,7 @@ import {
   JournalEntry,
   Page,
 } from "@acme/db/schema";
+import type { ReferenceTarget } from "@acme/references";
 import type { TRPCRouterRecord } from "@trpc/server";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod/v4";
@@ -15,15 +16,15 @@ import {
   getExternalGraphTitle,
   getGraphDocumentTargetKey,
 } from "~/references/graph-utils";
-import { type ReferenceTarget } from "~/references/reference-utils";
+
 import { protectedProcedure } from "../trpc";
 
 import {
-  truncate,
+  addGraphOccurrence,
   blockText,
   createGraphSourceExcerpt,
-  addGraphOccurrence,
   type GraphSourceExcerpt,
+  truncate,
 } from "./reference-api-helpers";
 
 export const referenceGraphProcedures = {

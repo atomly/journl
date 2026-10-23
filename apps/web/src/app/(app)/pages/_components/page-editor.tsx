@@ -5,13 +5,13 @@ import type { Page } from "@acme/db/schema";
 import type { DocumentBlock } from "@acme/document";
 import { useEffect, useSyncExternalStore } from "react";
 import { BlockEditor } from "~/components/editor/block-editor";
+import { ConnectedDocumentEditor } from "~/components/editor/document-editor";
 import { acceptedDocumentChange } from "~/components/editor/document-save-adapter";
 import { useTiptapPreview } from "~/components/editor/editor-frontend-provider";
 import {
   PageEditorDraftContext,
   usePageDraft,
 } from "~/components/editor/page-drafts-provider";
-import { TiptapEditor } from "~/components/editor/tiptap-editor";
 import { useBlockEditor } from "~/components/editor/use-block-editor";
 import { ReferenceBacklinks } from "~/components/references/reference-backlinks";
 import { PageCreatedEvent } from "~/events/page-created-event";
@@ -58,7 +58,7 @@ function TiptapPagePreview(props: PageEditorProps) {
   );
   return (
     <PageEditorDraftContext.Provider value={draft}>
-      <TiptapEditor
+      <ConnectedDocumentEditor
         key={snapshot.resetKey}
         initialBlocks={snapshot.blocks}
         onCommit={(blocks, operations) => {
@@ -77,7 +77,7 @@ function TiptapPagePreview(props: PageEditorProps) {
         className={props.className}
       >
         {props.children}
-      </TiptapEditor>
+      </ConnectedDocumentEditor>
       <ReferenceBacklinks documentId={props.page.document_id} />
     </PageEditorDraftContext.Provider>
   );

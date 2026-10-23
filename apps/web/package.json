@@ -22,6 +22,7 @@
     "@acme/blocknote": "workspace:*",
     "@acme/db": "workspace:*",
     "@acme/document": "workspace:*",
+    "@acme/editor": "workspace:*",
     "@acme/graph": "workspace:*",
     "@acme/references": "workspace:*",
     "@acme/tiptap": "workspace:*",

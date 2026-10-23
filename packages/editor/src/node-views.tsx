@@ -6,12 +6,13 @@ import {
   type ReferenceProps,
   zReferenceProps,
 } from "@acme/document";
-import type { ReferencePreviewData } from "@acme/references";
 import { describeExternal } from "@acme/references";
 import {
   PreviewIcon,
   PreviewImage,
   PreviewStatus,
+  useReferenceEmbed,
+  useReferencePreview,
 } from "@acme/references/react";
 import {
   convertReference,
@@ -26,29 +27,24 @@ import {
   DropdownMenuTrigger,
 } from "@acme/ui/dropdown-menu";
 import { Popover, PopoverContent, PopoverTrigger } from "@acme/ui/popover";
-import { useQuery } from "@tanstack/react-query";
 import { type Editor, Extension } from "@tiptap/core";
 import { dropCursor } from "@tiptap/pm/dropcursor";
 import type { Node as PMNode } from "@tiptap/pm/model";
 import { NodeSelection, Plugin } from "@tiptap/pm/state";
 import type { NodeView } from "@tiptap/pm/view";
 import { ChevronRight, ExternalLink, MoreHorizontal } from "lucide-react";
-import { useRouter } from "next/navigation";
 import {
   createContext,
   useContext,
+  useMemo,
   useState,
   useSyncExternalStore,
 } from "react";
 import { createPortal } from "react-dom";
-import { useTRPC } from "~/trpc/react";
-import {
-  EditorHint,
-  EditorMenuItem,
-  restoreEditorFocus,
-} from "./tiptap-controls";
-import { TiptapEditor } from "./tiptap-editor";
-import { referenceDisplays } from "./tiptap-reference-display";
+import { EditorHint, EditorMenuItem, restoreEditorFocus } from "./controls";
+import { DocumentEditor } from "./editor";
+import { ReferenceClientContext } from "./reference-client";
+import { referenceDisplays } from "./reference-display";
 
 type ReferenceView = {
   key: number;
@@ -195,18 +191,14 @@ function ResolvedReference({
   view: ReferenceView;
   props: ReferenceProps;
 }) {
-  const trpc = useTRPC();
-  const router = useRouter();
+  const references = useContext(ReferenceClientContext);
   const path = useContext(EmbedPath);
-  const target = targetOf(props);
-  const { data, isPending } = useQuery({
-    ...trpc.references.getPreviews.queryOptions({
-      targets: target ? [target] : [],
-    }),
-    enabled: Boolean(target),
-    staleTime: 30000,
-  });
-  const preview: ReferencePreviewData | undefined = data?.items[0]?.preview;
+  const target = useMemo(() => targetOf(props), [props]);
+  const { preview, loading: isPending } = useReferencePreview(
+    references,
+    target,
+    Boolean(target),
+  );
   const inline = view.node.type.name === "contentReference";
   const title =
     (inline ? props.label : undefined) ||
@@ -228,21 +220,11 @@ function ResolvedReference({
   const embed = view.node.type.name === "contentEmbed";
   const key = `${props.documentId}#${props.blockId}`;
   const limited = path.length >= 2 || path.includes(key);
-  const { data: embedData, isPending: loadingEmbed } = useQuery({
-    ...trpc.references.getEmbedContent.queryOptions({
-      targets: [
-        {
-          documentId: props.documentId,
-          ...(props.blockId ? { blockId: props.blockId } : {}),
-        },
-      ],
-    }),
-    enabled: embed && expanded && !limited && Boolean(props.documentId),
-    staleTime: 30000,
-  });
-  const content = embedData?.items[0] as
-    | { status?: string; blocks?: unknown }
-    | undefined;
+  const { content, loading: loadingEmbed } = useReferenceEmbed(
+    references,
+    target?.kind === "document" ? target : null,
+    embed && expanded && !limited,
+  );
   const blocks = content?.status === "ready" ? embedTree(content.blocks) : null;
   const open = (event: React.MouseEvent) => {
     if (
@@ -252,10 +234,9 @@ function ResolvedReference({
       props.targetKind === "external"
     )
       return;
-    event.preventDefault();
-    if (href) {
-      const url = new URL(href, location.origin);
-      router.push(`${url.pathname}${url.search}${url.hash}`);
+    if (href && target && references) {
+      event.preventDefault();
+      references.openTarget(target, href);
     }
   };
   const link = (
@@ -406,7 +387,7 @@ function ResolvedReference({
               </p>
             ) : blocks ? (
               <EmbedPath.Provider value={[...path, key]}>
-                <TiptapEditor initialBlocks={blocks} />
+                <DocumentEditor initialBlocks={blocks} />
               </EmbedPath.Provider>
             ) : (
               <p className="content-reference-status">

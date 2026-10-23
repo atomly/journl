@@ -1,6 +1,6 @@
 import type { ReferenceProps } from "@acme/document";
-import { selectedBlock } from "@acme/tiptap";
-import { TextSelection } from "@tiptap/pm/state";
+import { convertReference, selectedBlock } from "@acme/tiptap";
+import { NodeSelection, TextSelection } from "@tiptap/pm/state";
 import type { EditorView } from "@tiptap/pm/view";
 import type { RouterOutputs } from "~/trpc";
 
@@ -14,6 +14,7 @@ export function insertTiptapReference(
   url: string,
   resolve: Resolve,
   label = "",
+  display?: "contentReference" | "referenceCard",
 ) {
   if (!view.editable) return false;
   let parsed: URL;
@@ -48,7 +49,9 @@ export function insertTiptapReference(
     version: 1,
   };
   const body = target.node.firstChild;
+  if (body?.type.name === "table" && display === "referenceCard") return false;
   const rootCard =
+    display !== "contentReference" &&
     body?.type.name === "paragraph" &&
     !body.content.size &&
     target.parentId === null;
@@ -77,8 +80,19 @@ export function insertTiptapReference(
     transaction.setSelection(
       TextSelection.create(transaction.doc, nextPos + 2),
     );
-  } else transaction.replaceSelectionWith(type.create({ props }));
+  } else {
+    const from = transaction.selection.from;
+    transaction.replaceSelectionWith(type.create({ props }));
+    if (display === "referenceCard")
+      transaction.setSelection(NodeSelection.create(transaction.doc, from));
+  }
   view.dispatch(transaction);
+  if (!rootCard && display === "referenceCard") {
+    const conversion = convertReference(view.state, display, () =>
+      crypto.randomUUID(),
+    );
+    if (conversion) view.dispatch(conversion);
+  }
   const settle = (resolved?: Partial<ReferenceProps>, failed = false) => {
     if (view.isDestroyed) return;
     let found:

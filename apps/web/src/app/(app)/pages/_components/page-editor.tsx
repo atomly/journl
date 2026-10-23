@@ -17,7 +17,6 @@ import { ReferenceBacklinks } from "~/components/references/reference-backlinks"
 import { PageCreatedEvent } from "~/events/page-created-event";
 import { useAppEventHandler } from "~/hooks/use-app-event-handler";
 import { useJournlAgent } from "~/hooks/use-journl-agent";
-import type { BlockTransaction } from "~/trpc";
 
 const DEFAULT_DEBOUNCE_TIME = 1000;
 
@@ -68,11 +67,7 @@ function TiptapPagePreview(props: PageEditorProps) {
             operations,
           );
           retainDraft();
-          draft.update(
-            change.blocks,
-            change.transactions,
-            props.debounceTime ?? DEFAULT_DEBOUNCE_TIME,
-          );
+          draft.update(change, props.debounceTime ?? DEFAULT_DEBOUNCE_TIME);
         }}
         className={props.className}
       >
@@ -105,13 +100,9 @@ function BlockNotePageEditor({
     initialBlocks: snapshot.blocks,
     resetKey: snapshot.resetKey,
   });
-  function handleEditorChange(transactions: BlockTransaction[]) {
+  function handleEditorChange() {
     retainDraft();
-    draft.update(
-      fromBlockNoteBlocks(editor.document),
-      transactions,
-      debounceTime,
-    );
+    draft.update(fromBlockNoteBlocks(editor.document), debounceTime);
   }
 
   useEffect(

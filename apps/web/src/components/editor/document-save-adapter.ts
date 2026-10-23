@@ -57,5 +57,5 @@ export function acceptedDocumentChange(
     JSON.stringify(documentRows(next)) !== JSON.stringify(documentRows(blocks))
   )
     throw new Error("Committed editor operations do not match their document");
-  return { blocks: next, transactions: documentSaveTransactions(before, next) };
+  return next;
 }

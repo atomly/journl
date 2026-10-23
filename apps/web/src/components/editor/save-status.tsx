@@ -1,5 +1,6 @@
 "use client";
 
+import { Button } from "@acme/ui/button";
 import {
   AlertCircleIcon,
   CloudCheckIcon,
@@ -9,7 +10,6 @@ import {
 import Link from "next/link";
 import { lazy, Suspense, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { Button } from "~/components/ui/button";
 import {
   Dialog,
   DialogContent,

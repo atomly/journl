@@ -1,5 +1,6 @@
 "use client";
 
+import { Button } from "@acme/ui/button";
 import {
   type AuthSocialProvider,
   getAuthErrorMessage,
@@ -17,8 +18,6 @@ import {
 import type { Account } from "better-auth";
 import { Link2, Link2Off, Plug } from "lucide-react";
 import { toast } from "sonner";
-
-import { Button } from "~/components/ui/button";
 import {
   Dialog,
   DialogContent,

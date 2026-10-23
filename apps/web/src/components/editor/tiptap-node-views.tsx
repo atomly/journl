@@ -18,6 +18,14 @@ import {
   referenceDisplayAllowed,
   safeEditorUrl,
 } from "@acme/tiptap";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+} from "@acme/ui/dropdown-menu";
+import { Popover, PopoverContent, PopoverTrigger } from "@acme/ui/popover";
 import { useQuery } from "@tanstack/react-query";
 import { type Editor, Extension } from "@tiptap/core";
 import { dropCursor } from "@tiptap/pm/dropcursor";
@@ -33,18 +41,6 @@ import {
   useSyncExternalStore,
 } from "react";
 import { createPortal } from "react-dom";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuLabel,
-  DropdownMenuTrigger,
-} from "~/components/ui/dropdown-menu";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "~/components/ui/popover";
 import { useTRPC } from "~/trpc/react";
 import {
   EditorHint,

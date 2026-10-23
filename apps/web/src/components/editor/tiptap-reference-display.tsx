@@ -6,17 +6,17 @@ import {
   referenceDisplayAllowed,
   selectedBlock,
 } from "@acme/tiptap";
-import type { Editor } from "@tiptap/core";
-import { TextSelection } from "@tiptap/pm/state";
-import { ChevronDown } from "lucide-react";
-import { Button } from "~/components/ui/button";
+import { Button } from "@acme/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuGroup,
   DropdownMenuLabel,
   DropdownMenuTrigger,
-} from "~/components/ui/dropdown-menu";
+} from "@acme/ui/dropdown-menu";
+import type { Editor } from "@tiptap/core";
+import { TextSelection } from "@tiptap/pm/state";
+import { ChevronDown } from "lucide-react";
 import {
   EditorMenuItem,
   EditorToolbarControl,

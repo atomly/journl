@@ -1,10 +1,10 @@
 // @vitest-environment jsdom
 
+import { Button } from "@acme/ui/button";
 import Link from "next/link";
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
-import { Button } from "~/components/ui/button";
 
 let container: HTMLDivElement;
 let root: Root;

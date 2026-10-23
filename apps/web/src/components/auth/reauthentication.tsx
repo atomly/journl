@@ -1,5 +1,6 @@
 "use client";
 
+import { Button } from "@acme/ui/button";
 import {
   getReauthenticationSignInURL,
   isReauthenticationSignInURL,
@@ -7,7 +8,6 @@ import {
 import { useAuth, useSignOut } from "@better-auth-ui/react";
 import { useSyncExternalStore } from "react";
 import { Alert, AlertDescription, AlertTitle } from "~/components/ui/alert";
-import { Button } from "~/components/ui/button";
 import { Spinner } from "~/components/ui/spinner";
 import { cn } from "~/lib/cn";
 

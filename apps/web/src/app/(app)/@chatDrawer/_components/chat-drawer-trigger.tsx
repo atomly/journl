@@ -1,12 +1,12 @@
 "use client";
 
+import { Button } from "@acme/ui/button";
 import { RiSparkling2Fill } from "react-icons/ri";
 import {
   ChatUnreadA11yHint,
   ChatUnreadBadge,
 } from "~/components/assistant-ui/chat-unread-badge";
 import { useChatUnread } from "~/components/assistant-ui/use-chat-unread";
-import { Button } from "~/components/ui/button";
 import { DrawerTrigger, useDrawer } from "~/components/ui/drawer";
 import { cn } from "~/lib/cn";
 

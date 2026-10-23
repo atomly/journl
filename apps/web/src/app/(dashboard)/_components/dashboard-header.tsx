@@ -1,5 +1,6 @@
 "use client";
 
+import { Button } from "@acme/ui/button";
 import { useSession } from "@better-auth-ui/react";
 import { ArrowLeft, LogOut } from "lucide-react";
 import Link from "next/link";
@@ -7,7 +8,6 @@ import type { ReactNode } from "react";
 import { signOutAction } from "~/app/_actions/sign-out.action";
 import { authClient } from "~/auth/client";
 import { SaveStatus } from "~/components/editor/save-status";
-import { Button } from "~/components/ui/button";
 
 import {
   NavigationMenu,

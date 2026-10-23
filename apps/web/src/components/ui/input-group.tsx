@@ -3,11 +3,10 @@
 
 "use client";
 
+import { Button } from "@acme/ui/button";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "cn";
 import type * as React from "react";
-
-import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { Textarea } from "~/components/ui/textarea";
 

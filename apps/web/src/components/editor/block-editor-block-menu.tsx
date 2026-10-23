@@ -9,6 +9,11 @@ import {
   type ReferenceRenderTarget,
   schema,
 } from "@acme/blocknote/schema";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from "@acme/ui/dropdown-menu";
 import { SideMenuExtension } from "@blocknote/core/extensions";
 import {
   BlockColorsItem,
@@ -22,11 +27,6 @@ import {
 import { NodeSelection } from "@tiptap/pm/state";
 import { useContext, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuTrigger,
-} from "../ui/dropdown-menu";
 
 export function cloneBlockForDuplicate(
   block: BlockPrimitive,

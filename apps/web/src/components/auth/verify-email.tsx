@@ -1,10 +1,9 @@
 "use client";
 
+import { Button } from "@acme/ui/button";
 import { useAuth, useSendVerificationEmail } from "@better-auth-ui/react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-
-import { Button } from "~/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 import { FieldDescription } from "~/components/ui/field";
 import { Spinner } from "~/components/ui/spinner";

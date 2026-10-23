@@ -1,5 +1,5 @@
+import { Button } from "@acme/ui/button";
 import Link from "next/link";
-import { Button } from "~/components/ui/button";
 import "./styles/blocknote.css";
 import { Suspense } from "react";
 import { DynamicNotFoundEditor } from "./_components/not-found-editor.dynamic";

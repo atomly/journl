@@ -1,17 +1,17 @@
 "use client";
 
 import { blockAt, editBlocks, selectedBlock } from "@acme/tiptap";
+import { Button } from "@acme/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from "@acme/ui/dropdown-menu";
 import type { Editor } from "@tiptap/core";
 import { NodeSelection, TextSelection } from "@tiptap/pm/state";
 import { GripVertical, Plus } from "lucide-react";
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { Button } from "~/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuTrigger,
-} from "~/components/ui/dropdown-menu";
 import { EditorHint, restoreEditorFocus } from "./tiptap-controls";
 import { BlockMenuContent } from "./tiptap-toolbar";
 import { useTiptapState } from "./tiptap-writing-controls";

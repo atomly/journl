@@ -1,7 +1,7 @@
 "use client";
 
+import { useIsMobile } from "@acme/ui/use-mobile";
 import { useCallback, useEffect, useRef } from "react";
-import { useIsMobile } from "~/hooks/use-mobile";
 import { useAppLayout } from "../../_components/app-layout-provider";
 
 type AppContainerProps = React.ComponentProps<"div">;

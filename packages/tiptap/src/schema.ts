@@ -1,4 +1,7 @@
 import { type Extensions, Mark, Node } from "@tiptap/core";
+import { blockView } from "./block-view";
+import { editorColor as color } from "./colors";
+import { tableExtension, tableNodeView } from "./tables";
 
 export const inlineBlockTypes = [
   "paragraph",
@@ -28,10 +31,8 @@ export function safeEditorUrl(value: string): string {
     ? value
     : "";
 }
-const color = (value: unknown) =>
-  typeof value === "string" && /^[a-zA-Z0-9#(),.% -]+$/.test(value)
-    ? value
-    : "inherit";
+const textStyle = (props: Record<string, unknown> | null) =>
+  `text-align:${props?.textAlignment ?? "left"};${props?.textColor && props.textColor !== "default" ? `color:${color(props.textColor)};` : ""}background-color:${color(props?.backgroundColor, true)}`;
 const parseAttrs = (element: HTMLElement) => {
   const value = element.getAttribute("data-journl-attrs");
   return value ? JSON.parse(value) : null;
@@ -47,10 +48,12 @@ const propsAttribute = () => ({
 /** Each Journl block has one identity, one body, and an optional child group. */
 export function documentExtensions(): Extensions {
   return [
+    tableExtension(),
     Node.create({ name: "doc", topNode: true, content: "journlBlock*" }),
     Node.create({ name: "text", group: "inline" }),
     Node.create({
       name: "journlBlock",
+      addNodeView: () => blockView,
       draggable: true,
       content: "journlBody journlChildren?",
       defining: true,
@@ -117,7 +120,9 @@ export function documentExtensions(): Extensions {
               : "p",
           {
             "data-journl-body": name,
-            style: `text-align:${node.attrs.props?.textAlignment ?? "left"};color:${color(node.attrs.props?.textColor)};background-color:${color(node.attrs.props?.backgroundColor)}`,
+            style: textStyle(node.attrs.props),
+            "data-heading-level":
+              name === "heading" ? (node.attrs.props?.level ?? 1) : undefined,
             "data-checked": node.attrs.props?.checked ? "true" : "false",
             "data-start": node.attrs.props?.start ?? 1,
             ...htmlAttrs(node.attrs),
@@ -136,7 +141,11 @@ export function documentExtensions(): Extensions {
       parseHTML: () => [
         { tag: "pre", preserveWhitespace: "full", getAttrs: parseAttrs },
       ],
-      renderHTML: ({ node }) => ["pre", htmlAttrs(node.attrs), ["code", 0]],
+      renderHTML: ({ node }) => [
+        "pre",
+        { "data-journl-body": "codeBlock", ...htmlAttrs(node.attrs) },
+        ["code", 0],
+      ],
     }),
     ...atomBlockTypes.map((name) =>
       Node.create({
@@ -167,27 +176,66 @@ export function documentExtensions(): Extensions {
           const attrs = { "data-journl-body": name, ...htmlAttrs(node.attrs) };
           const url = safeEditorUrl(props.url ?? "");
           if (name === "divider") return ["div", attrs, ["hr"]];
-          if (name === "image")
+          if (["image", "video", "audio", "file"].includes(name)) {
+            const caption = ["figcaption", {}, props.caption ?? ""];
+            const preview = props.showPreview !== false && name !== "file";
             return [
               "figure",
-              attrs,
-              [
-                "img",
-                {
-                  src: url,
-                  alt: props.caption || props.name || "Image",
-                  width: props.previewWidth,
-                },
-              ],
-              ["figcaption", {}, props.caption ?? ""],
+              {
+                ...attrs,
+                style: `text-align:${props.textAlignment ?? "left"}`,
+              },
+              preview
+                ? name === "image"
+                  ? [
+                      "img",
+                      {
+                        src: url,
+                        alt: props.caption || props.name || "Image",
+                        width: props.previewWidth,
+                        style: `max-width:100%;${props.textAlignment === "center" ? "margin-inline:auto" : props.textAlignment === "right" ? "margin-left:auto" : ""}`,
+                      },
+                    ]
+                  : [
+                      name,
+                      {
+                        src: url,
+                        controls: "",
+                        preload: "none",
+                        width: props.previewWidth,
+                      },
+                    ]
+                : [
+                    "a",
+                    {
+                      href: url,
+                      class: "journl-file-link",
+                      rel: "noopener noreferrer",
+                      target: "_blank",
+                    },
+                    [
+                      "http://www.w3.org/2000/svg svg",
+                      {
+                        viewBox: "0 0 24 24",
+                        fill: "none",
+                        stroke: "currentColor",
+                        "stroke-width": "1.7",
+                        width: "24",
+                        height: "24",
+                        "aria-hidden": "true",
+                      },
+                      [
+                        "http://www.w3.org/2000/svg path",
+                        {
+                          d: "M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z M14 2v6h6",
+                        },
+                      ],
+                    ],
+                    props.name || name.charAt(0).toUpperCase() + name.slice(1),
+                  ],
+              caption,
             ];
-          if (name === "video" || name === "audio")
-            return [
-              "figure",
-              attrs,
-              [name, { src: url, controls: "", preload: "none" }],
-              ["figcaption", {}, props.caption ?? props.name ?? ""],
-            ];
+          }
           return [
             "div",
             attrs,
@@ -206,6 +254,7 @@ export function documentExtensions(): Extensions {
     ),
     Node.create({
       name: "table",
+      addNodeView: () => tableNodeView,
       group: "journlBody",
       content: "tableRow*",
       isolating: true,
@@ -217,7 +266,25 @@ export function documentExtensions(): Extensions {
         contentPresent: { default: true, rendered: false },
       }),
       parseHTML: () => [{ tag: "table", getAttrs: parseAttrs }],
-      renderHTML: ({ node }) => ["table", htmlAttrs(node.attrs), ["tbody", 0]],
+      renderHTML: ({ node }) => [
+        "table",
+        {
+          "data-journl-body": "table",
+          ...htmlAttrs(node.attrs),
+          style: textStyle(node.attrs.props),
+        },
+        [
+          "colgroup",
+          ...(
+            node.attrs.columnWidths ??
+            Array(node.firstChild?.childCount ?? 0).fill(null)
+          ).map((width: number | null) => [
+            "col",
+            { style: `width:${width ?? 200}px` },
+          ]),
+        ],
+        ["tbody", 0],
+      ],
     }),
     Node.create({
       name: "tableRow",
@@ -228,9 +295,14 @@ export function documentExtensions(): Extensions {
     }),
     Node.create({
       name: "tableCell",
-      content: "inline*",
+      content: "tableParagraph+",
       isolating: true,
-      addAttributes: propsAttribute,
+      addAttributes: () => ({
+        ...propsAttribute(),
+        colspan: { default: 1, rendered: false },
+        rowspan: { default: 1, rendered: false },
+        colwidth: { default: null, rendered: false },
+      }),
       parseHTML: () => [
         { tag: "td", getAttrs: parseAttrs, preserveWhitespace: "full" },
       ],
@@ -238,11 +310,19 @@ export function documentExtensions(): Extensions {
         "td",
         {
           ...htmlAttrs(node.attrs),
-          colspan: node.attrs.props?.colspan ?? 1,
-          rowspan: node.attrs.props?.rowspan ?? 1,
+          style: textStyle(node.attrs.props),
+          colspan: node.attrs.colspan,
+          rowspan: node.attrs.rowspan,
         },
         0,
       ],
+    }),
+    Node.create({
+      name: "tableParagraph",
+      priority: 1100,
+      content: "inline*",
+      parseHTML: () => [{ tag: "p[data-table-paragraph]" }],
+      renderHTML: () => ["p", { "data-table-paragraph": "" }, 0],
     }),
     Node.create({
       name: "contentReference",
@@ -291,7 +371,7 @@ export function documentExtensions(): Extensions {
           {
             "data-journl-style": name,
             ...htmlAttrs(mark.attrs),
-            style: `${name === "textColor" ? "color" : "background-color"}: ${mark.attrs.value}`,
+            style: `${name === "textColor" ? "color" : "background-color"}: ${color(mark.attrs.value, name === "backgroundColor")}`,
           },
           0,
         ],

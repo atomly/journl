@@ -5,8 +5,9 @@ for other branches are disabled in `apps/web/vercel.json`.
 
 `.github/workflows/preview.yml` requests a Vercel Git-source preview when a same-repository
 PR opens ready for review, is reopened, receives a commit, or is marked ready for
-review. Draft and closed PRs do not request builds. This applies to each ready PR
-in a stack, independently of the lowest-layer CI gate. CI tests and builds keep
+review, or changes its base. Draft and closed PRs do not request builds. For a native GitHub stack, only its bottom and top PRs are eligible; middle
+layers skip deployment. Standalone PRs remain eligible. The draft restriction still
+applies, including to either endpoint. This is independent of the lowest-layer CI gate. CI tests and builds keep
 their existing policy.
 
 ## One-time setup
@@ -42,6 +43,9 @@ Actions summary links to the queued deployment; Vercel reports the build result.
 Changing back to draft stops subsequent requests and cancels pending Actions runs.
 It does not delete existing previews or cancel a build already accepted by Vercel.
 There is a small race if draft state changes after the final GitHub check.
+Stack membership uses GitHub’s current `stack.position` and `stack.size` fields.
+Topology changes alone may not emit a supported PR event; a push or base change
+requests a preview for the newly eligible endpoint.
 
 To roll back, remove the preview workflow and the `git.deploymentEnabled` override
 together to restore Vercel's default automatic previews.

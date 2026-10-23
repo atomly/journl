@@ -3,7 +3,7 @@ name: Preview deployment
 on:
   # Use trusted workflow code from the base branch. Never check out PR code here.
   pull_request_target:
-    types: [opened, reopened, synchronize, ready_for_review, converted_to_draft, closed]
+    types: [opened, reopened, synchronize, edited, ready_for_review, converted_to_draft, closed]
 
 permissions:
   pull-requests: read
@@ -38,6 +38,11 @@ jobs:
                 pr.head.repo?.full_name !== context.payload.repository.full_name ||
                 pr.head.sha !== context.payload.pull_request.head.sha) {
               core.info("Skipping: PR is draft, closed, external, or has a newer commit.");
+              return;
+            }
+            const stack = pr.stack;
+            if (stack && stack.position !== 1 && stack.position !== stack.size) {
+              core.info("Skipping: only the bottom and top PRs of a stack get previews.");
               return;
             }
             const { VERCEL_TOKEN, VERCEL_PROJECT_ID, VERCEL_TEAM_ID } = process.env;

@@ -115,7 +115,13 @@ function tableDropTarget(
 
 /** One controller per editor. ProseMirror owns table data and selection;
  * Floating UI owns geometry/observers; this layer owns hover/menu gestures. */
-export function TiptapTableHandles({ editor }: { editor: Editor }) {
+export function TiptapTableHandles({
+  editor,
+  visible,
+}: {
+  editor: Editor;
+  visible: boolean;
+}) {
   const state = useTiptapState(editor);
   const [active, setActive] = useState<ActiveTable | null>(null);
   const [menu, setMenu] = useState<TableAxis | null>(null);
@@ -291,7 +297,13 @@ export function TiptapTableHandles({ editor }: { editor: Editor }) {
     setExtending(null);
   }, [active, editor, state]);
   const context = active && state ? tableContext(state, active.id) : null;
-  if (!active || !context || !active.element.isConnected) return null;
+  if (
+    (!visible && !locked) ||
+    !active ||
+    !context ||
+    !active.element.isConnected
+  )
+    return null;
   const { map, table, start } = context;
   const row = Math.min(active.row, map.height - 1);
   const column = Math.min(active.column, map.width - 1);

@@ -23,6 +23,7 @@
     "@tiptap/core": "3.31.4",
     "@tiptap/pm": "3.31.4",
     "cn": "^0.4.0",
+    "highlight.js": "^11.12.0",
     "lucide-react": "~1.55.0",
     "sonner": "~2.0.8"
   },

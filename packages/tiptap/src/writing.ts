@@ -6,7 +6,12 @@ import {
   type Transaction,
 } from "@tiptap/pm/state";
 import { fromTiptapDocument, toTiptapDocument } from "./codec";
-import { editBlocks, selectedBlock, setTextMark } from "./commands";
+import {
+  editBlocks,
+  selectedBlock,
+  selectedBlocks,
+  setTextMark,
+} from "./commands";
 import type { IdFactory } from "./identity";
 
 const inlineTypes = new Set([
@@ -107,8 +112,17 @@ export function changeBlockType(
   type: DocumentBlock["type"],
   properties?: Record<string, unknown>,
 ) {
-  const target = selectedBlock(state);
-  return target ? turnInto(state.tr, target.id, type, properties) : null;
+  const targets = selectedBlocks(state);
+  if (!targets.length) return null;
+  const bookmark = state.selection.getBookmark();
+  const tr = state.tr;
+  // Work backwards so each body is replaced at its original position. Do not
+  // dispatch a partial conversion when any selected block is incompatible.
+  for (const target of [...targets].reverse())
+    if (!turnInto(tr, target.id, type, properties)) return null;
+  if (targets.length > 1)
+    tr.setSelection(bookmark.map(tr.mapping).resolve(tr.doc));
+  return tr;
 }
 
 export function setBlockProperties(

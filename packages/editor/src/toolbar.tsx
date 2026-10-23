@@ -98,20 +98,9 @@ function EditorTool({
 }
 
 function blockTypeOptions(editor: Editor) {
-  const body = selectedBlock(editor.state)?.node.firstChild;
-  let references = false;
-  body?.descendants((node) => {
-    if (node.type.name === "contentReference") references = true;
-  });
-  return blockChoices
-    .filter((choice) => choice.type !== "divider")
-    .map((choice) => ({
-      ...choice,
-      disabled:
-        !body?.isTextblock ||
-        (choice.type === "codeBlock" && references) ||
-        (choice.type === "table" && Boolean(body.content.size)),
-    }));
+  return blockChoices.filter((choice) =>
+    Boolean(changeBlockType(editor.state, choice.type, choice.props)),
+  );
 }
 
 function BlockTypeMenu({ editor }: { editor: Editor }) {
@@ -119,9 +108,7 @@ function BlockTypeMenu({ editor }: { editor: Editor }) {
   return (
     <DropdownMenuSub>
       <EditorHint label="Turn this block into a different block type">
-        <DropdownMenuSubTrigger
-          disabled={choices.every((choice) => choice.disabled)}
-        >
+        <DropdownMenuSubTrigger disabled={!choices.length}>
           Turn into
         </DropdownMenuSubTrigger>
       </EditorHint>
@@ -129,7 +116,6 @@ function BlockTypeMenu({ editor }: { editor: Editor }) {
         {choices.map((choice) => (
           <EditorMenuItem
             key={choice.title}
-            disabled={choice.disabled}
             hint={`Turn into ${choice.title.toLowerCase()}`}
             onClick={() => {
               const tr = changeBlockType(
@@ -207,7 +193,6 @@ function BlockTypeSelector({ editor }: { editor: Editor }) {
             <SelectItem
               key={choice.title}
               value={choice.title}
-              disabled={choice.disabled}
               onMouseDown={(event) => event.preventDefault()}
             >
               {choice.title === "Text" ? "Paragraph" : choice.title}

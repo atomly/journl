@@ -12,9 +12,9 @@ import {
   inventoryDocumentId,
   parityBlocks,
 } from "./inventory/fixtures";
-import { serverSchema } from "./server/blocknote-schema";
+import { inventorySchema } from "./inventory/server-schema";
 
-const editor = ServerBlockNoteEditor.create({ schema: serverSchema });
+const editor = ServerBlockNoteEditor.create({ schema: inventorySchema });
 const normalize = (
   blocks: Parameters<typeof editor._blocksToProsemirrorNode>[0],
 ) =>

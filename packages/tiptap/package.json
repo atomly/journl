@@ -14,6 +14,7 @@
   "dependencies": {
     "@acme/document": "workspace:*",
     "@tiptap/core": "3.31.4",
+    "@tiptap/extension-node-range": "3.31.4",
     "@tiptap/pm": "3.31.4"
   },
   "devDependencies": {

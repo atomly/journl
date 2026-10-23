@@ -4,6 +4,7 @@ import {
   duplicateBlock,
 } from "@acme/document";
 import { Extension } from "@tiptap/core";
+import { NodeRangeSelection } from "@tiptap/extension-node-range";
 import { closeHistory, history, redo, undo } from "@tiptap/pm/history";
 import {
   type EditorState,
@@ -18,7 +19,8 @@ export function selectedBlock(state: Pick<EditorState, "doc" | "selection">) {
   const { $from } = state.selection;
   const selected = state.doc.nodeAt(state.selection.from);
   if (
-    state.selection instanceof NodeSelection &&
+    (state.selection instanceof NodeSelection ||
+      state.selection instanceof NodeRangeSelection) &&
     selected?.type.name === "journlBlock"
   )
     return {
@@ -452,4 +454,21 @@ export function applyAcceptedOperations(
 ) {
   editor.view.dispatch(editBlocks(editor.state.tr, operations));
   editor.view.dispatch(closeHistory(editor.state.tr));
+}
+
+/** Drag the selected sibling range as complete wrappers, retaining descendants. */
+export function blockDragSelection(state: EditorState, id: string) {
+  const chosen = selectedBlocks(state);
+  if (chosen.length > 1 && chosen.some((block) => block.id === id)) {
+    const first = chosen[0];
+    const last = chosen.at(-1);
+    if (first && last)
+      return NodeRangeSelection.create(
+        state.doc,
+        first.pos,
+        last.pos + last.node.nodeSize,
+        state.doc.resolve(first.pos).depth,
+      );
+  }
+  return NodeSelection.create(state.doc, blockAt(state.doc, id).pos);
 }

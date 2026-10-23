@@ -1,109 +1,83 @@
-import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
-import {
-  getGithubMetadata,
-  resetGithubMetadataCacheForTests,
-} from "./github-provider";
+import { beforeEach, expect, test, vi } from "vitest";
+import { githubProvider } from "./github-provider";
+import { createPreviewPipeline } from "./preview-pipeline";
+import { websiteProvider } from "./website-provider";
 
+const network = vi.hoisted(() => ({ html: vi.fn(), json: vi.fn() }));
+vi.mock("./public-web-fetch", async (original) => ({
+  ...(await original<typeof import("./public-web-fetch")>()),
+  readPublicHtml: network.html,
+  readPublicJson: network.json,
+}));
 beforeEach(() => {
-  resetGithubMetadataCacheForTests();
+  network.json.mockReset();
+  network.html.mockReset();
 });
-
-afterEach(() => {
-  vi.unstubAllGlobals();
+test.each([
+  [
+    "atomly/journl",
+    "/repos/atomly/journl",
+    { description: "Repository", full_name: "atomly/journl" },
+    "atomly/journl",
+    "repository",
+  ],
+  [
+    "atomly/journl/issues/1",
+    "/repos/atomly/journl/issues/1",
+    { body: "Details", state: "closed", title: "Issue" },
+    "Issue",
+    "issue",
+  ],
+  [
+    "atomly/journl/pull/2",
+    "/repos/atomly/journl/issues/2",
+    { body: "Details", pull_request: {}, state: "open", title: "Pull request" },
+    "Pull request",
+    "pull-request",
+  ],
+])(
+  "preserves GitHub metadata and classification for %s",
+  async (path, api, json, title, icon) => {
+    network.json.mockResolvedValue(json);
+    const pipeline = createPreviewPipeline([githubProvider, websiteProvider]);
+    expect(
+      await pipeline.resolve(`https://github.com/${path}`, { ownerId: "a" }),
+    ).toMatchObject({
+      icon,
+      metadataState: "enriched",
+      sourceLabel: "GitHub",
+      title,
+    });
+    expect(network.json).toHaveBeenCalledWith(
+      `https://api.github.com${api}`,
+      expect.any(AbortSignal),
+    );
+    expect(network.html).not.toHaveBeenCalled();
+  },
+);
+test("API failure falls back to public website metadata", async () => {
+  network.json.mockRejectedValue(new Error("rate limited"));
+  network.html.mockResolvedValue({
+    html: "<title>Public GitHub page</title>",
+    url: "https://github.com/atomly/journl",
+  });
+  const pipeline = createPreviewPipeline([githubProvider, websiteProvider]);
+  expect(
+    await pipeline.resolve("https://github.com/atomly/journl", {
+      ownerId: "a",
+    }),
+  ).toMatchObject({ provider: "github", title: "Public GitHub page" });
 });
-
-describe("public GitHub metadata provider", () => {
-  test("uses a fixed GitHub API host and extracts public issue metadata", async () => {
-    const fetchMock = vi.fn(
-      async () =>
-        new Response(
-          JSON.stringify({
-            body: "A useful description",
-            pull_request: {},
-            state: "open",
-            title: "Add reference graph",
-          }),
-          { headers: { "content-type": "application/json" }, status: 200 },
-        ),
-    );
-    vi.stubGlobal("fetch", fetchMock);
-
-    const metadata = await getGithubMetadata(
-      "user-1",
-      "https://github.com/atomly/journl/pull/291",
-    );
-    expect(fetchMock).toHaveBeenCalledExactlyOnceWith(
-      "https://api.github.com/repos/atomly/journl/issues/291",
-      expect.objectContaining({ redirect: "error" }),
-    );
-    expect(metadata).toEqual({
-      excerpt: "A useful description",
-      status: "open pull request",
-      title: "Add reference graph",
+test("spoofed hosts and unsupported GitHub URLs do not call the API", async () => {
+  network.html.mockRejectedValue(new Error("offline"));
+  const pipeline = createPreviewPipeline([githubProvider, websiteProvider]);
+  for (const url of [
+    "https://github.com.evil.example/owner/repo",
+    "https://github.com/owner/repo/issues/1?tab=comments",
+  ])
+    expect(await pipeline.resolve(url, { ownerId: "a" })).toMatchObject({
+      metadataState: "url-only",
+      provider: "website",
     });
-  });
-
-  test("rejects spoofed hosts and falls back on unavailable metadata", async () => {
-    const fetchMock = vi.fn();
-    vi.stubGlobal("fetch", fetchMock);
-    expect(
-      await getGithubMetadata(
-        "user-1",
-        "https://github.com.evil.example/atomly/journl",
-      ),
-    ).toBeNull();
-    expect(
-      await getGithubMetadata(
-        "user-1",
-        "https://github.com/atomly/journl/issues/291?tab=comments",
-      ),
-    ).toBeNull();
-    expect(fetchMock).not.toHaveBeenCalled();
-
-    fetchMock.mockRejectedValueOnce(new Error("offline"));
-    expect(
-      await getGithubMetadata(
-        "user-1",
-        "https://github.com/atomly/journl/issues/291",
-      ),
-    ).toBeNull();
-  });
-
-  test("coalesces duplicate metadata requests", async () => {
-    let resolveResponse!: (response: Response) => void;
-    const response = new Promise<Response>((resolve) => {
-      resolveResponse = resolve;
-    });
-    const fetchMock = vi.fn(() => response);
-    vi.stubGlobal("fetch", fetchMock);
-
-    const a = getGithubMetadata("user-1", "https://github.com/atomly/journl");
-    const b = getGithubMetadata(
-      "user-1",
-      "https://github.com/atomly/journl#readme",
-    );
-    resolveResponse(
-      new Response(JSON.stringify({ description: "A repo", name: "journl" }), {
-        status: 200,
-      }),
-    );
-    const [one, two] = await Promise.all([a, b]);
-    expect(fetchMock).toHaveBeenCalledTimes(1);
-    expect(one).toEqual(two);
-  });
-
-  test("limits unique cache misses per user while allowing a different user", async () => {
-    const fetchMock = vi.fn(async () => new Response(null, { status: 404 }));
-    vi.stubGlobal("fetch", fetchMock);
-
-    for (let number = 1; number <= 21; number += 1) {
-      await getGithubMetadata(
-        "user-1",
-        `https://github.com/atomly/journl/issues/${number}`,
-      );
-    }
-    await getGithubMetadata("user-2", "https://github.com/atomly/journl");
-
-    expect(fetchMock).toHaveBeenCalledTimes(21);
-  });
+  expect(network.json).not.toHaveBeenCalled();
 });

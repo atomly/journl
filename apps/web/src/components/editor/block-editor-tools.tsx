@@ -538,7 +538,7 @@ export function BlockEditorReferenceMenu() {
               const target = resolved.target;
               const label =
                 resolved.preview.status === "ready"
-                  ? resolved.preview.title
+                  ? (resolved.preview.title ?? "Referenced content")
                   : target.kind === "external"
                     ? new URL(target.url).hostname
                     : "Referenced note";

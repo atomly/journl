@@ -1,3 +1,5 @@
+import { describeExternal } from "@acme/references";
+import { PreviewIcon } from "@acme/references/react";
 import type {
   BlockNoteEditor,
   BlockSchema,
@@ -91,53 +93,21 @@ export function usePreview(
 
 export function ReferenceIcon({
   target,
+  preview,
 }: {
   target: ReferenceRenderTarget | null;
+  preview?: ReferencePreviewData;
 }) {
-  const github =
-    target?.kind === "external" &&
-    new URL(target.url).hostname === "github.com";
   return (
-    <svg
+    <PreviewIcon
       className="content-reference-icon"
-      aria-hidden="true"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.7"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      {github &&
-      target?.kind === "external" &&
-      new URL(target.url).pathname.match(/^\/[^/]+\/[^/]+\/pull\/\d+/) ? (
-        <>
-          <circle cx="6" cy="5" r="2" />
-          <circle cx="6" cy="19" r="2" />
-          <circle cx="18" cy="19" r="2" />
-          <path d="M6 7v10M18 17V9a4 4 0 0 0-4-4h-2m2-2-2 2 2 2" />
-        </>
-      ) : github &&
-        target?.kind === "external" &&
-        new URL(target.url).pathname.match(/^\/[^/]+\/[^/]+\/issues\/\d+/) ? (
-        <>
-          <circle cx="12" cy="12" r="9" />
-          <path d="M12 8v4M12 16h.01" />
-        </>
-      ) : github ? (
-        <path d="M9 19c-4.3 1.3-4.3-2.5-6-3m12 6v-3.9a3.4 3.4 0 0 0-1-2.7c3.3-.4 6.8-1.6 6.8-7A5.4 5.4 0 0 0 19.3 5a5 5 0 0 0-.1-3.4s-1.2-.4-3.9 1.5a13.4 13.4 0 0 0-7 0C5.6 1.2 4.4 1.6 4.4 1.6A5 5 0 0 0 4.3 5a5.4 5.4 0 0 0-1.5 3.7c0 5.4 3.5 6.6 6.8 7a3.4 3.4 0 0 0-1 2.7V22" />
-      ) : target?.kind === "external" ? (
-        <>
-          <path d="M15 3h6v6M10 14 21 3" />
-          <path d="M21 14v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5" />
-        </>
-      ) : (
-        <>
-          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-          <path d="M14 2v6h6M8 13h8M8 17h6" />
-        </>
-      )}
-    </svg>
+      icon={
+        preview?.icon ??
+        (target?.kind === "external"
+          ? describeExternal(target.url)?.icon
+          : "document")
+      }
+    />
   );
 }
 
@@ -199,10 +169,7 @@ export function fallbackTitle(
   url: string,
 ) {
   if (target?.kind === "external") {
-    const parsed = new URL(target.url);
-    return parsed.hostname === "github.com"
-      ? `GitHub · ${parsed.pathname.slice(1) || "github.com"}`
-      : `${parsed.hostname}${parsed.pathname === "/" ? "" : parsed.pathname}${parsed.search}${parsed.hash}`;
+    return describeExternal(target.url)?.title ?? url;
   }
   return target ? "Referenced note" : url || "Referenced content";
 }
@@ -211,16 +178,12 @@ export function inlineReferenceLabel(
   target: ReferenceRenderTarget | null,
   preview: ReferencePreviewData | undefined,
 ) {
-  if (target?.kind === "external") {
-    const url = new URL(target.url);
-    const match =
-      url.hostname === "github.com"
-        ? url.pathname.match(
-            /^\/([^/]+)\/([^/]+)\/(pull|issues)\/(\d+)(?:\/|$)/,
-          )
-        : null;
-    if (match) return `${match[1]}/${match[2]} #${match[4]}`;
-  }
+  const compact =
+    preview?.compactLabel ??
+    (target?.kind === "external"
+      ? describeExternal(target.url)?.compactLabel
+      : undefined);
+  if (compact) return compact;
   return preview?.status === "ready" && preview.metadataState !== "url-only"
     ? preview.title
     : undefined;

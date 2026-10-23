@@ -5,8 +5,12 @@ export * from "./identity";
 export * from "./reference-selection";
 export * from "./references";
 export * from "./schema";
-export { TABLE_DEFAULT_COLUMN_WIDTH, TABLE_MIN_COLUMN_WIDTH, tableHeadersKey } from "./tables";
-export * from "./writing";
 export * from "./suggestions";
-export * from "./writing-extension";
 export * from "./table-actions";
+export {
+  TABLE_DEFAULT_COLUMN_WIDTH,
+  TABLE_MIN_COLUMN_WIDTH,
+  tableHeadersKey,
+} from "./tables";
+export * from "./writing";
+export * from "./writing-extension";

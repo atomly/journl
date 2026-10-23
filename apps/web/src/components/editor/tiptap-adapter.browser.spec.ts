@@ -73,21 +73,28 @@ test("split, duplicate, nest, undo and reload preserve committed block identitie
     .first();
   const splitId = await split.getAttribute("data-block-id");
   expect(splitId).not.toBe(original);
+  await split.locator("[data-journl-body]").first().hover();
   await page
-    .getByRole("button", { exact: true, name: "Duplicate block" })
+    .getByRole("button", { exact: true, name: "Block actions" })
     .click();
+  await page
+    .getByRole("menuitem", { exact: true, name: "Duplicate block" })
+    .click();
+  await expect(
+    page.getByRole("menu", { exact: true, name: "Block actions" }),
+  ).toBeHidden();
   const copies = editor
-    .locator('[data-journl-body="heading"]')
+    .locator("[data-journl-body]")
     .filter({ hasText: marker });
   await expect(copies).toHaveCount(2);
-  await page.getByRole("button", { exact: true, name: "Indent" }).click();
+  await page.keyboard.press("Tab");
   const nested = split.locator("[data-block-id]");
   await expect(nested).toHaveCount(1);
   const copyId = await nested.getAttribute("data-block-id");
   expect(copyId).not.toBe(splitId);
-  await page.getByRole("button", { exact: true, name: "Undo" }).click();
+  await page.keyboard.press("ControlOrMeta+z");
   await expect(nested).toHaveCount(0);
-  await page.getByRole("button", { exact: true, name: "Redo" }).click();
+  await page.keyboard.press("ControlOrMeta+Shift+z");
   await expect(nested).toHaveCount(1);
   await expect(page.locator("[data-save-status]")).toContainText("Saved");
   const ids = await editor

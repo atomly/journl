@@ -166,3 +166,26 @@ export function isValidTreeDestination(
   }
   return ancestorId === null;
 }
+
+/** A shared folder label for destination pickers, including duplicate names. */
+export function folderDestinationLabel(
+  nodeId: string,
+  folders: readonly {
+    node_id: string | null;
+    parent_node_id: string | null;
+    name: string;
+  }[],
+) {
+  const byId = new Map(folders.map((folder) => [folder.node_id, folder]));
+  const names: string[] = [];
+  const visited = new Set<string>();
+  let current: string | null = nodeId;
+  while (current && !visited.has(current)) {
+    visited.add(current);
+    const folder = byId.get(current);
+    if (!folder) break;
+    names.unshift(folder.name || "New folder");
+    current = folder.parent_node_id;
+  }
+  return names.join(" / ");
+}

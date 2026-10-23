@@ -23,6 +23,7 @@ import { cn } from "~/lib/cn";
 import { formatDate } from "~/lib/format-date";
 import type { JournalListEntry } from "~/trpc";
 import { useJournalEntryDraft } from "./journal-drafts-provider";
+import { JournalEntryActions } from "./journal-entry-actions";
 
 const DEFAULT_DEBOUNCE_TIME = 1000;
 
@@ -119,7 +120,8 @@ export function JournalEntryHeader({
   linkDate = false,
   ...rest
 }: JournalEntryHeaderProps) {
-  const { date, formattedDate, isToday, documentId } = useJournalEntry();
+  const { date, formattedDate, isToday, documentId, updatedAt } =
+    useJournalEntry();
   const label = isToday && !forceDate ? "Today" : formattedDate;
 
   return (
@@ -128,6 +130,14 @@ export function JournalEntryHeader({
         {linkDate ? <Link href={`/journal/${date}`}>{label}</Link> : label}
       </h2>
       {documentId && <ExploreNoteLink documentId={documentId} />}
+      {documentId && updatedAt && (
+        <JournalEntryActions
+          date={date}
+          title={formattedDate}
+          documentId={documentId}
+          updatedAt={updatedAt}
+        />
+      )}
     </div>
   );
 }
@@ -149,7 +159,8 @@ export function JournalEntryEditor(props: JournalEntryEditorProps) {
 }
 
 function TiptapJournalEntryEditor(props: JournalEntryEditorProps) {
-  const { initialBlocks, documentId, updatedAt, date } = useJournalEntry();
+  const entry = useJournalEntry();
+  const { initialBlocks, documentId, updatedAt, date } = entry;
   const { draft, retainDraft } = useJournalEntryDraft(date, {
     blocks: initialBlocks,
     documentId,
@@ -167,7 +178,13 @@ function TiptapJournalEntryEditor(props: JournalEntryEditorProps) {
     [draft],
   );
   return (
-    <>
+    <JournalEntryContext.Provider
+      value={{
+        ...entry,
+        documentId: snapshot.documentId,
+        updatedAt: snapshot.updatedAt,
+      }}
+    >
       <ConnectedDocumentEditor
         key={snapshot.resetKey}
         initialBlocks={snapshot.blocks}
@@ -191,7 +208,7 @@ function TiptapJournalEntryEditor(props: JournalEntryEditorProps) {
       {snapshot.documentId && (
         <ReferenceBacklinks documentId={snapshot.documentId} />
       )}
-    </>
+    </JournalEntryContext.Provider>
   );
 }
 
@@ -200,7 +217,8 @@ function BlockNoteJournalEntryEditor({
   onCreateAction,
   ...rest
 }: JournalEntryEditorProps) {
-  const { initialBlocks, documentId, updatedAt, date } = useJournalEntry();
+  const entry = useJournalEntry();
+  const { initialBlocks, documentId, updatedAt, date } = entry;
   const { draft, retainDraft } = useJournalEntryDraft(date, {
     blocks: initialBlocks,
     documentId,
@@ -242,7 +260,13 @@ function BlockNoteJournalEntryEditor({
   }, [date, editor, setEditor, unsetEditor]);
 
   return (
-    <>
+    <JournalEntryContext.Provider
+      value={{
+        ...entry,
+        documentId: snapshot.documentId,
+        updatedAt: snapshot.updatedAt,
+      }}
+    >
       <BlockEditor
         key={snapshot.resetKey}
         editor={editor}
@@ -256,7 +280,7 @@ function BlockNoteJournalEntryEditor({
       {snapshot.documentId && (
         <ReferenceBacklinks documentId={snapshot.documentId} />
       )}
-    </>
+    </JournalEntryContext.Provider>
   );
 }
 

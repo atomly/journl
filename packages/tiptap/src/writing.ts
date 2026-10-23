@@ -13,6 +13,7 @@ import {
   setTextMark,
 } from "./commands";
 import type { IdFactory } from "./identity";
+import { restoreBlockSelection } from "./selection";
 
 const inlineTypes = new Set([
   "paragraph",
@@ -96,10 +97,14 @@ export function turnInto(
   const offset = transaction.selection.$from.parentOffset;
   transaction.replaceWith(pos + 1, pos + 1 + body.nodeSize, replacement);
   transaction.setSelection(
-    replacement.isTextblock
+    replacement.isTextblock || replacement.type.name === "table"
       ? TextSelection.near(
           transaction.doc.resolve(
-            pos + 2 + Math.min(offset, replacement.content.size),
+            pos +
+              2 +
+              (replacement.isTextblock
+                ? Math.min(offset, replacement.content.size)
+                : 0),
           ),
         )
       : NodeSelection.create(transaction.doc, pos),
@@ -116,11 +121,35 @@ export function changeBlockType(
   if (!targets.length) return null;
   const bookmark = state.selection.getBookmark();
   const tr = state.tr;
+  const first = targets[0];
+  const preceding =
+    first && first.index > 0
+      ? first.siblings.child(first.index - 1).firstChild
+      : null;
+  const start = Number(
+    properties?.start ??
+      (preceding?.type.name === "numberedListItem"
+        ? Number(preceding.attrs.props?.start ?? 1) + 1
+        : 1),
+  );
   // Work backwards so each body is replaced at its original position. Do not
   // dispatch a partial conversion when any selected block is incompatible.
-  for (const target of [...targets].reverse())
-    if (!turnInto(tr, target.id, type, properties)) return null;
-  if (targets.length > 1)
+  for (let index = targets.length - 1; index >= 0; index--) {
+    const target = targets[index];
+    if (
+      !target ||
+      !turnInto(
+        tr,
+        target.id,
+        type,
+        type === "numberedListItem"
+          ? { ...properties, start: start + index }
+          : properties,
+      )
+    )
+      return null;
+  }
+  if (targets.length > 1 && !restoreBlockSelection(state, tr))
     tr.setSelection(bookmark.map(tr.mapping).resolve(tr.doc));
   return tr;
 }

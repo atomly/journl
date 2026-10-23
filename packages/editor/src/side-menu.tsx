@@ -38,7 +38,7 @@ export function TiptapSideMenu({
   const [touchPointer, setTouchPointer] = useState(false);
   const mobile = compact || touchPointer;
   const [id, setId] = useState<string>();
-  const [position, setPosition] = useState({ left: 0, top: 0 });
+  const [position, setPosition] = useState({ color: "", left: 0, top: 0 });
   const [open, setOpen] = useState(false);
   const frozen = useRef(false);
   useEffect(() => {
@@ -121,12 +121,13 @@ export function TiptapSideMenu({
         ? Number.parseFloat(getComputedStyle(body).paddingTop) || 0
         : 0;
       setPosition({
+        color: getComputedStyle(editor.view.dom).color,
         left: Math.max(4, rect.left - (mobile ? 48 : 64)),
         top:
           rect.top +
           padding +
           ((body ? Number.parseFloat(getComputedStyle(body).lineHeight) : 24) -
-            (mobile ? 44 : 28)) /
+            (mobile ? 48 : 32)) /
             2,
       });
     };
@@ -138,7 +139,8 @@ export function TiptapSideMenu({
       window.removeEventListener("resize", update);
     };
   }, [editor, id, state, mobile]);
-  if (!id || (!visible && !open && !frozen.current)) return null;
+  if (!id || (!visible && !open && !frozen.current && !editor.view.dragging))
+    return null;
   const select = (preserve = true) => {
     const target = blockAt(editor.state.doc, id);
     editor.view.dispatch(

@@ -3,7 +3,8 @@ import { useEffect, useState } from "react";
 
 /** Handles are a pointer affordance. Editing hides them until a deliberate
  * pointer movement or tap; no timer can make them reappear under a parked mouse.
- * Open menus and gestures retain their own lock until completion. */
+ * Activity is shared across journal editors. Open menus and gestures retain
+ * their own lock until completion. */
 export function useHandleVisibility(editor: Editor | undefined) {
   const [visible, setVisible] = useState(true);
   useEffect(() => {
@@ -22,13 +23,16 @@ export function useHandleVisibility(editor: Editor | undefined) {
       if (!editor.view.composing) setVisible(true);
     };
     const inputs = ["keydown", "beforeinput", "paste", "compositionstart"];
-    for (const event of inputs) root.addEventListener(event, hide);
+    for (const event of inputs) document.addEventListener(event, hide, true);
     root.addEventListener("pointerdown", tap);
+    editor.on("blur", hide);
     document.addEventListener("pointermove", move);
     window.addEventListener("scroll", hide, true);
     return () => {
-      for (const event of inputs) root.removeEventListener(event, hide);
+      for (const event of inputs)
+        document.removeEventListener(event, hide, true);
       root.removeEventListener("pointerdown", tap);
+      editor.off("blur", hide);
       document.removeEventListener("pointermove", move);
       window.removeEventListener("scroll", hide, true);
     };

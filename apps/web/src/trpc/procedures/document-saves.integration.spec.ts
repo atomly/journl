@@ -567,13 +567,11 @@ test("stale and foreign journal moves cannot create a page or overwrite the entr
     expected_updated_at: null,
     transactions: changes(randomUUID(), "Original"),
   });
-  await db
-    .insert(schema.user)
-    .values({
-      email: "other@example.invalid",
-      id: "other-owner",
-      name: "Other",
-    });
+  await db.insert(schema.user).values({
+    email: "other@example.invalid",
+    id: "other-owner",
+    name: "Other",
+  });
   const [foreign] = await db
     .insert(schema.Document)
     .values({ user_id: "other-owner" })

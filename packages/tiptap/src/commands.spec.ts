@@ -600,3 +600,34 @@ test("clearing the full document leaves a writable paragraph and undo restores o
     editor.destroy();
   }
 });
+
+test("handle-selected groups retain their range through indent and outdent", () => {
+  const { editor, blocks } = setup([p("a"), p("b"), p("c")]);
+  const b = blockAt(editor.state.doc, "b");
+  const c = blockAt(editor.state.doc, "c");
+  editor.view.dispatch(
+    editor.state.tr.setSelection(
+      TextSelection.create(editor.state.doc, b.pos + 2, c.pos + 3),
+    ),
+  );
+  editor.view.dispatch(
+    editor.state.tr.setSelection(blockDragSelection(editor.state, "b")),
+  );
+  const indent = indentBlock(editor.state);
+  if (!indent) throw new Error("Expected group indent");
+  editor.view.dispatch(indent);
+  expect(selectedBlocks(editor.state).map((block) => block.id)).toEqual([
+    "b",
+    "c",
+  ]);
+  expect(blocks()[0]?.children?.map((block) => block.id)).toEqual(["b", "c"]);
+  const outdent = indentBlock(editor.state, true);
+  if (!outdent) throw new Error("Expected group outdent");
+  editor.view.dispatch(outdent);
+  expect(selectedBlocks(editor.state).map((block) => block.id)).toEqual([
+    "b",
+    "c",
+  ]);
+  expect(blocks().map((block) => block.id)).toEqual(["a", "b", "c"]);
+  editor.destroy();
+});

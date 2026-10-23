@@ -44,7 +44,8 @@ const htmlAttrs = (attrs: Record<string, unknown>) => ({
   "data-journl-attrs": JSON.stringify(attrs),
 });
 
-const highlight = createParser(createLowlight(all));
+const lowlight = createLowlight(all);
+const highlight = createParser(lowlight);
 
 const propsAttribute = () => ({
   props: { default: null, rendered: false },
@@ -60,7 +61,12 @@ export function documentExtensions(): Extensions {
         createHighlightPlugin({
           parser: highlight,
           nodeTypes: ["codeBlock"],
-          languageExtractor: (node) => node.attrs.props?.language || "text",
+          languageExtractor: (node) => {
+            const language = node.attrs.props?.language;
+            return language && lowlight.registered(language)
+              ? language
+              : undefined;
+          },
         }),
       ],
     }),

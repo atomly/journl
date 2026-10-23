@@ -13,7 +13,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "~/components/ui/dialog";
-import { folderDestinationLabel } from "~/lib/tree-model";
+import { folderDestinationLabels } from "~/lib/tree-model";
 import { useTRPC } from "~/trpc/react";
 import { useJournalDraftActions } from "./journal-drafts-provider";
 
@@ -40,6 +40,7 @@ export function JournalEntryActions({
     ...trpc.folders.getByUser.queryOptions(),
     enabled: open,
   });
+  const labels = folderDestinationLabels(folders.data ?? []);
   const router = useRouter();
   const move = useMutation(trpc.journal.moveToPage.mutationOptions());
   return (
@@ -157,10 +158,7 @@ export function JournalEntryActions({
                   .filter((folder) => folder.node_id && folder.edge_id)
                   .map((folder) => (
                     <option key={folder.node_id} value={folder.node_id ?? ""}>
-                      {folderDestinationLabel(
-                        folder.node_id ?? "",
-                        folders.data ?? [],
-                      )}
+                      {labels.get(folder.node_id ?? "") ?? folder.name}
                     </option>
                   ))}
               </select>

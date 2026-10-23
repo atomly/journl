@@ -7,14 +7,30 @@ import { Extension } from "@tiptap/core";
 import { closeHistory, history, redo, undo } from "@tiptap/pm/history";
 import {
   type EditorState,
+  NodeSelection,
   TextSelection,
   type Transaction,
 } from "@tiptap/pm/state";
 import { fromTiptapDocument, toTiptapDocument } from "./codec";
 import { blockAt, type IdFactory, joinBlocks, splitBlock } from "./identity";
 
-export function selectedBlock(state: EditorState) {
+export function selectedBlock(state: Pick<EditorState, "doc" | "selection">) {
   const { $from } = state.selection;
+  const selected = state.doc.nodeAt(state.selection.from);
+  if (
+    state.selection instanceof NodeSelection &&
+    selected?.type.name === "journlBlock"
+  )
+    return {
+      id: selected.attrs.id as string,
+      index: $from.index(),
+      node: selected,
+      parentId: $from.depth
+        ? ($from.node($from.depth - 1).attrs.id as string)
+        : null,
+      pos: state.selection.from,
+      siblings: $from.parent,
+    };
   for (let depth = $from.depth; depth > 0; depth--) {
     const node = $from.node(depth);
     if (node.type.name === "journlBlock")
@@ -46,6 +62,19 @@ export function editBlocks(
   operations: DocumentOperation[],
   focusId?: string,
 ) {
+  const focused = selectedBlock(transaction);
+  const selection = transaction.selection;
+  const preserve =
+    focused &&
+    focused.id === focusId &&
+    selection.from >= focused.pos &&
+    selection.to <= focused.pos + focused.node.nodeSize
+      ? {
+          anchor: selection.anchor - focused.pos,
+          head: selection.head - focused.pos,
+          node: selection instanceof NodeSelection,
+        }
+      : null;
   const next = applyDocumentOperations(
     fromTiptapDocument(transaction.doc),
     operations,
@@ -59,17 +88,60 @@ export function editBlocks(
   if (focusId) {
     const block = blockAt(transaction.doc, focusId);
     transaction.setSelection(
-      TextSelection.near(transaction.doc.resolve(block.pos + 2)),
+      preserve
+        ? preserve.node
+          ? NodeSelection.create(transaction.doc, block.pos + preserve.anchor)
+          : TextSelection.create(
+              transaction.doc,
+              block.pos + preserve.anchor,
+              block.pos + preserve.head,
+            )
+        : TextSelection.near(transaction.doc.resolve(block.pos + 2)),
     );
   }
   return transaction;
+}
+
+/** Select the sibling range at the nearest shared level. Descendants move with
+ * their parent, so a range never moves the same subtree twice. */
+export function selectedBlocks(state: EditorState) {
+  const { selection } = state;
+  if (selection.empty || selection instanceof NodeSelection) {
+    const block = selectedBlock(state);
+    return block ? [block] : [];
+  }
+  const { $from } = selection;
+  const end = Math.max(selection.from, selection.to - 1);
+  for (let depth = $from.depth; depth >= 0; depth--) {
+    const group = $from.node(depth);
+    if (group.type.name !== "doc" && group.type.name !== "journlChildren")
+      continue;
+    if (end > $from.end(depth)) continue;
+    const start = $from.start(depth);
+    const result: NonNullable<ReturnType<typeof selectedBlock>>[] = [];
+    group.forEach((node, offset, index) => {
+      const pos = start + offset;
+      if (pos < selection.to && pos + node.nodeSize > selection.from)
+        result.push({
+          id: node.attrs.id as string,
+          index,
+          node,
+          parentId: depth ? ($from.node(depth - 1).attrs.id as string) : null,
+          pos,
+          siblings: group,
+        });
+    });
+    return result;
+  }
+  return [];
 }
 
 export function indentBlock(
   state: EditorState,
   outdent = false,
 ): Transaction | null {
-  const target = selectedBlock(state);
+  const targets = selectedBlocks(state);
+  const target = targets[0];
   if (!target) return null;
   let parentId: string | null;
   let afterId: string | null;
@@ -87,11 +159,40 @@ export function indentBlock(
     const children = previous.childCount === 2 ? previous.child(1) : null;
     afterId = children?.lastChild?.attrs.id ?? null;
   }
-  return editBlocks(
-    state.tr,
-    [{ afterId, id: target.id, parentId, type: "move" }],
-    target.id,
-  );
+  const operations: DocumentOperation[] = targets.map((block) => {
+    const operation: DocumentOperation = {
+      afterId,
+      id: block.id,
+      parentId,
+      type: "move",
+    };
+    afterId = block.id;
+    return operation;
+  });
+  // Whole-document replacement cannot map a multi-block selection by positions.
+  // Anchor each endpoint to its own stable block ID, including backward ranges.
+  const point = (pos: number) => {
+    const $pos = state.doc.resolve(pos);
+    for (let depth = $pos.depth; depth > 0; depth--)
+      if ($pos.node(depth).type.name === "journlBlock")
+        return {
+          id: $pos.node(depth).attrs.id as string,
+          offset: pos - $pos.before(depth),
+        };
+    return null;
+  };
+  const anchor = point(state.selection.anchor);
+  const head = point(state.selection.head);
+  const tr = editBlocks(state.tr, operations, target.id);
+  if (anchor && head && !(state.selection instanceof NodeSelection))
+    tr.setSelection(
+      TextSelection.create(
+        tr.doc,
+        blockAt(tr.doc, anchor.id).pos + anchor.offset,
+        blockAt(tr.doc, head.id).pos + head.offset,
+      ),
+    );
+  return tr;
 }
 
 export function duplicateSelectedBlock(
@@ -117,35 +218,72 @@ export function duplicateSelectedBlock(
   );
 }
 
-/** The domain styles text, not reference atoms. Never apply unsupported marks to atoms. */
+/** The selection may contain one range per table cell. Style only text in
+ * parents that support the requested mark; reference atoms stay unmarked. */
+function selectedText(
+  state: EditorState,
+  name: string,
+  range?: { from: number; to: number },
+) {
+  const type = state.schema.marks[name];
+  const segments: { from: number; to: number; marked: boolean }[] = [];
+  if (!type) return segments;
+  const ranges = range
+    ? [range]
+    : state.selection.ranges.map(({ $from, $to }) => ({
+        from: $from.pos,
+        to: $to.pos,
+      }));
+  for (const { from, to } of ranges)
+    state.doc.nodesBetween(from, to, (node, pos, parent) => {
+      if (node.isText && parent?.type.allowsMarkType(type))
+        segments.push({
+          from: Math.max(from, pos),
+          marked: Boolean(type.isInSet(node.marks)),
+          to: Math.min(to, pos + node.nodeSize),
+        });
+    });
+  return segments;
+}
+
+export function textMarkActive(state: EditorState, name: string) {
+  if (state.selection.empty)
+    return Boolean(
+      state.schema.marks[name]?.isInSet(
+        state.storedMarks ?? state.selection.$from.marks(),
+      ),
+    );
+  const segments = selectedText(state, name);
+  return segments.length > 0 && segments.every((segment) => segment.marked);
+}
+
+export function setTextMark(
+  state: EditorState,
+  name: string,
+  attrs: Record<string, unknown> | null,
+  range?: { from: number; to: number },
+): Transaction | null {
+  const type = state.schema.marks[name];
+  if (!type) return null;
+  const tr = state.tr;
+  if (state.selection.empty && !range) {
+    if (!state.selection.$from.parent.type.allowsMarkType(type)) return null;
+    return attrs === null
+      ? tr.removeStoredMark(type)
+      : tr.addStoredMark(type.create(attrs));
+  }
+  for (const { from, to } of selectedText(state, name, range)) {
+    tr.removeMark(from, to, type);
+    if (attrs !== null) tr.addMark(from, to, type.create(attrs));
+  }
+  return tr.docChanged ? tr : null;
+}
+
 export function toggleTextMark(
   state: EditorState,
   name: string,
 ): Transaction | null {
-  const type = state.schema.marks[name];
-  if (!type) return null;
-  const transaction = state.tr;
-  if (state.selection.empty) {
-    if (!state.selection.$from.parent.type.allowsMarkType(type)) return null;
-    const marks = state.storedMarks ?? state.selection.$from.marks();
-    return type.isInSet(marks)
-      ? transaction.removeStoredMark(type)
-      : transaction.addStoredMark(type.create());
-  }
-  const { from, to } = state.selection;
-  const remove = state.doc.rangeHasMark(from, to, type);
-  state.doc.nodesBetween(from, to, (node, pos) => {
-    if (
-      !node.isText ||
-      !state.doc.resolve(pos).parent.type.allowsMarkType(type)
-    )
-      return;
-    const start = Math.max(from, pos);
-    const end = Math.min(to, pos + node.nodeSize);
-    if (remove) transaction.removeMark(start, end, type);
-    else transaction.addMark(start, end, type.create());
-  });
-  return transaction.docChanged ? transaction : null;
+  return setTextMark(state, name, textMarkActive(state, name) ? null : {});
 }
 
 export function editingExtension(createId: IdFactory) {
@@ -153,8 +291,20 @@ export function editingExtension(createId: IdFactory) {
     addKeyboardShortcuts() {
       const enter = () => {
         const { state, view } = this.editor;
+        if (view.composing) return false;
         const target = selectedBlock(state);
         if (!target) return false;
+        if (
+          state.selection instanceof NodeSelection &&
+          target.node.firstChild?.isTextblock
+        ) {
+          view.dispatch(
+            state.tr.setSelection(
+              TextSelection.near(state.doc.resolve(target.pos + 2)),
+            ),
+          );
+          return true;
+        }
         if (!state.selection.$from.parent.isTextblock) {
           const wrapper = state.schema.nodes.journlBlock;
           const paragraph = state.schema.nodes.paragraph;
@@ -180,6 +330,7 @@ export function editingExtension(createId: IdFactory) {
       };
       const join = (backward: boolean) => {
         const { state, view } = this.editor;
+        if (view.composing) return false;
         const target = selectedBlock(state);
         if (!target || !state.selection.empty) return false;
         const parent = state.selection.$from.parent;
@@ -192,8 +343,11 @@ export function editingExtension(createId: IdFactory) {
         const index = target.index + (backward ? -1 : 1);
         if (index < 0 || index >= target.siblings.childCount) return false;
         const adjacent = target.siblings.child(index);
-        if (adjacent.firstChild?.type !== target.node.firstChild?.type)
-          return false;
+        const left = backward ? adjacent.firstChild : target.node.firstChild;
+        const right = backward ? target.node.firstChild : adjacent.firstChild;
+        if (!left?.isTextblock || !right?.isTextblock) return false;
+        if (!left.type.validContent(left.content.append(right.content)))
+          return true;
         view.dispatch(
           joinBlocks(
             state.tr,
@@ -204,12 +358,14 @@ export function editingExtension(createId: IdFactory) {
         return true;
       };
       const indent = (outdent: boolean) => {
+        if (this.editor.view.composing) return false;
         const transaction = indentBlock(this.editor.state, outdent);
-        if (!transaction) return false;
+        if (!transaction) return Boolean(selectedBlock(this.editor.state));
         this.editor.view.dispatch(transaction);
         return true;
       };
       const mark = (name: string) => {
+        if (this.editor.view.composing) return false;
         const transaction = toggleTextMark(this.editor.state, name);
         if (!transaction) return false;
         this.editor.view.dispatch(transaction);
@@ -219,7 +375,57 @@ export function editingExtension(createId: IdFactory) {
         Backspace: () => join(true),
         Delete: () => join(false),
         Enter: enter,
+        Escape: () => {
+          const { state, view } = this.editor;
+          const target = selectedBlock(state);
+          if (
+            !target ||
+            view.composing ||
+            state.selection instanceof NodeSelection
+          )
+            return false;
+          view.dispatch(
+            state.tr.setSelection(NodeSelection.create(state.doc, target.pos)),
+          );
+          return true;
+        },
+        "Mod-[": () => indent(true),
+        "Mod-]": () => indent(false),
         "Mod-b": () => mark("bold"),
+        "Mod-d": () => {
+          if (this.editor.view.composing) return false;
+          const tr = duplicateSelectedBlock(this.editor.state, createId);
+          if (!tr) return false;
+          this.editor.view.dispatch(tr.scrollIntoView());
+          return true;
+        },
+        "Mod-Enter": () => {
+          const { state, view } = this.editor;
+          if (view.composing) return false;
+          const target = selectedBlock(state);
+          const body = target?.node.firstChild;
+          if (!target || !body) return false;
+          if (body.type.name === "checkListItem") {
+            view.dispatch(
+              state.tr.setNodeMarkup(target.pos + 1, undefined, {
+                ...body.attrs,
+                props: {
+                  ...body.attrs.props,
+                  checked: !body.attrs.props?.checked,
+                },
+              }),
+            );
+            return true;
+          }
+          if (
+            body.type.name === "toggleListItem" ||
+            (body.type.name === "heading" && body.attrs.props?.isToggleable)
+          ) {
+            view.dispatch(state.tr.setMeta("journlToggleBlock", target.id));
+            return true;
+          }
+          return false;
+        },
         "Mod-i": () => mark("italic"),
         "Mod-Shift-z": () => redo(this.editor.state, this.editor.view.dispatch),
         "Mod-u": () => mark("underline"),

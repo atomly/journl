@@ -1,80 +1,64 @@
-import { afterEach, beforeEach, expect, test, vi } from "vitest";
-import {
-  getWebsiteMetadata,
-  parseWebsiteMetadata,
-  resetWebsiteMetadataCacheForTests,
-} from "./website-provider";
+import { beforeEach, expect, test, vi } from "vitest";
+import { extractWebsiteMetadata, websiteProvider } from "./website-provider";
 
 const network = vi.hoisted(() => ({ destination: vi.fn(), html: vi.fn() }));
-vi.mock("./public-web-fetch", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("./public-web-fetch")>()),
+vi.mock("./public-web-fetch", async (original) => ({
+  ...(await original<typeof import("./public-web-fetch")>()),
   publicWebDestination: network.destination,
   readPublicHtml: network.html,
 }));
 beforeEach(() => {
-  resetWebsiteMetadataCacheForTests();
   network.html.mockReset();
   network.destination.mockReset();
   network.destination.mockResolvedValue({});
 });
-afterEach(() => vi.restoreAllMocks());
-
-test("reads Open Graph metadata and decodes HTML entities without executing content", () => {
+test("extracts standard metadata and entities without executing scripts", async () => {
   expect(
-    parseWebsiteMetadata(
-      `<title>Fallback</title><meta content="A &amp; B" property="og:title"><meta name="description" content="Useful &quot;details&quot;"><meta property="og:image" content="/thumbnail.png"><script>fake = '<meta property="og:title" content="Script">'</script>`,
+    await extractWebsiteMetadata(
+      `<title>Fallback</title><meta content="A &amp; B" property="og:title"><meta name="description" content="Useful &quot;details&quot;"><meta property="og:image" content="/thumbnail.png"><script>throw new Error('execute')</script>`,
       "https://example.com/article",
     ),
   ).toEqual({
-    excerpt: 'Useful "details"',
+    excerpt: "Useful “details”",
     imageUrl: "https://example.com/thumbnail.png",
     title: "A & B",
   });
+});
+test("reads body JSON-LD and ignores malformed JSON-LD", async () => {
   expect(
-    parseWebsiteMetadata(
-      '<title> Plain title </title><meta name="twitter:description" content="Summary"><meta property="og:image" content="http://127.0.0.1/private">',
+    await extractWebsiteMetadata(
+      '<html><head></head><body><script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","headline":"Structured article","description":"Body details"}</script></body></html>',
       "https://example.com",
     ),
-  ).toEqual({ excerpt: "Summary", title: "Plain title" });
+  ).toMatchObject({ excerpt: "Body details", title: "Structured article" });
+  expect(
+    await extractWebsiteMetadata(
+      '<title>Fallback</title><script type="application/ld+json">{bad json</script>',
+      "https://example.com",
+    ),
+  ).toMatchObject({ title: "Fallback" });
 });
-
-test("coalesces and caches metadata, validates image destinations", async () => {
+test("discards unsafe images and rechecks public image DNS", async () => {
+  expect(
+    await extractWebsiteMetadata(
+      '<title>Public</title><meta property="og:image" content="http://127.0.0.1/private">',
+      "https://example.com",
+    ),
+  ).toEqual({ title: "Public" });
   network.html.mockResolvedValue({
-    html: '<title>Example article</title><meta property="og:image" content="https://images.example.com/a.png">',
-    url: "https://example.com/article",
+    html: '<title>Public</title><meta property="og:image" content="https://images.example.com/a.png">',
+    url: "https://example.com",
   });
-  const [a, b] = await Promise.all([
-    getWebsiteMetadata("user", "https://example.com/article"),
-    getWebsiteMetadata("user", "https://example.com/article"),
-  ]);
-  expect(a).toEqual(b);
-  expect(a?.title).toBe("Example article");
-  expect(network.html).toHaveBeenCalledTimes(1);
+  network.destination.mockRejectedValue(new Error("Private destination"));
+  expect(
+    await websiteProvider.resolve(
+      new URL("https://example.com"),
+      { ownerId: "a" },
+      new AbortController().signal,
+    ),
+  ).toEqual({ title: "Public" });
   expect(network.destination).toHaveBeenCalledWith(
     "https://images.example.com/a.png",
     expect.any(AbortSignal),
   );
-  await getWebsiteMetadata("user", "https://example.com/article");
-  expect(network.html).toHaveBeenCalledTimes(1);
-});
-
-test("unsafe or failed metadata falls back without fetching private URLs", async () => {
-  expect(await getWebsiteMetadata("user", "http://127.0.0.1/admin")).toBeNull();
-  expect(network.html).not.toHaveBeenCalled();
-  network.html.mockRejectedValue(new Error("Timed out"));
-  expect(await getWebsiteMetadata("user", "https://example.com")).toBeNull();
-  expect(await getWebsiteMetadata("user", "https://example.com")).toBeNull();
-  expect(network.html).toHaveBeenCalledTimes(1);
-});
-
-test("discards a private image but retains useful title and description", async () => {
-  network.html.mockResolvedValue({
-    html: '<title>Public article</title><meta name="description" content="Summary"><meta property="og:image" content="https://images.example.com/image.png">',
-    url: "https://example.com",
-  });
-  network.destination.mockRejectedValue(new Error("Not a public destination"));
-  expect(await getWebsiteMetadata("user", "https://example.com")).toEqual({
-    excerpt: "Summary",
-    title: "Public article",
-  });
 });

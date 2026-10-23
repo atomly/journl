@@ -89,7 +89,11 @@ export async function publicWebDestination(value: string, signal: AbortSignal) {
 }
 
 const MAX_BYTES = 256 * 1024;
-export async function readPublicHtml(value: string, signal: AbortSignal) {
+async function readPublicResponse(
+  value: string,
+  signal: AbortSignal,
+  json = false,
+) {
   let current = value;
   for (let redirects = 0; redirects <= 2; redirects++) {
     const { url, addresses } = await publicWebDestination(current, signal);
@@ -102,7 +106,9 @@ export async function readPublicHtml(value: string, signal: AbortSignal) {
           {
             agent: false,
             headers: {
-              Accept: "text/html,application/xhtml+xml",
+              Accept: json
+                ? "application/vnd.github+json"
+                : "text/html,application/xhtml+xml",
               "Accept-Encoding": "identity",
               "User-Agent": "Journl link preview",
             },
@@ -138,9 +144,11 @@ export async function readPublicHtml(value: string, signal: AbortSignal) {
             if (
               status < 200 ||
               status >= 300 ||
-              !/^text\/html\b|^application\/xhtml\+xml\b/i.test(
-                response.headers["content-type"] ?? "",
-              )
+              !(
+                json
+                  ? /^application\/(?:[\w.+-]*\+)?json\b/i
+                  : /^text\/html\b|^application\/xhtml\+xml\b/i
+              ).test(response.headers["content-type"] ?? "")
             ) {
               response.destroy();
               reject(new Error("No bounded HTML preview"));
@@ -149,19 +157,12 @@ export async function readPublicHtml(value: string, signal: AbortSignal) {
             const chunks: Buffer[] = [];
             let bytes = 0;
             response.on("data", (chunk: Buffer) => {
-              const remaining = MAX_BYTES - bytes;
-              chunks.push(chunk.subarray(0, remaining));
               bytes += chunk.length;
-              const html = Buffer.concat(chunks).toString("utf8");
-              const headEnd = /<\/head\s*>/i.exec(html);
-              if (headEnd?.index !== undefined) {
-                response.destroy();
-                resolve({
-                  html: html.slice(0, headEnd.index + headEnd[0].length),
-                });
-              } else if (bytes > MAX_BYTES) {
+              if (bytes > MAX_BYTES) {
                 response.destroy(new Error("Preview response too large"));
+                return;
               }
+              chunks.push(chunk);
             });
             response.on("error", reject);
             response.on("end", () =>
@@ -178,4 +179,16 @@ export async function readPublicHtml(value: string, signal: AbortSignal) {
     current = result.redirect;
   }
   throw new Error("Too many preview redirects");
+}
+
+/** Full document, bounded by bytes and deadline, including body JSON-LD. */
+export function readPublicHtml(value: string, signal: AbortSignal) {
+  return readPublicResponse(value, signal);
+}
+export async function readPublicJson(
+  value: string,
+  signal: AbortSignal,
+): Promise<unknown> {
+  const response = await readPublicResponse(value, signal, true);
+  return JSON.parse(response.html);
 }

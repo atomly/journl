@@ -7,7 +7,13 @@ const config: NextConfig = {
   allowedDevOrigins: parseAuthDevOrigins(env.AUTH_DEV_ORIGINS),
   /** These packages won't be bundled in the server build */
   /** @see https://nextjs.org/docs/app/api-reference/config/next-config-js/serverExternalPackages */
-  serverExternalPackages: ["@blocknote/server-util"],
+  serverExternalPackages: [
+    "@blocknote/server-util",
+    "metascraper",
+    "metascraper-title",
+    "metascraper-description",
+    "metascraper-image",
+  ],
   /** Enables hot reloading for local packages without a build step */
   transpilePackages: [
     "@acme/auth",
@@ -15,6 +21,7 @@ const config: NextConfig = {
     "@acme/db",
     "@acme/document",
     "@acme/graph",
+    "@acme/references",
     "@acme/tiptap",
   ],
   typescript: { ignoreBuildErrors: true },

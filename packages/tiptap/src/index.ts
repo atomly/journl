@@ -9,3 +9,4 @@ export { TABLE_DEFAULT_COLUMN_WIDTH, TABLE_MIN_COLUMN_WIDTH, tableHeadersKey } f
 export * from "./writing";
 export * from "./suggestions";
 export * from "./writing-extension";
+export * from "./table-actions";

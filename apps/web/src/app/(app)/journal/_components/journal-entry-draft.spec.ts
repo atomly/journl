@@ -28,7 +28,7 @@ function blocks(text: string): [DocumentBlock] {
 function transaction(text: string): BlockTransaction {
   return {
     args: {
-      data: { content: text, props: {}, type: "paragraph" },
+      data: { content: text, type: "paragraph" },
       id: blockId,
       parent_id: null,
     },
@@ -66,7 +66,7 @@ test("restores the latest blocks when a row remounts before its debounce expires
   );
   const unmount = draft.subscribe(vi.fn());
 
-  draft.update(blocks("latest"), [transaction("latest")], 150);
+  draft.update(blocks("latest"), 150);
   unmount();
   expect(save).not.toHaveBeenCalled();
 
@@ -91,7 +91,7 @@ test("unmount flushes the debounce without sending the batch twice", async () =>
     load,
     onSaved,
   );
-  draft.update(blocks("latest"), [transaction("latest")], 150);
+  draft.update(blocks("latest"), 150);
 
   await draft.flush();
   await vi.advanceTimersByTimeAsync(150);
@@ -112,11 +112,11 @@ test("drains edits made during a save after the row unmounts", async () => {
     load,
     onSaved,
   );
-  draft.update(blocks("first"), [transaction("first")], 150);
+  draft.update(blocks("first"), 150);
   await vi.advanceTimersByTimeAsync(150);
 
-  draft.update(blocks("second"), [transaction("second")], 150);
-  await draft.flush(); // Virtualized row unmounts while the first request is pending.
+  draft.update(blocks("second"), 150);
+  void draft.flush(); // Virtualized row unmounts while the first request is pending.
   await vi.advanceTimersByTimeAsync(150);
   expect(save).toHaveBeenCalledTimes(1);
 
@@ -145,9 +145,9 @@ test("uses the created document ID and keeps newer text when creation completes"
     load,
     onSaved,
   );
-  draft.update(blocks("first"), [transaction("first")], 150, onCreate);
+  draft.update(blocks("first"), 150, onCreate);
   await vi.advanceTimersByTimeAsync(150);
-  draft.update(blocks("newer"), [transaction("newer")], 150, onCreate);
+  draft.update(blocks("newer"), 150, onCreate);
 
   const created = saved;
   creation.resolve(created);
@@ -184,9 +184,9 @@ test("coalesces rapid edits in order and never sends an empty save", async () =>
   await draft.flush();
   expect(save).not.toHaveBeenCalled();
 
-  draft.update(blocks("a"), [transaction("a")], 150);
+  draft.update(blocks("a"), 150);
   await vi.advanceTimersByTimeAsync(100);
-  draft.update(blocks("ab"), [transaction("ab")], 150);
+  draft.update(blocks("ab"), 150);
   await vi.advanceTimersByTimeAsync(100);
   expect(save).not.toHaveBeenCalled();
   await vi.advanceTimersByTimeAsync(50);
@@ -194,7 +194,7 @@ test("coalesces rapid edits in order and never sends an empty save", async () =>
     date,
     document_id: documentId,
     expected_updated_at: v1,
-    transactions: [transaction("a"), transaction("ab")],
+    transactions: [transaction("ab")],
   });
 });
 
@@ -218,8 +218,8 @@ test("different dates save independently", async () => {
     load,
     onSaved,
   );
-  first.update(blocks("first"), [transaction("first")], 150);
-  second.update(blocks("second"), [transaction("second")], 150);
+  first.update(blocks("first"), 150);
+  second.update(blocks("second"), 150);
 
   await vi.advanceTimersByTimeAsync(150);
   expect(save).toHaveBeenCalledTimes(2);
@@ -238,7 +238,7 @@ test("keeps the local text and exposes save errors without advancing the queue",
     load,
     onSaved,
   );
-  draft.update(blocks("unsaved text"), [transaction("unsaved text")], 150);
+  draft.update(blocks("unsaved text"), 150);
 
   await vi.advanceTimersByTimeAsync(150);
   expect(draft.getSnapshot().blocks).toEqual(blocks("unsaved text"));
@@ -255,14 +255,14 @@ function setupRetry(
     .mockRejectedValueOnce(new Error("Network failure"))
     .mockResolvedValue(saved);
   const draft = new JournalEntryDraft(date, initial, save, load, onSaved);
-  draft.update(blocks("first"), [transaction("first")], 150);
+  draft.update(blocks("first"), 150);
   return { draft, save };
 }
 
 test("retries a rolled-back batch with its original version and drains subsequent edits", async () => {
   const { draft, save } = setupRetry();
   await draft.flush();
-  draft.update(blocks("second"), [transaction("second")], 150);
+  draft.update(blocks("second"), 150);
   await draft.retry();
 
   expect(save.mock.calls[1]).toEqual(save.mock.calls[0]);
@@ -295,7 +295,7 @@ test("reconciles lost creation responses before saving newer local edits", async
     updatedAt: null,
   });
   await draft.flush();
-  draft.update(blocks("second"), [transaction("second")], 150);
+  draft.update(blocks("second"), 150);
   load.mockResolvedValue({ ...saved, blocks: blocks("first") });
   await draft.retry();
 
@@ -345,7 +345,7 @@ test("clean drafts accept newer server versions but ignore stale cached versions
     load,
     onSaved,
   );
-  draft.update(blocks("local"), [transaction("local")], 150);
+  draft.update(blocks("local"), 150);
   const fresh = { blocks: blocks("remote"), documentId, updatedAt: v3 };
   expect(draft.canUseServerSnapshot(fresh)).toBe(false);
   await draft.flush();
@@ -390,7 +390,7 @@ test("recovery does not discard text typed while the saved entry loads", async (
   const loading = deferred<Awaited<ReturnType<typeof load>>>();
   load.mockReturnValueOnce(loading.promise);
   const recovery = draft.loadSaved();
-  draft.update(blocks("keep this"), [transaction("keep this")], 150);
+  draft.update(blocks("keep this"), 150);
   loading.resolve({ ...saved, blocks: blocks("remote"), updated_at: v3 });
   await recovery;
   expect(draft.getSnapshot().blocks).toEqual(blocks("keep this"));
@@ -401,11 +401,7 @@ test("recovery does not discard text typed while the backup was downloading", as
   const { draft } = setupRetry();
   await draft.flush();
   const backedUp = draft.getSnapshot().blocks;
-  draft.update(
-    blocks("typed during download"),
-    [transaction("typed during download")],
-    150,
-  );
+  draft.update(blocks("typed during download"), 150);
   await draft.loadSaved(backedUp);
   expect(load).not.toHaveBeenCalled();
   expect(draft.getSnapshot().blocks).toEqual(blocks("typed during download"));

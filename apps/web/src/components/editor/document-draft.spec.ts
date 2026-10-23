@@ -20,13 +20,25 @@ function fixture() {
 test("page titles and body changes share a versioned batch", async () => {
   const { draft, save } = fixture();
   draft.updateTitle("New title", 60_000);
-  draft.update([], [{ args: { id: "block" }, type: "block_remove" }], 60_000);
+  draft.update(
+    [{ content: "New body", id: "block", type: "paragraph" }],
+    60_000,
+  );
   await draft.flush();
   expect(save).toHaveBeenCalledExactlyOnceWith({
     document_id: "document",
     expected_updated_at: "v1",
     title: "New title",
-    transactions: [{ args: { id: "block" }, type: "block_remove" }],
+    transactions: [
+      {
+        args: {
+          data: { content: "New body", type: "paragraph" },
+          id: "block",
+          parent_id: null,
+        },
+        type: "block_upsert",
+      },
+    ],
   });
   expect(draft.hasUnsavedChanges()).toBe(false);
 });
@@ -88,7 +100,10 @@ test("recovery never discards a title changed during download or loading", async
 test("reconciliation cannot rebase a pending title over a newer remote title", async () => {
   const { draft, save, load } = fixture();
   save.mockRejectedValueOnce(new Error("Response lost"));
-  draft.update([], [{ args: { id: "block" }, type: "block_remove" }], 60_000);
+  draft.update(
+    [{ content: "New body", id: "block", type: "paragraph" }],
+    60_000,
+  );
   await draft.flush();
   draft.updateTitle("Pending local title", 60_000);
   load.mockResolvedValue({
@@ -129,7 +144,7 @@ test("keeping both retains complete independent rich content and title across re
       type: "paragraph",
     },
   ];
-  draft.update(blocks, [{ args: { id: "old" }, type: "block_remove" }], 60_000);
+  draft.update(blocks, 60_000);
   draft.updateTitle("Complete local title", 60_000);
   const original = structuredClone(blocks);
   await draft.loadSaved();
@@ -192,7 +207,6 @@ test("recovery never replaces body edits made while loading", async () => {
   const loading = draft.loadSaved();
   draft.update(
     [{ content: "Keep this text", id: "new-draft", type: "paragraph" }],
-    [{ args: { id: "old" }, type: "block_remove" }],
     60_000,
   );
   resolve({ ...saved, blocks: undefined });
@@ -211,7 +225,10 @@ test("dirty status publishes immediately for body edits and remains dirty on fai
   const statuses: boolean[] = [];
   draft.subscribe(() => statuses.push(draft.getSnapshot().isDirty));
   save.mockRejectedValue(new Error("Offline"));
-  draft.update([], [{ args: { id: "old" }, type: "block_remove" }], 60_000);
+  draft.update(
+    [{ content: "New body", id: "block", type: "paragraph" }],
+    60_000,
+  );
   expect(statuses).toEqual([true]);
   await draft.flush();
   expect(statuses.every(Boolean)).toBe(true);
@@ -254,20 +271,7 @@ test("lost response recognizes storage-normalized empty children", async () => {
     blocks: [{ ...blocks[0], children: [] }],
     title: initial.title,
   });
-  draft.update(
-    blocks,
-    [
-      {
-        args: {
-          data: { content: blocks[0].content, props: {}, type: "paragraph" },
-          id: "paragraph",
-          parent_id: null,
-        },
-        type: "block_upsert",
-      },
-    ],
-    60_000,
-  );
+  draft.update(blocks, 60_000);
   await draft.flush();
   await draft.retry();
   expect(save).toHaveBeenCalledTimes(1);
@@ -294,11 +298,7 @@ test.each(["UNAUTHORIZED", "FORBIDDEN", "NOT_FOUND"])(
     ];
     save.mockRejectedValue(Object.assign(new Error(code), { code }));
     load.mockRejectedValue(Object.assign(new Error(code), { code }));
-    draft.update(
-      blocks,
-      [{ args: { id: "previous" }, type: "block_remove" }],
-      60_000,
-    );
+    draft.update(blocks, 60_000);
     draft.updateTitle("Recover this title", 60_000);
     await draft.flush();
     await draft.retry();
@@ -315,3 +315,56 @@ test.each(["UNAUTHORIZED", "FORBIDDEN", "NOT_FOUND"])(
     expect(save).toHaveBeenCalledTimes(1);
   },
 );
+
+test("hundreds of edits during a slow save become one latest delta, including the latest title", async () => {
+  let finish!: (value: typeof saved) => void;
+  const { draft, save } = fixture();
+  save.mockReturnValueOnce(
+    new Promise((resolve) => {
+      finish = resolve;
+    }),
+  );
+  draft.update([{ content: "First", id: "block", type: "paragraph" }], 60_000);
+  const flushing = draft.flush();
+  for (let i = 0; i < 500; i++)
+    draft.update(
+      [{ content: `Latest ${i}`, id: "block", type: "paragraph" }],
+      60_000,
+    );
+  draft.updateTitle("Latest title", 60_000);
+  finish(saved);
+  await flushing;
+  expect(save).toHaveBeenCalledTimes(2);
+  expect(save.mock.calls[1]?.[0]).toMatchObject({
+    expected_updated_at: "v2",
+    title: "Latest title",
+    transactions: [
+      {
+        args: { data: { content: "Latest 499" }, id: "block" },
+        type: "block_upsert",
+      },
+    ],
+  });
+  expect(draft.getSnapshot().isDirty).toBe(false);
+});
+
+test("editing back to the acknowledged content sends no redundant save", async () => {
+  const save = vi.fn().mockResolvedValue(saved);
+  const blocks: DraftInitial["blocks"] = [
+    { content: "Original", id: "block", type: "paragraph" },
+  ];
+  const draft = new DocumentDraft(
+    { ...initial, blocks },
+    save,
+    async () => ({ ...saved, blocks }),
+    vi.fn(),
+  );
+  draft.update(
+    [{ content: "Transient", id: "block", type: "paragraph" }],
+    60_000,
+  );
+  draft.update(blocks, 60_000);
+  await draft.flush();
+  expect(save).not.toHaveBeenCalled();
+  expect(draft.getSnapshot().isDirty).toBe(false);
+});

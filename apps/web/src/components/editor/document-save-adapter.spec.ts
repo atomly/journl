@@ -19,7 +19,8 @@ test("surviving children move before a deleted ancestor cascades", () => {
   ];
   const after = applyDocumentOperations(before, operations);
   const result = acceptedDocumentChange(before, after, operations);
-  expect(result.transactions).toEqual([
+  expect(result).toEqual(after);
+  expect(documentSaveTransactions(before, result)).toEqual([
     expect.objectContaining({
       args: expect.objectContaining({ id: "child", parent_id: null }),
       type: "block_upsert",

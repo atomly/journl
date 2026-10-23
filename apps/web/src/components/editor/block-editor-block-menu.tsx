@@ -6,9 +6,9 @@ import {
   type EditorPrimitive,
   type ReferenceRenderAdapter,
   ReferenceRenderContext,
-  type ReferenceRenderTarget,
   schema,
 } from "@acme/blocknote/schema";
+import type { ReferenceTarget } from "@acme/references";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -87,7 +87,7 @@ export async function referenceSourceHref(
   return href ? new URL(href, window.location.origin).toString() : null;
 }
 
-function referenceTarget(block: BlockPrimitive): ReferenceRenderTarget | null {
+function referenceTarget(block: BlockPrimitive): ReferenceTarget | null {
   if (block.type !== "referenceCard" && block.type !== "contentEmbed")
     return null;
   const props = block.props;
@@ -111,7 +111,7 @@ function referenceTarget(block: BlockPrimitive): ReferenceRenderTarget | null {
 }
 
 type InlineReferenceAction = {
-  target: ReferenceRenderTarget;
+  target: ReferenceTarget;
   href: string;
   label: string;
   occurrenceIndex: number;
@@ -152,7 +152,7 @@ export function inlineReferenceAction(
   ];
   if (record?.type !== "contentReference") return;
   const props = record.props;
-  let target: ReferenceRenderTarget;
+  let target: ReferenceTarget;
   if (props.targetKind === "external") {
     try {
       const url = new URL(props.url);

@@ -96,3 +96,53 @@ export function describeExternal(
   }
   return null;
 }
+
+export type InternalReferenceTarget = {
+  kind: "document";
+  documentId: string;
+  blockId?: string;
+};
+export type ExternalReferenceTarget = { kind: "external"; url: string };
+export type ReferenceTarget = InternalReferenceTarget | ExternalReferenceTarget;
+export type ReferenceEmbedBlock = {
+  id?: string;
+  type: string;
+  props?: Record<string, string | number | boolean>;
+  content?: unknown;
+  depth?: number;
+};
+export type ReferenceEmbedResult = {
+  status: "ready" | "unavailable";
+  title?: string;
+  href?: string;
+  blocks?: ReferenceEmbedBlock[];
+  truncated?: boolean;
+  nextCursor?: string | null;
+  contentUpdatedAt?: string;
+};
+export type ReferenceClient = {
+  resolveUrl(url: string): Promise<{
+    items: {
+      target: ReferenceTarget | null;
+      preview: ReferencePreviewData;
+      url?: string;
+    }[];
+  }>;
+  loadPreview(target: ReferenceTarget): Promise<ReferencePreviewData>;
+  subscribePreview?(
+    target: ReferenceTarget,
+    listener: (preview: ReferencePreviewData) => void,
+  ): () => void;
+  loadEmbedContent(
+    target: Extract<ReferenceTarget, { kind: "document" }>,
+    cursor?: string,
+  ): Promise<ReferenceEmbedResult>;
+  subscribeEmbedContent?(
+    target: Extract<ReferenceTarget, { kind: "document" }>,
+    cursor: string | undefined,
+    listener: (content: ReferenceEmbedResult | null) => void,
+  ): () => void;
+  openTarget(target: ReferenceTarget, href?: string): void;
+};
+
+export { getPlainUrlForAutomaticReference } from "./paste";

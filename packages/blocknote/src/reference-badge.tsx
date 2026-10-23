@@ -10,8 +10,6 @@ import {
 } from "react";
 import { safeReferenceHref as safeHref } from "./reference-href";
 
-export { referenceProps } from "./reference-config";
-
 import {
   type Display,
   DisplayMenu,

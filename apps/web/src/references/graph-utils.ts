@@ -1,5 +1,5 @@
+import type { ReferenceTarget } from "@acme/references";
 import { describeExternal } from "@acme/references";
-import type { ReferenceTarget } from "./reference-utils";
 
 export function getGraphDocumentTargetKey(
   target: Extract<ReferenceTarget, { kind: "document" }>,

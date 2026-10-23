@@ -1,16 +1,55 @@
-export * from "./changes";
-export * from "./codec";
-export * from "./commands";
-export * from "./identity";
-export * from "./reference-selection";
-export * from "./references";
-export * from "./schema";
-export * from "./suggestions";
-export * from "./table-actions";
+export { documentChanges } from "./changes";
 export {
-  TABLE_DEFAULT_COLUMN_WIDTH,
-  TABLE_MIN_COLUMN_WIDTH,
-  tableHeadersKey,
-} from "./tables";
-export * from "./writing";
-export * from "./writing-extension";
+  AdapterReadError,
+  fromTiptapDocument,
+  toTiptapDocument,
+} from "./codec";
+export {
+  applyAcceptedOperations,
+  duplicateSelectedBlock,
+  editBlocks,
+  editingExtension,
+  indentBlock,
+  selectedBlock,
+  setTextMark,
+  textMarkActive,
+  toggleTextMark,
+} from "./commands";
+export { blockAt, identityExtension } from "./identity";
+export { referenceSelectionPlugin } from "./reference-selection";
+export {
+  captureLink,
+  convertReference,
+  referenceDisplayAllowed,
+} from "./references";
+export { documentExtensions, safeEditorUrl } from "./schema";
+export {
+  applySlashChoice,
+  blockChoices,
+  filteredBlockChoices,
+  slashKey,
+  suggestionExtension,
+} from "./suggestions";
+export {
+  applyTableEdit,
+  canDropTableAxis,
+  canMoveTableAxis,
+  minimumTableSize,
+  moveTableAxis,
+  resizeTableAxis,
+  selectedTableCell,
+  setTableColumnWidth,
+  type TableAxis,
+  tableAxisSelection,
+  tableColumnWidth,
+  tableContext,
+} from "./table-actions";
+export { TABLE_MIN_COLUMN_WIDTH } from "./tables";
+export {
+  changeBlockType,
+  moveSelectedBlock,
+  removeSelectedBlock,
+  setBlockProperties,
+  setTextColor,
+} from "./writing";
+export { writingExtension } from "./writing-extension";

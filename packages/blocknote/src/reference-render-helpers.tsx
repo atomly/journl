@@ -1,5 +1,6 @@
+import type { ReferencePreviewData, ReferenceTarget } from "@acme/references";
 import { describeExternal } from "@acme/references";
-import { PreviewIcon } from "@acme/references/react";
+import { PreviewIcon, useReferencePreview } from "@acme/references/react";
 import type {
   BlockNoteEditor,
   BlockSchema,
@@ -12,21 +13,13 @@ import {
   type DragEvent as ReactDragEvent,
   type MouseEvent as ReactMouseEvent,
   useContext,
-  useEffect,
-  useState,
 } from "react";
-import {
-  type ReferencePreviewData,
-  ReferenceRenderContext,
-  type ReferenceRenderTarget,
-} from "./reference-context";
+import { ReferenceRenderContext } from "./reference-context";
 import { safeReferenceHref as safeHref } from "./reference-href";
-
-export { referenceProps } from "./reference-config";
 
 export function targetFromProps(
   props: Record<string, unknown>,
-): ReferenceRenderTarget | null {
+): ReferenceTarget | null {
   if (props.version !== 1) return null;
   if (
     props.targetKind === "document" &&
@@ -56,46 +49,16 @@ export function targetFromProps(
   return null;
 }
 
-export function usePreview(
-  target: ReferenceRenderTarget | null,
-  enabled: boolean,
-) {
+export function usePreview(target: ReferenceTarget | null, enabled: boolean) {
   const adapter = useContext(ReferenceRenderContext);
-  const [preview, setPreview] = useState<ReferencePreviewData>();
-  const [loading, setLoading] = useState(false);
-  useEffect(() => {
-    setPreview(undefined);
-    if (!enabled || !target || !adapter) {
-      setLoading(false);
-      return;
-    }
-    let active = true;
-    setLoading(true);
-    const receive = (result: ReferencePreviewData) => {
-      if (active) {
-        setPreview(result);
-        setLoading(false);
-      }
-    };
-    const unsubscribe = adapter.subscribePreview?.(target, receive);
-    if (!unsubscribe)
-      void adapter
-        .loadPreview(target)
-        .then(receive)
-        .catch(() => receive({ status: "unavailable" }));
-    return () => {
-      active = false;
-      unsubscribe?.();
-    };
-  }, [adapter, enabled, target]);
-  return { adapter, loading, preview };
+  return { adapter, ...useReferencePreview(adapter, target, enabled) };
 }
 
 export function ReferenceIcon({
   target,
   preview,
 }: {
-  target: ReferenceRenderTarget | null;
+  target: ReferenceTarget | null;
   preview?: ReferencePreviewData;
 }) {
   return (
@@ -164,10 +127,7 @@ export function DisplayMenu({
   );
 }
 
-export function fallbackTitle(
-  target: ReferenceRenderTarget | null,
-  url: string,
-) {
+export function fallbackTitle(target: ReferenceTarget | null, url: string) {
   if (target?.kind === "external") {
     return describeExternal(target.url)?.title ?? url;
   }
@@ -175,7 +135,7 @@ export function fallbackTitle(
 }
 
 export function inlineReferenceLabel(
-  target: ReferenceRenderTarget | null,
+  target: ReferenceTarget | null,
   preview: ReferencePreviewData | undefined,
 ) {
   const compact =

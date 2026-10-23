@@ -1,3 +1,4 @@
+import type { ReferenceEmbedResult } from "@acme/references";
 import type {
   BlockNoteEditor,
   BlockSchema,
@@ -5,9 +6,6 @@ import type {
   StyleSchema,
 } from "@blocknote/core";
 import { useEffect, useMemo, useState } from "react";
-import type { ReferenceEmbedResult } from "./reference-context";
-
-export { referenceProps } from "./reference-config";
 
 import { ReadOnlyBlocks } from "./reference-read-only";
 import {

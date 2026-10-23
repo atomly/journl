@@ -1,4 +1,6 @@
 // @vitest-environment jsdom
+
+import type { ReferenceClient } from "@acme/references";
 import {
   documentExtensions,
   editingExtension,
@@ -9,11 +11,10 @@ import {
 import { Editor } from "@tiptap/core";
 import { TextSelection } from "@tiptap/pm/state";
 import { expect, test, vi } from "vitest";
-import type { RouterOutputs } from "~/trpc";
-import { insertTiptapReference } from "./tiptap-reference-insertion";
+import { insertTiptapReference } from "./reference-insertion";
 
 const url = "https://example.invalid/source";
-type Result = RouterOutputs["references"]["resolveUrls"];
+type Result = Awaited<ReturnType<ReferenceClient["resolveUrl"]>>;
 function setup(text = "") {
   return new Editor({
     content: toTiptapDocument([

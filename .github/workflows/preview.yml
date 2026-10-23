@@ -29,6 +29,7 @@ jobs:
           VERCEL_TEAM_ID: ${{ vars.VERCEL_TEAM_ID }}
         with:
           script: |
+            if (context.payload.action === "edited" && !context.payload.changes?.base) return;
             const { data: pr } = await github.rest.pulls.get({
               ...context.repo,
               pull_number: context.payload.pull_request.number,

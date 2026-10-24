@@ -23,7 +23,7 @@ import { cn } from "~/lib/cn";
 import { formatDate } from "~/lib/format-date";
 import type { JournalListEntry } from "~/trpc";
 import { useJournalEntryDraft } from "./journal-drafts-provider";
-import { JournalEntryActions } from "./journal-entry-actions";
+import { JournalEntryConvertToPage } from "./journal-entry-convert-to-page";
 
 const DEFAULT_DEBOUNCE_TIME = 1000;
 
@@ -129,15 +129,17 @@ export function JournalEntryHeader({
       <h2 className="min-w-0 flex-1 font-semibold text-3xl text-muted-foreground md:text-4xl lg:text-5xl">
         {linkDate ? <Link href={`/journal/${date}`}>{label}</Link> : label}
       </h2>
-      {documentId && <ExploreNoteLink documentId={documentId} />}
-      {documentId && updatedAt && (
-        <JournalEntryActions
-          date={date}
-          title={formattedDate}
-          documentId={documentId}
-          updatedAt={updatedAt}
-        />
-      )}
+      <div className="flex shrink-0 items-center gap-0">
+        {documentId && <ExploreNoteLink documentId={documentId} />}
+        {documentId && updatedAt && (
+          <JournalEntryConvertToPage
+            date={date}
+            title={formattedDate}
+            documentId={documentId}
+            updatedAt={updatedAt}
+          />
+        )}
+      </div>
     </div>
   );
 }

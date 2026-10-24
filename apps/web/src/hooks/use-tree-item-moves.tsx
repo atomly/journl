@@ -14,7 +14,7 @@ import {
 } from "~/components/tree-move-actions";
 import { useMoveTreeItem } from "~/hooks/use-move-tree-item";
 import {
-  folderDestinationLabel,
+  folderDestinationLabels,
   isValidTreeDestination,
 } from "~/lib/tree-model";
 import { useTRPC } from "~/trpc/react";
@@ -42,6 +42,7 @@ export function TreeMoveProvider({ children }: { children: ReactNode }) {
       ? [{ ...folder, node_id: folder.node_id }]
       : [],
   );
+  const labels = folderDestinationLabels(destinations);
   return (
     <MoveContext.Provider value={setItem}>
       <section
@@ -74,7 +75,7 @@ export function TreeMoveProvider({ children }: { children: ReactNode }) {
                 ),
             )
             .map((folder) => ({
-              label: folderDestinationLabel(folder.node_id, destinations),
+              label: labels.get(folder.node_id) ?? folder.name,
               nodeId: folder.node_id,
             }))
             .sort((a, b) => a.label.localeCompare(b.label)),

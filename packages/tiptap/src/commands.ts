@@ -14,6 +14,7 @@ import {
 } from "@tiptap/pm/state";
 import { fromTiptapDocument, toTiptapDocument } from "./codec";
 import { blockAt, type IdFactory, joinBlocks, splitBlock } from "./identity";
+import { restoreBlockSelection } from "./selection";
 
 export function selectedBlock(state: Pick<EditorState, "doc" | "selection">) {
   const { $from } = state.selection;
@@ -171,29 +172,8 @@ export function indentBlock(
     afterId = block.id;
     return operation;
   });
-  // Whole-document replacement cannot map a multi-block selection by positions.
-  // Anchor each endpoint to its own stable block ID, including backward ranges.
-  const point = (pos: number) => {
-    const $pos = state.doc.resolve(pos);
-    for (let depth = $pos.depth; depth > 0; depth--)
-      if ($pos.node(depth).type.name === "journlBlock")
-        return {
-          id: $pos.node(depth).attrs.id as string,
-          offset: pos - $pos.before(depth),
-        };
-    return null;
-  };
-  const anchor = point(state.selection.anchor);
-  const head = point(state.selection.head);
   const tr = editBlocks(state.tr, operations, target.id);
-  if (anchor && head && !(state.selection instanceof NodeSelection))
-    tr.setSelection(
-      TextSelection.create(
-        tr.doc,
-        blockAt(tr.doc, anchor.id).pos + anchor.offset,
-        blockAt(tr.doc, head.id).pos + head.offset,
-      ),
-    );
+  restoreBlockSelection(state, tr);
   return tr;
 }
 

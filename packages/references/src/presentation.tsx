@@ -61,11 +61,13 @@ export function PreviewImage({
 export function PreviewStatus({
   loading,
   unavailable,
+  targetUnavailable,
   children,
   className,
 }: {
   loading?: boolean;
   unavailable?: boolean;
+  targetUnavailable?: boolean;
   children?: ReactNode;
   className?: string;
 }) {
@@ -78,9 +80,11 @@ export function PreviewStatus({
     >
       {loading
         ? "Loading preview…"
-        : unavailable
-          ? "Preview unavailable. You can still open the source."
-          : children}
+        : targetUnavailable
+          ? "Referenced content is unavailable. It may have been deleted or you may no longer have access."
+          : unavailable
+            ? "Preview unavailable. You can still open the source."
+            : children}
     </p>
   );
 }

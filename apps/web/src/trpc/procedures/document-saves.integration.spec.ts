@@ -486,7 +486,7 @@ test("Tiptap save adapter retains a moved child when its former parent is remove
   ).toHaveLength(0);
 });
 
-test("moving a journal entry transfers its document and leaves an indexed page reference atomically", async () => {
+test("converting a journal entry transfers its document and leaves an indexed page reference atomically", async () => {
   const first = randomUUID();
   const child = randomUUID();
   const second = randomUUID();
@@ -513,7 +513,7 @@ test("moving a journal entry transfers its document and leaves an indexed page r
   });
   const originalNodes = await db.select().from(schema.BlockNode);
   const originalEdges = await db.select().from(schema.BlockEdge);
-  const moved = await caller.journal.moveToPage({
+  const moved = await caller.journal.convertToPage({
     date,
     documentId: saved.document_id,
     expectedUpdatedAt: saved.updated_at,
@@ -550,7 +550,7 @@ test("moving a journal entry transfers its document and leaves an indexed page r
   expect(refs).toHaveLength(1);
   expect(refs[0]?.target_document_id).toBe(saved.document_id);
   await expect(
-    caller.journal.moveToPage({
+    caller.journal.convertToPage({
       date,
       documentId: saved.document_id,
       expectedUpdatedAt: saved.updated_at,
@@ -560,7 +560,7 @@ test("moving a journal entry transfers its document and leaves an indexed page r
   expect(await db.select().from(schema.Page)).toHaveLength(1);
 });
 
-test("stale and foreign journal moves cannot create a page or overwrite the entry", async () => {
+test("stale and foreign journal conversions cannot create a page or overwrite the entry", async () => {
   const saved = await caller.journal.saveTransactions({
     date,
     document_id: null,
@@ -581,7 +581,7 @@ test("stale and foreign journal moves cannot create a page or overwrite the entr
     .insert(schema.JournalEntry)
     .values({ date, document_id: foreign.id, user_id: "other-owner" });
   await expect(
-    caller.journal.moveToPage({
+    caller.journal.convertToPage({
       date,
       documentId: foreign.id,
       expectedUpdatedAt: saved.updated_at,
@@ -589,7 +589,7 @@ test("stale and foreign journal moves cannot create a page or overwrite the entr
     }),
   ).rejects.toMatchObject({ code: "CONFLICT" });
   await expect(
-    caller.journal.moveToPage({
+    caller.journal.convertToPage({
       date,
       documentId: saved.document_id,
       expectedUpdatedAt: "old-version",

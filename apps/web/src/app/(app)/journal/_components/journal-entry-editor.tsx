@@ -23,7 +23,7 @@ import { cn } from "~/lib/cn";
 import { formatDate } from "~/lib/format-date";
 import type { JournalListEntry } from "~/trpc";
 import { useJournalEntryDraft } from "./journal-drafts-provider";
-import { JournalEntryActions } from "./journal-entry-actions";
+import { JournalEntryConvertToPage } from "./journal-entry-convert-to-page";
 
 const DEFAULT_DEBOUNCE_TIME = 1000;
 
@@ -131,7 +131,7 @@ export function JournalEntryHeader({
       </h2>
       {documentId && <ExploreNoteLink documentId={documentId} />}
       {documentId && updatedAt && (
-        <JournalEntryActions
+        <JournalEntryConvertToPage
           date={date}
           title={formattedDate}
           documentId={documentId}

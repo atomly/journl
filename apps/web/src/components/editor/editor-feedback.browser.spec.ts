@@ -67,7 +67,7 @@ test("selected lists convert together, typing dismisses handles and plain copy k
   await expect(handle).toBeVisible();
 });
 
-test("moving a journal entry keeps its block identity and leaves an expandable page reference", async ({
+test("converting a journal entry keeps its block identity and leaves an expandable page reference", async ({
   page,
 }) => {
   const errors: string[] = [];
@@ -85,12 +85,14 @@ test("moving a journal entry keeps its block identity and leaves an expandable p
       nodes.map((node) => (node as HTMLElement).dataset.blockId),
     );
   await page
-    .getByRole("button", { exact: true, name: "Move entry to page" })
+    .getByRole("button", { exact: true, name: "Convert entry to page" })
     .click();
   await page
     .getByRole("textbox", { exact: true, name: "Page title" })
     .fill("Moved journal entry");
-  await page.getByRole("button", { exact: true, name: "Move to page" }).click();
+  await page
+    .getByRole("button", { exact: true, name: "Convert to page" })
+    .click();
   await expect(page).toHaveURL(/\/pages\//);
   await expect(editor).toContainText("Nested writing");
   expect(

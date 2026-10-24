@@ -17,7 +17,7 @@ import { folderDestinationLabels } from "~/lib/tree-model";
 import { useTRPC } from "~/trpc/react";
 import { useJournalDraftActions } from "./journal-drafts-provider";
 
-export function JournalEntryActions({
+export function JournalEntryConvertToPage({
   date,
   title,
   documentId,
@@ -42,7 +42,7 @@ export function JournalEntryActions({
   });
   const labels = folderDestinationLabels(folders.data ?? []);
   const router = useRouter();
-  const move = useMutation(trpc.journal.moveToPage.mutationOptions());
+  const convert = useMutation(trpc.journal.convertToPage.mutationOptions());
   return (
     <>
       <Tooltip>
@@ -50,8 +50,9 @@ export function JournalEntryActions({
           render={
             <Button
               variant="ghost"
-              size="icon-sm"
-              aria-label="Move entry to page"
+              size="icon"
+              className="pointer-coarse:size-11 size-10 text-muted-foreground"
+              aria-label="Convert entry to page"
               onClick={() => {
                 setError("");
                 setOpen(true);
@@ -61,7 +62,7 @@ export function JournalEntryActions({
             </Button>
           }
         />
-        <TooltipContent>Move to page</TooltipContent>
+        <TooltipContent>Convert to page</TooltipContent>
       </Tooltip>
       <Dialog
         open={open}
@@ -71,9 +72,9 @@ export function JournalEntryActions({
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Move entry to a page</DialogTitle>
+            <DialogTitle>Convert entry to a page</DialogTitle>
             <DialogDescription>
-              The writing moves to Library. This journal entry keeps a reference
+              The entry becomes a page in Library. The journal keeps a reference
               to the new page.
             </DialogDescription>
           </DialogHeader>
@@ -88,10 +89,10 @@ export function JournalEntryActions({
                 await draft?.flush();
                 if (draft?.hasUnsavedChanges())
                   throw new Error(
-                    "Resolve the unsaved changes before moving this entry.",
+                    "Resolve the unsaved changes before converting this entry.",
                   );
                 const saved = draft?.getSnapshot();
-                const result = await move.mutateAsync({
+                const result = await convert.mutateAsync({
                   date,
                   documentId: saved?.documentId ?? documentId,
                   expectedUpdatedAt: saved?.updatedAt ?? updatedAt,
@@ -124,7 +125,7 @@ export function JournalEntryActions({
                 setError(
                   error instanceof Error
                     ? error.message
-                    : "Unable to move this entry. Your writing has been kept.",
+                    : "Unable to convert this entry. Your writing has been kept.",
                 );
                 setBusy(false);
               }
@@ -178,7 +179,7 @@ export function JournalEntryActions({
                 Cancel
               </Button>
               <Button type="submit" disabled={busy || !name.trim()}>
-                {busy ? "Moving…" : "Move to page"}
+                {busy ? "Converting…" : "Convert to page"}
               </Button>
             </div>
           </form>

@@ -32,11 +32,7 @@ import {
 import { createPortal } from "react-dom";
 import { toast } from "sonner";
 
-import {
-  EditorHint,
-  EditorMenuItem,
-  restoreEditorFocus,
-} from "./tiptap-controls";
+import { EditorHint, EditorMenuItem, restoreEditorFocus } from "./controls";
 
 const subscribeEmpty = () => () => {};
 const getEmpty = () => null;

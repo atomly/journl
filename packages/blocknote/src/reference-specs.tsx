@@ -2,18 +2,15 @@ import {
   createReactBlockSpec,
   createReactInlineContentSpec,
 } from "@blocknote/react";
+import { ReferenceBadge } from "./reference-badge";
+import { ReferenceCardView } from "./reference-card";
 import {
   contentEmbedConfig,
   contentReferenceConfig,
   referenceCardConfig,
 } from "./reference-config";
-import { safeReferenceHref as safeHref } from "./reference-href";
-
-export { referenceProps } from "./reference-config";
-
-import { ReferenceBadge } from "./reference-badge";
-import { ReferenceCardView } from "./reference-card";
 import { ReferenceEmbedView } from "./reference-embed";
+import { safeReferenceHref as safeHref } from "./reference-href";
 export const contentReference = createReactInlineContentSpec(
   contentReferenceConfig,
   {

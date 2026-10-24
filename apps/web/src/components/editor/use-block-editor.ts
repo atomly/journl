@@ -3,6 +3,7 @@
 import { toBlockNoteBlocks } from "@acme/blocknote/adapter";
 import { schema } from "@acme/blocknote/schema";
 import type { DocumentBlocks } from "@acme/document";
+import { getPlainUrlForAutomaticReference } from "@acme/references";
 import { en } from "@blocknote/core/locales";
 import { useCreateBlockNote } from "@blocknote/react";
 import { AIExtension } from "@blocknote/xl-ai";
@@ -10,7 +11,6 @@ import { en as aiEn } from "@blocknote/xl-ai/locales";
 import { useQueryClient } from "@tanstack/react-query";
 import type { EditorView } from "@tiptap/pm/view";
 import { DefaultChatTransport } from "ai-sdk-v6";
-import { getPlainUrlForAutomaticReference } from "~/references/reference-paste-url";
 import { useTRPC } from "~/trpc/react";
 import {
   preserveControlTabNavigation,

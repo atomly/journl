@@ -1,3 +1,5 @@
+import { documentSchema } from "./codec";
+import { copySlice, identityPlugin, joinBlocks, splitBlock } from "./identity";
 // @vitest-environment jsdom
 
 import { historicalFixtures, parityBlocks } from "@acme/blocknote/inventory";
@@ -20,15 +22,10 @@ import { describe, expect, test } from "vitest";
 import {
   AdapterReadError,
   blockAt,
-  copySlice,
   documentChanges,
   documentExtensions,
-  documentSchema,
   fromTiptapDocument,
-  identityPlugin,
-  joinBlocks,
   referenceSelectionPlugin,
-  splitBlock,
   toTiptapDocument,
 } from "./index";
 import { required } from "./required";

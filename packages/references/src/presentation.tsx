@@ -6,7 +6,18 @@ import {
   FileText,
   GitPullRequest,
 } from "lucide-react";
-import { type ComponentProps, type ReactNode, useState } from "react";
+import {
+  type ComponentProps,
+  type ReactNode,
+  useEffect,
+  useState,
+} from "react";
+import type {
+  ReferenceClient,
+  ReferenceEmbedResult,
+  ReferencePreviewData,
+  ReferenceTarget,
+} from "./index";
 
 const icons = {
   document: FileText,
@@ -72,4 +83,78 @@ export function PreviewStatus({
           : children}
     </p>
   );
+}
+
+/** Both editor adapters share the same subscription lifecycle; the app owns caching. */
+export function useReferencePreview(
+  client: Pick<ReferenceClient, "loadPreview" | "subscribePreview"> | null,
+  target: ReferenceTarget | null,
+  enabled: boolean,
+) {
+  const [preview, setPreview] = useState<ReferencePreviewData>();
+  const [loading, setLoading] = useState(false);
+  useEffect(() => {
+    setPreview(undefined);
+    if (!enabled || !target || !client) {
+      setLoading(false);
+      return;
+    }
+    let active = true;
+    setLoading(true);
+    const receive = (result: ReferencePreviewData) => {
+      if (active) {
+        setPreview(result);
+        setLoading(false);
+      }
+    };
+    const unsubscribe = client.subscribePreview?.(target, receive);
+    if (!unsubscribe)
+      void client
+        .loadPreview(target)
+        .then(receive)
+        .catch(() => receive({ status: "unavailable" }));
+    return () => {
+      active = false;
+      unsubscribe?.();
+    };
+  }, [client, target, enabled]);
+  return { loading, preview };
+}
+export function useReferenceEmbed(
+  client: ReferenceClient | null,
+  target: Extract<ReferenceTarget, { kind: "document" }> | null,
+  enabled: boolean,
+) {
+  const [content, setContent] = useState<ReferenceEmbedResult | null>();
+  const [loading, setLoading] = useState(false);
+  useEffect(() => {
+    setContent(undefined);
+    if (!enabled || !target || !client) {
+      setLoading(false);
+      return;
+    }
+    let active = true;
+    setLoading(true);
+    const receive = (result: ReferenceEmbedResult | null) => {
+      if (active) {
+        setContent(result);
+        setLoading(false);
+      }
+    };
+    const unsubscribe = client.subscribeEmbedContent?.(
+      target,
+      undefined,
+      receive,
+    );
+    if (!unsubscribe)
+      void client
+        .loadEmbedContent(target)
+        .then(receive)
+        .catch(() => receive(null));
+    return () => {
+      active = false;
+      unsubscribe?.();
+    };
+  }, [client, target, enabled]);
+  return { content, loading };
 }

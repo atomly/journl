@@ -9,8 +9,8 @@ import {
 } from "@acme/ui/tooltip";
 import { Toolbar } from "@base-ui/react/toolbar";
 import type { Editor } from "@tiptap/core";
+import { cn } from "cn";
 import type { ComponentProps, ReactElement } from "react";
-import { cn } from "~/lib/cn";
 
 /** Compose onto the actual control: no wrapper in menus or nested buttons. */
 export function EditorHint({

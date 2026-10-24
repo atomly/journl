@@ -1,7 +1,7 @@
+import { getPlainUrlForAutomaticReference } from "@acme/references";
 import { getBlockInfoAtNearest } from "@blocknote/core";
 import { Selection } from "@tiptap/pm/state";
 import type { EditorView } from "@tiptap/pm/view";
-import { getPlainUrlForAutomaticReference } from "~/references/reference-paste-url";
 import type { RouterOutputs } from "~/trpc";
 
 export function insertReferenceUrl(

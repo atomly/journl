@@ -2,7 +2,7 @@
 
 import { Button } from "@acme/ui/button";
 import { useState, useSyncExternalStore } from "react";
-import type { TrackedDraft } from "./draft-activity-provider";
+import type { TrackedDraft } from "./draft-activity";
 
 type Draft = TrackedDraft["draft"];
 type RecoveryCopy = ReturnType<Draft["getSnapshot"]>["recoveryCopies"][number];

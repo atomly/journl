@@ -21,7 +21,7 @@ import {
   EditorMenuItem,
   EditorToolbarControl,
   restoreEditorFocus,
-} from "./tiptap-controls";
+} from "./controls";
 
 export type InsertReference = (
   url: string,

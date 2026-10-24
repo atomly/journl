@@ -31,7 +31,7 @@ import {
   mergeCells,
   splitCell,
 } from "@tiptap/pm/tables";
-import { EditorMenuItem } from "./tiptap-controls";
+import { EditorMenuItem } from "./controls";
 
 export function TableMenuItems({
   editor,

@@ -1,12 +1,10 @@
 import type { ReferenceProps } from "@acme/document";
+import type { ReferenceClient } from "@acme/references";
 import { convertReference, selectedBlock } from "@acme/tiptap";
 import { NodeSelection, TextSelection } from "@tiptap/pm/state";
 import type { EditorView } from "@tiptap/pm/view";
-import type { RouterOutputs } from "~/trpc";
 
-type Resolve = (
-  url: string,
-) => Promise<RouterOutputs["references"]["resolveUrls"]>;
+type Resolve = ReferenceClient["resolveUrl"];
 
 /** Resolution follows a token, never a stale ProseMirror position or DOM wrapper. */
 export function insertTiptapReference(

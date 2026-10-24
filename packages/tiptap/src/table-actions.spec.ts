@@ -21,11 +21,11 @@ import {
   tableAxisSelection,
   tableColumnWidth,
   tableContext,
-  tableHeadersKey,
   textMarkActive,
   toggleTextMark,
   toTiptapDocument,
 } from "./index";
+import { tableHeadersKey } from "./tables";
 
 function setup() {
   const editor = new Editor({

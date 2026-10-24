@@ -21,8 +21,10 @@ import {
 } from "@acme/tiptap";
 import { Editor, Extension } from "@tiptap/core";
 import { TextSelection } from "@tiptap/pm/state";
+import { EditorContent } from "@tiptap/react";
 import { cn } from "cn";
 import { useContext, useEffect, useMemo, useRef, useState } from "react";
+import { codeBlockPresentation } from "./code-block";
 import { useHandleVisibility } from "./handle-visibility";
 import { referenceViewStore, TiptapReferenceViews } from "./node-views";
 import { ReferenceClientContext } from "./reference-client";
@@ -166,7 +168,11 @@ function EditorView({
         element: host.current,
         enableContentCheck: true,
         extensions: [
-          ...documentExtensions(),
+          ...documentExtensions().map((extension) =>
+            extension.name === "codeBlock"
+              ? extension.extend(codeBlockPresentation)
+              : extension,
+          ),
           clipboardPasteExtension(() => crypto.randomUUID()),
           referenceViews.extension,
           editingExtension(() => crypto.randomUUID()),
@@ -229,7 +235,11 @@ function EditorView({
           still available in save details.
         </p>
       )}
-      <div ref={host} className="journl-tiptap-host" />
+      <EditorContent
+        ref={host}
+        editor={editor ?? null}
+        className="journl-tiptap-host"
+      />
       <TiptapReferenceViews store={referenceViews} />
       {onCommit && !error && (
         <>

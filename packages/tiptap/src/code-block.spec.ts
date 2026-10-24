@@ -2,8 +2,10 @@
 import { Editor } from "@tiptap/core";
 import { expect, test } from "vitest";
 import {
+  codeLanguages,
   documentExtensions,
   fromTiptapDocument,
+  setBlockProperties,
   toTiptapDocument,
 } from "./index";
 
@@ -21,12 +23,13 @@ test("code language selection highlights through Lowlight and stays out of store
     extensions: documentExtensions(),
   });
   try {
-    const select = editor.view.dom.querySelector("select");
-    if (!select) throw new Error("Missing language picker");
-    expect(select.options.length).toBeGreaterThan(100);
+    expect(codeLanguages.length).toBeGreaterThan(100);
     expect(editor.view.dom.querySelector(".hljs-keyword")).toBeNull();
-    select.value = "javascript";
-    select.dispatchEvent(new Event("change", { bubbles: true }));
+    const language = setBlockProperties(editor.state, {
+      language: "javascript",
+    });
+    if (!language) throw new Error("Missing code block");
+    editor.view.dispatch(language);
     expect(editor.view.dom.querySelector(".hljs-keyword")?.textContent).toBe(
       "const",
     );
@@ -35,8 +38,8 @@ test("code language selection highlights through Lowlight and stays out of store
       id: "code",
       props: { language: "javascript" },
     });
-    select.value = "text";
-    select.dispatchEvent(new Event("change", { bubbles: true }));
+    const plain = setBlockProperties(editor.state, { language: "text" });
+    if (plain) editor.view.dispatch(plain);
     expect(editor.view.dom.querySelector(".hljs-keyword")).toBeNull();
   } finally {
     editor.destroy();

@@ -47,15 +47,19 @@ test("handle menu opens once, add picker leaves no slash, and divider needs no s
 
 test("code language picker produces visible colors and survives save/reload", async ({
   page,
-}) => {
-  await page.goto("/journal/1988-08-26");
+}, info) => {
+  await page.goto(
+    `/journal/1988-08-${info.project.name === "desktop-chromium" ? "26" : "29"}`,
+  );
   const editor = page.locator(".journl-tiptap").first();
   await editor.pressSequentially("```javascript ");
   await editor.pressSequentially("console.log('hello world');");
   await editor.press("Enter");
   await editor.pressSequentially("const foo = 'bar';");
   const language = editor.getByRole("combobox", { name: "Code language" });
-  await expect(language).toHaveValue("javascript");
+  await expect(language.locator('[data-slot="select-value"]')).toHaveText(
+    "javascript",
+  );
   const keyword = editor.locator(".hljs-keyword");
   await expect(keyword).toHaveText("const");
   const colors = await keyword.evaluate((element) => ({
@@ -63,13 +67,17 @@ test("code language picker produces visible colors and survives save/reload", as
     keyword: getComputedStyle(element).color,
   }));
   expect(colors.keyword).not.toBe(colors.code);
-  await language.selectOption("text");
+  await language.click();
+  await page.getByRole("option", { exact: true, name: "Plain text" }).click();
   await expect(keyword).toHaveCount(0);
-  await language.selectOption("javascript");
+  await language.click();
+  await page.getByRole("option", { exact: true, name: "javascript" }).click();
   await expect(keyword).toHaveText("const");
   await expect(page.locator("[data-save-status]")).toContainText("Saved");
   await page.reload();
-  await expect(language).toHaveValue("javascript");
+  await expect(language.locator('[data-slot="select-value"]')).toHaveText(
+    "javascript",
+  );
   await expect(keyword).toHaveText("const");
 });
 
@@ -178,4 +186,58 @@ test("mobile handle opens block actions in one tap with a usable touch target", 
   await expect(
     page.getByRole("menuitem", { exact: true, name: "Duplicate block" }),
   ).toBeVisible();
+});
+
+test("crossing the toolbar gap keeps the handle on its block and leaving releases it", async ({
+  page,
+}, info) => {
+  test.skip(
+    info.project.name !== "desktop-chromium",
+    "Pointer corridor acceptance",
+  );
+  await page.goto("/journal");
+  await page.getByRole("button", { exact: true, name: "New page" }).click();
+  await expect(page).toHaveURL(/\/pages\//);
+  await page.keyboard.press("Escape");
+  const editor = page.locator(".journl-tiptap");
+  await editor.click();
+  await editor.pressSequentially("Previous block");
+  await editor.press("Enter");
+  await editor.pressSequentially("Selected block");
+  const rows = editor.locator('[data-journl-body="paragraph"]');
+  await rows.last().evaluate(async (element) => {
+    const range = document.createRange();
+    range.selectNodeContents(element);
+    getSelection()?.removeAllRanges();
+    getSelection()?.addRange(range);
+    document.dispatchEvent(new Event("selectionchange"));
+    await new Promise(requestAnimationFrame);
+  });
+  const toolbar = page.getByRole("toolbar", { name: "Editor controls" });
+  await expect(toolbar).toBeVisible();
+  await rows.last().hover();
+  const handle = page.locator("[data-tiptap-side-menu]");
+  const before = await handle.boundingBox();
+  const target = await rows.last().boundingBox();
+  const menu = await toolbar.boundingBox();
+  if (!before || !target || !menu)
+    throw new Error("Missing pointer corridor geometry");
+  const gapStart = menu.y + menu.height;
+  expect(target.y).toBeGreaterThan(gapStart);
+  const x = Math.max(target.x + 8, menu.x + menu.width / 2);
+  for (let y = target.y - 1; y > gapStart; y--) {
+    await page.mouse.move(x, y);
+    const current = await handle.boundingBox();
+    expect(current?.y).toBeCloseTo(before.y, 0);
+  }
+  await page
+    .getByRole("button", { exact: true, name: "More formatting" })
+    .hover();
+  expect((await handle.boundingBox())?.y).toBeCloseTo(before.y, 0);
+  const other = await rows.first().boundingBox();
+  if (!other) throw new Error("Missing neighboring block");
+  await page.mouse.move(other.x + other.width - 4, other.y + other.height / 2);
+  await expect
+    .poll(async () => (await handle.boundingBox())?.y)
+    .toBeLessThan(before.y - 4);
 });

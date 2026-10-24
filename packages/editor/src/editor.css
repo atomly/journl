@@ -460,12 +460,3 @@
 .journl-code-controls {
   padding: 8px 16px 0;
 }
-.journl-code-controls select {
-  max-width: 100%;
-  color: #cfcfcf;
-  background: #161616;
-  border-radius: 4px;
-  font:
-    12px / 1.5 system-ui,
-    sans-serif;
-}

@@ -15,7 +15,9 @@
     "@acme/document": "workspace:*",
     "@tiptap/core": "3.31.4",
     "@tiptap/extension-node-range": "3.31.4",
-    "@tiptap/pm": "3.31.4"
+    "@tiptap/pm": "3.31.4",
+    "lowlight": "^3.3.0",
+    "prosemirror-highlight": "0.15.3"
   },
   "devDependencies": {
     "@acme/blocknote": "workspace:*",

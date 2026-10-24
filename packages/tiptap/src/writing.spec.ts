@@ -385,3 +385,57 @@ test("Backspace reverses an input rule without changing the block identity or pr
     editor.destroy();
   }
 });
+
+test("turning a selected list range into numbered items preserves every identity and child", () => {
+  const fixture = setup([
+    parseBlock({
+      children: [{ content: "Nested", id: "child", type: "paragraph" }],
+      content: "One",
+      id: "a",
+      type: "bulletListItem",
+    }),
+    parseBlock({ content: "Two", id: "b", type: "bulletListItem" }),
+  ]);
+  const { editor, blocks } = fixture;
+  editor.view.dispatch(
+    editor.state.tr.setSelection(
+      TextSelection.create(
+        editor.state.doc,
+        2,
+        blockAt(editor.state.doc, "b").pos + 4,
+      ),
+    ),
+  );
+  const tr = changeBlockType(editor.state, "numberedListItem");
+  expect(tr).not.toBeNull();
+  if (tr) editor.view.dispatch(tr);
+  expect(blocks().map(({ id, type }) => ({ id, type }))).toEqual([
+    { id: "a", type: "numberedListItem" },
+    { id: "b", type: "numberedListItem" },
+  ]);
+  expect(blocks()[0]?.children?.[0]?.id).toBe("child");
+  expect(editor.state.selection.empty).toBe(false);
+  editor.destroy();
+});
+
+test("empty non-paragraph blocks accept new Markdown shortcuts without losing identity", () => {
+  for (const type of [
+    "heading",
+    "bulletListItem",
+    "numberedListItem",
+    "quote",
+  ] as const) {
+    const { editor, text, blocks } = setup([
+      parseBlock({ content: [], id: "a", type }),
+    ]);
+    text("## ");
+    expect(blocks()[0]).toMatchObject({
+      id: "a",
+      props: { level: 2 },
+      type: "heading",
+    });
+    text("- ");
+    expect(blocks()[0]).toMatchObject({ id: "a", type: "bulletListItem" });
+    editor.destroy();
+  }
+});

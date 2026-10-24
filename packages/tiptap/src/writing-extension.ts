@@ -27,7 +27,10 @@ export function writingExtension(createId: IdFactory) {
             const target = selectedBlock(state);
             if (
               !target ||
-              state.selection.$from.parent.type.name !== "paragraph"
+              !state.selection.$from.parent.isTextblock ||
+              state.selection.$from.parent.type.spec.code ||
+              state.selection.$from.parent.content.size !==
+                range.to - range.from
             )
               return null;
             const tr = state.tr;

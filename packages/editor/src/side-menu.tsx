@@ -26,7 +26,13 @@ import { useTiptapState } from "./writing-controls";
 
 /** A handle selects the complete Journl wrapper, including descendants. Native
  * ProseMirror drag/drop owns moves; the identity adapter gives copies fresh IDs. */
-export function TiptapSideMenu({ editor }: { editor: Editor }) {
+export function TiptapSideMenu({
+  editor,
+  visible,
+}: {
+  editor: Editor;
+  visible: boolean;
+}) {
   const state = useTiptapState(editor);
   const compact = useIsMobile();
   const [touchPointer, setTouchPointer] = useState(false);
@@ -119,14 +125,9 @@ export function TiptapSideMenu({ editor }: { editor: Editor }) {
         top:
           rect.top +
           padding +
-          Math.max(
-            0,
-            ((body
-              ? Number.parseFloat(getComputedStyle(body).lineHeight)
-              : 24) -
-              (mobile ? 44 : 28)) /
-              2,
-          ),
+          ((body ? Number.parseFloat(getComputedStyle(body).lineHeight) : 24) -
+            (mobile ? 44 : 28)) /
+            2,
       });
     };
     update();
@@ -137,7 +138,7 @@ export function TiptapSideMenu({ editor }: { editor: Editor }) {
       window.removeEventListener("resize", update);
     };
   }, [editor, id, state, mobile]);
-  if (!id) return null;
+  if (!id || (!visible && !open && !frozen.current)) return null;
   const select = (preserve = true) => {
     const target = blockAt(editor.state.doc, id);
     editor.view.dispatch(
@@ -173,7 +174,7 @@ export function TiptapSideMenu({ editor }: { editor: Editor }) {
             style={position}
           >
             {!mobile && (
-              <EditorHint label="Add a block below (opens slash menu)">
+              <EditorHint label="Add a block below">
                 <Button
                   aria-label="Add block"
                   variant="ghost"
@@ -231,13 +232,7 @@ export function TiptapSideMenu({ editor }: { editor: Editor }) {
                   setOpen(!open);
                 }}
               >
-                <EditorHint
-                  label={
-                    mobile
-                      ? "Hold to move · Tap for block actions"
-                      : "Drag to move · Alt-drag to copy · Click for actions"
-                  }
-                >
+                <EditorHint label="Drag to move">
                   <Button
                     aria-label="Block actions"
                     variant="ghost"

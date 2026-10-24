@@ -208,9 +208,12 @@ function ResolvedReference({
     (target?.kind === "external"
       ? describeExternal(target.url)?.sourceLabel || "External link"
       : "Referenced note");
-  const href = safeEditorUrl(
-    (preview?.status === "ready" ? preview.href : undefined) || props.url,
-  );
+  const targetUnavailable = preview?.unavailableReason === "target-unavailable";
+  const href = targetUnavailable
+    ? null
+    : safeEditorUrl(
+        (preview?.status === "ready" ? preview.href : undefined) || props.url,
+      );
   const icon =
     preview?.icon ??
     (target?.kind === "external"
@@ -223,7 +226,7 @@ function ResolvedReference({
   const { content, loading: loadingEmbed } = useReferenceEmbed(
     references,
     target?.kind === "document" ? target : null,
-    embed && expanded && !limited,
+    embed && expanded && !limited && !targetUnavailable,
   );
   const blocks = content?.status === "ready" ? embedTree(content.blocks) : null;
   const open = (event: React.MouseEvent) => {
@@ -239,7 +242,9 @@ function ResolvedReference({
       references.openTarget(target, href);
     }
   };
-  const link = (
+  const link = targetUnavailable ? (
+    <span>{title}</span>
+  ) : (
     <a
       href={href || undefined}
       onClick={open}
@@ -335,17 +340,20 @@ function ResolvedReference({
             className="content-reference-card-excerpt"
             loading={isPending}
             unavailable={preview?.status === "unavailable" || !preview}
+            targetUnavailable={targetUnavailable}
           >
             {preview?.excerpt}
           </PreviewStatus>
           <div className="content-reference-preview-footer">
-            <a
-              className="content-reference-open"
-              href={href || undefined}
-              onClick={open}
-            >
-              Open source
-            </a>
+            {!targetUnavailable && (
+              <a
+                className="content-reference-open"
+                href={href || undefined}
+                onClick={open}
+              >
+                Open source
+              </a>
+            )}
             {menu}
           </div>
         </PopoverContent>
@@ -361,7 +369,8 @@ function ResolvedReference({
           <button
             type="button"
             className="content-embed-toggle"
-            aria-expanded={expanded}
+            aria-expanded={expanded && !targetUnavailable}
+            disabled={targetUnavailable}
             onClick={() => setExpanded(!expanded)}
           >
             <ChevronRight
@@ -370,16 +379,19 @@ function ResolvedReference({
             <strong>{title}</strong>
           </button>
           {menu}
-          <a
-            className="content-reference-open"
-            href={href || undefined}
-            onClick={open}
-          >
-            <ExternalLink className="size-4" />
-            <span>Open source</span>
-          </a>
+          {!targetUnavailable && (
+            <a
+              className="content-reference-open"
+              href={href || undefined}
+              onClick={open}
+            >
+              <ExternalLink className="size-4" />
+              <span>Open source</span>
+            </a>
+          )}
         </div>
-        {expanded && (
+        {targetUnavailable && <PreviewStatus targetUnavailable />}
+        {expanded && !targetUnavailable && (
           <div className="content-embed-content">
             {limited ? (
               <p className="content-reference-status">
@@ -420,6 +432,7 @@ function ResolvedReference({
           className="content-reference-card-excerpt"
           loading={isPending}
           unavailable={preview?.status === "unavailable" || !preview}
+          targetUnavailable={targetUnavailable}
         >
           {preview?.excerpt}
         </PreviewStatus>

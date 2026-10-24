@@ -30,6 +30,7 @@ export function ReferenceCardView<
   const props = block.props;
   const target = useMemo(() => targetFromProps(props), [props]);
   const { adapter, loading, preview } = usePreview(target, true);
+  const targetUnavailable = preview?.unavailableReason === "target-unavailable";
   const authoredLabel = typeof props.label === "string" ? props.label : "";
   const title =
     (preview?.status === "ready" ? preview.title : undefined) ||
@@ -54,12 +55,16 @@ export function ReferenceCardView<
           <ReferenceIcon target={target} preview={preview} />
           <a
             draggable={false}
-            href={href}
+            href={targetUnavailable ? undefined : href}
             rel={
               target?.kind === "external" ? "noopener noreferrer" : undefined
             }
             target={target?.kind === "external" ? "_blank" : undefined}
             onClick={(event) => {
+              if (targetUnavailable) {
+                event.preventDefault();
+                return;
+              }
               if (adapter && target && !event.metaKey && !event.ctrlKey) {
                 event.preventDefault();
                 adapter.openTarget(target, href);
@@ -93,6 +98,7 @@ export function ReferenceCardView<
           className="content-reference-card-excerpt"
           loading={loading}
           unavailable={preview?.status === "unavailable"}
+          targetUnavailable={targetUnavailable}
         >
           {preview?.excerpt || String(props.url ?? "")}
         </PreviewStatus>

@@ -1,4 +1,5 @@
 import type { ReferenceEmbedResult } from "@acme/references";
+import { PreviewStatus } from "@acme/references/react";
 import type {
   BlockNoteEditor,
   BlockSchema,
@@ -34,6 +35,7 @@ export function ReferenceEmbedView<
 }) {
   const target = useMemo(() => targetFromProps(props), [props]);
   const { adapter, preview } = usePreview(target, true);
+  const targetUnavailable = preview?.unavailableReason === "target-unavailable";
   const [expanded, setExpanded] = useState(false);
   const [content, setContent] = useState<ReferenceEmbedResult>();
   const [requestCursor, setRequestCursor] = useState<string>();
@@ -57,6 +59,7 @@ export function ReferenceEmbedView<
   // biome-ignore lint/correctness/useExhaustiveDependencies: retry is an explicit reload trigger after a failed request.
   useEffect(() => {
     if (
+      targetUnavailable ||
       !expanded ||
       target?.kind !== "document" ||
       !adapter ||
@@ -106,7 +109,16 @@ export function ReferenceEmbedView<
       active = false;
       unsubscribe?.();
     };
-  }, [adapter, circular, expanded, limitReached, requestCursor, retry, target]);
+  }, [
+    adapter,
+    circular,
+    expanded,
+    limitReached,
+    requestCursor,
+    retry,
+    target,
+    targetUnavailable,
+  ]);
   const authoredLabel = typeof props.label === "string" ? props.label : "";
   const title =
     content?.title ||
@@ -117,6 +129,16 @@ export function ReferenceEmbedView<
     content?.href ?? (preview?.status === "ready" ? preview.href : undefined);
   if (target?.kind !== "document")
     return <div className="content-embed-fallback">{title}</div>;
+  if (targetUnavailable)
+    return (
+      <section
+        className="content-embed"
+        {...blockSurface(editor, blockId, adapter?.editable)}
+      >
+        <strong>{authoredLabel || "Referenced note"}</strong>
+        <PreviewStatus targetUnavailable />
+      </section>
+    );
   if (circular || limitReached)
     return (
       <div className="content-embed-fallback">

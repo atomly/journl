@@ -182,7 +182,11 @@ export async function resolveInternal(
       and(eq(Document.id, target.documentId), eq(Document.user_id, userId)),
     )
     .limit(1);
-  if (!document) return { status: "unavailable" as const };
+  if (!document)
+    return {
+      status: "unavailable" as const,
+      unavailableReason: "target-unavailable" as const,
+    };
 
   const [page] = await db
     .select()
@@ -200,7 +204,10 @@ export async function resolveInternal(
     )
     .limit(1);
   if ((!page && !entry) || (page && entry))
-    return { status: "unavailable" as const };
+    return {
+      status: "unavailable" as const,
+      unavailableReason: "target-unavailable" as const,
+    };
 
   const blocks = await db
     .select()
@@ -212,7 +219,10 @@ export async function resolveInternal(
       ),
     );
   if (target.blockId && !blocks.some((block) => block.id === target.blockId)) {
-    return { status: "unavailable" as const };
+    return {
+      status: "unavailable" as const,
+      unavailableReason: "target-unavailable" as const,
+    };
   }
   const edges = await db
     .select()

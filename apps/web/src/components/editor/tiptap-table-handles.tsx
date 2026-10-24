@@ -13,6 +13,13 @@ import {
   tableAxisSelection,
   tableContext,
 } from "@acme/tiptap";
+import { Button } from "@acme/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@acme/ui/dropdown-menu";
 import {
   autoUpdate,
   hide,
@@ -34,13 +41,6 @@ import {
   useState,
 } from "react";
 import { createPortal } from "react-dom";
-import { Button } from "~/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "~/components/ui/dropdown-menu";
 import {
   EditorHint,
   EditorMenuItem,

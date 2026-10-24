@@ -1,7 +1,7 @@
 "use client";
 
+import { Button } from "@acme/ui/button";
 import type { ComponentProps } from "react";
-import { Button } from "~/components/ui/button";
 import { cn } from "~/lib/cn";
 
 type HeroCtaButtonProps = ComponentProps<typeof Button>;

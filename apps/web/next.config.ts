@@ -23,6 +23,7 @@ const config: NextConfig = {
     "@acme/graph",
     "@acme/references",
     "@acme/tiptap",
+    "@acme/ui",
   ],
   typescript: { ignoreBuildErrors: true },
 };

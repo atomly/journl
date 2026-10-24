@@ -1,8 +1,8 @@
 "use client";
 
+import { Button } from "@acme/ui/button";
 import Link from "next/link";
 import { useEffect } from "react";
-import { Button } from "~/components/ui/button";
 import {
   Dialog,
   DialogContent,

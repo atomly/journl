@@ -1,15 +1,15 @@
 "use client";
 
 import type { Folder } from "@acme/db/schema";
-import { Settings, Trash2 } from "lucide-react";
-import { useState } from "react";
-import { Button } from "~/components/ui/button";
+import { Button } from "@acme/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "~/components/ui/dropdown-menu";
+} from "@acme/ui/dropdown-menu";
+import { Settings, Trash2 } from "lucide-react";
+import { useState } from "react";
 import { DeleteFolderDialog } from "../../@appSidebar/_components/delete-folder-button";
 
 type FolderDeleteActionProps = {

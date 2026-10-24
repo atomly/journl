@@ -6,6 +6,7 @@ import {
   ReferenceRenderContext,
   schema,
 } from "@acme/blocknote/schema";
+import { useIsMobile } from "@acme/ui/use-mobile";
 import {
   FormattingToolbarExtension,
   filterSuggestionItems,
@@ -42,7 +43,6 @@ import { RiSparkling2Fill } from "react-icons/ri";
 import removeMarkdown from "remove-markdown";
 import { toast } from "sonner";
 import { useJournlAgent } from "~/hooks/use-journl-agent";
-import { useIsMobile } from "~/hooks/use-mobile";
 import { useTRPC } from "~/trpc/react";
 import { BlockActions, inlineReferenceAction } from "./block-editor-block-menu";
 import {

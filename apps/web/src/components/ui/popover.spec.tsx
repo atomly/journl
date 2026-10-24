@@ -1,13 +1,14 @@
 // @vitest-environment jsdom
-import { act } from "react";
-import { createRoot } from "react-dom/client";
-import { expect, test, vi } from "vitest";
+
 import {
   Popover,
   PopoverContent,
   PopoverTitle,
   PopoverTrigger,
-} from "./popover";
+} from "@acme/ui/popover";
+import { act } from "react";
+import { createRoot } from "react-dom/client";
+import { expect, test, vi } from "vitest";
 
 test.each(["button", "span"])(
   "%s popover triggers expose semantics and open with the keyboard",

@@ -1,6 +1,6 @@
+import { Button } from "@acme/ui/button";
 import Link from "next/link";
 import { withoutAuth } from "~/app/_guards/page-guards";
-import { Button } from "~/components/ui/button";
 
 type SearchParams = Record<string, string | string[] | undefined>;
 

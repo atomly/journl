@@ -4,14 +4,14 @@ import {
   ReferenceRenderContext,
   schema,
 } from "@acme/blocknote/schema";
+import * as DropdownMenu from "@acme/ui/dropdown-menu";
+import * as Popover from "@acme/ui/popover";
 import { BlockNoteEditor } from "@blocknote/core";
 import { BlockNoteView } from "@blocknote/shadcn";
 import { TextSelection } from "@tiptap/pm/state";
 import { act } from "react";
 import { createRoot } from "react-dom/client";
 import { afterEach, expect, test, vi } from "vitest";
-import * as DropdownMenu from "../ui/dropdown-menu";
-import * as Popover from "../ui/popover";
 import { BlockEditorContextMenu } from "./block-editor-block-menu";
 import { ReferenceSelectionExtension } from "./reference-selection";
 

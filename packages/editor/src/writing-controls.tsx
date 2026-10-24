@@ -96,14 +96,14 @@ export function BlockActions({
   return (
     <>
       <EditorMenuItem
-        hint="Indent the selected blocks together (Tab or ⌘/Ctrl+])"
+        hint="Indent (Tab)"
         disabled={!indentBlock(state)}
         onClick={() => execute((state) => indentBlock(state))}
       >
         Indent
       </EditorMenuItem>
       <EditorMenuItem
-        hint="Outdent the selected blocks together (Shift+Tab or ⌘/Ctrl+[)"
+        hint="Outdent (Shift+Tab)"
         disabled={!indentBlock(state, true)}
         onClick={() => execute((state) => indentBlock(state, true))}
       >
@@ -111,7 +111,7 @@ export function BlockActions({
       </EditorMenuItem>
       <DropdownMenuSeparator />
       <EditorMenuItem
-        hint="Duplicate this block and everything nested inside it (⌘/Ctrl+D)"
+        hint="Duplicate (⌘/Ctrl+D)"
         onClick={() =>
           execute((state) =>
             duplicateSelectedBlock(state, () => crypto.randomUUID()),
@@ -120,20 +120,14 @@ export function BlockActions({
       >
         Duplicate block
       </EditorMenuItem>
-      <EditorMenuItem
-        hint="Move the block up (⌘/Ctrl+Shift+↑)"
-        onClick={() => run(-1)}
-      >
+      <EditorMenuItem hint="Move up (⌘/Ctrl+Shift+↑)" onClick={() => run(-1)}>
         Move block up
       </EditorMenuItem>
-      <EditorMenuItem
-        hint="Move the block down (⌘/Ctrl+Shift+↓)"
-        onClick={() => run(1)}
-      >
+      <EditorMenuItem hint="Move down (⌘/Ctrl+Shift+↓)" onClick={() => run(1)}>
         Move block down
       </EditorMenuItem>
       <EditorMenuItem
-        hint="Copy a link directly to this block"
+        hint="Copy block link"
         onClick={async () => {
           const target = targetState();
           const id = target && selectedBlock(target)?.id;
@@ -150,7 +144,7 @@ export function BlockActions({
         Copy block link
       </EditorMenuItem>
       <EditorMenuItem
-        hint="Delete the block and everything nested inside it"
+        hint="Delete block and children"
         variant="destructive"
         onClick={() => run()}
       >
@@ -160,7 +154,7 @@ export function BlockActions({
       </EditorMenuItem>
       <DropdownMenuSeparator />
       <EditorMenuItem
-        hint="Undo the last edit (⌘/Ctrl+Z)"
+        hint="Undo (⌘/Ctrl+Z)"
         disabled={!undo(editor.state)}
         onClick={() => {
           undo(editor.state, editor.view.dispatch);
@@ -171,7 +165,7 @@ export function BlockActions({
         Undo
       </EditorMenuItem>
       <EditorMenuItem
-        hint="Redo the last undone edit (⌘/Ctrl+Shift+Z)"
+        hint="Redo (⌘/Ctrl+Shift+Z)"
         disabled={!redo(editor.state)}
         onClick={() => {
           redo(editor.state, editor.view.dispatch);

@@ -6,6 +6,7 @@ import {
   type ReferenceClient,
 } from "@acme/references";
 import {
+  clipboardPasteExtension,
   clipboardText,
   documentChanges,
   documentExtensions,
@@ -166,6 +167,7 @@ function EditorView({
         enableContentCheck: true,
         extensions: [
           ...documentExtensions(),
+          clipboardPasteExtension(() => crypto.randomUUID()),
           referenceViews.extension,
           editingExtension(() => crypto.randomUUID()),
           writingExtension(() => crypto.randomUUID()),

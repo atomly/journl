@@ -5,6 +5,7 @@ import { NodeSelection } from "@tiptap/pm/state";
 import { CellSelection } from "@tiptap/pm/tables";
 import { selectedBlock } from "./commands";
 import type { IdFactory } from "./identity";
+import { blockAt } from "./identity";
 import { required } from "./required";
 
 /** A cell can contain inline forms; document embeds require owned document targets. */
@@ -133,6 +134,19 @@ export function convertReference(
       : []),
   ];
   transaction.replaceWith(target.pos, target.pos + target.node.nodeSize, nodes);
+  // A terminal reference needs a writable sibling, just like pasted URL cards.
+  // Keep the reference selected so its display menu and selection cue still work.
+  const converted = blockAt(transaction.doc, target.id);
+  const boundary = transaction.doc.resolve(converted.pos);
+  if (boundary.index() === boundary.parent.childCount - 1) {
+    transaction.insert(
+      converted.pos + converted.node.nodeSize,
+      wrapper.createChecked(
+        { id: createId() },
+        required(schema.nodes.paragraph).create(),
+      ),
+    );
+  }
   const cardPos =
     target.pos +
     (nodes.length && before.size ? required(nodes[0]).nodeSize : 0) +

@@ -6,6 +6,7 @@ import {
   editBlocks,
   selectedBlock,
   selectedBlocks,
+  slashKey,
 } from "@acme/tiptap";
 import { Button } from "@acme/ui/button";
 import {
@@ -41,6 +42,17 @@ export function TiptapSideMenu({
   const [position, setPosition] = useState({ color: "", left: 0, top: 0 });
   const [open, setOpen] = useState(false);
   const frozen = useRef(false);
+  const [pressed, setPressed] = useState(false);
+  useEffect(() => {
+    if (!pressed) return;
+    const release = () => requestAnimationFrame(() => setPressed(false));
+    document.addEventListener("pointerup", release, { once: true });
+    document.addEventListener("pointercancel", release, { once: true });
+    return () => {
+      document.removeEventListener("pointerup", release);
+      document.removeEventListener("pointercancel", release);
+    };
+  }, [pressed]);
   useEffect(() => {
     const root = editor.view.dom;
     const move = (event: PointerEvent) => {
@@ -48,6 +60,8 @@ export function TiptapSideMenu({
       if (
         event.pointerType === "touch" ||
         open ||
+        pressed ||
+        frozen.current ||
         editor.view.dragging ||
         event.buttons
       )
@@ -80,7 +94,7 @@ export function TiptapSideMenu({
         setId(row.closest<HTMLElement>("[data-block-id]")?.dataset.blockId);
     };
     const focus = () => {
-      if (open || frozen.current) return;
+      if (open || pressed || frozen.current) return;
       const target = selectedBlock(editor.state);
       if (target) setId(target.id);
     };
@@ -102,7 +116,7 @@ export function TiptapSideMenu({
       editor.off("selectionUpdate", focus);
       root.removeEventListener("pointerup", tap);
     };
-  }, [editor, open, mobile, touchPointer]);
+  }, [editor, open, pressed, mobile, touchPointer]);
   useEffect(() => {
     if (!id) return;
     const update = () => {
@@ -139,7 +153,10 @@ export function TiptapSideMenu({
       window.removeEventListener("resize", update);
     };
   }, [editor, id, state, mobile]);
-  if (!id || (!visible && !open && !frozen.current && !editor.view.dragging))
+  if (
+    !id ||
+    (!visible && !open && !pressed && !frozen.current && !editor.view.dragging)
+  )
     return null;
   const select = (preserve = true) => {
     const target = blockAt(editor.state.doc, id);
@@ -184,27 +201,34 @@ export function TiptapSideMenu({
                   onMouseDown={(event) => event.preventDefault()}
                   onClick={() => {
                     const target = select(false);
-                    const fresh = crypto.randomUUID();
-                    const tr = editBlocks(
-                      editor.state.tr,
-                      [
-                        {
-                          afterId: target.id,
-                          block: { content: "/", id: fresh, type: "paragraph" },
-                          parentId: target.parentId,
-                          type: "insert",
-                        },
-                      ],
-                      fresh,
-                    );
+                    const body = target.node.firstChild;
+                    const reuse =
+                      body?.type.name === "paragraph" && !body.content.size;
+                    const fresh = reuse ? target.id : crypto.randomUUID();
+                    const tr = reuse
+                      ? editor.state.tr
+                      : editBlocks(
+                          editor.state.tr,
+                          [
+                            {
+                              afterId: target.id,
+                              block: { id: fresh, type: "paragraph" },
+                              parentId: target.parentId,
+                              type: "insert",
+                            },
+                          ],
+                          fresh,
+                        );
                     tr.setSelection(
                       TextSelection.create(
                         tr.doc,
-                        blockAt(tr.doc, fresh).pos + 3,
+                        blockAt(tr.doc, fresh).pos + 2,
                       ),
                     );
                     editor.view.focus();
-                    editor.view.dispatch(tr.scrollIntoView());
+                    editor.view.dispatch(
+                      tr.setMeta(slashKey, { open: true }).scrollIntoView(),
+                    );
                   }}
                 >
                   <Plus />
@@ -221,7 +245,10 @@ export function TiptapSideMenu({
             >
               <DropdownMenuTrigger
                 asChild
-                onPointerDown={(event) => event.preventBaseUIHandler()}
+                onPointerDown={(event) => {
+                  event.preventBaseUIHandler();
+                  setPressed(true);
+                }}
                 onMouseDown={(event) => {
                   // Opening on mousedown schedules focus into the menu during native
                   // dragstart. Keep the browser's drag gesture; open only on click.

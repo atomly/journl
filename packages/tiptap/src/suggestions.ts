@@ -42,7 +42,7 @@ export const blockChoices: BlockChoice[] = [
   { aliases: "blockquote", title: "Quote", type: "quote" },
   {
     aliases: "source codeblock",
-    props: { language: "text" },
+    props: { language: "auto" },
     title: "Code",
     type: "codeBlock",
   },
@@ -50,6 +50,7 @@ export const blockChoices: BlockChoice[] = [
   { aliases: "grid rows columns", title: "Table", type: "table" },
 ];
 export type SlashQuery = {
+  explicit?: boolean;
   from: number;
   to: number;
   query: string;
@@ -89,7 +90,7 @@ export function applySlashChoice(
   choice: BlockChoice,
   createId: IdFactory,
 ) {
-  const query = slashQuery(state);
+  const query = slashKey.getState(state) ?? slashQuery(state);
   const target = selectedBlock(state);
   if (!query || !target) return null;
   const tr = state.tr.delete(query.from, query.to);
@@ -107,7 +108,7 @@ export function applySlashChoice(
     );
     tr.setSelection(TextSelection.create(tr.doc, pos + 2));
   }
-  return tr.scrollIntoView();
+  return tr.setMeta(slashKey, { dismiss: true }).scrollIntoView();
 }
 export function suggestionExtension(createId: IdFactory) {
   return Extension.create({
@@ -163,12 +164,34 @@ export function suggestionExtension(createId: IdFactory) {
           state: {
             apply(tr, previous, _, state) {
               if (!editor.isFocused) return null;
-              const query = slashQuery(state);
-              if (!query) return null;
               const meta = tr.getMeta(slashKey);
+              const explicit =
+                meta?.open ||
+                (previous?.explicit &&
+                  previous.from === state.selection.$from.start());
+              const query =
+                explicit &&
+                state.selection.empty &&
+                state.selection.$from.parent.type.name === "paragraph" &&
+                state.selection.$from.parentOffset ===
+                  state.selection.$from.parent.content.size
+                  ? {
+                      explicit: true,
+                      from: state.selection.$from.start(),
+                      query: state.selection.$from.parent.textContent,
+                      to: state.selection.from,
+                    }
+                  : slashQuery(state);
+              if (!query) return null;
               if (meta?.dismiss) return null;
               // Escape stays dismissed until the document/selection changes.
-              if (!previous && !tr.docChanged && !tr.selectionSet) return null;
+              if (
+                !previous &&
+                !tr.docChanged &&
+                !tr.selectionSet &&
+                !meta?.open
+              )
+                return null;
               const same =
                 previous?.from === query.from && previous.query === query.query;
               const count = filteredBlockChoices(query.query).length;

@@ -271,7 +271,7 @@ function ResolvedReference({
   const menu = view.editor.isEditable && (
     <DropdownMenu modal={false}>
       <DropdownMenuTrigger asChild>
-        <EditorHint label="Change how this link is displayed">
+        <EditorHint label="Display as">
           <button
             type="button"
             className="content-reference-action"

@@ -31,17 +31,17 @@ export type InsertReference = (
 export const referenceDisplays = [
   { hint: "Plain linked text", label: "Link", type: "link" },
   {
-    hint: "Compact inline link with an icon and preview",
+    hint: "Inline mention",
     label: "Mention",
     type: "contentReference",
   },
   {
-    hint: "A separate block with the source title and description",
-    label: "Card preview",
+    hint: "Title and description",
+    label: "Card",
     type: "referenceCard",
   },
   {
-    hint: "Show the linked Journl content inside this document",
+    hint: "Embedded content",
     label: "Embedded content",
     type: "contentEmbed",
   },
@@ -134,7 +134,7 @@ export function ReferenceDisplayControl({
     return null;
   return (
     <DropdownMenu modal={false}>
-      <EditorToolbarControl label="Change this link into a mention, card preview, or embedded content">
+      <EditorToolbarControl label="Display as">
         <DropdownMenuTrigger asChild>
           <Button
             variant="ghost"

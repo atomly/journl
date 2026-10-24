@@ -107,7 +107,7 @@ function BlockTypeMenu({ editor }: { editor: Editor }) {
   const choices = blockTypeOptions(editor);
   return (
     <DropdownMenuSub>
-      <EditorHint label="Turn this block into a different block type">
+      <EditorHint label="Block type">
         <DropdownMenuSubTrigger disabled={!choices.length}>
           Turn into
         </DropdownMenuSubTrigger>
@@ -690,7 +690,7 @@ export function TiptapToolbar({
           <IndentDecrease />
         </EditorTool>
         <DropdownMenu modal={false}>
-          <EditorToolbarControl label="Block actions and undo/redo (Alt+F10 focuses editor controls)">
+          <EditorToolbarControl label="More actions">
             <DropdownMenuTrigger asChild>
               <Button
                 aria-label="More formatting"
@@ -736,8 +736,6 @@ export function BlockMenuContent({
   blockId?: string;
   insertReference?: InsertReference;
 }) {
-  const state = useTiptapState(editor);
-  const body = state && selectedBlock(state)?.node.firstChild;
   return (
     <>
       <BlockTypeMenu editor={editor} />
@@ -746,24 +744,6 @@ export function BlockMenuContent({
         editor={editor}
         insertReference={insertReference}
       />
-      {body?.type.name === "codeBlock" && (
-        <EditorHint label="Syntax language for this code block">
-          <label className="flex flex-col gap-1 p-2 text-sm">
-            Language
-            <input
-              aria-label="Code language"
-              className="rounded border bg-background p-1"
-              value={body.attrs.props?.language ?? "text"}
-              onChange={(event) => {
-                const tr = setBlockProperties(editor.state, {
-                  language: event.target.value,
-                });
-                if (tr) editor.view.dispatch(tr);
-              }}
-            />
-          </label>
-        </EditorHint>
-      )}
       <BlockActions editor={editor} blockId={blockId} />
     </>
   );

@@ -444,3 +444,28 @@
   :is([data-journl-block], [data-journl-body]).ProseMirror-selectednode {
   outline: none;
 }
+
+/* Select the reference surface itself, without a second wrapper outline. */
+.journl-tiptap
+  :is([data-reference-selected], .ProseMirror-selectednode)
+  > :is(.content-reference-card, .content-embed) {
+  border-color: var(--ring);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--ring) 45%, transparent);
+}
+
+.journl-code-block {
+  border-radius: 8px;
+  background: #161616;
+}
+.journl-code-controls {
+  padding: 8px 16px 0;
+}
+.journl-code-controls select {
+  max-width: 100%;
+  color: #cfcfcf;
+  background: #161616;
+  border-radius: 4px;
+  font:
+    12px / 1.5 system-ui,
+    sans-serif;
+}

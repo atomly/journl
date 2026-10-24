@@ -112,3 +112,39 @@ test("resolver failure restores an authored link alias and styles", async () => 
     editor.destroy();
   }
 });
+
+test("converting the final selected link to a card leaves a writable caret through asynchronous resolution", async () => {
+  const editor = setup("Alias");
+  try {
+    editor.view.dispatch(
+      editor.state.tr.setSelection(
+        TextSelection.create(editor.state.doc, 2, 7),
+      ),
+    );
+    expect(
+      insertTiptapReference(
+        editor.view,
+        url,
+        async () => ({ items: [] }),
+        "Alias",
+        "referenceCard",
+      ),
+    ).toBe(true);
+    expect(editor.state.selection.$from.parent.type.name).toBe("paragraph");
+    editor.view.dispatch(editor.state.tr.insertText("After card"));
+    await vi.waitFor(() =>
+      expect(fromTiptapDocument(editor.state.doc)[0]).toMatchObject({
+        props: { label: "Alias" },
+        type: "referenceCard",
+      }),
+    );
+    expect(fromTiptapDocument(editor.state.doc).at(-1)).toMatchObject({
+      content: [{ text: "After card" }],
+      type: "paragraph",
+    });
+    editor.state.doc.check();
+    expect(editor.isEditable).toBe(true);
+  } finally {
+    editor.destroy();
+  }
+});

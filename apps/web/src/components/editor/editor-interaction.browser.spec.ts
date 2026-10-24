@@ -159,3 +159,23 @@ test("reference selection highlights its own frame and native handles still move
     await embed.evaluate((element) => getComputedStyle(element).boxShadow),
   ).not.toBe("none");
 });
+
+test("mobile handle opens block actions in one tap with a usable touch target", async ({
+  page,
+}, info) => {
+  test.skip(info.project.name !== "mobile-webkit", "Touch handle acceptance");
+  await page.goto("/journal/1988-08-28");
+  await page.locator(".journl-tiptap [data-journl-body]").first().tap();
+  const handle = page.getByRole("button", {
+    exact: true,
+    name: "Block actions",
+  });
+  await expect(handle).toBeVisible();
+  const bounds = await handle.boundingBox();
+  expect(bounds?.width).toBeGreaterThanOrEqual(44);
+  expect(bounds?.height).toBeGreaterThanOrEqual(44);
+  await handle.tap();
+  await expect(
+    page.getByRole("menuitem", { exact: true, name: "Duplicate block" }),
+  ).toBeVisible();
+});

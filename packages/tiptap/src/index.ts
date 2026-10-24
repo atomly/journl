@@ -1,6 +1,7 @@
 export { documentChanges } from "./changes";
 export { clipboardText } from "./clipboard";
 export { clipboardPasteExtension } from "./clipboard-paste";
+export { codeLanguages } from "./code-block";
 export {
   AdapterReadError,
   fromTiptapDocument,

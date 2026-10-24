@@ -18,9 +18,10 @@ import { useIsMobile } from "@acme/ui/use-mobile";
 import type { Editor } from "@tiptap/core";
 import { NodeSelection, TextSelection } from "@tiptap/pm/state";
 import { GripVertical, Plus } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { EditorHint, restoreEditorFocus } from "./controls";
+import { inToolbarCorridor } from "./pointer-corridor";
 import { BlockMenuContent } from "./toolbar";
 import { TouchBlockDrag } from "./touch-block-drag";
 import { useTiptapState } from "./writing-controls";
@@ -38,7 +39,13 @@ export function TiptapSideMenu({
   const compact = useIsMobile();
   const [touchPointer, setTouchPointer] = useState(false);
   const mobile = compact || touchPointer;
-  const [id, setId] = useState<string>();
+  const [id, setIdState] = useState<string>();
+  const activeId = useRef<string | undefined>(undefined);
+  const setId = useCallback((value: string | undefined) => {
+    // Pointer events can cross the gap before React paints the next handle.
+    activeId.current = value;
+    setIdState(value);
+  }, []);
   const [position, setPosition] = useState({ color: "", left: 0, top: 0 });
   const [open, setOpen] = useState(false);
   const frozen = useRef(false);
@@ -68,6 +75,26 @@ export function TiptapSideMenu({
         return;
       if (!(event.target instanceof Element)) return;
       if (event.target.closest("[data-tiptap-controls]")) return;
+      const currentId = activeId.current;
+      if (currentId) {
+        const toolbar = document.querySelector<HTMLElement>(
+          `[data-tiptap-toolbar="selection"][data-tiptap-owner="${editor.instanceId}"]`,
+        );
+        const block = [...root.querySelectorAll<HTMLElement>("[data-block-id]")]
+          .find((element) => element.dataset.blockId === currentId)
+          ?.querySelector<HTMLElement>("[data-journl-body]");
+        if (
+          toolbar &&
+          block &&
+          inToolbarCorridor(
+            event.clientX,
+            event.clientY,
+            block.getBoundingClientRect(),
+            toolbar.getBoundingClientRect(),
+          )
+        )
+          return;
+      }
       const bounds = root.getBoundingClientRect();
       if (
         event.clientX < bounds.left - 64 ||
@@ -116,7 +143,7 @@ export function TiptapSideMenu({
       editor.off("selectionUpdate", focus);
       root.removeEventListener("pointerup", tap);
     };
-  }, [editor, open, pressed, mobile, touchPointer]);
+  }, [editor, open, pressed, mobile, touchPointer, setId]);
   useEffect(() => {
     if (!id) return;
     const update = () => {
@@ -152,7 +179,7 @@ export function TiptapSideMenu({
       window.removeEventListener("scroll", update, true);
       window.removeEventListener("resize", update);
     };
-  }, [editor, id, state, mobile]);
+  }, [editor, id, state, mobile, setId]);
   if (
     !id ||
     (!visible && !open && !pressed && !frozen.current && !editor.view.dragging)

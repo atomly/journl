@@ -89,7 +89,18 @@ export function insertTiptapReference(
     const conversion = convertReference(view.state, display, () =>
       crypto.randomUUID(),
     );
-    if (conversion) view.dispatch(conversion);
+    if (conversion) {
+      view.dispatch(conversion);
+      const current = selectedBlock(view.state);
+      if (current) {
+        const end = current.pos + current.node.nodeSize;
+        view.dispatch(
+          view.state.tr.setSelection(
+            TextSelection.near(view.state.doc.resolve(end), 1),
+          ),
+        );
+      }
+    }
   }
   const settle = (resolved?: Partial<ReferenceProps>, failed = false) => {
     if (view.isDestroyed) return;
@@ -134,7 +145,7 @@ export function insertTiptapReference(
       const target = result?.target;
       settle(
         !target
-          ? { label: parsed.hostname }
+          ? { label: label || parsed.hostname }
           : target.kind === "document"
             ? {
                 blockId: target.blockId ?? "",

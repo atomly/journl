@@ -71,9 +71,9 @@ export function writingExtension(createId: IdFactory) {
         })),
         blockRule(/^>\s$/, "quote"),
         blockRule(/^```([\w-]*)\s$/, "codeBlock", (match) => ({
-          language: match[1] || "text",
+          language: match[1] || "auto",
         })),
-        blockRule(/^---\s$/, "divider"),
+        blockRule(/^---$/, "divider"),
         ...marks.flatMap(([name, find]) => {
           const type = this.editor.schema.marks[name];
           return type ? [markInputRule({ find, type })] : [];

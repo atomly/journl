@@ -1,8 +1,6 @@
 import { Extension, type Extensions, Mark, Node } from "@tiptap/core";
-import { all, createLowlight } from "lowlight";
-import { createHighlightPlugin } from "prosemirror-highlight";
-import { createParser } from "prosemirror-highlight/lowlight";
 import { blockView } from "./block-view";
+import { codeBlockView, codeHighlightPlugin } from "./code-block";
 import { editorColor as color } from "./colors";
 import { tableExtension, tableNodeView } from "./tables";
 
@@ -44,9 +42,6 @@ const htmlAttrs = (attrs: Record<string, unknown>) => ({
   "data-journl-attrs": JSON.stringify(attrs),
 });
 
-const lowlight = createLowlight(all);
-const highlight = createParser(lowlight);
-
 const propsAttribute = () => ({
   props: { default: null, rendered: false },
 });
@@ -57,18 +52,7 @@ export function documentExtensions(): Extensions {
     tableExtension(),
     Extension.create({
       name: "journlSyntaxHighlight",
-      addProseMirrorPlugins: () => [
-        createHighlightPlugin({
-          parser: highlight,
-          nodeTypes: ["codeBlock"],
-          languageExtractor: (node) => {
-            const language = node.attrs.props?.language;
-            return language && lowlight.registered(language)
-              ? language
-              : undefined;
-          },
-        }),
-      ],
+      addProseMirrorPlugins: () => [codeHighlightPlugin()],
     }),
     Node.create({ name: "doc", topNode: true, content: "journlBlock*" }),
     Node.create({ name: "text", group: "inline" }),
@@ -154,6 +138,7 @@ export function documentExtensions(): Extensions {
     ),
     Node.create({
       name: "codeBlock",
+      addNodeView: () => codeBlockView,
       group: "journlBody",
       content: "text*",
       marks: "",

@@ -108,33 +108,24 @@ export function JournalEntryWrapper({
   );
 }
 
-export function JournalEntryLink({ className, ...rest }: ComponentProps<"a">) {
-  const { date } = useJournalEntry();
-
-  return (
-    <Link
-      className={cn("text-muted-foreground", className)}
-      href={`/journal/${date}`}
-      {...rest}
-    />
-  );
-}
-
 type JournalEntryHeaderProps = Omit<ComponentProps<"div">, "children"> & {
   forceDate?: boolean;
+  linkDate?: boolean;
 };
 
 export function JournalEntryHeader({
   className,
   forceDate = false,
+  linkDate = false,
   ...rest
 }: JournalEntryHeaderProps) {
-  const { formattedDate, isToday, documentId } = useJournalEntry();
+  const { date, formattedDate, isToday, documentId } = useJournalEntry();
+  const label = isToday && !forceDate ? "Today" : formattedDate;
 
   return (
     <div className={cn("flex items-start gap-3", className)} {...rest}>
       <h2 className="min-w-0 flex-1 font-semibold text-3xl text-muted-foreground md:text-4xl lg:text-5xl">
-        {isToday && !forceDate ? "Today" : formattedDate}
+        {linkDate ? <Link href={`/journal/${date}`}>{label}</Link> : label}
       </h2>
       {documentId && <ExploreNoteLink documentId={documentId} />}
     </div>

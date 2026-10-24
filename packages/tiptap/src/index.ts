@@ -6,11 +6,13 @@ export {
 } from "./codec";
 export {
   applyAcceptedOperations,
+  blockDragSelection,
   duplicateSelectedBlock,
   editBlocks,
   editingExtension,
   indentBlock,
   selectedBlock,
+  selectedBlocks,
   setTextMark,
   textMarkActive,
   toggleTextMark,

@@ -1,6 +1,7 @@
 import type { DocumentBlock } from "@acme/document";
 import { documentRows } from "@acme/document";
 import type { BlockTransaction } from "~/trpc";
+import { documentSaveTransactions } from "./document-save-adapter";
 
 type SaveInput = {
   document_id: string | null;
@@ -65,7 +66,9 @@ function sameBlocks(a: DraftInitial["blocks"], b: DraftInitial["blocks"]) {
 export class DocumentDraft<T extends SavedDocument> {
   private snapshot: DraftSnapshot;
   private listeners = new Set<() => void>();
-  private pending: BlockTransaction[] = [];
+  private pendingBody = false;
+  private acceptedBlocks: DraftInitial["blocks"];
+  private flight: Promise<void> | undefined;
   private pendingTitle = false;
   private timer: ReturnType<typeof setTimeout> | undefined;
   private saving = false;
@@ -78,6 +81,7 @@ export class DocumentDraft<T extends SavedDocument> {
     private load: () => Promise<WithBlocks<T> | { date: string }>,
     private onSaved: (entry: WithBlocks<T>) => void,
   ) {
+    this.acceptedBlocks = initial.blocks;
     this.snapshot = {
       ...initial,
       conflict: false,
@@ -93,7 +97,7 @@ export class DocumentDraft<T extends SavedDocument> {
     return (
       !this.saving &&
       !this.failed &&
-      this.pending.length === 0 &&
+      !this.pendingBody &&
       !this.pendingTitle &&
       this.snapshot.recoveryCopies.length === 0 &&
       initial.updatedAt !== null &&
@@ -105,7 +109,7 @@ export class DocumentDraft<T extends SavedDocument> {
   private isDirty = () =>
     this.saving ||
     Boolean(this.failed) ||
-    this.pending.length > 0 ||
+    this.pendingBody ||
     this.pendingTitle;
 
   hasUnsavedChanges = () =>
@@ -125,12 +129,11 @@ export class DocumentDraft<T extends SavedDocument> {
 
   update(
     blocks: DocumentBlock[],
-    transactions: BlockTransaction[],
     debounceTime: number,
     onCreate?: (entry: WithBlocks<T>) => void,
   ) {
     const [first, ...rest] = blocks;
-    this.pending.push(...transactions);
+    this.pendingBody = true;
     this.publish({
       ...this.snapshot,
       blocks: first ? [first, ...rest] : undefined,
@@ -147,33 +150,49 @@ export class DocumentDraft<T extends SavedDocument> {
     this.timer = setTimeout(() => void this.flush(), debounceTime);
   }
 
-  flush = async (): Promise<void> => {
+  flush = (): Promise<void> => {
     clearTimeout(this.timer);
-    if (
-      this.saving ||
-      this.snapshot.error ||
-      (this.pending.length === 0 && !this.pendingTitle)
-    )
-      return;
-
-    const batch: Batch = {
-      blocks: this.snapshot.blocks,
-      input: {
-        document_id: this.snapshot.documentId,
-        expected_updated_at: this.snapshot.updatedAt,
-        transactions: this.pending,
-        ...(this.pendingTitle ? { title: this.snapshot.title } : {}),
-      },
-      title: this.snapshot.title,
-    };
-    this.pending = [];
-    this.pendingTitle = false;
-    await this.send(batch);
+    if (this.flight) return this.flight;
+    if (this.saving || this.snapshot.error) return Promise.resolve();
+    this.flight = this.drain().finally(() => {
+      this.flight = undefined;
+    });
+    return this.flight;
   };
+
+  private async drain() {
+    while ((this.pendingBody || this.pendingTitle) && !this.snapshot.error) {
+      clearTimeout(this.timer);
+      // Keep one latest snapshot while a request is in flight. Intermediate edits
+      // are not queued: derive the next delta from the last acknowledged body.
+      const transactions = this.pendingBody
+        ? documentSaveTransactions(
+            this.acceptedBlocks ?? [],
+            this.snapshot.blocks ?? [],
+          )
+        : [];
+      const batch: Batch = {
+        blocks: this.snapshot.blocks,
+        input: {
+          document_id: this.snapshot.documentId,
+          expected_updated_at: this.snapshot.updatedAt,
+          transactions,
+          ...(this.pendingTitle ? { title: this.snapshot.title } : {}),
+        },
+        title: this.snapshot.title,
+      };
+      this.pendingBody = false;
+      this.pendingTitle = false;
+      if (transactions.length || batch.input.title !== undefined)
+        await this.send(batch);
+      else this.publish(this.snapshot);
+    }
+  }
 
   private accept(saved: T, batch: Batch) {
     const isNew = !this.snapshot.documentId;
     this.failed = undefined;
+    this.acceptedBlocks = batch.blocks;
     this.publish({
       ...this.snapshot,
       conflict: false,
@@ -203,10 +222,6 @@ export class DocumentDraft<T extends SavedDocument> {
       this.saving = false;
       this.publish({ ...this.snapshot, isSaving: false });
     }
-
-    // Drain edits made while saving, even if their editor has since unmounted.
-    if ((this.pending.length > 0 || this.pendingTitle) && !this.snapshot.error)
-      await this.flush();
   }
 
   retry = async (): Promise<void> => {
@@ -247,7 +262,7 @@ export class DocumentDraft<T extends SavedDocument> {
     }
     // Reuse the original version guard: an earlier request may still be running.
     if (shouldResend) await this.send(batch);
-    else if (!this.snapshot.error) await this.flush();
+    if (!this.snapshot.error) await this.flush();
   };
 
   loadSaved = async (
@@ -286,7 +301,8 @@ export class DocumentDraft<T extends SavedDocument> {
           "Your draft changed while loading. Review it before keeping both versions.",
         );
       clearTimeout(this.timer);
-      this.pending = [];
+      this.pendingBody = false;
+      this.acceptedBlocks = "blocks" in remote ? remote.blocks : undefined;
       this.pendingTitle = false;
       this.failed = undefined;
       this.publish({

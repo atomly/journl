@@ -1,10 +1,7 @@
 import { readFileSync } from "node:fs";
 import { expect, test } from "vitest";
 
-const css = readFileSync(
-  new URL("./tiptap-editor.css", import.meta.url),
-  "utf8",
-);
+const css = readFileSync(new URL("./editor.css", import.meta.url), "utf8");
 function luminance(hex: string) {
   const channels = [1, 3, 5].map((offset) => {
     const value = Number.parseInt(hex.slice(offset, offset + 2), 16) / 255;

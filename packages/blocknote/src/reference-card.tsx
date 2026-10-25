@@ -8,8 +8,6 @@ import type {
 import { useMemo } from "react";
 import { safeReferenceHref as safeHref } from "./reference-href";
 
-export { referenceProps } from "./reference-config";
-
 import {
   blockSurface,
   DisplayMenu,

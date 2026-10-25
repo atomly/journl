@@ -20,6 +20,7 @@ const config: NextConfig = {
     "@acme/blocknote",
     "@acme/db",
     "@acme/document",
+    "@acme/editor",
     "@acme/graph",
     "@acme/references",
     "@acme/tiptap",

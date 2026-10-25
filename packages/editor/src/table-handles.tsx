@@ -41,13 +41,9 @@ import {
   useState,
 } from "react";
 import { createPortal } from "react-dom";
-import {
-  EditorHint,
-  EditorMenuItem,
-  restoreEditorFocus,
-} from "./tiptap-controls";
-import { TableMenuItems } from "./tiptap-table-controls";
-import { useTiptapState } from "./tiptap-writing-controls";
+import { EditorHint, EditorMenuItem, restoreEditorFocus } from "./controls";
+import { TableMenuItems } from "./table-controls";
+import { useTiptapState } from "./writing-controls";
 
 type ActiveTable = {
   id: string;

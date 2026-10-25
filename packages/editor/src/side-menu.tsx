@@ -12,9 +12,9 @@ import { NodeSelection, TextSelection } from "@tiptap/pm/state";
 import { GripVertical, Plus } from "lucide-react";
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { EditorHint, restoreEditorFocus } from "./tiptap-controls";
-import { BlockMenuContent } from "./tiptap-toolbar";
-import { useTiptapState } from "./tiptap-writing-controls";
+import { EditorHint, restoreEditorFocus } from "./controls";
+import { BlockMenuContent } from "./toolbar";
+import { useTiptapState } from "./writing-controls";
 
 /** A handle selects the complete Journl wrapper, including descendants. Native
  * ProseMirror drag/drop owns moves; the identity adapter gives copies fresh IDs. */

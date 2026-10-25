@@ -12,9 +12,9 @@ import {
   useSyncExternalStore,
 } from "react";
 import { BlockEditor } from "~/components/editor/block-editor";
+import { ConnectedDocumentEditor } from "~/components/editor/document-editor";
 import { acceptedDocumentChange } from "~/components/editor/document-save-adapter";
 import { useTiptapPreview } from "~/components/editor/editor-frontend-provider";
-import { TiptapEditor } from "~/components/editor/tiptap-editor";
 import { useBlockEditor } from "~/components/editor/use-block-editor";
 import { ExploreNoteLink } from "~/components/references/explore-note-link";
 import { ReferenceBacklinks } from "~/components/references/reference-backlinks";
@@ -177,7 +177,7 @@ function TiptapJournalEntryEditor(props: JournalEntryEditorProps) {
   );
   return (
     <>
-      <TiptapEditor
+      <ConnectedDocumentEditor
         key={snapshot.resetKey}
         initialBlocks={snapshot.blocks}
         className={props.className}
@@ -197,7 +197,7 @@ function TiptapJournalEntryEditor(props: JournalEntryEditorProps) {
         }}
       >
         {props.children}
-      </TiptapEditor>
+      </ConnectedDocumentEditor>
       {snapshot.documentId && (
         <ReferenceBacklinks documentId={snapshot.documentId} />
       )}

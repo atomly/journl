@@ -2,6 +2,10 @@
 
 import type { DocumentBlock, DocumentOperation } from "@acme/document";
 import {
+  getPlainUrlForAutomaticReference,
+  type ReferenceClient,
+} from "@acme/references";
+import {
   documentChanges,
   documentExtensions,
   editingExtension,
@@ -13,44 +17,49 @@ import {
   toTiptapDocument,
   writingExtension,
 } from "@acme/tiptap";
-import { useQueryClient } from "@tanstack/react-query";
 import { Editor, Extension } from "@tiptap/core";
 import { TextSelection } from "@tiptap/pm/state";
-import { useEffect, useMemo, useRef, useState } from "react";
-import { cn } from "~/lib/cn";
-import { getPlainUrlForAutomaticReference } from "~/references/reference-paste-url";
-import { useTRPC } from "~/trpc/react";
-import { referenceViewStore, TiptapReferenceViews } from "./tiptap-node-views";
-import { insertTiptapReference } from "./tiptap-reference-insertion";
-import { TiptapSideMenu } from "./tiptap-side-menu";
-import { TiptapTableHandles } from "./tiptap-table-handles";
-import { TiptapToolbar } from "./tiptap-toolbar";
-import { TiptapContextMenu, TiptapSlashMenu } from "./tiptap-writing-controls";
-import "./tiptap-editor.css";
+import { cn } from "cn";
+import { useContext, useEffect, useMemo, useRef, useState } from "react";
+import { referenceViewStore, TiptapReferenceViews } from "./node-views";
+import { ReferenceClientContext } from "./reference-client";
+import { insertTiptapReference } from "./reference-insertion";
+import { TiptapSideMenu } from "./side-menu";
+import { TiptapTableHandles } from "./table-handles";
+import { TiptapToolbar } from "./toolbar";
+import { TiptapContextMenu, TiptapSlashMenu } from "./writing-controls";
+import "./editor.css";
 
-export type TiptapCommit = (
+export type EditorCommit = (
   blocks: DocumentBlock[],
   operations: DocumentOperation[],
 ) => void;
 
 /** Owns a mounted view, never the draft or its persistence queue. */
-export function TiptapEditor({
+type DocumentEditorProps = {
+  initialBlocks: readonly DocumentBlock[] | undefined;
+  onCommit?: EditorCommit;
+  className?: string;
+  children?: React.ReactNode;
+  references?: ReferenceClient;
+};
+export function DocumentEditor({ references, ...props }: DocumentEditorProps) {
+  const parent = useContext(ReferenceClientContext);
+  return (
+    <ReferenceClientContext.Provider value={references ?? parent}>
+      <EditorView {...props} />
+    </ReferenceClientContext.Provider>
+  );
+}
+function EditorView({
   initialBlocks,
   onCommit,
   className,
   children,
-}: {
-  initialBlocks: readonly DocumentBlock[] | undefined;
-  onCommit?: TiptapCommit;
-  className?: string;
-  children?: React.ReactNode;
-}) {
-  const trpc = useTRPC();
-  const queryClient = useQueryClient();
-  const resolveUrl = (url: string) =>
-    queryClient.fetchQuery(
-      trpc.references.resolveUrls.queryOptions({ urls: [url] }),
-    );
+}: DocumentEditorProps) {
+  const references = useContext(ReferenceClientContext);
+  const resolveUrl: ReferenceClient["resolveUrl"] =
+    references?.resolveUrl ?? (async () => ({ items: [] }));
   const initial = useRef(initialBlocks);
   const resolver = useRef(resolveUrl);
   resolver.current = resolveUrl;
@@ -170,7 +179,7 @@ export function TiptapEditor({
             if (operations.length) commit.current?.(next, operations);
             previous = next;
           } catch {
-            updated.setEditable(false);
+            updated.setEditable(false, false);
             setError(true);
           }
         },

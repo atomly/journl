@@ -1,6 +1,7 @@
 /** Presentation contracts are transient; they are never document storage. */
 export type ReferencePreviewData = {
   status: "ready" | "unavailable";
+  unavailableReason?: "target-unavailable";
   kind?: "page" | "journal" | "external";
   href?: string;
   title?: string;

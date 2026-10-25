@@ -129,6 +129,7 @@ export function ReferenceBadge({
   const href = safeHref(
     preview?.status === "ready" ? (preview.href ?? fallbackHref) : fallbackHref,
   );
+  const targetUnavailable = preview?.unavailableReason === "target-unavailable";
   const authoredLabel = typeof props.label === "string" ? props.label : "";
   const label =
     authoredLabel ||
@@ -161,7 +162,7 @@ export function ReferenceBadge({
   const badge = (
     <a
       className="content-reference"
-      href={href}
+      href={targetUnavailable ? undefined : href}
       rel={target?.kind === "external" ? "noopener noreferrer" : undefined}
       target={target?.kind === "external" ? "_blank" : undefined}
       draggable={false}
@@ -234,11 +235,12 @@ export function ReferenceBadge({
                 className="content-reference-card-excerpt"
                 loading={loading}
                 unavailable={preview?.status === "unavailable"}
+                targetUnavailable={targetUnavailable}
               >
                 {preview?.excerpt || ""}
               </PreviewStatus>
               <div className="content-reference-preview-footer">
-                {target && (
+                {target && !targetUnavailable && (
                   <button
                     className="content-reference-open"
                     type="button"

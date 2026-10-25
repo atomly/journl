@@ -1,4 +1,5 @@
 import { Extension, InputRule, markInputRule } from "@tiptap/core";
+import { TextSelection } from "@tiptap/pm/state";
 import { indentBlock, selectedBlock, toggleTextMark } from "./commands";
 import { blockAt, type IdFactory, splitBlock } from "./identity";
 import { changeBlockType, moveSelectedBlock, turnInto } from "./writing";
@@ -27,6 +28,7 @@ export function writingExtension(createId: IdFactory) {
             const target = selectedBlock(state);
             if (
               !target ||
+              target.node.firstChild !== state.selection.$from.parent ||
               !state.selection.$from.parent.isTextblock ||
               state.selection.$from.parent.type.spec.code ||
               state.selection.$from.parent.content.size !==
@@ -35,7 +37,19 @@ export function writingExtension(createId: IdFactory) {
               return null;
             const tr = state.tr;
             tr.delete(range.from, range.to);
-            turnInto(tr, target.id, type, props(match));
+            if (!turnInto(tr, target.id, type, props(match))) return null;
+            if (type === "divider") {
+              const wrapper = state.schema.nodes.journlBlock;
+              const paragraph = state.schema.nodes.paragraph;
+              if (!wrapper || !paragraph) return null;
+              const block = blockAt(tr.doc, target.id);
+              const pos = block.pos + block.node.nodeSize;
+              tr.insert(
+                pos,
+                wrapper.createChecked({ id: createId() }, paragraph.create()),
+              );
+              tr.setSelection(TextSelection.create(tr.doc, pos + 2));
+            }
           },
         });
       const marks = [

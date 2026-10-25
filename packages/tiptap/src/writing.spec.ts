@@ -6,6 +6,7 @@ import { expect, test } from "vitest";
 import {
   blockAt,
   changeBlockType,
+  clipboardText,
   documentExtensions,
   editingExtension,
   fromTiptapDocument,
@@ -414,7 +415,15 @@ test("turning a selected list range into numbered items preserves every identity
     { id: "b", type: "numberedListItem" },
   ]);
   expect(blocks()[0]?.children?.[0]?.id).toBe("child");
+  expect(
+    blocks().map((block) =>
+      block.type === "numberedListItem" ? block.props?.start : undefined,
+    ),
+  ).toEqual([1, 2]);
   expect(editor.state.selection.empty).toBe(false);
+  expect(clipboardText(editor.state.selection.content().content)).toMatch(
+    /1\. One[\s\S]*2\. Tw/,
+  );
   editor.destroy();
 });
 
@@ -438,4 +447,42 @@ test("empty non-paragraph blocks accept new Markdown shortcuts without losing id
     expect(blocks()[0]).toMatchObject({ id: "a", type: "bulletListItem" });
     editor.destroy();
   }
+});
+
+test("divider shortcut leaves a writable paragraph and table cells keep literal Markdown", () => {
+  const first = setup();
+  first.text("--- ");
+  first.text("After divider");
+  expect(first.blocks().map((block) => block.type)).toEqual([
+    "divider",
+    "paragraph",
+  ]);
+  expect(first.blocks()[1]?.content).toMatchObject([{ text: "After divider" }]);
+  first.editor.destroy();
+  const table = setup([
+    parseBlock({
+      content: { rows: [{ cells: [""] }], type: "tableContent" },
+      id: "table",
+      type: "table",
+    }),
+  ]);
+  const pos = table.editor.state.doc.resolve(5);
+  table.editor.view.dispatch(
+    table.editor.state.tr.setSelection(TextSelection.near(pos)),
+  );
+  table.text("- ");
+  expect(table.editor.state.doc.textContent).toBe("- ");
+  table.editor.destroy();
+});
+
+test("turning an empty block into a table puts typing in its first cell", () => {
+  const { editor, text, blocks } = setup();
+  const tr = changeBlockType(editor.state, "table");
+  if (!tr) throw new Error("Expected a table conversion");
+  editor.view.dispatch(tr);
+  expect(editor.state.selection.$from.parent.type.name).toBe("tableParagraph");
+  text("First cell");
+  expect(blocks()[0]?.type).toBe("table");
+  expect(editor.state.doc.textContent).toBe("First cell");
+  editor.destroy();
 });

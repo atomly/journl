@@ -80,6 +80,9 @@ importers:
       '@acme/graph':
         specifier: workspace:*
         version: link:../../packages/graph
+      '@acme/tiptap':
+        specifier: workspace:*
+        version: link:../../packages/tiptap
       '@ai-sdk/openai':
         specifier: ~4.0.84
         version: 4.0.84(zod@4.6.5)
@@ -521,6 +524,34 @@ importers:
       '@types/node':
         specifier: ~26.6.5
         version: 26.6.5
+      typescript:
+        specifier: ~7.0.2
+        version: 7.0.2
+      vitest:
+        specifier: ^5.0.3
+        version: 5.0.3(@opentelemetry/api@1.9.1)(@types/node@26.6.5)(jsdom@30.1.2(@noble/hashes@2.4.0))(vite@8.3.4(@types/node@26.6.5)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1))
+
+  packages/tiptap:
+    dependencies:
+      '@acme/document':
+        specifier: workspace:*
+        version: link:../document
+      '@tiptap/core':
+        specifier: 3.31.4
+        version: 3.31.4(@tiptap/pm@3.31.4)
+      '@tiptap/pm':
+        specifier: 3.31.4
+        version: 3.31.4
+    devDependencies:
+      '@acme/blocknote':
+        specifier: workspace:*
+        version: link:../blocknote
+      '@acme/tsconfig':
+        specifier: workspace:*
+        version: link:../../tooling/tsconfig
+      jsdom:
+        specifier: 30.1.2
+        version: 30.1.2(@noble/hashes@2.4.0)
       typescript:
         specifier: ~7.0.2
         version: 7.0.2

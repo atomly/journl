@@ -1,16 +1,16 @@
 "use client";
 
-import { DropdownMenuItem } from "@acme/ui/dropdown-menu";
+import type { Editor } from "@tiptap/core";
+import { cn } from "cn";
+import type { ComponentProps, ReactElement } from "react";
 import {
+  DropdownMenuItem,
+  Toolbar,
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@acme/ui/tooltip";
-import { Toolbar } from "@base-ui/react/toolbar";
-import type { Editor } from "@tiptap/core";
-import { cn } from "cn";
-import type { ComponentProps, ReactElement } from "react";
+} from "./ui-components";
 
 /** Compose onto the actual control: no wrapper in menus or nested buttons. */
 export function EditorHint({

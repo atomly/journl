@@ -1,10 +1,10 @@
 "use client";
 
 import { Button } from "@acme/ui/button";
+import { Input } from "@acme/ui/input";
 import { useMutation } from "@tanstack/react-query";
 import { Copy } from "lucide-react";
 import { useMemo, useState } from "react";
-import { Input } from "~/components/ui/input";
 import { env } from "~/env";
 import { cn } from "~/lib/cn";
 import { useTRPC } from "~/trpc/react";

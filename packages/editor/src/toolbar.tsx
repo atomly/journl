@@ -13,26 +13,7 @@ import {
   textMarkActive,
   toggleTextMark,
 } from "@acme/tiptap";
-import { Button } from "@acme/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
-  DropdownMenuTrigger,
-} from "@acme/ui/dropdown-menu";
-import { Popover, PopoverContent, PopoverTrigger } from "@acme/ui/popover";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@acme/ui/select";
-import { TooltipProvider } from "@acme/ui/tooltip";
 import { useIsMobile } from "@acme/ui/use-mobile";
-import { Toolbar } from "@base-ui/react/toolbar";
 import type { Editor } from "@tiptap/core";
 import { TextSelection } from "@tiptap/pm/state";
 import { CellSelection } from "@tiptap/pm/tables";
@@ -65,6 +46,27 @@ import {
   ReferenceDisplayItems,
 } from "./reference-display";
 import { TableMenuItems } from "./table-controls";
+import {
+  Button,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuTrigger,
+  Input,
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+  SurfaceButton,
+  Toolbar,
+  TooltipProvider,
+} from "./ui-components";
 import { BlockActions, useTiptapState } from "./writing-controls";
 
 function EditorTool({
@@ -387,9 +389,7 @@ export function TiptapToolbar({
   };
   const body = state && selectedBlock(state)?.node.firstChild;
   const formattable = Boolean(
-    state?.selection instanceof CellSelection ||
-      (state?.selection.$from.parent.isTextblock &&
-        state.selection.$from.parent.type.name !== "codeBlock"),
+    state?.selection instanceof CellSelection || editor.can().setMark("bold"),
   );
   const content = (
     <TooltipProvider>
@@ -490,7 +490,7 @@ export function TiptapToolbar({
               >
                 Link to a note or URL
               </label>
-              <input
+              <Input
                 id={`reference-${editor.instanceId}`}
                 aria-label="Reference URL"
                 type="url"
@@ -651,7 +651,7 @@ export function TiptapToolbar({
                       key={value}
                       label={`${name === "textColor" ? "Text color" : "Highlight"}: ${value}`}
                     >
-                      <button
+                      <SurfaceButton
                         key={value}
                         type="button"
                         aria-label={`${name === "textColor" ? "Text" : "Highlight"} ${value}`}
@@ -670,7 +670,7 @@ export function TiptapToolbar({
                         }}
                       >
                         A
-                      </button>
+                      </SurfaceButton>
                     </EditorHint>
                   ))}
                 </div>

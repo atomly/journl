@@ -27,6 +27,7 @@ import {
 import { ScrollArea } from "~/components/ui/scroll-area";
 import { Skeleton } from "~/components/ui/skeleton";
 import { useTRPC } from "~/trpc/react";
+import { HeaderSearchTrigger } from "./header-search-trigger";
 
 const MIN_QUERY_LENGTH = 2;
 const DEFAULT_THRESHOLD = 0.25;
@@ -34,15 +35,16 @@ const DEFAULT_LIMIT = 10;
 const DEFAULT_DEBOUNCE_TIME = 150;
 const HEADER_SEARCH_DIALOG_CONTENT_ID = "header-search-dialog-content";
 
-type HeaderSearchButtonProps = React.ComponentProps<typeof Dialog> & {
-  children: React.ReactNode;
+type HeaderSearchButtonProps = Omit<
+  React.ComponentProps<typeof Dialog>,
+  "children"
+> & {
   limit?: number;
   threshold?: number;
   debounceTime?: number;
 };
 
 export function HeaderSearchButton({
-  children,
   limit = DEFAULT_LIMIT,
   threshold = DEFAULT_THRESHOLD,
   debounceTime = DEFAULT_DEBOUNCE_TIME,
@@ -87,9 +89,10 @@ export function HeaderSearchButton({
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen} {...rest}>
-      <DialogTrigger asChild aria-controls={HEADER_SEARCH_DIALOG_CONTENT_ID}>
-        {children}
-      </DialogTrigger>
+      <DialogTrigger
+        render={<HeaderSearchTrigger />}
+        aria-controls={HEADER_SEARCH_DIALOG_CONTENT_ID}
+      />
       <DialogContent
         id={HEADER_SEARCH_DIALOG_CONTENT_ID}
         className="gap-0 overflow-hidden rounded-2xl border-4 border-muted bg-sidebar p-0"

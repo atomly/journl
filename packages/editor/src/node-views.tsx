@@ -19,14 +19,6 @@ import {
   referenceDisplayAllowed,
   safeEditorUrl,
 } from "@acme/tiptap";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuLabel,
-  DropdownMenuTrigger,
-} from "@acme/ui/dropdown-menu";
-import { Popover, PopoverContent, PopoverTrigger } from "@acme/ui/popover";
 import { type Editor, Extension } from "@tiptap/core";
 import { dropCursor } from "@tiptap/pm/dropcursor";
 import type { Node as PMNode } from "@tiptap/pm/model";
@@ -45,6 +37,17 @@ import { EditorHint, EditorMenuItem, restoreEditorFocus } from "./controls";
 import { DocumentEditor } from "./editor";
 import { ReferenceClientContext } from "./reference-client";
 import { referenceDisplays } from "./reference-display";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+  SurfaceButton,
+} from "./ui-components";
 
 type ReferenceView = {
   key: number;
@@ -272,13 +275,13 @@ function ResolvedReference({
     <DropdownMenu modal={false}>
       <DropdownMenuTrigger asChild>
         <EditorHint label="Display as">
-          <button
+          <SurfaceButton
             type="button"
             className="content-reference-action"
             aria-label="Reference actions"
           >
             <MoreHorizontal />
-          </button>
+          </SurfaceButton>
         </EditorHint>
       </DropdownMenuTrigger>
       <DropdownMenuContent
@@ -366,7 +369,7 @@ function ResolvedReference({
         data-block-surface={view.editor.isEditable ? "true" : undefined}
       >
         <div className="content-embed-heading">
-          <button
+          <SurfaceButton
             type="button"
             className="content-embed-toggle"
             aria-expanded={expanded && !targetUnavailable}
@@ -377,7 +380,7 @@ function ResolvedReference({
               style={{ transform: expanded ? "rotate(90deg)" : undefined }}
             />
             <strong>{title}</strong>
-          </button>
+          </SurfaceButton>
           {menu}
           {!targetUnavailable && (
             <a

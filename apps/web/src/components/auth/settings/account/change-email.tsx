@@ -1,13 +1,12 @@
 "use client";
 
+import { Input } from "@acme/ui/input";
 import { getViewURL, validateEmailAddress } from "@better-auth-ui/core";
 import { useAuth, useChangeEmail, useSession } from "@better-auth-ui/react";
 import { useEffect } from "react";
 import { toast } from "sonner";
-
 import { Card, CardContent, CardFooter } from "~/components/ui/card";
 import { Field, FieldLabel } from "~/components/ui/field";
-import { Input } from "~/components/ui/input";
 import { Skeleton } from "~/components/ui/skeleton";
 import { cn } from "~/lib/cn";
 import { isAuthFormFieldInvalid, useAuthForm } from "../../auth-form";

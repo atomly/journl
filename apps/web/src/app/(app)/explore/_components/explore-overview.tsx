@@ -1,10 +1,10 @@
 "use client";
 import { Button } from "@acme/ui/button";
+import { Input } from "@acme/ui/input";
 import { useQuery } from "@tanstack/react-query";
 import { Compass, List, Map as MapIcon } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { Input } from "~/components/ui/input";
 import { Skeleton } from "~/components/ui/skeleton";
 import { getExploreTitle } from "~/references/explore-graph";
 import { exploreUpdatedLabel } from "~/references/explore-note-list";

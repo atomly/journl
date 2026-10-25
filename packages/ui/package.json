@@ -9,7 +9,8 @@
     "./tooltip": "./src/tooltip.tsx",
     "./button": "./src/button.tsx",
     "./dropdown-menu": "./src/dropdown-menu.tsx",
-    "./select": "./src/select.tsx"
+    "./select": "./src/select.tsx",
+    "./input": "./src/input.tsx"
   },
   "scripts": {
     "check": "biome check",

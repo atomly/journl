@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@acme/ui/button";
+import { Input } from "@acme/ui/input";
 import {
   Tooltip,
   TooltipContent,
@@ -12,7 +13,6 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { PanelLeftIcon } from "lucide-react";
 import * as React from "react";
 import { createPortal } from "react-dom";
-import { Input } from "~/components/ui/input";
 import { Separator } from "~/components/ui/separator";
 import {
   Sheet,

@@ -6,14 +6,6 @@ import {
   referenceDisplayAllowed,
   selectedBlock,
 } from "@acme/tiptap";
-import { Button } from "@acme/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuLabel,
-  DropdownMenuTrigger,
-} from "@acme/ui/dropdown-menu";
 import type { Editor } from "@tiptap/core";
 import { TextSelection } from "@tiptap/pm/state";
 import { ChevronDown } from "lucide-react";
@@ -22,6 +14,14 @@ import {
   EditorToolbarControl,
   restoreEditorFocus,
 } from "./controls";
+import {
+  Button,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+} from "./ui-components";
 
 export type InsertReference = (
   url: string,

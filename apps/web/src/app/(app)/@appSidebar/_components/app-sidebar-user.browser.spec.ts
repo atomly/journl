@@ -125,12 +125,30 @@ test("shipped account dropdown works in the collapsed desktop sidebar", async ({
     info.project.name === "mobile-webkit",
     "Mobile uses the sidebar sheet rather than the desktop rail",
   );
+  const errors: string[] = [];
+  page.on("pageerror", (error) => errors.push(error.message));
   await page.goto("/journal");
-  await page.getByRole("button", { name: "Toggle Sidebar" }).first().click();
+  const sidebar = page.locator('[data-slot="sidebar"][data-side="left"]');
+  await expect(sidebar).toBeVisible();
+  if ((await sidebar.getAttribute("data-state")) === "expanded")
+    await page.getByRole("button", { name: "Toggle Sidebar" }).first().click();
+  await expect(sidebar).toHaveAttribute("data-state", "collapsed");
   await page.getByRole("button", { exact: true, name: "Account" }).click();
   await expect(
     page.getByRole("tab", { exact: true, name: "Light" }),
   ).toBeVisible();
   await page.getByRole("tab", { exact: true, name: "Light" }).click();
   await expect(page.locator("html")).toHaveClass(/\blight\b/);
+  await page.keyboard.press("Escape");
+  await page.getByRole("button", { exact: true, name: "Search notes" }).click();
+  const search = page.getByRole("dialog", {
+    name: "Search pages and journal entries",
+  });
+  await expect(search).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(search).toBeHidden();
+  await page.keyboard.press("ControlOrMeta+k");
+  await expect(search).toBeVisible();
+  await page.keyboard.press("Escape");
+  expect(errors).toEqual([]);
 });

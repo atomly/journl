@@ -1,3 +1,4 @@
+import type { Editor } from "@tiptap/core";
 import { fixtureId } from "~/testing/browser/data";
 import { expect, test } from "~/testing/browser/fixtures";
 
@@ -139,23 +140,31 @@ test("page code indentation and table navigation edit bodies without moving bloc
     )
     .first();
   await source.click();
-  await page.keyboard.press("Home");
-  await page.keyboard.press("Shift+End");
+  await source.evaluate((element) => {
+    // Select this body on both macOS and Linux; Home/End have different
+    // native meanings and can include the following reference on macOS.
+    const range = document.createRange();
+    range.selectNodeContents(element);
+    const selection = window.getSelection();
+    selection?.removeAllRanges();
+    selection?.addRange(range);
+    document.dispatchEvent(new Event("selectionchange"));
+  });
   await page.getByRole("combobox", { exact: true, name: "Block type" }).click();
   await page.getByRole("option", { exact: true, name: "Code" }).click();
   const code = editor.locator(
     `[data-block-id="${fixtureId(pageNumber + 1)}"] pre`,
   );
   await expect(code).toBeVisible();
-  await code.click();
-  await page.keyboard.press("Home");
-  await page.keyboard.press("Shift+End");
-  await page
-    .getByRole("button", { exact: true, name: "More formatting" })
-    .click();
-  await page.getByLabel("Code language", { exact: true }).fill("typescript");
-  await page.keyboard.press("Escape");
-  await expect(page.getByRole("menu")).toBeHidden();
+  const language = editor.getByRole("combobox", {
+    exact: true,
+    name: "Code language",
+  });
+  await language.click();
+  await page.getByRole("option", { exact: true, name: "typescript" }).click();
+  await expect(language.locator('[data-slot="select-value"]')).toHaveText(
+    "typescript",
+  );
   await code.click();
   await page.keyboard.press("Tab");
   const codeText = ` // code ${info.project.name}`;
@@ -168,21 +177,32 @@ test("page code indentation and table navigation edit bodies without moving bloc
   );
   const cells = table.locator("td");
   await cells.first().click();
+  // The browser can expose its new DOM range before ProseMirror has processed
+  // selectionchange. Wait for the installed editor's selection before typing.
   await expect
     .poll(() =>
-      page.evaluate(() => {
-        const anchor = window.getSelection()?.anchorNode;
-        return (
-          anchor instanceof Element ? anchor : anchor?.parentElement
-        )?.closest("td")?.tagName;
-      }),
+      editor.evaluate(
+        (element) =>
+          (element as HTMLElement & { editor: Editor }).editor.state.selection
+            .$from.parent.type.name,
+      ),
     )
-    .toBe("TD");
+    .toBe("tableParagraph");
   await page.keyboard.press("Enter");
+  // Table Enter moves down; Tab then moves to the next cell in that row.
+  await expect
+    .poll(() =>
+      cells
+        .nth(2)
+        .evaluate((cell) =>
+          cell.contains(window.getSelection()?.anchorNode ?? null),
+        ),
+    )
+    .toBe(true);
   await page.keyboard.press("Tab");
   const cellText = ` table ${info.project.name}`;
   await page.keyboard.insertText(cellText);
-  await expect(cells.nth(1)).toContainText(cellText);
+  await expect(cells.nth(3)).toContainText(cellText);
   await expect(table.locator("tr")).toHaveCount(2);
   await expect(editor).toContainText("Stored reference");
   await expect(page.locator("[data-save-status]")).toContainText("Saved");
@@ -193,7 +213,10 @@ test("page code indentation and table navigation edit bodies without moving bloc
     );
   await page.reload();
   await expect(editor.locator("pre")).toContainText(codeText);
-  await expect(editor.locator("td").nth(1)).toContainText(cellText);
+  await expect(language.locator('[data-slot="select-value"]')).toHaveText(
+    "typescript",
+  );
+  await expect(editor.locator("td").nth(3)).toContainText(cellText);
   expect(
     await editor
       .locator("[data-block-id]")

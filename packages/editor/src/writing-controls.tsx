@@ -11,12 +11,6 @@ import {
   selectedBlock,
   slashKey,
 } from "@acme/tiptap";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@acme/ui/dropdown-menu";
 import type { Editor } from "@tiptap/core";
 import { redo, undo } from "@tiptap/pm/history";
 import { NodeSelection } from "@tiptap/pm/state";
@@ -31,8 +25,14 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 import { toast } from "sonner";
-
 import { EditorHint, EditorMenuItem, restoreEditorFocus } from "./controls";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+  SurfaceButton,
+} from "./ui-components";
 
 const subscribeEmpty = () => () => {};
 const getEmpty = () => null;
@@ -346,7 +346,7 @@ export function TiptapSlashMenu({ editor }: { editor?: Editor }) {
             key={choice.title}
             label={`Insert ${choice.title.toLowerCase()}`}
           >
-            <button
+            <SurfaceButton
               type="button"
               key={choice.title}
               id={`${menuId}-${index}`}
@@ -365,7 +365,7 @@ export function TiptapSlashMenu({ editor }: { editor?: Editor }) {
               }}
             >
               {choice.title}
-            </button>
+            </SurfaceButton>
           </EditorHint>
         ))
       ) : (

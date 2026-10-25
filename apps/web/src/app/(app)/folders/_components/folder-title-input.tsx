@@ -1,11 +1,11 @@
 "use client";
 
 import type { Folder } from "@acme/db/schema";
+import { Input } from "@acme/ui/input";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
 import { useDebouncedCallback } from "use-debounce";
-import { Input } from "~/components/ui/input";
 import { updateNode } from "~/trpc/cache/tree-cache";
 import { useTRPC } from "~/trpc/react";
 

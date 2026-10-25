@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@acme/ui/button";
+import { Input } from "@acme/ui/input";
 import { useActionState } from "react";
 import {
   Card,
@@ -9,7 +10,6 @@ import {
   CardHeader,
   CardTitle,
 } from "~/components/ui/card";
-import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import { savePasswordAction } from "./password.actions";
 

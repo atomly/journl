@@ -8,14 +8,8 @@ import {
   selectedBlocks,
   slashKey,
 } from "@acme/tiptap";
-import { Button } from "@acme/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuTrigger,
-} from "@acme/ui/dropdown-menu";
 import { useIsMobile } from "@acme/ui/use-mobile";
-import type { Editor } from "@tiptap/core";
+import { type Editor, isMacOS } from "@tiptap/core";
 import { NodeSelection, TextSelection } from "@tiptap/pm/state";
 import { GripVertical, Plus } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -24,6 +18,12 @@ import { EditorHint, restoreEditorFocus } from "./controls";
 import { inToolbarCorridor } from "./pointer-corridor";
 import { BlockMenuContent } from "./toolbar";
 import { TouchBlockDrag } from "./touch-block-drag";
+import {
+  Button,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from "./ui-components";
 import { useTiptapState } from "./writing-controls";
 
 /** A handle selects the complete Journl wrapper, including descendants. Native
@@ -314,7 +314,10 @@ export function TiptapSideMenu({
                       const element = editor.view.nodeDOM(target.pos);
                       if (element instanceof HTMLElement)
                         event.dataTransfer.setDragImage(element, 0, 0);
-                      editor.view.dragging = { move: !event.altKey, slice };
+                      editor.view.dragging = {
+                        move: !(isMacOS() ? event.altKey : event.ctrlKey),
+                        slice,
+                      };
                       setOpen(false);
                     }}
                     onDragEnd={() => {

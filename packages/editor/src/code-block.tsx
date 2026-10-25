@@ -2,13 +2,6 @@
 
 import { codeLanguages } from "@acme/tiptap";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@acme/ui/select";
-import {
   NodeViewContent,
   NodeViewWrapper,
   type ReactNodeViewProps,
@@ -16,6 +9,13 @@ import {
 } from "@tiptap/react";
 import { memo } from "react";
 import { EditorHint, restoreEditorFocus } from "./controls";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "./ui-components";
 
 const languages = ["auto", "text", ...codeLanguages];
 const languageLabel = (value: string) =>

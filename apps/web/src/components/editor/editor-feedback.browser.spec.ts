@@ -69,15 +69,27 @@ test("selected lists convert together, typing dismisses handles and plain copy k
 
 test("converting a journal entry keeps its block identity and leaves an expandable page reference", async ({
   page,
-}) => {
+}, info) => {
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
-  await page.goto("/journal/1988-08-24");
+  // Both projects use the same owner/database. Conversion consumes the entry,
+  // so each browser needs its own source date.
+  const date = `1988-08-${info.project.name === "desktop-chromium" ? "24" : "25"}`;
+  await page.goto(`/journal/${date}`);
   const editor = page.locator(".journl-tiptap").first();
   await editor.fill("Entry to move");
+  const paragraphs = editor.locator('[data-journl-body="paragraph"]');
+  await expect(paragraphs).toHaveCount(1);
+  await expect(paragraphs.first()).toHaveText("Entry to move");
   await editor.press("Enter");
+  await expect(paragraphs).toHaveCount(2);
   await editor.pressSequentially("Nested writing");
+  await expect(paragraphs.last()).toHaveText("Nested writing");
   await editor.press("Tab");
+  await expect(paragraphs.first()).toHaveText("Entry to move");
+  await expect(
+    editor.locator('[data-journl-children] [data-journl-body="paragraph"]'),
+  ).toHaveText("Nested writing");
   await expect(page.locator("[data-save-status]")).toContainText("Saved");
   const ids = await editor
     .locator("[data-block-id]")
@@ -103,7 +115,7 @@ test("converting a journal entry keeps its block identity and leaves an expandab
       ),
   ).toEqual(ids);
   const pagePath = new URL(page.url()).pathname;
-  await page.goto("/journal/1988-08-24");
+  await page.goto(`/journal/${date}`);
   await expect(
     editor.locator(".content-reference-card-heading a"),
   ).toHaveAttribute("href", pagePath);

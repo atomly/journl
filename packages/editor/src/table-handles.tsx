@@ -13,13 +13,6 @@ import {
   tableAxisSelection,
   tableContext,
 } from "@acme/tiptap";
-import { Button } from "@acme/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@acme/ui/dropdown-menu";
 import {
   autoUpdate,
   hide,
@@ -43,6 +36,13 @@ import {
 import { createPortal } from "react-dom";
 import { EditorHint, EditorMenuItem, restoreEditorFocus } from "./controls";
 import { TableMenuItems } from "./table-controls";
+import {
+  Button,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "./ui-components";
 import { useTiptapState } from "./writing-controls";
 
 type ActiveTable = {
@@ -74,7 +74,7 @@ function tableDropTarget(
     right <= left ||
     bottom <= top ||
     x < left - 32 ||
-    x > right + 32 ||
+    x > right + (axis === "row" ? 56 : 32) ||
     y < top - 32 ||
     y > bottom + 32
   )
@@ -396,13 +396,15 @@ function useTablePosition(
         Math.max(0, right - left),
         rect.height,
       );
-    return placement === "left"
+    return placement === "right"
       ? new DOMRect(left, box.top, Math.max(0, right - left), box.height)
       : new DOMRect(box.left, rect.top, box.width, rect.height);
   }, [table, cell, placement, rail]);
   const floating = useFloating({
     middleware: [
-      offset(2),
+      // The whole-block menu occupies the left gutter. Row controls use the
+      // right gutter, outside the 20px column-extension rail plus a small gap.
+      offset(!rail && placement === "right" ? 24 : 2),
       size({
         apply({ elements }) {
           if (!rail) return;
@@ -475,7 +477,7 @@ function TableAxisHandle({
   const { refs, floatingStyles, clipped } = useTablePosition(
     active.element,
     cell,
-    axis === "row" ? "left" : "top",
+    axis === "row" ? "right" : "top",
   );
   return (
     <DropdownMenu modal={false} open={open} onOpenChange={onOpenChange}>

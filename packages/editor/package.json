@@ -5,7 +5,8 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./styles.css": "./src/editor.css"
+    "./styles.css": "./src/editor.css",
+    "./ui": "./src/ui.ts"
   },
   "scripts": {
     "check": "biome check",

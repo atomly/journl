@@ -25,14 +25,24 @@ export function useHandleVisibility(editor: Editor | undefined) {
     const inputs = ["keydown", "beforeinput", "paste", "compositionstart"];
     for (const event of inputs) document.addEventListener(event, hide, true);
     root.addEventListener("pointerdown", tap);
-    editor.on("blur", hide);
+    const blur = ({ event }: { event: FocusEvent }) => {
+      // Moving focus into the editor's controls is still an editor interaction.
+      // Hiding their portal here removes a pointer trigger before its click.
+      if (
+        event.relatedTarget instanceof Element &&
+        event.relatedTarget.closest("[data-tiptap-controls]")
+      )
+        return;
+      hide();
+    };
+    editor.on("blur", blur);
     document.addEventListener("pointermove", move);
     window.addEventListener("scroll", hide, true);
     return () => {
       for (const event of inputs)
         document.removeEventListener(event, hide, true);
       root.removeEventListener("pointerdown", tap);
-      editor.off("blur", hide);
+      editor.off("blur", blur);
       document.removeEventListener("pointermove", move);
       window.removeEventListener("scroll", hide, true);
     };

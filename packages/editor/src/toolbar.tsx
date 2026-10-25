@@ -408,6 +408,7 @@ export function TiptapToolbar({
         }}
         data-tiptap-controls=""
         data-tiptap-toolbar={mobile ? "mobile" : "selection"}
+        data-tiptap-owner={editor.instanceId}
         role="toolbar"
         aria-label="Editor controls"
         className="journl-formatting-toolbar"

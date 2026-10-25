@@ -1,6 +1,6 @@
 import { Extension, type Extensions, Mark, Node } from "@tiptap/core";
 import { blockView } from "./block-view";
-import { codeBlockView, codeHighlightPlugin } from "./code-block";
+import { codeHighlightPlugin } from "./code-block";
 import { editorColor as color } from "./colors";
 import { tableExtension, tableNodeView } from "./tables";
 
@@ -138,7 +138,6 @@ export function documentExtensions(): Extensions {
     ),
     Node.create({
       name: "codeBlock",
-      addNodeView: () => codeBlockView,
       group: "journlBody",
       content: "text*",
       marks: "",

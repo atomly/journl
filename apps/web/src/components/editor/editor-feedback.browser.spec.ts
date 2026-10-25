@@ -71,7 +71,16 @@ test("converting a journal entry keeps its block identity and leaves an expandab
   page,
 }, info) => {
   const errors: string[] = [];
-  page.on("pageerror", (error) => errors.push(error.message));
+  page.on("pageerror", (error) => {
+    // WebKit can cancel Next's dev-overlay symbolication during reload.
+    // Keep application errors; this endpoint and stack belong to devtools only.
+    if (
+      error.message.includes("/__nextjs_original-stack-frames") &&
+      error.stack?.includes("next-devtools")
+    )
+      return;
+    errors.push(error.message);
+  });
   // Both projects use the same owner/database. Conversion consumes the entry,
   // so each browser needs its own source date.
   const date = `1988-08-${info.project.name === "desktop-chromium" ? "24" : "25"}`;

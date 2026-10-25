@@ -58,7 +58,7 @@ for (const unmergedRow of [true, false]) {
       for (const [column, expected] of [
         [7, 600],
         [1, 120],
-      ]) {
+      ] as const) {
         wrapper.scrollLeft = 480;
         revealTableColumn(editor, "table", column);
         measure?.(0);

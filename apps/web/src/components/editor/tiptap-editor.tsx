@@ -23,6 +23,7 @@ import { useTRPC } from "~/trpc/react";
 import { referenceViewStore, TiptapReferenceViews } from "./tiptap-node-views";
 import { insertTiptapReference } from "./tiptap-reference-insertion";
 import { TiptapSideMenu } from "./tiptap-side-menu";
+import { TiptapTableHandles } from "./tiptap-table-handles";
 import { TiptapToolbar } from "./tiptap-toolbar";
 import { TiptapContextMenu, TiptapSlashMenu } from "./tiptap-writing-controls";
 import "./tiptap-editor.css";
@@ -220,6 +221,7 @@ export function TiptapEditor({
           {editor && (
             <>
               <TiptapSideMenu editor={editor} />
+              <TiptapTableHandles editor={editor} />
             </>
           )}
           <TiptapSlashMenu editor={editor} />

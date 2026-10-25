@@ -3,12 +3,21 @@
 import { Editor } from "@tiptap/core";
 import { act } from "react";
 import { createRoot } from "react-dom/client";
-import { expect, test, vi } from "vitest";
+import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import { documentExtensions } from "../engine/schema";
 import { toTiptapDocument } from "../serialization/tiptap";
 import { useHandleVisibility } from "./handle-visibility";
 
 Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
+
+beforeEach(() => {
+  vi.stubGlobal("matchMedia", () => ({
+    addEventListener() {},
+    matches: false,
+    removeEventListener() {},
+  }));
+});
+afterEach(() => vi.unstubAllGlobals());
 
 test("pointer focus can enter editor controls without unmounting the pending click target", async () => {
   const surface = document.createElement("div");
@@ -48,7 +57,7 @@ test("pointer focus can enter editor controls without unmounting the pending cli
   }
 });
 
-test("touch typing/scrolling retains controls; mouse editing and outside focus dismiss them", async () => {
+test("touch controls persist; desktop typing hides and interactions restore them", async () => {
   const surface = document.createElement("div");
   const host = document.createElement("div");
   document.body.append(surface, host);
@@ -70,7 +79,11 @@ test("touch typing/scrolling retains controls; mouse editing and outside focus d
     });
     editor.view.dom.dispatchEvent(event);
   };
-  vi.stubGlobal("matchMedia", () => ({ matches: true }));
+  vi.stubGlobal("matchMedia", () => ({
+    addEventListener() {},
+    matches: true,
+    removeEventListener() {},
+  }));
   try {
     await act(async () => root.render(<Handles />));
     await act(async () => pointer("pointerdown", "touch"));
@@ -87,6 +100,10 @@ test("touch typing/scrolling retains controls; mouse editing and outside focus d
     expect(host.textContent).toBe("true");
     await act(async () => pointer("pointerdown", "touch"));
     expect(host.textContent).toBe("true");
+    await act(async () =>
+      document.body.dispatchEvent(new Event("focusin", { bubbles: true })),
+    );
+    expect(host.textContent).toBe("true");
     await act(async () => pointer("pointermove", "mouse"));
     await act(async () =>
       editor.view.dom.dispatchEvent(
@@ -96,7 +113,7 @@ test("touch typing/scrolling retains controls; mouse editing and outside focus d
     expect(host.textContent).toBe("false");
     await act(async () => pointer("pointerdown", "mouse"));
     await act(async () => window.dispatchEvent(new Event("scroll")));
-    expect(host.textContent).toBe("false");
+    expect(host.textContent).toBe("true");
   } finally {
     await act(async () => root.unmount());
     editor.destroy();

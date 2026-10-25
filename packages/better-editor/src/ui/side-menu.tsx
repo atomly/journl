@@ -27,10 +27,10 @@ import {
 } from "../engine/commands";
 import { blockAt } from "../engine/identity";
 import { slashKey } from "../engine/suggestions";
-import { EditorHint, restoreEditorFocus } from "./controls";
+import { EditorHint, isPointerClick, restoreEditorFocus } from "./controls";
 import { inToolbarCorridor } from "./pointer-corridor";
 import { BlockMenuContent } from "./toolbar";
-import { TouchBlockDrag } from "./touch-block-drag";
+import { BLOCK_DRAG_DISTANCE, TouchBlockDrag } from "./touch-block-drag";
 import { useTiptapState } from "./writing-controls";
 
 /** A handle selects the complete BetterEditor wrapper, including descendants. Native
@@ -51,6 +51,9 @@ export function TiptapSideMenu({
   );
   const touchOwner = useRef(touchPointer);
   const consumedClick = useRef(false);
+  const pressPoint = useRef<{ x: number; y: number; pointerId: number } | null>(
+    null,
+  );
   const dragClosedMenu = useRef(false);
   const mobile = compact || touchPointer;
   const [id, setIdState] = useState<string>();
@@ -137,7 +140,7 @@ export function TiptapSideMenu({
         event.clientY < bounds.top ||
         event.clientY > bounds.bottom
       ) {
-        setId(undefined);
+        if (!mobile) setId(undefined);
         return;
       }
       // Hit-test each block's own row, not the ancestor wrapper that also
@@ -164,7 +167,7 @@ export function TiptapSideMenu({
     };
     document.addEventListener("pointermove", move);
     editor.on("focus", focus);
-    if (mobile) editor.on("selectionUpdate", focus);
+    editor.on("selectionUpdate", focus);
     const tap = (event: PointerEvent) => {
       if (
         event.pointerType !== "touch" ||
@@ -247,6 +250,13 @@ export function TiptapSideMenu({
     if (!selected) throw new Error("Selected block is unavailable");
     return selected;
   };
+  const toggleMenu = () => {
+    if (!open) {
+      dragClosedMenu.current = false;
+      select();
+    }
+    setOpen(!open);
+  };
   const addBlock = (
     <EditorHint label="Add a block below">
       <Button
@@ -322,7 +332,11 @@ export function TiptapSideMenu({
             <DropdownMenu
               modal={false}
               open={open}
-              onOpenChange={(value) => {
+              onOpenChange={(value, details) => {
+                if (value && (frozen.current || consumedClick.current)) {
+                  details.cancel();
+                  return;
+                }
                 if (value) {
                   dragClosedMenu.current = false;
                   select();
@@ -334,31 +348,70 @@ export function TiptapSideMenu({
                 asChild
                 onPointerDown={(event) => {
                   event.preventBaseUIHandler();
+                  if (
+                    event.button !== 0 ||
+                    !event.isPrimary ||
+                    frozen.current ||
+                    editor.view.dragging
+                  )
+                    return;
+                  pressPoint.current = {
+                    pointerId: event.pointerId,
+                    x: event.clientX,
+                    y: event.clientY,
+                  };
                   consumedClick.current = false;
                   touchOwner.current = event.pointerType === "touch";
                   setPressed(true);
+                }}
+                onPointerUp={(event) => {
+                  event.preventBaseUIHandler();
+                  const start = pressPoint.current;
+                  if (
+                    !start ||
+                    start.pointerId !== event.pointerId ||
+                    event.button !== 0
+                  )
+                    return;
+                  pressPoint.current = null;
+                  const moved =
+                    Math.hypot(
+                      event.clientX - start.x,
+                      event.clientY - start.y,
+                    ) > BLOCK_DRAG_DISTANCE;
+                  const tap =
+                    !moved && !frozen.current && !consumedClick.current;
+                  // Pointer taps and click-only accessibility activation are distinct.
+                  // Opening on release avoids dnd-kit's trailing-click suppression.
+                  consumedClick.current = true;
+                  if (tap) toggleMenu();
+                }}
+                onPointerCancel={() => {
+                  pressPoint.current = null;
+                  setPressed(false);
+                }}
+                onKeyDown={() => {
+                  if (!frozen.current) consumedClick.current = false;
                 }}
                 onMouseDown={(event) => {
                   // Opening on mousedown schedules focus into the menu during native
                   // dragstart. Keep the browser's drag gesture; open only on click.
                   event.preventBaseUIHandler();
-                  select();
+                  if (touchOwner.current) event.preventDefault();
+                  else select();
                 }}
                 onClick={(event) => {
                   event.preventBaseUIHandler();
                   if (
                     frozen.current ||
-                    (event.detail > 0 && consumedClick.current)
+                    (consumedClick.current && isPointerClick(event))
                   ) {
                     event.preventDefault();
                     event.stopPropagation();
                     return;
                   }
-                  if (!open) {
-                    dragClosedMenu.current = false;
-                    select();
-                  }
-                  setOpen(!open);
+                  if (!isPointerClick(event)) consumedClick.current = false;
+                  toggleMenu();
                 }}
               >
                 <EditorHint label="Drag to move">

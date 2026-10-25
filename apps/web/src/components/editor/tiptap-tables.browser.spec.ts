@@ -313,3 +313,103 @@ test("merged cells and outer gutters keep the table extension rails reachable", 
   await expect(rows.last().locator("td")).toHaveCount(4);
   await expect(merged).toHaveCount(1);
 });
+
+test("table extension belongs to one pointer and trailing touch clicks never add twice", async ({
+  page,
+  context,
+}, info) => {
+  test.skip(
+    info.project.name !== "desktop-chromium",
+    "CDP trusted multi-touch input",
+  );
+  const editor = page.locator(".journl-tiptap");
+  const cells = editor.locator("tr").first().locator("td");
+  const add = page.getByRole("button", { exact: true, name: "Add column" });
+  for (let count = 3; count < 5; count++) {
+    await editor.locator("td").last().hover();
+    await add.click();
+    await expect(cells).toHaveCount(count + 1);
+  }
+  await editor.locator("td").last().hover();
+  await add.evaluate((element) =>
+    element.dispatchEvent(
+      new PointerEvent("click", {
+        bubbles: true,
+        detail: 0,
+        pointerType: "touch",
+      }),
+    ),
+  );
+  await expect(cells).toHaveCount(5);
+  const session = await context.newCDPSession(page);
+  await session.send("Emulation.setTouchEmulationEnabled", {
+    enabled: true,
+    maxTouchPoints: 2,
+  });
+  const box = await add.boundingBox();
+  if (!box) throw new Error("Missing column rail");
+  const first = { id: 1, x: box.x + box.width / 2, y: box.y + box.height / 2 };
+  await session.send("Input.dispatchTouchEvent", {
+    touchPoints: [first],
+    type: "touchStart",
+  });
+  first.x += 120;
+  await session.send("Input.dispatchTouchEvent", {
+    touchPoints: [first],
+    type: "touchMove",
+  });
+  await expect(cells).toHaveCount(6);
+  const next = await add.boundingBox();
+  if (!next) throw new Error("Missing captured rail");
+  const second = {
+    id: 2,
+    x: next.x + next.width / 2,
+    y: next.y + next.height / 2,
+  };
+  await session.send("Input.dispatchTouchEvent", {
+    touchPoints: [first, second],
+    type: "touchStart",
+  });
+  second.x += 40;
+  await session.send("Input.dispatchTouchEvent", {
+    touchPoints: [first, second],
+    type: "touchMove",
+  });
+  await session.send("Input.dispatchTouchEvent", {
+    touchPoints: [first],
+    type: "touchEnd",
+  });
+  await expect(cells).toHaveCount(5);
+  await session.send("Input.dispatchTouchEvent", {
+    touchPoints: [],
+    type: "touchEnd",
+  });
+  await expect(cells).toHaveCount(5);
+  // A second contact cancels the extension; a fresh single-pointer drag works.
+  await editor.locator("td").last().hover();
+  const freshBox = await add.boundingBox();
+  if (!freshBox) throw new Error("Missing rail after cancellation");
+  const fresh = {
+    id: 1,
+    x: freshBox.x + freshBox.width / 2,
+    y: freshBox.y + freshBox.height / 2,
+  };
+  await session.send("Input.dispatchTouchEvent", {
+    touchPoints: [fresh],
+    type: "touchStart",
+  });
+  fresh.x += 240;
+  await session.send("Input.dispatchTouchEvent", {
+    touchPoints: [fresh],
+    type: "touchMove",
+  });
+  await expect(cells).toHaveCount(7);
+  await session.send("Input.dispatchTouchEvent", {
+    touchPoints: [],
+    type: "touchEnd",
+  });
+  await expect(cells).toHaveCount(7);
+  await editor.focus();
+  await page.keyboard.press("ControlOrMeta+z");
+  await expect(cells).toHaveCount(5);
+});

@@ -33,6 +33,18 @@ export function EditorHint({
   );
 }
 
+/** Assistive activation can dispatch click without pointerdown or keydown. */
+export function isPointerClick(event: {
+  detail: number;
+  nativeEvent: MouseEvent;
+}) {
+  return (
+    event.detail > 0 ||
+    ("pointerType" in event.nativeEvent &&
+      Boolean(event.nativeEvent.pointerType))
+  );
+}
+
 /** Restore ProseMirror's selection as well as DOM focus. Bare element.focus()
  * can replace a multi-range cell selection with the browser's text range. */
 export function restoreEditorFocus(editor: Editor): false {

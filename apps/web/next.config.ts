@@ -5,14 +5,6 @@ import { env, parseAuthDevOrigins } from "~/env";
 const config: NextConfig = {
   /* Adding support for cross origin request in development */
   allowedDevOrigins: parseAuthDevOrigins(env.AUTH_DEV_ORIGINS),
-  /** These packages won't be bundled in the server build */
-  /** @see https://nextjs.org/docs/app/api-reference/config/next-config-js/serverExternalPackages */
-  serverExternalPackages: [
-    "metascraper",
-    "metascraper-title",
-    "metascraper-description",
-    "metascraper-image",
-  ],
   /** Enables hot reloading for local packages without a build step */
   transpilePackages: [
     "@acme/auth",

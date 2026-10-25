@@ -124,6 +124,9 @@ test("converting a journal entry keeps its block identity and leaves an expandab
       ),
   ).toEqual(ids);
   const pagePath = new URL(page.url()).pathname;
+  // Complete the converted page's streamed reads before leaving. WebKit can
+  // report cancelled fetches as page errors during a full navigation.
+  await page.waitForLoadState("networkidle");
   await page.goto(`/journal/${date}`);
   await expect(
     editor.locator(".content-reference-card-heading a"),
@@ -139,6 +142,7 @@ test("converting a journal entry keeps its block identity and leaves an expandab
     "Nested writing",
   );
   await expect(page.locator("[data-save-status]")).toContainText("Saved");
+  await page.waitForLoadState("networkidle");
   await page.reload();
   await expect(editor.locator(".content-embed")).toHaveCount(1);
   expect(errors).toEqual([]);

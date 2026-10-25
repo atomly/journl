@@ -1,5 +1,6 @@
 "use client";
 
+import { Button } from "@acme/ui/button";
 import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import type React from "react";
 import { useEffect, useMemo } from "react";
@@ -7,7 +8,6 @@ import { Virtuoso } from "react-virtuoso";
 import { useDebouncedCallback } from "use-debounce";
 import { useAppLayout } from "~/app/_components/app-layout-provider";
 import { useAppPreferences } from "~/components/preferences/app-preferences-provider";
-import { Button } from "~/components/ui/button";
 import { useJournlAgent } from "~/hooks/use-journl-agent";
 import type { JournalListEntry } from "~/trpc";
 import {

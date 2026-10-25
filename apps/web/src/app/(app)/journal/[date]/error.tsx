@@ -1,8 +1,8 @@
 "use client"; // Error boundaries must be Client Components
 
+import { Button } from "@acme/ui/button";
 import Link from "next/link";
 import { useEffect } from "react";
-import { Button } from "~/components/ui/button";
 
 export default function JournalEntryError({
   error,

@@ -4,6 +4,8 @@ import {
   type EditorPrimitive,
   schema,
 } from "@acme/blocknote/schema";
+import * as DropdownMenu from "@acme/ui/dropdown-menu";
+import * as Popover from "@acme/ui/popover";
 import { BlockNoteEditor } from "@blocknote/core";
 import { FormattingToolbar } from "@blocknote/react";
 import { BlockNoteView } from "@blocknote/shadcn";
@@ -13,8 +15,6 @@ import { act } from "react";
 import { createRoot } from "react-dom/client";
 import { afterEach, beforeAll, expect, test, vi } from "vitest";
 import { ReferenceRuntime } from "../references/reference-runtime";
-import * as DropdownMenu from "../ui/dropdown-menu";
-import * as Popover from "../ui/popover";
 import { BlockEditorFormattingItems } from "./block-editor-tools";
 import {
   captureReferenceLink,
@@ -75,7 +75,7 @@ vi.mock("../../trpc/react", () => ({
 vi.mock("../../hooks/use-journl-agent", () => ({
   useJournlAgent: () => ({}),
 }));
-vi.mock("../../hooks/use-mobile", () => ({ useIsMobile: () => false }));
+vi.mock("@acme/ui/use-mobile", () => ({ useIsMobile: () => false }));
 const cleanup: Array<() => void> = [];
 beforeAll(() => vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true));
 afterEach(async () => {

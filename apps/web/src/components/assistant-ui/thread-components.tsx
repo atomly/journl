@@ -1,5 +1,6 @@
 "use client";
 
+import { Button } from "@acme/ui/button";
 import {
   ActionBarPrimitive,
   type AssistantState,
@@ -37,7 +38,6 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "~/components/ui/accordion";
-import { Button } from "~/components/ui/button";
 import { cn } from "~/lib/cn";
 import { getHumanReadableChatError } from "~/usage/quota-error";
 

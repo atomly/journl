@@ -1,5 +1,6 @@
 "use client";
 
+import { Button } from "@acme/ui/button";
 import {
   type AuthSocialProvider,
   type AuthView,
@@ -18,8 +19,6 @@ import {
 import { useIsMutating } from "@tanstack/react-query";
 import type { ComponentProps } from "react";
 import { toast } from "sonner";
-
-import { Button } from "~/components/ui/button";
 import { Spinner } from "~/components/ui/spinner";
 import { cn } from "~/lib/cn";
 import { LastUsedBadge } from "./last-login-method/last-used-badge";

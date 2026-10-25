@@ -13,6 +13,11 @@ import {
   tableAxisSelection,
   tableColumnWidth,
 } from "@acme/tiptap";
+import {
+  DropdownMenuGroup,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+} from "@acme/ui/dropdown-menu";
 import type { Editor } from "@tiptap/core";
 import { type Command, TextSelection } from "@tiptap/pm/state";
 import {
@@ -26,11 +31,6 @@ import {
   mergeCells,
   splitCell,
 } from "@tiptap/pm/tables";
-import {
-  DropdownMenuGroup,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-} from "~/components/ui/dropdown-menu";
 import { EditorMenuItem } from "./tiptap-controls";
 
 export function TableMenuItems({

@@ -1,16 +1,16 @@
 // @vitest-environment jsdom
 
+import * as Button from "@acme/ui/button";
+import * as DropdownMenu from "@acme/ui/dropdown-menu";
+import * as Popover from "@acme/ui/popover";
+import * as Select from "@acme/ui/select";
+import * as Tooltip from "@acme/ui/tooltip";
 import { BlockNoteEditor } from "@blocknote/core";
 import { BlockNoteView } from "@blocknote/shadcn";
 import { act } from "react";
 import { createRoot } from "react-dom/client";
 import { expect, test, vi } from "vitest";
-import * as Button from "./button";
-import * as DropdownMenu from "./dropdown-menu";
-import * as Popover from "./popover";
-import * as Select from "./select";
 import * as Toggle from "./toggle";
-import * as Tooltip from "./tooltip";
 
 test("the app's BlockNote heading dropdown stays inside editor focus and applies a heading", async () => {
   vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);

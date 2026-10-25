@@ -1,19 +1,7 @@
 "use client";
 
 import type { EditorPrimitive } from "@acme/blocknote/schema";
-import { BlockNoteView } from "@blocknote/shadcn";
-import { AIMenuController } from "@blocknote/xl-ai";
-import { useTheme } from "next-themes";
-import { type ComponentProps, useEffect, useRef } from "react";
-import { env } from "~/env";
-import { useJournlAgent } from "~/hooks/use-journl-agent";
-import type { BlockTransaction } from "~/trpc";
-import { DefaultMap } from "../../lib/default-map";
-import { ReferenceRuntime } from "../references/reference-runtime";
-import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
-import { Badge } from "../ui/badge";
-import { Button } from "../ui/button";
-import { Card, CardContent } from "../ui/card";
+import { Button } from "@acme/ui/button";
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -26,26 +14,38 @@ import {
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
-} from "../ui/dropdown-menu";
-import { Input } from "../ui/input";
-import { Label } from "../ui/label";
-import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
+} from "@acme/ui/dropdown-menu";
+import { Popover, PopoverContent, PopoverTrigger } from "@acme/ui/popover";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "../ui/select";
-import { Skeleton } from "../ui/skeleton";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
-import { Toggle } from "../ui/toggle";
+} from "@acme/ui/select";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "../ui/tooltip";
+} from "@acme/ui/tooltip";
+import { BlockNoteView } from "@blocknote/shadcn";
+import { AIMenuController } from "@blocknote/xl-ai";
+import { useTheme } from "next-themes";
+import { type ComponentProps, useEffect, useRef } from "react";
+import { env } from "~/env";
+import { useJournlAgent } from "~/hooks/use-journl-agent";
+import type { BlockTransaction } from "~/trpc";
+import { DefaultMap } from "../../lib/default-map";
+import { ReferenceRuntime } from "../references/reference-runtime";
+import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
+import { Badge } from "../ui/badge";
+import { Card, CardContent } from "../ui/card";
+import { Input } from "../ui/input";
+import { Label } from "../ui/label";
+import { Skeleton } from "../ui/skeleton";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
+import { Toggle } from "../ui/toggle";
 import { cn } from "../utils";
 import { BlockEditorContextMenu } from "./block-editor-block-menu";
 import { BlockEditorSideMenu } from "./block-editor-side-menu";

@@ -1,5 +1,6 @@
 "use client";
 
+import { Button } from "@acme/ui/button";
 import {
   useAuth,
   useRevokeOtherSessions,
@@ -8,7 +9,6 @@ import {
 import { LogOut } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
-
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -19,7 +19,6 @@ import {
   AlertDialogMedia,
   AlertDialogTitle,
 } from "~/components/ui/alert-dialog";
-import { Button } from "~/components/ui/button";
 import { Spinner } from "~/components/ui/spinner";
 
 type PendingAction = "other" | "all";

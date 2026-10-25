@@ -141,7 +141,7 @@ importers:
         specifier: ^3.1.1
         version: 3.1.1
       '@dnd-kit/core':
-        specifier: ^6.3.1
+        specifier: 6.3.1
         version: 6.3.1(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
       '@floating-ui/react':
         specifier: 0.27.20

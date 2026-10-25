@@ -22,33 +22,65 @@ env:
   STRIPE_WEBHOOK_SECRET: 'whsec_build_placeholder'
 
 jobs:
-  # Native GitHub stacks: full CI runs only on the lowest unmerged PR.
-  # The required check job blocks every PR above it before checkout or setup.
-  # As the bottom merges, the next PR targets the stack base and becomes eligible.
-  # Standalone PRs, pushes, and merge groups run normally.
+  # Full CI runs on stack layers 1, 5, 10, ... and the current top.
+  # Intermediate layers defer successfully: native batch merges require all
+  # included PRs to satisfy required checks. This is not a concurrency cap.
+  # Standalone PRs, main pushes, and merge groups run full CI normally.
+  stack-policy:
+    runs-on: ubuntu-latest
+    outputs:
+      run: ${{ steps.decision.outputs.run }}
+    steps:
+      - name: Select stack CI checkpoints
+        id: decision
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const stack = context.payload.pull_request?.stack;
+            if (stack && (
+              !Number.isInteger(stack.position) ||
+              !Number.isInteger(stack.size) ||
+              stack.position < 1 || stack.position > stack.size
+            )) {
+              throw new Error('Invalid native stack position or size');
+            }
+            const run = !stack || stack.position === 1 ||
+              stack.position % 5 === 0 || stack.position === stack.size;
+            core.setOutput('run', String(run));
+            core.notice(!stack ? 'Full CI: standalone PR, push, or merge group.' :
+              `Stack layer ${stack.position}/${stack.size}: ${run ? 'run full CI' : 'defer CI to a checkpoint'}.`);
+
   check:
+    needs: stack-policy
+    if: always()
     runs-on: ubuntu-latest
     steps:
-      - name: Require the lowest unmerged PR in the stack
+      - name: Validate CI policy decision
         if: >-
-          github.event.pull_request.stack != null &&
-          github.event.pull_request.stack.base.ref != github.event.pull_request.base.ref
+          needs.stack-policy.result != 'success' ||
+          (needs.stack-policy.outputs.run != 'true' && needs.stack-policy.outputs.run != 'false')
         run: |
-          echo "::error::Merge the lowest unmerged PR first. Full CI will run here once this PR targets the stack base."
+          echo "::error::The stack CI policy did not produce a valid decision."
           exit 1
 
+      - name: CI deferred to a stack checkpoint
+        if: needs.stack-policy.outputs.run == 'false'
+        run: echo "Full CI runs on the bottom PR, every fifth layer, and the top PR."
+
       - uses: actions/checkout@v7
+        if: needs.stack-policy.outputs.run == 'true'
 
       - name: Setup
+        if: needs.stack-policy.outputs.run == 'true'
         uses: ./tooling/github/setup
 
       - name: Check (lint and format)
+        if: needs.stack-policy.outputs.run == 'true'
         run: pnpm check
 
   typecheck:
-    if: >-
-      github.event.pull_request.stack == null ||
-      github.event.pull_request.stack.base.ref == github.event.pull_request.base.ref
+    needs: stack-policy
+    if: needs.stack-policy.outputs.run == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -60,9 +92,8 @@ jobs:
         run: pnpm typecheck
 
   build:
-    if: >-
-      github.event.pull_request.stack == null ||
-      github.event.pull_request.stack.base.ref == github.event.pull_request.base.ref
+    needs: stack-policy
+    if: needs.stack-policy.outputs.run == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -85,9 +116,8 @@ jobs:
           retention-days: 1
 
   unit:
-    if: >-
-      github.event.pull_request.stack == null ||
-      github.event.pull_request.stack.base.ref == github.event.pull_request.base.ref
+    needs: stack-policy
+    if: needs.stack-policy.outputs.run == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -97,9 +127,8 @@ jobs:
         run: pnpm test:unit
 
   integration:
-    if: >-
-      github.event.pull_request.stack == null ||
-      github.event.pull_request.stack.base.ref == github.event.pull_request.base.ref
+    needs: stack-policy
+    if: needs.stack-policy.outputs.run == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -109,9 +138,8 @@ jobs:
         run: pnpm test:integration
 
   browser:
-    if: >-
-      github.event.pull_request.stack == null ||
-      github.event.pull_request.stack.base.ref == github.event.pull_request.base.ref
+    needs: stack-policy
+    if: needs.stack-policy.outputs.run == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

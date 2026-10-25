@@ -21,7 +21,7 @@ import { ReferenceBacklinks } from "~/components/references/reference-backlinks"
 import { useJournlAgent } from "~/hooks/use-journl-agent";
 import { cn } from "~/lib/cn";
 import { formatDate } from "~/lib/format-date";
-import type { BlockTransaction, JournalListEntry } from "~/trpc";
+import type { JournalListEntry } from "~/trpc";
 import { useJournalEntryDraft } from "./journal-drafts-provider";
 
 const DEFAULT_DEBOUNCE_TIME = 1000;
@@ -180,8 +180,7 @@ function TiptapJournalEntryEditor(props: JournalEntryEditorProps) {
           );
           retainDraft();
           draft.update(
-            change.blocks,
-            change.transactions,
+            change,
             props.debounceTime ?? DEFAULT_DEBOUNCE_TIME,
             props.onCreateAction,
           );
@@ -218,11 +217,10 @@ function BlockNoteJournalEntryEditor({
     resetKey: snapshot.resetKey,
   });
 
-  function handleEditorChange(transactions: BlockTransaction[]) {
+  function handleEditorChange() {
     retainDraft();
     draft.update(
       fromBlockNoteBlocks(editor.document),
-      transactions,
       debounceTime,
       onCreateAction,
     );

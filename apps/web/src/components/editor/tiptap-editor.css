@@ -1,0 +1,77 @@
+.journl-tiptap {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.journl-tiptap [data-journl-block] {
+  position: relative;
+  margin-block: 0.35rem;
+}
+.journl-tiptap [data-journl-children] {
+  margin-left: 1.5rem;
+  border-left: 1px solid var(--border);
+  padding-left: 0.75rem;
+}
+.journl-tiptap [data-journl-body] {
+  min-height: 1.5em;
+}
+.journl-tiptap [data-journl-body="heading"] {
+  font-size: 1.5em;
+  font-weight: 600;
+}
+.journl-tiptap [data-journl-body="bulletListItem"]::before {
+  content: "• ";
+}
+.journl-tiptap [data-journl-body="numberedListItem"]::before {
+  content: "1. ";
+}
+.journl-tiptap [data-journl-body="checkListItem"]::before {
+  content: "☐ ";
+}
+.journl-tiptap [data-journl-body="toggleListItem"]::before {
+  content: "▸ ";
+}
+.journl-tiptap table {
+  border-collapse: collapse;
+  width: 100%;
+}
+.journl-tiptap td {
+  border: 1px solid var(--border);
+  padding: 0.4rem;
+  min-width: 3rem;
+}
+.journl-tiptap pre {
+  white-space: pre-wrap;
+  padding: 0.75rem;
+  background: var(--muted);
+  font-family: monospace;
+}
+.journl-tiptap [data-journl-body="referenceCard"],
+.journl-tiptap [data-journl-body="contentEmbed"] {
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  padding: 1rem;
+}
+.journl-tiptap [data-journl-reference] {
+  border-radius: 0.25rem;
+  background: var(--muted);
+  padding-inline: 0.2rem;
+}
+.journl-tiptap .ProseMirror-selectednode,
+.journl-tiptap [data-reference-selected] {
+  outline: 2px solid var(--ring);
+}
+.journl-tiptap [data-journl-body="checkListItem"][data-checked="true"]::before {
+  content: "☑ ";
+}
+.journl-tiptap [data-journl-body="numberedListItem"]::before {
+  content: attr(data-start) ". ";
+}
+.journl-tiptap img,
+.journl-tiptap video {
+  max-width: 100%;
+  height: auto;
+}
+.journl-tiptap a {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}

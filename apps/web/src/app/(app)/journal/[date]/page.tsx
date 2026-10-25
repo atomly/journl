@@ -4,7 +4,6 @@ import { api } from "~/trpc/server";
 import {
   JournalEntryAgentView,
   JournalEntryHeader,
-  JournalEntryLink,
   JournalEntryProvider,
   JournalEntryWrapper,
 } from "../_components/journal-entry-editor";
@@ -44,9 +43,7 @@ async function SuspendedJournalEntry({ date }: { date: string }) {
       <JournalEntryWrapper className="mx-auto max-w-5xl pt-8 pb-20">
         <Suspense fallback={<JournalEntrySkeleton hasContent />}>
           <DynamicJournalEntryEditor>
-            <JournalEntryLink>
-              <JournalEntryHeader className="px-8" />
-            </JournalEntryLink>
+            <JournalEntryHeader className="px-8" linkDate />
           </DynamicJournalEntryEditor>
         </Suspense>
       </JournalEntryWrapper>

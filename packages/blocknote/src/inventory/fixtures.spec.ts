@@ -1,13 +1,13 @@
 import { schema } from "@acme/blocknote/schema";
-import { serverSchema } from "@acme/blocknote/server";
 import { DocumentReadError, documentBlocks } from "@acme/document";
 import { ServerBlockNoteEditor } from "@blocknote/server-util";
 import { expect, test } from "vitest";
 import { toBlockNoteBlocks } from "../document-adapter";
 import acceptedSchema from "./accepted-schema.json";
 import { historicalFixtures, inventoryId, parityBlocks } from "./fixtures";
+import { inventorySchema } from "./server-schema";
 
-const editor = ServerBlockNoteEditor.create({ schema: serverSchema });
+const editor = ServerBlockNoteEditor.create({ schema: inventorySchema });
 function walk(
   value: unknown,
   visit: (record: Record<string, unknown>) => void,
@@ -28,7 +28,7 @@ function ids(value: unknown) {
 }
 
 test("accepted blocks, inline nodes, styles and property defaults cannot drift without a parity review", () => {
-  for (const current of [schema, serverSchema]) {
+  for (const current of [schema, inventorySchema]) {
     expect(
       JSON.parse(
         JSON.stringify({

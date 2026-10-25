@@ -6,6 +6,7 @@ import { expect, test } from "vitest";
 import {
   applyAcceptedOperations,
   blockAt,
+  blockDragSelection,
   captureLink,
   convertReference,
   documentExtensions,
@@ -14,6 +15,7 @@ import {
   fromTiptapDocument,
   identityExtension,
   indentBlock,
+  selectedBlocks,
   toggleTextMark,
   toTiptapDocument,
 } from "./index";
@@ -529,6 +531,71 @@ test("a reference in a table cannot be promoted out of its cell", () => {
       convertReference(editor.state, "contentEmbed", () => "new"),
     ).toBeNull();
     expect(convertReference(editor.state, "link", () => "new")).not.toBeNull();
+  } finally {
+    editor.destroy();
+  }
+});
+
+test("handle drags expand a selected group to complete wrappers and preserve nested IDs", () => {
+  const { editor, blocks } = setup([
+    { ...p("a"), children: [p("child")] },
+    p("b"),
+    p("c"),
+  ]);
+  try {
+    const a = blockAt(editor.state.doc, "a");
+    const b = blockAt(editor.state.doc, "b");
+    editor.view.dispatch(
+      editor.state.tr.setSelection(
+        TextSelection.create(editor.state.doc, a.pos + 2, b.pos + 3),
+      ),
+    );
+    editor.view.dispatch(
+      editor.state.tr.setSelection(blockDragSelection(editor.state, "b")),
+    );
+    expect(selectedBlocks(editor.state).map((block) => block.id)).toEqual([
+      "a",
+      "b",
+    ]);
+    const slice = editor.state.selection.content();
+    expect(slice.openStart).toBe(0);
+    expect(slice.openEnd).toBe(0);
+    const tr = editor.state.tr.deleteSelection();
+    tr.insert(tr.doc.content.size, slice.content);
+    editor.view.dispatch(tr);
+    expect(blocks().map((block) => block.id)).toEqual(["c", "a", "b"]);
+    expect(blocks()[1]?.children?.[0]?.id).toBe("child");
+  } finally {
+    editor.destroy();
+  }
+});
+test("a handle outside the selected range selects only its own block", () => {
+  const { editor } = setup([p("a"), p("b"), p("c")]);
+  try {
+    const b = blockAt(editor.state.doc, "b");
+    editor.view.dispatch(
+      editor.state.tr.setSelection(
+        TextSelection.create(editor.state.doc, 2, b.pos + 3),
+      ),
+    );
+    const selection = blockDragSelection(editor.state, "c");
+    expect(selection).toBeInstanceOf(NodeSelection);
+    expect(selection.from).toBe(blockAt(editor.state.doc, "c").pos);
+  } finally {
+    editor.destroy();
+  }
+});
+
+test("clearing the full document leaves a writable paragraph and undo restores original IDs", () => {
+  const { editor, blocks } = setup([p("a"), p("b")]);
+  try {
+    editor.commands.selectAll();
+    editor.commands.deleteSelection();
+    expect(blocks()).toHaveLength(1);
+    expect(blocks()[0]?.type).toBe("paragraph");
+    expect(editor.state.selection.$from.parent.type.name).toBe("paragraph");
+    editor.commands.keyboardShortcut("Mod-z");
+    expect(blocks().map((block) => block.id)).toEqual(["a", "b"]);
   } finally {
     editor.destroy();
   }

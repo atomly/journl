@@ -211,6 +211,17 @@ try {
       id: fixtureId(984),
       type: "paragraph",
     },
+    {
+      content: {
+        rows: [
+          { cells: ["First cell", "Second cell"] },
+          { cells: ["Third cell", "Fourth cell"] },
+        ],
+        type: "tableContent",
+      },
+      id: fixtureId(987),
+      type: "table",
+    },
   ]);
   for (const block of structural.blocks)
     await db.insert(schema.BlockNode).values({
@@ -225,6 +236,61 @@ try {
       user_id: data.paginationOwner,
     })),
   );
+  for (const pageNumber of [1000, 1010]) {
+    const id = fixtureId(pageNumber);
+    const ids = new Map(
+      [983, 984, 985, 987].map((source, index) => [
+        fixtureId(source),
+        fixtureId(pageNumber + index + 1),
+      ]),
+    );
+    const remap = (source: string) => {
+      const target = ids.get(source);
+      if (!target) throw new Error("Writing fixture block is missing");
+      return target;
+    };
+    await db
+      .insert(schema.Document)
+      .values({ id, user_id: data.paginationOwner });
+    await db.insert(schema.Page).values({
+      document_id: id,
+      id,
+      title: "Writing controls",
+      user_id: data.paginationOwner,
+    });
+    await db.insert(schema.TreeNode).values({
+      id,
+      node_type: "page",
+      page_id: id,
+      user_id: data.paginationOwner,
+    });
+    await db.transaction((tx) =>
+      insertEdgeAtPosition({
+        db: tx,
+        nodeId: id,
+        parentNodeId: null,
+        position: "after",
+        userId: data.paginationOwner,
+      }),
+    );
+    for (const row of structural.blocks)
+      await db.insert(schema.BlockNode).values({
+        ...row,
+        document_id: id,
+        id: remap(row.id),
+        parent_id: row.parent_id ? remap(row.parent_id) : null,
+        user_id: data.paginationOwner,
+      });
+    await db.insert(schema.BlockEdge).values(
+      structural.edges.map((edge) => ({
+        ...edge,
+        document_id: id,
+        from_id: remap(edge.from_id),
+        to_id: remap(edge.to_id),
+        user_id: data.paginationOwner,
+      })),
+    );
+  }
   await db
     .insert(schema.Document)
     .values({ id: longDocumentId, user_id: data.owner });

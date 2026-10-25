@@ -411,6 +411,9 @@
   pointer-events: none;
 }
 
+.better-editor-side-menu[data-touch="true"] {
+  flex-direction: column;
+}
 .better-editor-side-menu[data-touch="true"] button {
   width: 44px;
   height: 44px;

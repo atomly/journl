@@ -168,27 +168,74 @@ test("reference selection highlights its own frame and native handles still move
   ).not.toBe("none");
 });
 
-test("mobile handle opens block actions in one tap with a usable touch target", async ({
+test("mobile handles include Add block and stay anchored through scroll and viewport resize", async ({
   page,
 }, info) => {
   test.skip(info.project.name !== "mobile-webkit", "Touch handle acceptance");
   await page.goto("/journal/1988-08-28");
-  await page
-    .locator(".better-editor-tiptap [data-better-editor-body]")
-    .first()
-    .tap();
+  const editor = page.locator(".better-editor-tiptap").first();
+  await editor.fill(
+    Array.from({ length: 40 }, (_, i) => `Line ${i}`).join("\n"),
+  );
+  const body = editor.locator("[data-better-editor-body]").first();
+  await body.tap({ position: { x: 20, y: 12 } });
   const handle = page.getByRole("button", {
     exact: true,
     name: "Block actions",
   });
-  await expect(handle).toBeVisible();
-  const bounds = await handle.boundingBox();
-  expect(bounds?.width).toBeGreaterThanOrEqual(44);
-  expect(bounds?.height).toBeGreaterThanOrEqual(44);
+  const add = page.getByRole("button", { exact: true, name: "Add block" });
+  const anchored = async () => {
+    await expect(handle).toBeVisible();
+    await expect(add).toBeVisible();
+    await expect
+      .poll(async () => {
+        const grip = await handle.boundingBox();
+        const row = await body.boundingBox();
+        return grip && row
+          ? Math.abs(grip.y + grip.height / 2 - row.y - 15)
+          : Number.POSITIVE_INFINITY;
+      })
+      .toBeLessThan(3);
+    for (const button of [handle, add]) {
+      const bounds = await button.boundingBox();
+      expect(bounds?.width).toBeGreaterThanOrEqual(44);
+      expect(bounds?.height).toBeGreaterThanOrEqual(44);
+    }
+  };
+  await anchored();
+  // Move the real scroll ancestor, rather than synthesizing a scroll event.
+  await body.evaluate((element) => {
+    const top = element.getBoundingClientRect().top;
+    for (
+      let parent = element.parentElement;
+      parent;
+      parent = parent.parentElement
+    ) {
+      if (
+        parent.scrollHeight > parent.clientHeight &&
+        /auto|scroll/.test(getComputedStyle(parent).overflowY)
+      ) {
+        parent.scrollTop += Math.min(32, Math.max(0, top - 100));
+        break;
+      }
+    }
+  });
+  await anchored();
+  const viewport = page.viewportSize();
+  if (!viewport) throw new Error("Missing mobile viewport");
+  await page.setViewportSize({ height: 480, width: viewport.width });
+  await anchored();
   await handle.tap();
   await expect(
     page.getByRole("menuitem", { exact: true, name: "Duplicate block" }),
   ).toBeVisible();
+  await page.keyboard.press("Escape");
+  await add.tap();
+  await expect(
+    page.getByRole("listbox", { name: "Block commands" }),
+  ).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(editor).not.toContainText("/");
 });
 
 test("crossing the toolbar gap keeps the handle on its block and leaving releases it", async ({

@@ -7,6 +7,13 @@ import {
   DropdownMenuTrigger,
 } from "@acme/ui/dropdown-menu";
 import { useIsMobile } from "@acme/ui/use-mobile";
+import {
+  autoUpdate,
+  hide,
+  offset,
+  shift,
+  useFloating,
+} from "@floating-ui/react";
 import { type Editor, isMacOS } from "@tiptap/core";
 import { NodeSelection, TextSelection } from "@tiptap/pm/state";
 import { GripVertical, Plus } from "lucide-react";
@@ -46,7 +53,16 @@ export function TiptapSideMenu({
     activeId.current = value;
     setIdState(value);
   }, []);
-  const [position, setPosition] = useState({ color: "", left: 0, top: 0 });
+  const floating = useFloating({
+    middleware: [
+      offset(4),
+      shift({ crossAxis: true, mainAxis: mobile, padding: 4 }),
+      hide({ strategy: "referenceHidden" }),
+    ],
+    placement: "left-start",
+    strategy: "fixed",
+    whileElementsMounted: autoUpdate,
+  });
   const [open, setOpen] = useState(false);
   const frozen = useRef(false);
   const [pressed, setPressed] = useState(false);
@@ -65,6 +81,7 @@ export function TiptapSideMenu({
     const move = (event: PointerEvent) => {
       if (event.pointerType === "mouse" && touchPointer) setTouchPointer(false);
       if (
+        mobile ||
         event.pointerType === "touch" ||
         open ||
         pressed ||
@@ -150,40 +167,41 @@ export function TiptapSideMenu({
   }, [editor, open, pressed, mobile, touchPointer, setId]);
   useEffect(() => {
     if (!id) return;
-    const update = () => {
-      let position: ReturnType<typeof blockAt>;
-      try {
-        position = blockAt(state?.doc ?? editor.state.doc, id);
-      } catch {
-        setId(undefined);
-        return;
-      }
-      const node = editor.view.nodeDOM(position.pos);
-      if (!(node instanceof HTMLElement)) return;
-      const body = node.querySelector<HTMLElement>("[data-better-editor-body]");
-      const rect = (body ?? node).getBoundingClientRect();
-      const padding = body
-        ? Number.parseFloat(getComputedStyle(body).paddingTop) || 0
-        : 0;
-      setPosition({
-        color: getComputedStyle(editor.view.dom).color,
-        left: Math.max(4, rect.left - (mobile ? 48 : 64)),
-        top:
-          rect.top +
-          padding +
-          ((body ? Number.parseFloat(getComputedStyle(body).lineHeight) : 24) -
-            (mobile ? 48 : 32)) /
-            2,
-      });
-    };
-    update();
-    window.addEventListener("scroll", update, true);
-    window.addEventListener("resize", update);
-    return () => {
-      window.removeEventListener("scroll", update, true);
-      window.removeEventListener("resize", update);
-    };
-  }, [editor, id, state, mobile, setId]);
+    let target: ReturnType<typeof blockAt>;
+    try {
+      target = blockAt(state?.doc ?? editor.state.doc, id);
+    } catch {
+      setId(undefined);
+      return;
+    }
+    const node = editor.view.nodeDOM(target.pos);
+    if (!(node instanceof HTMLElement)) return;
+    const body =
+      node.querySelector<HTMLElement>("[data-better-editor-body]") ?? node;
+    floating.refs.setPositionReference({
+      contextElement: body,
+      getBoundingClientRect() {
+        const rect = body.getBoundingClientRect();
+        const style = getComputedStyle(body);
+        const padding = Number.parseFloat(style.paddingTop) || 0;
+        const lineHeight = Number.parseFloat(style.lineHeight) || 24;
+        const handleHeight = mobile ? 44 : 28;
+        // Nested touch controls stay in the outer gutter so their 44px targets
+        // cannot cover text in the following, less-indented row.
+        const left = mobile
+          ? editor.view.dom.getBoundingClientRect().left +
+            (Number.parseFloat(getComputedStyle(editor.view.dom).paddingLeft) ||
+              0)
+          : rect.left;
+        return new DOMRect(
+          left,
+          rect.top + padding + (lineHeight - handleHeight) / 2 - 2,
+          rect.width,
+          handleHeight,
+        );
+      },
+    });
+  }, [editor, id, state, mobile, setId, floating.refs]);
   if (
     !id ||
     (!visible && !open && !pressed && !frozen.current && !editor.view.dragging)
@@ -202,6 +220,45 @@ export function TiptapSideMenu({
     if (!selected) throw new Error("Selected block is unavailable");
     return selected;
   };
+  const addBlock = (
+    <EditorHint label="Add a block below">
+      <Button
+        aria-label="Add block"
+        variant="ghost"
+        size="icon-sm"
+        onMouseDown={(event) => event.preventDefault()}
+        onClick={() => {
+          const target = select(false);
+          const body = target.node.firstChild;
+          const reuse = body?.type.name === "paragraph" && !body.content.size;
+          const fresh = reuse ? target.id : crypto.randomUUID();
+          const tr = reuse
+            ? editor.state.tr
+            : editBlocks(
+                editor.state.tr,
+                [
+                  {
+                    afterId: target.id,
+                    block: { id: fresh, type: "paragraph" },
+                    parentId: target.parentId,
+                    type: "insert",
+                  },
+                ],
+                fresh,
+              );
+          tr.setSelection(
+            TextSelection.create(tr.doc, blockAt(tr.doc, fresh).pos + 2),
+          );
+          editor.view.focus();
+          editor.view.dispatch(
+            tr.setMeta(slashKey, { open: true }).scrollIntoView(),
+          );
+        }}
+      >
+        <Plus />
+      </Button>
+    </EditorHint>
+  );
   return (
     <TouchBlockDrag
       editor={editor}
@@ -221,51 +278,15 @@ export function TiptapSideMenu({
             data-tiptap-side-menu=""
             className="better-editor-side-menu"
             data-touch={mobile ? "true" : undefined}
-            style={position}
+            ref={floating.refs.setFloating}
+            style={{
+              ...floating.floatingStyles,
+              visibility: floating.middlewareData.hide?.referenceHidden
+                ? "hidden"
+                : undefined,
+            }}
           >
-            {!mobile && (
-              <EditorHint label="Add a block below">
-                <Button
-                  aria-label="Add block"
-                  variant="ghost"
-                  size="icon-sm"
-                  onMouseDown={(event) => event.preventDefault()}
-                  onClick={() => {
-                    const target = select(false);
-                    const body = target.node.firstChild;
-                    const reuse =
-                      body?.type.name === "paragraph" && !body.content.size;
-                    const fresh = reuse ? target.id : crypto.randomUUID();
-                    const tr = reuse
-                      ? editor.state.tr
-                      : editBlocks(
-                          editor.state.tr,
-                          [
-                            {
-                              afterId: target.id,
-                              block: { id: fresh, type: "paragraph" },
-                              parentId: target.parentId,
-                              type: "insert",
-                            },
-                          ],
-                          fresh,
-                        );
-                    tr.setSelection(
-                      TextSelection.create(
-                        tr.doc,
-                        blockAt(tr.doc, fresh).pos + 2,
-                      ),
-                    );
-                    editor.view.focus();
-                    editor.view.dispatch(
-                      tr.setMeta(slashKey, { open: true }).scrollIntoView(),
-                    );
-                  }}
-                >
-                  <Plus />
-                </Button>
-              </EditorHint>
-            )}
+            {!mobile && addBlock}
             <DropdownMenu
               modal={false}
               open={open}
@@ -346,6 +367,7 @@ export function TiptapSideMenu({
                 />
               </DropdownMenuContent>
             </DropdownMenu>
+            {mobile && addBlock}
           </div>,
           document.body,
         )

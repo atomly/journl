@@ -1,6 +1,8 @@
 "use client";
 
-import { type EditorPartialBlock, schema } from "@acme/blocknote/schema";
+import { toBlockNoteBlocks } from "@acme/blocknote/adapter";
+import { schema } from "@acme/blocknote/schema";
+import type { DocumentBlocks } from "@acme/document";
 import { en } from "@blocknote/core/locales";
 import { useCreateBlockNote } from "@blocknote/react";
 import { AIExtension } from "@blocknote/xl-ai";
@@ -25,7 +27,7 @@ type UseBlockEditorOptions = {
    * The initial blocks to render in the editor.
    * @note The initial blocks must be a non-empty array.
    */
-  initialBlocks?: [EditorPartialBlock, ...EditorPartialBlock[]] | undefined;
+  initialBlocks?: DocumentBlocks;
   resetKey?: number;
 };
 
@@ -153,7 +155,7 @@ export function useBlockEditor({
           }),
         }),
       ],
-      initialContent: initialBlocks,
+      initialContent: toBlockNoteBlocks(initialBlocks),
       pasteHandler: (context) =>
         handleReferencePaste(context, (url) =>
           queryClient.fetchQuery(

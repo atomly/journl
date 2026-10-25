@@ -1,5 +1,5 @@
 import type { BlockEdge, BlockNode } from "@acme/db/schema";
-import type { EditorPartialBlock } from "../blocknote-schema";
+import type { DocumentBlock } from "@acme/document";
 
 /** Synthetic only. IDs and example.invalid URLs contain no application/user data. */
 export const inventoryId = (n: number) =>
@@ -28,7 +28,7 @@ const externalReference = {
 } as const;
 
 /** Every installed default block, all styles, both table cell shapes, nesting and references. */
-export const parityBlocks: [EditorPartialBlock, ...EditorPartialBlock[]] = [
+export const parityBlocks: [DocumentBlock, ...DocumentBlock[]] = [
   {
     content: [
       {
@@ -331,7 +331,7 @@ export const historicalFixtures = [
     nodes: [savedNode(101, { props: {}, type: "paragraph" })],
   },
   {
-    disposition: "preserve-raw",
+    disposition: "load",
     edges: [],
     name: "missing-props",
     nodes: [

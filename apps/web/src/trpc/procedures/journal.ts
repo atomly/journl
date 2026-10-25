@@ -1,4 +1,3 @@
-import { blocknoteBlocks } from "@acme/blocknote/server";
 import {
   and,
   between,
@@ -16,6 +15,7 @@ import {
   JournalEntry,
   zJournalEntryDate,
 } from "@acme/db/schema";
+import { documentBlocks } from "@acme/document";
 import type { TRPCRouterRecord } from "@trpc/server";
 import { TRPCError } from "@trpc/server";
 import { embed } from "ai";
@@ -31,7 +31,7 @@ import {
 import { protectedProcedure, usageGuard } from "../trpc";
 
 type BlockNoteJournalEntry = JournalEntry & {
-  blocks: ReturnType<typeof blocknoteBlocks>;
+  blocks: ReturnType<typeof documentBlocks>;
 };
 
 type BlockNoteJournalEntries = (
@@ -76,7 +76,7 @@ export const journalRouter = {
 
       return entries.map(({ block_nodes, block_edges, ...entry }) => ({
         ...entry,
-        blocks: blocknoteBlocks(block_nodes, block_edges),
+        blocks: documentBlocks(block_nodes, block_edges),
       }));
     }),
   getByDate: protectedProcedure
@@ -108,7 +108,7 @@ export const journalRouter = {
 
         return {
           ...entry,
-          blocks: blocknoteBlocks(block_nodes, block_edges),
+          blocks: documentBlocks(block_nodes, block_edges),
         };
       } catch (error) {
         if (error instanceof TRPCError) {
@@ -162,7 +162,7 @@ export const journalRouter = {
         const timeline: BlockNoteJournalEntries = pageResults.map(
           ({ block_nodes, block_edges, ...entry }) => ({
             ...entry,
-            blocks: blocknoteBlocks(block_nodes, block_edges),
+            blocks: documentBlocks(block_nodes, block_edges),
           }),
         );
 
@@ -290,7 +290,7 @@ export const journalRouter = {
               entry.date,
               {
                 ...entry,
-                blocks: blocknoteBlocks(block_nodes, block_edges),
+                blocks: documentBlocks(block_nodes, block_edges),
               },
             ];
           }),

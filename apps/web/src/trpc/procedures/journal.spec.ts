@@ -12,7 +12,6 @@ import { journalRouter } from "./journal";
 vi.mock("~/env", () => ({ env: { PUBLIC_WEB_URL: "https://journl.example" } }));
 
 const mocks = vi.hoisted(() => ({ persist: vi.fn() }));
-vi.mock("@acme/blocknote/server", () => ({ blocknoteBlocks: vi.fn() }));
 vi.mock("../../workflows/document-embedding", () => ({
   startDocumentEmbedding: vi.fn(),
 }));

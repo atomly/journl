@@ -29,14 +29,13 @@ import {
   zBlockTransactions,
 } from "../shared/block-transaction";
 import { protectedProcedure, usageGuard } from "../trpc";
+import { readJournalContent } from "./journal-content";
 
-type BlockNoteJournalEntry = JournalEntry & {
-  blocks: ReturnType<typeof documentBlocks>;
-};
+type JournalContentEntry = JournalEntry & ReturnType<typeof readJournalContent>;
 
-type BlockNoteJournalEntries = (
+type JournalContentEntries = (
   | { date: string }
-  | Exclude<BlockNoteJournalEntry, undefined>
+  | Exclude<JournalContentEntry, undefined>
 )[];
 
 function formatDateKey(date: Date) {
@@ -159,12 +158,8 @@ export const journalRouter = {
         const hasMore = results.length > input.limit;
         const pageResults = hasMore ? results.slice(0, input.limit) : results;
 
-        const timeline: BlockNoteJournalEntries = pageResults.map(
-          ({ block_nodes, block_edges, ...entry }) => ({
-            ...entry,
-            blocks: documentBlocks(block_nodes, block_edges),
-          }),
-        );
+        const timeline: JournalContentEntries =
+          pageResults.map(readJournalContent);
 
         if (!input.cursor && todayKey) {
           const hasToday = timeline.some((entry) => entry.date === todayKey);
@@ -285,20 +280,14 @@ export const journalRouter = {
         });
 
         const entriesByDate = new Map(
-          results.map(({ block_nodes, block_edges, ...entry }) => {
-            return [
-              entry.date,
-              {
-                ...entry,
-                blocks: documentBlocks(block_nodes, block_edges),
-              },
-            ];
+          results.map((entry) => {
+            return [entry.date, readJournalContent(entry)];
           }),
         );
 
         // Generate all dates in the range and fill missing days with placeholders
         // Start from the newest date and work backwards for descending order
-        const timeline: BlockNoteJournalEntries = [];
+        const timeline: JournalContentEntries = [];
         const currentDate = new Date(from);
         const endDate = new Date(to);
 

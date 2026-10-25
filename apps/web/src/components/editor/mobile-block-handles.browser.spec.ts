@@ -75,6 +75,11 @@ test("mobile block handles follow taps and move nested blocks with stable identi
   if (!size) throw new Error("Missing touch handle");
   expect(size.width).toBeGreaterThanOrEqual(44);
   expect(size.height).toBeGreaterThanOrEqual(44);
+  const allIds = await editor
+    .locator("[data-block-id]")
+    .evaluateAll((nodes) =>
+      nodes.map((node) => node.getAttribute("data-block-id")).sort(),
+    );
   const id = await beta.evaluate(
     (el) => el.closest<HTMLElement>("[data-block-id]")?.dataset.blockId,
   );
@@ -108,13 +113,28 @@ test("mobile block handles follow taps and move nested blocks with stable identi
     start.x + start.width / 2,
     start.y + start.height / 2,
   );
-  await page.waitForTimeout(300); // dnd-kit requires a deliberate hold before touch dragging.
+  await touch(
+    handle,
+    "touchmove",
+    start.x + start.width / 2 + 8,
+    start.y + start.height / 2 + 8,
+  );
   await touch(handle, "touchmove", end.x + 16, end.y + end.height - 2);
   await expect(
     page.locator(".better-editor-block-drop-indicator"),
   ).toBeVisible();
   await touch(handle, "touchend", end.x + 16, end.y + end.height - 2);
   await expect(editor.locator(":scope > [data-block-id]")).toHaveCount(3);
+  expect(
+    await editor
+      .locator("[data-block-id]")
+      .evaluateAll((nodes) =>
+        nodes.map((node) => node.getAttribute("data-block-id")).sort(),
+      ),
+  ).toEqual(allIds);
+  await expect(
+    editor.locator('[data-better-editor-body="paragraph"]'),
+  ).toHaveText(["Alpha", "Gamma", "Beta"]);
   await expect(editor.locator(":scope > [data-block-id]").last()).toContainText(
     "Beta",
   );

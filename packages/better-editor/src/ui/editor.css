@@ -420,6 +420,9 @@
   min-width: 44px;
   touch-action: manipulation;
 }
+.better-editor-side-menu button[aria-label="Block actions"] {
+  touch-action: none;
+}
 .better-editor-side-menu[data-touch="true"] button svg {
   width: 22px;
   height: 22px;

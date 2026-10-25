@@ -288,6 +288,7 @@ function ResolvedReference({
       </DropdownMenuTrigger>
       <DropdownMenuContent
         data-tiptap-controls=""
+        data-tiptap-owner={view.editor.instanceId}
         finalFocus={() => {
           return restoreEditorFocus(view.editor);
         }}
@@ -339,6 +340,7 @@ function ResolvedReference({
         <PopoverContent
           className="content-reference-preview"
           data-tiptap-controls=""
+          data-tiptap-owner={view.editor.instanceId}
         >
           <strong>{title}</strong>
           <PreviewStatus

@@ -39,6 +39,7 @@ const LanguageMenu = memo(function LanguageMenu({
       className="better-editor-code-controls"
       contentEditable={false}
       data-tiptap-controls=""
+      data-tiptap-owner={editor.instanceId}
     >
       <Select
         value={language}
@@ -62,6 +63,7 @@ const LanguageMenu = memo(function LanguageMenu({
           alignItemWithTrigger={false}
           className="max-h-72 border border-sidebar-border"
           data-tiptap-controls=""
+          data-tiptap-owner={editor.instanceId}
           finalFocus={() => restoreEditorFocus(editor)}
         >
           {options.map((value) => (

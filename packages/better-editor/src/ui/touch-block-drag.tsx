@@ -1,13 +1,13 @@
 "use client";
 import {
   DndContext,
-  type DragMoveEvent,
   TouchSensor,
   useDraggable,
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
 import type { Editor } from "@tiptap/core";
+import { closeHistory } from "@tiptap/pm/history";
 import { NodeSelection } from "@tiptap/pm/state";
 import { type ReactNode, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
@@ -88,15 +88,13 @@ type Handle = Pick<
 function DraggableHandle({
   editor,
   id,
-  enabled,
   children,
 }: {
   editor: Editor;
   id: string;
-  enabled: boolean;
   children: (handle: Handle) => ReactNode;
 }) {
-  const handle = useDraggable({ disabled: !enabled, id });
+  const handle = useDraggable({ id });
   useEffect(() => {
     try {
       const node = editor.view.nodeDOM(blockAt(editor.state.doc, id).pos);
@@ -113,38 +111,75 @@ function DraggableHandle({
 export function TouchBlockDrag({
   editor,
   id,
-  enabled,
   select,
   onActiveChange,
   children,
 }: {
   editor: Editor;
   id: string;
-  enabled: boolean;
   select: () => void;
   onActiveChange: (active: boolean) => void;
   children: (handle: Handle) => ReactNode;
 }) {
+  const ids = useRef<string[]>([]);
+  const point = useRef<{ x: number; y: number } | null>(null);
+  const cancelled = useRef(false);
+  const stopTracking = useRef<(() => void) | undefined>(undefined);
+  const [drop, setDrop] = useState<Drop | null>(null);
+  useEffect(() => () => stopTracking.current?.(), []);
   const sensors = useSensors(
     useSensor(TouchSensor, {
-      activationConstraint: { delay: 250, tolerance: 8 },
+      activationConstraint: { distance: 6 },
+      onActivation({ event }) {
+        stopTracking.current?.();
+        const start = (event as TouchEvent).touches[0];
+        if (!start) return;
+        cancelled.current = false;
+        point.current = { x: start.clientX, y: start.clientY };
+        const doc = (event.target as Node).ownerDocument ?? document;
+        const track = (event: TouchEvent) => {
+          // TouchSensor ends on any finger's release. Once another contact joins,
+          // this single-finger gesture must stay cancelled through that end.
+          if (event.touches.length > 1 || event.type === "touchcancel") {
+            cancelled.current = true;
+            point.current = null;
+            setDrop(null);
+          }
+          const touch = Array.from(event.changedTouches).find(
+            (touch) => touch.identifier === start.identifier,
+          );
+          if (touch && !cancelled.current)
+            point.current = { x: touch.clientX, y: touch.clientY };
+          if (event.type === "touchend" || event.type === "touchcancel")
+            stopTracking.current?.();
+        };
+        // Capture runs before the library's move/end listeners. Client positions
+        // stay in viewport space; dnd-kit deltas also contain scroll adjustment.
+        for (const type of [
+          "touchstart",
+          "touchmove",
+          "touchend",
+          "touchcancel",
+        ] as const)
+          doc.addEventListener(type, track, { capture: true, passive: true });
+        stopTracking.current = () => {
+          for (const type of [
+            "touchstart",
+            "touchmove",
+            "touchend",
+            "touchcancel",
+          ] as const)
+            doc.removeEventListener(type, track, true);
+          stopTracking.current = undefined;
+        };
+      },
     }),
   );
-  const ids = useRef<string[]>([]);
-  const [drop, setDrop] = useState<Drop | null>(null);
-  const resolve = (event: DragMoveEvent) => {
-    const touch =
-      "touches" in event.activatorEvent
-        ? (event.activatorEvent as TouchEvent).touches[0]
-        : undefined;
-    if (!touch) return null;
+  const resolve = () => {
+    const current = point.current;
+    if (!current) return null;
     try {
-      return destination(
-        editor,
-        ids.current,
-        touch.clientX + event.delta.x,
-        touch.clientY + event.delta.y,
-      );
+      return destination(editor, ids.current, current.x, current.y);
     } catch {
       return null;
     }
@@ -153,19 +188,26 @@ export function TouchBlockDrag({
     <DndContext
       sensors={sensors}
       onDragStart={() => {
+        editor.view.dragging = null;
         onActiveChange(true);
         select();
         ids.current = selectedBlocks(editor.state).map((block) => block.id);
       }}
-      onDragMove={(event) => setDrop(resolve(event))}
+      onDragMove={() => setDrop(resolve())}
       onDragCancel={() => {
-        onActiveChange(false);
+        stopTracking.current?.();
+        point.current = null;
+        editor.view.dragging = null;
         ids.current = [];
         setDrop(null);
-      }}
-      onDragEnd={(event) => {
         onActiveChange(false);
-        const target = resolve(event);
+      }}
+      onDragEnd={() => {
+        const target = resolve();
+        stopTracking.current?.();
+        point.current = null;
+        editor.view.dragging = null;
+        onActiveChange(false);
         const moving = ids.current;
         ids.current = [];
         setDrop(null);
@@ -189,8 +231,11 @@ export function TouchBlockDrag({
             return operation;
           });
           editor.view.dispatch(
-            editBlocks(editor.state.tr, operations, moving[0]).scrollIntoView(),
+            closeHistory(
+              editBlocks(editor.state.tr, operations, moving[0]),
+            ).scrollIntoView(),
           );
+          editor.view.dispatch(closeHistory(editor.state.tr));
         } catch {
           /* A concurrent removal or invalid destination cancels the gesture. */
         }
@@ -204,11 +249,11 @@ export function TouchBlockDrag({
         },
         screenReaderInstructions: {
           draggable:
-            "Hold the block handle, then drag to move. Use the block menu to move without dragging.",
+            "Drag the block handle to move. Use the block menu to move without dragging.",
         },
       }}
     >
-      <DraggableHandle editor={editor} id={id} enabled={enabled}>
+      <DraggableHandle editor={editor} id={id}>
         {children}
       </DraggableHandle>
       {drop &&

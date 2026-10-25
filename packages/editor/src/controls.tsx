@@ -22,10 +22,12 @@ export function EditorHint({
   label: string;
 }) {
   return (
-    <TooltipProvider delay={350}>
+    <TooltipProvider delay={150}>
       <Tooltip>
         <TooltipTrigger {...props} render={children} />
-        <TooltipContent role="tooltip">{label}</TooltipContent>
+        <TooltipContent role="tooltip" data-tiptap-controls="">
+          {label}
+        </TooltipContent>
       </Tooltip>
     </TooltipProvider>
   );

@@ -451,7 +451,7 @@ test("empty non-paragraph blocks accept new Markdown shortcuts without losing id
 
 test("divider shortcut leaves a writable paragraph and table cells keep literal Markdown", () => {
   const first = setup();
-  first.text("--- ");
+  first.text("---");
   first.text("After divider");
   expect(first.blocks().map((block) => block.type)).toEqual([
     "divider",
@@ -484,5 +484,22 @@ test("turning an empty block into a table puts typing in its first cell", () => 
   text("First cell");
   expect(blocks()[0]?.type).toBe("table");
   expect(editor.state.doc.textContent).toBe("First cell");
+  editor.destroy();
+});
+
+test("the add-block picker opens on empty content without inserting a slash and cancels cleanly", () => {
+  const { editor, key, text, blocks } = setup();
+  editor.view.dispatch(editor.state.tr.setMeta(slashKey, { open: true }));
+  expect(slashKey.getState(editor.state)?.query).toBe("");
+  expect(editor.state.doc.textContent).toBe("");
+  key("Escape");
+  expect(slashKey.getState(editor.state)).toBeNull();
+  expect(editor.state.doc.textContent).toBe("");
+  editor.view.dispatch(editor.state.tr.setMeta(slashKey, { open: true }));
+  text("bullet");
+  key("Enter");
+  expect(blocks()[0]).toMatchObject({ id: "a", type: "bulletListItem" });
+  expect(editor.state.doc.textContent).toBe("");
+  expect(slashKey.getState(editor.state)).toBeNull();
   editor.destroy();
 });

@@ -6,6 +6,7 @@ import {
   type ReferenceClient,
 } from "@acme/references";
 import {
+  clipboardText,
   documentChanges,
   documentExtensions,
   editingExtension,
@@ -21,6 +22,7 @@ import { Editor, Extension } from "@tiptap/core";
 import { TextSelection } from "@tiptap/pm/state";
 import { cn } from "cn";
 import { useContext, useEffect, useMemo, useRef, useState } from "react";
+import { useHandleVisibility } from "./handle-visibility";
 import { referenceViewStore, TiptapReferenceViews } from "./node-views";
 import { ReferenceClientContext } from "./reference-client";
 import { insertTiptapReference } from "./reference-insertion";
@@ -69,6 +71,7 @@ function EditorView({
   const [editor, setEditor] = useState<Editor>();
   const referenceViews = useMemo(referenceViewStore, []);
   const [error, setError] = useState(false);
+  const handlesVisible = useHandleVisibility(editor);
   useEffect(() => {
     if (!host.current) return;
     const initialBlocks = initial.current;
@@ -91,6 +94,7 @@ function EditorView({
             class: "journl-tiptap min-h-32 outline-none",
             role: commit.current ? "textbox" : "document",
           },
+          clipboardTextSerializer: (slice) => clipboardText(slice.content),
           handleDOMEvents: {
             click: (view, event) => {
               if (
@@ -229,8 +233,8 @@ function EditorView({
         <>
           {editor && (
             <>
-              <TiptapSideMenu editor={editor} />
-              <TiptapTableHandles editor={editor} />
+              <TiptapSideMenu editor={editor} visible={handlesVisible} />
+              <TiptapTableHandles editor={editor} visible={handlesVisible} />
             </>
           )}
           <TiptapSlashMenu editor={editor} />

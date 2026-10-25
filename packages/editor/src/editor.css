@@ -1,3 +1,5 @@
+@import "highlight.js/styles/github-dark.css";
+
 /* Typography follows the installed skin. Named colors retain their hues with
    accessible text/highlight contrast; stored Journl color names stay unchanged. */
 :root {
@@ -110,10 +112,19 @@
 .journl-tiptap [data-heading-level="6"] {
   font-size: 0.8em;
 }
+.journl-tiptap
+  :is(
+    [data-journl-body="bulletListItem"],
+    [data-journl-body="numberedListItem"]
+  ) {
+  position: relative;
+  padding-left: 24px;
+}
 .journl-tiptap [data-journl-body="bulletListItem"]::before,
 .journl-tiptap [data-journl-body="numberedListItem"]::before {
-  display: inline-block;
-  min-width: 24px;
+  position: absolute;
+  left: 0;
+  width: 24px;
   padding-right: 4px;
   text-align: center;
 }
@@ -152,6 +163,7 @@
   min-width: 28px;
 }
 .journl-side-menu button svg {
+  stroke-width: 2.5;
   width: 18px;
   height: 18px;
 }
@@ -180,7 +192,7 @@
   white-space: pre;
   tab-size: 2;
   overflow-x: auto;
-  padding: 24px !important;
+  padding: 12px 16px !important;
   margin: 3px 0 !important;
   border-radius: 8px;
   background: #161616;
@@ -297,11 +309,10 @@
   display: flex;
   gap: 2px;
   padding: 2px;
-  border: 1px solid var(--journl-menu-border);
+  border: 0;
   border-radius: 8px;
   background: var(--popover);
-  color: var(--muted-foreground);
-  box-shadow: 0 2px 6px rgb(0 0 0 / 8%);
+  color: var(--foreground);
 }
 .journl-side-menu :where(button) {
   padding: 0;
@@ -338,8 +349,7 @@
   background: var(--muted);
 }
 
-.journl-tiptap .ProseMirror-selectednode,
-.journl-tiptap [data-reference-selected] {
+.journl-tiptap [data-journl-reference][data-reference-selected] {
   border-radius: 6px;
   outline: 1px solid color-mix(in srgb, var(--ring) 45%, transparent);
   outline-offset: 2px;
@@ -430,7 +440,7 @@
   z-index: 60;
   pointer-events: none;
 }
-.journl-tiptap .ProseMirror-noderangeselection {
-  outline: 1px solid color-mix(in srgb, var(--ring), transparent 55%);
-  border-radius: 6px;
+.journl-tiptap
+  :is([data-journl-block], [data-journl-body]).ProseMirror-selectednode {
+  outline: none;
 }

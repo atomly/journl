@@ -1,4 +1,5 @@
 export { documentChanges } from "./changes";
+export { clipboardText } from "./clipboard";
 export {
   AdapterReadError,
   fromTiptapDocument,

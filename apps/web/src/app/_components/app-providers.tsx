@@ -5,7 +5,6 @@ import { JournalDraftsProvider } from "~/app/(app)/journal/_components/journal-d
 import { ThreadRuntime } from "~/components/assistant-ui/thread-runtime";
 import { DraftActivityProvider } from "~/components/editor/draft-activity-provider";
 import { DraftOwnerProvider } from "~/components/editor/draft-sessions-provider";
-import { EditorFrontendProvider } from "~/components/editor/editor-frontend-provider";
 import { PageDraftsProvider } from "~/components/editor/page-drafts-provider";
 import { AppEventProvider } from "~/components/events/app-event-context";
 import { AppPreferencesProvider } from "~/components/preferences/app-preferences-provider";
@@ -18,16 +17,12 @@ import { TRPCReactProvider } from "~/trpc/react";
 type AppProvidersProps = {
   children: React.ReactNode;
   owner: string;
-  tiptap?: boolean;
-  editorPreviewEnabled?: boolean;
   initialPreferences: AppPreferences;
 };
 
 export function AppProviders({
   children,
   owner,
-  tiptap = false,
-  editorPreviewEnabled = false,
   initialPreferences,
 }: AppProvidersProps) {
   return (
@@ -47,12 +42,7 @@ export function AppProviders({
                     <DraftActivityProvider>
                       <PageDraftsProvider>
                         <JournalDraftsProvider>
-                          <EditorFrontendProvider
-                            enabled={editorPreviewEnabled}
-                            tiptap={tiptap}
-                          >
-                            <ThreadRuntime>{children}</ThreadRuntime>
-                          </EditorFrontendProvider>
+                          <ThreadRuntime>{children}</ThreadRuntime>
                         </JournalDraftsProvider>
                       </PageDraftsProvider>
                     </DraftActivityProvider>

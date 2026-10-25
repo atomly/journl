@@ -64,7 +64,7 @@ export function TiptapSideMenu({
     middleware: [
       offset(4),
       shift({
-        altBoundary: true,
+        altBoundary: mobile,
         crossAxis: true,
         mainAxis: mobile,
         padding: 4,

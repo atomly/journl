@@ -2,13 +2,9 @@ import type { Editor } from "@tiptap/core";
 import { expect, test } from "~/testing/browser/fixtures";
 
 test.use({ journalPagination: true });
-test("saved external previews keep source presentation and navigation in both editors", async ({
+test("saved external previews keep source presentation and navigation after saving and reloading", async ({
   page,
-  context,
 }) => {
-  await context.addCookies([
-    { name: "journl-editor", url: "http://127.0.0.1:3100", value: "tiptap" },
-  ]);
   await page.goto("/journal");
   const create = page.getByRole("button", { exact: true, name: "New page" });
   if (!(await create.isVisible()))
@@ -53,12 +49,9 @@ test("saved external previews keep source presentation and navigation in both ed
       })),
     );
   }, urls);
-  for (const frontend of ["tiptap", "blocknote"]) {
-    const cards = page.locator(
-      frontend === "tiptap"
-        ? ".better-editor-tiptap .content-reference-card"
-        : ".bn-editor .content-reference-card",
-    );
+  const cards = page.locator(".better-editor-tiptap .content-reference-card");
+  for (const reload of [false, true]) {
+    if (reload) await page.reload();
     await expect(cards).toHaveCount(3);
     await expect(
       cards.nth(1).locator(".content-reference-source"),
@@ -70,15 +63,6 @@ test("saved external previews keep source presentation and navigation in both ed
       await expect(
         cards.nth(i).locator(".content-reference-card-heading a"),
       ).toHaveAttribute("href", url);
-    await expect(page.locator("[data-save-status]")).toContainText(
-      frontend === "tiptap" ? "Saved" : /Autosave on|Saved/,
-    );
-    if (frontend === "tiptap") {
-      await page.reload();
-      await expect(cards).toHaveCount(3);
-      await page
-        .getByRole("button", { exact: true, name: "Use current editor" })
-        .click();
-    }
+    await expect(page.locator("[data-save-status]")).toContainText("Saved");
   }
 });

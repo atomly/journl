@@ -1,11 +1,6 @@
 import { expect, test } from "~/testing/browser/fixtures";
 
 test.use({ journalPagination: true });
-test.beforeEach(async ({ context }) => {
-  await context.addCookies([
-    { name: "journl-editor", url: "http://127.0.0.1:3100", value: "tiptap" },
-  ]);
-});
 
 test("selected lists convert together, typing dismisses handles and plain copy keeps list markers", async ({
   page,

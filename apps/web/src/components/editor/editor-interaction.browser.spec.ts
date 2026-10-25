@@ -1,11 +1,5 @@
 import { expect, test } from "~/testing/browser/fixtures";
 
-test.beforeEach(async ({ context }) => {
-  await context.addCookies([
-    { name: "journl-editor", url: "http://127.0.0.1:3100", value: "tiptap" },
-  ]);
-});
-
 test("handle menu opens once, add picker leaves no slash, and divider needs no space", async ({
   page,
 }, info) => {

@@ -3,11 +3,7 @@ import { expect, test } from "~/testing/browser/fixtures";
 test.use({ journalPagination: true });
 test("added columns reveal themselves without moving the document vertically", async ({
   page,
-  context,
 }, info) => {
-  await context.addCookies([
-    { name: "journl-editor", url: "http://127.0.0.1:3100", value: "tiptap" },
-  ]);
   await page.goto("/journal");
   const create = page.getByRole("button", { exact: true, name: "New page" });
   if (!(await create.isVisible()))

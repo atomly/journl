@@ -32,7 +32,7 @@ This is a monorepo powered by [Turborepo](https://turborepo.dev/) and
 - **Shared packages:** [`packages`](./packages) for auth, database access,
   usage domain logic, the framework-independent [`document contract`](packages/document/README.md),
   the [`BetterEditor engine and React UI`](packages/better-editor/README.md),
-  reference previews, shared UI primitives, and the temporary BlockNote frontend adapter.
+  reference previews, shared UI primitives, and compatibility code for the legacy AI integration.
 - **Local dev utilities:** [`apps/drizzle-studio`](./apps/drizzle-studio) and
   [`apps/stripe`](./apps/stripe).
 - **Agents & Contributor guidance:** [`AGENTS.md`](./AGENTS.md).

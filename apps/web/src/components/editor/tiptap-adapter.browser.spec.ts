@@ -5,14 +5,9 @@ import { expect, test } from "~/testing/browser/fixtures";
 
 test.use({ journalPagination: true });
 
-test("the actual page route loads every inventory block through the Tiptap switch", async ({
+test("the actual page route loads every inventory block without an editor opt-in", async ({
   page,
 }) => {
-  await page
-    .context()
-    .addCookies([
-      { name: "journl-editor", url: "http://127.0.0.1:3100", value: "tiptap" },
-    ]);
   await page.goto(`/pages/${fixtureId(980)}`);
   const editor = page.locator(".better-editor-tiptap");
   await expect(editor).toHaveCount(1);
@@ -46,19 +41,14 @@ test("the actual page route loads every inventory block through the Tiptap switc
     },
   ]);
   await page.goto(`/pages/${fixtureId(980)}`);
-  await expect(page.locator(".bn-editor")).toBeVisible();
-  await expect(page.locator(".bn-editor")).toContainText("Styled writing 世界");
+  await expect(page.locator(".bn-editor")).toHaveCount(0);
+  await expect(editor).toContainText("Styled writing 世界");
 });
 
 test("split, duplicate, nest, undo and reload preserve committed block identities", async ({
   page,
 }, info) => {
   const marker = `Split writing persisted ${info.project.name}`;
-  await page
-    .context()
-    .addCookies([
-      { name: "journl-editor", url: "http://127.0.0.1:3100", value: "tiptap" },
-    ]);
   await page.goto(`/pages/${fixtureId(982)}`);
   const editor = page.locator(".better-editor-tiptap");
   const original = fixtureId(983);

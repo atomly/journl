@@ -1,77 +1,413 @@
+/* Typography follows the installed skin. Named colors retain their hues with
+   accessible text/highlight contrast; stored Journl color names stay unchanged. */
+:root {
+  --journl-menu-border: color-mix(
+    in srgb,
+    var(--foreground) 24%,
+    var(--background)
+  );
+  --journl-text-gray: #656462;
+  --journl-background-gray: #ebeced;
+  --journl-text-brown: #64473a;
+  --journl-background-brown: #e9e5e3;
+  --journl-text-red: #b83333;
+  --journl-background-red: #fbe4e4;
+  --journl-text-orange: #9a5209;
+  --journl-background-orange: #f6e9d9;
+  --journl-text-yellow: #7d6001;
+  --journl-background-yellow: #fbf3db;
+  --journl-text-green: #4d6461;
+  --journl-background-green: #ddedea;
+  --journl-text-blue: #0b6c96;
+  --journl-background-blue: #ddebf1;
+  --journl-text-purple: #6940a5;
+  --journl-background-purple: #eae4f2;
+  --journl-text-pink: #ad1a72;
+  --journl-background-pink: #f4dfeb;
+}
+.dark {
+  --journl-text-gray: #bebdb8;
+  --journl-background-gray: #2b2b2a;
+  --journl-text-brown: #ab8d7f;
+  --journl-background-brown: #1f1815;
+  --journl-text-red: #f06868;
+  --journl-background-red: #331414;
+  --journl-text-orange: #e3790d;
+  --journl-background-orange: #321e0a;
+  --journl-text-yellow: #dfab01;
+  --journl-background-yellow: #312808;
+  --journl-text-green: #7d9995;
+  --journl-background-green: #191f1e;
+  --journl-text-blue: #399dc8;
+  --journl-background-blue: #0a212b;
+  --journl-text-purple: #a681e2;
+  --journl-background-purple: #20162e;
+  --journl-text-pink: #e565b2;
+  --journl-background-pink: #2f0e22;
+}
 .journl-tiptap {
+  font-family:
+    Inter, "SF Pro Display", -apple-system, BlinkMacSystemFont, "Open Sans", "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1.5;
+  color: #3f3f3f;
+  padding-inline: 54px;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
+  font-synthesis: style weight;
+  -webkit-font-smoothing: antialiased;
+}
+.dark .journl-tiptap {
+  color: #cfcfcf;
 }
 .journl-tiptap [data-journl-block] {
   position: relative;
-  margin-block: 0.35rem;
+  margin: 0;
 }
 .journl-tiptap [data-journl-children] {
-  margin-left: 1.5rem;
-  border-left: 1px solid var(--border);
-  padding-left: 0.75rem;
+  margin-left: 24px;
 }
 .journl-tiptap [data-journl-body] {
-  min-height: 1.5em;
+  min-width: 2px;
+  min-height: 30px;
+  margin: 0;
+  padding-block: 3px;
 }
-.journl-tiptap [data-journl-body="heading"] {
-  font-size: 1.5em;
-  font-weight: 600;
-}
-.journl-tiptap [data-journl-body="bulletListItem"]::before {
-  content: "• ";
-}
-.journl-tiptap [data-journl-body="numberedListItem"]::before {
-  content: "1. ";
-}
-.journl-tiptap [data-journl-body="checkListItem"]::before {
-  content: "☐ ";
-}
-.journl-tiptap [data-journl-body="toggleListItem"]::before {
-  content: "▸ ";
-}
-.journl-tiptap table {
-  border-collapse: collapse;
-  width: 100%;
-}
-.journl-tiptap td {
-  border: 1px solid var(--border);
-  padding: 0.4rem;
-  min-width: 3rem;
-}
-.journl-tiptap pre {
+/* Tiptap injects break-spaces on its root; match the existing inline surface's
+   pre-wrap so a preserved trailing space does not change mobile line breaks. */
+.journl-tiptap [data-journl-body] {
   white-space: pre-wrap;
-  padding: 0.75rem;
-  background: var(--muted);
-  font-family: monospace;
+}
+.journl-tiptap [data-journl-body="codeBlock"] {
+  white-space: pre;
 }
 .journl-tiptap [data-journl-body="referenceCard"],
 .journl-tiptap [data-journl-body="contentEmbed"] {
-  border: 1px solid var(--border);
-  border-radius: 0.5rem;
-  padding: 1rem;
+  white-space: normal;
 }
-.journl-tiptap [data-journl-reference] {
-  border-radius: 0.25rem;
-  background: var(--muted);
-  padding-inline: 0.2rem;
+
+.journl-tiptap [data-journl-body="heading"] {
+  font-weight: 700;
+  padding-top: 18px;
+  line-height: 1.5;
 }
-.journl-tiptap .ProseMirror-selectednode,
-.journl-tiptap [data-reference-selected] {
-  outline: 2px solid var(--ring);
+.journl-tiptap [data-heading-level="1"] {
+  font-size: 3em;
 }
-.journl-tiptap [data-journl-body="checkListItem"][data-checked="true"]::before {
-  content: "☑ ";
+.journl-tiptap [data-heading-level="2"] {
+  font-size: 2em;
+}
+.journl-tiptap [data-heading-level="3"] {
+  font-size: 1.3em;
+}
+.journl-tiptap [data-heading-level="4"] {
+  font-size: 1em;
+}
+.journl-tiptap [data-heading-level="5"] {
+  font-size: 0.9em;
+}
+.journl-tiptap [data-heading-level="6"] {
+  font-size: 0.8em;
+}
+.journl-tiptap [data-journl-body="bulletListItem"]::before,
+.journl-tiptap [data-journl-body="numberedListItem"]::before {
+  display: inline-block;
+  min-width: 24px;
+  padding-right: 4px;
+  text-align: center;
+}
+.journl-tiptap [data-journl-body="bulletListItem"]::before {
+  content: "•";
 }
 .journl-tiptap [data-journl-body="numberedListItem"]::before {
-  content: attr(data-start) ". ";
+  content: attr(data-start) ".";
+}
+.journl-tiptap [data-journl-body="checkListItem"],
+.journl-tiptap [data-journl-body="toggleListItem"],
+.journl-tiptap
+  [data-block-type="heading"]:has(> [data-journl-block-controls]:not([hidden]))
+  > [data-journl-content]
+  > [data-journl-body] {
+  padding-left: 24px;
+}
+.journl-tiptap [data-journl-block-controls] {
+  position: absolute;
+  left: 4px;
+  top: 6px;
+  display: flex;
+  align-items: center;
+  height: 18px;
+}
+.journl-tiptap [data-block-type="heading"] > [data-journl-block-controls] {
+  top: 24px;
+}
+.journl-tiptap [data-journl-block-controls][hidden],
+.journl-tiptap [data-journl-block-controls] [hidden] {
+  display: none;
+}
+.journl-side-menu button {
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+}
+.journl-side-menu button svg {
+  width: 18px;
+  height: 18px;
+}
+
+.journl-tiptap [data-journl-block-controls] button {
+  cursor: pointer;
+  width: 18px;
+  height: 18px;
+}
+.journl-tiptap [data-journl-block-controls] input {
+  cursor: pointer;
+  width: 12px;
+  height: 12px;
+  accent-color: var(--primary);
+}
+.journl-tiptap
+  [data-collapsed="true"]
+  > [data-journl-content]
+  > [data-journl-children] {
+  display: none;
+}
+.journl-tiptap [data-journl-body="checkListItem"][data-checked="true"] {
+  text-decoration: line-through;
+}
+.journl-tiptap pre {
+  white-space: pre;
+  tab-size: 2;
+  overflow-x: auto;
+  padding: 24px !important;
+  margin: 3px 0 !important;
+  border-radius: 8px;
+  background: #161616;
+  color: white;
+  font-family: monospace;
+}
+.journl-tiptap blockquote {
+  border-left: 2px solid #7d797a;
+  padding-left: 1em;
+  color: #7d797a;
+}
+.journl-tiptap [data-journl-body="divider"] {
+  padding-block: 12px;
+}
+.journl-tiptap hr {
+  border: 0;
+  border-top: 1px solid #aaa;
+}
+.journl-tiptap table {
+  border-collapse: collapse;
+  table-layout: fixed;
+  width: auto;
+  max-width: 100%;
+  margin: 9px 0 22px !important;
+}
+.journl-tiptap td {
+  border: 1px solid #ddd;
+  padding: 5px 10px;
+  min-width: 40px;
+  vertical-align: top;
+}
+.journl-tiptap [data-header-cell] {
+  font-weight: 700;
 }
 .journl-tiptap img,
 .journl-tiptap video {
   max-width: 100%;
   height: auto;
 }
-.journl-tiptap a {
+.journl-tiptap figure {
+  margin-block: 3px;
+}
+.journl-tiptap figcaption {
+  font-size: 0.8em;
+  color: var(--muted-foreground);
+}
+.journl-tiptap a[data-journl-link] {
+  color: #00e;
   text-decoration: underline;
-  text-underline-offset: 2px;
+}
+.dark .journl-tiptap a[data-journl-link] {
+  color: #958df1;
+}
+.journl-tiptap .content-reference,
+.journl-tiptap .content-reference-card,
+.journl-tiptap .content-embed {
+  white-space: normal;
+}
+/* One contrast level for every editor menu, in either theme. */
+.journl-formatting-toolbar,
+[data-tiptap-controls][data-slot="dropdown-menu-content"],
+[data-tiptap-controls][data-slot="popover-content"],
+[data-tiptap-controls][data-slot="select-content"],
+[data-tiptap-controls][role="listbox"] {
+  border: 1px solid var(--journl-menu-border);
+  border-radius: var(--radius-lg);
+}
+[data-tiptap-controls]
+  :is([data-slot="dropdown-menu-item"], [data-slot="select-item"]) {
+  border: 1px solid transparent;
+  border-radius: 6px;
+}
+[data-tiptap-controls]
+  :is([data-slot="dropdown-menu-item"], [data-slot="select-item"]):is(
+    :hover,
+    [data-highlighted]
+  ) {
+  border-color: var(--journl-menu-border);
+}
+
+.journl-formatting-toolbar {
+  z-index: 50;
+  display: flex;
+  width: max-content;
+  max-width: calc(100vw - 16px);
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: 4px;
+  padding: 4px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--popover);
+  color: var(--popover-foreground);
+  box-shadow: 0 4px 12px rgb(0 0 0 / 12%);
+  overflow-x: auto;
+}
+.journl-mobile-toolbar {
+  position: sticky;
+  z-index: 40;
+  top: calc(
+    var(--app-visual-viewport-offset-top, 0px) +
+    var(--app-header-offset, 0px)
+  );
+  padding-inline: 24px;
+  margin-bottom: 24px;
+}
+.journl-mobile-toolbar .journl-formatting-toolbar {
+  max-width: 100%;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 8%);
+}
+.journl-side-menu {
+  position: fixed;
+  z-index: 45;
+  display: flex;
+  gap: 2px;
+  padding: 2px;
+  border: 1px solid var(--journl-menu-border);
+  border-radius: 8px;
+  background: var(--popover);
+  color: var(--muted-foreground);
+  box-shadow: 0 2px 6px rgb(0 0 0 / 8%);
+}
+.journl-side-menu :where(button) {
+  padding: 0;
+}
+.content-embed-content .journl-tiptap {
+  padding: 0;
+  font-size: 0.9rem;
+}
+.content-embed-content .journl-tiptap [data-journl-body="heading"] {
+  font-size: 1.15rem;
+}
+.journl-tiptap-host {
+  margin-top: 24px;
+}
+@media (min-width: 768px) {
+  .journl-tiptap-host {
+    margin-top: 32px;
+  }
+}
+.journl-tiptap [data-journl-reference] {
+  display: inline-flex;
+  max-width: 100%;
+  vertical-align: baseline;
+}
+.journl-file-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 4px;
+  border-radius: 4px;
+  text-decoration: none;
+}
+.journl-file-link:hover {
+  background: var(--muted);
+}
+
+.journl-tiptap .ProseMirror-selectednode,
+.journl-tiptap [data-reference-selected] {
+  border-radius: 6px;
+  outline: 1px solid color-mix(in srgb, var(--ring) 45%, transparent);
+  outline-offset: 2px;
+  background-color: color-mix(in srgb, var(--ring) 4%, transparent);
+}
+.journl-table-wrapper {
+  overflow-x: auto;
+  max-width: 100%;
+  position: relative;
+}
+.journl-tiptap .selectedCell {
+  position: relative;
+}
+.journl-tiptap .selectedCell::after {
+  background: color-mix(in srgb, var(--ring) 15%, transparent);
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.journl-tiptap .column-resize-handle {
+  position: absolute;
+  right: -2px;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: var(--ring);
+  pointer-events: none;
+}
+.journl-tiptap.resize-cursor {
+  cursor: col-resize;
+}
+.journl-tiptap td {
+  position: relative;
+}
+.journl-tiptap [data-table-paragraph] {
+  margin: 0;
+  padding: 0;
+}
+
+.journl-table-handle,
+.journl-table-extend {
+  z-index: 46;
+  padding: 0;
+  border: 1px solid var(--journl-menu-border);
+  border-radius: 6px;
+  background: var(--popover);
+  color: var(--muted-foreground);
+  box-shadow: 0 1px 3px rgb(0 0 0 / 10%);
+  touch-action: none;
+}
+.journl-table-handle[draggable="true"] {
+  cursor: grab;
+}
+.journl-table-handle[draggable="true"]:active {
+  cursor: grabbing;
+}
+.journl-table-extend-row {
+  height: 20px;
+  min-height: 20px;
+}
+.journl-table-extend-column {
+  width: 20px;
+  min-width: 20px;
+}
+.journl-table-drop-indicator {
+  position: fixed;
+  z-index: 47;
+  background: var(--ring);
+  pointer-events: none;
 }

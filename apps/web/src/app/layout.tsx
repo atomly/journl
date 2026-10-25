@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { DraftSessionsProvider } from "~/components/editor/draft-sessions-provider";
 import { env } from "~/env";
 import { cn } from "~/lib/cn";
 import { getPublicWebUrl } from "~/lib/public-web-url";
@@ -73,8 +74,10 @@ export default function RootLayout({
             env.VERCEL_ENV === "preview" || env.NODE_ENV === "development"
           }
         >
-          {children}
-          {authModal}
+          <DraftSessionsProvider>
+            {children}
+            {authModal}
+          </DraftSessionsProvider>
         </BetterAuthProvider>
       </body>
     </html>

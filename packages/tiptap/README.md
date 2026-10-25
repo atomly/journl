@@ -8,8 +8,8 @@ The adapter is available in actual page and journal routes behind a preview-only
 switch. Select “Try Tiptap editor” in the header of a development or Vercel preview
 build. The server reads the `journl-editor=tiptap` cookie before rendering, so the
 selected frontend is consistent through hydration and ordinary navigation.
-Production keeps the current editor until #375's rollout. #372 connects editable
-views to the existing draft/save sessions.
+Production keeps the current editor until #375's rollout. Editable preview views
+use the existing draft/save sessions.
 
 ## Content boundary
 
@@ -90,3 +90,19 @@ editor, native paste path, ProseMirror transactions/history, storage codecs, and
 the complete preservation inventory. They are adapter checks, not application
 acceptance. Application acceptance uses the existing authenticated Next.js
 routes and disposable PostgreSQL browser suite.
+
+## Save sessions
+
+The app revalidates committed operations with `acceptedDocumentChange()` before
+building existing database transactions. Both page and journal views pass these
+deltas through `DocumentDraft`, including queued title edits, guarded versions,
+retry reconciliation, and recovery copies. No Tiptap JSON or steps enter saves.
+`applyAcceptedOperations()` uses the same update bridge and isolates an accepted
+proposal as one undo event. Unaccepted streaming content belongs outside this
+committed document; #374 and #376 implement that proposal/review experience.
+
+Owner-scoped draft maps and activity live in `DraftSessionsProvider` above route
+layouts. Account Settings and Subscription expose the same save/recovery controls.
+Drafts remain in tab memory and are not durable browser storage. The root lifetime
+keeps reconnect retries and reload warnings active across those layouts. An owner
+change starts an isolated session; the backend still checks ownership on every save.

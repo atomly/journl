@@ -13,9 +13,11 @@ import {
   Document,
   DocumentEmbedding,
   JournalEntry,
+  Page,
+  TreeNode,
   zJournalEntryDate,
 } from "@acme/db/schema";
-import { documentBlocks } from "@acme/document";
+import { documentBlocks, parseBlock } from "@acme/document";
 import type { TRPCRouterRecord } from "@trpc/server";
 import { TRPCError } from "@trpc/server";
 import { embed } from "ai";
@@ -30,6 +32,7 @@ import {
 } from "../shared/block-transaction";
 import { protectedProcedure, usageGuard } from "../trpc";
 import { readJournalContent } from "./journal-content";
+import { insertEdgeAtPosition, lockTreeOwner } from "./tree-helpers";
 
 type JournalContentEntry = JournalEntry & ReturnType<typeof readJournalContent>;
 
@@ -328,6 +331,146 @@ export const journalRouter = {
           message: "Failed to fetch journal entries",
         });
       }
+    }),
+  moveToPage: protectedProcedure
+    .input(
+      z.object({
+        date: zJournalEntryDate,
+        documentId: z.uuid(),
+        expectedUpdatedAt: z.string(),
+        parentNodeId: z.uuid().nullable().default(null),
+        title: z.string().trim().min(1).max(255),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const owner = ctx.session.user.id;
+      const result = await ctx.db.transaction(async (tx) => {
+        await lockTreeOwner(tx, owner);
+        await lockExploreOwner(tx, owner);
+        await tx.execute(
+          sql`select pg_advisory_xact_lock(hashtext(${owner}), hashtext(${input.date}))`,
+        );
+        const current = await tx.query.JournalEntry.findFirst({
+          where: and(
+            eq(JournalEntry.user_id, owner),
+            eq(JournalEntry.date, input.date),
+          ),
+        });
+        if (
+          !current ||
+          current.document_id !== input.documentId ||
+          current.updated_at !== input.expectedUpdatedAt
+        )
+          throw new TRPCError({
+            code: "CONFLICT",
+            message:
+              "This entry has changed. Reload it before moving it to a page.",
+          });
+        const [original] = await tx
+          .select({ id: Document.id })
+          .from(Document)
+          .where(
+            and(
+              eq(Document.id, current.document_id),
+              eq(Document.user_id, owner),
+            ),
+          )
+          .for("update");
+        if (!original)
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Journal document not found",
+          });
+        // Transfer the document, rather than copying its blocks. Existing block
+        // IDs, children, edges and references continue to identify the writing.
+        const [page] = await tx
+          .insert(Page)
+          .values({
+            document_id: original.id,
+            title: input.title,
+            updated_at: current.updated_at,
+            user_id: owner,
+          })
+          .returning();
+        if (!page)
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Failed to create page",
+          });
+        const [node] = await tx
+          .insert(TreeNode)
+          .values({ node_type: "page", page_id: page.id, user_id: owner })
+          .returning();
+        if (!node)
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Failed to add page to Library",
+          });
+        await insertEdgeAtPosition({
+          db: tx,
+          nodeId: node.id,
+          parentNodeId: input.parentNodeId,
+          userId: owner,
+        });
+        const [replacement] = await tx
+          .insert(Document)
+          .values({ user_id: owner })
+          .returning();
+        if (!replacement)
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Failed to create journal reference",
+          });
+        await tx
+          .update(JournalEntry)
+          .set({
+            document_id: replacement.id,
+            updated_at: replacement.updated_at,
+          })
+          .where(eq(JournalEntry.id, current.id));
+        const reference = parseBlock({
+          id: crypto.randomUUID(),
+          props: {
+            blockId: "",
+            documentId: original.id,
+            label: input.title,
+            targetKind: "document",
+            url: `/pages/${page.id}`,
+            version: 1,
+          },
+          type: "referenceCard",
+        });
+        const saved = await saveTransactions(
+          { ...ctx, db: tx },
+          {
+            document_id: replacement.id,
+            expected_updated_at: replacement.updated_at,
+            transactions: [
+              {
+                args: {
+                  data: { props: reference.props, type: reference.type },
+                  id: reference.id,
+                  parent_id: null,
+                },
+                type: "block_upsert",
+              },
+            ],
+          },
+        );
+        const [entry] = await tx
+          .update(JournalEntry)
+          .set({ updated_at: saved.updatedAt })
+          .where(eq(JournalEntry.id, current.id))
+          .returning();
+        if (!entry)
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Failed to update journal",
+          });
+        return { entry: { ...entry, blocks: [reference] }, page };
+      });
+      await dispatchExploreRefresh(owner);
+      return result;
     }),
   saveTransactions: protectedProcedure
     .input(

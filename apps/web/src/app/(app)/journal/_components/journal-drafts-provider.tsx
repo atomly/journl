@@ -142,3 +142,16 @@ export function useJournalEntryDraft(
     },
   };
 }
+
+/** Read the retained session at action time, including edits made since render. */
+export function useJournalDraftActions() {
+  const context = useContext(JournalDraftsContext);
+  if (!context)
+    throw new Error("Journal actions require JournalDraftsProvider");
+  return {
+    forget: (date: string) => {
+      context.drafts.delete(date);
+    },
+    get: (date: string) => context.drafts.get(date),
+  };
+}

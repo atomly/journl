@@ -76,7 +76,13 @@ export function TiptapSideMenu({
     ],
     placement: "left-start",
     strategy: "fixed",
-    whileElementsMounted: autoUpdate,
+    // Cards animate their height. Track their geometry outside resize callbacks
+    // so positioning cannot trigger a ResizeObserver delivery loop in WebKit.
+    whileElementsMounted: (reference, floating, update) =>
+      autoUpdate(reference, floating, update, {
+        animationFrame: true,
+        elementResize: false,
+      }),
   });
   const [open, setOpen] = useState(false);
   const frozen = useRef(false);

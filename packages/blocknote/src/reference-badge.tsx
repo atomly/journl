@@ -1,3 +1,4 @@
+import { PreviewStatus } from "@acme/references/react";
 import { useComponentsContext, usePortalElement } from "@blocknote/react";
 import {
   type MouseEvent as ReactMouseEvent,
@@ -178,7 +179,7 @@ export function ReferenceBadge({
       }}
       aria-label={`${label} reference`}
     >
-      <ReferenceIcon target={target} />
+      <ReferenceIcon target={target} preview={preview} />
       <span>{label}</span>
     </a>
   );
@@ -216,7 +217,7 @@ export function ReferenceBadge({
               onMouseLeave={leave}
             >
               <div className="content-reference-card-heading">
-                <ReferenceIcon target={target} />
+                <ReferenceIcon target={target} preview={preview} />
                 <strong>
                   {preview?.status === "ready"
                     ? (preview.title ?? label)
@@ -231,15 +232,15 @@ export function ReferenceBadge({
                   ×
                 </button>
               </div>
-              <p className="content-reference-card-excerpt">
-                {loading
-                  ? "Loading preview…"
-                  : preview?.status === "unavailable"
-                    ? "Content unavailable"
-                    : preview?.excerpt || ""}
-              </p>
+              <PreviewStatus
+                className="content-reference-card-excerpt"
+                loading={loading}
+                unavailable={preview?.status === "unavailable"}
+              >
+                {preview?.excerpt || ""}
+              </PreviewStatus>
               <div className="content-reference-preview-footer">
-                {target && preview?.status === "ready" && (
+                {target && (
                   <button
                     className="content-reference-open"
                     type="button"

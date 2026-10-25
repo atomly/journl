@@ -6,6 +6,13 @@ import {
   type ReferenceProps,
   zReferenceProps,
 } from "@acme/document";
+import type { ReferencePreviewData } from "@acme/references";
+import { describeExternal } from "@acme/references";
+import {
+  PreviewIcon,
+  PreviewImage,
+  PreviewStatus,
+} from "@acme/references/react";
 import {
   convertReference,
   referenceDisplayAllowed,
@@ -17,12 +24,7 @@ import { dropCursor } from "@tiptap/pm/dropcursor";
 import type { Node as PMNode } from "@tiptap/pm/model";
 import { NodeSelection, Plugin } from "@tiptap/pm/state";
 import type { NodeView } from "@tiptap/pm/view";
-import {
-  ChevronRight,
-  ExternalLink,
-  FileText,
-  MoreHorizontal,
-} from "lucide-react";
+import { ChevronRight, ExternalLink, MoreHorizontal } from "lucide-react";
 import { useRouter } from "next/navigation";
 import {
   createContext,
@@ -208,10 +210,11 @@ function ResolvedReference({
     enabled: Boolean(target),
     staleTime: 30000,
   });
-  const preview = data?.items[0]?.preview;
+  const preview: ReferencePreviewData | undefined = data?.items[0]?.preview;
   const inline = view.node.type.name === "contentReference";
   const title =
     (inline ? props.label : undefined) ||
+    (inline ? preview?.compactLabel : undefined) ||
     (preview?.status === "ready" ? preview.title : undefined) ||
     props.label ||
     (target?.kind === "external"
@@ -220,7 +223,11 @@ function ResolvedReference({
   const href = safeEditorUrl(
     (preview?.status === "ready" ? preview.href : undefined) || props.url,
   );
-  const Icon = props.targetKind === "external" ? ExternalLink : FileText;
+  const icon =
+    preview?.icon ??
+    (target?.kind === "external"
+      ? describeExternal(target.url)?.icon
+      : "document");
   const [expanded, setExpanded] = useState(false);
   const embed = view.node.type.name === "contentEmbed";
   const key = `${props.documentId}#${props.blockId}`;
@@ -339,7 +346,7 @@ function ResolvedReference({
             />
           }
         >
-          <Icon className="content-reference-icon" />
+          <PreviewIcon icon={icon} className="content-reference-icon" />
           <span>{title}</span>
         </PopoverTrigger>
         <PopoverContent
@@ -347,13 +354,13 @@ function ResolvedReference({
           data-tiptap-controls=""
         >
           <strong>{title}</strong>
-          <p className="content-reference-card-excerpt">
-            {preview?.status === "ready"
-              ? preview.excerpt
-              : isPending
-                ? "Loading…"
-                : "Referenced content is unavailable."}
-          </p>
+          <PreviewStatus
+            className="content-reference-card-excerpt"
+            loading={isPending}
+            unavailable={preview?.status === "unavailable" || !preview}
+          >
+            {preview?.excerpt}
+          </PreviewStatus>
           <div className="content-reference-preview-footer">
             <a
               className="content-reference-open"
@@ -422,39 +429,32 @@ function ResolvedReference({
       data-block-surface={view.editor.isEditable ? "true" : undefined}
       aria-label={`${title} reference card`}
     >
-      {preview?.status === "ready" &&
-        preview.kind === "external" &&
-        preview.imageUrl && (
-          // biome-ignore lint/performance/noImgElement: arbitrary reference thumbnails use referrerPolicy and do not pass authenticated URLs to an optimizer.
-          <img
-            className="content-reference-thumbnail"
-            src={safeEditorUrl(preview.imageUrl)}
-            alt=""
-            loading="lazy"
-            referrerPolicy="no-referrer"
-          />
-        )}
+      <PreviewImage
+        className="content-reference-thumbnail"
+        src={preview?.status === "ready" ? preview.imageUrl : undefined}
+      />
       <div className="content-reference-card-body">
         <div className="content-reference-card-heading">
-          <Icon className="content-reference-icon" />
+          <PreviewIcon icon={icon} className="content-reference-icon" />
           {link}
           {menu}
         </div>
-        <p className="content-reference-card-excerpt">
-          {preview?.status === "ready"
-            ? preview.excerpt
-            : isPending
-              ? "Loading…"
-              : "Referenced content is unavailable."}
-        </p>
+        <PreviewStatus
+          className="content-reference-card-excerpt"
+          loading={isPending}
+          unavailable={preview?.status === "unavailable" || !preview}
+        >
+          {preview?.excerpt}
+        </PreviewStatus>
         <div className="content-reference-source">
           {preview?.status === "ready"
             ? preview.kind === "journal"
               ? "Journal entry"
               : preview.kind === "page"
                 ? "Page"
-                : new URL(props.url).hostname
+                : (preview.sourceLabel ?? new URL(props.url).hostname)
             : ""}
+          {preview?.sourceStatus ? ` · ${preview.sourceStatus}` : ""}
         </div>
       </div>
     </article>

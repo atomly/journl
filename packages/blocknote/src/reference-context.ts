@@ -1,22 +1,11 @@
+import type { ReferencePreviewData } from "@acme/references";
 import { createContext } from "react";
 
 export type ReferenceRenderTarget =
   | { kind: "document"; documentId: string; blockId?: string }
   | { kind: "external"; url: string };
 
-export type ReferencePreviewData = {
-  status: "ready" | "unavailable";
-  kind?: "page" | "journal" | "external";
-  href?: string;
-  title?: string;
-  excerpt?: string;
-  imageUrl?: string;
-  metadataState?: "enriched" | "url-only";
-  truncated?: boolean;
-  provider?: "github" | "generic";
-  sourceStatus?: string;
-  contentUpdatedAt?: string;
-};
+export type { ReferencePreviewData } from "@acme/references";
 
 export type ReferenceEmbedBlock = {
   id?: string;

@@ -1,124 +1,46 @@
-import { type DefaultTreeAdapterMap, parse } from "parse5";
+import { websiteSource } from "@acme/references";
+import metascraper from "metascraper";
+import description from "metascraper-description";
+import image from "metascraper-image";
+import title from "metascraper-title";
+import type { PreviewMetadata, PreviewProvider } from "./preview-pipeline";
 import {
   publicWebDestination,
   readPublicHtml,
   safePublicWebUrl,
 } from "./public-web-fetch";
 
-export type WebsiteMetadata = {
-  title?: string;
-  excerpt?: string;
-  imageUrl?: string;
-};
-export function parseWebsiteMetadata(
+// Supplied HTML only: no browser, script execution, oEmbed requests, or hosted API.
+const extract = metascraper([title(), description(), image()]);
+export async function extractWebsiteMetadata(
   html: string,
   url: string,
-): WebsiteMetadata {
-  const metadata = new Map<string, string>();
-  let title = "";
-  const text = (node: DefaultTreeAdapterMap["node"]): string =>
-    "value" in node
-      ? node.value
-      : "childNodes" in node
-        ? node.childNodes.map(text).join("")
-        : "";
-  const visit = (node: DefaultTreeAdapterMap["node"]) => {
-    if ("tagName" in node) {
-      if (node.tagName === "meta") {
-        const attrs = new Map(
-          node.attrs.map((attr) => [attr.name.toLowerCase(), attr.value]),
-        );
-        const key = (attrs.get("property") ?? attrs.get("name"))?.toLowerCase();
-        const value = attrs.get("content");
-        if (key && value && !metadata.has(key)) metadata.set(key, value);
+): Promise<PreviewMetadata | null> {
+  const data = await extract({ html, url });
+  const imageUrl = data.image
+    ? safePublicWebUrl(data.image, url)?.href
+    : undefined;
+  return data.title || data.description || imageUrl
+    ? {
+        ...(data.title ? { title: data.title } : {}),
+        ...(data.description ? { excerpt: data.description } : {}),
+        ...(imageUrl ? { imageUrl } : {}),
       }
-      if (node.tagName === "title" && !title) title = text(node);
-      if (["script", "style", "template"].includes(node.tagName)) return;
-    }
-    if ("childNodes" in node) for (const child of node.childNodes) visit(child);
-  };
-  visit(parse(html));
-  const clean = (value: string | undefined, max: number) =>
-    value?.replace(/\s+/g, " ").trim().slice(0, max) || undefined;
-  const image = metadata.get("og:image") ?? metadata.get("twitter:image");
-  return {
-    excerpt: clean(
-      metadata.get("og:description") ??
-        metadata.get("twitter:description") ??
-        metadata.get("description"),
-      240,
-    ),
-    title: clean(
-      metadata.get("og:title") ?? metadata.get("twitter:title") ?? title,
-      180,
-    ),
-    ...(image && safePublicWebUrl(image, url)
-      ? { imageUrl: safePublicWebUrl(image, url)?.href }
-      : {}),
-  };
+    : null;
 }
-
-const cache = new Map<
-  string,
-  { expiresAt: number; value: WebsiteMetadata | null }
->();
-const pending = new Map<string, Promise<WebsiteMetadata | null>>();
-const userMisses = new Map<string, number[]>();
-let active = 0;
-export async function getWebsiteMetadata(userId: string, value: string) {
-  const url = safePublicWebUrl(value)?.href;
-  if (!userId || !url) return null;
-  const cached = cache.get(url);
-  if (cached && cached.expiresAt > Date.now()) return cached.value;
-  const existing = pending.get(url);
-  if (existing) return existing;
-  const now = Date.now();
-  const misses = (userMisses.get(userId) ?? []).filter(
-    (time) => now - time < 60_000,
-  );
-  if (active >= 4 || misses.length >= 20) return null;
-  userMisses.set(userId, [...misses, now]);
-  active++;
-  const request = (async () => {
-    let result: WebsiteMetadata | null = null;
-    try {
-      const signal = AbortSignal.timeout(3_000);
-      const response = await readPublicHtml(url, signal);
-      result = parseWebsiteMetadata(response.html, response.url);
-      if (result.imageUrl) {
-        try {
-          await publicWebDestination(result.imageUrl, signal);
-        } catch {
-          delete result.imageUrl;
-        }
+export const websiteProvider: PreviewProvider = {
+  cacheScope: "public",
+  async resolve(url, _context, signal) {
+    const response = await readPublicHtml(url.href, signal);
+    const metadata = await extractWebsiteMetadata(response.html, response.url);
+    if (metadata?.imageUrl) {
+      try {
+        await publicWebDestination(metadata.imageUrl, signal);
+      } catch {
+        delete metadata.imageUrl;
       }
-      if (!result.title && !result.excerpt && !result.imageUrl) result = null;
-    } catch {
-      /* Missing or unsafe metadata retains the authored URL. */
-    } finally {
-      active--;
     }
-    if (cache.size >= 1000) {
-      const oldest = cache.keys().next().value;
-      if (oldest) cache.delete(oldest);
-    }
-    cache.set(url, {
-      expiresAt: Date.now() + (result ? 300_000 : 30_000),
-      value: result,
-    });
-    return result;
-  })();
-  pending.set(url, request);
-  try {
-    return await request;
-  } finally {
-    pending.delete(url);
-  }
-}
-
-export function resetWebsiteMetadataCacheForTests() {
-  cache.clear();
-  pending.clear();
-  userMisses.clear();
-  active = 0;
-}
+    return metadata;
+  },
+  source: websiteSource,
+};

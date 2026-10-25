@@ -63,12 +63,22 @@ test("Entries scrolls past an unreadable stored document to healthy older writin
 test("a failed next-page request preserves loaded entries and Retry resumes pagination", async ({
   page,
 }) => {
-  const pattern = "**/api/trpc/journal.getEntries**";
+  const pattern = "**/api/trpc/**";
+  let aborted = 0;
   await page.route(pattern, async (route) => {
-    const input =
-      new URL(route.request().url()).searchParams.get("input") ?? "";
-    if (/"cursor":"/.test(input)) await route.abort();
-    else await route.continue();
+    const url = new URL(route.request().url());
+    // tRPC can batch this query after backlink requests. Match the procedure
+    // and its own input rather than assuming it is the first URL segment.
+    const procedures = url.pathname.split("/").at(-1)?.split(",") ?? [];
+    const index = procedures.indexOf("journal.getEntries");
+    const input = JSON.parse(url.searchParams.get("input") ?? "{}") as Record<
+      string,
+      { json?: { cursor?: unknown } }
+    >;
+    if (index >= 0 && typeof input[index]?.json?.cursor === "string") {
+      aborted++;
+      await route.abort();
+    } else await route.continue();
   });
   const scroller = await entriesView(page);
   await expect(async () => {
@@ -81,6 +91,7 @@ test("a failed next-page request preserves loaded entries and Retry resumes pagi
       ),
     ).toBeVisible({ timeout: 1000 });
   }).toPass({ timeout: 30_000 });
+  expect(aborted).toBeGreaterThan(0);
   await expect(page.getByText("Sorry, something went wrong.")).toHaveCount(0);
   await scroller.evaluate((element) => {
     element.scrollTop = 0;

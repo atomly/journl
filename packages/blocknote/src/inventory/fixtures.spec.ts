@@ -1,10 +1,14 @@
 import { schema } from "@acme/blocknote/schema";
 import { DocumentReadError, documentBlocks } from "@acme/document";
+import {
+  historicalFixtures,
+  inventoryId,
+  parityBlocks,
+} from "@acme/document/fixtures";
 import { ServerBlockNoteEditor } from "@blocknote/server-util";
 import { expect, test } from "vitest";
 import { toBlockNoteBlocks } from "../document-adapter";
 import acceptedSchema from "./accepted-schema.json";
-import { historicalFixtures, inventoryId, parityBlocks } from "./fixtures";
 import { inventorySchema } from "./server-schema";
 
 const editor = ServerBlockNoteEditor.create({ schema: inventorySchema });

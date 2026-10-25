@@ -1,5 +1,5 @@
-import { parityBlocks } from "@acme/blocknote/inventory";
 import { documentRows } from "@acme/document";
+import { parityBlocks } from "@acme/document/fixtures";
 import { fixtureId } from "~/testing/browser/data";
 import { expect, test } from "~/testing/browser/fixtures";
 

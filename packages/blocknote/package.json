@@ -4,7 +4,6 @@
   "private": true,
   "type": "module",
   "exports": {
-    "./inventory": "./src/inventory/fixtures.ts",
     "./schema": "./src/blocknote-schema.ts",
     "./adapter": "./src/document-adapter.ts"
   },
@@ -25,7 +24,6 @@
     "@acme/references": "workspace:*"
   },
   "devDependencies": {
-    "@acme/db": "workspace:*",
     "@acme/tsconfig": "workspace:*",
     "@blocknote/core": "~0.55.0",
     "@blocknote/react": "~0.55.0",

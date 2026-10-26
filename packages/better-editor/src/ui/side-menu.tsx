@@ -336,7 +336,7 @@ export function TiptapSideMenu({
                 : undefined,
             }}
           >
-            {addBlock}
+            {!mobile && addBlock}
             <DropdownMenu
               modal={false}
               open={open}

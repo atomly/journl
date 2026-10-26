@@ -125,7 +125,7 @@ for (const width of [390, 1024]) {
     await page.keyboard.insertText("!");
     await expect(
       page.getByRole("button", { exact: true, name: "Add block" }),
-    ).toBeVisible();
+    ).toHaveCount(0);
     await page.keyboard.press("Backspace");
     await page.setViewportSize({ height: 520, width });
     await expect(
@@ -456,8 +456,8 @@ test("a quick closed-menu drag and cancellation leave no popup or stuck handle",
   await handle.scrollIntoViewIfNeeded();
   grip = await handle.boundingBox();
   if (!grip) throw new Error("Missing cancellation grip");
-  const x = grip.x + grip.width / 2,
-    y = grip.y + grip.height / 2;
+  const x = grip.x + grip.width / 2;
+  const y = grip.y + grip.height / 2;
   await finger(session, "touchStart", x, y);
   await finger(session, "touchMove", x + 16, y + 16);
   await finger(session, "touchCancel");

@@ -162,7 +162,7 @@ test("reference selection highlights its own frame and native handles still move
   ).not.toBe("none");
 });
 
-test("mobile handles include Add block and stay anchored through scroll and viewport resize", async ({
+test("mobile handles stay compact and anchored through scroll and viewport resize", async ({
   page,
 }, info) => {
   test.skip(info.project.name !== "mobile-webkit", "Touch handle acceptance");
@@ -180,7 +180,7 @@ test("mobile handles include Add block and stay anchored through scroll and view
   const add = page.getByRole("button", { exact: true, name: "Add block" });
   const anchored = async () => {
     await expect(handle).toBeVisible();
-    await expect(add).toBeVisible();
+    await expect(add).toHaveCount(0);
     await expect
       .poll(async () => {
         const grip = await handle.boundingBox();
@@ -190,11 +190,9 @@ test("mobile handles include Add block and stay anchored through scroll and view
           : Number.POSITIVE_INFINITY;
       })
       .toBeLessThan(3);
-    for (const button of [handle, add]) {
-      const bounds = await button.boundingBox();
-      expect(bounds?.width).toBeGreaterThanOrEqual(44);
-      expect(bounds?.height).toBeGreaterThanOrEqual(44);
-    }
+    const bounds = await handle.boundingBox();
+    expect(bounds?.width).toBeGreaterThanOrEqual(44);
+    expect(bounds?.height).toBeGreaterThanOrEqual(44);
   };
   await anchored();
   // Move the real scroll ancestor, rather than synthesizing a scroll event.
@@ -224,12 +222,6 @@ test("mobile handles include Add block and stay anchored through scroll and view
     page.getByRole("menuitem", { exact: true, name: "Duplicate block" }),
   ).toBeVisible();
   await page.keyboard.press("Escape");
-  await add.tap();
-  await expect(
-    page.getByRole("listbox", { name: "Block commands" }),
-  ).toBeVisible();
-  await page.keyboard.press("Escape");
-  await expect(editor).not.toContainText("/");
 });
 
 test("crossing the toolbar gap keeps the handle on its block and leaving releases it", async ({

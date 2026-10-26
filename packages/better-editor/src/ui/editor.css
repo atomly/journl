@@ -412,11 +412,11 @@
   pointer-events: none;
 }
 
-/* Two 44px controls share the first line. Keep the total writing inset at
-   108px while reserving enough leading space for the touch gutter. */
+/* A single 44px touch handle fits in the leading gutter. Give the remaining
+   space back to writing instead of reserving room for the desktop Add button. */
 @media (max-width: 767px), (pointer: coarse) {
   .better-editor-tiptap {
-    padding-inline: 100px 8px;
+    padding-inline: 54px 16px;
   }
 }
 .better-editor-side-menu[data-touch="true"] button {

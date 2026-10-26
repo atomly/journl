@@ -35,10 +35,7 @@ for (const theme of ["light", "dark"]) {
     await expect(card).toHaveCSS("border-top-width", "1px");
     await expect(editor).toHaveCSS("font-size", "16px");
     await expect(editor).toHaveCSS("line-height", "24px");
-    await expect(editor).toHaveCSS(
-      "padding-left",
-      info.project.name === "mobile-webkit" ? "100px" : "54px",
-    );
+    await expect(editor).toHaveCSS("padding-left", "54px");
     await expect(editor).toHaveCSS(
       "color",
       theme === "dark" ? "rgb(207, 207, 207)" : "rgb(63, 63, 63)",

@@ -55,10 +55,13 @@ test("handles follow focus and navigation, hide only for desktop typing, and per
     await expect(handle).toBeVisible();
     await expect(
       page.getByRole("button", { exact: true, name: "Add block" }),
-    ).toBeVisible();
+    ).toHaveCount(0);
   } else {
     await expect(handle).toHaveCount(0);
     await rows.last().hover();
+    await expect(
+      page.getByRole("button", { exact: true, name: "Add block" }),
+    ).toBeVisible();
     await follows(4);
     await page.getByPlaceholder("New page").focus();
     await expect(handle).toHaveCount(0);
@@ -97,26 +100,15 @@ test("mobile handles stay aligned with their block as the viewport shrinks and r
   });
   await expect(handle).toBeVisible();
   const add = page.getByRole("button", { exact: true, name: "Add block" });
-  await expect(add).toBeVisible();
-  await expect
-    .poll(async () => {
-      const plus = await add.boundingBox();
-      const grip = await handle.boundingBox();
-      return plus && grip
-        ? Math.abs(plus.y + plus.height / 2 - grip.y - grip.height / 2)
-        : Number.POSITIVE_INFINITY;
-    })
-    .toBeLessThan(1);
-  const plus = await add.boundingBox();
+  await expect(add).toHaveCount(0);
   const grip = await handle.boundingBox();
   const content = await row.boundingBox();
-  if (!plus || !grip || !content) throw new Error("Missing mobile gutter");
-  expect(plus.width).toBeGreaterThanOrEqual(44);
-  expect(plus.height).toBeGreaterThanOrEqual(44);
+  if (!grip || !content) throw new Error("Missing mobile gutter");
   expect(grip.width).toBeGreaterThanOrEqual(44);
   expect(grip.height).toBeGreaterThanOrEqual(44);
-  expect(plus.x + plus.width).toBeLessThanOrEqual(grip.x);
   expect(grip.x + grip.width).toBeLessThanOrEqual(content.x);
+  await expect(editor).toHaveCSS("padding-left", "54px");
+  await expect(editor).toHaveCSS("padding-right", "16px");
   const relativeTop = async () => {
     const grip = await handle.boundingBox();
     const block = await row.boundingBox();

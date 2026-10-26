@@ -397,14 +397,14 @@ test("a quick closed-menu drag and cancellation leave no popup or stuck handle",
     "CDP trusted touch input",
   );
   await page.setViewportSize({ height: 720, width: 390 });
-  const editor = page.locator(".journl-tiptap");
+  const editor = page.locator(".better-editor-tiptap");
   await expect(page.locator(".bn-editor")).toHaveCount(0);
   await editor.fill("Alpha");
   for (const text of ["Beta", "Gamma"]) {
     await page.keyboard.press("Enter");
     await page.keyboard.insertText(text);
   }
-  const rows = editor.locator('[data-journl-body="paragraph"]');
+  const rows = editor.locator('[data-better-editor-body="paragraph"]');
   const ids = await editor
     .locator("[data-block-id]")
     .evaluateAll((nodes) =>

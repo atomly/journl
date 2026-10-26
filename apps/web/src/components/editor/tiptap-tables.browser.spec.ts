@@ -322,7 +322,7 @@ test("table extension belongs to one pointer and trailing touch clicks never add
     info.project.name !== "desktop-chromium",
     "CDP trusted multi-touch input",
   );
-  const editor = page.locator(".journl-tiptap");
+  const editor = page.locator(".better-editor-tiptap");
   const cells = editor.locator("tr").first().locator("td");
   const add = page.getByRole("button", { exact: true, name: "Add column" });
   for (let count = 3; count < 5; count++) {

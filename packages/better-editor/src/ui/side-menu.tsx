@@ -78,22 +78,40 @@ export function TiptapSideMenu({
     ],
     placement: "left-start",
     strategy: "fixed",
-    // Cards animate their height. Track their geometry outside resize callbacks
-    // so positioning cannot trigger a ResizeObserver delivery loop in WebKit.
-    whileElementsMounted: (reference, floating, update) =>
-      autoUpdate(reference, floating, update, {
-        animationFrame: true,
-        elementResize: false,
-      }),
+    // Coalesce observed layout changes outside ResizeObserver delivery. There
+    // is no frame loop when geometry is idle.
+    whileElementsMounted: (reference, floating, update) => {
+      let frame: number | undefined;
+      const cleanup = autoUpdate(reference, floating, () => {
+        if (frame !== undefined) return;
+        frame = requestAnimationFrame(() => {
+          frame = undefined;
+          update();
+        });
+      });
+      return () => {
+        cleanup();
+        if (frame !== undefined) cancelAnimationFrame(frame);
+      };
+    },
   });
   const [open, setOpen] = useState(false);
   const frozen = useRef(false);
   const [pressed, setPressed] = useState(false);
   useEffect(() => {
-    if (!pressed) return;
-    const release = () => requestAnimationFrame(() => setPressed(false));
-    document.addEventListener("pointerup", release, { once: true });
-    document.addEventListener("pointercancel", release, { once: true });
+    const owner = pressPoint.current?.pointerId;
+    if (!pressed || owner === undefined) return;
+    const release = (event: PointerEvent) => {
+      if (event.pointerId !== owner || pressPoint.current?.pointerId !== owner)
+        return;
+      pressPoint.current = null;
+      consumedClick.current = true;
+      setPressed(false);
+    };
+    // Bubble after the trigger's intentional release action. Other pointers
+    // must not clear this press or consume its termination listener.
+    document.addEventListener("pointerup", release);
+    document.addEventListener("pointercancel", release);
     return () => {
       document.removeEventListener("pointerup", release);
       document.removeEventListener("pointercancel", release);
@@ -218,7 +236,11 @@ export function TiptapSideMenu({
       contextElement: node,
       getBoundingClientRect() {
         const rect = body.getBoundingClientRect();
-        const style = getComputedStyle(body);
+        const line =
+          body.dataset.journlBody === "codeBlock"
+            ? (body.querySelector("pre") ?? body)
+            : body;
+        const style = getComputedStyle(line);
         const padding = Number.parseFloat(style.paddingTop) || 0;
         const lineHeight = Number.parseFloat(style.lineHeight) || 24;
         const handleHeight = mobile ? 44 : 28;
@@ -233,7 +255,10 @@ export function TiptapSideMenu({
               ?.getBoundingClientRect().left ?? rect.left);
         return new DOMRect(
           left,
-          rect.top + padding + (lineHeight - handleHeight) / 2 - 2,
+          line.getBoundingClientRect().top +
+            padding +
+            (lineHeight - handleHeight) / 2 -
+            2,
           rect.width,
           mobile ? Math.max(handleHeight, rect.height) : handleHeight,
         );
@@ -359,6 +384,7 @@ export function TiptapSideMenu({
                   if (
                     event.button !== 0 ||
                     !event.isPrimary ||
+                    pressPoint.current ||
                     frozen.current ||
                     editor.view.dragging
                   )
@@ -382,6 +408,7 @@ export function TiptapSideMenu({
                   )
                     return;
                   pressPoint.current = null;
+                  setPressed(false);
                   const moved =
                     Math.hypot(
                       event.clientX - start.x,
@@ -394,8 +421,10 @@ export function TiptapSideMenu({
                   consumedClick.current = true;
                   if (tap) toggleMenu();
                 }}
-                onPointerCancel={() => {
+                onPointerCancel={(event) => {
+                  if (pressPoint.current?.pointerId !== event.pointerId) return;
                   pressPoint.current = null;
+                  consumedClick.current = true;
                   setPressed(false);
                 }}
                 onKeyDown={() => {

@@ -45,6 +45,22 @@ export function PageTitleTextarea({
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
     onKeyDown?.(e);
+    if (
+      e.defaultPrevented ||
+      e.key !== "Tab" ||
+      e.shiftKey ||
+      e.altKey ||
+      e.ctrlKey ||
+      e.metaKey
+    )
+      return;
+    const content = e.currentTarget
+      .closest("[data-editor-frontend]")
+      ?.querySelector<HTMLElement>('[role="textbox"][contenteditable="true"]');
+    if (content) {
+      e.preventDefault();
+      content.focus();
+    }
   }
 
   useAppEventHandler(

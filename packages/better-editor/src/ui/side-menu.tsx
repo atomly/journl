@@ -69,7 +69,9 @@ export function TiptapSideMenu({
       shift({
         altBoundary: mobile,
         crossAxis: true,
-        mainAxis: mobile,
+        // For left placement, the main axis is vertical. Never move the rail
+        // away from its block to fit above a mobile keyboard.
+        mainAxis: false,
         padding: 4,
       }),
       hide({ strategy: "referenceHidden" }),

@@ -67,3 +67,61 @@ test("handles follow focus and navigation, hide only for desktop typing, and per
     await follows(0);
   }
 });
+
+test("mobile handles stay aligned with their block as the viewport shrinks and restores", async ({
+  page,
+}, info) => {
+  await page.setViewportSize({ height: 844, width: 390 });
+  await page.goto("/journal");
+  const create = page.getByRole("button", { exact: true, name: "New page" });
+  if (!(await create.isVisible()))
+    await page
+      .getByRole("button", { exact: true, name: "Toggle Sidebar" })
+      .click();
+  const previous = page.url();
+  await create.click();
+  await expect(page).not.toHaveURL(previous);
+  await page.keyboard.press("Escape");
+  const editor = page.locator(".journl-tiptap");
+  await editor.fill("First row");
+  for (let index = 1; index <= 7; index++) {
+    await page.keyboard.press("Enter");
+    await page.keyboard.insertText(`Row ${index}`);
+  }
+  const row = editor.locator('[data-journl-body="paragraph"]').last();
+  if (info.project.name === "mobile-webkit") await row.tap();
+  else await row.click();
+  const handle = page.getByRole("button", {
+    exact: true,
+    name: "Block actions",
+  });
+  await expect(handle).toBeVisible();
+  const relativeTop = async () => {
+    const grip = await handle.boundingBox();
+    const block = await row.boundingBox();
+    if (!grip || !block) throw new Error("Missing block handle geometry");
+    return grip.y - block.y;
+  };
+  await expect.poll(relativeTop).toBeGreaterThan(-20);
+  const initial = await relativeTop();
+  const bounds = await row.boundingBox();
+  if (!bounds) throw new Error("Missing selected block");
+  // Leave the first line visible but insufficient room for the whole rail.
+  // This exercises keyboard-like clipping without claiming a physical keyboard.
+  const reducedHeight = Math.ceil(bounds.y + 45);
+  expect(reducedHeight).toBeLessThan(844);
+  await page.setViewportSize({ height: reducedHeight, width: 390 });
+  await expect(handle).toBeVisible();
+  await expect
+    .poll(async () => Math.abs((await relativeTop()) - initial))
+    .toBeLessThan(2);
+  await page.keyboard.insertText("!");
+  await expect(handle).toBeVisible();
+  await expect
+    .poll(async () => Math.abs((await relativeTop()) - initial))
+    .toBeLessThan(2);
+  await page.setViewportSize({ height: 844, width: 390 });
+  await expect
+    .poll(async () => Math.abs((await relativeTop()) - initial))
+    .toBeLessThan(2);
+});

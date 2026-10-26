@@ -26,7 +26,7 @@ test("only the initiating pointer can finish a pending handle press", async ({
   await editor.fill("Alpha");
   await page.keyboard.press("Enter");
   await page.keyboard.insertText("Beta");
-  const rows = editor.locator('[data-journl-body="paragraph"]');
+  const rows = editor.locator('[data-better-editor-body="paragraph"]');
   const alpha = rows.first();
   const beta = rows.last();
   await alpha.hover();
@@ -94,7 +94,7 @@ test("nested code handles align with the writing line below the language picker"
   await editor.pressSequentially("```javascript ");
   await editor.pressSequentially("console.log('nested');");
   const body = editor.locator(
-    '[data-journl-children] [data-journl-body="codeBlock"]',
+    '[data-better-editor-children] [data-better-editor-body="codeBlock"]',
   );
   await expect(body).toHaveCount(1);
   const code = body.locator("pre");

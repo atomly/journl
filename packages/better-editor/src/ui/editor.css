@@ -350,6 +350,11 @@
   max-width: 100%;
   position: relative;
 }
+/* Leave room outside the scroll area for the add-column rail and row menu. */
+.better-editor-tiptap[contenteditable="true"] .better-editor-table-wrapper {
+  margin-inline: 12px 56px;
+  max-width: calc(100% - 68px);
+}
 .better-editor-tiptap .selectedCell {
   position: relative;
 }

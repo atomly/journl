@@ -237,7 +237,7 @@ export function TiptapSideMenu({
       getBoundingClientRect() {
         const rect = body.getBoundingClientRect();
         const line =
-          body.dataset.journlBody === "codeBlock"
+          body.dataset.betterEditorBody === "codeBlock"
             ? (body.querySelector("pre") ?? body)
             : body;
         const style = getComputedStyle(line);

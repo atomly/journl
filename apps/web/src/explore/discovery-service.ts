@@ -11,11 +11,11 @@ import { TRPCError } from "@trpc/server";
 import { encodeExploreCursor } from "./cursor";
 
 import {
-  exploreContext,
-  metadata,
-  loadNotes,
   type Database,
   type ExploreInput,
+  exploreContext,
+  loadNotes,
+  metadata,
 } from "./query-context";
 export async function listClusters(
   database: Database,

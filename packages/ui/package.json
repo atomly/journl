@@ -1,7 +1,7 @@
 {
   "name": "@acme/ui",
   "version": "0.0.0",
-  "private": true,
+  "private": false,
   "type": "module",
   "exports": {
     "./popover": "./src/popover.tsx",
@@ -31,5 +31,19 @@
     "@types/react": "~19.3.0",
     "@types/react-dom": "~19.3.0",
     "typescript": "~7.0.2"
+  },
+  "files": [
+    "src",
+    "README.md",
+    "LICENSE"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/atomly/journl.git",
+    "directory": "packages/ui"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

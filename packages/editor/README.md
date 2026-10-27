@@ -1,56 +1,66 @@
 # Journl editor
 
-`@acme/editor` owns the React writing surface: block controls, menus, references,
-tables, touch controls and editor styles. It composes Base UI, Floating UI and the
-low-level `@acme/tiptap` adapter. It does not import the web app, Next.js, tRPC,
-authentication, database code, or save queues.
+`@acme/editor` is the styled React writing surface. It imports Journl's Base UI
+controls from `@acme/ui` directly. Customize the source to change its appearance;
+there is no UI provider or runtime component replacement contract.
 
-`DocumentEditor` accepts initial Journl blocks and emits validated blocks plus
-Journl operations through `onCommit`. The mounted view owns selection and undo;
-the app owns document sessions and persistence. A draft reset remounts the view.
-Changes to an acknowledged save must not reset editor state.
-
-The app injects a `ReferenceClient` from `@acme/references` for queries,
-subscriptions and navigation. Nested read-only embeds inherit it. Without a
-client, authored links remain available but metadata is unavailable. Reference
-payloads remain independent of either editor frontend.
-
-Use `@acme/editor/styles.css` and include this package's source in the host's
-Tailwind scan. The public entry point exposes the editor, commit type, and UI provider;
-controls and node-view details remain private implementation files.
-
-`@acme/document` owns the persisted document contract. `@acme/tiptap` owns schema
-translation and transactions. `@acme/ui` owns shared design-system primitives.
-
-## UI adapter
-
-Editor controls consume `EditorUIComponents` through context. They do not import
-styled buttons, menus, tooltips, popovers, selects or toolbars directly. The
-`@acme/editor/ui` entry supplies the existing shared UI as a default adapter:
+## Package installation
 
 ```tsx
-import { DocumentEditor, EditorUIProvider } from "@acme/editor";
-import { editorUI } from "@acme/editor/ui";
+import { DocumentEditor } from "@acme/editor";
+import "@acme/editor/styles.css";
 
-<EditorUIProvider components={editorUI}>
-  <DocumentEditor initialBlocks={blocks} onCommit={save} />
-</EditorUIProvider>;
+<DocumentEditor initialBlocks={blocks} onCommit={save} references={references} />;
 ```
 
-Supply a stable adapter object, or spread the default adapter and override only
-the components you need. `SurfaceButton` covers custom-styled choices, color
-swatches, reference actions and embed disclosures; `Input` covers the link field.
-These controls retain their editor-specific classes and event handlers. Nested editors and React portals inherit the provider.
-The core entry does not import the default adapter. References are injected
-separately through `ReferenceClient`; neither adapter knows about app persistence.
+Include the editor, references and shared UI sources in the host's Tailwind scan.
+The styles use the host's Tailwind theme tokens. The packages export TypeScript
+source and require a bundler that compiles TS/TSX, React 19 and Tailwind 4.
+`pnpm pack` resolves workspace dependencies to package versions. The editor and
+its runtime workspace dependencies have public package manifests; this change
+does not publish them or reserve the `@acme` npm scope. Choose the public scope
+and release versions together before publishing.
 
-The contract follows the installed Base UI primitives. Replacements must forward
-refs, `render`, event handlers, accessible attributes, disabled state, and
-portal/focus options. Editor commands and selection restoration stay in the
-editor, while the UI adapter owns primitive presentation and interaction. This
-is a Base UI adapter seam, not a promise of compatibility with arbitrary UI
-libraries. React 19 is required for ref forwarding through component props.
+## Source installation through shadcn
 
-The default adapter uses the app's Tailwind tokens and shared `@acme/ui` source.
-This change does not package precompiled styles or make the workspace packages
-ready for npm publication.
+Run `pnpm registry:build` to generate six registry items under `apps/web/public/r`.
+Web dev and production build regenerate them from the workspace source. To test
+another registry host, pass its absolute `/r/` URL (with trailing slash) as the argument to
+`pnpm registry:build http://localhost:3100/r/`.
+
+```sh
+pnpm dlx shadcn@latest add https://journl-snowy.vercel.app/r/journl-editor.json
+```
+
+The URL is served after this change is deployed. The registry copies the editor,
+core, document contract, Tiptap implementation, reference components and shared UI
+into `components/journl/`. It installs external dependencies and rewrites workspace
+imports to local source imports. No private workspace package is required.
+Consumers own all of these files, including the core and shared controls. The
+registry uses the Base UI controls shipped here; substituting Radix components
+requires adapting their props and focus behavior.
+
+Import `DocumentEditor` from `@/components/journl/editor/editor-index` and its
+`editor-editor.css` from the same directory. Use your configured components alias if it
+differs from `@/components`. Include `components/journl` in your Tailwind sources
+and provide the same theme tokens used by the package installation.
+
+## Core and UI responsibilities
+
+`@acme/document` owns the persisted block contract. `@acme/tiptap` owns schema
+translation, ProseMirror plugins, commands and transactions.
+`@acme/editor-core` exports `useDocumentEditor`, reference insertion and the
+commit type. The hook owns mounting, destruction, clipboard handling, reference
+resolution, content validation and commit delivery. It imports no styled controls
+or editor UI. A UI variation can use the same hook and supply stable node-view
+extensions; matching extension names replace the default schema presentation.
+
+`@acme/editor` supplies menus, code and reference node views, tables, touch
+controls, selection visibility and styles. Nested read-only editors inherit the
+host's `ReferenceClient`. Neither the core nor the UI imports the application,
+Next.js, authentication, database access or save queues.
+
+The mounted editor owns selection and undo. The app owns drafts and persistence.
+A draft reset remounts the view; acknowledged saves must not reset its state.
+`onCommit` emits validated blocks and Journl operations. An unavailable reference
+client leaves authored links available without metadata.

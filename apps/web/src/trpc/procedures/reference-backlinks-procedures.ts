@@ -12,7 +12,7 @@ import { z } from "zod/v4";
 import { env } from "~/env";
 import { protectedProcedure } from "../trpc";
 
-import { truncate, blockText } from "./reference-api-helpers";
+import { blockText, truncate } from "./reference-api-helpers";
 
 export const referenceBacklinksProcedures = {
   listBacklinks: protectedProcedure

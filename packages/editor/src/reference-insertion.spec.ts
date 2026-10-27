@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 
+import { insertTiptapReference } from "@acme/editor-core";
 import type { ReferenceClient } from "@acme/references";
 import {
   documentExtensions,
@@ -11,7 +12,6 @@ import {
 import { Editor } from "@tiptap/core";
 import { TextSelection } from "@tiptap/pm/state";
 import { expect, test, vi } from "vitest";
-import { insertTiptapReference } from "./reference-insertion";
 
 const url = "https://example.invalid/source";
 type Result = Awaited<ReturnType<ReferenceClient["resolveUrl"]>>;

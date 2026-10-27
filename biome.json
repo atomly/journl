@@ -19,7 +19,8 @@
       "!**/.mastra",
       "!**/.well-known",
       "!**/playwright-report",
-      "!**/test-results"
+      "!**/test-results",
+      "!**/public/r"
     ]
   },
   "formatter": {

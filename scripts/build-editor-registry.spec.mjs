@@ -13,6 +13,20 @@ test("registry includes the full local import graph without private workspace im
   const registry = JSON.parse(
     await readFile(`${root}/apps/web/public/r/registry.json`, "utf8"),
   );
+  assert.deepEqual(registry.items.map((item) => item.name).sort(), [
+    "openeditor",
+    "openeditor-document",
+    "openeditor-references",
+    "openeditor-ui",
+  ]);
+  const basenames = registry.items.flatMap((item) =>
+    item.files.map((file) => file.path.split("/").at(-1)),
+  );
+  assert.equal(
+    new Set(basenames).size,
+    basenames.length,
+    "shadcn requires unambiguous generated basenames",
+  );
   const targets = new Set(
     registry.items.flatMap((item) =>
       item.files.map((file) =>

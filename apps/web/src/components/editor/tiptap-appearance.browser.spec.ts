@@ -84,3 +84,45 @@ for (const theme of ["light", "dark"]) {
     ).toBeVisible();
   });
 }
+
+test("editor styles do not adopt the host application's toolbar layout", async ({
+  page,
+}) => {
+  await page.goto(`/pages/${fixtureId(980)}`);
+  await expect(
+    page.getByRole("textbox", { exact: true, name: "Document editor" }),
+  ).toBeVisible();
+  const styles = await page.evaluate(() => {
+    const consumer = document.createElement("section");
+    consumer.style.fontFamily = "monospace";
+    consumer.style.setProperty("--app-header-offset", "800px");
+    consumer.style.setProperty("--app-visual-viewport-offset-top", "400px");
+    const content = document.createElement("div");
+    content.className = "better-editor-tiptap";
+    const toolbar = document.createElement("div");
+    toolbar.className = "better-editor-mobile-toolbar";
+    const host = document.createElement("div");
+    host.className = "better-editor-tiptap-host";
+    consumer.append(content, toolbar, host);
+    document.body.append(consumer);
+    try {
+      const toolbarStyle = getComputedStyle(toolbar);
+      return {
+        font: getComputedStyle(content).fontFamily,
+        hostSpacing: getComputedStyle(host).marginTop,
+        order: toolbarStyle.order,
+        position: toolbarStyle.position,
+        top: toolbarStyle.top,
+      };
+    } finally {
+      consumer.remove();
+    }
+  });
+  expect(styles).toEqual({
+    font: "monospace",
+    hostSpacing: "0px",
+    order: "0",
+    position: "static",
+    top: "auto",
+  });
+});

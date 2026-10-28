@@ -49,8 +49,7 @@
   --better-editor-background-pink: #2f0e22;
 }
 .better-editor-tiptap {
-  font-family:
-    var(--font-editor, Inter), "SF Pro Display", -apple-system, BlinkMacSystemFont, "Open Sans", "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
+  font-family: var(--better-editor-font-family, inherit);
   font-size: 16px;
   font-weight: 400;
   line-height: 1.5;

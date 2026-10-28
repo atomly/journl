@@ -31,7 +31,7 @@ This is a monorepo powered by [Turborepo](https://turborepo.dev/) and
   authenticated journaling views, API routes, and editor UI.
 - **Shared packages:** [`packages`](./packages) for auth, database access,
   usage domain logic, the framework-independent [`document contract`](packages/document/README.md),
-  the [`OpenEditor engine and React UI`](packages/openeditor/README.md),
+  the [`OpenEditor engine and React UI`](packages/open-editor/README.md),
   reference previews, shared UI primitives, and the temporary BlockNote frontend adapter.
 - **Local dev utilities:** [`apps/drizzle-studio`](./apps/drizzle-studio) and
   [`apps/stripe`](./apps/stripe).
@@ -46,7 +46,7 @@ Use these paths as the fastest way to understand the product and core systems.
 - **App surfaces:** [`apps/web/src/app`](./apps/web/src/app)
 - **Journal experience:** `apps/web/src/app/(app)/journal`
 - **API routes:** [`apps/web/src/app/api`](./apps/web/src/app/api)
-- **Editor UI:** [`packages/openeditor`](./packages/openeditor), with app sessions and data integration in [`apps/web/src/components/editor`](./apps/web/src/components/editor)
+- **Editor UI:** [`packages/open-editor`](./packages/open-editor), with app sessions and data integration in [`apps/web/src/components/editor`](./apps/web/src/components/editor)
 - **AI/workflow logic:** [`apps/web/src/ai`](./apps/web/src/ai) and [`apps/web/src/workflows`](./apps/web/src/workflows)
 - **Auth and usage guards:** [`apps/web/src/auth`](./apps/web/src/auth) and [`apps/web/src/usage`](./apps/web/src/usage)
 - **DB schema and usage domain:** [`packages/db/src/schema.ts`](./packages/db/src/schema.ts) and [`packages/db/src/usage`](./packages/db/src/usage)

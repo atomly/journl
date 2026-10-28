@@ -23,7 +23,7 @@
     "@acme/db": "workspace:*",
     "@acme/document": "workspace:*",
     "@acme/graph": "workspace:*",
-    "@acme/openeditor": "workspace:*",
+    "@acme/open-editor": "workspace:*",
     "@acme/references": "workspace:*",
     "@acme/ui": "workspace:*",
     "@ai-sdk/openai": "~4.0.84",

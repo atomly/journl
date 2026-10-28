@@ -31,7 +31,7 @@ async function focusMore(page: Page) {
   await expect(more).toBeFocused();
 }
 async function openMore(page: Page) {
-  await expect(page.locator(".openeditor-tiptap")).toBeFocused();
+  await expect(page.locator(".open-editor-tiptap")).toBeFocused();
   await page.keyboard.press("Alt+F10");
   await expect(
     page.getByRole("button", { exact: true, name: "Copy block link" }),
@@ -64,10 +64,10 @@ async function menuAction(page: Page, name: string) {
   await expect(item).toBeFocused();
   await page.keyboard.press("Enter");
   await expect(item).toBeHidden();
-  await expect(page.locator(".openeditor-tiptap")).toBeFocused();
+  await expect(page.locator(".open-editor-tiptap")).toBeFocused();
 }
 async function escapeToEditor(page: Page) {
-  const editor = page.locator(".openeditor-tiptap");
+  const editor = page.locator(".open-editor-tiptap");
   // Escape dismisses the current popup layer, including a focused tooltip.
   for (let i = 0; i < 4; i++) {
     if (await editor.evaluate((el) => el === document.activeElement)) return;
@@ -97,11 +97,11 @@ async function caretIn(editor: Locator, text: string) {
 test("keyboard users can reach controls, return to their selection, and leave editing", async ({
   page,
 }) => {
-  const editor = page.locator(".openeditor-tiptap");
+  const editor = page.locator(".open-editor-tiptap");
   await editor.fill("Alpha");
   await page.keyboard.press("Enter");
   await page.keyboard.insertText("Beta");
-  const paragraphs = editor.locator('[data-openeditor-body="paragraph"]');
+  const paragraphs = editor.locator('[data-open-editor-body="paragraph"]');
   await paragraphs.first().click();
   await page.keyboard.press("Home");
   await page.keyboard.press("Shift+End");
@@ -144,11 +144,11 @@ test("keyboard users can reach controls, return to their selection, and leave ed
   await page.keyboard.press("Tab");
   await expect(
     editor.locator(
-      '[data-openeditor-children] [data-openeditor-body="paragraph"]',
+      '[data-open-editor-children] [data-open-editor-body="paragraph"]',
     ),
   ).toHaveText("Beta");
   await page.keyboard.press("Shift+Tab");
-  await expect(editor.locator("[data-openeditor-children]")).toHaveCount(0);
+  await expect(editor.locator("[data-open-editor-children]")).toHaveCount(0);
 });
 
 test("context actions target the clicked block and tolerate its concurrent removal", async ({
@@ -158,11 +158,11 @@ test("context actions target the clicked block and tolerate its concurrent remov
     info.project.name !== "desktop-chromium",
     "The custom mouse context menu preserves native touch menus",
   );
-  const editor = page.locator(".openeditor-tiptap");
+  const editor = page.locator(".open-editor-tiptap");
   await editor.fill("Alpha");
   await page.keyboard.press("Enter");
   await page.keyboard.insertText("Beta");
-  const paragraphs = editor.locator('[data-openeditor-body="paragraph"]');
+  const paragraphs = editor.locator('[data-open-editor-body="paragraph"]');
   await paragraphs.first().click();
   await caretIn(editor, "Alpha");
   // Dispatching the context gesture alone retains the independently focused caret.
@@ -172,7 +172,7 @@ test("context actions target the clicked block and tolerate its concurrent remov
   await menuAction(page, "Indent");
   await expect(
     editor.locator(
-      '[data-openeditor-children] [data-openeditor-body="paragraph"]',
+      '[data-open-editor-children] [data-open-editor-body="paragraph"]',
     ),
   ).toHaveText("Beta");
   await page.keyboard.press("Shift+Tab");
@@ -208,7 +208,7 @@ test("context actions target the clicked block and tolerate its concurrent remov
 test("table formatting, headers, movement and widths work through accessible controls", async ({
   page,
 }) => {
-  const editor = page.locator(".openeditor-tiptap");
+  const editor = page.locator(".open-editor-tiptap");
   await editor.fill("/table");
   await page.getByRole("option", { exact: true, name: "Table" }).click();
   const table = editor.locator("table");
@@ -245,7 +245,7 @@ test("table formatting, headers, movement and widths work through accessible con
         .nth(r)
         .locator("td")
         .nth(c)
-        .locator('[data-openeditor-style="textColor"]'),
+        .locator('[data-open-editor-style="textColor"]'),
     ).toHaveCount(1);
   for (const href of [
     "https://example.com/first",
@@ -270,7 +270,7 @@ test("table formatting, headers, movement and widths work through accessible con
       .first()
       .locator("td")
       .nth(2)
-      .locator("a,strong,[data-openeditor-style]"),
+      .locator("a,strong,[data-open-editor-style]"),
   ).toHaveCount(0);
   await rows.first().locator("td").first().click();
   await openMore(page);

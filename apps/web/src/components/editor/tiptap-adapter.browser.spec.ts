@@ -14,7 +14,7 @@ test("the actual page route loads every inventory block through the Tiptap switc
       { name: "journl-editor", url: "http://127.0.0.1:3100", value: "tiptap" },
     ]);
   await page.goto(`/pages/${fixtureId(980)}`);
-  const editor = page.locator(".openeditor-tiptap");
+  const editor = page.locator(".open-editor-tiptap");
   await expect(editor).toHaveCount(1);
   await expect(editor).toBeVisible();
   await expect(editor).toContainText("Styled writing 世界");
@@ -30,13 +30,13 @@ test("the actual page route loads every inventory block through the Tiptap switc
   );
   await expect(editor.locator("table")).toHaveCount(2);
   await expect(
-    editor.locator('[data-openeditor-body="image"] img'),
+    editor.locator('[data-open-editor-body="image"] img'),
   ).toHaveCount(1);
   await expect(
-    editor.locator('[data-openeditor-body="referenceCard"]'),
+    editor.locator('[data-open-editor-body="referenceCard"]'),
   ).toHaveCount(2);
   await expect(
-    editor.locator('[data-openeditor-body="contentEmbed"]'),
+    editor.locator('[data-open-editor-body="contentEmbed"]'),
   ).toHaveCount(1);
   await page.context().addCookies([
     {
@@ -60,10 +60,10 @@ test("split, duplicate, nest, undo and reload preserve committed block identitie
       { name: "journl-editor", url: "http://127.0.0.1:3100", value: "tiptap" },
     ]);
   await page.goto(`/pages/${fixtureId(982)}`);
-  const editor = page.locator(".openeditor-tiptap");
+  const editor = page.locator(".open-editor-tiptap");
   const original = fixtureId(983);
   const heading = editor
-    .locator(`[data-block-id="${original}"] [data-openeditor-body]`)
+    .locator(`[data-block-id="${original}"] [data-open-editor-body]`)
     .first();
   await heading.click();
   await page.keyboard.press("End");
@@ -75,7 +75,7 @@ test("split, duplicate, nest, undo and reload preserve committed block identitie
     .first();
   const splitId = await split.getAttribute("data-block-id");
   expect(splitId).not.toBe(original);
-  await split.locator("[data-openeditor-body]").first().hover();
+  await split.locator("[data-open-editor-body]").first().hover();
   await page
     .getByRole("button", { exact: true, name: "Block actions" })
     .click();
@@ -86,7 +86,7 @@ test("split, duplicate, nest, undo and reload preserve committed block identitie
     page.getByRole("menu", { exact: true, name: "Block actions" }),
   ).toBeHidden();
   const copies = editor
-    .locator("[data-openeditor-body]")
+    .locator("[data-open-editor-body]")
     .filter({ hasText: marker });
   await expect(copies).toHaveCount(2);
   await page.keyboard.press("Tab");

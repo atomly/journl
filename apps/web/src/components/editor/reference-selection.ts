@@ -1,4 +1,4 @@
-import { referenceSelectionPlugin } from "@acme/openeditor/engine/reference-selection";
+import { referenceSelectionPlugin } from "@acme/open-editor/engine/reference-selection";
 import { createExtension } from "@blocknote/core";
 
 /** The editor wrapper delegates to the shared ProseMirror selection behavior. */

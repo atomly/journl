@@ -5,9 +5,9 @@ import { fileURLToPath } from "node:url";
 // Both installation modes use these exact sources. No vendored editor copy.
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const baseUrl = process.argv[2] ?? "https://journl-snowy.vercel.app/r/";
-const packages = ["document", "references", "ui", "openeditor"];
+const packages = ["document", "references", "ui", "open-editor"];
 const itemName = (name) =>
-  name === "openeditor" ? "openeditor" : `openeditor-${name}`;
+  name === "open-editor" ? "open-editor" : `open-editor-${name}`;
 const manifests = Object.fromEntries(
   await Promise.all(
     packages.map(async (name) => [
@@ -79,8 +79,8 @@ for (const name of packages) {
       const relative = source.split(`/packages/${name}/src/`)[1];
       return {
         content: rewrite(await readFile(source, "utf8"), name, relative),
-        path: `registry/openeditor/${installedPath(name, relative)}`,
-        target: `@components/openeditor/${installedPath(name, relative)}`,
+        path: `registry/open-editor/${installedPath(name, relative)}`,
+        target: `@components/open-editor/${installedPath(name, relative)}`,
         type: "registry:file",
       };
     }),
@@ -107,7 +107,7 @@ for (const name of packages) {
     files,
     name: itemName(name),
     registryDependencies,
-    title: name === "openeditor" ? "OpenEditor" : `OpenEditor ${name}`,
+    title: name === "open-editor" ? "OpenEditor" : `OpenEditor ${name}`,
     type: "registry:block",
   });
 }

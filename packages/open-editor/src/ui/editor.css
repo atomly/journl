@@ -1,0 +1,470 @@
+@import "highlight.js/styles/github-dark.css";
+
+/* Typography follows the installed skin. Named colors retain their hues with
+   accessible text/highlight contrast; stored color names stay unchanged. */
+:root {
+  --open-editor-menu-border: color-mix(
+    in srgb,
+    var(--foreground) 24%,
+    var(--background)
+  );
+  --open-editor-text-gray: #656462;
+  --open-editor-background-gray: #ebeced;
+  --open-editor-text-brown: #64473a;
+  --open-editor-background-brown: #e9e5e3;
+  --open-editor-text-red: #b83333;
+  --open-editor-background-red: #fbe4e4;
+  --open-editor-text-orange: #9a5209;
+  --open-editor-background-orange: #f6e9d9;
+  --open-editor-text-yellow: #7d6001;
+  --open-editor-background-yellow: #fbf3db;
+  --open-editor-text-green: #4d6461;
+  --open-editor-background-green: #ddedea;
+  --open-editor-text-blue: #0b6c96;
+  --open-editor-background-blue: #ddebf1;
+  --open-editor-text-purple: #6940a5;
+  --open-editor-background-purple: #eae4f2;
+  --open-editor-text-pink: #ad1a72;
+  --open-editor-background-pink: #f4dfeb;
+}
+.dark {
+  --open-editor-text-gray: #bebdb8;
+  --open-editor-background-gray: #2b2b2a;
+  --open-editor-text-brown: #ab8d7f;
+  --open-editor-background-brown: #1f1815;
+  --open-editor-text-red: #f06868;
+  --open-editor-background-red: #331414;
+  --open-editor-text-orange: #e3790d;
+  --open-editor-background-orange: #321e0a;
+  --open-editor-text-yellow: #dfab01;
+  --open-editor-background-yellow: #312808;
+  --open-editor-text-green: #7d9995;
+  --open-editor-background-green: #191f1e;
+  --open-editor-text-blue: #399dc8;
+  --open-editor-background-blue: #0a212b;
+  --open-editor-text-purple: #a681e2;
+  --open-editor-background-purple: #20162e;
+  --open-editor-text-pink: #e565b2;
+  --open-editor-background-pink: #2f0e22;
+}
+.open-editor-tiptap {
+  font-family:
+    Inter, "SF Pro Display", -apple-system, BlinkMacSystemFont, "Open Sans", "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1.5;
+  color: #3f3f3f;
+  padding-inline: 54px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-synthesis: style weight;
+  -webkit-font-smoothing: antialiased;
+}
+.dark .open-editor-tiptap {
+  color: #cfcfcf;
+}
+.open-editor-tiptap [data-open-editor-block] {
+  position: relative;
+  margin: 0;
+}
+.open-editor-tiptap [data-open-editor-children] {
+  margin-left: 24px;
+}
+.open-editor-tiptap [data-open-editor-body] {
+  min-width: 2px;
+  min-height: 30px;
+  margin: 0;
+  padding-block: 3px;
+}
+/* Tiptap injects break-spaces on its root; match the existing inline surface's
+   pre-wrap so a preserved trailing space does not change mobile line breaks. */
+.open-editor-tiptap [data-open-editor-body] {
+  white-space: pre-wrap;
+}
+.open-editor-tiptap [data-open-editor-body="codeBlock"] {
+  white-space: pre;
+}
+.open-editor-tiptap [data-open-editor-body="referenceCard"],
+.open-editor-tiptap [data-open-editor-body="contentEmbed"] {
+  white-space: normal;
+}
+
+.open-editor-tiptap [data-open-editor-body="heading"] {
+  font-weight: 700;
+  padding-top: 18px;
+  line-height: 1.5;
+}
+.open-editor-tiptap [data-heading-level="1"] {
+  font-size: 3em;
+}
+.open-editor-tiptap [data-heading-level="2"] {
+  font-size: 2em;
+}
+.open-editor-tiptap [data-heading-level="3"] {
+  font-size: 1.3em;
+}
+.open-editor-tiptap [data-heading-level="4"] {
+  font-size: 1em;
+}
+.open-editor-tiptap [data-heading-level="5"] {
+  font-size: 0.9em;
+}
+.open-editor-tiptap [data-heading-level="6"] {
+  font-size: 0.8em;
+}
+.open-editor-tiptap
+  :is(
+    [data-open-editor-body="bulletListItem"],
+    [data-open-editor-body="numberedListItem"]
+  ) {
+  position: relative;
+  padding-left: 24px;
+}
+.open-editor-tiptap [data-open-editor-body="bulletListItem"]::before,
+.open-editor-tiptap [data-open-editor-body="numberedListItem"]::before {
+  position: absolute;
+  left: 0;
+  width: 24px;
+  padding-right: 4px;
+  text-align: center;
+}
+.open-editor-tiptap [data-open-editor-body="bulletListItem"]::before {
+  content: "•";
+}
+.open-editor-tiptap [data-open-editor-body="numberedListItem"]::before {
+  content: attr(data-start) ".";
+}
+.open-editor-tiptap [data-open-editor-body="checkListItem"],
+.open-editor-tiptap [data-open-editor-body="toggleListItem"],
+.open-editor-tiptap
+  [data-block-type="heading"]:has(
+    > [data-open-editor-block-controls]:not([hidden])
+  )
+  > [data-open-editor-content]
+  > [data-open-editor-body] {
+  padding-left: 24px;
+}
+.open-editor-tiptap [data-open-editor-block-controls] {
+  position: absolute;
+  left: 4px;
+  top: 6px;
+  display: flex;
+  align-items: center;
+  height: 18px;
+}
+.open-editor-tiptap
+  [data-block-type="heading"]
+  > [data-open-editor-block-controls] {
+  top: 24px;
+}
+.open-editor-tiptap [data-open-editor-block-controls][hidden],
+.open-editor-tiptap [data-open-editor-block-controls] [hidden] {
+  display: none;
+}
+.open-editor-side-menu button {
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+}
+.open-editor-side-menu button svg {
+  stroke-width: 2.5;
+  width: 18px;
+  height: 18px;
+}
+
+.open-editor-tiptap [data-open-editor-block-controls] button {
+  cursor: pointer;
+  width: 18px;
+  height: 18px;
+}
+.open-editor-tiptap [data-open-editor-block-controls] input {
+  cursor: pointer;
+  width: 12px;
+  height: 12px;
+  accent-color: var(--primary);
+}
+.open-editor-tiptap
+  [data-collapsed="true"]
+  > [data-open-editor-content]
+  > [data-open-editor-children] {
+  display: none;
+}
+.open-editor-tiptap
+  [data-open-editor-body="checkListItem"][data-checked="true"] {
+  text-decoration: line-through;
+}
+.open-editor-tiptap pre {
+  white-space: pre;
+  tab-size: 2;
+  overflow-x: auto;
+  padding: 12px 16px !important;
+  margin: 3px 0 !important;
+  border-radius: 8px;
+  background: #161616;
+  color: white;
+  font-family: monospace;
+}
+.open-editor-tiptap blockquote {
+  border-left: 2px solid #7d797a;
+  padding-left: 1em;
+  color: #7d797a;
+}
+.open-editor-tiptap [data-open-editor-body="divider"] {
+  padding-block: 12px;
+}
+.open-editor-tiptap hr {
+  border: 0;
+  border-top: 1px solid #aaa;
+}
+.open-editor-tiptap table {
+  border-collapse: collapse;
+  table-layout: fixed;
+  width: auto;
+  max-width: 100%;
+  margin: 9px 0 22px !important;
+}
+.open-editor-tiptap td {
+  border: 1px solid #ddd;
+  padding: 5px 10px;
+  min-width: 40px;
+  vertical-align: top;
+}
+.open-editor-tiptap [data-header-cell] {
+  font-weight: 700;
+}
+.open-editor-tiptap img,
+.open-editor-tiptap video {
+  max-width: 100%;
+  height: auto;
+}
+.open-editor-tiptap figure {
+  margin-block: 3px;
+}
+.open-editor-tiptap figcaption {
+  font-size: 0.8em;
+  color: var(--muted-foreground);
+}
+.open-editor-tiptap a[data-open-editor-link] {
+  color: #00e;
+  text-decoration: underline;
+}
+.dark .open-editor-tiptap a[data-open-editor-link] {
+  color: #958df1;
+}
+.open-editor-tiptap .content-reference,
+.open-editor-tiptap .content-reference-card,
+.open-editor-tiptap .content-embed {
+  white-space: normal;
+}
+/* One contrast level for every editor menu, in either theme. */
+.open-editor-formatting-toolbar,
+[data-tiptap-controls][data-slot="dropdown-menu-content"],
+[data-tiptap-controls][data-slot="popover-content"],
+[data-tiptap-controls][data-slot="select-content"],
+[data-tiptap-controls][role="listbox"] {
+  border: 1px solid var(--open-editor-menu-border);
+  border-radius: var(--radius-lg);
+}
+[data-tiptap-controls]
+  :is([data-slot="dropdown-menu-item"], [data-slot="select-item"]) {
+  border: 1px solid transparent;
+  border-radius: 6px;
+}
+[data-tiptap-controls]
+  :is([data-slot="dropdown-menu-item"], [data-slot="select-item"]):is(
+    :hover,
+    [data-highlighted]
+  ) {
+  border-color: var(--open-editor-menu-border);
+}
+
+.open-editor-formatting-toolbar {
+  z-index: 50;
+  display: flex;
+  width: max-content;
+  max-width: calc(100vw - 16px);
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: 4px;
+  padding: 4px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--popover);
+  color: var(--popover-foreground);
+  box-shadow: 0 4px 12px rgb(0 0 0 / 12%);
+  overflow-x: auto;
+}
+.open-editor-mobile-toolbar {
+  position: sticky;
+  z-index: 40;
+  top: calc(
+    var(--app-visual-viewport-offset-top, 0px) +
+    var(--app-header-offset, 0px)
+  );
+  padding-inline: 24px;
+  margin-bottom: 24px;
+}
+.open-editor-mobile-toolbar .open-editor-formatting-toolbar {
+  max-width: 100%;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 8%);
+}
+.open-editor-side-menu {
+  position: fixed;
+  z-index: 45;
+  display: flex;
+  gap: 2px;
+  padding: 2px;
+  border: 0;
+  border-radius: 8px;
+  background: var(--popover);
+  color: var(--foreground);
+}
+.open-editor-side-menu :where(button) {
+  padding: 0;
+}
+.content-embed-content .open-editor-tiptap {
+  padding: 0;
+  font-size: 0.9rem;
+}
+.content-embed-content .open-editor-tiptap [data-open-editor-body="heading"] {
+  font-size: 1.15rem;
+}
+.open-editor-tiptap-host {
+  margin-top: 24px;
+}
+@media (min-width: 768px) {
+  .open-editor-tiptap-host {
+    margin-top: 32px;
+  }
+}
+.open-editor-tiptap [data-open-editor-reference] {
+  display: inline-flex;
+  max-width: 100%;
+  vertical-align: baseline;
+}
+.open-editor-file-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 4px;
+  border-radius: 4px;
+  text-decoration: none;
+}
+.open-editor-file-link:hover {
+  background: var(--muted);
+}
+
+.open-editor-tiptap [data-open-editor-reference][data-reference-selected] {
+  border-radius: 6px;
+  outline: 1px solid color-mix(in srgb, var(--ring) 45%, transparent);
+  outline-offset: 2px;
+  background-color: color-mix(in srgb, var(--ring) 4%, transparent);
+}
+.open-editor-table-wrapper {
+  overflow-x: auto;
+  max-width: 100%;
+  position: relative;
+}
+.open-editor-tiptap .selectedCell {
+  position: relative;
+}
+.open-editor-tiptap .selectedCell::after {
+  background: color-mix(in srgb, var(--ring) 15%, transparent);
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.open-editor-tiptap .column-resize-handle {
+  position: absolute;
+  right: -2px;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: var(--ring);
+  pointer-events: none;
+}
+.open-editor-tiptap.resize-cursor {
+  cursor: col-resize;
+}
+.open-editor-tiptap td {
+  position: relative;
+}
+.open-editor-tiptap [data-table-paragraph] {
+  margin: 0;
+  padding: 0;
+}
+
+.open-editor-table-handle,
+.open-editor-table-extend {
+  z-index: 46;
+  padding: 0;
+  border: 1px solid var(--open-editor-menu-border);
+  border-radius: 6px;
+  background: var(--popover);
+  color: var(--muted-foreground);
+  box-shadow: 0 1px 3px rgb(0 0 0 / 10%);
+  touch-action: none;
+}
+.open-editor-table-handle[draggable="true"] {
+  cursor: grab;
+}
+.open-editor-table-handle[draggable="true"]:active {
+  cursor: grabbing;
+}
+.open-editor-table-extend-row {
+  height: 20px;
+  min-height: 20px;
+}
+.open-editor-table-extend-column {
+  width: 20px;
+  min-width: 20px;
+}
+.open-editor-table-drop-indicator {
+  position: fixed;
+  z-index: 47;
+  background: var(--ring);
+  pointer-events: none;
+}
+
+.open-editor-side-menu[data-touch="true"] button {
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  touch-action: manipulation;
+}
+.open-editor-side-menu[data-touch="true"] button svg {
+  width: 22px;
+  height: 22px;
+}
+.open-editor-block-drop-indicator {
+  position: fixed;
+  height: 2px;
+  background: var(--ring);
+  border-radius: 2px;
+  z-index: 60;
+  pointer-events: none;
+}
+.open-editor-tiptap
+  :is(
+    [data-open-editor-block],
+    [data-open-editor-body]
+  ).ProseMirror-selectednode {
+  outline: none;
+}
+
+/* Select the reference surface itself, without a second wrapper outline. */
+.open-editor-tiptap
+  :is([data-reference-selected], .ProseMirror-selectednode)
+  > :is(.content-reference-card, .content-embed) {
+  border-color: var(--ring);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--ring) 45%, transparent);
+}
+
+.open-editor-code-block {
+  border-radius: 8px;
+  background: #161616;
+}
+.open-editor-code-controls {
+  padding: 8px 16px 0;
+}

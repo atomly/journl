@@ -15,7 +15,7 @@ test.beforeEach(async ({ page, context }) => {
   await create.click();
   await expect(page).not.toHaveURL(previous);
   await page.keyboard.press("Escape");
-  const editor = page.locator(".openeditor-tiptap");
+  const editor = page.locator(".open-editor-tiptap");
   await editor.fill("/table");
   await page.getByRole("option", { exact: true, name: "Table" }).click();
 });
@@ -23,7 +23,7 @@ test.beforeEach(async ({ page, context }) => {
 test("table edge rails and border menus add, select, delete and undo the intended axes", async ({
   page,
 }) => {
-  const table = page.locator(".openeditor-tiptap table");
+  const table = page.locator(".open-editor-tiptap table");
   const rows = table.locator("tr");
   const id = await table
     .locator("xpath=ancestor::*[@data-block-id]")
@@ -61,7 +61,7 @@ test("table edge rails and border menus add, select, delete and undo the intende
     .getByRole("menuitem", { exact: true, name: "Delete column" })
     .click();
   await expect(rows.first().locator("td")).toHaveCount(3);
-  await expect(page.locator(".openeditor-tiptap")).toBeFocused();
+  await expect(page.locator(".open-editor-tiptap")).toBeFocused();
   await page.keyboard.press("ControlOrMeta+z");
   await expect(rows.first().locator("td")).toHaveCount(4);
   await expect(rows).toHaveCount(5);
@@ -80,7 +80,7 @@ test("row dragging preserves cell contents and an extension drag undoes as one a
     info.project.name !== "desktop-chromium",
     "Native mouse dragging is a desktop interaction",
   );
-  const table = page.locator(".openeditor-tiptap table");
+  const table = page.locator(".open-editor-tiptap table");
   const rows = table.locator("tr");
   for (let i = 0; i < 3; i++) {
     await rows.nth(i).locator("td").first().click();
@@ -167,10 +167,10 @@ test("scrolled table gutters resolve drops and extension gestures cancel cleanly
     info.project.name !== "desktop-chromium",
     "Native mouse dragging is a desktop interaction",
   );
-  const editor = page.locator(".openeditor-tiptap");
+  const editor = page.locator(".open-editor-tiptap");
   const table = editor.locator("table");
   const rows = table.locator("tr");
-  const wrapper = editor.locator(".openeditor-table-wrapper");
+  const wrapper = editor.locator(".open-editor-table-wrapper");
   const hoverRightEdge = async () => {
     await wrapper.evaluate(async (el) => {
       el.scrollLeft = el.scrollWidth;
@@ -277,7 +277,7 @@ test("merged cells and outer gutters keep the table extension rails reachable", 
     info.project.name !== "desktop-chromium",
     "Cell range selection uses Shift-click",
   );
-  const table = page.locator(".openeditor-tiptap table");
+  const table = page.locator(".open-editor-tiptap table");
   const rows = table.locator("tr");
   await rows.first().locator("td").first().click();
   await rows
@@ -304,7 +304,7 @@ test("merged cells and outer gutters keep the table extension rails reachable", 
   await page.getByRole("button", { exact: true, name: "Add row" }).click();
   await expect(rows).toHaveCount(4);
   await merged.click();
-  await expect(page.locator(".openeditor-tiptap")).toBeFocused();
+  await expect(page.locator(".open-editor-tiptap")).toBeFocused();
   const box = await table.boundingBox();
   if (!box) throw new Error("Missing table geometry");
   await page.mouse.move(box.x + box.width / 2, box.y + box.height + 8);

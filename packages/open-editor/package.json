@@ -1,0 +1,106 @@
+{
+  "name": "@acme/open-editor",
+  "version": "0.0.0",
+  "private": false,
+  "type": "module",
+  "exports": {
+    "./engine/block-view": "./src/engine/block-view.ts",
+    "./engine/changes": "./src/engine/changes.ts",
+    "./engine/clipboard-paste": "./src/engine/clipboard-paste.ts",
+    "./engine/code-block": "./src/engine/code-block.ts",
+    "./engine/colors": "./src/engine/colors.ts",
+    "./engine/commands": "./src/engine/commands.ts",
+    "./engine/editor": "./src/engine/editor.ts",
+    "./engine/identity": "./src/engine/identity.ts",
+    "./engine/reference-insertion": "./src/engine/reference-insertion.ts",
+    "./engine/reference-selection": "./src/engine/reference-selection.ts",
+    "./engine/references": "./src/engine/references.ts",
+    "./engine/required": "./src/engine/required.ts",
+    "./engine/schema": "./src/engine/schema.ts",
+    "./engine/selection": "./src/engine/selection.ts",
+    "./engine/suggestions": "./src/engine/suggestions.ts",
+    "./engine/table-actions": "./src/engine/table-actions.ts",
+    "./engine/tables": "./src/engine/tables.ts",
+    "./engine/writing": "./src/engine/writing.ts",
+    "./engine/writing-extension": "./src/engine/writing-extension.ts",
+    "./serialization/clipboard": "./src/serialization/clipboard.ts",
+    "./serialization/html-paste": "./src/serialization/html-paste.ts",
+    "./serialization/markdown-paste": "./src/serialization/markdown-paste.ts",
+    "./serialization/tiptap": "./src/serialization/tiptap.ts",
+    "./ui/code-block": "./src/ui/code-block.tsx",
+    "./ui/controls": "./src/ui/controls.tsx",
+    "./ui/document-editor": "./src/ui/document-editor.tsx",
+    "./ui/editor.css": "./src/ui/editor.css",
+    "./ui/handle-visibility": "./src/ui/handle-visibility.ts",
+    "./ui/node-views": "./src/ui/node-views.tsx",
+    "./ui/pointer-corridor": "./src/ui/pointer-corridor.ts",
+    "./ui/reference-client": "./src/ui/reference-client.ts",
+    "./ui/reference-display": "./src/ui/reference-display.tsx",
+    "./ui/side-menu": "./src/ui/side-menu.tsx",
+    "./ui/table-actions": "./src/ui/table-actions.ts",
+    "./ui/table-controls": "./src/ui/table-controls.tsx",
+    "./ui/table-handles": "./src/ui/table-handles.tsx",
+    "./ui/toolbar": "./src/ui/toolbar.tsx",
+    "./ui/touch-block-drag": "./src/ui/touch-block-drag.tsx",
+    "./ui/use-document-editor": "./src/ui/use-document-editor.ts",
+    "./ui/writing-controls": "./src/ui/writing-controls.tsx"
+  },
+  "scripts": {
+    "check": "biome check",
+    "typecheck": "tsc --noEmit",
+    "test:unit": "vitest run --maxWorkers=4"
+  },
+  "dependencies": {
+    "@acme/document": "workspace:*",
+    "@acme/references": "workspace:*",
+    "@acme/ui": "workspace:*",
+    "@base-ui/react": "^1.9.0",
+    "@dnd-kit/core": "6.3.1",
+    "@floating-ui/react": "0.27.20",
+    "@tiptap/core": "3.31.4",
+    "@tiptap/extension-node-range": "3.31.4",
+    "@tiptap/pm": "3.31.4",
+    "@tiptap/react": "3.31.4",
+    "cn": "^0.4.0",
+    "highlight.js": "^11.12.0",
+    "lowlight": "^3.3.0",
+    "lucide-react": "~1.55.0",
+    "mdast-util-from-markdown": "^2.1.0",
+    "prosemirror-highlight": "0.15.3",
+    "sonner": "~2.0.8",
+    "zod": "~4.6.5"
+  },
+  "peerDependencies": {
+    "react": "~19.3.0",
+    "react-dom": "~19.3.0"
+  },
+  "devDependencies": {
+    "@acme/blocknote": "workspace:*",
+    "@acme/tsconfig": "workspace:*",
+    "@types/mdast": "^4.0.4",
+    "@types/node": "~26.6.5",
+    "@types/react": "~19.3.0",
+    "@types/react-dom": "~19.3.0",
+    "jsdom": "30.1.2",
+    "react": "~19.3.0",
+    "typescript": "~7.0.2",
+    "vitest": "^5.0.3"
+  },
+  "files": [
+    "src",
+    "README.md",
+    "LICENSE"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/atomly/journl.git",
+    "directory": "packages/open-editor"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "sideEffects": [
+    "**/*.css"
+  ]
+}

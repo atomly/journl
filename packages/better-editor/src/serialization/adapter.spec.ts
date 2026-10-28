@@ -7,13 +7,13 @@ import {
 import { documentSchema } from "./tiptap";
 // @vitest-environment jsdom
 
-import { historicalFixtures, parityBlocks } from "@acme/blocknote/inventory";
 import {
   applyDocumentOperations,
   documentBlocks,
   documentRows,
   parseBlock,
 } from "@acme/document";
+import { historicalFixtures, parityBlocks } from "@acme/document/fixtures";
 import { Editor } from "@tiptap/core";
 import { closeHistory, history, redo, undo } from "@tiptap/pm/history";
 import { DOMParser, DOMSerializer, Slice } from "@tiptap/pm/model";

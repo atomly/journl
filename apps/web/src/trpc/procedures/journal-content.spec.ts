@@ -1,4 +1,4 @@
-import { historicalFixtures } from "@acme/blocknote/inventory";
+import { historicalFixtures } from "@acme/document/fixtures";
 import { expect, test } from "vitest";
 import { readJournalContent } from "./journal-content";
 

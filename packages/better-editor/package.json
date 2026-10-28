@@ -75,7 +75,6 @@
     "react-dom": "~19.3.0"
   },
   "devDependencies": {
-    "@acme/blocknote": "workspace:*",
     "@acme/tsconfig": "workspace:*",
     "@types/mdast": "^4.0.4",
     "@types/node": "~26.6.5",

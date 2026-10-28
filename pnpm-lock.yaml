@@ -419,9 +419,6 @@ importers:
         specifier: workspace:*
         version: link:../references
     devDependencies:
-      '@acme/db':
-        specifier: workspace:*
-        version: link:../db
       '@acme/tsconfig':
         specifier: workspace:*
         version: link:../../tooling/tsconfig
@@ -597,9 +594,6 @@ importers:
         specifier: ~4.6.5
         version: 4.6.5
     devDependencies:
-      '@acme/blocknote':
-        specifier: workspace:*
-        version: link:../blocknote
       '@acme/tsconfig':
         specifier: workspace:*
         version: link:../../tooling/tsconfig

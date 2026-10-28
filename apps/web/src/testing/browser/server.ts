@@ -1,9 +1,9 @@
 import { spawn } from "node:child_process";
 import { once } from "node:events";
 import { createRequire } from "node:module";
-import { parityBlocks } from "@acme/blocknote/inventory";
 import * as schema from "@acme/db/schema";
 import { documentRows } from "@acme/document";
+import { parityBlocks } from "@acme/document/fixtures";
 import { ALGORITHM_VERSION } from "@acme/graph/config";
 import { PostgreSqlContainer } from "@testcontainers/postgresql";
 import { hashPassword } from "better-auth/crypto";

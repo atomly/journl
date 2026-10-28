@@ -1,5 +1,4 @@
-import type { BlockEdge, BlockNode } from "@acme/db/schema";
-import type { DocumentBlock } from "@acme/document";
+import type { DocumentBlock } from "./schema";
 
 /** Synthetic only. IDs and example.invalid URLs contain no application/user data. */
 export const inventoryId = (n: number) =>
@@ -300,7 +299,7 @@ export function savedNode(
   id: number,
   data: Record<string, unknown>,
   parentId: number | null = null,
-): BlockNode {
+) {
   return {
     created_at: timestamp,
     data,
@@ -311,13 +310,13 @@ export function savedNode(
     user_id: "synthetic-inventory",
   };
 }
-export function savedEdge(from: number, to: number): BlockEdge {
+export function savedEdge(from: number, to: number) {
   return {
     created_at: timestamp,
     document_id: inventoryDocumentId,
     from_id: inventoryId(from),
     to_id: inventoryId(to),
-    type: "sibling",
+    type: "sibling" as const,
     updated_at: timestamp,
     user_id: "synthetic-inventory",
   };

@@ -1,6 +1,6 @@
 import type { Locator, Page } from "@playwright/test";
 import type { Editor } from "@tiptap/core";
-import { expect, test } from "~/testing/browser/fixtures";
+import { expect, test, typeParagraphs } from "~/testing/browser/fixtures";
 
 test.use({ journalPagination: true });
 test.beforeEach(async ({ page }) => {
@@ -95,9 +95,7 @@ test("keyboard users can reach controls, return to their selection, and leave ed
   page,
 }) => {
   const editor = page.locator(".better-editor-tiptap");
-  await editor.fill("Alpha");
-  await page.keyboard.press("Enter");
-  await page.keyboard.insertText("Beta");
+  await typeParagraphs(editor, ["Alpha", "Beta"]);
   const paragraphs = editor.locator('[data-better-editor-body="paragraph"]');
   await paragraphs.first().click();
   await page.keyboard.press("Home");
@@ -156,9 +154,7 @@ test("context actions target the clicked block and tolerate its concurrent remov
     "The custom mouse context menu preserves native touch menus",
   );
   const editor = page.locator(".better-editor-tiptap");
-  await editor.fill("Alpha");
-  await page.keyboard.press("Enter");
-  await page.keyboard.insertText("Beta");
+  await typeParagraphs(editor, ["Alpha", "Beta"]);
   const paragraphs = editor.locator('[data-better-editor-body="paragraph"]');
   await paragraphs.first().click();
   await caretIn(editor, "Alpha");

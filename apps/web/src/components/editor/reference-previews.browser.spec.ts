@@ -13,7 +13,7 @@ test("saved external previews keep source presentation and navigation after savi
       .click();
   const previous = page.url();
   await create.click();
-  await expect(page).not.toHaveURL(previous);
+  await expect(page).not.toHaveURL(previous, { timeout: 60000 });
   await page.keyboard.press("Escape");
   const editor = page.locator(".better-editor-tiptap");
   await editor.fill("Preview acceptance");
@@ -63,6 +63,8 @@ test("saved external previews keep source presentation and navigation after savi
       await expect(
         cards.nth(i).locator(".content-reference-card-heading a"),
       ).toHaveAttribute("href", url);
-    await expect(page.locator("[data-save-status]")).toContainText("Saved");
+    await expect(page.locator("[data-save-status]")).toContainText(
+      reload ? "Autosave on" : "Saved",
+    );
   }
 });

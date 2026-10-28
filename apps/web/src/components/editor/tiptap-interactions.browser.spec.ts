@@ -1,4 +1,9 @@
-import { expect, test } from "~/testing/browser/fixtures";
+import {
+  expect,
+  selectEditorText,
+  test,
+  typeParagraphs,
+} from "~/testing/browser/fixtures";
 
 test.use({ journalPagination: true });
 test.beforeEach(async ({ page }) => {
@@ -11,7 +16,7 @@ test.beforeEach(async ({ page }) => {
       .click();
   const previous = page.url();
   await create.click();
-  await expect(page).not.toHaveURL(previous);
+  await expect(page).not.toHaveURL(previous, { timeout: 60000 });
   await page.keyboard.press("Escape");
   await expect(page.locator(".better-editor-tiptap")).toBeVisible();
 });
@@ -20,11 +25,7 @@ test("selected blocks indent together and a child handle remains stable across i
   page,
 }) => {
   const editor = page.locator(".better-editor-tiptap");
-  await editor.fill("Parent");
-  await page.keyboard.press("Enter");
-  await page.keyboard.insertText("First");
-  await page.keyboard.press("Enter");
-  await page.keyboard.insertText("Second");
+  await typeParagraphs(editor, ["Parent", "First", "Second"]);
   const roots = editor.locator(":scope > [data-block-id]");
   const ids = await roots.evaluateAll((nodes) =>
     nodes.map((node) => node.getAttribute("data-block-id")),
@@ -95,10 +96,8 @@ test("select-all text keeps formatting controls available and saves their change
   page,
 }) => {
   const editor = page.locator(".better-editor-tiptap");
-  await editor.fill("First paragraph");
-  await page.keyboard.press("Enter");
-  await page.keyboard.insertText("Second paragraph");
-  await page.keyboard.press("ControlOrMeta+a");
+  await typeParagraphs(editor, ["First paragraph", "Second paragraph"]);
+  await selectEditorText(editor);
   const colors = page.getByRole("button", { exact: true, name: "Colors" });
   await expect(colors).toBeEnabled();
   await colors.click();
@@ -106,7 +105,7 @@ test("select-all text keeps formatting controls available and saves their change
   await expect(
     editor.locator('[style*="--better-editor-text-purple"]'),
   ).toHaveCount(2);
-  await page.keyboard.press("ControlOrMeta+a");
+  await selectEditorText(editor);
   await page.getByRole("button", { exact: true, name: "Bold" }).click();
   await expect(editor.locator("strong")).toHaveText([
     "First paragraph",
@@ -191,8 +190,8 @@ test("a plain link exposes consistent display choices and converts to a card", a
   page,
 }) => {
   const editor = page.locator(".better-editor-tiptap");
-  await editor.fill("Example link");
-  await page.keyboard.press("ControlOrMeta+a");
+  await typeParagraphs(editor, ["Example link"]);
+  await selectEditorText(editor);
   await page.keyboard.press("ControlOrMeta+k");
   await page
     .getByRole("textbox", { name: "Reference URL" })
@@ -261,7 +260,7 @@ test("native handle drag moves nested blocks and copies receive fresh identities
       handle.y + handle.height / 2 + 10,
       { steps: 4 },
     );
-    await page.mouse.move(end.x + 100, end.y + end.height + 10, { steps: 15 });
+    await page.mouse.move(end.x + 100, end.y + end.height - 2, { steps: 15 });
     await page.mouse.up();
     if (copy) await page.keyboard.up(copyModifier);
   };

@@ -1,4 +1,4 @@
-import { expect, test } from "~/testing/browser/fixtures";
+import { expect, test, typeParagraphs } from "~/testing/browser/fixtures";
 
 test.use({ journalPagination: true });
 test("handles follow focus and navigation, hide only for desktop typing, and persist on mobile", async ({
@@ -14,11 +14,13 @@ test("handles follow focus and navigation, hide only for desktop typing, and per
   await expect(page).toHaveURL(/\/pages\//);
   await page.keyboard.press("Escape");
   const editor = page.locator(".better-editor-tiptap");
-  await editor.fill("Alpha");
-  for (const text of ["Middle 1", "Middle 2", "Middle 3", "Beta"]) {
-    await page.keyboard.press("Enter");
-    await page.keyboard.insertText(text);
-  }
+  await typeParagraphs(editor, [
+    "Alpha",
+    "Middle 1",
+    "Middle 2",
+    "Middle 3",
+    "Beta",
+  ]);
   const mobile = info.project.name === "mobile-webkit";
   const rows = editor.locator('[data-better-editor-body="paragraph"]');
   if (mobile) await rows.last().tap();
@@ -86,11 +88,10 @@ test("mobile handles stay aligned with their block as the viewport shrinks and r
   await expect(page).not.toHaveURL(previous);
   await page.keyboard.press("Escape");
   const editor = page.locator(".better-editor-tiptap");
-  await editor.fill("First row");
-  for (let index = 1; index <= 7; index++) {
-    await page.keyboard.press("Enter");
-    await page.keyboard.insertText(`Row ${index}`);
-  }
+  await typeParagraphs(editor, [
+    "First row",
+    ...Array.from({ length: 7 }, (_, index) => `Row ${index + 1}`),
+  ]);
   const row = editor.locator('[data-better-editor-body="paragraph"]').last();
   if (info.project.name === "mobile-webkit") await row.tap();
   else await row.click();

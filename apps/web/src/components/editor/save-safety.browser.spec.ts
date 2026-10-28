@@ -168,8 +168,8 @@ test.describe("document editor", () => {
         .click();
       const backup = await download;
       expect(backup.suggestedFilename()).toMatch(/draft.*\.json$/);
-      const backupPath = await backup.path();
-      expect(backupPath).not.toBeNull();
+      const backupPath = info.outputPath("kept-draft.json");
+      await backup.saveAs(backupPath);
       const payload = JSON.parse(await readFile(backupPath as string, "utf8"));
       expect(payload).toMatchObject({ format: "journl-draft", version: 1 });
       expect(JSON.stringify(payload.blocks)).toContain(
@@ -321,8 +321,8 @@ test.describe("document editor", () => {
         .click();
       const backup = await download;
       expect(backup.suggestedFilename()).toMatch(/draft.*\.json$/);
-      const backupPath = await backup.path();
-      expect(backupPath).not.toBeNull();
+      const backupPath = info.outputPath("kept-draft.json");
+      await backup.saveAs(backupPath);
       const payload = JSON.parse(await readFile(backupPath as string, "utf8"));
       expect(payload).toMatchObject({ format: "journl-draft", version: 1 });
       expect(JSON.stringify(payload.blocks)).toContain(
@@ -503,8 +503,8 @@ test.describe("document editor", () => {
       .getByRole("button", { exact: true, name: "Download full draft" })
       .click();
     const download = await downloaded;
-    const path = await download.path();
-    expect(path).not.toBeNull();
+    const path = info.outputPath("offline-draft.json");
+    await download.saveAs(path);
     const backup = JSON.parse(await readFile(path as string, "utf8"));
     expect(JSON.stringify(backup.blocks)).toContain(writing);
     await context.setOffline(false);

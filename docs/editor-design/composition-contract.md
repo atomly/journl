@@ -78,15 +78,14 @@ editor's context, owner ID, focus return, and theme when multiple editors exist.
 
 ## Proposed JSX experience
 
-Illustrative imports and names, not existing APIs. The consumer owns `compact`.
+The consumer owns `compact` and its responsive policy.
 
 ```tsx
 import { useBetterEditor } from "@acme/better-editor/ui/use-better-editor";
 import { EditorRoot } from "@acme/better-editor/ui/editor-root";
 import { EditorContent } from "@acme/better-editor/ui/editor-content";
 import { EditorToolbar } from "@acme/better-editor/ui/editor-toolbar";
-import { BoldButton } from "@acme/better-editor/ui/bold-button";
-import { ItalicButton } from "@acme/better-editor/ui/italic-button";
+import { BoldButton, ItalicButton } from "@acme/better-editor/ui/mark-button";
 import { LinkMenu } from "@acme/better-editor/ui/link-menu";
 import { SlashMenu } from "@acme/better-editor/ui/slash-menu";
 

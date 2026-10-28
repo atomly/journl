@@ -60,7 +60,7 @@ installed editor contract, synthetic recovery fixtures, remaining production
 uncertainty, and preservation checks for the Tiptap frontend migration on Journl-owned
 block documents. Performance benchmarks are outside this migration scope.
 Content checks run with `pnpm --filter @acme/document test:unit` and
-`pnpm --filter @acme/tiptap test:unit`. The remaining BlockNote compatibility
+`pnpm --filter @acme/better-editor test:unit`. The remaining BlockNote compatibility
 suite is separate from the current editor's acceptance checks.
 
 ## Development Workflow

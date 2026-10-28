@@ -11,18 +11,19 @@ import type { EditorCommit } from "../engine/editor";
 import { insertTiptapReference } from "../engine/reference-insertion";
 import { documentExtensions } from "../engine/schema";
 import type { SlashItemSource } from "../engine/slash-items";
+import { BlockHandle } from "./block-handle";
 import { codeBlockPresentation } from "./code-block";
 import { EditorContent } from "./editor-content";
+import { EditorError } from "./editor-error";
 import { EditorRoot } from "./editor-root";
 import type { EditorServices } from "./editor-services";
 import { useHandleVisibility } from "./handle-visibility";
-import { referenceViewStore, TiptapReferenceViews } from "./node-views";
 import { ReferenceClientContext } from "./reference-client";
-import { TiptapSideMenu } from "./side-menu";
+import { ReferenceViews, useReferenceViews } from "./reference-views";
 import { SlashMenu } from "./slash-menu";
-import { TiptapTableHandles } from "./table-handles";
-import { TiptapToolbar } from "./toolbar";
-import { useDocumentEditor } from "./use-document-editor";
+import { TableControls } from "./table-controls-root";
+import { DocumentToolbar } from "./toolbar";
+import { useBetterEditor } from "./use-better-editor";
 import { TiptapContextMenu } from "./writing-controls";
 import "./editor.css";
 
@@ -69,7 +70,7 @@ function EditorView({
   const references = useContext(ReferenceClientContext);
   const resolveUrl: ReferenceClient["resolveUrl"] =
     references?.resolveUrl ?? (async () => ({ items: [] }));
-  const referenceViews = useMemo(referenceViewStore, []);
+  const referenceViews = useReferenceViews();
   const extensions = useMemo(
     () => [
       syntaxHighlightExtension,
@@ -80,7 +81,7 @@ function EditorView({
     ],
     [referenceViews.extension],
   );
-  const { editor, error, host } = useDocumentEditor({
+  const { editor, error, host } = useBetterEditor({
     editable,
     extensions,
     initialBlocks,
@@ -88,6 +89,7 @@ function EditorView({
     onCommit,
     onReady,
     openLink: services?.openLink,
+    referenceBehavior: true,
     resetKey,
     resolveUrl,
     slashItems: [],
@@ -102,14 +104,9 @@ function EditorView({
         editable && "flex flex-col",
         className,
       )}
-      data-editor-frontend="tiptap"
     >
       {children}
-      {error && (
-        <p role="alert" className="px-8 text-destructive">
-          This content could not be edited safely.
-        </p>
-      )}
+      <EditorError error={error} className="px-8 text-destructive" />
       <EditorContent
         ref={host}
         editor={editor}
@@ -121,7 +118,7 @@ function EditorView({
         (toolbar !== undefined ? (
           toolbar
         ) : (
-          <TiptapToolbar
+          <DocumentToolbar
             editor={editor}
             mode={toolbarMode}
             visibility={toolbarVisibility}
@@ -137,13 +134,13 @@ function EditorView({
             }}
           />
         ))}
-      <TiptapReferenceViews store={referenceViews} />
+      <ReferenceViews store={referenceViews} />
       {editable && !error && (
         <>
           {editor && (
             <>
-              <TiptapSideMenu editor={editor} visible={handlesVisible} />
-              <TiptapTableHandles editor={editor} visible={handlesVisible} />
+              <BlockHandle editor={editor} visible={handlesVisible} />
+              <TableControls editor={editor} visible={handlesVisible} />
             </>
           )}
           {slashMenu !== undefined ? (

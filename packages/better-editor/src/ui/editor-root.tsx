@@ -44,6 +44,7 @@ export function EditorRoot({
         value={services ?? parentServices ?? emptyServices}
       >
         <section
+          data-better-editor-root=""
           {...props}
           className={cn("better-editor-editor-shell min-w-0", className)}
         />

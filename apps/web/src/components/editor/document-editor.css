@@ -4,7 +4,7 @@
     var(--font-editor, Inter), "SF Pro Display", -apple-system, BlinkMacSystemFont, "Open Sans", "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
 }
 
-.journl-document-editor .better-editor-mobile-toolbar {
+.journl-document-editor [data-better-editor-toolbar-mode="sticky"] {
   /* Keep the toolbar visually above writing, after it in keyboard order. */
   order: -1;
   position: sticky;
@@ -13,7 +13,8 @@
     var(--app-visual-viewport-offset-top, 0px) +
     var(--app-header-offset, 0px)
   );
-  padding-inline: 24px;
+  margin-inline: 24px;
+  max-width: calc(100% - 48px);
   margin-bottom: 24px;
 }
 

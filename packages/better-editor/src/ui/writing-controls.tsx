@@ -6,20 +6,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@acme/ui/dropdown-menu";
-import { Button as SurfaceButton } from "@base-ui/react/button";
 import type { Editor } from "@tiptap/core";
 import { redo, undo } from "@tiptap/pm/history";
 import { NodeSelection } from "@tiptap/pm/state";
 import { Redo2, Undo2 } from "lucide-react";
-import {
-  useCallback,
-  useEffect,
-  useId,
-  useRef,
-  useState,
-  useSyncExternalStore,
-} from "react";
-import { createPortal } from "react-dom";
+import { useEffect, useRef, useState } from "react";
 import {
   canIndentBlock,
   duplicateSelectedBlock,
@@ -27,32 +18,10 @@ import {
   selectedBlock,
 } from "../engine/commands";
 import { blockAt } from "../engine/identity";
-import { executeSlashItem } from "../engine/slash-items";
-import { slashKey } from "../engine/suggestions";
 import { moveSelectedBlock, removeSelectedBlock } from "../engine/writing";
-import { EditorHint, EditorMenuItem, restoreEditorFocus } from "./controls";
+import { EditorMenuItem, restoreEditorFocus } from "./controls";
 import { useEditorServices } from "./editor-services";
-
-const subscribeEmpty = () => () => {};
-const getEmpty = () => null;
-export function useTiptapState(editor?: Editor) {
-  const subscribe = useCallback(
-    (notify: () => void) => {
-      if (!editor) return () => {};
-      editor.on("transaction", notify);
-      return () => {
-        editor.off("transaction", notify);
-      };
-    },
-    [editor],
-  );
-  const getSnapshot = useCallback(() => editor?.state ?? null, [editor]);
-  return useSyncExternalStore(
-    editor ? subscribe : subscribeEmpty,
-    getSnapshot,
-    getEmpty,
-  );
-}
+import { useEditorSnapshot } from "./use-editor-snapshot";
 
 export function BlockActions({
   editor,
@@ -61,7 +30,7 @@ export function BlockActions({
   editor: Editor;
   blockId?: string;
 }) {
-  const current = useTiptapState(editor) ?? editor.state;
+  const current = useEditorSnapshot(editor) ?? editor.state;
   const services = useEditorServices();
   const targetState = (base = editor.state) => {
     if (!blockId) return base;
@@ -277,101 +246,5 @@ export function TiptapContextMenu({ editor }: { editor?: Editor }) {
         <BlockActions editor={editor} blockId={context.id} />
       </DropdownMenuContent>
     </DropdownMenu>
-  );
-}
-
-export function TiptapSlashMenu({ editor }: { editor?: Editor }) {
-  const state = useTiptapState(editor);
-  const query = state ? slashKey.getState(state) : null;
-  const [position, setPosition] = useState({ left: 0, maxHeight: 280, top: 0 });
-  const popup = useRef<HTMLDivElement>(null);
-  const menuId = useId();
-  useEffect(() => {
-    if (!editor) return;
-    const dom = editor.view.dom;
-    if (query) {
-      dom.setAttribute("aria-controls", menuId);
-      dom.setAttribute("aria-activedescendant", `${menuId}-${query.index}`);
-      dom.setAttribute("aria-autocomplete", "list");
-    }
-    return () => {
-      dom.removeAttribute("aria-controls");
-      dom.removeAttribute("aria-activedescendant");
-      dom.removeAttribute("aria-autocomplete");
-    };
-  }, [editor, query, menuId]);
-  useEffect(() => {
-    if (!editor || !query) return;
-    const update = () => {
-      const rect = editor.view.coordsAtPos(query.from);
-      const viewport = window.visualViewport;
-      const bottom =
-        (viewport?.offsetTop ?? 0) + (viewport?.height ?? window.innerHeight);
-      const top = rect.bottom + 4;
-      setPosition({
-        left: Math.max(8, Math.min(rect.left, window.innerWidth - 272)),
-        maxHeight: Math.min(280, Math.max(80, bottom - top - 8)),
-        top: Math.min(top, bottom - 100),
-      });
-    };
-    update();
-    window.addEventListener("scroll", update, true);
-    window.addEventListener("resize", update);
-    window.visualViewport?.addEventListener("resize", update);
-    return () => {
-      window.removeEventListener("scroll", update, true);
-      window.removeEventListener("resize", update);
-      window.visualViewport?.removeEventListener("resize", update);
-    };
-  }, [editor, query]);
-  useEffect(() => {
-    if (!query) return;
-    popup.current
-      ?.querySelector<HTMLElement>(`[data-choice-index="${query.index}"]`)
-      ?.scrollIntoView({ block: "nearest" });
-  }, [query]);
-  if (!editor || !query || editor.view.composing) return null;
-  const choices = query.items;
-  return createPortal(
-    <div
-      ref={popup}
-      id={menuId}
-      data-tiptap-controls=""
-      data-tiptap-owner={editor.instanceId}
-      role="listbox"
-      aria-label="Block commands"
-      className="fixed z-50 w-64 overflow-y-auto rounded-md border bg-popover p-1 text-popover-foreground shadow-md"
-      style={position}
-    >
-      {choices.length ? (
-        choices.map((choice, index) => (
-          <EditorHint
-            key={choice.id}
-            label={`Insert ${choice.title.toLowerCase()}`}
-          >
-            <SurfaceButton
-              type="button"
-              key={choice.id}
-              id={`${menuId}-${index}`}
-              role="option"
-              data-choice-index={index}
-              aria-selected={index === query.index}
-              disabled={choice.disabled}
-              tabIndex={-1}
-              className="block w-full rounded px-3 py-2 text-left text-sm hover:bg-accent aria-selected:bg-accent"
-              onMouseDown={(event) => event.preventDefault()}
-              onClick={() => {
-                executeSlashItem(editor, choice.id);
-              }}
-            >
-              {choice.title}
-            </SurfaceButton>
-          </EditorHint>
-        ))
-      ) : (
-        <p className="p-2 text-sm">No matching blocks</p>
-      )}
-    </div>,
-    document.body,
   );
 }

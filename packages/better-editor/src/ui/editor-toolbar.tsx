@@ -12,19 +12,23 @@ import {
   type VirtualElement,
 } from "@floating-ui/react";
 import type { Editor } from "@tiptap/core";
+import { CellSelection } from "@tiptap/pm/tables";
 import { cn } from "cn";
 import {
   type ComponentProps,
   useCallback,
   useEffect,
+  useId,
   useRef,
   useState,
 } from "react";
 import { createPortal } from "react-dom";
+import { captureLink } from "../engine/references";
 import { useEditorInstance, useEditorSelector } from "./editor-root";
 
 export type EditorToolbarProps = ComponentProps<typeof Toolbar.Root> & {
   editor?: Editor;
+  onEditorKeyDown?: (event: KeyboardEvent) => void;
   mode?: "inline" | "sticky" | "floating";
   visibility?: "always" | "selection" | "manual";
   open?: boolean;
@@ -40,6 +44,7 @@ export type EditorToolbarProps = ComponentProps<typeof Toolbar.Root> & {
 /** Layout policy is explicit; changing it never reconfigures the editor. */
 export function EditorToolbar({
   editor: explicit,
+  onEditorKeyDown,
   mode = "inline",
   visibility = "always",
   open,
@@ -61,19 +66,25 @@ export function EditorToolbar({
     (instance) => ({
       empty: instance.state.selection.empty,
       from: instance.state.selection.from,
+      link: Boolean(captureLink(instance.state)),
       to: instance.state.selection.to,
     }),
     editor,
   );
+  const hintId = useId();
+  const tabNavigation = useRef(false);
+  const [navigationMessage, setNavigationMessage] = useState("");
   const root = useRef<HTMLDivElement | null>(null);
   const [requested, setRequested] = useState(false);
   const [focused, setFocused] = useState(false);
-  const focusNext = useRef(false);
+  const [focusRequest, requestFocus] = useState(0);
   const visible =
     visibility === "manual"
       ? Boolean(open)
       : (open ??
-        (visibility === "always" || requested || (focused && !state?.empty)));
+        (visibility === "always" ||
+          requested ||
+          (focused && (!state?.empty || state?.link))));
   const floating = useFloating({
     middleware: [
       offset(sideOffset),
@@ -89,6 +100,16 @@ export function EditorToolbar({
   useEffect(() => {
     if (!editor) return;
     const dom = editor.view.dom;
+    const description = dom.getAttribute("aria-describedby");
+    const shortcuts = dom.getAttribute("aria-keyshortcuts");
+    dom.setAttribute(
+      "aria-describedby",
+      [description, hintId].filter(Boolean).join(" "),
+    );
+    dom.setAttribute(
+      "aria-keyshortcuts",
+      [shortcuts, "Alt+F10 Control+m"].filter(Boolean).join(" "),
+    );
     setFocused(editor.isFocused);
     const focus = () => setFocused(true);
     const blur = ({ event }: { event: FocusEvent }) => {
@@ -117,10 +138,34 @@ export function EditorToolbar({
       }
     };
     const keyboard = (event: KeyboardEvent) => {
+      if (event.isComposing) return;
+      onEditorKeyDown?.(event);
+      if (event.defaultPrevented) return;
+      if (
+        event.ctrlKey &&
+        !event.metaKey &&
+        !event.shiftKey &&
+        !event.altKey &&
+        event.key.toLowerCase() === "m"
+      ) {
+        event.preventDefault();
+        event.stopPropagation();
+        tabNavigation.current = !tabNavigation.current;
+        setNavigationMessage(
+          tabNavigation.current
+            ? "Tab now moves between controls. Press Control+M to use Tab for indentation again."
+            : "Tab now indents text or moves between table cells. Press Control+M to use Tab to leave the editor.",
+        );
+        return;
+      }
+      if (event.key === "Tab" && tabNavigation.current) {
+        event.stopPropagation();
+        return;
+      }
       if (event.isComposing || !event.altKey || event.key !== "F10") return;
       event.preventDefault();
       event.stopPropagation();
-      focusNext.current = true;
+      requestFocus((value) => value + 1);
       setRequested(true);
       onOpenChange?.(true);
     };
@@ -129,12 +174,16 @@ export function EditorToolbar({
     dom.addEventListener("keydown", keyboard, true);
     document.addEventListener("pointerdown", outside);
     return () => {
+      if (description === null) dom.removeAttribute("aria-describedby");
+      else dom.setAttribute("aria-describedby", description);
+      if (shortcuts === null) dom.removeAttribute("aria-keyshortcuts");
+      else dom.setAttribute("aria-keyshortcuts", shortcuts);
       editor.off("focus", focus);
       editor.off("blur", blur);
       dom.removeEventListener("keydown", keyboard, true);
       document.removeEventListener("pointerdown", outside);
     };
-  }, [editor, onOpenChange]);
+  }, [editor, onOpenChange, onEditorKeyDown, hintId]);
 
   useEffect(() => {
     if (!editor || mode !== "floating") return;
@@ -147,6 +196,23 @@ export function EditorToolbar({
       contextElement: editor.view.dom,
       getBoundingClientRect() {
         if (editor.isDestroyed) return new DOMRect();
+        const selection = editor.state.selection;
+        if (selection instanceof CellSelection) {
+          const anchor = editor.view.nodeDOM(selection.$anchorCell.pos);
+          const table =
+            anchor instanceof HTMLElement ? anchor.closest("table") : null;
+          if (table) {
+            const rect = table.getBoundingClientRect();
+            // Keep both top and bottom placements outside the cell/axis controls.
+            return new DOMRect(
+              rect.left,
+              rect.top - 28,
+              rect.width,
+              rect.height + 56,
+            );
+          }
+        }
+
         const start = editor.view.coordsAtPos(
           state?.from ?? editor.state.selection.from,
         );
@@ -165,17 +231,17 @@ export function EditorToolbar({
   }, [editor, mode, state, floating.refs, floating.update, anchor]);
 
   useEffect(() => {
-    if (!visible || !focusNext.current) return;
+    if (!visible || focusRequest === 0) return;
     const frame = requestAnimationFrame(() => {
       root.current
         ?.querySelector<HTMLElement>(
           "button:not(:disabled),[role=button]:not([aria-disabled=true])",
         )
         ?.focus();
-      focusNext.current = false;
+      requestFocus(0);
     });
     return () => cancelAnimationFrame(frame);
-  }, [visible]);
+  }, [visible, focusRequest]);
 
   const assignRef = useCallback(
     (element: HTMLDivElement | null) => {
@@ -194,7 +260,20 @@ export function EditorToolbar({
     [ref, floating.refs],
   );
 
-  if (!editor || !visible) return null;
+  const accessibility = (
+    <>
+      <p id={hintId} className="sr-only">
+        Press Alt+F10 for formatting controls. Use arrow keys in the toolbar and
+        Escape to return to writing. Press Control+M to switch Tab between
+        editing and moving between controls.
+      </p>
+      <p role="status" aria-live="polite" className="sr-only">
+        {navigationMessage}
+      </p>
+    </>
+  );
+  if (!editor) return null;
+  if (!visible) return accessibility;
   const content = (
     <Toolbar.Root
       {...props}
@@ -209,7 +288,7 @@ export function EditorToolbar({
         ...(mode === "floating"
           ? floating.floatingStyles
           : mode === "sticky"
-            ? { position: "sticky", top: 0 }
+            ? { position: "sticky" }
             : {}),
         ...style,
       }}
@@ -228,7 +307,12 @@ export function EditorToolbar({
       }}
     />
   );
-  return mode === "floating"
-    ? createPortal(content, portalContainer ?? document.body)
-    : content;
+  return (
+    <>
+      {accessibility}
+      {mode === "floating"
+        ? createPortal(content, portalContainer ?? document.body)
+        : content}
+    </>
+  );
 }

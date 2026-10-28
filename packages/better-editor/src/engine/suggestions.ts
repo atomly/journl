@@ -64,12 +64,6 @@ export type SlashQuery = {
   index: number;
 };
 export const slashKey = new PluginKey<SlashQuery | null>("better-editor-slash");
-export const filteredBlockChoices = (query: string) =>
-  blockChoices.filter((choice) =>
-    `${choice.title} ${choice.aliases}`
-      .toLowerCase()
-      .includes(query.toLowerCase()),
-  );
 export function slashQuery(
   state: EditorState,
 ): Omit<SlashQuery, "index" | "items"> | null {

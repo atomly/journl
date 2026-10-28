@@ -56,6 +56,11 @@ Run `pnpm --filter @acme/better-editor test:unit` for engine and UI tests, and
 
 ## Compose an experience
 
+`DocumentEditor` assembles the same public parts used by custom compositions,
+including `EditorToolbar`, `MarkButton`, `LinkMenu`, `BlockHandle`, `TableControls`,
+`ReferenceViews`, and `SlashMenu`. Its default toolbar items live in `ui/toolbar`;
+positioning, keyboard access, and engine lifecycle each have one implementation.
+
 `DocumentEditor` remains the full preset. Use the independent parts to arrange
 controls or omit them entirely. The lifecycle hook returns an editor instance and
 diagnostic state; the root shares the stable instance without broadcasting the

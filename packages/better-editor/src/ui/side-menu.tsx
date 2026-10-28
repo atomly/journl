@@ -31,7 +31,7 @@ import { EditorHint, isPointerClick, restoreEditorFocus } from "./controls";
 import { inToolbarCorridor } from "./pointer-corridor";
 import { BlockMenuContent } from "./toolbar";
 import { BLOCK_DRAG_DISTANCE, TouchBlockDrag } from "./touch-block-drag";
-import { useTiptapState } from "./writing-controls";
+import { useEditorSnapshot } from "./use-editor-snapshot";
 
 /** A handle selects the complete BetterEditor wrapper, including descendants. Native
  * ProseMirror drag/drop owns moves; the identity adapter gives copies fresh IDs. */
@@ -49,7 +49,7 @@ export function TiptapSideMenu({
   }) => React.ReactNode;
   renderHandle?: React.ReactNode;
 }) {
-  const state = useTiptapState(editor);
+  const state = useEditorSnapshot(editor);
   const compact = useIsMobile();
   const [touchPointer, setTouchPointer] = useState(
     () =>

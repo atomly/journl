@@ -295,7 +295,7 @@
   overflow-x: auto;
 }
 
-.better-editor-mobile-toolbar .better-editor-formatting-toolbar {
+.better-editor-formatting-toolbar[data-better-editor-toolbar-mode="sticky"] {
   max-width: 100%;
   box-shadow: 0 1px 3px rgb(0 0 0 / 8%);
 }
@@ -466,4 +466,10 @@
 }
 .better-editor-code-controls {
   padding: 8px 16px 0;
+}
+
+.better-editor-formatting-toolbar:where(
+  [data-better-editor-toolbar-mode="sticky"]
+) {
+  top: 0;
 }

@@ -50,7 +50,7 @@ import {
 } from "./controls";
 import { TableMenuItems } from "./table-controls";
 import { revealTableColumn } from "./table-reveal";
-import { useTiptapState } from "./writing-controls";
+import { useEditorSnapshot } from "./use-editor-snapshot";
 
 type ActiveTable = {
   id: string;
@@ -137,7 +137,7 @@ export function TiptapTableHandles({
   }) => React.ReactNode;
   renderHandle?: (axis: TableAxis) => React.ReactNode;
 }) {
-  const state = useTiptapState(editor);
+  const state = useEditorSnapshot(editor);
   const [active, setActive] = useState<ActiveTable | null>(null);
   const [menu, setMenu] = useState<TableAxis | null>(null);
   const [drag, setDrag] = useState<Drag | null>(null);

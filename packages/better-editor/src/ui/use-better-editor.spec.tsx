@@ -4,7 +4,7 @@ import { act } from "react";
 import { createRoot } from "react-dom/client";
 import { expect, test, vi } from "vitest";
 import type { EditorCommit } from "../engine/editor";
-import { useDocumentEditor } from "./use-document-editor";
+import { useBetterEditor } from "./use-better-editor";
 
 Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
 
@@ -17,7 +17,7 @@ test("core commits to the current callback, preserves mounted state on save, and
   const extensions = [Extension.create({ name: "testPresentation" })];
   let mounted: Editor | undefined;
   function View({ onCommit }: { onCommit: EditorCommit }) {
-    const { editor, error, host } = useDocumentEditor({
+    const { editor, error, host } = useBetterEditor({
       extensions,
       initialBlocks: [{ id: "paragraph", type: "paragraph" }],
       onCommit,
@@ -66,7 +66,7 @@ test("array identities and live editability preserve content; reset is deliberat
   document.body.append(container);
   const root = createRoot(container);
   const extension = Extension.create({ name: "stable" });
-  let current: ReturnType<typeof useDocumentEditor> | undefined;
+  let current: ReturnType<typeof useBetterEditor> | undefined;
   function View({
     editable,
     resetKey = 0,
@@ -74,7 +74,7 @@ test("array identities and live editability preserve content; reset is deliberat
     editable: boolean;
     resetKey?: number;
   }) {
-    current = useDocumentEditor({
+    current = useBetterEditor({
       editable,
       extensions: [extension],
       initialBlocks: [{ content: "Initial", id: "initial", type: "paragraph" }],
@@ -109,9 +109,9 @@ test("consumer callback failure does not invalidate or disable the editor", asyn
   document.body.append(container);
   const root = createRoot(container);
   const failure = new Error("Consumer save failed");
-  let current: ReturnType<typeof useDocumentEditor> | undefined;
+  let current: ReturnType<typeof useBetterEditor> | undefined;
   function View() {
-    current = useDocumentEditor({
+    current = useBetterEditor({
       editable: true,
       extensions: [],
       initialBlocks: [{ id: "p", type: "paragraph" }],
@@ -140,10 +140,10 @@ test("consumer mutation cannot corrupt cached snapshots or future operation IDs"
   const container = document.createElement("div");
   document.body.append(container);
   const root = createRoot(container);
-  let current: ReturnType<typeof useDocumentEditor> | undefined;
+  let current: ReturnType<typeof useBetterEditor> | undefined;
   const ids: string[] = [];
   function View() {
-    current = useDocumentEditor({
+    current = useBetterEditor({
       editable: true,
       extensions: [],
       initialBlocks: [{ id: "p", type: "paragraph" }],
@@ -180,11 +180,11 @@ test("commit retry retains missed edits and clears the consumer error", async ()
   const container = document.createElement("div");
   document.body.append(container);
   const root = createRoot(container);
-  let current: ReturnType<typeof useDocumentEditor> | undefined;
+  let current: ReturnType<typeof useBetterEditor> | undefined;
   let attempts = 0;
   const received: unknown[] = [];
   function View() {
-    current = useDocumentEditor({
+    current = useBetterEditor({
       editable: true,
       extensions: [],
       initialBlocks: [{ id: "p", type: "paragraph" }],

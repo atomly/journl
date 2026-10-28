@@ -308,3 +308,16 @@ rendering, and input-to-paint latency. It is not a typing-latency guarantee.
 
 The earlier merged-baseline server failure remains unexplained. Its failing
 table-accessibility case and the complete browser suite passed in this run.
+
+## Consumer adoption cleanup
+
+Journl's preset now assembles the public root/content, toolbar, mark buttons,
+link menu, block/table handles, slash menu, reference views, and error component.
+`useBetterEditor` owns the lifecycle directly. Keyboard focus and Tab-navigation
+behavior live in the shared toolbar. The same link menu handles optional reference
+insertion while preserving its mapped selection.
+
+The duplicate toolbar and slash-menu implementations, old lifecycle-hook module
+and export, unused slash filter, frontend-selection marker, and mobile wrapper
+hook were removed. There are no aliases retaining those old paths. Journl's
+sticky placement and spacing target the shared toolbar's mode attribute.

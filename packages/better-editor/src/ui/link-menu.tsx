@@ -1,9 +1,11 @@
 "use client";
 
+import { Button } from "@acme/ui/button";
+import { Input } from "@acme/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@acme/ui/popover";
 import { Toolbar } from "@base-ui/react/toolbar";
 import type { Editor } from "@tiptap/core";
-import type { SelectionBookmark } from "@tiptap/pm/state";
+import { type SelectionBookmark, TextSelection } from "@tiptap/pm/state";
 import {
   type ComponentProps,
   type ReactElement,
@@ -16,12 +18,15 @@ import { captureLink } from "../engine/references";
 import { safeEditorUrl } from "../engine/schema";
 import { restoreEditorFocus } from "./controls";
 import { useEditorInstance, useEditorSelector } from "./editor-root";
+import type { InsertReference } from "./reference-display";
 
 export type LinkMenuProps = {
   editor?: Editor;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
   label?: string;
+  inputLabel?: string;
+  insertReference?: InsertReference;
   renderTrigger?: ReactElement;
   contentProps?: ComponentProps<typeof PopoverContent>;
 };
@@ -32,6 +37,8 @@ export function LinkMenu({
   open: controlled,
   onOpenChange,
   label = "Insert link",
+  inputLabel = "Link URL",
+  insertReference,
   renderTrigger,
   contentProps,
 }: LinkMenuProps) {
@@ -99,6 +106,7 @@ export function LinkMenu({
         finalFocus={() => restoreEditorFocus(editor)}
       >
         <form
+          className="flex flex-col gap-2"
           onSubmit={(event) => {
             event.preventDefault();
             const href = safeEditorUrl(url);
@@ -131,17 +139,52 @@ export function LinkMenu({
             }
           }}
         >
-          <label>
-            Link URL
-            <input
-              aria-label="Link URL"
+          <label htmlFor={`link-${editor.instanceId}`}>
+            Link to a note or URL
+            <Input
+              id={`link-${editor.instanceId}`}
+              aria-label={inputLabel}
               type="text"
               value={url}
               onChange={(event) => setUrl(event.target.value)}
               required
             />
           </label>
-          <button type="submit">Apply link</button>
+          <Button type="submit" size="sm">
+            Apply link
+          </Button>
+          {insertReference && (
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              disabled={!safeEditorUrl(url)}
+              onClick={() => {
+                if (!editor.isEditable || !valid.current || !bookmark.current)
+                  return;
+                const selection = bookmark.current.resolve(editor.state.doc);
+                const captured = editor.state.apply(
+                  editor.state.tr.setSelection(selection),
+                );
+                const existing = captureLink(captured);
+                editor.view.dispatch(
+                  editor.state.tr.setSelection(
+                    existing
+                      ? TextSelection.create(
+                          editor.state.doc,
+                          existing.from,
+                          existing.to,
+                        )
+                      : selection,
+                  ),
+                );
+                insertReference(url, existing?.label, "contentReference");
+                change(false);
+              }}
+            >
+              Insert mention
+            </Button>
+          )}
         </form>
       </PopoverContent>
     </Popover>

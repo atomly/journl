@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { act } from "react";
 import { createRoot } from "react-dom/client";
-import { expect, test } from "vitest";
+import { expect, test, vi } from "vitest";
 import type { SlashMenuItem } from "../engine/slash-items";
 import { slashKey } from "../engine/suggestions";
 import { EditorContent } from "./editor-content";
@@ -217,5 +217,53 @@ test("minimal content does not capture slash keys without a mounted command menu
   } finally {
     await act(async () => root.unmount());
     container.remove();
+  }
+});
+
+test("Alt+F10 focuses an already visible toolbar", async () => {
+  vi.stubGlobal("requestAnimationFrame", (callback: FrameRequestCallback) =>
+    setTimeout(() => callback(0), 0),
+  );
+  vi.stubGlobal("cancelAnimationFrame", clearTimeout);
+  const container = document.createElement("div");
+  document.body.append(container);
+  const root = createRoot(container);
+  let controller: ReturnType<typeof useBetterEditor> | undefined;
+  function View() {
+    controller = useBetterEditor({
+      editable: true,
+      initialBlocks: [{ id: "p", type: "paragraph" }],
+    });
+    return (
+      <EditorRoot editor={controller.editor}>
+        <EditorContent />
+        <EditorToolbar visibility="always">
+          <BoldButton>Bold</BoldButton>
+        </EditorToolbar>
+      </EditorRoot>
+    );
+  }
+  try {
+    await act(async () => root.render(<View />));
+    await act(async () => {
+      controller?.editor?.view.focus();
+      controller?.editor?.view.dom.dispatchEvent(
+        new KeyboardEvent("keydown", {
+          altKey: true,
+          bubbles: true,
+          key: "F10",
+        }),
+      );
+    });
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 10));
+    });
+    expect(document.activeElement).toBe(
+      container.querySelector("[data-better-editor-toolbar-mode] button"),
+    );
+  } finally {
+    await act(async () => root.unmount());
+    container.remove();
+    vi.unstubAllGlobals();
   }
 });

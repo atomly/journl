@@ -47,7 +47,11 @@ for (const theme of ["light", "dark"]) {
           `[data-better-editor-body="heading"][data-heading-level="${index + 1}"]`,
         )
         .first();
-      await expect(heading).toHaveCSS("font-size", `${size}px`);
+      expect(
+        await heading.evaluate((node) =>
+          Number.parseFloat(getComputedStyle(node).fontSize),
+        ),
+      ).toBeCloseTo(size, 3);
       await expect(heading).toHaveCSS("font-weight", "700");
     }
     await expect(

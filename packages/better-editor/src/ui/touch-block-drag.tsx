@@ -10,9 +10,30 @@ import type { Editor } from "@tiptap/core";
 import { closeHistory } from "@tiptap/pm/history";
 import { NodeSelection } from "@tiptap/pm/state";
 import { type ReactNode, useEffect, useRef, useState } from "react";
-import { createPortal } from "react-dom";
+import { createPortal, flushSync } from "react-dom";
 import { editBlocks, selectedBlock, selectedBlocks } from "../engine/commands";
 import { blockAt } from "../engine/identity";
+
+export const BLOCK_DRAG_DISTANCE = 6;
+
+// dnd-kit 6.3.1 can lose a quick release or let the next tap inherit an old
+// activation. Commit public lifecycle callbacks atomically; keep sensor behavior.
+class ImmediateTouchSensor extends TouchSensor {
+  constructor(props: ConstructorParameters<typeof TouchSensor>[0]) {
+    super({
+      ...props,
+      onCancel: () =>
+        flushSync(() => {
+          props.onCancel();
+        }),
+      onEnd: () =>
+        flushSync(() => {
+          props.onEnd();
+        }),
+      onStart: (coordinates) => flushSync(() => props.onStart(coordinates)),
+    });
+  }
+}
 
 type Drop = {
   parentId: string | null;
@@ -128,8 +149,8 @@ export function TouchBlockDrag({
   const [drop, setDrop] = useState<Drop | null>(null);
   useEffect(() => () => stopTracking.current?.(), []);
   const sensors = useSensors(
-    useSensor(TouchSensor, {
-      activationConstraint: { distance: 6 },
+    useSensor(ImmediateTouchSensor, {
+      activationConstraint: { distance: BLOCK_DRAG_DISTANCE },
       onActivation({ event }) {
         stopTracking.current?.();
         const start = (event as TouchEvent).touches[0];
@@ -192,6 +213,7 @@ export function TouchBlockDrag({
         onActiveChange(true);
         select();
         ids.current = selectedBlocks(editor.state).map((block) => block.id);
+        setDrop(resolve());
       }}
       onDragMove={() => setDrop(resolve())}
       onDragCancel={() => {

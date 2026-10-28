@@ -41,7 +41,12 @@ import {
   tableContext,
 } from "../engine/table-actions";
 import { removeSelectedBlock } from "../engine/writing";
-import { EditorHint, EditorMenuItem, restoreEditorFocus } from "./controls";
+import {
+  EditorHint,
+  EditorMenuItem,
+  isPointerClick,
+  restoreEditorFocus,
+} from "./controls";
 import { TableMenuItems } from "./table-controls";
 import { revealTableColumn } from "./table-reveal";
 import { useTiptapState } from "./writing-controls";
@@ -479,24 +484,50 @@ function TableAxisHandle({
   onDragStart: () => void;
   onDragEnd: () => void;
 }) {
+  const dragging = useRef(false);
+  const consumedClick = useRef(false);
+  const dragClosedMenu = useRef(false);
   const { refs, floatingStyles, clipped } = useTablePosition(
     active.element,
     cell,
     axis === "row" ? "right" : "top",
   );
   return (
-    <DropdownMenu modal={false} open={open} onOpenChange={onOpenChange}>
+    <DropdownMenu
+      modal={false}
+      open={open}
+      onOpenChange={(value, details) => {
+        if (value && (dragging.current || consumedClick.current)) {
+          details.cancel();
+          return;
+        }
+        if (value) dragClosedMenu.current = false;
+        onOpenChange(value);
+      }}
+    >
       <DropdownMenuTrigger
         asChild
+        onPointerDown={(event) => {
+          event.preventBaseUIHandler();
+          if (!dragging.current) consumedClick.current = false;
+        }}
+        onKeyDown={() => {
+          if (!dragging.current) consumedClick.current = false;
+        }}
         onMouseDown={(event) => event.preventBaseUIHandler()}
         onClick={(event) => {
           event.preventBaseUIHandler();
+          if (
+            dragging.current ||
+            (consumedClick.current && isPointerClick(event))
+          )
+            return;
+          if (!isPointerClick(event)) consumedClick.current = false;
+          dragClosedMenu.current = false;
           onOpenChange(!open);
         }}
       >
-        <EditorHint
-          label={`Select ${axis}${draggable ? " · Drag to move" : ""} · Click for actions`}
-        >
+        <EditorHint label={axis === "row" ? "Row actions" : "Column actions"}>
           <Button
             ref={refs.setFloating}
             aria-label={`${axis === "row" ? "Row" : "Column"} actions`}
@@ -521,6 +552,9 @@ function TableAxisHandle({
                 editor.view.dispatch(editor.state.tr.setSelection(selection));
             }}
             onDragStart={(event) => {
+              dragging.current = true;
+              consumedClick.current = true;
+              dragClosedMenu.current = true;
               event.dataTransfer.setData(
                 "application/x-better-editor-table-axis",
                 axis,
@@ -528,7 +562,10 @@ function TableAxisHandle({
               event.dataTransfer.effectAllowed = "move";
               onDragStart();
             }}
-            onDragEnd={onDragEnd}
+            onDragEnd={() => {
+              dragging.current = false;
+              onDragEnd();
+            }}
           >
             {axis === "row" ? <GripVertical /> : <GripHorizontal />}
           </Button>
@@ -538,7 +575,7 @@ function TableAxisHandle({
         data-tiptap-controls=""
         data-tiptap-owner={editor.instanceId}
         finalFocus={() => {
-          return restoreEditorFocus(editor);
+          return dragClosedMenu.current ? false : restoreEditorFocus(editor);
         }}
       >
         <TableMenuItems editor={editor} axis={axis} />
@@ -635,18 +672,26 @@ function TableExtendRail({
       )
         end();
     };
+    const cancelWithAnotherPointer = (event: PointerEvent) => {
+      const current = gesture.current;
+      if (current && event.pointerId !== current.pointerId) end(true);
+    };
+    document.addEventListener("pointerdown", cancelWithAnotherPointer, true);
     document.addEventListener("keydown", cancelWithEscape, true);
     editor.on("transaction", transaction);
     return () => {
+      document.removeEventListener(
+        "pointerdown",
+        cancelWithAnotherPointer,
+        true,
+      );
       document.removeEventListener("keydown", cancelWithEscape, true);
       editor.off("transaction", transaction);
       end();
     };
   }, [editor, end, extending]);
   return (
-    <EditorHint
-      label={`Add a ${axis} · Drag to add or remove empty ${axis === "row" ? "rows" : "columns"}`}
-    >
+    <EditorHint label={axis === "row" ? "Add row" : "Add column"}>
       <Button
         ref={refs.setFloating}
         aria-label={axis === "row" ? "Add row" : "Add column"}
@@ -659,10 +704,16 @@ function TableExtendRail({
         }}
         onPointerDown={(event) => {
           if (event.button !== 0) return;
-          event.preventDefault();
-          event.currentTarget.setPointerCapture(event.pointerId);
+          const current = gesture.current;
+          if (!event.isPrimary || current) {
+            event.preventDefault();
+            if (current && event.pointerId !== current.pointerId) end(true);
+            return;
+          }
           const context = tableContext(editor.state, active.id);
           if (!context) return;
+          event.preventDefault();
+          event.currentTarget.setPointerCapture(event.pointerId);
           const count = axis === "row" ? context.map.height : context.map.width;
           editor.view.dispatch(closeHistory(editor.state.tr));
           gesture.current = {
@@ -682,7 +733,7 @@ function TableExtendRail({
         }}
         onPointerMove={(event) => {
           const current = gesture.current;
-          if (!current) return;
+          if (!current || event.pointerId !== current.pointerId) return;
           const delta =
             (axis === "row" ? event.clientY : event.clientX) - current.origin;
           const count = Math.max(
@@ -701,9 +752,9 @@ function TableExtendRail({
               revealTableColumn(editor, active.id, count - 1);
           }
         }}
-        onPointerUp={() => {
+        onPointerUp={(event) => {
           const current = gesture.current;
-          if (!current) return;
+          if (!current || event.pointerId !== current.pointerId) return;
           if (!current.changed) {
             const tr = resizeTableAxis(
               editor.state,
@@ -723,10 +774,14 @@ function TableExtendRail({
           }
           end();
         }}
-        onPointerCancel={() => end(true)}
-        onLostPointerCapture={() => end(true)}
+        onPointerCancel={(event) => {
+          if (event.pointerId === gesture.current?.pointerId) end(true);
+        }}
+        onLostPointerCapture={(event) => {
+          if (event.pointerId === gesture.current?.pointerId) end(true);
+        }}
         onClick={(event) => {
-          if (event.detail === 0) {
+          if (!isPointerClick(event)) {
             const context = tableContext(editor.state, active.id);
             if (context) {
               const count =

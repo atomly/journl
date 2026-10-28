@@ -17,12 +17,13 @@ test.beforeEach(async ({ page }) => {
 
 async function finger(
   session: CDPSession,
-  type: "touchStart" | "touchMove" | "touchEnd",
+  type: "touchStart" | "touchMove" | "touchEnd" | "touchCancel",
   x = 0,
   y = 0,
 ) {
   await session.send("Input.dispatchTouchEvent", {
-    touchPoints: type === "touchEnd" ? [] : [{ id: 1, x, y }],
+    touchPoints:
+      type === "touchEnd" || type === "touchCancel" ? [] : [{ id: 1, x, y }],
     type,
   });
 }
@@ -124,7 +125,7 @@ for (const width of [390, 1024]) {
     await page.keyboard.insertText("!");
     await expect(
       page.getByRole("button", { exact: true, name: "Add block" }),
-    ).toBeVisible();
+    ).toHaveCount(0);
     await page.keyboard.press("Backspace");
     await page.setViewportSize({ height: 520, width });
     await expect(
@@ -221,6 +222,10 @@ for (const width of [390, 1024]) {
     await page.waitForTimeout(75);
     await handle.dispatchEvent("click", { detail: 1 });
     await expect(duplicate).toBeHidden();
+    // Click-only assistive activation is a new action, not a drag's trailing click.
+    await handle.evaluate((element) => (element as HTMLButtonElement).click());
+    await expect(duplicate).toBeVisible();
+    await page.keyboard.press("Escape");
     await expect(rows).toHaveCount(3);
     await editor.focus();
     await page.keyboard.press("ControlOrMeta+z");
@@ -381,4 +386,105 @@ test("touch auto-scroll keeps the destination under the finger and preserves eve
         nodes.map((node) => node.getAttribute("data-block-id")),
       ),
   ).toEqual(moved);
+});
+
+test("a quick closed-menu drag and cancellation leave no popup or stuck handle", async ({
+  page,
+  context,
+}, info) => {
+  test.skip(
+    info.project.name !== "desktop-chromium",
+    "CDP trusted touch input",
+  );
+  await page.setViewportSize({ height: 720, width: 390 });
+  const editor = page.locator(".better-editor-tiptap");
+  await expect(page.locator(".bn-editor")).toHaveCount(0);
+  await editor.fill("Alpha");
+  for (const text of ["Beta", "Gamma"]) {
+    await page.keyboard.press("Enter");
+    await page.keyboard.insertText(text);
+  }
+  const rows = editor.locator('[data-better-editor-body="paragraph"]');
+  const ids = await editor
+    .locator("[data-block-id]")
+    .evaluateAll((nodes) =>
+      nodes.map((node) => node.getAttribute("data-block-id")),
+    );
+  const session = await context.newCDPSession(page);
+  await session.send("Emulation.setTouchEmulationEnabled", {
+    enabled: true,
+    maxTouchPoints: 1,
+  });
+  const source = await rows.first().boundingBox();
+  if (!source) throw new Error("Missing source");
+  await finger(session, "touchStart", source.x + 20, source.y + 12);
+  await finger(session, "touchEnd");
+  const handle = page.getByRole("button", {
+    exact: true,
+    name: "Block actions",
+  });
+  await handle.scrollIntoViewIfNeeded();
+  let grip = await handle.boundingBox();
+  const last = await rows.last().boundingBox();
+  if (!grip || !last) throw new Error("Missing drag geometry");
+  await expect(
+    page.getByRole("menuitem", { exact: true, name: "Duplicate block" }),
+  ).toHaveCount(0);
+  await finger(
+    session,
+    "touchStart",
+    grip.x + grip.width / 2,
+    grip.y + grip.height / 2,
+  );
+  // One delivered move, immediate release: no activation/frame/guide wait.
+  await finger(session, "touchMove", last.x + 30, last.y + last.height - 2);
+  await finger(session, "touchEnd");
+  await expect(rows).toHaveText(["Beta", "Gamma", "Alpha"]);
+  await expect(
+    page.getByRole("menuitem", { exact: true, name: "Duplicate block" }),
+  ).toHaveCount(0);
+  expect(
+    await editor
+      .locator("[data-block-id]")
+      .evaluateAll((nodes) =>
+        nodes.map((node) => node.getAttribute("data-block-id")),
+      ),
+  ).toEqual([ids[1], ids[2], ids[0]]);
+  await editor.focus();
+  await page.keyboard.press("ControlOrMeta+z");
+  await expect(rows).toHaveText(["Alpha", "Beta", "Gamma"]);
+  await handle.scrollIntoViewIfNeeded();
+  grip = await handle.boundingBox();
+  if (!grip) throw new Error("Missing cancellation grip");
+  const x = grip.x + grip.width / 2;
+  const y = grip.y + grip.height / 2;
+  await finger(session, "touchStart", x, y);
+  await finger(session, "touchMove", x + 16, y + 16);
+  await finger(session, "touchCancel");
+  await expect(rows).toHaveText(["Alpha", "Beta", "Gamma"]);
+  await expect(handle).not.toHaveAttribute("aria-pressed", "true");
+  await handle.scrollIntoViewIfNeeded();
+  grip = await handle.boundingBox();
+  if (!grip) throw new Error("Missing menu grip after cancellation");
+  await finger(
+    session,
+    "touchStart",
+    grip.x + grip.width / 2,
+    grip.y + grip.height / 2,
+  );
+  await finger(session, "touchEnd");
+  await expect(
+    page.getByRole("menuitem", { exact: true, name: "Duplicate block" }),
+  ).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(page.locator("[data-save-status]")).toContainText("Saved");
+  await page.reload();
+  await expect(rows).toHaveText(["Alpha", "Beta", "Gamma"]);
+  expect(
+    await editor
+      .locator("[data-block-id]")
+      .evaluateAll((nodes) =>
+        nodes.map((node) => node.getAttribute("data-block-id")),
+      ),
+  ).toEqual(ids);
 });

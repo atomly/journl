@@ -412,8 +412,12 @@
   pointer-events: none;
 }
 
-.better-editor-side-menu[data-touch="true"] {
-  flex-direction: column;
+/* A single 44px touch handle fits in the leading gutter. Give the remaining
+   space back to writing instead of reserving room for the desktop Add button. */
+@media (max-width: 767px), (pointer: coarse) {
+  .better-editor-tiptap {
+    padding-inline: 54px 16px;
+  }
 }
 .better-editor-side-menu[data-touch="true"] button {
   width: 44px;

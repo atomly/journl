@@ -44,12 +44,22 @@ test("added columns reveal themselves without moving the document vertically", a
   };
   for (let count = 3; count < 8; count++) {
     const last = editor.locator("td").last();
-    await last.hover({ position: { x: 2, y: 2 } });
-    await last.hover();
+    if (info.project.name === "mobile-webkit") await last.tap();
+    else {
+      await last.hover({ position: { x: 2, y: 2 } });
+      await last.hover();
+    }
     const add = page.getByRole("button", { exact: true, name: "Add column" });
     if (info.project.name === "mobile-webkit") await add.tap();
     else await add.click();
     await expect(cells).toHaveCount(count + 1);
+    await visibleColumn(count);
+    await page.evaluate(
+      () =>
+        new Promise<void>((resolve) =>
+          requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+        ),
+    );
     await visibleColumn(count);
   }
   await expect
@@ -57,15 +67,21 @@ test("added columns reveal themselves without moving the document vertically", a
     .toBeGreaterThan(0);
   await expect.poll(vertical).toEqual(initial);
   const last = editor.locator("td").last();
-  await last.hover({ position: { x: 2, y: 2 } });
-  await last.hover();
+  if (info.project.name === "mobile-webkit") await last.tap();
+  else {
+    await last.hover({ position: { x: 2, y: 2 } });
+    await last.hover();
+  }
   const add = page.getByRole("button", { exact: true, name: "Add column" });
   await add.focus();
   await page.keyboard.press("Enter");
   await expect(cells).toHaveCount(9);
   await visibleColumn(8);
-  await cells.first().hover({ position: { x: 2, y: 2 } });
-  await cells.first().hover();
+  if (info.project.name === "mobile-webkit") await cells.first().tap();
+  else {
+    await cells.first().hover({ position: { x: 2, y: 2 } });
+    await cells.first().hover();
+  }
   await page
     .getByRole("button", { exact: true, name: "Column actions" })
     .click();

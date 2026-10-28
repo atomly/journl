@@ -64,17 +64,13 @@ function EditorView({
   const handlesVisible = useHandleVisibility(editor);
   return (
     <section
-      className={cn("better-editor-editor-shell min-w-0", className)}
+      className={cn(
+        "better-editor-editor-shell min-w-0",
+        onCommit && "flex flex-col",
+        className,
+      )}
       data-editor-frontend="tiptap"
     >
-      {onCommit && editor && !error && (
-        <TiptapToolbar
-          editor={editor}
-          insertReference={(url, label, display) => {
-            insertTiptapReference(editor.view, url, resolveUrl, label, display);
-          }}
-        />
-      )}
       {children}
       {error && (
         <p role="alert" className="px-8 text-destructive">
@@ -86,6 +82,14 @@ function EditorView({
         editor={editor ?? null}
         className="better-editor-tiptap-host"
       />
+      {onCommit && editor && !error && (
+        <TiptapToolbar
+          editor={editor}
+          insertReference={(url, label, display) => {
+            insertTiptapReference(editor.view, url, resolveUrl, label, display);
+          }}
+        />
+      )}
       <TiptapReferenceViews store={referenceViews} />
       {onCommit && !error && (
         <>

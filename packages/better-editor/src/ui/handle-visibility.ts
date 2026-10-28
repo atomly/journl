@@ -1,9 +1,12 @@
+import { useIsMobile } from "@acme/ui/use-mobile";
 import type { Editor } from "@tiptap/core";
+import type { Transaction } from "@tiptap/pm/state";
 import { useEffect, useState } from "react";
 
-/** Mouse hover is passive; touch and focused controls are explicit editor
- * interactions. Scrolling repositions controls, never substitutes for editing. */
+/** Desktop controls hide during typing and return on editor interaction.
+ * Mobile/touch controls stay visible; layout still clips offscreen targets. */
 export function useHandleVisibility(editor: Editor | undefined) {
+  const mobile = useIsMobile();
   const [visible, setVisible] = useState(true);
   useEffect(() => {
     if (!editor?.isEditable) return;
@@ -11,76 +14,58 @@ export function useHandleVisibility(editor: Editor | undefined) {
     let pointerType = window.matchMedia?.("(pointer: coarse)").matches
       ? "touch"
       : "mouse";
-    let pointer: { x: number; y: number } | undefined;
-    let overControls = false;
     const ownControls = (target: EventTarget | null) =>
       target instanceof Element &&
       target
         .closest("[data-tiptap-controls][data-tiptap-owner]")
         ?.getAttribute("data-tiptap-owner") === String(editor.instanceId);
-    const hide = () => setVisible(false);
+    const inside = (target: EventTarget | null) =>
+      ownControls(target) || (target instanceof Node && root.contains(target));
+    const show = () => {
+      if (!editor.view.composing) setVisible(true);
+    };
+    const hide = () => {
+      if (!mobile && pointerType !== "touch") setVisible(false);
+    };
     const edit = () => {
-      if (pointerType !== "touch" && !ownControls(document.activeElement)) {
-        overControls = false;
-        hide();
-      }
+      if (!ownControls(document.activeElement)) hide();
     };
-    const scroll = () => {
-      if (
-        pointerType !== "touch" &&
-        !overControls &&
-        !ownControls(document.activeElement)
-      )
-        hide();
-    };
-    const move = (event: PointerEvent) => {
+    const pointer = (event: PointerEvent) => {
       pointerType = event.pointerType;
-      if (pointerType === "touch") return;
-      overControls = ownControls(event.target);
-      const next = { x: event.clientX, y: event.clientY };
-      if (!pointer || Math.hypot(next.x - pointer.x, next.y - pointer.y) >= 4) {
-        pointer = next;
-        if (!editor.view.composing) setVisible(true);
-      }
-    };
-    const down = (event: PointerEvent) => {
-      pointerType = event.pointerType;
-      overControls = ownControls(event.target);
-      if (
-        overControls ||
-        (event.target instanceof Node && root.contains(event.target))
-      ) {
-        if (!editor.view.composing) setVisible(true);
-      } else hide();
+      if (inside(event.target)) show();
+      else if (event.type === "pointerdown") hide();
     };
     const focus = (event: FocusEvent) => {
-      if (ownControls(event.target)) setVisible(true);
-      else if (event.target instanceof Node && !root.contains(event.target))
-        hide();
+      if (inside(event.target)) show();
+      else hide();
     };
     const blur = ({ event }: { event: FocusEvent }) => {
-      if (ownControls(event.relatedTarget)) return;
-      // Mobile keyboard/viewport transitions can blur with no new focus target.
-      // An explicit outside pointer/focus interaction still dismisses controls.
-      if (pointerType === "touch" && event.relatedTarget === null) return;
-      hide();
+      if (!ownControls(event.relatedTarget)) hide();
     };
+    const selection = ({ transaction }: { transaction: Transaction }) => {
+      // Typing also moves the caret; only navigation revives desktop controls.
+      if (!transaction.docChanged) show();
+    };
+    if (mobile || pointerType === "touch") setVisible(true);
     const inputs = ["beforeinput", "paste", "compositionstart"];
-    for (const event of inputs) document.addEventListener(event, edit, true);
+    for (const event of inputs) root.addEventListener(event, edit, true);
+    root.addEventListener("keydown", show);
+    editor.on("focus", show);
     editor.on("blur", blur);
-    document.addEventListener("pointerdown", down, true);
-    document.addEventListener("pointermove", move);
+    editor.on("selectionUpdate", selection);
+    document.addEventListener("pointerdown", pointer, true);
+    document.addEventListener("pointermove", pointer);
     document.addEventListener("focusin", focus);
-    window.addEventListener("scroll", scroll, true);
     return () => {
-      for (const event of inputs)
-        document.removeEventListener(event, edit, true);
+      for (const event of inputs) root.removeEventListener(event, edit, true);
+      root.removeEventListener("keydown", show);
+      editor.off("focus", show);
       editor.off("blur", blur);
-      document.removeEventListener("pointerdown", down, true);
-      document.removeEventListener("pointermove", move);
+      editor.off("selectionUpdate", selection);
+      document.removeEventListener("pointerdown", pointer, true);
+      document.removeEventListener("pointermove", pointer);
       document.removeEventListener("focusin", focus);
-      window.removeEventListener("scroll", scroll, true);
     };
-  }, [editor]);
-  return visible;
+  }, [editor, mobile]);
+  return mobile || visible;
 }

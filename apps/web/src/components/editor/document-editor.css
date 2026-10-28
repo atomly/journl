@@ -5,6 +5,8 @@
 }
 
 .journl-document-editor .better-editor-mobile-toolbar {
+  /* Keep the toolbar visually above writing, after it in keyboard order. */
+  order: -1;
   position: sticky;
   z-index: 40;
   top: calc(

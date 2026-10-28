@@ -129,7 +129,7 @@ test("converting a journal entry keeps its block identity and leaves an expandab
   await page.goto(`/journal/${date}`);
   await expect(
     editor.locator(".content-reference-card-heading a"),
-  ).toHaveAttribute("href", pagePath);
+  ).toHaveJSProperty("href", new URL(pagePath, page.url()).href);
   await page
     .getByRole("button", { exact: true, name: "Reference actions" })
     .click();

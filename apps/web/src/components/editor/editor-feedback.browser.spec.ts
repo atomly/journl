@@ -27,7 +27,9 @@ test("selected lists convert together, typing dismisses handles and plain copy k
   const rows = editor.locator('[data-openeditor-body="bulletListItem"]');
   await expect(rows).toHaveCount(2);
   await editor.evaluate(async (root) => {
-    const rows = root.querySelectorAll('[data-openeditor-body="bulletListItem"]');
+    const rows = root.querySelectorAll(
+      '[data-openeditor-body="bulletListItem"]',
+    );
     const first = rows[0]?.firstChild;
     const last = rows[1]?.firstChild;
     if (!first || !last) throw new Error("Missing selected list fixture");
@@ -97,7 +99,9 @@ test("converting a journal entry keeps its block identity and leaves an expandab
   await editor.press("Tab");
   await expect(paragraphs.first()).toHaveText("Entry to move");
   await expect(
-    editor.locator('[data-openeditor-children] [data-openeditor-body="paragraph"]'),
+    editor.locator(
+      '[data-openeditor-children] [data-openeditor-body="paragraph"]',
+    ),
   ).toHaveText("Nested writing");
   await expect(page.locator("[data-save-status]")).toContainText("Saved");
   const ids = await editor

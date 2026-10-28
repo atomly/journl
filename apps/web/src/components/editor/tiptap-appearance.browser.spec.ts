@@ -62,7 +62,10 @@ for (const theme of ["light", "dark"]) {
           await expect(toolbar).toHaveCSS("flex-wrap", "nowrap");
           expect((await toolbar.boundingBox())?.height).toBeLessThan(50);
         }
-        await editor.locator('[data-openeditor-body="paragraph"]').first().hover();
+        await editor
+          .locator('[data-openeditor-body="paragraph"]')
+          .first()
+          .hover();
         await expect(
           page.getByRole("button", { exact: true, name: "Block actions" }),
         ).toBeVisible();

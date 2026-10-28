@@ -143,7 +143,9 @@ test("keyboard users can reach controls, return to their selection, and leave ed
   await page.keyboard.press("Control+m");
   await page.keyboard.press("Tab");
   await expect(
-    editor.locator('[data-openeditor-children] [data-openeditor-body="paragraph"]'),
+    editor.locator(
+      '[data-openeditor-children] [data-openeditor-body="paragraph"]',
+    ),
   ).toHaveText("Beta");
   await page.keyboard.press("Shift+Tab");
   await expect(editor.locator("[data-openeditor-children]")).toHaveCount(0);
@@ -169,7 +171,9 @@ test("context actions target the clicked block and tolerate its concurrent remov
     .dispatchEvent("contextmenu", { button: 2, clientX: 450, clientY: 330 });
   await menuAction(page, "Indent");
   await expect(
-    editor.locator('[data-openeditor-children] [data-openeditor-body="paragraph"]'),
+    editor.locator(
+      '[data-openeditor-children] [data-openeditor-body="paragraph"]',
+    ),
   ).toHaveText("Beta");
   await page.keyboard.press("Shift+Tab");
   await page.keyboard.press("ArrowRight");
@@ -262,7 +266,11 @@ test("table formatting, headers, movement and widths work through accessible con
       ).toHaveAttribute("href", href);
   }
   await expect(
-    rows.first().locator("td").nth(2).locator("a,strong,[data-openeditor-style]"),
+    rows
+      .first()
+      .locator("td")
+      .nth(2)
+      .locator("a,strong,[data-openeditor-style]"),
   ).toHaveCount(0);
   await rows.first().locator("td").first().click();
   await openMore(page);

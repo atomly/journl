@@ -29,13 +29,15 @@ test("the actual page route loads every inventory block through the Tiptap switc
     documentRows(parityBlocks).blocks.map((block) => block.id),
   );
   await expect(editor.locator("table")).toHaveCount(2);
-  await expect(editor.locator('[data-openeditor-body="image"] img')).toHaveCount(1);
+  await expect(
+    editor.locator('[data-openeditor-body="image"] img'),
+  ).toHaveCount(1);
   await expect(
     editor.locator('[data-openeditor-body="referenceCard"]'),
   ).toHaveCount(2);
-  await expect(editor.locator('[data-openeditor-body="contentEmbed"]')).toHaveCount(
-    1,
-  );
+  await expect(
+    editor.locator('[data-openeditor-body="contentEmbed"]'),
+  ).toHaveCount(1);
   await page.context().addCookies([
     {
       name: "journl-editor",

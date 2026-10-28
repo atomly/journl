@@ -405,7 +405,9 @@ for (const frontend of ["blocknote", "tiptap"] as const) {
         .poll(() =>
           editor
             .locator(
-              frontend === "tiptap" ? "[data-openeditor-block]" : ".bn-block-outer",
+              frontend === "tiptap"
+                ? "[data-openeditor-block]"
+                : ".bn-block-outer",
             )
             .count(),
         )

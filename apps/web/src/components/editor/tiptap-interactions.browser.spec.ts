@@ -106,9 +106,9 @@ test("select-all text keeps formatting controls available and saves their change
   await expect(colors).toBeEnabled();
   await colors.click();
   await page.getByRole("button", { exact: true, name: "Text purple" }).click();
-  await expect(editor.locator('[style*="--openeditor-text-purple"]')).toHaveCount(
-    2,
-  );
+  await expect(
+    editor.locator('[style*="--openeditor-text-purple"]'),
+  ).toHaveCount(2);
   await page.keyboard.press("ControlOrMeta+a");
   await page.getByRole("button", { exact: true, name: "Bold" }).click();
   await expect(editor.locator("strong")).toHaveText([
@@ -121,9 +121,9 @@ test("select-all text keeps formatting controls available and saves their change
     "First paragraph",
     "Second paragraph",
   ]);
-  await expect(editor.locator('[style*="--openeditor-text-purple"]')).toHaveCount(
-    2,
-  );
+  await expect(
+    editor.locator('[style*="--openeditor-text-purple"]'),
+  ).toHaveCount(2);
 });
 
 test("tables are discoverable and row/column edits save on the actual route", async ({

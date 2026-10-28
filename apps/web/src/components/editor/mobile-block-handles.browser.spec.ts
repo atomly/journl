@@ -80,7 +80,9 @@ test("mobile block handles follow taps and move nested blocks with stable identi
   );
   await handle.tap();
   await page.getByRole("menuitem", { exact: true, name: "Indent" }).click();
-  await expect(editor.locator("[data-openeditor-children]")).toContainText("Beta");
+  await expect(editor.locator("[data-openeditor-children]")).toContainText(
+    "Beta",
+  );
   await beta.tap();
   const start = await handle.boundingBox();
   const end = await editor
@@ -110,10 +112,14 @@ test("mobile block handles follow taps and move nested blocks with stable identi
   ).toBe(id);
   await beta.tap();
   await page.keyboard.press("ControlOrMeta+z");
-  await expect(editor.locator("[data-openeditor-children]")).toContainText("Beta");
+  await expect(editor.locator("[data-openeditor-children]")).toContainText(
+    "Beta",
+  );
   await expect(page.locator("[data-save-status]")).toContainText("Saved", {
     timeout: 60000,
   });
   await page.reload();
-  await expect(editor.locator("[data-openeditor-children]")).toContainText("Beta");
+  await expect(editor.locator("[data-openeditor-children]")).toContainText(
+    "Beta",
+  );
 });

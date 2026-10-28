@@ -64,7 +64,7 @@ function EditorView({
   const handlesVisible = useHandleVisibility(editor);
   return (
     <section
-      className={cn("journl-editor-shell min-w-0", className)}
+      className={cn("openeditor-editor-shell min-w-0", className)}
       data-editor-frontend="tiptap"
     >
       {onCommit && editor && !error && (
@@ -85,7 +85,7 @@ function EditorView({
       <EditorContent
         ref={host}
         editor={editor ?? null}
-        className="journl-tiptap-host"
+        className="openeditor-tiptap-host"
       />
       <TiptapReferenceViews store={referenceViews} />
       {onCommit && !error && (

@@ -268,7 +268,7 @@ test("checkboxes commit once; collapsed state does not enter the document or cli
         ?.getAttribute("data-collapsed"),
     ).toBe("true");
     expect(blocks()).toEqual(before);
-    expect(editor.getHTML()).not.toContain("data-journl-block-controls");
+    expect(editor.getHTML()).not.toContain("data-openeditor-block-controls");
     expect(editor.getHTML()).toContain("Hidden writing");
   } finally {
     editor.destroy();

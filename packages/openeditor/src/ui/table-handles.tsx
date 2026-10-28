@@ -149,7 +149,7 @@ export function TiptapTableHandles({
         if (
           table &&
           id &&
-          table.closest(".journl-tiptap") === editor.view.dom
+          table.closest(".openeditor-tiptap") === editor.view.dom
         ) {
           const context = tableContext(editor.state, id);
           const cell = target.closest("td,th");
@@ -499,7 +499,7 @@ function TableAxisHandle({
             size="icon-sm"
             data-table-handle={axis}
             data-table-index={index}
-            className="journl-table-handle"
+            className="openeditor-table-handle"
             style={{
               ...floatingStyles,
               visibility: hidden || clipped ? "hidden" : undefined,
@@ -517,7 +517,7 @@ function TableAxisHandle({
             }}
             onDragStart={(event) => {
               event.dataTransfer.setData(
-                "application/x-journl-table-axis",
+                "application/x-openeditor-table-axis",
                 axis,
               );
               event.dataTransfer.effectAllowed = "move";
@@ -644,7 +644,7 @@ function TableExtendRail({
         ref={refs.setFloating}
         aria-label={axis === "row" ? "Add row" : "Add column"}
         variant="ghost"
-        className={`journl-table-extend journl-table-extend-${axis}`}
+        className={`openeditor-table-extend openeditor-table-extend-${axis}`}
         data-table-extend={axis}
         style={{
           ...floatingStyles,
@@ -769,5 +769,5 @@ function TableDropIndicator({
           top: table.top,
           width: 2,
         };
-  return <div className="journl-table-drop-indicator" style={style} />;
+  return <div className="openeditor-table-drop-indicator" style={style} />;
 }

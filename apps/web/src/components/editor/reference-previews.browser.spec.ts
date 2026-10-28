@@ -19,7 +19,7 @@ test("saved external previews keep source presentation and navigation in both ed
   await create.click();
   await expect(page).not.toHaveURL(previous);
   await page.keyboard.press("Escape");
-  const editor = page.locator(".journl-tiptap");
+  const editor = page.locator(".openeditor-tiptap");
   await editor.fill("Preview acceptance");
   await page.keyboard.press("Enter");
   const urls = [
@@ -56,7 +56,7 @@ test("saved external previews keep source presentation and navigation in both ed
   for (const frontend of ["tiptap", "blocknote"]) {
     const cards = page.locator(
       frontend === "tiptap"
-        ? ".journl-tiptap .content-reference-card"
+        ? ".openeditor-tiptap .content-reference-card"
         : ".bn-editor .content-reference-card",
     );
     await expect(cards).toHaveCount(3);

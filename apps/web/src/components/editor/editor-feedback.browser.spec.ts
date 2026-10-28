@@ -20,14 +20,14 @@ test("selected lists convert together, typing dismisses handles and plain copy k
   await page.getByRole("button", { exact: true, name: "New page" }).click();
   await expect(page).toHaveURL(/\/pages\//);
   await page.keyboard.press("Escape");
-  const editor = page.locator(".journl-tiptap");
+  const editor = page.locator(".openeditor-tiptap");
   await editor.pressSequentially("- One");
   await editor.press("Enter");
   await editor.pressSequentially("Two");
-  const rows = editor.locator('[data-journl-body="bulletListItem"]');
+  const rows = editor.locator('[data-openeditor-body="bulletListItem"]');
   await expect(rows).toHaveCount(2);
   await editor.evaluate(async (root) => {
-    const rows = root.querySelectorAll('[data-journl-body="bulletListItem"]');
+    const rows = root.querySelectorAll('[data-openeditor-body="bulletListItem"]');
     const first = rows[0]?.firstChild;
     const last = rows[1]?.firstChild;
     if (!first || !last) throw new Error("Missing selected list fixture");
@@ -48,13 +48,13 @@ test("selected lists convert together, typing dismisses handles and plain copy k
     .getByRole("option", { exact: true, name: "Numbered list" })
     .click();
   await expect(
-    editor.locator('[data-journl-body="numberedListItem"]'),
+    editor.locator('[data-openeditor-body="numberedListItem"]'),
   ).toHaveCount(2);
   await editor.press("ControlOrMeta+c");
   expect(await page.evaluate(() => navigator.clipboard.readText())).toMatch(
     /1\. One[\s\S]*2\. Two/,
   );
-  await editor.locator("[data-journl-body]").last().hover();
+  await editor.locator("[data-openeditor-body]").last().hover();
   const handle = page.getByRole("button", {
     exact: true,
     name: "Block actions",
@@ -63,7 +63,7 @@ test("selected lists convert together, typing dismisses handles and plain copy k
   await editor.press("ArrowRight");
   await editor.pressSequentially("More");
   await expect(handle).toHaveCount(0);
-  await editor.locator("[data-journl-body]").first().hover();
+  await editor.locator("[data-openeditor-body]").first().hover();
   await expect(handle).toBeVisible();
 });
 
@@ -85,9 +85,9 @@ test("converting a journal entry keeps its block identity and leaves an expandab
   // so each browser needs its own source date.
   const date = `1988-08-${info.project.name === "desktop-chromium" ? "24" : "25"}`;
   await page.goto(`/journal/${date}`);
-  const editor = page.locator(".journl-tiptap").first();
+  const editor = page.locator(".openeditor-tiptap").first();
   await editor.fill("Entry to move");
-  const paragraphs = editor.locator('[data-journl-body="paragraph"]');
+  const paragraphs = editor.locator('[data-openeditor-body="paragraph"]');
   await expect(paragraphs).toHaveCount(1);
   await expect(paragraphs.first()).toHaveText("Entry to move");
   await editor.press("Enter");
@@ -97,7 +97,7 @@ test("converting a journal entry keeps its block identity and leaves an expandab
   await editor.press("Tab");
   await expect(paragraphs.first()).toHaveText("Entry to move");
   await expect(
-    editor.locator('[data-journl-children] [data-journl-body="paragraph"]'),
+    editor.locator('[data-openeditor-children] [data-openeditor-body="paragraph"]'),
   ).toHaveText("Nested writing");
   await expect(page.locator("[data-save-status]")).toContainText("Saved");
   const ids = await editor
@@ -159,7 +159,7 @@ test("new tables accept immediate typing and typing hides controls over another 
   await page.getByRole("button", { exact: true, name: "New page" }).click();
   await expect(page).toHaveURL(/\/pages\//);
   await page.keyboard.press("Escape");
-  const editor = page.locator(".journl-tiptap");
+  const editor = page.locator(".openeditor-tiptap");
   await editor.fill("/table");
   await page.getByRole("option", { exact: true, name: "Table" }).click();
   const cells = editor.locator("td");

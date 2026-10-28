@@ -11,7 +11,7 @@ const palette = new Set([
 ]);
 export const editorColor = (value: unknown, background = false) =>
   typeof value === "string" && palette.has(value)
-    ? `var(--journl-${background ? "background" : "text"}-${value})`
+    ? `var(--openeditor-${background ? "background" : "text"}-${value})`
     : typeof value === "string" &&
         value !== "default" &&
         /^[a-zA-Z0-9#(),.% -]+$/.test(value)

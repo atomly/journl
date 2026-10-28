@@ -34,7 +34,7 @@ export function useDocumentEditor({
     try {
       const attributes: Record<string, string> = {
         "aria-label": commit.current ? "Document editor" : "Document content",
-        class: "journl-tiptap min-h-32 outline-none",
+        class: "openeditor-tiptap min-h-32 outline-none",
         role: commit.current ? "textbox" : "document",
       };
       if (commit.current) attributes["aria-multiline"] = "true";

@@ -413,7 +413,7 @@ export function TiptapToolbar({
         data-tiptap-owner={editor.instanceId}
         role="toolbar"
         aria-label="Editor controls"
-        className="journl-formatting-toolbar"
+        className="openeditor-formatting-toolbar"
         style={mobile ? undefined : { position: "fixed", ...position }}
       >
         <EditorTool
@@ -661,9 +661,9 @@ export function TiptapToolbar({
                         style={{
                           backgroundColor:
                             name === "backgroundColor"
-                              ? `var(--journl-background-${value},transparent)`
+                              ? `var(--openeditor-background-${value},transparent)`
                               : undefined,
-                          color: `var(--journl-text-${value},var(--foreground))`,
+                          color: `var(--openeditor-text-${value},var(--foreground))`,
                         }}
                         onMouseDown={(event) => event.preventDefault()}
                         onClick={() => {
@@ -723,7 +723,7 @@ export function TiptapToolbar({
     </TooltipProvider>
   );
   return mobile ? (
-    <div className="journl-mobile-toolbar">{content}</div>
+    <div className="openeditor-mobile-toolbar">{content}</div>
   ) : (
     createPortal(content, document.body)
   );

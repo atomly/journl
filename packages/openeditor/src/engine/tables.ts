@@ -120,7 +120,7 @@ export function tableExtension() {
 
 export function tableNodeView({ node }: NodeViewRendererProps) {
   const view = new TableView(node, TABLE_DEFAULT_COLUMN_WIDTH);
-  view.dom.classList.add("journl-table-wrapper");
-  view.table.dataset.journlBody = "table";
+  view.dom.classList.add("openeditor-table-wrapper");
+  view.table.dataset.openeditorBody = "table";
   return view;
 }

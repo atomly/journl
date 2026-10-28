@@ -1,53 +1,53 @@
 @import "highlight.js/styles/github-dark.css";
 
 /* Typography follows the installed skin. Named colors retain their hues with
-   accessible text/highlight contrast; stored Journl color names stay unchanged. */
+   accessible text/highlight contrast; stored color names stay unchanged. */
 :root {
-  --journl-menu-border: color-mix(
+  --openeditor-menu-border: color-mix(
     in srgb,
     var(--foreground) 24%,
     var(--background)
   );
-  --journl-text-gray: #656462;
-  --journl-background-gray: #ebeced;
-  --journl-text-brown: #64473a;
-  --journl-background-brown: #e9e5e3;
-  --journl-text-red: #b83333;
-  --journl-background-red: #fbe4e4;
-  --journl-text-orange: #9a5209;
-  --journl-background-orange: #f6e9d9;
-  --journl-text-yellow: #7d6001;
-  --journl-background-yellow: #fbf3db;
-  --journl-text-green: #4d6461;
-  --journl-background-green: #ddedea;
-  --journl-text-blue: #0b6c96;
-  --journl-background-blue: #ddebf1;
-  --journl-text-purple: #6940a5;
-  --journl-background-purple: #eae4f2;
-  --journl-text-pink: #ad1a72;
-  --journl-background-pink: #f4dfeb;
+  --openeditor-text-gray: #656462;
+  --openeditor-background-gray: #ebeced;
+  --openeditor-text-brown: #64473a;
+  --openeditor-background-brown: #e9e5e3;
+  --openeditor-text-red: #b83333;
+  --openeditor-background-red: #fbe4e4;
+  --openeditor-text-orange: #9a5209;
+  --openeditor-background-orange: #f6e9d9;
+  --openeditor-text-yellow: #7d6001;
+  --openeditor-background-yellow: #fbf3db;
+  --openeditor-text-green: #4d6461;
+  --openeditor-background-green: #ddedea;
+  --openeditor-text-blue: #0b6c96;
+  --openeditor-background-blue: #ddebf1;
+  --openeditor-text-purple: #6940a5;
+  --openeditor-background-purple: #eae4f2;
+  --openeditor-text-pink: #ad1a72;
+  --openeditor-background-pink: #f4dfeb;
 }
 .dark {
-  --journl-text-gray: #bebdb8;
-  --journl-background-gray: #2b2b2a;
-  --journl-text-brown: #ab8d7f;
-  --journl-background-brown: #1f1815;
-  --journl-text-red: #f06868;
-  --journl-background-red: #331414;
-  --journl-text-orange: #e3790d;
-  --journl-background-orange: #321e0a;
-  --journl-text-yellow: #dfab01;
-  --journl-background-yellow: #312808;
-  --journl-text-green: #7d9995;
-  --journl-background-green: #191f1e;
-  --journl-text-blue: #399dc8;
-  --journl-background-blue: #0a212b;
-  --journl-text-purple: #a681e2;
-  --journl-background-purple: #20162e;
-  --journl-text-pink: #e565b2;
-  --journl-background-pink: #2f0e22;
+  --openeditor-text-gray: #bebdb8;
+  --openeditor-background-gray: #2b2b2a;
+  --openeditor-text-brown: #ab8d7f;
+  --openeditor-background-brown: #1f1815;
+  --openeditor-text-red: #f06868;
+  --openeditor-background-red: #331414;
+  --openeditor-text-orange: #e3790d;
+  --openeditor-background-orange: #321e0a;
+  --openeditor-text-yellow: #dfab01;
+  --openeditor-background-yellow: #312808;
+  --openeditor-text-green: #7d9995;
+  --openeditor-background-green: #191f1e;
+  --openeditor-text-blue: #399dc8;
+  --openeditor-background-blue: #0a212b;
+  --openeditor-text-purple: #a681e2;
+  --openeditor-background-purple: #20162e;
+  --openeditor-text-pink: #e565b2;
+  --openeditor-background-pink: #2f0e22;
 }
-.journl-tiptap {
+.openeditor-tiptap {
   font-family:
     Inter, "SF Pro Display", -apple-system, BlinkMacSystemFont, "Open Sans", "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
   font-size: 16px;
@@ -60,17 +60,17 @@
   font-synthesis: style weight;
   -webkit-font-smoothing: antialiased;
 }
-.dark .journl-tiptap {
+.dark .openeditor-tiptap {
   color: #cfcfcf;
 }
-.journl-tiptap [data-journl-block] {
+.openeditor-tiptap [data-openeditor-block] {
   position: relative;
   margin: 0;
 }
-.journl-tiptap [data-journl-children] {
+.openeditor-tiptap [data-openeditor-children] {
   margin-left: 24px;
 }
-.journl-tiptap [data-journl-body] {
+.openeditor-tiptap [data-openeditor-body] {
   min-width: 2px;
   min-height: 30px;
   margin: 0;
@@ -78,71 +78,73 @@
 }
 /* Tiptap injects break-spaces on its root; match the existing inline surface's
    pre-wrap so a preserved trailing space does not change mobile line breaks. */
-.journl-tiptap [data-journl-body] {
+.openeditor-tiptap [data-openeditor-body] {
   white-space: pre-wrap;
 }
-.journl-tiptap [data-journl-body="codeBlock"] {
+.openeditor-tiptap [data-openeditor-body="codeBlock"] {
   white-space: pre;
 }
-.journl-tiptap [data-journl-body="referenceCard"],
-.journl-tiptap [data-journl-body="contentEmbed"] {
+.openeditor-tiptap [data-openeditor-body="referenceCard"],
+.openeditor-tiptap [data-openeditor-body="contentEmbed"] {
   white-space: normal;
 }
 
-.journl-tiptap [data-journl-body="heading"] {
+.openeditor-tiptap [data-openeditor-body="heading"] {
   font-weight: 700;
   padding-top: 18px;
   line-height: 1.5;
 }
-.journl-tiptap [data-heading-level="1"] {
+.openeditor-tiptap [data-heading-level="1"] {
   font-size: 3em;
 }
-.journl-tiptap [data-heading-level="2"] {
+.openeditor-tiptap [data-heading-level="2"] {
   font-size: 2em;
 }
-.journl-tiptap [data-heading-level="3"] {
+.openeditor-tiptap [data-heading-level="3"] {
   font-size: 1.3em;
 }
-.journl-tiptap [data-heading-level="4"] {
+.openeditor-tiptap [data-heading-level="4"] {
   font-size: 1em;
 }
-.journl-tiptap [data-heading-level="5"] {
+.openeditor-tiptap [data-heading-level="5"] {
   font-size: 0.9em;
 }
-.journl-tiptap [data-heading-level="6"] {
+.openeditor-tiptap [data-heading-level="6"] {
   font-size: 0.8em;
 }
-.journl-tiptap
+.openeditor-tiptap
   :is(
-    [data-journl-body="bulletListItem"],
-    [data-journl-body="numberedListItem"]
+    [data-openeditor-body="bulletListItem"],
+    [data-openeditor-body="numberedListItem"]
   ) {
   position: relative;
   padding-left: 24px;
 }
-.journl-tiptap [data-journl-body="bulletListItem"]::before,
-.journl-tiptap [data-journl-body="numberedListItem"]::before {
+.openeditor-tiptap [data-openeditor-body="bulletListItem"]::before,
+.openeditor-tiptap [data-openeditor-body="numberedListItem"]::before {
   position: absolute;
   left: 0;
   width: 24px;
   padding-right: 4px;
   text-align: center;
 }
-.journl-tiptap [data-journl-body="bulletListItem"]::before {
+.openeditor-tiptap [data-openeditor-body="bulletListItem"]::before {
   content: "•";
 }
-.journl-tiptap [data-journl-body="numberedListItem"]::before {
+.openeditor-tiptap [data-openeditor-body="numberedListItem"]::before {
   content: attr(data-start) ".";
 }
-.journl-tiptap [data-journl-body="checkListItem"],
-.journl-tiptap [data-journl-body="toggleListItem"],
-.journl-tiptap
-  [data-block-type="heading"]:has(> [data-journl-block-controls]:not([hidden]))
-  > [data-journl-content]
-  > [data-journl-body] {
+.openeditor-tiptap [data-openeditor-body="checkListItem"],
+.openeditor-tiptap [data-openeditor-body="toggleListItem"],
+.openeditor-tiptap
+  [data-block-type="heading"]:has(
+    > [data-openeditor-block-controls]:not([hidden])
+  )
+  > [data-openeditor-content]
+  > [data-openeditor-body] {
   padding-left: 24px;
 }
-.journl-tiptap [data-journl-block-controls] {
+.openeditor-tiptap [data-openeditor-block-controls] {
   position: absolute;
   left: 4px;
   top: 6px;
@@ -150,45 +152,47 @@
   align-items: center;
   height: 18px;
 }
-.journl-tiptap [data-block-type="heading"] > [data-journl-block-controls] {
+.openeditor-tiptap
+  [data-block-type="heading"]
+  > [data-openeditor-block-controls] {
   top: 24px;
 }
-.journl-tiptap [data-journl-block-controls][hidden],
-.journl-tiptap [data-journl-block-controls] [hidden] {
+.openeditor-tiptap [data-openeditor-block-controls][hidden],
+.openeditor-tiptap [data-openeditor-block-controls] [hidden] {
   display: none;
 }
-.journl-side-menu button {
+.openeditor-side-menu button {
   width: 28px;
   height: 28px;
   min-width: 28px;
 }
-.journl-side-menu button svg {
+.openeditor-side-menu button svg {
   stroke-width: 2.5;
   width: 18px;
   height: 18px;
 }
 
-.journl-tiptap [data-journl-block-controls] button {
+.openeditor-tiptap [data-openeditor-block-controls] button {
   cursor: pointer;
   width: 18px;
   height: 18px;
 }
-.journl-tiptap [data-journl-block-controls] input {
+.openeditor-tiptap [data-openeditor-block-controls] input {
   cursor: pointer;
   width: 12px;
   height: 12px;
   accent-color: var(--primary);
 }
-.journl-tiptap
+.openeditor-tiptap
   [data-collapsed="true"]
-  > [data-journl-content]
-  > [data-journl-children] {
+  > [data-openeditor-content]
+  > [data-openeditor-children] {
   display: none;
 }
-.journl-tiptap [data-journl-body="checkListItem"][data-checked="true"] {
+.openeditor-tiptap [data-openeditor-body="checkListItem"][data-checked="true"] {
   text-decoration: line-through;
 }
-.journl-tiptap pre {
+.openeditor-tiptap pre {
   white-space: pre;
   tab-size: 2;
   overflow-x: auto;
@@ -199,65 +203,65 @@
   color: white;
   font-family: monospace;
 }
-.journl-tiptap blockquote {
+.openeditor-tiptap blockquote {
   border-left: 2px solid #7d797a;
   padding-left: 1em;
   color: #7d797a;
 }
-.journl-tiptap [data-journl-body="divider"] {
+.openeditor-tiptap [data-openeditor-body="divider"] {
   padding-block: 12px;
 }
-.journl-tiptap hr {
+.openeditor-tiptap hr {
   border: 0;
   border-top: 1px solid #aaa;
 }
-.journl-tiptap table {
+.openeditor-tiptap table {
   border-collapse: collapse;
   table-layout: fixed;
   width: auto;
   max-width: 100%;
   margin: 9px 0 22px !important;
 }
-.journl-tiptap td {
+.openeditor-tiptap td {
   border: 1px solid #ddd;
   padding: 5px 10px;
   min-width: 40px;
   vertical-align: top;
 }
-.journl-tiptap [data-header-cell] {
+.openeditor-tiptap [data-header-cell] {
   font-weight: 700;
 }
-.journl-tiptap img,
-.journl-tiptap video {
+.openeditor-tiptap img,
+.openeditor-tiptap video {
   max-width: 100%;
   height: auto;
 }
-.journl-tiptap figure {
+.openeditor-tiptap figure {
   margin-block: 3px;
 }
-.journl-tiptap figcaption {
+.openeditor-tiptap figcaption {
   font-size: 0.8em;
   color: var(--muted-foreground);
 }
-.journl-tiptap a[data-journl-link] {
+.openeditor-tiptap a[data-openeditor-link] {
   color: #00e;
   text-decoration: underline;
 }
-.dark .journl-tiptap a[data-journl-link] {
+.dark .openeditor-tiptap a[data-openeditor-link] {
   color: #958df1;
 }
-.journl-tiptap .content-reference,
-.journl-tiptap .content-reference-card,
-.journl-tiptap .content-embed {
+.openeditor-tiptap .content-reference,
+.openeditor-tiptap .content-reference-card,
+.openeditor-tiptap .content-embed {
   white-space: normal;
 }
 /* One contrast level for every editor menu, in either theme. */
-.journl-formatting-toolbar,
+.openeditor-formatting-toolbar,
 [data-tiptap-controls][data-slot="dropdown-menu-content"],
 [data-tiptap-controls][data-slot="popover-content"],
 [data-tiptap-controls][data-slot="select-content"],
 [data-tiptap-controls][role="listbox"] {
-  border: 1px solid var(--journl-menu-border);
+  border: 1px solid var(--openeditor-menu-border);
   border-radius: var(--radius-lg);
 }
 [data-tiptap-controls]
@@ -270,10 +274,10 @@
     :hover,
     [data-highlighted]
   ) {
-  border-color: var(--journl-menu-border);
+  border-color: var(--openeditor-menu-border);
 }
 
-.journl-formatting-toolbar {
+.openeditor-formatting-toolbar {
   z-index: 50;
   display: flex;
   width: max-content;
@@ -289,7 +293,7 @@
   box-shadow: 0 4px 12px rgb(0 0 0 / 12%);
   overflow-x: auto;
 }
-.journl-mobile-toolbar {
+.openeditor-mobile-toolbar {
   position: sticky;
   z-index: 40;
   top: calc(
@@ -299,11 +303,11 @@
   padding-inline: 24px;
   margin-bottom: 24px;
 }
-.journl-mobile-toolbar .journl-formatting-toolbar {
+.openeditor-mobile-toolbar .openeditor-formatting-toolbar {
   max-width: 100%;
   box-shadow: 0 1px 3px rgb(0 0 0 / 8%);
 }
-.journl-side-menu {
+.openeditor-side-menu {
   position: fixed;
   z-index: 45;
   display: flex;
@@ -314,30 +318,30 @@
   background: var(--popover);
   color: var(--foreground);
 }
-.journl-side-menu :where(button) {
+.openeditor-side-menu :where(button) {
   padding: 0;
 }
-.content-embed-content .journl-tiptap {
+.content-embed-content .openeditor-tiptap {
   padding: 0;
   font-size: 0.9rem;
 }
-.content-embed-content .journl-tiptap [data-journl-body="heading"] {
+.content-embed-content .openeditor-tiptap [data-openeditor-body="heading"] {
   font-size: 1.15rem;
 }
-.journl-tiptap-host {
+.openeditor-tiptap-host {
   margin-top: 24px;
 }
 @media (min-width: 768px) {
-  .journl-tiptap-host {
+  .openeditor-tiptap-host {
     margin-top: 32px;
   }
 }
-.journl-tiptap [data-journl-reference] {
+.openeditor-tiptap [data-openeditor-reference] {
   display: inline-flex;
   max-width: 100%;
   vertical-align: baseline;
 }
-.journl-file-link {
+.openeditor-file-link {
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -345,32 +349,32 @@
   border-radius: 4px;
   text-decoration: none;
 }
-.journl-file-link:hover {
+.openeditor-file-link:hover {
   background: var(--muted);
 }
 
-.journl-tiptap [data-journl-reference][data-reference-selected] {
+.openeditor-tiptap [data-openeditor-reference][data-reference-selected] {
   border-radius: 6px;
   outline: 1px solid color-mix(in srgb, var(--ring) 45%, transparent);
   outline-offset: 2px;
   background-color: color-mix(in srgb, var(--ring) 4%, transparent);
 }
-.journl-table-wrapper {
+.openeditor-table-wrapper {
   overflow-x: auto;
   max-width: 100%;
   position: relative;
 }
-.journl-tiptap .selectedCell {
+.openeditor-tiptap .selectedCell {
   position: relative;
 }
-.journl-tiptap .selectedCell::after {
+.openeditor-tiptap .selectedCell::after {
   background: color-mix(in srgb, var(--ring) 15%, transparent);
   content: "";
   position: absolute;
   inset: 0;
   pointer-events: none;
 }
-.journl-tiptap .column-resize-handle {
+.openeditor-tiptap .column-resize-handle {
   position: absolute;
   right: -2px;
   top: 0;
@@ -379,60 +383,60 @@
   background: var(--ring);
   pointer-events: none;
 }
-.journl-tiptap.resize-cursor {
+.openeditor-tiptap.resize-cursor {
   cursor: col-resize;
 }
-.journl-tiptap td {
+.openeditor-tiptap td {
   position: relative;
 }
-.journl-tiptap [data-table-paragraph] {
+.openeditor-tiptap [data-table-paragraph] {
   margin: 0;
   padding: 0;
 }
 
-.journl-table-handle,
-.journl-table-extend {
+.openeditor-table-handle,
+.openeditor-table-extend {
   z-index: 46;
   padding: 0;
-  border: 1px solid var(--journl-menu-border);
+  border: 1px solid var(--openeditor-menu-border);
   border-radius: 6px;
   background: var(--popover);
   color: var(--muted-foreground);
   box-shadow: 0 1px 3px rgb(0 0 0 / 10%);
   touch-action: none;
 }
-.journl-table-handle[draggable="true"] {
+.openeditor-table-handle[draggable="true"] {
   cursor: grab;
 }
-.journl-table-handle[draggable="true"]:active {
+.openeditor-table-handle[draggable="true"]:active {
   cursor: grabbing;
 }
-.journl-table-extend-row {
+.openeditor-table-extend-row {
   height: 20px;
   min-height: 20px;
 }
-.journl-table-extend-column {
+.openeditor-table-extend-column {
   width: 20px;
   min-width: 20px;
 }
-.journl-table-drop-indicator {
+.openeditor-table-drop-indicator {
   position: fixed;
   z-index: 47;
   background: var(--ring);
   pointer-events: none;
 }
 
-.journl-side-menu[data-touch="true"] button {
+.openeditor-side-menu[data-touch="true"] button {
   width: 44px;
   height: 44px;
   min-width: 44px;
   touch-action: manipulation;
 }
-.journl-side-menu[data-touch="true"] button svg {
+.openeditor-side-menu[data-touch="true"] button svg {
   width: 22px;
   height: 22px;
 }
-.journl-block-drop-indicator {
+.openeditor-block-drop-indicator {
   position: fixed;
   height: 2px;
   background: var(--ring);
@@ -440,23 +444,26 @@
   z-index: 60;
   pointer-events: none;
 }
-.journl-tiptap
-  :is([data-journl-block], [data-journl-body]).ProseMirror-selectednode {
+.openeditor-tiptap
+  :is(
+    [data-openeditor-block],
+    [data-openeditor-body]
+  ).ProseMirror-selectednode {
   outline: none;
 }
 
 /* Select the reference surface itself, without a second wrapper outline. */
-.journl-tiptap
+.openeditor-tiptap
   :is([data-reference-selected], .ProseMirror-selectednode)
   > :is(.content-reference-card, .content-embed) {
   border-color: var(--ring);
   box-shadow: 0 0 0 1px color-mix(in srgb, var(--ring) 45%, transparent);
 }
 
-.journl-code-block {
+.openeditor-code-block {
   border-radius: 8px;
   background: #161616;
 }
-.journl-code-controls {
+.openeditor-code-controls {
   padding: 8px 16px 0;
 }

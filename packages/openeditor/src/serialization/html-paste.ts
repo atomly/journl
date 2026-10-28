@@ -17,25 +17,25 @@ export function normalizePastedLists(
     for (const item of [...list.children]) {
       if (item.tagName !== "LI") continue;
       const wrapper = document.createElement("div");
-      wrapper.dataset.journlBlock = "";
+      wrapper.dataset.openeditorBlock = "";
       wrapper.dataset.blockId = createId();
       const body = document.createElement("p");
-      body.dataset.journlBody =
+      body.dataset.openeditorBody =
         list.tagName === "OL" ? "numberedListItem" : "bulletListItem";
       if (list.tagName === "OL") {
         number =
           Number.parseInt(item.getAttribute("value") ?? "", 10) || number;
         body.setAttribute(
-          "data-journl-attrs",
+          "data-openeditor-attrs",
           JSON.stringify({ props: { start: number++ } }),
         );
       }
       const children = document.createElement("div");
-      children.dataset.journlChildren = "";
+      children.dataset.openeditorChildren = "";
       for (const child of [...item.childNodes]) {
         if (
           child instanceof HTMLElement &&
-          child.hasAttribute("data-journl-block")
+          child.hasAttribute("data-openeditor-block")
         )
           children.append(child);
         else if (child instanceof HTMLElement && child.tagName === "P") {

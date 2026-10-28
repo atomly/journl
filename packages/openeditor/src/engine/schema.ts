@@ -35,11 +35,11 @@ export function safeEditorUrl(value: string): string {
 const textStyle = (props: Record<string, unknown> | null) =>
   `text-align:${props?.textAlignment ?? "left"};${props?.textColor && props.textColor !== "default" ? `color:${color(props.textColor)};` : ""}background-color:${color(props?.backgroundColor, true)}`;
 const parseAttrs = (element: HTMLElement) => {
-  const value = element.getAttribute("data-journl-attrs");
+  const value = element.getAttribute("data-openeditor-attrs");
   return value ? JSON.parse(value) : null;
 };
 const htmlAttrs = (attrs: Record<string, unknown>) => ({
-  "data-journl-attrs": JSON.stringify(attrs),
+  "data-openeditor-attrs": JSON.stringify(attrs),
 });
 
 const propsAttribute = () => ({
@@ -67,7 +67,7 @@ export function documentExtensions(): Extensions {
       }),
       parseHTML: () => [
         {
-          tag: "div[data-journl-block]",
+          tag: "div[data-openeditor-block]",
           getAttrs: (element) => ({
             id: element.getAttribute("data-block-id"),
           }),
@@ -76,7 +76,7 @@ export function documentExtensions(): Extensions {
       renderHTML: ({ node }) => [
         "div",
         {
-          "data-journl-block": "",
+          "data-openeditor-block": "",
           "data-block-id": node.attrs.id,
         },
         0,
@@ -86,8 +86,8 @@ export function documentExtensions(): Extensions {
       name: "journlChildren",
       content: "journlBlock*",
       defining: true,
-      parseHTML: () => [{ tag: "div[data-journl-children]" }],
-      renderHTML: () => ["div", { "data-journl-children": "" }, 0],
+      parseHTML: () => [{ tag: "div[data-openeditor-children]" }],
+      renderHTML: () => ["div", { "data-openeditor-children": "" }, 0],
     }),
     ...inlineBlockTypes.map((name) =>
       Node.create({
@@ -97,14 +97,14 @@ export function documentExtensions(): Extensions {
         addAttributes: propsAttribute,
         parseHTML: () => [
           {
-            tag: `[data-journl-body="${name}"]`,
+            tag: `[data-openeditor-body="${name}"]`,
             getAttrs: parseAttrs,
             preserveWhitespace: "full",
           },
           ...(name === "paragraph"
             ? [
                 {
-                  tag: "p:not([data-journl-body])",
+                  tag: "p:not([data-openeditor-body])",
                   preserveWhitespace: "full" as const,
                 },
               ]
@@ -124,7 +124,7 @@ export function documentExtensions(): Extensions {
               ? `h${node.attrs.props?.level ?? 1}`
               : "p",
           {
-            "data-journl-body": name,
+            "data-openeditor-body": name,
             style: textStyle(node.attrs.props),
             "data-heading-level":
               name === "heading" ? (node.attrs.props?.level ?? 1) : undefined,
@@ -148,7 +148,7 @@ export function documentExtensions(): Extensions {
       ],
       renderHTML: ({ node }) => [
         "pre",
-        { "data-journl-body": "codeBlock", ...htmlAttrs(node.attrs) },
+        { "data-openeditor-body": "codeBlock", ...htmlAttrs(node.attrs) },
         ["code", 0],
       ],
     }),
@@ -159,7 +159,7 @@ export function documentExtensions(): Extensions {
         atom: true,
         addAttributes: propsAttribute,
         parseHTML: () => [
-          { tag: `[data-journl-body="${name}"]`, getAttrs: parseAttrs },
+          { tag: `[data-openeditor-body="${name}"]`, getAttrs: parseAttrs },
           ...(["image", "video", "audio"].includes(name)
             ? [
                 {
@@ -178,7 +178,10 @@ export function documentExtensions(): Extensions {
         ],
         renderHTML: ({ node }) => {
           const props = node.attrs.props ?? {};
-          const attrs = { "data-journl-body": name, ...htmlAttrs(node.attrs) };
+          const attrs = {
+            "data-openeditor-body": name,
+            ...htmlAttrs(node.attrs),
+          };
           const url = safeEditorUrl(props.url ?? "");
           if (name === "divider") return ["div", attrs, ["hr"]];
           if (["image", "video", "audio", "file"].includes(name)) {
@@ -214,7 +217,7 @@ export function documentExtensions(): Extensions {
                     "a",
                     {
                       href: url,
-                      class: "journl-file-link",
+                      class: "openeditor-file-link",
                       rel: "noopener noreferrer",
                       target: "_blank",
                     },
@@ -274,7 +277,7 @@ export function documentExtensions(): Extensions {
       renderHTML: ({ node }) => [
         "table",
         {
-          "data-journl-body": "table",
+          "data-openeditor-body": "table",
           ...htmlAttrs(node.attrs),
           style: textStyle(node.attrs.props),
         },
@@ -336,11 +339,11 @@ export function documentExtensions(): Extensions {
       atom: true,
       addAttributes: propsAttribute,
       parseHTML: () => [
-        { tag: "span[data-journl-reference]", getAttrs: parseAttrs },
+        { tag: "span[data-openeditor-reference]", getAttrs: parseAttrs },
       ],
       renderHTML: ({ node }) => [
         "span",
-        { "data-journl-reference": "", ...htmlAttrs(node.attrs) },
+        { "data-openeditor-reference": "", ...htmlAttrs(node.attrs) },
         String(node.attrs.props?.label || node.attrs.props?.url || "Reference"),
       ],
     }),
@@ -366,7 +369,10 @@ export function documentExtensions(): Extensions {
         name,
         excludes: "",
         parseHTML: () => [
-          { tag: `span[data-journl-style="${name}"]`, getAttrs: parseAttrs },
+          {
+            tag: `span[data-openeditor-style="${name}"]`,
+            getAttrs: parseAttrs,
+          },
         ],
         addAttributes: () => ({
           value: { default: "default", rendered: false },
@@ -374,7 +380,7 @@ export function documentExtensions(): Extensions {
         renderHTML: ({ mark }) => [
           "span",
           {
-            "data-journl-style": name,
+            "data-openeditor-style": name,
             ...htmlAttrs(mark.attrs),
             style: `${name === "textColor" ? "color" : "background-color"}: ${color(mark.attrs.value, name === "backgroundColor")}`,
           },
@@ -387,7 +393,7 @@ export function documentExtensions(): Extensions {
       inclusive: false,
       addAttributes: () => ({ href: { default: "", rendered: false } }),
       parseHTML: () => [
-        { tag: "[data-journl-link]", getAttrs: parseAttrs },
+        { tag: "[data-openeditor-link]", getAttrs: parseAttrs },
         {
           tag: "a[href]",
           getAttrs: (element) => ({ href: element.getAttribute("href") ?? "" }),
@@ -397,7 +403,7 @@ export function documentExtensions(): Extensions {
       renderHTML: ({ mark }) => [
         "a",
         {
-          "data-journl-link": "",
+          "data-openeditor-link": "",
           ...(safeEditorUrl(mark.attrs.href)
             ? { href: safeEditorUrl(mark.attrs.href) }
             : {}),

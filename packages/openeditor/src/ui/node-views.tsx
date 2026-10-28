@@ -78,11 +78,15 @@ export function referenceViewStore() {
               type === "contentReference" ? "span" : "div",
             );
             dom.contentEditable = "false";
-            if (type === "contentReference") dom.dataset.journlReference = "";
-            else dom.dataset.journlBody = type;
+            if (type === "contentReference")
+              dom.dataset.openeditorReference = "";
+            else dom.dataset.openeditorBody = type;
             const id = key++;
             const sync = (next: PMNode) => {
-              dom.setAttribute("data-journl-attrs", JSON.stringify(next.attrs));
+              dom.setAttribute(
+                "data-openeditor-attrs",
+                JSON.stringify(next.attrs),
+              );
               views = [
                 ...views.filter((item) => item.key !== id),
                 { dom, editor, getPos, key: id, node: next },

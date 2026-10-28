@@ -61,7 +61,7 @@ export function createDocumentEditor({
             event.shiftKey ||
             event.altKey ||
             !(event.target instanceof Element) ||
-            !event.target.closest("a[data-journl-link]")
+            !event.target.closest("a[data-openeditor-link]")
           )
             return false;
           event.preventDefault();
@@ -71,7 +71,7 @@ export function createDocumentEditor({
           if (!view.editable || !(event.target instanceof Element))
             return false;
           const anchor = event.target.closest<HTMLAnchorElement>(
-            "a[data-journl-link]",
+            "a[data-openeditor-link]",
           );
           const href =
             anchor && safeEditorUrl(anchor.getAttribute("href") ?? "");

@@ -15,7 +15,7 @@ for (const frontend of ["blocknote", "tiptap"] as const) {
     });
     const editorSelector =
       frontend === "tiptap"
-        ? '.journl-tiptap[contenteditable="true"]'
+        ? '.openeditor-tiptap[contenteditable="true"]'
         : '.bn-editor[contenteditable="true"]';
     test("a failed page save retains title and writing across navigation and retries", async ({
       page,
@@ -405,7 +405,7 @@ for (const frontend of ["blocknote", "tiptap"] as const) {
         .poll(() =>
           editor
             .locator(
-              frontend === "tiptap" ? "[data-journl-block]" : ".bn-block-outer",
+              frontend === "tiptap" ? "[data-openeditor-block]" : ".bn-block-outer",
             )
             .count(),
         )

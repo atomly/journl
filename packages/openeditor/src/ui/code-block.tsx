@@ -36,7 +36,7 @@ const LanguageMenu = memo(function LanguageMenu({
     : [...languages, language];
   return (
     <div
-      className="journl-code-controls"
+      className="openeditor-code-controls"
       contentEditable={false}
       data-tiptap-controls=""
     >
@@ -78,9 +78,9 @@ const LanguageMenu = memo(function LanguageMenu({
 function CodeBlock({ node, editor, updateAttributes }: ReactNodeViewProps) {
   return (
     <NodeViewWrapper
-      className="journl-code-block"
-      data-journl-body="codeBlock"
-      data-journl-attrs={JSON.stringify(node.attrs)}
+      className="openeditor-code-block"
+      data-openeditor-body="codeBlock"
+      data-openeditor-attrs={JSON.stringify(node.attrs)}
     >
       <LanguageMenu
         editor={editor}

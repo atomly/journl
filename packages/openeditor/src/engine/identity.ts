@@ -126,7 +126,7 @@ export function identityPlugin(createId: IdFactory): Plugin {
             event.target.closest("a[href]")
           )
             return false;
-          const body = event.target.closest("[data-journl-body]");
+          const body = event.target.closest("[data-openeditor-body]");
           if (
             !body ||
             ![
@@ -137,7 +137,7 @@ export function identityPlugin(createId: IdFactory): Plugin {
               "audio",
               "file",
               "divider",
-            ].includes(body.getAttribute("data-journl-body") ?? "")
+            ].includes(body.getAttribute("data-openeditor-body") ?? "")
           )
             return false;
           const wrapper = body.closest<HTMLElement>("[data-block-id]");

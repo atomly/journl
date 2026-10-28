@@ -21,7 +21,7 @@ for (const [theme, background, foreground] of [
     const colors = (kind: string) =>
       [
         ...body.matchAll(
-          new RegExp(`--journl-${kind}-([a-z]+): (#[a-f0-9]{6})`, "g"),
+          new RegExp(`--openeditor-${kind}-([a-z]+): (#[a-f0-9]{6})`, "g"),
         ),
       ].map((match) => ({ hex: match[2] ?? "", name: match[1] }));
     const text = [

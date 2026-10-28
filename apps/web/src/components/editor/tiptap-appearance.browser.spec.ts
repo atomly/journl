@@ -22,7 +22,7 @@ for (const theme of ["light", "dark"]) {
       ]);
       await page.goto(`/pages/${fixtureId(980)}`);
       const editor = page.locator(
-        frontend === "blocknote" ? ".bn-editor" : ".journl-tiptap",
+        frontend === "blocknote" ? ".bn-editor" : ".openeditor-tiptap",
       );
       await expect(editor).toContainText("Heading 6");
       await page.evaluate(() => document.fonts.ready);
@@ -62,7 +62,7 @@ for (const theme of ["light", "dark"]) {
           await expect(toolbar).toHaveCSS("flex-wrap", "nowrap");
           expect((await toolbar.boundingBox())?.height).toBeLessThan(50);
         }
-        await editor.locator('[data-journl-body="paragraph"]').first().hover();
+        await editor.locator('[data-openeditor-body="paragraph"]').first().hover();
         await expect(
           page.getByRole("button", { exact: true, name: "Block actions" }),
         ).toBeVisible();

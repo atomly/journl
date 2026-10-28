@@ -11,9 +11,9 @@ export function blockView({
   let node = initial;
   let collapsed = false;
   const dom = document.createElement("div");
-  dom.dataset.journlBlock = "";
+  dom.dataset.openeditorBlock = "";
   const controls = document.createElement("div");
-  controls.dataset.journlBlockControls = "";
+  controls.dataset.openeditorBlockControls = "";
   controls.contentEditable = "false";
   const check = document.createElement("input");
   check.type = "checkbox";
@@ -21,7 +21,7 @@ export function blockView({
   const toggle = document.createElement("button");
   toggle.type = "button";
   const contentDOM = document.createElement("div");
-  contentDOM.dataset.journlContent = "";
+  contentDOM.dataset.openeditorContent = "";
   controls.append(check, toggle);
   dom.append(controls, contentDOM);
   const sync = () => {

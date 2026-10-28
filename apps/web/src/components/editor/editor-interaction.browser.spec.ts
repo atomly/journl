@@ -17,8 +17,8 @@ test("handle menu opens once, add picker leaves no slash, and divider needs no s
   await page.getByRole("button", { exact: true, name: "New page" }).click();
   await expect(page).toHaveURL(/\/pages\//);
   await page.keyboard.press("Escape");
-  const editor = page.locator(".journl-tiptap");
-  const body = editor.locator("[data-journl-body]").first();
+  const editor = page.locator(".openeditor-tiptap");
+  const body = editor.locator("[data-openeditor-body]").first();
   await body.hover();
   await page
     .getByRole("button", { exact: true, name: "Block actions" })
@@ -40,7 +40,7 @@ test("handle menu opens once, add picker leaves no slash, and divider needs no s
   await editor.pressSequentially("---");
   await expect(editor.locator("hr")).toHaveCount(1);
   await editor.pressSequentially("After divider");
-  await expect(editor.locator('[data-journl-body="paragraph"]')).toHaveText(
+  await expect(editor.locator('[data-openeditor-body="paragraph"]')).toHaveText(
     "After divider",
   );
 });
@@ -51,7 +51,7 @@ test("code language picker produces visible colors and survives save/reload", as
   await page.goto(
     `/journal/1988-08-${info.project.name === "desktop-chromium" ? "26" : "29"}`,
   );
-  const editor = page.locator(".journl-tiptap").first();
+  const editor = page.locator(".openeditor-tiptap").first();
   await editor.pressSequentially("```javascript ");
   await editor.pressSequentially("console.log('hello world');");
   await editor.press("Enter");
@@ -88,25 +88,25 @@ test("pasting a plain multiline list creates nested list blocks", async ({
   test.skip(info.project.name !== "desktop-chromium", "Desktop clipboard API");
   await context.grantPermissions(["clipboard-read", "clipboard-write"]);
   await page.goto("/journal/1988-08-27");
-  const editor = page.locator(".journl-tiptap").first();
+  const editor = page.locator(".openeditor-tiptap").first();
   await editor.click();
   await page.evaluate(() =>
     navigator.clipboard.writeText("- First **bold**\n  - Child\n- Second"),
   );
   await editor.press("ControlOrMeta+v");
   await expect(
-    editor.locator('[data-journl-body="bulletListItem"]'),
+    editor.locator('[data-openeditor-body="bulletListItem"]'),
   ).toHaveCount(3);
   await expect(
     editor.locator(
-      '[data-journl-children] [data-journl-body="bulletListItem"]',
+      '[data-openeditor-children] [data-openeditor-body="bulletListItem"]',
     ),
   ).toHaveText("Child");
   await expect(editor.locator("strong")).toHaveText("bold");
   await expect(page.locator("[data-save-status]")).toContainText("Saved");
   await page.reload();
   await expect(
-    editor.locator('[data-journl-body="bulletListItem"]'),
+    editor.locator('[data-openeditor-body="bulletListItem"]'),
   ).toHaveCount(3);
 });
 
@@ -123,14 +123,14 @@ test("reference selection highlights its own frame and native handles still move
   await page.getByRole("button", { exact: true, name: "New page" }).click();
   await expect(page).toHaveURL(/\/pages\//);
   await page.keyboard.press("Escape");
-  const editor = page.locator(".journl-tiptap");
+  const editor = page.locator(".openeditor-tiptap");
   await editor.click();
   await editor.pressSequentially("First");
   await editor.press("Enter");
   await editor.pressSequentially("Second");
   await editor.press("Enter");
   await editor.pressSequentially("Third");
-  const rows = editor.locator("[data-journl-body]");
+  const rows = editor.locator("[data-openeditor-body]");
   await rows.first().hover();
   const handle = page.getByRole("button", {
     exact: true,
@@ -173,7 +173,7 @@ test("mobile handle opens block actions in one tap with a usable touch target", 
 }, info) => {
   test.skip(info.project.name !== "mobile-webkit", "Touch handle acceptance");
   await page.goto("/journal/1988-08-28");
-  await page.locator(".journl-tiptap [data-journl-body]").first().tap();
+  await page.locator(".openeditor-tiptap [data-openeditor-body]").first().tap();
   const handle = page.getByRole("button", {
     exact: true,
     name: "Block actions",
@@ -199,12 +199,12 @@ test("crossing the toolbar gap keeps the handle on its block and leaving release
   await page.getByRole("button", { exact: true, name: "New page" }).click();
   await expect(page).toHaveURL(/\/pages\//);
   await page.keyboard.press("Escape");
-  const editor = page.locator(".journl-tiptap");
+  const editor = page.locator(".openeditor-tiptap");
   await editor.click();
   await editor.pressSequentially("Previous block");
   await editor.press("Enter");
   await editor.pressSequentially("Selected block");
-  const rows = editor.locator('[data-journl-body="paragraph"]');
+  const rows = editor.locator('[data-openeditor-body="paragraph"]');
   await rows.last().evaluate(async (element) => {
     const range = document.createRange();
     range.selectNodeContents(element);

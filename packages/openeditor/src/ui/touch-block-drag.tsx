@@ -36,8 +36,8 @@ function destination(
     y > bounds.bottom
   )
     return null;
-  const row = [...root.querySelectorAll<HTMLElement>("[data-journl-body]")]
-    .filter((row) => row.closest(".journl-tiptap") === root)
+  const row = [...root.querySelectorAll<HTMLElement>("[data-openeditor-body]")]
+    .filter((row) => row.closest(".openeditor-tiptap") === root)
     .find((row) => {
       const rect = row.getBoundingClientRect();
       return rect.height > 0 && y >= rect.top && y <= rect.bottom;
@@ -213,7 +213,7 @@ export function TouchBlockDrag({
         createPortal(
           <div
             aria-hidden="true"
-            className="journl-block-drop-indicator"
+            className="openeditor-block-drop-indicator"
             style={{ left: drop.left, top: drop.top, width: drop.width }}
           />,
           document.body,

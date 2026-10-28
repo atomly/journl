@@ -82,7 +82,7 @@ export function TiptapSideMenu({
         );
         const block = [...root.querySelectorAll<HTMLElement>("[data-block-id]")]
           .find((element) => element.dataset.blockId === currentId)
-          ?.querySelector<HTMLElement>("[data-journl-body]");
+          ?.querySelector<HTMLElement>("[data-openeditor-body]");
         if (
           toolbar &&
           block &&
@@ -107,8 +107,10 @@ export function TiptapSideMenu({
       }
       // Hit-test each block's own row, not the ancestor wrapper that also
       // encloses its descendants. This keeps a child's handle across its gutter.
-      const row = [...root.querySelectorAll<HTMLElement>("[data-journl-body]")]
-        .filter((body) => body.closest(".journl-tiptap") === root)
+      const row = [
+        ...root.querySelectorAll<HTMLElement>("[data-openeditor-body]"),
+      ]
+        .filter((body) => body.closest(".openeditor-tiptap") === root)
         .find((body) => {
           const rect = body.getBoundingClientRect();
           return (
@@ -132,8 +134,8 @@ export function TiptapSideMenu({
       if (event.pointerType !== "touch" || !(event.target instanceof Element))
         return;
       setTouchPointer(true);
-      const row = event.target.closest<HTMLElement>("[data-journl-body]");
-      if (row?.closest(".journl-tiptap") === root)
+      const row = event.target.closest<HTMLElement>("[data-openeditor-body]");
+      if (row?.closest(".openeditor-tiptap") === root)
         setId(row.closest<HTMLElement>("[data-block-id]")?.dataset.blockId);
     };
     root.addEventListener("pointerup", tap);
@@ -156,7 +158,7 @@ export function TiptapSideMenu({
       }
       const node = editor.view.nodeDOM(position.pos);
       if (!(node instanceof HTMLElement)) return;
-      const body = node.querySelector<HTMLElement>("[data-journl-body]");
+      const body = node.querySelector<HTMLElement>("[data-openeditor-body]");
       const rect = (body ?? node).getBoundingClientRect();
       const padding = body
         ? Number.parseFloat(getComputedStyle(body).paddingTop) || 0
@@ -215,7 +217,7 @@ export function TiptapSideMenu({
           <div
             data-tiptap-controls=""
             data-tiptap-side-menu=""
-            className="journl-side-menu"
+            className="openeditor-side-menu"
             data-touch={mobile ? "true" : undefined}
             style={position}
           >

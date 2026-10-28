@@ -1,10 +1,11 @@
 # BetterEditor composition contract — proposal
 
-Status: design record for the composition implementation. The package README
-documents the implemented interface; remaining work is distinguished below.
+Status: design record containing the original goals and proposed surface. The
+package README documents the implemented interface. The final section distinguishes
+the implementation from remaining work.
 
 This follows the module audit. The merged baseline is main commit
-643d82dbc55f7abc0443a8f440da0793d9fa17af. Local source has the same tracked tree.
+643d82dbc55f7abc0443a8f440da0793d9fa17af.
 The historical audit uses earlier names; the package is now `@acme/better-editor`.
 
 ## Goal and limits
@@ -278,3 +279,32 @@ The stored schema and document/reference dependencies remain. Fully optional sch
 features, transaction-mapped indexes, bounded gutter hit testing, and per-feature
 registry items remain separate optimizations requiring measurements and compatibility
 review. No AI replacement or second storage schema is part of this implementation.
+
+## Local implementation verification — 2026-10-28
+
+The implementation passed the upstream commands locally in a clean Playwright
+container using Node 24.22.1 and pnpm 10.29.3. GitHub Actions remains billing-limited.
+
+- Frozen installation, dependency checks, lint, workspace typechecks, and registry
+  checks passed. Lint retains existing repository warnings.
+- The final workspace unit run passed 428 tests, including 106 BetterEditor tests.
+  The additional mixed-operation regression test was added after the clean
+  container snapshot. It also passed the package typecheck and lint checks.
+- Database integration passed 43 tests against disposable PostgreSQL containers.
+- Full application acceptance passed 104 tests across desktop Chromium and mobile
+  WebKit, with 20 existing platform-specific skips. No assertions were relaxed.
+- The uncached Next.js 16.4.3 production build passed using Turbopack.
+- A real shadcn CLI installation into a separate consumer compiled with TypeScript.
+  Standalone composition also passed Chromium and mobile WebKit: live toolbar
+  modes, formatting, link insertion, custom slash items, editability, and reset.
+- The minimal root/content/hook bundle excludes menu, drag, reference-view, and
+  syntax-highlighting JavaScript. The shared CSS still includes a code theme.
+  Package packing succeeded. No packages were published.
+
+The benchmark runs at 100, 1,000, and 5,000 paragraphs. Its cached path repeatedly
+reads a warmed changed snapshot, diffs it, and clones commit payloads. Its median
+at 1,000 paragraphs was 3.23 ms on this host. This excludes browser layout, React
+rendering, and input-to-paint latency. It is not a typing-latency guarantee.
+
+The earlier merged-baseline server failure remains unexplained. Its failing
+table-accessibility case and the complete browser suite passed in this run.

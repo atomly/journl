@@ -5,14 +5,9 @@ import { fileURLToPath } from "node:url";
 // Both installation modes use these exact sources. No vendored editor copy.
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const baseUrl = process.argv[2] ?? "https://journl-snowy.vercel.app/r/";
-const packages = [
-  "document",
-  "tiptap",
-  "references",
-  "editor-core",
-  "ui",
-  "editor",
-];
+const packages = ["document", "references", "ui", "openeditor"];
+const itemName = (name) =>
+  name === "openeditor" ? "openeditor" : `openeditor-${name}`;
 const manifests = Object.fromEntries(
   await Promise.all(
     packages.map(async (name) => [
@@ -39,12 +34,12 @@ async function sources(directory) {
     )
     .sort();
 }
-// Unique basenames prevent shadcn's import transformer from confusing the six index.ts files.
+// Unique basenames keep shadcn import rewriting unambiguous across namespaces.
 function installedPath(name, relative) {
   return posix.join(
     name,
     posix.dirname(relative),
-    `${name}-${posix.basename(relative)}`,
+    `${name}-${relative.split("/").join("-")}`,
   );
 }
 function rewrite(content, owner, sourceRelative) {
@@ -84,8 +79,8 @@ for (const name of packages) {
       const relative = source.split(`/packages/${name}/src/`)[1];
       return {
         content: rewrite(await readFile(source, "utf8"), name, relative),
-        path: `registry/journl/${installedPath(name, relative)}`,
-        target: `@components/journl/${installedPath(name, relative)}`,
+        path: `registry/openeditor/${installedPath(name, relative)}`,
+        target: `@components/openeditor/${installedPath(name, relative)}`,
         type: "registry:file",
       };
     }),
@@ -102,7 +97,7 @@ for (const name of packages) {
         throw new Error(`Unbundled dependency ${dependency}`);
       // Resolve dependency URLs against the same deployment.
       registryDependencies.push(
-        new URL(`journl-${sibling}.json`, baseUrl).href,
+        new URL(`${itemName(sibling)}.json`, baseUrl).href,
       );
     } else dependencies.add(`${dependency}@${version}`);
   }
@@ -110,9 +105,9 @@ for (const name of packages) {
     $schema: "https://ui.shadcn.com/schema/registry-item.json",
     dependencies: [...dependencies].sort(),
     files,
-    name: `journl-${name}`,
+    name: itemName(name),
     registryDependencies,
-    title: `Journl ${name}`,
+    title: name === "openeditor" ? "OpenEditor" : `OpenEditor ${name}`,
     type: "registry:block",
   });
 }

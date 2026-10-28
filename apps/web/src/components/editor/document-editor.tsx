@@ -1,5 +1,5 @@
 "use client";
-import { DocumentEditor } from "@acme/editor";
+import { DocumentEditor } from "@acme/openeditor/ui/document-editor";
 import type { ComponentProps } from "react";
 import { useReferenceClient } from "~/components/references/use-reference-client";
 

@@ -1,5 +1,4 @@
-import type { DocumentBlock } from "@acme/document";
-import { documentRows } from "@acme/document";
+import { type DocumentBlock, documentRows } from "@acme/document";
 import type { BlockTransaction } from "~/trpc";
 import { documentSaveTransactions } from "./document-save-adapter";
 

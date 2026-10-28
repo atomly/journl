@@ -77,18 +77,15 @@ importers:
       '@acme/document':
         specifier: workspace:*
         version: link:../../packages/document
-      '@acme/editor':
-        specifier: workspace:*
-        version: link:../../packages/editor
       '@acme/graph':
         specifier: workspace:*
         version: link:../../packages/graph
+      '@acme/openeditor':
+        specifier: workspace:*
+        version: link:../../packages/openeditor
       '@acme/references':
         specifier: workspace:*
         version: link:../../packages/references
-      '@acme/tiptap':
-        specifier: workspace:*
-        version: link:../../packages/tiptap
       '@acme/ui':
         specifier: workspace:*
         version: link:../../packages/ui
@@ -521,116 +518,6 @@ importers:
         specifier: ^5.0.3
         version: 5.0.3(@opentelemetry/api@1.9.1)(@types/node@26.6.5)(jsdom@30.1.2(@noble/hashes@2.4.0))(vite@8.3.4(@types/node@26.6.5)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1))
 
-  packages/editor:
-    dependencies:
-      '@acme/document':
-        specifier: workspace:*
-        version: link:../document
-      '@acme/editor-core':
-        specifier: workspace:*
-        version: link:../editor-core
-      '@acme/references':
-        specifier: workspace:*
-        version: link:../references
-      '@acme/tiptap':
-        specifier: workspace:*
-        version: link:../tiptap
-      '@acme/ui':
-        specifier: workspace:*
-        version: link:../ui
-      '@base-ui/react':
-        specifier: ^1.9.0
-        version: 1.9.0(@date-fns/tz@1.5.0)(@types/react@19.3.0)(date-fns@4.4.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
-      '@dnd-kit/core':
-        specifier: 6.3.1
-        version: 6.3.1(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
-      '@floating-ui/react':
-        specifier: 0.27.20
-        version: 0.27.20(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
-      '@tiptap/core':
-        specifier: 3.31.4
-        version: 3.31.4(@tiptap/pm@3.31.4)
-      '@tiptap/pm':
-        specifier: 3.31.4
-        version: 3.31.4
-      '@tiptap/react':
-        specifier: 3.31.4
-        version: 3.31.4(@floating-ui/dom@1.8.0)(@tiptap/core@3.31.4(@tiptap/pm@3.31.4))(@tiptap/pm@3.31.4)(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
-      cn:
-        specifier: ^0.4.0
-        version: 0.4.0
-      highlight.js:
-        specifier: ^11.12.0
-        version: 11.12.0
-      lucide-react:
-        specifier: ~1.55.0
-        version: 1.55.0(@types/react@19.3.0)(react@19.3.0)
-      sonner:
-        specifier: ~2.0.8
-        version: 2.0.8(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
-    devDependencies:
-      '@acme/tsconfig':
-        specifier: workspace:*
-        version: link:../../tooling/tsconfig
-      '@types/node':
-        specifier: ~26.6.5
-        version: 26.6.5
-      '@types/react':
-        specifier: ~19.3.0
-        version: 19.3.0
-      '@types/react-dom':
-        specifier: ~19.3.0
-        version: 19.3.0(@types/react@19.3.0)
-      jsdom:
-        specifier: 30.1.2
-        version: 30.1.2(@noble/hashes@2.4.0)
-      typescript:
-        specifier: ~7.0.2
-        version: 7.0.2
-      vitest:
-        specifier: ^5.0.3
-        version: 5.0.3(@opentelemetry/api@1.9.1)(@types/node@26.6.5)(jsdom@30.1.2(@noble/hashes@2.4.0))(vite@8.3.4(@types/node@26.6.5)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1))
-
-  packages/editor-core:
-    dependencies:
-      '@acme/document':
-        specifier: workspace:*
-        version: link:../document
-      '@acme/references':
-        specifier: workspace:*
-        version: link:../references
-      '@acme/tiptap':
-        specifier: workspace:*
-        version: link:../tiptap
-      '@tiptap/core':
-        specifier: 3.31.4
-        version: 3.31.4(@tiptap/pm@3.31.4)
-      '@tiptap/pm':
-        specifier: 3.31.4
-        version: 3.31.4
-    devDependencies:
-      '@acme/tsconfig':
-        specifier: workspace:*
-        version: link:../../tooling/tsconfig
-      '@types/node':
-        specifier: ~26.6.5
-        version: 26.6.5
-      '@types/react':
-        specifier: ~19.3.0
-        version: 19.3.0
-      '@types/react-dom':
-        specifier: ~19.3.0
-        version: 19.3.0(@types/react@19.3.0)
-      jsdom:
-        specifier: 30.1.2
-        version: 30.1.2(@noble/hashes@2.4.0)
-      typescript:
-        specifier: ~7.0.2
-        version: 7.0.2
-      vitest:
-        specifier: ^5.0.3
-        version: 5.0.3(@opentelemetry/api@1.9.1)(@types/node@26.6.5)(jsdom@30.1.2(@noble/hashes@2.4.0))(vite@8.3.4(@types/node@26.6.5)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1))
-
   packages/graph:
     dependencies:
       ngraph.graph:
@@ -653,6 +540,94 @@ importers:
         specifier: ^5.0.3
         version: 5.0.3(@opentelemetry/api@1.9.1)(@types/node@26.6.5)(jsdom@30.1.2(@noble/hashes@2.4.0))(vite@8.3.4(@types/node@26.6.5)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1))
 
+  packages/openeditor:
+    dependencies:
+      '@acme/document':
+        specifier: workspace:*
+        version: link:../document
+      '@acme/references':
+        specifier: workspace:*
+        version: link:../references
+      '@acme/ui':
+        specifier: workspace:*
+        version: link:../ui
+      '@base-ui/react':
+        specifier: ^1.9.0
+        version: 1.9.0(@date-fns/tz@1.5.0)(@types/react@19.3.0)(date-fns@4.4.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+      '@dnd-kit/core':
+        specifier: 6.3.1
+        version: 6.3.1(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+      '@floating-ui/react':
+        specifier: 0.27.20
+        version: 0.27.20(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+      '@tiptap/core':
+        specifier: 3.31.4
+        version: 3.31.4(@tiptap/pm@3.31.4)
+      '@tiptap/extension-node-range':
+        specifier: 3.31.4
+        version: 3.31.4(@tiptap/core@3.31.4(@tiptap/pm@3.31.4))(@tiptap/pm@3.31.4)
+      '@tiptap/pm':
+        specifier: 3.31.4
+        version: 3.31.4
+      '@tiptap/react':
+        specifier: 3.31.4
+        version: 3.31.4(@floating-ui/dom@1.8.0)(@tiptap/core@3.31.4(@tiptap/pm@3.31.4))(@tiptap/pm@3.31.4)(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+      cn:
+        specifier: ^0.4.0
+        version: 0.4.0
+      highlight.js:
+        specifier: ^11.12.0
+        version: 11.12.0
+      lowlight:
+        specifier: ^3.3.0
+        version: 3.3.0
+      lucide-react:
+        specifier: ~1.55.0
+        version: 1.55.0(@types/react@19.3.0)(react@19.3.0)
+      mdast-util-from-markdown:
+        specifier: ^2.1.0
+        version: 2.1.0
+      prosemirror-highlight:
+        specifier: 0.15.3
+        version: 0.15.3(@shikijs/types@4.5.0)(@types/hast@3.0.5)(highlight.js@11.12.0)(lowlight@3.3.0)(prosemirror-model@1.25.12)(prosemirror-state@1.4.4)(prosemirror-transform@1.12.2)(prosemirror-view@1.42.6)
+      sonner:
+        specifier: ~2.0.8
+        version: 2.0.8(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+      zod:
+        specifier: ~4.6.5
+        version: 4.6.5
+    devDependencies:
+      '@acme/blocknote':
+        specifier: workspace:*
+        version: link:../blocknote
+      '@acme/tsconfig':
+        specifier: workspace:*
+        version: link:../../tooling/tsconfig
+      '@types/mdast':
+        specifier: ^4.0.4
+        version: 4.0.4
+      '@types/node':
+        specifier: ~26.6.5
+        version: 26.6.5
+      '@types/react':
+        specifier: ~19.3.0
+        version: 19.3.0
+      '@types/react-dom':
+        specifier: ~19.3.0
+        version: 19.3.0(@types/react@19.3.0)
+      jsdom:
+        specifier: 30.1.2
+        version: 30.1.2(@noble/hashes@2.4.0)
+      react:
+        specifier: ~19.3.0
+        version: 19.3.0
+      typescript:
+        specifier: ~7.0.2
+        version: 7.0.2
+      vitest:
+        specifier: ^5.0.3
+        version: 5.0.3(@opentelemetry/api@1.9.1)(@types/node@26.6.5)(jsdom@30.1.2(@noble/hashes@2.4.0))(vite@8.3.4(@types/node@26.6.5)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1))
+
   packages/references:
     dependencies:
       lucide-react:
@@ -668,49 +643,6 @@ importers:
       react:
         specifier: ~19.3.0
         version: 19.3.0
-      typescript:
-        specifier: ~7.0.2
-        version: 7.0.2
-      vitest:
-        specifier: ^5.0.3
-        version: 5.0.3(@opentelemetry/api@1.9.1)(@types/node@26.6.5)(jsdom@30.1.2(@noble/hashes@2.4.0))(vite@8.3.4(@types/node@26.6.5)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1))
-
-  packages/tiptap:
-    dependencies:
-      '@acme/document':
-        specifier: workspace:*
-        version: link:../document
-      '@tiptap/core':
-        specifier: 3.31.4
-        version: 3.31.4(@tiptap/pm@3.31.4)
-      '@tiptap/extension-node-range':
-        specifier: 3.31.4
-        version: 3.31.4(@tiptap/core@3.31.4(@tiptap/pm@3.31.4))(@tiptap/pm@3.31.4)
-      '@tiptap/pm':
-        specifier: 3.31.4
-        version: 3.31.4
-      lowlight:
-        specifier: ^3.3.0
-        version: 3.3.0
-      mdast-util-from-markdown:
-        specifier: ^2.1.0
-        version: 2.1.0
-      prosemirror-highlight:
-        specifier: 0.15.3
-        version: 0.15.3(@shikijs/types@4.5.0)(@types/hast@3.0.5)(highlight.js@11.12.0)(lowlight@3.3.0)(prosemirror-model@1.25.12)(prosemirror-state@1.4.4)(prosemirror-transform@1.12.2)(prosemirror-view@1.42.6)
-    devDependencies:
-      '@acme/blocknote':
-        specifier: workspace:*
-        version: link:../blocknote
-      '@acme/tsconfig':
-        specifier: workspace:*
-        version: link:../../tooling/tsconfig
-      '@types/mdast':
-        specifier: ^4.0.4
-        version: 4.0.4
-      jsdom:
-        specifier: 30.1.2
-        version: 30.1.2(@noble/hashes@2.4.0)
       typescript:
         specifier: ~7.0.2
         version: 7.0.2

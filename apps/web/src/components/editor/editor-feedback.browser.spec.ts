@@ -20,15 +20,15 @@ test("selected lists convert together, typing dismisses handles and plain copy k
   await page.getByRole("button", { exact: true, name: "New page" }).click();
   await expect(page).toHaveURL(/\/pages\//);
   await page.keyboard.press("Escape");
-  const editor = page.locator(".open-editor-tiptap");
+  const editor = page.locator(".better-editor-tiptap");
   await editor.pressSequentially("- One");
   await editor.press("Enter");
   await editor.pressSequentially("Two");
-  const rows = editor.locator('[data-open-editor-body="bulletListItem"]');
+  const rows = editor.locator('[data-better-editor-body="bulletListItem"]');
   await expect(rows).toHaveCount(2);
   await editor.evaluate(async (root) => {
     const rows = root.querySelectorAll(
-      '[data-open-editor-body="bulletListItem"]',
+      '[data-better-editor-body="bulletListItem"]',
     );
     const first = rows[0]?.firstChild;
     const last = rows[1]?.firstChild;
@@ -50,13 +50,13 @@ test("selected lists convert together, typing dismisses handles and plain copy k
     .getByRole("option", { exact: true, name: "Numbered list" })
     .click();
   await expect(
-    editor.locator('[data-open-editor-body="numberedListItem"]'),
+    editor.locator('[data-better-editor-body="numberedListItem"]'),
   ).toHaveCount(2);
   await editor.press("ControlOrMeta+c");
   expect(await page.evaluate(() => navigator.clipboard.readText())).toMatch(
     /1\. One[\s\S]*2\. Two/,
   );
-  await editor.locator("[data-open-editor-body]").last().hover();
+  await editor.locator("[data-better-editor-body]").last().hover();
   const handle = page.getByRole("button", {
     exact: true,
     name: "Block actions",
@@ -65,7 +65,7 @@ test("selected lists convert together, typing dismisses handles and plain copy k
   await editor.press("ArrowRight");
   await editor.pressSequentially("More");
   await expect(handle).toHaveCount(0);
-  await editor.locator("[data-open-editor-body]").first().hover();
+  await editor.locator("[data-better-editor-body]").first().hover();
   await expect(handle).toBeVisible();
 });
 
@@ -87,9 +87,9 @@ test("converting a journal entry keeps its block identity and leaves an expandab
   // so each browser needs its own source date.
   const date = `1988-08-${info.project.name === "desktop-chromium" ? "24" : "25"}`;
   await page.goto(`/journal/${date}`);
-  const editor = page.locator(".open-editor-tiptap").first();
+  const editor = page.locator(".better-editor-tiptap").first();
   await editor.fill("Entry to move");
-  const paragraphs = editor.locator('[data-open-editor-body="paragraph"]');
+  const paragraphs = editor.locator('[data-better-editor-body="paragraph"]');
   await expect(paragraphs).toHaveCount(1);
   await expect(paragraphs.first()).toHaveText("Entry to move");
   await editor.press("Enter");
@@ -100,7 +100,7 @@ test("converting a journal entry keeps its block identity and leaves an expandab
   await expect(paragraphs.first()).toHaveText("Entry to move");
   await expect(
     editor.locator(
-      '[data-open-editor-children] [data-open-editor-body="paragraph"]',
+      '[data-better-editor-children] [data-better-editor-body="paragraph"]',
     ),
   ).toHaveText("Nested writing");
   await expect(page.locator("[data-save-status]")).toContainText("Saved");
@@ -163,7 +163,7 @@ test("new tables accept immediate typing and typing hides controls over another 
   await page.getByRole("button", { exact: true, name: "New page" }).click();
   await expect(page).toHaveURL(/\/pages\//);
   await page.keyboard.press("Escape");
-  const editor = page.locator(".open-editor-tiptap");
+  const editor = page.locator(".better-editor-tiptap");
   await editor.fill("/table");
   await page.getByRole("option", { exact: true, name: "Table" }).click();
   const cells = editor.locator("td");

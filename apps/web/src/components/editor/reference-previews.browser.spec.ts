@@ -19,7 +19,7 @@ test("saved external previews keep source presentation and navigation in both ed
   await create.click();
   await expect(page).not.toHaveURL(previous);
   await page.keyboard.press("Escape");
-  const editor = page.locator(".open-editor-tiptap");
+  const editor = page.locator(".better-editor-tiptap");
   await editor.fill("Preview acceptance");
   await page.keyboard.press("Enter");
   const urls = [
@@ -49,14 +49,14 @@ test("saved external previews keep source presentation and navigation in both ed
             type: "referenceCard",
           },
         ],
-        type: "openEditorBlock",
+        type: "betterEditorBlock",
       })),
     );
   }, urls);
   for (const frontend of ["tiptap", "blocknote"]) {
     const cards = page.locator(
       frontend === "tiptap"
-        ? ".open-editor-tiptap .content-reference-card"
+        ? ".better-editor-tiptap .content-reference-card"
         : ".bn-editor .content-reference-card",
     );
     await expect(cards).toHaveCount(3);

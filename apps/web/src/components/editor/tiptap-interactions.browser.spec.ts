@@ -16,13 +16,13 @@ test.beforeEach(async ({ page, context }) => {
   await create.click();
   await expect(page).not.toHaveURL(previous);
   await page.keyboard.press("Escape");
-  await expect(page.locator(".open-editor-tiptap")).toBeVisible();
+  await expect(page.locator(".better-editor-tiptap")).toBeVisible();
 });
 
 test("selected blocks indent together and a child handle remains stable across its gutter", async ({
   page,
 }) => {
-  const editor = page.locator(".open-editor-tiptap");
+  const editor = page.locator(".better-editor-tiptap");
   await editor.fill("Parent");
   await page.keyboard.press("Enter");
   await page.keyboard.insertText("First");
@@ -33,7 +33,7 @@ test("selected blocks indent together and a child handle remains stable across i
     nodes.map((node) => node.getAttribute("data-block-id")),
   );
   await editor.evaluate(async (root) => {
-    const rows = [...root.querySelectorAll("[data-open-editor-body]")];
+    const rows = [...root.querySelectorAll("[data-better-editor-body]")];
     const first = rows[1]?.firstChild;
     const last = rows[2]?.firstChild;
     if (!first || !last) throw new Error("Selection rows missing");
@@ -58,7 +58,7 @@ test("selected blocks indent together and a child handle remains stable across i
   await page.keyboard.press("ControlOrMeta+z");
   await expect(roots).toHaveCount(1);
   const child = editor.locator(
-    `[data-block-id="${ids[2]}"] [data-open-editor-body]`,
+    `[data-block-id="${ids[2]}"] [data-better-editor-body]`,
   );
   // Undo restores the multi-block selection. Place a caret before testing a
   // single-block handle; clicking a selected group intentionally retains it.
@@ -97,7 +97,7 @@ test("selected blocks indent together and a child handle remains stable across i
 test("select-all text keeps formatting controls available and saves their changes", async ({
   page,
 }) => {
-  const editor = page.locator(".open-editor-tiptap");
+  const editor = page.locator(".better-editor-tiptap");
   await editor.fill("First paragraph");
   await page.keyboard.press("Enter");
   await page.keyboard.insertText("Second paragraph");
@@ -107,7 +107,7 @@ test("select-all text keeps formatting controls available and saves their change
   await colors.click();
   await page.getByRole("button", { exact: true, name: "Text purple" }).click();
   await expect(
-    editor.locator('[style*="--open-editor-text-purple"]'),
+    editor.locator('[style*="--better-editor-text-purple"]'),
   ).toHaveCount(2);
   await page.keyboard.press("ControlOrMeta+a");
   await page.getByRole("button", { exact: true, name: "Bold" }).click();
@@ -122,14 +122,14 @@ test("select-all text keeps formatting controls available and saves their change
     "Second paragraph",
   ]);
   await expect(
-    editor.locator('[style*="--open-editor-text-purple"]'),
+    editor.locator('[style*="--better-editor-text-purple"]'),
   ).toHaveCount(2);
 });
 
 test("tables are discoverable and row/column edits save on the actual route", async ({
   page,
 }) => {
-  const editor = page.locator(".open-editor-tiptap");
+  const editor = page.locator(".better-editor-tiptap");
   await editor.fill("/table");
   await page.getByRole("option", { exact: true, name: "Table" }).click();
   const table = editor.locator("table");
@@ -151,7 +151,7 @@ test("tables are discoverable and row/column edits save on the actual route", as
     .getByRole("menuitem", { exact: true, name: "Insert column right" })
     .click();
   await expect(table.locator("tr").first().locator("td")).toHaveCount(4);
-  const wrapper = editor.locator(".open-editor-table-wrapper");
+  const wrapper = editor.locator(".better-editor-table-wrapper");
   await wrapper.evaluate(async (element) => {
     element.scrollLeft = element.scrollWidth;
     await new Promise(requestAnimationFrame);
@@ -193,7 +193,7 @@ test("tables are discoverable and row/column edits save on the actual route", as
 test("a plain link exposes consistent display choices and converts to a card", async ({
   page,
 }) => {
-  const editor = page.locator(".open-editor-tiptap");
+  const editor = page.locator(".better-editor-tiptap");
   await editor.fill("Example link");
   await page.keyboard.press("ControlOrMeta+a");
   await page.keyboard.press("ControlOrMeta+k");
@@ -201,7 +201,7 @@ test("a plain link exposes consistent display choices and converts to a card", a
     .getByRole("textbox", { name: "Reference URL" })
     .fill("https://example.com");
   await page.getByRole("button", { exact: true, name: "Apply link" }).click();
-  await editor.locator("a[data-open-editor-link]").click();
+  await editor.locator("a[data-better-editor-link]").click();
   await page.getByRole("button", { exact: true, name: "Display as" }).click();
   await expect(
     page.getByRole("menuitem", { exact: true, name: "Mention" }),
@@ -223,7 +223,7 @@ test("native handle drag moves nested blocks and copies receive fresh identities
     info.project.name !== "desktop-chromium",
     "Native mouse drag is a desktop interaction",
   );
-  const editor = page.locator(".open-editor-tiptap");
+  const editor = page.locator(".better-editor-tiptap");
   await editor.fill("Parent move");
   await page.keyboard.press("Enter");
   await page.keyboard.insertText("Child move");
@@ -247,7 +247,7 @@ test("native handle drag moves nested blocks and copies receive fresh identities
   const drag = async (copy: boolean) => {
     const source = copy ? roots.last() : roots.first();
     const target = copy ? roots.first() : roots.last();
-    await source.locator("[data-open-editor-body]").first().hover();
+    await source.locator("[data-better-editor-body]").first().hover();
     const handle = await page
       .getByRole("button", { exact: true, name: "Block actions" })
       .boundingBox();

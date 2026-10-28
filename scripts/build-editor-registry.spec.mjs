@@ -14,10 +14,10 @@ test("registry includes the full local import graph without private workspace im
     await readFile(`${root}/apps/web/public/r/registry.json`, "utf8"),
   );
   assert.deepEqual(registry.items.map((item) => item.name).sort(), [
-    "open-editor",
-    "open-editor-document",
-    "open-editor-references",
-    "open-editor-ui",
+    "better-editor",
+    "better-editor-document",
+    "better-editor-references",
+    "better-editor-ui",
   ]);
   const basenames = registry.items.flatMap((item) =>
     item.files.map((file) => file.path.split("/").at(-1)),

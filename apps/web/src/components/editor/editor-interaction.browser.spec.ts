@@ -17,8 +17,8 @@ test("handle menu opens once, add picker leaves no slash, and divider needs no s
   await page.getByRole("button", { exact: true, name: "New page" }).click();
   await expect(page).toHaveURL(/\/pages\//);
   await page.keyboard.press("Escape");
-  const editor = page.locator(".open-editor-tiptap");
-  const body = editor.locator("[data-open-editor-body]").first();
+  const editor = page.locator(".better-editor-tiptap");
+  const body = editor.locator("[data-better-editor-body]").first();
   await body.hover();
   await page
     .getByRole("button", { exact: true, name: "Block actions" })
@@ -41,7 +41,7 @@ test("handle menu opens once, add picker leaves no slash, and divider needs no s
   await expect(editor.locator("hr")).toHaveCount(1);
   await editor.pressSequentially("After divider");
   await expect(
-    editor.locator('[data-open-editor-body="paragraph"]'),
+    editor.locator('[data-better-editor-body="paragraph"]'),
   ).toHaveText("After divider");
 });
 
@@ -51,7 +51,7 @@ test("code language picker produces visible colors and survives save/reload", as
   await page.goto(
     `/journal/1988-08-${info.project.name === "desktop-chromium" ? "26" : "29"}`,
   );
-  const editor = page.locator(".open-editor-tiptap").first();
+  const editor = page.locator(".better-editor-tiptap").first();
   await editor.pressSequentially("```javascript ");
   await editor.pressSequentially("console.log('hello world');");
   await editor.press("Enter");
@@ -88,25 +88,25 @@ test("pasting a plain multiline list creates nested list blocks", async ({
   test.skip(info.project.name !== "desktop-chromium", "Desktop clipboard API");
   await context.grantPermissions(["clipboard-read", "clipboard-write"]);
   await page.goto("/journal/1988-08-27");
-  const editor = page.locator(".open-editor-tiptap").first();
+  const editor = page.locator(".better-editor-tiptap").first();
   await editor.click();
   await page.evaluate(() =>
     navigator.clipboard.writeText("- First **bold**\n  - Child\n- Second"),
   );
   await editor.press("ControlOrMeta+v");
   await expect(
-    editor.locator('[data-open-editor-body="bulletListItem"]'),
+    editor.locator('[data-better-editor-body="bulletListItem"]'),
   ).toHaveCount(3);
   await expect(
     editor.locator(
-      '[data-open-editor-children] [data-open-editor-body="bulletListItem"]',
+      '[data-better-editor-children] [data-better-editor-body="bulletListItem"]',
     ),
   ).toHaveText("Child");
   await expect(editor.locator("strong")).toHaveText("bold");
   await expect(page.locator("[data-save-status]")).toContainText("Saved");
   await page.reload();
   await expect(
-    editor.locator('[data-open-editor-body="bulletListItem"]'),
+    editor.locator('[data-better-editor-body="bulletListItem"]'),
   ).toHaveCount(3);
 });
 
@@ -123,14 +123,14 @@ test("reference selection highlights its own frame and native handles still move
   await page.getByRole("button", { exact: true, name: "New page" }).click();
   await expect(page).toHaveURL(/\/pages\//);
   await page.keyboard.press("Escape");
-  const editor = page.locator(".open-editor-tiptap");
+  const editor = page.locator(".better-editor-tiptap");
   await editor.click();
   await editor.pressSequentially("First");
   await editor.press("Enter");
   await editor.pressSequentially("Second");
   await editor.press("Enter");
   await editor.pressSequentially("Third");
-  const rows = editor.locator("[data-open-editor-body]");
+  const rows = editor.locator("[data-better-editor-body]");
   await rows.first().hover();
   const handle = page.getByRole("button", {
     exact: true,
@@ -174,7 +174,7 @@ test("mobile handle opens block actions in one tap with a usable touch target", 
   test.skip(info.project.name !== "mobile-webkit", "Touch handle acceptance");
   await page.goto("/journal/1988-08-28");
   await page
-    .locator(".open-editor-tiptap [data-open-editor-body]")
+    .locator(".better-editor-tiptap [data-better-editor-body]")
     .first()
     .tap();
   const handle = page.getByRole("button", {
@@ -202,12 +202,12 @@ test("crossing the toolbar gap keeps the handle on its block and leaving release
   await page.getByRole("button", { exact: true, name: "New page" }).click();
   await expect(page).toHaveURL(/\/pages\//);
   await page.keyboard.press("Escape");
-  const editor = page.locator(".open-editor-tiptap");
+  const editor = page.locator(".better-editor-tiptap");
   await editor.click();
   await editor.pressSequentially("Previous block");
   await editor.press("Enter");
   await editor.pressSequentially("Selected block");
-  const rows = editor.locator('[data-open-editor-body="paragraph"]');
+  const rows = editor.locator('[data-better-editor-body="paragraph"]');
   await rows.last().evaluate(async (element) => {
     const range = document.createRange();
     range.selectNodeContents(element);

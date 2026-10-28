@@ -22,7 +22,7 @@ for (const theme of ["light", "dark"]) {
       ]);
       await page.goto(`/pages/${fixtureId(980)}`);
       const editor = page.locator(
-        frontend === "blocknote" ? ".bn-editor" : ".open-editor-tiptap",
+        frontend === "blocknote" ? ".bn-editor" : ".better-editor-tiptap",
       );
       await expect(editor).toContainText("Heading 6");
       await page.evaluate(() => document.fonts.ready);
@@ -63,7 +63,7 @@ for (const theme of ["light", "dark"]) {
           expect((await toolbar.boundingBox())?.height).toBeLessThan(50);
         }
         await editor
-          .locator('[data-open-editor-body="paragraph"]')
+          .locator('[data-better-editor-body="paragraph"]')
           .first()
           .hover();
         await expect(

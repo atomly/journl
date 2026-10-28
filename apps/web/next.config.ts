@@ -7,7 +7,7 @@ const config: NextConfig = {
   allowedDevOrigins: parseAuthDevOrigins(env.AUTH_DEV_ORIGINS),
   /** Enables hot reloading for local packages without a build step */
   transpilePackages: [
-    "@acme/open-editor",
+    "@acme/better-editor",
     "@acme/document",
     "@acme/references",
     "@acme/auth",

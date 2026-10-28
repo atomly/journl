@@ -55,8 +55,8 @@ test("journal slash commands, checkboxes, and collapsible writing save with stab
         const element =
           anchor instanceof Element ? anchor : anchor?.parentElement;
         return element
-          ?.closest("[data-open-editor-body]")
-          ?.getAttribute("data-open-editor-body");
+          ?.closest("[data-better-editor-body]")
+          ?.getAttribute("data-better-editor-body");
       }),
     )
     .toBe("paragraph");
@@ -68,7 +68,7 @@ test("journal slash commands, checkboxes, and collapsible writing save with stab
   });
   await checkbox.check();
   await expect(checkbox).toBeChecked();
-  await editor.locator('[data-open-editor-body="checkListItem"]').click();
+  await editor.locator('[data-better-editor-body="checkListItem"]').click();
   await page.keyboard.press("End");
   await page.keyboard.press("Enter");
   await expect(editor.getByRole("checkbox")).toHaveCount(2);
@@ -77,17 +77,17 @@ test("journal slash commands, checkboxes, and collapsible writing save with stab
   await page.keyboard.press("Enter");
   await page.keyboard.type("Details");
   const details = editor
-    .locator('[data-open-editor-body="toggleListItem"]')
+    .locator('[data-better-editor-body="toggleListItem"]')
     .filter({ hasText: /^Details$/ });
   await expect(details).toHaveCount(1);
   await page.keyboard.press("Enter");
   await expect(
-    editor.locator('[data-open-editor-body="toggleListItem"]'),
+    editor.locator('[data-better-editor-body="toggleListItem"]'),
   ).toHaveCount(2);
   await page.keyboard.press("Tab");
   await page.keyboard.type("Nested writing survives collapse");
   const child = editor
-    .locator("[data-open-editor-children] [data-block-id]")
+    .locator("[data-better-editor-children] [data-block-id]")
     .filter({ hasText: "Nested writing survives collapse" });
   await expect(child).toHaveCount(1);
   const childId = await child.getAttribute("data-block-id");
@@ -136,7 +136,7 @@ test("page code indentation and table navigation edit bodies without moving bloc
   });
   const source = editor
     .locator(
-      `[data-block-id="${fixtureId(pageNumber + 1)}"] [data-open-editor-body]`,
+      `[data-block-id="${fixtureId(pageNumber + 1)}"] [data-better-editor-body]`,
     )
     .first();
   await source.click();
@@ -265,7 +265,7 @@ test("block menus move, copy, delete and undo the selected block while text form
       items.map((item) => item.getAttribute("data-block-id")),
     );
   await editor
-    .locator(`[data-block-id="${original[1]}"] [data-open-editor-body]`)
+    .locator(`[data-block-id="${original[1]}"] [data-better-editor-body]`)
     .first()
     .hover();
   await page
@@ -287,7 +287,7 @@ test("block menus move, copy, delete and undo the selected block while text form
       ),
   ).toEqual([...original].reverse());
   await editor
-    .locator(`[data-block-id="${original[1]}"] [data-open-editor-body]`)
+    .locator(`[data-block-id="${original[1]}"] [data-better-editor-body]`)
     .first()
     .hover();
   await page
@@ -314,7 +314,7 @@ test("block menus move, copy, delete and undo the selected block while text form
   await page.keyboard.press("Escape");
   await expect(contextMenu).toBeHidden();
   await editor
-    .locator(`[data-block-id="${copied}"] [data-open-editor-body]`)
+    .locator(`[data-block-id="${copied}"] [data-better-editor-body]`)
     .first()
     .hover();
   await page
@@ -337,6 +337,6 @@ test("block menus move, copy, delete and undo the selected block while text form
     editor.locator(`[data-block-id="${copied}"] strong`),
   ).toContainText("bold writing");
   await expect(
-    editor.locator(`[data-block-id="${copied}"] [data-open-editor-body]`),
+    editor.locator(`[data-block-id="${copied}"] [data-better-editor-body]`),
   ).toHaveCSS("text-align", "right");
 });

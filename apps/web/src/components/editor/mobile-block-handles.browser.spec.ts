@@ -56,14 +56,14 @@ test("mobile block handles follow taps and move nested blocks with stable identi
   await create.click();
   await expect(page).not.toHaveURL(old, { timeout: 30000 });
   await page.keyboard.press("Escape");
-  const editor = page.locator(".open-editor-tiptap");
+  const editor = page.locator(".better-editor-tiptap");
   await editor.fill("Alpha");
   await page.keyboard.press("Enter");
   await page.keyboard.insertText("Beta");
   await page.keyboard.press("Enter");
   await page.keyboard.insertText("Gamma");
   const beta = editor
-    .locator('[data-open-editor-body="paragraph"]')
+    .locator('[data-better-editor-body="paragraph"]')
     .filter({ hasText: /^Beta$/ });
   await beta.tap();
   const handle = page.getByRole("button", {
@@ -80,13 +80,13 @@ test("mobile block handles follow taps and move nested blocks with stable identi
   );
   await handle.tap();
   await page.getByRole("menuitem", { exact: true, name: "Indent" }).click();
-  await expect(editor.locator("[data-open-editor-children]")).toContainText(
+  await expect(editor.locator("[data-better-editor-children]")).toContainText(
     "Beta",
   );
   await beta.tap();
   const start = await handle.boundingBox();
   const end = await editor
-    .locator('[data-open-editor-body="paragraph"]')
+    .locator('[data-better-editor-body="paragraph"]')
     .filter({ hasText: /^Gamma$/ })
     .boundingBox();
   if (!start || !end) throw new Error("Missing drag geometry");
@@ -98,7 +98,9 @@ test("mobile block handles follow taps and move nested blocks with stable identi
   );
   await page.waitForTimeout(300); // dnd-kit requires a deliberate hold before touch dragging.
   await touch(handle, "touchmove", end.x + 16, end.y + end.height - 2);
-  await expect(page.locator(".open-editor-block-drop-indicator")).toBeVisible();
+  await expect(
+    page.locator(".better-editor-block-drop-indicator"),
+  ).toBeVisible();
   await touch(handle, "touchend", end.x + 16, end.y + end.height - 2);
   await expect(editor.locator(":scope > [data-block-id]")).toHaveCount(3);
   await expect(editor.locator(":scope > [data-block-id]").last()).toContainText(
@@ -112,14 +114,14 @@ test("mobile block handles follow taps and move nested blocks with stable identi
   ).toBe(id);
   await beta.tap();
   await page.keyboard.press("ControlOrMeta+z");
-  await expect(editor.locator("[data-open-editor-children]")).toContainText(
+  await expect(editor.locator("[data-better-editor-children]")).toContainText(
     "Beta",
   );
   await expect(page.locator("[data-save-status]")).toContainText("Saved", {
     timeout: 60000,
   });
   await page.reload();
-  await expect(editor.locator("[data-open-editor-children]")).toContainText(
+  await expect(editor.locator("[data-better-editor-children]")).toContainText(
     "Beta",
   );
 });

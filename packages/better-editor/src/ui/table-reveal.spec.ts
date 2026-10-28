@@ -1,8 +1,9 @@
 // @vitest-environment jsdom
 import { parseBlock } from "@acme/document";
-import { documentExtensions, toTiptapDocument } from "@acme/tiptap";
 import { Editor } from "@tiptap/core";
 import { expect, test, vi } from "vitest";
+import { documentExtensions } from "../engine/schema";
+import { toTiptapDocument } from "../serialization/tiptap";
 import { revealTableColumn } from "./table-reveal";
 
 for (const unmergedRow of [true, false]) {

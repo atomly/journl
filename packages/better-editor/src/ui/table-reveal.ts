@@ -1,6 +1,7 @@
-import { blockAt, tableColumnWidth } from "@acme/tiptap";
 import type { Editor } from "@tiptap/core";
 import { TableMap } from "@tiptap/pm/tables";
+import { blockAt } from "../engine/identity";
+import { tableColumnWidth } from "../engine/table-actions";
 
 /** Reveal the added column without vertical scrolling. WebKit gives col
  * elements empty boxes, so use the narrowest cell covering this column. */

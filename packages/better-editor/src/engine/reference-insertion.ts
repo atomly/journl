@@ -14,11 +14,12 @@ export function insertTiptapReference(
   resolve: Resolve,
   label = "",
   display?: "contentReference" | "referenceCard",
+  normalizeUrl?: (url: string) => string,
 ) {
   if (!view.editable) return false;
   let parsed: URL;
   try {
-    parsed = new URL(url, window.location.origin);
+    parsed = new URL(normalizeUrl?.(url) ?? url);
   } catch {
     return false;
   }
@@ -136,11 +137,7 @@ export function insertTiptapReference(
       });
     view.dispatch(tr.setMeta("addToHistory", false));
   };
-  const resolverUrl =
-    parsed.origin === window.location.origin
-      ? `${parsed.pathname}${parsed.search}${parsed.hash}`
-      : parsed.href;
-  void resolve(resolverUrl)
+  void resolve(parsed.href)
     .then(({ items }) => {
       const result = items[0];
       const target = result?.target;

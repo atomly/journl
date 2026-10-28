@@ -486,8 +486,13 @@ try {
       stdio: "inherit",
     },
   );
-  const [code] = await once(child, "exit");
-  if (!stopping) process.exitCode = typeof code === "number" ? code : 1;
+  const [code, signal] = await once(child, "exit");
+  if (!stopping) {
+    process.stderr.write(
+      `Browser dev server exited unexpectedly (code: ${String(code)}, signal: ${String(signal)})\n`,
+    );
+    process.exitCode = typeof code === "number" && code !== 0 ? code : 1;
+  }
 } finally {
   await cleanup();
 }

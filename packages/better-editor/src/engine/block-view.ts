@@ -1,6 +1,7 @@
 import type { NodeViewRendererProps } from "@tiptap/core";
 import type { NodeView } from "@tiptap/pm/view";
 import { editorColor } from "./colors";
+import { TOGGLE_BLOCK_META } from "./metadata";
 
 /** Controls are view state, outside contentDOM and clipboard/storage serialization. */
 export function blockView({
@@ -10,6 +11,7 @@ export function blockView({
 }: NodeViewRendererProps): NodeView {
   let node = initial;
   let collapsed = false;
+  let listening = false;
   const dom = document.createElement("div");
   dom.dataset.betterEditorBlock = "";
   const controls = document.createElement("div");
@@ -40,6 +42,11 @@ export function blockView({
       body?.type.name === "toggleListItem" ||
       (body?.type.name === "heading" && body.attrs.props?.isToggleable)
     );
+    if (listening === toggle.hidden) {
+      if (toggle.hidden) editor.off("transaction", keyboardToggle);
+      else editor.on("transaction", keyboardToggle);
+      listening = !toggle.hidden;
+    }
     toggle.setAttribute(
       "aria-label",
       collapsed ? "Expand content" : "Collapse content",
@@ -77,14 +84,13 @@ export function blockView({
     transaction: import("@tiptap/pm/state").Transaction;
   }) => {
     if (
-      transaction.getMeta("better-editor-toggle-block") === node.attrs.id &&
+      transaction.getMeta(TOGGLE_BLOCK_META) === node.attrs.id &&
       !toggle.hidden
     ) {
       collapsed = !collapsed;
       sync();
     }
   };
-  editor.on("transaction", keyboardToggle);
   sync();
   return {
     contentDOM,

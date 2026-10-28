@@ -44,7 +44,7 @@ test("registry includes the full local import graph without private workspace im
       );
     }
     for (const file of item.files) {
-      assert.doesNotMatch(file.path, /\.(spec|test)\./);
+      assert.doesNotMatch(file.path, /\.(spec|test|bench)\./);
       assert.doesNotMatch(file.content, /["']@acme\//);
       const imports = [
         ...file.content.matchAll(/(?:from\s*|import\s*\(?)["']([^"']+)["']/g),

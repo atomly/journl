@@ -31,6 +31,7 @@ import type { NodeView } from "@tiptap/pm/view";
 import { ChevronRight, ExternalLink, MoreHorizontal } from "lucide-react";
 import {
   createContext,
+  memo,
   useContext,
   useMemo,
   useState,
@@ -82,7 +83,9 @@ export function referenceViewStore() {
               dom.dataset.betterEditorReference = "";
             else dom.dataset.betterEditorBody = type;
             const id = key++;
+            let current = node;
             const sync = (next: PMNode) => {
+              current = next;
               dom.setAttribute(
                 "data-better-editor-attrs",
                 JSON.stringify(next.attrs),
@@ -109,7 +112,7 @@ export function referenceViewStore() {
                 Boolean(event.target.closest('a,button,input,[role="menu"]')),
               update(next) {
                 if (next.type !== node.type) return false;
-                sync(next);
+                if (next !== current) sync(next);
                 return true;
               },
             };
@@ -183,12 +186,17 @@ function embedTree(value: unknown): DocumentBlock[] | null {
     return null;
   }
 }
-function ReferenceSurface({ view }: { view: ReferenceView }) {
+const ReferenceSurface = memo(function ReferenceSurface({
+  view,
+}: {
+  view: ReferenceView;
+}) {
   const parsed = zReferenceProps.safeParse(view.node.attrs.props);
   if (!parsed.success)
     return <span className="content-reference-status">Unavailable target</span>;
   return <ResolvedReference view={view} props={parsed.data} />;
-}
+});
+
 function ResolvedReference({
   view,
   props,

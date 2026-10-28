@@ -208,11 +208,16 @@ function readInline(node: Node): Exclude<InlineContent, string> {
   return result;
 }
 
-export function fromTiptapDocument(doc: Node): DocumentBlock[] {
+function readTiptapDocument(
+  doc: Node,
+  cache?: WeakMap<Node, DocumentBlock>,
+): DocumentBlock[] {
   try {
     doc.check();
     if (doc.type.name !== "doc") throw new Error("Expected document root");
     const convert = (wrapper: Node): DocumentBlock => {
+      const cached = cache?.get(wrapper);
+      if (cached) return cached;
       if (wrapper.type.name !== "betterEditorBlock")
         throw new Error("Expected BetterEditor block wrapper");
       const body = required(wrapper.firstChild);
@@ -297,15 +302,51 @@ export function fromTiptapDocument(doc: Node): DocumentBlock[] {
         });
         data.children = children;
       }
-      return parseBlock(data);
+      const children = data.children as DocumentBlock[] | undefined;
+      delete data.children;
+      const parsed = parseBlock(data);
+      if (children) parsed.children = children;
+      if (cache) {
+        const freeze = (value: unknown) => {
+          if (!value || typeof value !== "object" || Object.isFrozen(value))
+            return;
+          for (const child of Object.values(value)) freeze(child);
+          Object.freeze(value);
+        };
+        freeze(parsed);
+        cache.set(wrapper, parsed);
+      }
+      return parsed;
     };
     const result: DocumentBlock[] = [];
     doc.forEach((node) => {
       result.push(convert(node));
     });
-    documentRows(result);
+    // Payloads were validated as each node was converted. Check cross-block
+    // invariants without parsing every unchanged payload a second time.
+    const ids = new Set<string>();
+    const validate = (blocks: readonly DocumentBlock[], depth = 0) => {
+      if (depth > 128) throw new Error("Nesting exceeds document limit");
+      for (const block of blocks) {
+        if (ids.has(block.id)) throw new Error("Duplicate block ID");
+        ids.add(block.id);
+        validate(block.children ?? [], depth + 1);
+      }
+    };
+    validate(result);
     return result;
   } catch (cause) {
     throw new AdapterReadError(doc.toJSON(), cause);
   }
+}
+
+export function fromTiptapDocument(doc: Node): DocumentBlock[] {
+  return readTiptapDocument(doc);
+}
+
+/** Immutable snapshots reuse validated payloads for unchanged ProseMirror nodes. */
+export function createDocumentReader() {
+  const cache = new WeakMap<Node, DocumentBlock>();
+  return (doc: Node): readonly DocumentBlock[] =>
+    readTiptapDocument(doc, cache);
 }

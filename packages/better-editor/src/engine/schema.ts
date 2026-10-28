@@ -1,6 +1,5 @@
-import { Extension, type Extensions, Mark, Node } from "@tiptap/core";
+import { type Extensions, Mark, Node } from "@tiptap/core";
 import { blockView } from "./block-view";
-import { codeHighlightPlugin } from "./code-block";
 import { editorColor as color } from "./colors";
 import { tableExtension, tableNodeView } from "./tables";
 
@@ -50,10 +49,6 @@ const propsAttribute = () => ({
 export function documentExtensions(): Extensions {
   return [
     tableExtension(),
-    Extension.create({
-      name: "better-editor-syntax-highlight",
-      addProseMirrorPlugins: () => [codeHighlightPlugin()],
-    }),
     Node.create({ name: "doc", topNode: true, content: "betterEditorBlock*" }),
     Node.create({ name: "text", group: "inline" }),
     Node.create({

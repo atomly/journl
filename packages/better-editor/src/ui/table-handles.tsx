@@ -29,6 +29,7 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 import { blockAt } from "../engine/identity";
+import { TABLE_EXTENSION_META } from "../engine/metadata";
 import {
   applyTableEdit,
   canDropTableAxis,
@@ -124,9 +125,17 @@ function tableDropTarget(
 export function TiptapTableHandles({
   editor,
   visible,
+  renderMenu,
+  renderHandle,
 }: {
   editor: Editor;
   visible: boolean;
+  renderMenu?: (target: {
+    editor: Editor;
+    axis: TableAxis;
+    blockId: string;
+  }) => React.ReactNode;
+  renderHandle?: (axis: TableAxis) => React.ReactNode;
 }) {
   const state = useTiptapState(editor);
   const [active, setActive] = useState<ActiveTable | null>(null);
@@ -336,6 +345,8 @@ export function TiptapTableHandles({
           axis={axis}
           index={axis === "row" ? row : column}
           active={active}
+          renderMenu={renderMenu}
+          renderHandle={renderHandle}
           cell={cell}
           open={menu === axis}
           hidden={
@@ -471,6 +482,8 @@ function TableAxisHandle({
   draggable,
   onDragStart,
   onDragEnd,
+  renderMenu,
+  renderHandle,
 }: {
   editor: Editor;
   axis: TableAxis;
@@ -483,6 +496,12 @@ function TableAxisHandle({
   draggable: boolean;
   onDragStart: () => void;
   onDragEnd: () => void;
+  renderMenu?: (target: {
+    editor: Editor;
+    axis: TableAxis;
+    blockId: string;
+  }) => React.ReactNode;
+  renderHandle?: (axis: TableAxis) => React.ReactNode;
 }) {
   const dragging = useRef(false);
   const consumedClick = useRef(false);
@@ -567,7 +586,8 @@ function TableAxisHandle({
               onDragEnd();
             }}
           >
-            {axis === "row" ? <GripVertical /> : <GripHorizontal />}
+            {renderHandle?.(axis) ??
+              (axis === "row" ? <GripVertical /> : <GripHorizontal />)}
           </Button>
         </EditorHint>
       </DropdownMenuTrigger>
@@ -578,27 +598,33 @@ function TableAxisHandle({
           return dragClosedMenu.current ? false : restoreEditorFocus(editor);
         }}
       >
-        <TableMenuItems editor={editor} axis={axis} />
-        <DropdownMenuSeparator />
-        <EditorMenuItem
-          hint="Remove the whole table"
-          variant="destructive"
-          onClick={() => {
-            const block = blockAt(editor.state.doc, active.id);
-            editor.view.dispatch(
-              editor.state.tr.setSelection(
-                NodeSelection.create(editor.state.doc, block.pos),
-              ),
-            );
-            const tr = removeSelectedBlock(editor.state, () =>
-              crypto.randomUUID(),
-            );
-            if (tr) applyTableEdit(editor, tr);
-            editor.view.focus();
-          }}
-        >
-          Delete table
-        </EditorMenuItem>
+        {renderMenu ? (
+          renderMenu({ axis, blockId: active.id, editor })
+        ) : (
+          <>
+            <TableMenuItems editor={editor} axis={axis} />
+            <DropdownMenuSeparator />
+            <EditorMenuItem
+              hint="Remove the whole table"
+              variant="destructive"
+              onClick={() => {
+                const block = blockAt(editor.state.doc, active.id);
+                editor.view.dispatch(
+                  editor.state.tr.setSelection(
+                    NodeSelection.create(editor.state.doc, block.pos),
+                  ),
+                );
+                const tr = removeSelectedBlock(editor.state, () =>
+                  crypto.randomUUID(),
+                );
+                if (tr) applyTableEdit(editor, tr);
+                editor.view.focus();
+              }}
+            >
+              Delete table
+            </EditorMenuItem>
+          </>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   );
@@ -667,8 +693,7 @@ function TableExtendRail({
     }) => {
       if (
         (transaction.docChanged || transaction.selectionSet) &&
-        transaction.getMeta("better-editor-table-extension") !==
-          gesture.current?.time
+        transaction.getMeta(TABLE_EXTENSION_META) !== gesture.current?.time
       )
         end();
     };
@@ -746,7 +771,7 @@ function TableExtendRail({
             editor.view.dispatch(
               tr
                 .setTime(current.time)
-                .setMeta("better-editor-table-extension", current.time),
+                .setMeta(TABLE_EXTENSION_META, current.time),
             );
             if (axis === "column" && count > current.count)
               revealTableColumn(editor, active.id, count - 1);
@@ -766,7 +791,7 @@ function TableExtendRail({
               editor.view.dispatch(
                 tr
                   .setTime(current.time)
-                  .setMeta("better-editor-table-extension", current.time),
+                  .setMeta(TABLE_EXTENSION_META, current.time),
               );
               if (axis === "column")
                 revealTableColumn(editor, active.id, current.count);

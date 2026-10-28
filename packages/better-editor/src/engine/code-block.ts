@@ -1,3 +1,4 @@
+import { Extension } from "@tiptap/core";
 import { all, createLowlight } from "lowlight";
 import { createHighlightPlugin } from "prosemirror-highlight";
 import { createParser } from "prosemirror-highlight/lowlight";
@@ -18,3 +19,8 @@ export const codeHighlightPlugin = () =>
           ? highlight(options)
           : [],
   });
+
+export const syntaxHighlightExtension = Extension.create({
+  addProseMirrorPlugins: () => [codeHighlightPlugin()],
+  name: "better-editor-syntax-highlight",
+});

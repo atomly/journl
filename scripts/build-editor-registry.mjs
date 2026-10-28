@@ -30,7 +30,8 @@ async function sources(directory) {
   return files
     .flat()
     .filter(
-      (path) => /\.(ts|tsx|css)$/.test(path) && !/\.(spec|test)\./.test(path),
+      (path) =>
+        /\.(ts|tsx|css)$/.test(path) && !/\.(spec|test|bench)\./.test(path),
     )
     .sort();
 }

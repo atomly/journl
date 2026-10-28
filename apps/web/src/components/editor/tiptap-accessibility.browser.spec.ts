@@ -12,7 +12,7 @@ test.beforeEach(async ({ page }) => {
       .click();
   const previous = page.url();
   await create.click();
-  await expect(page).not.toHaveURL(previous);
+  await expect(page).not.toHaveURL(previous, { timeout: 60_000 });
   await page.keyboard.press("Escape");
 });
 

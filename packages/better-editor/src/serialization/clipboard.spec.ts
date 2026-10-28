@@ -2,6 +2,7 @@
 import { parseBlock } from "@acme/document";
 import { Editor } from "@tiptap/core";
 import { expect, test } from "vitest";
+import { syntaxHighlightExtension } from "../engine/code-block";
 import { documentExtensions } from "../engine/schema";
 import { clipboardText } from "./clipboard";
 import { toTiptapDocument } from "./tiptap";
@@ -36,7 +37,7 @@ test("highlighting decorates code and leaves unsupported languages and storage c
         }),
       ]).toJSON(),
       element: document.createElement("div"),
-      extensions: documentExtensions(),
+      extensions: [...documentExtensions(), syntaxHighlightExtension],
     });
     expect(editor.view.dom.querySelector("pre")?.textContent).toBe(
       "const value = 42;",

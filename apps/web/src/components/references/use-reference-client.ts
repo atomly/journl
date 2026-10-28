@@ -75,8 +75,13 @@ export function useReferenceClient(): ReferenceClient {
         }
       },
       resolveUrl(url) {
+        const parsed = new URL(url, window.location.origin);
+        const value =
+          parsed.origin === window.location.origin
+            ? `${parsed.pathname}${parsed.search}${parsed.hash}`
+            : parsed.href;
         return queryClient.fetchQuery(
-          trpc.references.resolveUrls.queryOptions({ urls: [url] }),
+          trpc.references.resolveUrls.queryOptions({ urls: [value] }),
         );
       },
       subscribeEmbedContent(target, cursor, listener) {

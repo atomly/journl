@@ -60,3 +60,169 @@ test("core commits to the current callback, preserves mounted state on save, and
     host.remove();
   }
 });
+
+test("array identities and live editability preserve content; reset is deliberate", async () => {
+  const container = document.createElement("div");
+  document.body.append(container);
+  const root = createRoot(container);
+  const extension = Extension.create({ name: "stable" });
+  let current: ReturnType<typeof useDocumentEditor> | undefined;
+  function View({
+    editable,
+    resetKey = 0,
+  }: {
+    editable: boolean;
+    resetKey?: number;
+  }) {
+    current = useDocumentEditor({
+      editable,
+      extensions: [extension],
+      initialBlocks: [{ content: "Initial", id: "initial", type: "paragraph" }],
+      resetKey,
+      resolveUrl: async () => ({ items: [] }),
+    });
+    return <div ref={current.host} />;
+  }
+  try {
+    await act(async () => root.render(<View editable />));
+    const original = current?.editor;
+    await act(async () => {
+      original?.commands.insertContent("Changed ");
+    });
+    await act(async () => root.render(<View editable={false} />));
+    expect(current?.editor).toBe(original);
+    expect(original?.isEditable).toBe(false);
+    expect(original?.state.doc.textContent).toContain("Changed");
+    expect(current?.configurationError).toBeUndefined();
+    await act(async () => root.render(<View editable resetKey={1} />));
+    expect(original?.isDestroyed).toBe(true);
+    expect(current?.editor).not.toBe(original);
+    expect(current?.editor?.state.doc.textContent).toBe("Initial");
+  } finally {
+    await act(async () => root.unmount());
+    container.remove();
+  }
+});
+
+test("consumer callback failure does not invalidate or disable the editor", async () => {
+  const container = document.createElement("div");
+  document.body.append(container);
+  const root = createRoot(container);
+  const failure = new Error("Consumer save failed");
+  let current: ReturnType<typeof useDocumentEditor> | undefined;
+  function View() {
+    current = useDocumentEditor({
+      editable: true,
+      extensions: [],
+      initialBlocks: [{ id: "p", type: "paragraph" }],
+      onCommit: () => {
+        throw failure;
+      },
+      resolveUrl: async () => ({ items: [] }),
+    });
+    return <div ref={current.host} />;
+  }
+  try {
+    await act(async () => root.render(<View />));
+    await act(async () => {
+      current?.editor?.commands.insertContent("Still writing");
+    });
+    expect(current?.error).toBe(false);
+    expect(current?.editor?.isEditable).toBe(true);
+    expect(current?.callbackError).toBe(failure);
+  } finally {
+    await act(async () => root.unmount());
+    container.remove();
+  }
+});
+
+test("consumer mutation cannot corrupt cached snapshots or future operation IDs", async () => {
+  const container = document.createElement("div");
+  document.body.append(container);
+  const root = createRoot(container);
+  let current: ReturnType<typeof useDocumentEditor> | undefined;
+  const ids: string[] = [];
+  function View() {
+    current = useDocumentEditor({
+      editable: true,
+      extensions: [],
+      initialBlocks: [{ id: "p", type: "paragraph" }],
+      onCommit: (blocks, operations) => {
+        for (const operation of operations)
+          if ("id" in operation) ids.push(operation.id);
+        const first = blocks[0];
+        if (first) first.id = "consumer mutation";
+        const operation = operations[0];
+        if (operation && "id" in operation) operation.id = "consumer mutation";
+      },
+      resolveUrl: async () => ({ items: [] }),
+    });
+    return <div ref={current.host} />;
+  }
+  try {
+    await act(async () => root.render(<View />));
+    await act(async () => {
+      current?.editor?.commands.insertContent("First");
+    });
+    await act(async () => {
+      current?.editor?.commands.insertContent(" second");
+    });
+    expect(current?.error).toBe(false);
+    expect(ids).toEqual(["p", "p"]);
+    expect(current?.editor?.state.doc.textContent).toBe("First second");
+  } finally {
+    await act(async () => root.unmount());
+    container.remove();
+  }
+});
+
+test("commit retry retains missed edits and clears the consumer error", async () => {
+  const container = document.createElement("div");
+  document.body.append(container);
+  const root = createRoot(container);
+  let current: ReturnType<typeof useDocumentEditor> | undefined;
+  let attempts = 0;
+  const received: unknown[] = [];
+  function View() {
+    current = useDocumentEditor({
+      editable: true,
+      extensions: [],
+      initialBlocks: [{ id: "p", type: "paragraph" }],
+      onCommit: (blocks, operations) => {
+        attempts++;
+        if (attempts === 1) throw new Error("Consumer failed");
+        received.push({ blocks, operations });
+      },
+      resolveUrl: async () => ({ items: [] }),
+    });
+    return <div ref={current.host} />;
+  }
+  try {
+    await act(async () => root.render(<View />));
+    await act(async () => {
+      current?.editor?.commands.insertContent("Retained");
+    });
+    expect(current?.callbackError).toBeInstanceOf(Error);
+    await act(async () => {
+      expect(current?.retryCommit()).toBe(true);
+    });
+    expect(attempts).toBe(2);
+    expect(current?.callbackError).toBeUndefined();
+    expect(received).toMatchObject([
+      {
+        blocks: [{ content: [{ text: "Retained" }], id: "p" }],
+        operations: [
+          {
+            data: { content: [{ text: "Retained" }] },
+            id: "p",
+            type: "update",
+          },
+        ],
+      },
+    ]);
+    expect(current?.editor?.isEditable).toBe(true);
+  } finally {
+    await act(async () => root.unmount());
+    container.remove();
+  }
+});

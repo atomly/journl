@@ -5,66 +5,124 @@ import { useEffect, useRef, useState } from "react";
 import {
   createDocumentEditor,
   type DocumentEditorOptions,
+  retryEditorCommit,
 } from "../engine/editor";
 
 export type UseDocumentEditorOptions = Omit<
   DocumentEditorOptions,
-  "element" | "attributes" | "onError"
->;
+  "element" | "attributes"
+> & {
+  /** Changing this key deliberately loads current initialBlocks and clears history. */
+  resetKey?: string | number;
+  onReady?: (editor: Editor) => void;
+};
 
-/** Mounts an engine in React without owning the draft or save queue. */
-export function useDocumentEditor({
-  initialBlocks,
-  onCommit,
-  resolveUrl,
-  extensions,
-}: UseDocumentEditorOptions) {
-  const initial = useRef(initialBlocks);
-  const resolver = useRef(resolveUrl);
-  resolver.current = resolveUrl;
-  const commit = useRef(onCommit);
-  commit.current = onCommit;
+/** Owns one engine until unmount or an explicit reset, independently of UI layout. */
+export function useDocumentEditor(options: UseDocumentEditorOptions) {
+  const latest = useRef(options);
+  latest.current = options;
   const host = useRef<HTMLDivElement>(null);
+  const configured = useRef(options.extensions);
   const [editor, setEditor] = useState<Editor>();
   const [error, setError] = useState(false);
+  const [cause, setCause] = useState<unknown>();
+  const [callbackError, setCallbackError] = useState<unknown>();
+  const [configurationError, setConfigurationError] = useState<Error>();
+  const { resetKey } = options;
+  const editable = options.editable ?? Boolean(options.onCommit);
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: resetKey deliberately owns engine lifetime; other options are live refs or mount-time configuration.
   useEffect(() => {
-    const element = host.current;
-    if (!element) return;
+    const currentOptions = latest.current;
+    configured.current = currentOptions.extensions;
+    setError(false);
+    setCause(undefined);
+    setCallbackError(undefined);
+    setConfigurationError(undefined);
     let current: Editor | undefined;
     try {
-      const attributes: Record<string, string> = {
-        "aria-label": commit.current ? "Document editor" : "Document content",
-        class: "better-editor-tiptap min-h-32 outline-none",
-        role: commit.current ? "textbox" : "document",
-      };
-      if (commit.current) attributes["aria-multiline"] = "true";
       current = createDocumentEditor({
-        attributes,
-        element,
-        extensions,
-        initialBlocks: initial.current,
-        onCommit: commit.current
-          ? (blocks, operations) => commit.current?.(blocks, operations)
-          : undefined,
-        onError: () => setError(true),
-        resolveUrl: (url) => resolver.current(url),
+        ...currentOptions,
+        attributes: {
+          "aria-label":
+            (currentOptions.editable ?? Boolean(currentOptions.onCommit))
+              ? "Document editor"
+              : "Document content",
+          class: "better-editor-tiptap min-h-32 outline-none",
+        },
+        editable: currentOptions.editable ?? Boolean(currentOptions.onCommit),
+        element: host.current ?? document.createElement("div"),
+        normalizeReferenceUrl: (url) =>
+          latest.current.normalizeReferenceUrl?.(url) ?? url,
+        onCommit: (blocks, operations) => {
+          latest.current.onCommit?.(blocks, operations);
+          setCallbackError((previous: unknown) =>
+            previous === undefined ? previous : undefined,
+          );
+        },
+        onCommitError: (failure) => {
+          setCallbackError(failure);
+          latest.current.onCommitError?.(failure);
+        },
+        onError: (failure) => {
+          setError(true);
+          setCause(failure);
+          latest.current.onError?.(failure);
+        },
+        openLink: (href) => latest.current.openLink?.(href),
+        resolveUrl: (url) => latest.current.resolveUrl(url),
       });
       setEditor(current);
-      const targetId = new URLSearchParams(window.location.hash.slice(1)).get(
-        "block",
-      );
-      if (targetId) {
-        const target = Array.from(
-          element.querySelectorAll<HTMLElement>("[data-block-id]"),
-        ).find((item) => item.dataset.blockId === targetId);
-        target?.scrollIntoView({ block: "center" });
-        target?.classList.add("reference-target-highlight");
-      }
-    } catch {
+    } catch (failure) {
+      setEditor(undefined);
       setError(true);
+      setCause(failure);
+      latest.current.onError?.(failure);
     }
     return () => current?.destroy();
-    // Draft resets remount this view. Save acknowledgements preserve history and selection.
-  }, [extensions]);
-  return { editor, error, host };
+  }, [resetKey]);
+
+  useEffect(() => {
+    const initial = configured.current;
+    const changed =
+      initial.length !== options.extensions.length ||
+      initial.some((item, index) => item !== options.extensions[index]);
+    setConfigurationError((previous) =>
+      changed
+        ? (previous ??
+          new Error(
+            "Editor extensions are mount-time configuration. Change resetKey to explicitly recreate the editor.",
+          ))
+        : undefined,
+    );
+  }, [options.extensions]);
+
+  useEffect(() => {
+    if (!editor || editor.isDestroyed || error) return;
+    if (editor.isEditable !== editable) editor.setEditable(editable);
+    const dom = editor.view.dom;
+    dom.setAttribute("role", editable ? "textbox" : "document");
+    const label = dom.getAttribute("aria-label");
+    if (!label || label === "Document editor" || label === "Document content")
+      dom.setAttribute(
+        "aria-label",
+        editable ? "Document editor" : "Document content",
+      );
+    if (editable) dom.setAttribute("aria-multiline", "true");
+    else dom.removeAttribute("aria-multiline");
+  }, [editor, editable, error]);
+
+  useEffect(() => {
+    if (editor) latest.current.onReady?.(editor);
+  }, [editor]);
+
+  return {
+    callbackError,
+    cause,
+    configurationError,
+    editor,
+    error,
+    host,
+    retryCommit: () => (editor && !error ? retryEditorCommit(editor) : false),
+  };
 }

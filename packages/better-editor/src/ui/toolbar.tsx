@@ -41,7 +41,6 @@ import {
 } from "lucide-react";
 import { type ReactNode, useEffect, useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { toast } from "sonner";
 import {
   indentBlock,
   selectedBlock,
@@ -63,6 +62,7 @@ import {
   EditorToolbarControl,
   restoreEditorFocus,
 } from "./controls";
+import { useEditorServices } from "./editor-services";
 import {
   type InsertReference,
   ReferenceDisplayControl,
@@ -215,12 +215,21 @@ function BlockTypeSelector({ editor }: { editor: Editor }) {
 export function TiptapToolbar({
   editor,
   insertReference,
+  mode = "floating",
+  visibility = "selection",
+  children,
+  portalContainer,
 }: {
   editor: Editor;
   insertReference: InsertReference;
+  mode?: "floating" | "sticky" | "inline";
+  visibility?: "always" | "selection";
+  children?: React.ReactNode;
+  portalContainer?: HTMLElement;
 }) {
   const state = useTiptapState(editor);
-  const mobile = useIsMobile();
+  const mobile = mode !== "floating";
+  const services = useEditorServices();
   const [focused, setFocused] = useState(editor.isFocused);
   const [linkOpen, setLinkOpen] = useState(false);
   const [colorsOpen, setColorsOpen] = useState(false);
@@ -302,7 +311,7 @@ export function TiptapToolbar({
     };
   }, [editor, hintId]);
   const visible =
-    mobile ||
+    visibility === "always" ||
     requested ||
     Boolean(focused && state && (!state.selection.empty || captureLink(state)));
   useEffect(() => {
@@ -420,320 +429,332 @@ export function TiptapToolbar({
         className="better-editor-formatting-toolbar"
         style={mobile ? undefined : { position: "fixed", ...position }}
       >
-        <EditorTool
-          label="Copy block link"
-          onClick={() => {
-            const id = selectedBlock(editor.state)?.id;
-            if (id)
-              void navigator.clipboard
-                .writeText(`${location.origin}${location.pathname}#block=${id}`)
-                .catch(() =>
-                  toast.error(
-                    "Could not copy the block link. Please try again.",
-                  ),
-                );
-          }}
-        >
-          <Copy />
-        </EditorTool>
-        <Popover
-          open={linkOpen}
-          onOpenChange={(open) => {
-            if (open) setUrl(captureLink(editor.state)?.href ?? "");
-            setLinkOpen(open);
-          }}
-        >
-          <EditorToolbarControl label="Edit link (⌘/Ctrl+K)">
-            <PopoverTrigger
-              render={
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  aria-label="Insert link"
-                  onMouseDown={(event) => event.preventDefault()}
-                >
-                  <Link2 />
-                </Button>
-              }
-            />
-          </EditorToolbarControl>
-          <PopoverContent
-            data-tiptap-controls=""
-            data-tiptap-owner={editor.instanceId}
-            finalFocus={() => {
-              setRequested(false);
-              return restoreEditorFocus(editor);
-            }}
-          >
-            <form
-              className="flex flex-col gap-2"
-              onSubmit={(event) => {
-                event.preventDefault();
-                const href = safeEditorUrl(url);
-                if (!href) return;
-                const existing = captureLink(editor.state);
-                const mark = editor.schema.marks.link;
-                if (!mark) return;
-                const tr =
-                  !existing && editor.state.selection.empty
-                    ? editor.state.tr.replaceSelectionWith(
-                        editor.schema.text(url, [mark.create({ href })]),
-                      )
-                    : setTextMark(
-                        editor.state,
-                        "link",
-                        { href },
-                        existing || undefined,
-                      );
-                if (tr) editor.view.dispatch(tr);
-                setUrl("");
-                setLinkOpen(false);
-                setRequested(false);
+        {children ?? (
+          <>
+            <EditorTool
+              label="Copy block link"
+              disabled={!services.getBlockUrl}
+              onClick={() => {
+                const id = selectedBlock(editor.state)?.id;
+                const url = id && services.getBlockUrl?.(id);
+                if (url)
+                  void navigator.clipboard
+                    .writeText(url)
+                    .catch((error) => services.onActionError?.(error));
               }}
             >
-              <label
-                className="font-medium text-sm"
-                htmlFor={`reference-${editor.instanceId}`}
+              <Copy />
+            </EditorTool>
+            <Popover
+              open={linkOpen}
+              onOpenChange={(open) => {
+                if (open) setUrl(captureLink(editor.state)?.href ?? "");
+                setLinkOpen(open);
+              }}
+            >
+              <EditorToolbarControl label="Edit link (⌘/Ctrl+K)">
+                <PopoverTrigger
+                  render={
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      aria-label="Insert link"
+                      onMouseDown={(event) => event.preventDefault()}
+                    >
+                      <Link2 />
+                    </Button>
+                  }
+                />
+              </EditorToolbarControl>
+              <PopoverContent
+                data-tiptap-controls=""
+                data-tiptap-owner={editor.instanceId}
+                finalFocus={() => {
+                  setRequested(false);
+                  return restoreEditorFocus(editor);
+                }}
               >
-                Link to a note or URL
-              </label>
-              <Input
-                id={`reference-${editor.instanceId}`}
-                aria-label="Reference URL"
-                type="url"
-                required
-                value={url}
-                onChange={(event) => setUrl(event.target.value)}
-                className="h-9 rounded-lg border bg-background px-3 text-sm"
-              />
-              <EditorHint label="Apply a plain text link">
-                <Button type="submit" size="sm">
-                  Apply link
-                </Button>
-              </EditorHint>
-              <EditorHint label="Insert a compact mention with a source preview">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  disabled={!safeEditorUrl(url)}
-                  onClick={() => {
+                <form
+                  className="flex flex-col gap-2"
+                  onSubmit={(event) => {
+                    event.preventDefault();
+                    const href = safeEditorUrl(url);
+                    if (!href) return;
                     const existing = captureLink(editor.state);
-                    if (existing)
-                      editor.view.dispatch(
-                        editor.state.tr.setSelection(
-                          TextSelection.create(
-                            editor.state.doc,
-                            existing.from,
-                            existing.to,
-                          ),
-                        ),
-                      );
-                    insertReference(url, existing?.label, "contentReference");
+                    const mark = editor.schema.marks.link;
+                    if (!mark) return;
+                    const tr =
+                      !existing && editor.state.selection.empty
+                        ? editor.state.tr.replaceSelectionWith(
+                            editor.schema.text(url, [mark.create({ href })]),
+                          )
+                        : setTextMark(
+                            editor.state,
+                            "link",
+                            { href },
+                            existing || undefined,
+                          );
+                    if (tr) editor.view.dispatch(tr);
                     setUrl("");
                     setLinkOpen(false);
                     setRequested(false);
                   }}
                 >
-                  Insert mention
-                </Button>
-              </EditorHint>
-            </form>
-          </PopoverContent>
-        </Popover>
-        <BlockTypeSelector editor={editor} />
-        <ReferenceDisplayControl
-          editor={editor}
-          insertReference={insertReference}
-        />
-        {(
-          [
-            ["bold", Bold],
-            ["italic", Italic],
-            ["underline", Underline],
-            ["strike", Strikethrough],
-            ["code", Code],
-          ] as const
-        ).map(([mark, Icon]) => (
-          <EditorTool
-            key={mark}
-            label={mark.charAt(0).toUpperCase() + mark.slice(1)}
-            active={Boolean(state && textMarkActive(state, mark))}
-            disabled={!formattable}
-            onClick={() => dispatch(toggleTextMark(editor.state, mark))}
-          >
-            <Icon />
-          </EditorTool>
-        ))}
-        <DropdownMenu modal={false}>
-          <EditorToolbarControl
-            label="Text alignment"
-            disabled={
-              !body?.isTextblock ||
-              body?.type.name === "quote" ||
-              body?.type.name === "codeBlock"
-            }
-          >
-            <DropdownMenuTrigger asChild>
-              <Button
-                aria-label="Text alignment"
-                variant="ghost"
-                size="icon"
+                  <label
+                    className="font-medium text-sm"
+                    htmlFor={`reference-${editor.instanceId}`}
+                  >
+                    Link to a note or URL
+                  </label>
+                  <Input
+                    id={`reference-${editor.instanceId}`}
+                    aria-label="Reference URL"
+                    type="url"
+                    required
+                    value={url}
+                    onChange={(event) => setUrl(event.target.value)}
+                    className="h-9 rounded-lg border bg-background px-3 text-sm"
+                  />
+                  <EditorHint label="Apply a plain text link">
+                    <Button type="submit" size="sm">
+                      Apply link
+                    </Button>
+                  </EditorHint>
+                  <EditorHint label="Insert a compact mention with a source preview">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      disabled={!safeEditorUrl(url)}
+                      onClick={() => {
+                        const existing = captureLink(editor.state);
+                        if (existing)
+                          editor.view.dispatch(
+                            editor.state.tr.setSelection(
+                              TextSelection.create(
+                                editor.state.doc,
+                                existing.from,
+                                existing.to,
+                              ),
+                            ),
+                          );
+                        insertReference(
+                          url,
+                          existing?.label,
+                          "contentReference",
+                        );
+                        setUrl("");
+                        setLinkOpen(false);
+                        setRequested(false);
+                      }}
+                    >
+                      Insert mention
+                    </Button>
+                  </EditorHint>
+                </form>
+              </PopoverContent>
+            </Popover>
+            <BlockTypeSelector editor={editor} />
+            <ReferenceDisplayControl
+              editor={editor}
+              insertReference={insertReference}
+            />
+            {(
+              [
+                ["bold", Bold],
+                ["italic", Italic],
+                ["underline", Underline],
+                ["strike", Strikethrough],
+                ["code", Code],
+              ] as const
+            ).map(([mark, Icon]) => (
+              <EditorTool
+                key={mark}
+                label={mark.charAt(0).toUpperCase() + mark.slice(1)}
+                active={Boolean(state && textMarkActive(state, mark))}
+                disabled={!formattable}
+                onClick={() => dispatch(toggleTextMark(editor.state, mark))}
+              >
+                <Icon />
+              </EditorTool>
+            ))}
+            <DropdownMenu modal={false}>
+              <EditorToolbarControl
+                label="Text alignment"
                 disabled={
                   !body?.isTextblock ||
                   body?.type.name === "quote" ||
                   body?.type.name === "codeBlock"
                 }
-                onMouseDown={(event) => event.preventDefault()}
               >
-                <AlignLeft />
-              </Button>
-            </DropdownMenuTrigger>
-          </EditorToolbarControl>
-          <DropdownMenuContent
-            data-tiptap-controls=""
-            data-tiptap-owner={editor.instanceId}
-            finalFocus={() => {
-              return restoreEditorFocus(editor);
-            }}
-          >
-            {["left", "center", "right", "justify"].map((value) => (
-              <EditorMenuItem
-                hint={`Align text ${value}`}
-                key={value}
-                onClick={() =>
-                  dispatch(
-                    setBlockProperties(editor.state, { textAlignment: value }),
-                  )
-                }
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    aria-label="Text alignment"
+                    variant="ghost"
+                    size="icon"
+                    disabled={
+                      !body?.isTextblock ||
+                      body?.type.name === "quote" ||
+                      body?.type.name === "codeBlock"
+                    }
+                    onMouseDown={(event) => event.preventDefault()}
+                  >
+                    <AlignLeft />
+                  </Button>
+                </DropdownMenuTrigger>
+              </EditorToolbarControl>
+              <DropdownMenuContent
+                data-tiptap-controls=""
+                data-tiptap-owner={editor.instanceId}
+                finalFocus={() => {
+                  return restoreEditorFocus(editor);
+                }}
               >
-                {value.charAt(0).toUpperCase() + value.slice(1)}
-              </EditorMenuItem>
-            ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
-        <Popover open={colorsOpen} onOpenChange={setColorsOpen}>
-          <EditorToolbarControl
-            label="Text color and highlight"
-            disabled={!formattable}
-          >
-            <PopoverTrigger
-              render={
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  aria-label="Colors"
-                  disabled={!formattable}
-                  onMouseDown={(event) => event.preventDefault()}
-                >
-                  <Paintbrush />
-                </Button>
-              }
-            />
-          </EditorToolbarControl>
-          <PopoverContent
-            data-tiptap-controls=""
-            data-tiptap-owner={editor.instanceId}
-            finalFocus={() => {
-              return restoreEditorFocus(editor);
-            }}
-          >
-            {(["textColor", "backgroundColor"] as const).map((name) => (
-              <div key={name}>
-                <p className="mb-2 font-medium text-muted-foreground text-xs">
-                  {name === "textColor" ? "Text color" : "Highlight"}
-                </p>
-                <div className="flex flex-wrap gap-1">
-                  {[
-                    "default",
-                    "gray",
-                    "brown",
-                    "red",
-                    "orange",
-                    "yellow",
-                    "green",
-                    "blue",
-                    "purple",
-                    "pink",
-                  ].map((value) => (
-                    <EditorHint
-                      key={value}
-                      label={`${name === "textColor" ? "Text color" : "Highlight"}: ${value}`}
+                {["left", "center", "right", "justify"].map((value) => (
+                  <EditorMenuItem
+                    hint={`Align text ${value}`}
+                    key={value}
+                    onClick={() =>
+                      dispatch(
+                        setBlockProperties(editor.state, {
+                          textAlignment: value,
+                        }),
+                      )
+                    }
+                  >
+                    {value.charAt(0).toUpperCase() + value.slice(1)}
+                  </EditorMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <Popover open={colorsOpen} onOpenChange={setColorsOpen}>
+              <EditorToolbarControl
+                label="Text color and highlight"
+                disabled={!formattable}
+              >
+                <PopoverTrigger
+                  render={
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      aria-label="Colors"
+                      disabled={!formattable}
+                      onMouseDown={(event) => event.preventDefault()}
                     >
-                      <SurfaceButton
-                        key={value}
-                        type="button"
-                        aria-label={`${name === "textColor" ? "Text" : "Highlight"} ${value}`}
-                        className="flex size-7 items-center justify-center rounded border hover:bg-muted"
-                        style={{
-                          backgroundColor:
-                            name === "backgroundColor"
-                              ? `var(--better-editor-background-${value},transparent)`
-                              : undefined,
-                          color: `var(--better-editor-text-${value},var(--foreground))`,
-                        }}
-                        onMouseDown={(event) => event.preventDefault()}
-                        onClick={() => {
-                          dispatch(setTextColor(editor.state, name, value));
-                          setColorsOpen(false);
-                        }}
-                      >
-                        A
-                      </SurfaceButton>
-                    </EditorHint>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </PopoverContent>
-        </Popover>
-        <EditorTool
-          label="Indent"
-          onClick={() => dispatch(indentBlock(editor.state))}
-        >
-          <IndentIncrease />
-        </EditorTool>
-        <EditorTool
-          label="Outdent"
-          onClick={() => dispatch(indentBlock(editor.state, true))}
-        >
-          <IndentDecrease />
-        </EditorTool>
-        <DropdownMenu modal={false}>
-          <EditorToolbarControl label="More actions">
-            <DropdownMenuTrigger asChild>
-              <Button
-                aria-label="More formatting"
-                variant="ghost"
-                size="icon"
-                onMouseDown={(event) => event.preventDefault()}
+                      <Paintbrush />
+                    </Button>
+                  }
+                />
+              </EditorToolbarControl>
+              <PopoverContent
+                data-tiptap-controls=""
+                data-tiptap-owner={editor.instanceId}
+                finalFocus={() => {
+                  return restoreEditorFocus(editor);
+                }}
               >
-                <MoreHorizontal />
-              </Button>
-            </DropdownMenuTrigger>
-          </EditorToolbarControl>
-          <DropdownMenuContent
-            data-tiptap-controls=""
-            data-tiptap-owner={editor.instanceId}
-            finalFocus={() => {
-              return restoreEditorFocus(editor);
-            }}
-          >
-            <BlockMenuContent
-              editor={editor}
-              insertReference={insertReference}
-            />
-          </DropdownMenuContent>
-        </DropdownMenu>
+                {(["textColor", "backgroundColor"] as const).map((name) => (
+                  <div key={name}>
+                    <p className="mb-2 font-medium text-muted-foreground text-xs">
+                      {name === "textColor" ? "Text color" : "Highlight"}
+                    </p>
+                    <div className="flex flex-wrap gap-1">
+                      {[
+                        "default",
+                        "gray",
+                        "brown",
+                        "red",
+                        "orange",
+                        "yellow",
+                        "green",
+                        "blue",
+                        "purple",
+                        "pink",
+                      ].map((value) => (
+                        <EditorHint
+                          key={value}
+                          label={`${name === "textColor" ? "Text color" : "Highlight"}: ${value}`}
+                        >
+                          <SurfaceButton
+                            key={value}
+                            type="button"
+                            aria-label={`${name === "textColor" ? "Text" : "Highlight"} ${value}`}
+                            className="flex size-7 items-center justify-center rounded border hover:bg-muted"
+                            style={{
+                              backgroundColor:
+                                name === "backgroundColor"
+                                  ? `var(--better-editor-background-${value},transparent)`
+                                  : undefined,
+                              color: `var(--better-editor-text-${value},var(--foreground))`,
+                            }}
+                            onMouseDown={(event) => event.preventDefault()}
+                            onClick={() => {
+                              dispatch(setTextColor(editor.state, name, value));
+                              setColorsOpen(false);
+                            }}
+                          >
+                            A
+                          </SurfaceButton>
+                        </EditorHint>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </PopoverContent>
+            </Popover>
+            <EditorTool
+              label="Indent"
+              onClick={() => dispatch(indentBlock(editor.state))}
+            >
+              <IndentIncrease />
+            </EditorTool>
+            <EditorTool
+              label="Outdent"
+              onClick={() => dispatch(indentBlock(editor.state, true))}
+            >
+              <IndentDecrease />
+            </EditorTool>
+            <DropdownMenu modal={false}>
+              <EditorToolbarControl label="More actions">
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    aria-label="More formatting"
+                    variant="ghost"
+                    size="icon"
+                    onMouseDown={(event) => event.preventDefault()}
+                  >
+                    <MoreHorizontal />
+                  </Button>
+                </DropdownMenuTrigger>
+              </EditorToolbarControl>
+              <DropdownMenuContent
+                data-tiptap-controls=""
+                data-tiptap-owner={editor.instanceId}
+                finalFocus={() => {
+                  return restoreEditorFocus(editor);
+                }}
+              >
+                <BlockMenuContent
+                  editor={editor}
+                  insertReference={insertReference}
+                />
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </>
+        )}
       </Toolbar.Root>
       {keyboardHint}
       {keyboardStatus}
     </TooltipProvider>
   );
   return mobile ? (
-    <div className="better-editor-mobile-toolbar">{content}</div>
+    <div
+      className={mode === "sticky" ? "better-editor-mobile-toolbar" : undefined}
+    >
+      {content}
+    </div>
   ) : (
-    createPortal(content, document.body)
+    createPortal(content, portalContainer ?? document.body)
   );
 }
 

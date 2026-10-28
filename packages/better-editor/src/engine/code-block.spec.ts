@@ -2,7 +2,7 @@
 import { Editor } from "@tiptap/core";
 import { expect, test } from "vitest";
 import { fromTiptapDocument, toTiptapDocument } from "../serialization/tiptap";
-import { codeLanguages } from "./code-block";
+import { codeLanguages, syntaxHighlightExtension } from "./code-block";
 import { documentExtensions } from "./schema";
 import { setBlockProperties } from "./writing";
 
@@ -17,7 +17,7 @@ test("code language selection highlights through Lowlight and stays out of store
       },
     ]).toJSON(),
     element: document.createElement("div"),
-    extensions: documentExtensions(),
+    extensions: [...documentExtensions(), syntaxHighlightExtension],
   });
   try {
     expect(codeLanguages.length).toBeGreaterThan(100);

@@ -38,9 +38,16 @@ import { useTiptapState } from "./writing-controls";
 export function TiptapSideMenu({
   editor,
   visible,
+  renderMenu,
+  renderHandle,
 }: {
   editor: Editor;
   visible: boolean;
+  renderMenu?: (target: {
+    editor: Editor;
+    blockId?: string;
+  }) => React.ReactNode;
+  renderHandle?: React.ReactNode;
 }) {
   const state = useTiptapState(editor);
   const compact = useIsMobile();
@@ -498,7 +505,7 @@ export function TiptapSideMenu({
                       editor.view.dragging = null;
                     }}
                   >
-                    <GripVertical />
+                    {renderHandle ?? <GripVertical />}
                   </Button>
                 </EditorHint>
               </DropdownMenuTrigger>
@@ -511,12 +518,20 @@ export function TiptapSideMenu({
                     : restoreEditorFocus(editor);
                 }}
               >
-                <BlockMenuContent
-                  editor={editor}
-                  blockId={
-                    selectedBlocks(editor.state).length > 1 ? undefined : id
-                  }
-                />
+                {renderMenu ? (
+                  renderMenu({
+                    blockId:
+                      selectedBlocks(editor.state).length > 1 ? undefined : id,
+                    editor,
+                  })
+                ) : (
+                  <BlockMenuContent
+                    editor={editor}
+                    blockId={
+                      selectedBlocks(editor.state).length > 1 ? undefined : id
+                    }
+                  />
+                )}
               </DropdownMenuContent>
             </DropdownMenu>
           </div>,

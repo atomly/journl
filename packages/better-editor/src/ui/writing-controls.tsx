@@ -20,20 +20,18 @@ import {
   useSyncExternalStore,
 } from "react";
 import { createPortal } from "react-dom";
-import { toast } from "sonner";
 import {
+  canIndentBlock,
   duplicateSelectedBlock,
   indentBlock,
   selectedBlock,
 } from "../engine/commands";
 import { blockAt } from "../engine/identity";
-import {
-  applySlashChoice,
-  filteredBlockChoices,
-  slashKey,
-} from "../engine/suggestions";
+import { executeSlashItem } from "../engine/slash-items";
+import { slashKey } from "../engine/suggestions";
 import { moveSelectedBlock, removeSelectedBlock } from "../engine/writing";
 import { EditorHint, EditorMenuItem, restoreEditorFocus } from "./controls";
+import { useEditorServices } from "./editor-services";
 
 const subscribeEmpty = () => () => {};
 const getEmpty = () => null;
@@ -64,6 +62,7 @@ export function BlockActions({
   blockId?: string;
 }) {
   const current = useTiptapState(editor) ?? editor.state;
+  const services = useEditorServices();
   const targetState = (base = editor.state) => {
     if (!blockId) return base;
     try {
@@ -98,14 +97,14 @@ export function BlockActions({
     <>
       <EditorMenuItem
         hint="Indent (Tab)"
-        disabled={!indentBlock(state)}
+        disabled={!canIndentBlock(state)}
         onClick={() => execute((state) => indentBlock(state))}
       >
         Indent
       </EditorMenuItem>
       <EditorMenuItem
         hint="Outdent (Shift+Tab)"
-        disabled={!indentBlock(state, true)}
+        disabled={!canIndentBlock(state, true)}
         onClick={() => execute((state) => indentBlock(state, true))}
       >
         Outdent
@@ -129,16 +128,17 @@ export function BlockActions({
       </EditorMenuItem>
       <EditorMenuItem
         hint="Copy block link"
+        disabled={!services.getBlockUrl}
         onClick={async () => {
           const target = targetState();
           const id = target && selectedBlock(target)?.id;
           if (!id) return;
-          const url = new URL(window.location.href);
-          url.hash = new URLSearchParams({ block: id }).toString();
+          const url = services.getBlockUrl?.(id);
+          if (!url) return;
           try {
-            await navigator.clipboard.writeText(url.toString());
-          } catch {
-            toast.error("Could not copy the block link. Please try again.");
+            await navigator.clipboard.writeText(url);
+          } catch (error) {
+            services.onActionError?.(error);
           }
         }}
       >
@@ -331,7 +331,7 @@ export function TiptapSlashMenu({ editor }: { editor?: Editor }) {
       ?.scrollIntoView({ block: "nearest" });
   }, [query]);
   if (!editor || !query || editor.view.composing) return null;
-  const choices = filteredBlockChoices(query.query);
+  const choices = query.items;
   return createPortal(
     <div
       ref={popup}
@@ -346,25 +346,22 @@ export function TiptapSlashMenu({ editor }: { editor?: Editor }) {
       {choices.length ? (
         choices.map((choice, index) => (
           <EditorHint
-            key={choice.title}
+            key={choice.id}
             label={`Insert ${choice.title.toLowerCase()}`}
           >
             <SurfaceButton
               type="button"
-              key={choice.title}
+              key={choice.id}
               id={`${menuId}-${index}`}
               role="option"
               data-choice-index={index}
               aria-selected={index === query.index}
+              disabled={choice.disabled}
               tabIndex={-1}
               className="block w-full rounded px-3 py-2 text-left text-sm hover:bg-accent aria-selected:bg-accent"
               onMouseDown={(event) => event.preventDefault()}
               onClick={() => {
-                const tr = applySlashChoice(editor.state, choice, () =>
-                  crypto.randomUUID(),
-                );
-                if (tr) editor.view.dispatch(tr);
-                editor.view.focus();
+                executeSlashItem(editor, choice.id);
               }}
             >
               {choice.title}

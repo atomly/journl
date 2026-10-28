@@ -294,16 +294,7 @@
   box-shadow: 0 4px 12px rgb(0 0 0 / 12%);
   overflow-x: auto;
 }
-.better-editor-mobile-toolbar {
-  position: sticky;
-  z-index: 40;
-  top: calc(
-    var(--app-visual-viewport-offset-top, 0px) +
-    var(--app-header-offset, 0px)
-  );
-  padding-inline: 24px;
-  margin-bottom: 24px;
-}
+
 .better-editor-mobile-toolbar .better-editor-formatting-toolbar {
   max-width: 100%;
   box-shadow: 0 1px 3px rgb(0 0 0 / 8%);
@@ -330,14 +321,6 @@
   .better-editor-tiptap
   [data-better-editor-body="heading"] {
   font-size: 1.15rem;
-}
-.better-editor-tiptap-host {
-  margin-top: 24px;
-}
-@media (min-width: 768px) {
-  .better-editor-tiptap-host {
-    margin-top: 32px;
-  }
 }
 .better-editor-tiptap [data-better-editor-reference] {
   display: inline-flex;

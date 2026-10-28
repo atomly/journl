@@ -46,21 +46,21 @@ const propsAttribute = () => ({
   props: { default: null, rendered: false },
 });
 
-/** Each Journl block has one identity, one body, and an optional child group. */
+/** Each OpenEditor block has one identity, one body, and an optional child group. */
 export function documentExtensions(): Extensions {
   return [
     tableExtension(),
     Extension.create({
-      name: "journlSyntaxHighlight",
+      name: "openeditorSyntaxHighlight",
       addProseMirrorPlugins: () => [codeHighlightPlugin()],
     }),
-    Node.create({ name: "doc", topNode: true, content: "journlBlock*" }),
+    Node.create({ name: "doc", topNode: true, content: "openeditorBlock*" }),
     Node.create({ name: "text", group: "inline" }),
     Node.create({
-      name: "journlBlock",
+      name: "openeditorBlock",
       addNodeView: () => blockView,
       draggable: true,
-      content: "journlBody journlChildren?",
+      content: "openeditorBody openeditorChildren?",
       defining: true,
       addAttributes: () => ({
         id: { default: null, keepOnSplit: false, rendered: false },
@@ -83,8 +83,8 @@ export function documentExtensions(): Extensions {
       ],
     }),
     Node.create({
-      name: "journlChildren",
-      content: "journlBlock*",
+      name: "openeditorChildren",
+      content: "openeditorBlock*",
       defining: true,
       parseHTML: () => [{ tag: "div[data-openeditor-children]" }],
       renderHTML: () => ["div", { "data-openeditor-children": "" }, 0],
@@ -92,7 +92,7 @@ export function documentExtensions(): Extensions {
     ...inlineBlockTypes.map((name) =>
       Node.create({
         name,
-        group: "journlBody",
+        group: "openeditorBody",
         content: "inline*",
         addAttributes: propsAttribute,
         parseHTML: () => [
@@ -138,7 +138,7 @@ export function documentExtensions(): Extensions {
     ),
     Node.create({
       name: "codeBlock",
-      group: "journlBody",
+      group: "openeditorBody",
       content: "text*",
       marks: "",
       code: true,
@@ -155,7 +155,7 @@ export function documentExtensions(): Extensions {
     ...atomBlockTypes.map((name) =>
       Node.create({
         name,
-        group: "journlBody",
+        group: "openeditorBody",
         atom: true,
         addAttributes: propsAttribute,
         parseHTML: () => [
@@ -263,7 +263,7 @@ export function documentExtensions(): Extensions {
     Node.create({
       name: "table",
       addNodeView: () => tableNodeView,
-      group: "journlBody",
+      group: "openeditorBody",
       content: "tableRow*",
       isolating: true,
       addAttributes: () => ({

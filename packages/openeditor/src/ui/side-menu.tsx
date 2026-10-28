@@ -26,7 +26,7 @@ import { BlockMenuContent } from "./toolbar";
 import { TouchBlockDrag } from "./touch-block-drag";
 import { useTiptapState } from "./writing-controls";
 
-/** A handle selects the complete Journl wrapper, including descendants. Native
+/** A handle selects the complete OpenEditor wrapper, including descendants. Native
  * ProseMirror drag/drop owns moves; the identity adapter gives copies fresh IDs. */
 export function TiptapSideMenu({
   editor,

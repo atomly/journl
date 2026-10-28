@@ -62,7 +62,7 @@ export function insertTiptapReference(
   if (rootCard) {
     const card = view.state.schema.nodes.referenceCard;
     const paragraph = view.state.schema.nodes.paragraph;
-    const wrapper = view.state.schema.nodes.journlBlock;
+    const wrapper = view.state.schema.nodes.openeditorBlock;
     if (!card || !paragraph || !wrapper || !body) return false;
     transaction.replaceWith(
       target.pos + 1,

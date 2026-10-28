@@ -16,13 +16,13 @@ export function clipboardPasteExtension(createId: IdFactory) {
           clipboardTextParser: (text, context) =>
             markdownClipboard(text, context, createId),
           transformPasted: (slice, _view, plain) =>
-            plain && slice.content.firstChild?.type.name === "journlBlock"
+            plain && slice.content.firstChild?.type.name === "openeditorBlock"
               ? new Slice(slice.content, 0, 0)
               : slice,
           transformPastedHTML: (html) => normalizePastedLists(html, createId),
         },
       }),
     ],
-    name: "journlClipboardPaste",
+    name: "openeditorClipboardPaste",
   });
 }

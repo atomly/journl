@@ -624,7 +624,8 @@ function TableExtendRail({
     }) => {
       if (
         (transaction.docChanged || transaction.selectionSet) &&
-        transaction.getMeta("journlTableExtension") !== gesture.current?.time
+        transaction.getMeta("openeditorTableExtension") !==
+          gesture.current?.time
       )
         end();
     };
@@ -688,7 +689,7 @@ function TableExtendRail({
             editor.view.dispatch(
               tr
                 .setTime(current.time)
-                .setMeta("journlTableExtension", current.time),
+                .setMeta("openeditorTableExtension", current.time),
             );
           }
         }}
@@ -706,7 +707,7 @@ function TableExtendRail({
               editor.view.dispatch(
                 tr
                   .setTime(current.time)
-                  .setMeta("journlTableExtension", current.time),
+                  .setMeta("openeditorTableExtension", current.time),
               );
           }
           end();

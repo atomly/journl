@@ -49,7 +49,7 @@ test("saved external previews keep source presentation and navigation in both ed
             type: "referenceCard",
           },
         ],
-        type: "journlBlock",
+        type: "openeditorBlock",
       })),
     );
   }, urls);

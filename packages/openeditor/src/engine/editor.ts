@@ -132,7 +132,7 @@ export function createDocumentEditor({
       identityExtension(() => crypto.randomUUID()),
       Extension.create({
         addProseMirrorPlugins: () => [referenceSelectionPlugin()],
-        name: "journlReferences",
+        name: "openeditorReferences",
       }),
     ],
     onUpdate: ({ editor: updated }) => {

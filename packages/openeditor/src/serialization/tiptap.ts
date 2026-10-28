@@ -146,14 +146,14 @@ export function toTiptapDocument(
           "content" in block ? inlineNodes(block.content, schema) : undefined,
         );
       }
-      return required(schema.nodes.journlBlock).createChecked(
+      return required(schema.nodes.openeditorBlock).createChecked(
         { id: block.id },
         [
           body,
           ...(!block.children?.length
             ? []
             : [
-                required(schema.nodes.journlChildren).createChecked(
+                required(schema.nodes.openeditorChildren).createChecked(
                   null,
                   block.children.map(convert),
                 ),
@@ -213,8 +213,8 @@ export function fromTiptapDocument(doc: Node): DocumentBlock[] {
     doc.check();
     if (doc.type.name !== "doc") throw new Error("Expected document root");
     const convert = (wrapper: Node): DocumentBlock => {
-      if (wrapper.type.name !== "journlBlock")
-        throw new Error("Expected Journl block wrapper");
+      if (wrapper.type.name !== "openeditorBlock")
+        throw new Error("Expected OpenEditor block wrapper");
       const body = required(wrapper.firstChild);
       const type = body.type.name;
       const data: Record<string, unknown> = { id: wrapper.attrs.id, type };
@@ -231,7 +231,7 @@ export function fromTiptapDocument(doc: Node): DocumentBlock[] {
             const legacyCells: InlineContent[] = [];
             row.forEach((cell) => {
               // The editor library may concatenate paragraphs when merging cells.
-              // Journl cells own inline content, so retain paragraph boundaries as newlines.
+              // OpenEditor cells own inline content, so retain paragraph boundaries as newlines.
               const content: Exclude<InlineContent, string> = [];
               cell.forEach((paragraph, _offset, index) => {
                 if (index)

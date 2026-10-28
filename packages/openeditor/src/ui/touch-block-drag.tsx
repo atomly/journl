@@ -107,7 +107,7 @@ function DraggableHandle({
   return children(handle);
 }
 /** dnd-kit owns touch activation, cancellation, auto-scroll and gesture listeners.
- * Journl only maps a drop to validated document operations. Text keeps native touch behavior. */
+ * OpenEditor only maps a drop to validated document operations. Text keeps native touch behavior. */
 export function TouchBlockDrag({
   editor,
   id,

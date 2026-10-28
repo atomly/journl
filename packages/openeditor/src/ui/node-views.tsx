@@ -121,7 +121,7 @@ export function referenceViewStore() {
         dropCursor({ color: "var(--ring)", width: 2 }),
       ];
     },
-    name: "journlPresentation",
+    name: "openeditorPresentation",
   });
   return {
     extension,

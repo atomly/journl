@@ -7,7 +7,7 @@ import { fromTiptapDocument } from "./tiptap";
 export function clipboardText(content: Fragment): string {
   const parts: string[] = [];
   content.forEach((node: Node) => {
-    if (node.type.name === "journlBlock") {
+    if (node.type.name === "openeditorBlock") {
       const blocks = fromTiptapDocument(
         node.type.schema.topNodeType.create(null, node),
       );

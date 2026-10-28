@@ -46,7 +46,7 @@ test("plain multiline bullets paste as ordered owned blocks with nesting and for
     expect(JSON.stringify(blocks[0]?.content)).toContain('"bold":true');
     const ids: string[] = [];
     editor.state.doc.descendants((node) => {
-      if (node.type.name === "journlBlock") ids.push(node.attrs.id);
+      if (node.type.name === "openeditorBlock") ids.push(node.attrs.id);
     });
     expect(new Set(ids).size).toBe(ids.length);
     editor.state.doc.check();

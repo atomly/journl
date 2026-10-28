@@ -6,7 +6,7 @@ import { documentExtensions } from "../engine/schema";
 import { fromTiptapDocument, toTiptapDocument } from "../serialization/tiptap";
 import { tableMenuActions } from "./table-actions";
 
-test("table menus keep axis eligibility and execute native edits on the same Journl block", () => {
+test("table menus keep axis eligibility and execute native edits on the same OpenEditor block", () => {
   const editor = new Editor({
     content: toTiptapDocument([
       parseBlock({

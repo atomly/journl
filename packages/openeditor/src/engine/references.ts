@@ -32,8 +32,8 @@ export function captureLink(state: EditorState) {
       ? state.doc.nodeAt(selection.from)
       : null;
   const wholeText =
-    wrapper?.type.name === "journlBlock" && wrapper.firstChild?.isTextblock;
-  if (wrapper?.type.name === "journlBlock" && !wholeText) return null;
+    wrapper?.type.name === "openeditorBlock" && wrapper.firstChild?.isTextblock;
+  if (wrapper?.type.name === "openeditorBlock" && !wholeText) return null;
   const from = wholeText ? selection.from + 2 : (range?.from ?? selection.from);
   const to = wholeText
     ? from + (wrapper?.firstChild?.content.size ?? 0)
@@ -67,9 +67,9 @@ export function convertReference(
 ) {
   const target = selectedBlock(state);
   const at = state.doc.nodeAt(state.selection.from);
-  const selected = at?.type.name === "journlBlock" ? at.firstChild : at;
+  const selected = at?.type.name === "openeditorBlock" ? at.firstChild : at;
   const from =
-    at?.type.name === "journlBlock"
+    at?.type.name === "openeditorBlock"
       ? state.selection.from + 1
       : state.selection.from;
   if (
@@ -119,7 +119,7 @@ export function convertReference(
   const offset = from - target.pos - 2;
   const before = body.content.cut(0, offset);
   const after = body.content.cut(offset + selected.nodeSize);
-  const wrapper = required(schema.nodes.journlBlock);
+  const wrapper = required(schema.nodes.openeditorBlock);
   const nodes = [
     ...(before.size
       ? [wrapper.createChecked({ id: createId() }, body.copy(before))]

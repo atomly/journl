@@ -18,7 +18,7 @@ export const TABLE_MIN_COLUMN_WIDTH = 35;
 export const TABLE_DEFAULT_COLUMN_WIDTH = 120;
 
 export const tableHeadersKey = new PluginKey<DecorationSet>(
-  "journlTableHeaders",
+  "openeditorTableHeaders",
 );
 
 function tableHeaders(doc: Node) {
@@ -113,7 +113,7 @@ export function tableExtension() {
         )[extension.name],
       };
     },
-    name: "journlTables",
+    name: "openeditorTables",
     priority: 1100,
   });
 }

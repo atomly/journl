@@ -17,7 +17,7 @@ type Text = {
 };
 
 /** CommonMark parsing belongs to micromark/remark's parser. This adapter only
- * maps supported syntax into Journl blocks; raw HTML is inert authored text. */
+ * maps supported syntax into OpenEditor blocks; raw HTML is inert authored text. */
 export function markdownClipboard(
   text: string,
   context: ResolvedPos,

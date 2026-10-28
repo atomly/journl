@@ -12,7 +12,10 @@ export function restoreBlockSelection(before: EditorState, tr: Transaction) {
   if (before.selection instanceof NodeRangeSelection) {
     const first = before.doc.nodeAt(before.selection.from);
     const last = before.doc.resolve(before.selection.to).nodeBefore;
-    if (first?.type.name !== "journlBlock" || last?.type.name !== "journlBlock")
+    if (
+      first?.type.name !== "openeditorBlock" ||
+      last?.type.name !== "openeditorBlock"
+    )
       return false;
     const a = blockAt(tr.doc, first.attrs.id).pos;
     const end = blockAt(tr.doc, last.attrs.id);
@@ -32,7 +35,7 @@ export function restoreBlockSelection(before: EditorState, tr: Transaction) {
   const point = (pos: number) => {
     const $pos = before.doc.resolve(pos);
     for (let depth = $pos.depth; depth > 0; depth--)
-      if ($pos.node(depth).type.name === "journlBlock")
+      if ($pos.node(depth).type.name === "openeditorBlock")
         return {
           id: $pos.node(depth).attrs.id as string,
           offset: pos - $pos.before(depth),

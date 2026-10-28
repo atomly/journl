@@ -22,7 +22,7 @@ export function selectedBlock(state: Pick<EditorState, "doc" | "selection">) {
   if (
     (state.selection instanceof NodeSelection ||
       state.selection instanceof NodeRangeSelection) &&
-    selected?.type.name === "journlBlock"
+    selected?.type.name === "openeditorBlock"
   )
     return {
       id: selected.attrs.id as string,
@@ -36,7 +36,7 @@ export function selectedBlock(state: Pick<EditorState, "doc" | "selection">) {
     };
   for (let depth = $from.depth; depth > 0; depth--) {
     const node = $from.node(depth);
-    if (node.type.name === "journlBlock")
+    if (node.type.name === "openeditorBlock")
       return {
         id: node.attrs.id as string,
         index: $from.index(depth - 1),
@@ -47,7 +47,7 @@ export function selectedBlock(state: Pick<EditorState, "doc" | "selection">) {
       };
   }
   const node = state.doc.nodeAt(state.selection.from);
-  if (node?.type.name === "journlBlock")
+  if (node?.type.name === "openeditorBlock")
     return {
       id: node.attrs.id as string,
       index: $from.index(),
@@ -117,7 +117,7 @@ export function selectedBlocks(state: EditorState) {
   const end = Math.max(selection.from, selection.to - 1);
   for (let depth = $from.depth; depth >= 0; depth--) {
     const group = $from.node(depth);
-    if (group.type.name !== "doc" && group.type.name !== "journlChildren")
+    if (group.type.name !== "doc" && group.type.name !== "openeditorChildren")
       continue;
     if (end > $from.end(depth)) continue;
     const start = $from.start(depth);
@@ -288,7 +288,7 @@ export function editingExtension(createId: IdFactory) {
           return true;
         }
         if (!state.selection.$from.parent.isTextblock) {
-          const wrapper = state.schema.nodes.journlBlock;
+          const wrapper = state.schema.nodes.openeditorBlock;
           const paragraph = state.schema.nodes.paragraph;
           if (!wrapper || !paragraph) return false;
           const pos = target.pos + target.node.nodeSize;
@@ -403,7 +403,7 @@ export function editingExtension(createId: IdFactory) {
             body.type.name === "toggleListItem" ||
             (body.type.name === "heading" && body.attrs.props?.isToggleable)
           ) {
-            view.dispatch(state.tr.setMeta("journlToggleBlock", target.id));
+            view.dispatch(state.tr.setMeta("openeditorToggleBlock", target.id));
             return true;
           }
           return false;
@@ -422,7 +422,7 @@ export function editingExtension(createId: IdFactory) {
       };
     },
     addProseMirrorPlugins: () => [history()],
-    name: "journlEditing",
+    name: "openeditorEditing",
     priority: 1000,
   });
 }

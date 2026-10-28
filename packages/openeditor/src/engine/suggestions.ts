@@ -56,7 +56,7 @@ export type SlashQuery = {
   query: string;
   index: number;
 };
-export const slashKey = new PluginKey<SlashQuery | null>("journlSlash");
+export const slashKey = new PluginKey<SlashQuery | null>("openeditorSlash");
 export const filteredBlockChoices = (query: string) =>
   blockChoices.filter((choice) =>
     `${choice.title} ${choice.aliases}`
@@ -97,7 +97,7 @@ export function applySlashChoice(
   if (!turnInto(tr, target.id, choice.type, choice.props)) return null;
   if (choice.type === "divider") {
     const paragraph = state.schema.nodes.paragraph;
-    const wrapper = state.schema.nodes.journlBlock;
+    const wrapper = state.schema.nodes.openeditorBlock;
     if (!paragraph || !wrapper) return null;
     const current = tr.doc.nodeAt(target.pos);
     if (!current) return null;
@@ -210,7 +210,7 @@ export function suggestionExtension(createId: IdFactory) {
         }),
       ];
     },
-    name: "journlSuggestions",
+    name: "openeditorSuggestions",
     priority: 1100,
   });
 }

@@ -32,10 +32,11 @@ Workspace consumers use package subpaths. The package metadata supports a future
 npm release; the scope and release version remain provisional. Nothing is
 published by the registry build or application build.
 
-For source ownership through shadcn, run `pnpm registry:build`, then install:
+For source ownership through shadcn, generate the registry in the host repository
+and serve its output at a URL you control. Set `REGISTRY_URL` to that URL, then install:
 
 ```sh
-pnpm dlx shadcn@latest add https://journl-snowy.vercel.app/r/openeditor.json
+pnpm dlx shadcn@latest add "$REGISTRY_URL/openeditor.json"
 ```
 
 The registry copies OpenEditor and its document, reference, and shared UI sources

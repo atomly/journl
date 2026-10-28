@@ -39,7 +39,7 @@ export function writingExtension(createId: IdFactory) {
             tr.delete(range.from, range.to);
             if (!turnInto(tr, target.id, type, props(match))) return null;
             if (type === "divider") {
-              const wrapper = state.schema.nodes.journlBlock;
+              const wrapper = state.schema.nodes.openeditorBlock;
               const paragraph = state.schema.nodes.paragraph;
               if (!wrapper || !paragraph) return null;
               const block = blockAt(tr.doc, target.id);
@@ -217,7 +217,7 @@ export function writingExtension(createId: IdFactory) {
         Tab: () => tab(false),
       };
     },
-    name: "journlWriting",
+    name: "openeditorWriting",
     priority: 1050,
   });
 }

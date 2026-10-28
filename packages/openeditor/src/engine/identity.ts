@@ -15,7 +15,7 @@ export type IdFactory = () => string;
 export function blockAt(doc: Node, id: string): { node: Node; pos: number } {
   let result: { node: Node; pos: number } | undefined;
   doc.descendants((node, pos) => {
-    if (node.type.name === "journlBlock" && node.attrs.id === id)
+    if (node.type.name === "openeditorBlock" && node.attrs.id === id)
       result = { node, pos };
   });
   if (!result) throw new Error(`Block not found: ${id}`);
@@ -26,7 +26,7 @@ export function blockAt(doc: Node, id: string): { node: Node; pos: number } {
 export function copySlice(slice: Slice, createId: IdFactory): Slice {
   const used = new Set<string>();
   slice.content.descendants((node) => {
-    if (node.type.name === "journlBlock") used.add(node.attrs.id);
+    if (node.type.name === "openeditorBlock") used.add(node.attrs.id);
   });
   const freshId = () => {
     const id = createId();
@@ -45,7 +45,7 @@ export function copySlice(slice: Slice, createId: IdFactory): Slice {
       : node.type.create(
           {
             ...node.attrs,
-            ...(node.type.name === "journlBlock" ? { id: freshId() } : {}),
+            ...(node.type.name === "openeditorBlock" ? { id: freshId() } : {}),
           },
           children,
           node.marks,
@@ -68,7 +68,7 @@ export function identityPlugin(createId: IdFactory): Plugin {
       if (!transactions.some((tr) => tr.docChanged)) return null;
       // ProseMirror permits an empty root; the writing surface still needs a caret.
       if (!state.doc.childCount) {
-        const wrapper = state.schema.nodes.journlBlock;
+        const wrapper = state.schema.nodes.openeditorBlock;
         const paragraph = state.schema.nodes.paragraph;
         if (!wrapper || !paragraph) return null;
         const tr = state.tr.insert(
@@ -80,7 +80,7 @@ export function identityPlugin(createId: IdFactory): Plugin {
 
       const preferred = new Map<string, number>();
       oldState.doc.descendants((node, start) => {
-        if (node.type.name !== "journlBlock" || !node.attrs.id) return;
+        if (node.type.name !== "openeditorBlock" || !node.attrs.id) return;
         let pos = start;
         let deleted = false;
         for (const transaction of transactions) {
@@ -92,7 +92,7 @@ export function identityPlugin(createId: IdFactory): Plugin {
       });
       const occurrences = new Map<string, number[]>();
       state.doc.descendants((node, pos) => {
-        if (node.type.name !== "journlBlock") return;
+        if (node.type.name !== "openeditorBlock") return;
         const items = occurrences.get(node.attrs.id) ?? [];
         items.push(pos);
         occurrences.set(node.attrs.id, items);
@@ -196,7 +196,10 @@ export function splitBlock(
   const freshId = createId();
   if (!freshId) throw new Error("ID factory must return fresh nonempty IDs");
   transaction.doc.descendants((candidate) => {
-    if (candidate.type.name === "journlBlock" && candidate.attrs.id === freshId)
+    if (
+      candidate.type.name === "openeditorBlock" &&
+      candidate.attrs.id === freshId
+    )
       throw new Error("ID factory must return fresh nonempty IDs");
   });
   const left = node.type.createChecked(node.attrs, [
@@ -240,7 +243,7 @@ export function joinBlocks(
     ...(children.size
       ? [
           required(
-            transaction.doc.type.schema.nodes.journlChildren,
+            transaction.doc.type.schema.nodes.openeditorChildren,
           ).createChecked(null, children),
         ]
       : []),
@@ -254,6 +257,6 @@ export function joinBlocks(
 export function identityExtension(createId: IdFactory): Extension {
   return Extension.create({
     addProseMirrorPlugins: () => [identityPlugin(createId)],
-    name: "journlIdentity",
+    name: "openeditorIdentity",
   });
 }

@@ -16,7 +16,7 @@ import { editingExtension } from "./commands";
 import { blockAt, identityExtension } from "./identity";
 import { documentExtensions } from "./schema";
 
-test("native table commands preserve Journl identity, content, spans and resized widths", () => {
+test("native table commands preserve OpenEditor identity, content, spans and resized widths", () => {
   let id = 0;
   const editor = new Editor({
     content: toTiptapDocument([

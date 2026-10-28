@@ -77,7 +77,7 @@ export function blockView({
     transaction: import("@tiptap/pm/state").Transaction;
   }) => {
     if (
-      transaction.getMeta("journlToggleBlock") === node.attrs.id &&
+      transaction.getMeta("openeditorToggleBlock") === node.attrs.id &&
       !toggle.hidden
     ) {
       collapsed = !collapsed;

@@ -41,7 +41,7 @@ export function turnInto(
     | { pos: number; node: import("@tiptap/pm/model").Node }
     | undefined;
   transaction.doc.descendants((node, pos) => {
-    if (node.type.name === "journlBlock" && node.attrs.id === id) {
+    if (node.type.name === "openeditorBlock" && node.attrs.id === id) {
       target = { node, pos };
       return false;
     }

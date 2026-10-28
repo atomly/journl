@@ -248,7 +248,7 @@ describe("committed changes become framework-independent domain operations", () 
       const operations = documentChanges(before, doc);
       const result = applyDocumentOperations(before, operations);
       expect(toTiptapDocument(result, schema).eq(doc)).toBe(true);
-      expect(JSON.stringify(operations)).not.toContain("journlBlock");
+      expect(JSON.stringify(operations)).not.toContain("openeditorBlock");
       expect(documentChanges(fromTiptapDocument(doc), doc)).toEqual([]);
     },
   );

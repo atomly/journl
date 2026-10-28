@@ -58,7 +58,7 @@ export function ReferenceDisplayItems({
   const { state } = editor;
   const at = state.doc.nodeAt(state.selection.from);
   const reference =
-    at?.type.name === "journlBlock"
+    at?.type.name === "openeditorBlock"
       ? selectedBlock(state)?.node.firstChild
       : at;
   const isReference =
@@ -124,7 +124,7 @@ export function ReferenceDisplayControl({
   insertReference: InsertReference;
 }) {
   const at = editor.state.doc.nodeAt(editor.state.selection.from);
-  const reference = at?.type.name === "journlBlock" ? at.firstChild : at;
+  const reference = at?.type.name === "openeditorBlock" ? at.firstChild : at;
   if (
     !captureLink(editor.state) &&
     !["contentReference", "referenceCard", "contentEmbed"].includes(

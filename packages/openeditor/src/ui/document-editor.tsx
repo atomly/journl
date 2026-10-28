@@ -78,8 +78,7 @@ function EditorView({
       {children}
       {error && (
         <p role="alert" className="px-8 text-destructive">
-          This content could not be edited safely. Your last valid draft is
-          still available in save details.
+          This content could not be edited safely.
         </p>
       )}
       <EditorContent

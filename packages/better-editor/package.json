@@ -36,6 +36,7 @@
     "./ui/pointer-corridor": "./src/ui/pointer-corridor.ts",
     "./ui/reference-client": "./src/ui/reference-client.ts",
     "./ui/reference-display": "./src/ui/reference-display.tsx",
+    "./ui/reference.css": "./src/ui/reference.css",
     "./ui/side-menu": "./src/ui/side-menu.tsx",
     "./ui/table-actions": "./src/ui/table-actions.ts",
     "./ui/table-controls": "./src/ui/table-controls.tsx",

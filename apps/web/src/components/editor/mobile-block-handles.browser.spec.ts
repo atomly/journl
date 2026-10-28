@@ -31,20 +31,11 @@ async function touch(
 }
 test("mobile block handles follow taps and move nested blocks with stable identity", async ({
   page,
-  context,
 }, info) => {
   test.skip(
     info.project.name !== "mobile-webkit",
     "Touch handle acceptance runs on mobile WebKit",
   );
-  await context.addCookies([
-    {
-      name: "journl-editor",
-      sameSite: "Lax",
-      url: "http://127.0.0.1:3100",
-      value: "tiptap",
-    },
-  ]);
   await page.goto("/journal");
   await expect(page.locator("a a")).toHaveCount(0);
   const create = page.getByRole("button", { exact: true, name: "New page" });

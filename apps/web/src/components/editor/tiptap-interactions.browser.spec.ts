@@ -1,10 +1,7 @@
 import { expect, test } from "~/testing/browser/fixtures";
 
 test.use({ journalPagination: true });
-test.beforeEach(async ({ page, context }) => {
-  await context.addCookies([
-    { name: "journl-editor", url: "http://127.0.0.1:3100", value: "tiptap" },
-  ]);
+test.beforeEach(async ({ page }) => {
   // Each acceptance case owns a real page instead of overwriting shared codec fixtures.
   await page.goto("/journal");
   const create = page.getByRole("button", { exact: true, name: "New page" });

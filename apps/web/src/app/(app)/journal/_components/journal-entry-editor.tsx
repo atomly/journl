@@ -1,6 +1,5 @@
 "use client";
 
-import { fromBlockNoteBlocks } from "@acme/blocknote/adapter";
 import type { DocumentBlock } from "@acme/document";
 import Link from "next/link";
 import {
@@ -11,11 +10,8 @@ import {
   useMemo,
   useSyncExternalStore,
 } from "react";
-import { BlockEditor } from "~/components/editor/block-editor";
 import { ConnectedDocumentEditor } from "~/components/editor/document-editor";
 import { acceptedDocumentChange } from "~/components/editor/document-save-adapter";
-import { useTiptapPreview } from "~/components/editor/editor-frontend-provider";
-import { useBlockEditor } from "~/components/editor/use-block-editor";
 import { ExploreNoteLink } from "~/components/references/explore-note-link";
 import { ReferenceBacklinks } from "~/components/references/reference-backlinks";
 import { useJournlAgent } from "~/hooks/use-journl-agent";
@@ -145,22 +141,14 @@ export function JournalEntryHeader({
 }
 
 type JournalEntryEditorProps = Omit<
-  React.ComponentProps<typeof BlockEditor>,
-  "editor" | "onChange" | "formattingToolbar" | "slashMenu"
+  React.ComponentProps<typeof ConnectedDocumentEditor>,
+  "initialBlocks" | "onCommit"
 > & {
   debounceTime?: number;
   onCreateAction?: (newEntry: JournalListEntry) => void;
 };
 
 export function JournalEntryEditor(props: JournalEntryEditorProps) {
-  return useTiptapPreview() ? (
-    <TiptapJournalEntryEditor {...props} />
-  ) : (
-    <BlockNoteJournalEntryEditor {...props} />
-  );
-}
-
-function TiptapJournalEntryEditor(props: JournalEntryEditorProps) {
   const entry = useJournalEntry();
   const { initialBlocks, documentId, updatedAt, date } = entry;
   const { draft, retainDraft } = useJournalEntryDraft(date, {
@@ -207,78 +195,6 @@ function TiptapJournalEntryEditor(props: JournalEntryEditorProps) {
       >
         {props.children}
       </ConnectedDocumentEditor>
-      {snapshot.documentId && (
-        <ReferenceBacklinks documentId={snapshot.documentId} />
-      )}
-    </JournalEntryContext.Provider>
-  );
-}
-
-function BlockNoteJournalEntryEditor({
-  debounceTime = DEFAULT_DEBOUNCE_TIME,
-  onCreateAction,
-  ...rest
-}: JournalEntryEditorProps) {
-  const entry = useJournalEntry();
-  const { initialBlocks, documentId, updatedAt, date } = entry;
-  const { draft, retainDraft } = useJournalEntryDraft(date, {
-    blocks: initialBlocks,
-    documentId,
-    updatedAt,
-  });
-  const snapshot = useSyncExternalStore(
-    draft.subscribe,
-    draft.getSnapshot,
-    draft.getSnapshot,
-  );
-  const { setEditor, unsetEditor } = useJournlAgent();
-  const editor = useBlockEditor({
-    initialBlocks: snapshot.blocks,
-    resetKey: snapshot.resetKey,
-  });
-
-  function handleEditorChange() {
-    retainDraft();
-    draft.update(
-      fromBlockNoteBlocks(editor.document),
-      debounceTime,
-      onCreateAction,
-    );
-  }
-
-  useEffect(
-    () => () => {
-      void draft.flush();
-    },
-    [draft],
-  );
-
-  useEffect(() => {
-    const id = `journal-entry:${date}` as const;
-    setEditor({ editor, id });
-    return () => {
-      unsetEditor(id);
-    };
-  }, [date, editor, setEditor, unsetEditor]);
-
-  return (
-    <JournalEntryContext.Provider
-      value={{
-        ...entry,
-        documentId: snapshot.documentId,
-        updatedAt: snapshot.updatedAt,
-      }}
-    >
-      <BlockEditor
-        key={snapshot.resetKey}
-        editor={editor}
-        onChange={handleEditorChange}
-        // Disabling the default because we're using a formatting toolbar with the AI option.
-        formattingToolbar={false}
-        // Disabling the default because we're using a slash menu with the AI option.
-        slashMenu={false}
-        {...rest}
-      />
       {snapshot.documentId && (
         <ReferenceBacklinks documentId={snapshot.documentId} />
       )}

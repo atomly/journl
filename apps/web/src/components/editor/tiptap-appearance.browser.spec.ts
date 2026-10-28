@@ -3,7 +3,7 @@ import { expect, test } from "~/testing/browser/fixtures";
 
 test.use({ journalPagination: true });
 for (const theme of ["light", "dark"]) {
-  test(`writing appearance matches the current editor in ${theme}`, async ({
+  test(`writing keeps the preserved typography and controls in ${theme}`, async ({
     page,
     context,
   }, info) => {
@@ -11,72 +11,71 @@ for (const theme of ["light", "dark"]) {
       (value) => localStorage.setItem("theme", value),
       theme,
     );
-    const snapshots = [];
-    for (const frontend of ["blocknote", "tiptap"]) {
-      await context.addCookies([
-        {
-          name: "journl-editor",
-          url: "http://127.0.0.1:3100",
-          value: frontend,
-        },
-      ]);
-      await page.goto(`/pages/${fixtureId(980)}`);
-      const editor = page.locator(
-        frontend === "blocknote" ? ".bn-editor" : ".better-editor-tiptap",
+    await page.goto(`/pages/${fixtureId(980)}`);
+    const editor = page.locator(".better-editor-tiptap");
+    await expect(editor).toContainText("Heading 6");
+    await page.evaluate(() => document.fonts.ready);
+    const font = await editor.evaluate((root) => {
+      const clean = (family: string) =>
+        family.trim().replaceAll('"', "").replaceAll("'", "");
+      const family = clean(
+        getComputedStyle(root).fontFamily.split(",")[0] ?? "",
       );
-      await expect(editor).toContainText("Heading 6");
-      await page.evaluate(() => document.fonts.ready);
-      snapshots.push(
-        await editor.evaluate((root) => {
-          const s = getComputedStyle(root);
-          return {
-            font: s.fontFamily,
-            headings: [...root.querySelectorAll("h1,h2,h3,h4,h5,h6")].map(
-              (node) => {
-                const style = getComputedStyle(node);
-                return {
-                  lineHeight: style.lineHeight,
-                  size: style.fontSize,
-                  text: node.textContent,
-                  weight: style.fontWeight,
-                  whiteSpace: style.whiteSpaceCollapse,
-                };
-              },
-            ),
-            padding: s.paddingLeft,
-          };
-        }),
-      );
-      if (frontend === "tiptap") {
-        await expect(
-          page.getByRole("textbox", { exact: true, name: "Reference URL" }),
-        ).toBeHidden();
-        const toolbar = page.getByRole("toolbar", {
-          exact: true,
-          name: "Editor controls",
-        });
-        if (info.project.name === "desktop-chromium")
-          await expect(toolbar).toBeHidden();
-        else {
-          await expect(toolbar).toBeVisible();
-          await expect(toolbar).toHaveCSS("flex-wrap", "nowrap");
-          expect((await toolbar.boundingBox())?.height).toBeLessThan(50);
-        }
-        await editor
-          .locator('[data-better-editor-body="paragraph"]')
-          .first()
-          .hover();
-        await expect(
-          page.getByRole("button", { exact: true, name: "Block actions" }),
-        ).toBeVisible();
-        await page
-          .getByRole("button", { exact: true, name: "Block actions" })
-          .click();
-        await expect(
-          page.getByRole("menuitem", { exact: true, name: "Duplicate block" }),
-        ).toBeVisible();
-      }
+      return {
+        family,
+        loaded: [...document.fonts].some(
+          (face) => clean(face.family) === family && face.status === "loaded",
+        ),
+      };
+    });
+    expect(font.family.toLowerCase()).toContain("inter");
+    expect(font.loaded).toBe(true);
+    const card = editor.locator(".content-reference-card").first();
+    await expect(card).toHaveCSS("display", "flex");
+    await expect(card).toHaveCSS("border-top-width", "1px");
+    await expect(editor).toHaveCSS("font-size", "16px");
+    await expect(editor).toHaveCSS("line-height", "24px");
+    await expect(editor).toHaveCSS("padding-left", "54px");
+    await expect(editor).toHaveCSS(
+      "color",
+      theme === "dark" ? "rgb(207, 207, 207)" : "rgb(63, 63, 63)",
+    );
+    // These are the typography values preserved from the retired editor.
+    for (const [index, size] of [48, 32, 20.8, 16, 14.4, 12.8].entries()) {
+      const heading = editor
+        .locator(
+          `[data-better-editor-body="heading"][data-heading-level="${index + 1}"]`,
+        )
+        .first();
+      await expect(heading).toHaveCSS("font-size", `${size}px`);
+      await expect(heading).toHaveCSS("font-weight", "700");
     }
-    expect(snapshots[1]).toEqual(snapshots[0]);
+    await expect(
+      page.getByRole("textbox", { exact: true, name: "Reference URL" }),
+    ).toBeHidden();
+    const toolbar = page.getByRole("toolbar", {
+      exact: true,
+      name: "Editor controls",
+    });
+    if (info.project.name === "desktop-chromium")
+      await expect(toolbar).toBeHidden();
+    else {
+      await expect(toolbar).toBeVisible();
+      await expect(toolbar).toHaveCSS("flex-wrap", "nowrap");
+      expect((await toolbar.boundingBox())?.height).toBeLessThan(50);
+    }
+    await editor
+      .locator('[data-better-editor-body="paragraph"]')
+      .first()
+      .hover();
+    await expect(
+      page.getByRole("button", { exact: true, name: "Block actions" }),
+    ).toBeVisible();
+    await page
+      .getByRole("button", { exact: true, name: "Block actions" })
+      .click();
+    await expect(
+      page.getByRole("menuitem", { exact: true, name: "Duplicate block" }),
+    ).toBeVisible();
   });
 }

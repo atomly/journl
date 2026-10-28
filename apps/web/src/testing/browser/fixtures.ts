@@ -31,9 +31,9 @@ export async function typeParagraphs(editor: Locator, paragraphs: string[]) {
   await editor.fill("");
   for (const [index, text] of paragraphs.entries()) {
     if (index) await editor.press("Enter");
-    await expect(editor.locator('[data-better-editor-body="paragraph"]')).toHaveCount(
-      index + 1,
-    );
+    await expect(
+      editor.locator('[data-better-editor-body="paragraph"]'),
+    ).toHaveCount(index + 1);
     await editor.pressSequentially(text, { delay: 20 });
   }
 }

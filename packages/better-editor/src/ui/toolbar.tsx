@@ -116,7 +116,10 @@ function BlockTypeMenu({ editor }: { editor: Editor }) {
           Turn into
         </DropdownMenuSubTrigger>
       </EditorHint>
-      <DropdownMenuSubContent data-tiptap-controls="">
+      <DropdownMenuSubContent
+        data-tiptap-controls=""
+        data-tiptap-owner={editor.instanceId}
+      >
         {choices.map((choice) => (
           <EditorMenuItem
             key={choice.title}
@@ -179,6 +182,7 @@ function BlockTypeSelector({ editor }: { editor: Editor }) {
       </EditorToolbarControl>
       <SelectContent
         data-tiptap-controls=""
+        data-tiptap-owner={editor.instanceId}
         alignItemWithTrigger={false}
         onFocusCapture={(event) => {
           const from = event.relatedTarget;
@@ -455,6 +459,7 @@ export function TiptapToolbar({
           </EditorToolbarControl>
           <PopoverContent
             data-tiptap-controls=""
+            data-tiptap-owner={editor.instanceId}
             finalFocus={() => {
               setRequested(false);
               return restoreEditorFocus(editor);
@@ -587,6 +592,7 @@ export function TiptapToolbar({
           </EditorToolbarControl>
           <DropdownMenuContent
             data-tiptap-controls=""
+            data-tiptap-owner={editor.instanceId}
             finalFocus={() => {
               return restoreEditorFocus(editor);
             }}
@@ -627,6 +633,7 @@ export function TiptapToolbar({
           </EditorToolbarControl>
           <PopoverContent
             data-tiptap-controls=""
+            data-tiptap-owner={editor.instanceId}
             finalFocus={() => {
               return restoreEditorFocus(editor);
             }}
@@ -707,6 +714,7 @@ export function TiptapToolbar({
           </EditorToolbarControl>
           <DropdownMenuContent
             data-tiptap-controls=""
+            data-tiptap-owner={editor.instanceId}
             finalFocus={() => {
               return restoreEditorFocus(editor);
             }}

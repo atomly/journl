@@ -84,6 +84,13 @@ export function createDocumentEditor({
           view.composing || event.isComposing || event.keyCode === 229,
       },
       handleDrop: (view, event, _slice, moved) => {
+        // A stale table-axis gesture must not become a clipboard copy.
+        if (
+          event.dataTransfer?.types.includes(
+            "application/x-better-editor-table-axis",
+          )
+        )
+          return true;
         if (moved) return false;
         const url = getPlainUrlForAutomaticReference({
           html: event.dataTransfer?.getData("text/html") ?? "",

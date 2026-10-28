@@ -269,6 +269,7 @@ export function TiptapContextMenu({ editor }: { editor?: Editor }) {
       />
       <DropdownMenuContent
         data-tiptap-controls=""
+        data-tiptap-owner={editor.instanceId}
         finalFocus={() => {
           return restoreEditorFocus(editor);
         }}
@@ -336,6 +337,7 @@ export function TiptapSlashMenu({ editor }: { editor?: Editor }) {
       ref={popup}
       id={menuId}
       data-tiptap-controls=""
+      data-tiptap-owner={editor.instanceId}
       role="listbox"
       aria-label="Block commands"
       className="fixed z-50 w-64 overflow-y-auto rounded-md border bg-popover p-1 text-popover-foreground shadow-md"

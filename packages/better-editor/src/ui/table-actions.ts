@@ -9,6 +9,7 @@ import {
   deleteRow,
   isInTable,
   mergeCells,
+  selectedRect,
   splitCell,
 } from "@tiptap/pm/tables";
 import { selectedBlock } from "../engine/commands";
@@ -24,6 +25,8 @@ import {
 } from "../engine/table-actions";
 import { TABLE_MIN_COLUMN_WIDTH } from "../engine/tables";
 import { changeBlockType } from "../engine/writing";
+
+import { revealTableColumn } from "./table-reveal";
 
 export type TableMenuAction = {
   label: string;
@@ -62,8 +65,16 @@ export function tableMenuActions(
   const run = (command: Command) => {
     if (state !== editor.state)
       editor.view.dispatch(editor.state.tr.setSelection(state.selection));
-    command(editor.state, (tr) => applyTableEdit(editor, tr), editor.view);
+    const rect = selectedRect(editor.state);
+    const added = command === addColumnBefore ? rect.left : rect.right;
+    const changed = command(
+      editor.state,
+      (tr) => applyTableEdit(editor, tr),
+      editor.view,
+    );
     editor.view.focus();
+    if (changed && (command === addColumnBefore || command === addColumnAfter))
+      revealTableColumn(editor, target.id, added);
   };
   const commands: [string, string, Command, TableAxis?][] = [
     [

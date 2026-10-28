@@ -24,7 +24,7 @@ test("pointer focus can enter editor controls without unmounting the pending cli
   function Handles() {
     const visible = useHandleVisibility(editor);
     return visible ? (
-      <div data-tiptap-controls="">
+      <div data-tiptap-controls="" data-tiptap-owner={editor.instanceId}>
         <button type="button">Row actions</button>
       </div>
     ) : null;
@@ -48,7 +48,7 @@ test("pointer focus can enter editor controls without unmounting the pending cli
   }
 });
 
-test("touch scrolling retains handles, typing hides them, and mouse scrolling dismisses them", async () => {
+test("touch typing/scrolling retains controls; mouse editing and outside focus dismiss them", async () => {
   const surface = document.createElement("div");
   const host = document.createElement("div");
   document.body.append(surface, host);
@@ -76,14 +76,25 @@ test("touch scrolling retains handles, typing hides them, and mouse scrolling di
     await act(async () => pointer("pointerdown", "touch"));
     await act(async () => window.dispatchEvent(new Event("scroll")));
     expect(host.textContent).toBe("true");
-    await act(async () => document.dispatchEvent(new KeyboardEvent("keydown")));
-    expect(host.textContent).toBe("false");
+    await act(async () =>
+      editor.view.dom.dispatchEvent(
+        new InputEvent("beforeinput", { bubbles: true }),
+      ),
+    );
+    expect(host.textContent).toBe("true");
     await act(async () => window.dispatchEvent(new Event("scroll")));
     await act(async () => pointer("pointermove", "touch"));
-    expect(host.textContent).toBe("false");
+    expect(host.textContent).toBe("true");
     await act(async () => pointer("pointerdown", "touch"));
     expect(host.textContent).toBe("true");
     await act(async () => pointer("pointermove", "mouse"));
+    await act(async () =>
+      editor.view.dom.dispatchEvent(
+        new InputEvent("beforeinput", { bubbles: true }),
+      ),
+    );
+    expect(host.textContent).toBe("false");
+    await act(async () => pointer("pointerdown", "mouse"));
     await act(async () => window.dispatchEvent(new Event("scroll")));
     expect(host.textContent).toBe("false");
   } finally {
@@ -92,5 +103,48 @@ test("touch scrolling retains handles, typing hides them, and mouse scrolling di
     surface.remove();
     host.remove();
     vi.unstubAllGlobals();
+  }
+});
+
+test("keyboard navigation and input in owned controls keep the focused control mounted", async () => {
+  const surface = document.createElement("div");
+  const host = document.createElement("div");
+  const outside = document.createElement("input");
+  document.body.append(surface, host, outside);
+  const editor = new Editor({
+    content: toTiptapDocument([{ id: "text", type: "paragraph" }]).toJSON(),
+    element: surface,
+    extensions: documentExtensions(),
+  });
+  const root = createRoot(host);
+  function Handles() {
+    return useHandleVisibility(editor) ? (
+      <div data-tiptap-controls="" data-tiptap-owner={editor.instanceId}>
+        <input aria-label="Editor control" />
+      </div>
+    ) : null;
+  }
+  try {
+    await act(async () => root.render(<Handles />));
+    const control = host.querySelector("input");
+    await act(async () => control?.focus());
+    await act(async () =>
+      control?.dispatchEvent(
+        new KeyboardEvent("keydown", { bubbles: true, key: "Tab" }),
+      ),
+    );
+    await act(async () =>
+      control?.dispatchEvent(new InputEvent("beforeinput", { bubbles: true })),
+    );
+    expect(control?.isConnected).toBe(true);
+    expect(document.activeElement).toBe(control);
+    await act(async () => outside.focus());
+    expect(host.querySelector("input")).toBeNull();
+  } finally {
+    await act(async () => root.unmount());
+    editor.destroy();
+    surface.remove();
+    host.remove();
+    outside.remove();
   }
 });

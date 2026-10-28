@@ -43,6 +43,7 @@ import {
 import { removeSelectedBlock } from "../engine/writing";
 import { EditorHint, EditorMenuItem, restoreEditorFocus } from "./controls";
 import { TableMenuItems } from "./table-controls";
+import { revealTableColumn } from "./table-reveal";
 import { useTiptapState } from "./writing-controls";
 
 type ActiveTable = {
@@ -318,7 +319,11 @@ export function TiptapTableHandles({
       editor.view.dispatch(editor.state.tr.setSelection(selection));
   };
   return createPortal(
-    <div data-tiptap-controls="" data-tiptap-table-controls="">
+    <div
+      data-tiptap-controls=""
+      data-tiptap-owner={editor.instanceId}
+      data-tiptap-table-controls=""
+    >
       {(["row", "column"] as const).map((axis) => (
         <TableAxisHandle
           key={axis}
@@ -531,6 +536,7 @@ function TableAxisHandle({
       </DropdownMenuTrigger>
       <DropdownMenuContent
         data-tiptap-controls=""
+        data-tiptap-owner={editor.instanceId}
         finalFocus={() => {
           return restoreEditorFocus(editor);
         }}
@@ -691,6 +697,8 @@ function TableExtendRail({
                 .setTime(current.time)
                 .setMeta("better-editor-table-extension", current.time),
             );
+            if (axis === "column" && count > current.count)
+              revealTableColumn(editor, active.id, count - 1);
           }
         }}
         onPointerUp={() => {
@@ -703,12 +711,15 @@ function TableExtendRail({
               axis,
               current.count + 1,
             );
-            if (tr)
+            if (tr) {
               editor.view.dispatch(
                 tr
                   .setTime(current.time)
                   .setMeta("better-editor-table-extension", current.time),
               );
+              if (axis === "column")
+                revealTableColumn(editor, active.id, current.count);
+            }
           }
           end();
         }}
@@ -726,7 +737,11 @@ function TableExtendRail({
                 axis,
                 count + 1,
               );
-              if (tr) applyTableEdit(editor, tr);
+              if (tr) {
+                applyTableEdit(editor, tr);
+                if (axis === "column")
+                  revealTableColumn(editor, active.id, count);
+              }
             }
             editor.view.focus();
           }

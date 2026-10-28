@@ -40,6 +40,7 @@
     "./ui/table-actions": "./src/ui/table-actions.ts",
     "./ui/table-controls": "./src/ui/table-controls.tsx",
     "./ui/table-handles": "./src/ui/table-handles.tsx",
+    "./ui/table-reveal": "./src/ui/table-reveal.ts",
     "./ui/toolbar": "./src/ui/toolbar.tsx",
     "./ui/touch-block-drag": "./src/ui/touch-block-drag.tsx",
     "./ui/use-document-editor": "./src/ui/use-document-editor.ts",

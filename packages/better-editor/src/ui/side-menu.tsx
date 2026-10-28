@@ -44,7 +44,14 @@ export function TiptapSideMenu({
 }) {
   const state = useTiptapState(editor);
   const compact = useIsMobile();
-  const [touchPointer, setTouchPointer] = useState(false);
+  const [touchPointer, setTouchPointer] = useState(
+    () =>
+      typeof window !== "undefined" &&
+      window.matchMedia("(pointer: coarse)").matches,
+  );
+  const touchOwner = useRef(touchPointer);
+  const consumedClick = useRef(false);
+  const dragClosedMenu = useRef(false);
   const mobile = compact || touchPointer;
   const [id, setIdState] = useState<string>();
   const activeId = useRef<string | undefined>(undefined);
@@ -56,7 +63,12 @@ export function TiptapSideMenu({
   const floating = useFloating({
     middleware: [
       offset(4),
-      shift({ crossAxis: true, mainAxis: mobile, padding: 4 }),
+      shift({
+        altBoundary: true,
+        crossAxis: true,
+        mainAxis: mobile,
+        padding: 4,
+      }),
       hide({ strategy: "referenceHidden" }),
     ],
     placement: "left-start",
@@ -79,9 +91,15 @@ export function TiptapSideMenu({
   useEffect(() => {
     const root = editor.view.dom;
     const move = (event: PointerEvent) => {
-      if (event.pointerType === "mouse" && touchPointer) setTouchPointer(false);
       if (
-        mobile ||
+        event.pointerType === "mouse" &&
+        touchPointer &&
+        !pressed &&
+        !frozen.current
+      )
+        setTouchPointer(false);
+      if (
+        touchPointer ||
         event.pointerType === "touch" ||
         open ||
         pressed ||
@@ -148,7 +166,14 @@ export function TiptapSideMenu({
     editor.on("focus", focus);
     if (mobile) editor.on("selectionUpdate", focus);
     const tap = (event: PointerEvent) => {
-      if (event.pointerType !== "touch" || !(event.target instanceof Element))
+      if (
+        event.pointerType !== "touch" ||
+        !(event.target instanceof Element) ||
+        open ||
+        pressed ||
+        frozen.current ||
+        editor.view.dragging
+      )
         return;
       setTouchPointer(true);
       const row = event.target.closest<HTMLElement>(
@@ -179,7 +204,7 @@ export function TiptapSideMenu({
     const body =
       node.querySelector<HTMLElement>("[data-better-editor-body]") ?? node;
     floating.refs.setPositionReference({
-      contextElement: body,
+      contextElement: node,
       getBoundingClientRect() {
         const rect = body.getBoundingClientRect();
         const style = getComputedStyle(body);
@@ -192,12 +217,14 @@ export function TiptapSideMenu({
           ? editor.view.dom.getBoundingClientRect().left +
             (Number.parseFloat(getComputedStyle(editor.view.dom).paddingLeft) ||
               0)
-          : rect.left;
+          : (body
+              .closest(".better-editor-table-wrapper")
+              ?.getBoundingClientRect().left ?? rect.left);
         return new DOMRect(
           left,
           rect.top + padding + (lineHeight - handleHeight) / 2 - 2,
           rect.width,
-          handleHeight,
+          mobile ? Math.max(handleHeight, rect.height) : handleHeight,
         );
       },
     });
@@ -263,9 +290,13 @@ export function TiptapSideMenu({
     <TouchBlockDrag
       editor={editor}
       id={id}
-      enabled={mobile}
       onActiveChange={(value) => {
         frozen.current = value;
+        if (value) {
+          consumedClick.current = true;
+          dragClosedMenu.current = true;
+          setOpen(false);
+        } else setPressed(false);
       }}
       select={() => {
         select();
@@ -275,6 +306,7 @@ export function TiptapSideMenu({
         createPortal(
           <div
             data-tiptap-controls=""
+            data-tiptap-owner={editor.instanceId}
             data-tiptap-side-menu=""
             className="better-editor-side-menu"
             data-touch={mobile ? "true" : undefined}
@@ -291,7 +323,10 @@ export function TiptapSideMenu({
               modal={false}
               open={open}
               onOpenChange={(value) => {
-                if (value) select();
+                if (value) {
+                  dragClosedMenu.current = false;
+                  select();
+                }
                 setOpen(value);
               }}
             >
@@ -299,6 +334,8 @@ export function TiptapSideMenu({
                 asChild
                 onPointerDown={(event) => {
                   event.preventBaseUIHandler();
+                  consumedClick.current = false;
+                  touchOwner.current = event.pointerType === "touch";
                   setPressed(true);
                 }}
                 onMouseDown={(event) => {
@@ -309,7 +346,18 @@ export function TiptapSideMenu({
                 }}
                 onClick={(event) => {
                   event.preventBaseUIHandler();
-                  if (!open) select();
+                  if (
+                    frozen.current ||
+                    (event.detail > 0 && consumedClick.current)
+                  ) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    return;
+                  }
+                  if (!open) {
+                    dragClosedMenu.current = false;
+                    select();
+                  }
                   setOpen(!open);
                 }}
               >
@@ -324,9 +372,17 @@ export function TiptapSideMenu({
                       setTouchPointer(event.pointerType === "touch")
                     }
                     ref={handle.setActivatorNodeRef}
-                    {...(mobile ? handle.attributes : {})}
-                    {...(mobile ? handle.listeners : {})}
+                    {...handle.attributes}
+                    {...handle.listeners}
                     onDragStart={(event) => {
+                      // A cancelled native start must not leave a clipboard slice
+                      // behind while dnd-kit owns this touch gesture.
+                      if (touchOwner.current || frozen.current) {
+                        event.preventDefault();
+                        return;
+                      }
+                      consumedClick.current = true;
+                      dragClosedMenu.current = true;
                       const target = select();
                       const selection = editor.state.selection;
                       const slice = selection.content();
@@ -342,6 +398,9 @@ export function TiptapSideMenu({
                       editor.view.dragging = {
                         move: !(isMacOS() ? event.altKey : event.ctrlKey),
                         slice,
+                        ...(selection instanceof NodeSelection
+                          ? { node: selection }
+                          : {}),
                       };
                       setOpen(false);
                     }}
@@ -355,8 +414,11 @@ export function TiptapSideMenu({
               </DropdownMenuTrigger>
               <DropdownMenuContent
                 data-tiptap-controls=""
+                data-tiptap-owner={editor.instanceId}
                 finalFocus={() => {
-                  return restoreEditorFocus(editor);
+                  return dragClosedMenu.current
+                    ? false
+                    : restoreEditorFocus(editor);
                 }}
               >
                 <BlockMenuContent

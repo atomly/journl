@@ -84,6 +84,18 @@ test("mobile block handles follow taps and move nested blocks with stable identi
     "Beta",
   );
   await beta.tap();
+  await expect
+    .poll(async () => {
+      const menu = await page.locator("[data-tiptap-side-menu]").boundingBox();
+      const first = await editor
+        .locator('[data-better-editor-body="paragraph"]')
+        .first()
+        .boundingBox();
+      return menu && first
+        ? menu.x + menu.width - first.x
+        : Number.POSITIVE_INFINITY;
+    })
+    .toBeLessThanOrEqual(0);
   const start = await handle.boundingBox();
   const end = await editor
     .locator('[data-better-editor-body="paragraph"]')

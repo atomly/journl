@@ -11,15 +11,28 @@ export function useHandleVisibility(editor: Editor | undefined) {
     if (!editor) return;
     const root = editor.view.dom;
     let pointer: { x: number; y: number } | undefined;
+    let pointerType = "mouse";
     const hide = () => setVisible(false);
+    const scroll = () => {
+      // Touch has no hover to bring controls back after a scroll. Keep the
+      // selected block's controls anchored; typing still hides them until a tap.
+      if (
+        pointerType !== "touch" &&
+        window.matchMedia("(hover: hover) and (pointer: fine)").matches
+      )
+        hide();
+    };
     const move = (event: PointerEvent) => {
+      pointerType = event.pointerType;
+      if (pointerType === "touch") return;
       const next = { x: event.clientX, y: event.clientY };
       if (!pointer || Math.hypot(next.x - pointer.x, next.y - pointer.y) >= 4) {
         pointer = next;
         if (!editor.view.composing) setVisible(true);
       }
     };
-    const tap = () => {
+    const tap = (event: PointerEvent) => {
+      pointerType = event.pointerType;
       if (!editor.view.composing) setVisible(true);
     };
     const inputs = ["keydown", "beforeinput", "paste", "compositionstart"];
@@ -37,14 +50,14 @@ export function useHandleVisibility(editor: Editor | undefined) {
     };
     editor.on("blur", blur);
     document.addEventListener("pointermove", move);
-    window.addEventListener("scroll", hide, true);
+    window.addEventListener("scroll", scroll, true);
     return () => {
       for (const event of inputs)
         document.removeEventListener(event, hide, true);
       root.removeEventListener("pointerdown", tap);
       editor.off("blur", blur);
       document.removeEventListener("pointermove", move);
-      window.removeEventListener("scroll", hide, true);
+      window.removeEventListener("scroll", scroll, true);
     };
   }, [editor]);
   return visible;

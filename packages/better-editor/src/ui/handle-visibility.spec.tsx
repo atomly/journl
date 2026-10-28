@@ -3,7 +3,7 @@
 import { Editor } from "@tiptap/core";
 import { act } from "react";
 import { createRoot } from "react-dom/client";
-import { expect, test } from "vitest";
+import { expect, test, vi } from "vitest";
 import { documentExtensions } from "../engine/schema";
 import { toTiptapDocument } from "../serialization/tiptap";
 import { useHandleVisibility } from "./handle-visibility";
@@ -45,5 +45,52 @@ test("pointer focus can enter editor controls without unmounting the pending cli
     surface.remove();
     host.remove();
     outside.remove();
+  }
+});
+
+test("touch scrolling retains handles, typing hides them, and mouse scrolling dismisses them", async () => {
+  const surface = document.createElement("div");
+  const host = document.createElement("div");
+  document.body.append(surface, host);
+  const editor = new Editor({
+    content: toTiptapDocument([{ id: "text", type: "paragraph" }]).toJSON(),
+    element: surface,
+    extensions: documentExtensions(),
+  });
+  const root = createRoot(host);
+  function Handles() {
+    return <output>{String(useHandleVisibility(editor))}</output>;
+  }
+  const pointer = (type: string, pointerType: string) => {
+    const event = new Event(type, { bubbles: true });
+    Object.defineProperties(event, {
+      clientX: { value: 100 },
+      clientY: { value: 100 },
+      pointerType: { value: pointerType },
+    });
+    editor.view.dom.dispatchEvent(event);
+  };
+  vi.stubGlobal("matchMedia", () => ({ matches: true }));
+  try {
+    await act(async () => root.render(<Handles />));
+    await act(async () => pointer("pointerdown", "touch"));
+    await act(async () => window.dispatchEvent(new Event("scroll")));
+    expect(host.textContent).toBe("true");
+    await act(async () => document.dispatchEvent(new KeyboardEvent("keydown")));
+    expect(host.textContent).toBe("false");
+    await act(async () => window.dispatchEvent(new Event("scroll")));
+    await act(async () => pointer("pointermove", "touch"));
+    expect(host.textContent).toBe("false");
+    await act(async () => pointer("pointerdown", "touch"));
+    expect(host.textContent).toBe("true");
+    await act(async () => pointer("pointermove", "mouse"));
+    await act(async () => window.dispatchEvent(new Event("scroll")));
+    expect(host.textContent).toBe("false");
+  } finally {
+    await act(async () => root.unmount());
+    editor.destroy();
+    surface.remove();
+    host.remove();
+    vi.unstubAllGlobals();
   }
 });

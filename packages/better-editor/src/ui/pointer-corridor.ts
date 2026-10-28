@@ -1,20 +1,27 @@
 type Rect = Pick<DOMRect, "left" | "right" | "top" | "bottom">;
 
-/** A bounded bridge between a block and the toolbar above it. No overlay steals
- * text clicks, and no timer leaves a stale handle on a different row. */
+/** Protect the toolbar's edges and the short bridge to its block. This is
+ * geometry, not a timer or overlay: entering another row releases the handle. */
 export function inToolbarCorridor(
   x: number,
   y: number,
   block: Rect,
   toolbar: Rect,
 ): boolean {
+  const padding = 8;
+  if (
+    x >= toolbar.left - padding &&
+    x <= toolbar.right + padding &&
+    y >= toolbar.top - padding &&
+    y <= toolbar.bottom + padding
+  )
+    return true;
   const gap = block.top - toolbar.bottom;
-  if (gap < 0 || gap > 48 || y < toolbar.bottom - 4 || y > block.top + 4)
-    return false;
-  const progress = gap
-    ? Math.max(0, Math.min(1, (y - toolbar.bottom) / gap))
-    : 1;
-  const left = toolbar.left + (block.left - toolbar.left) * progress;
-  const right = toolbar.right + (block.right - toolbar.right) * progress;
-  return x >= left - 4 && x <= right + 4;
+  if (gap < 0 || gap > 64) return false;
+  return (
+    y >= toolbar.bottom - padding &&
+    y <= block.top + padding &&
+    x >= Math.min(toolbar.left, block.left) - padding &&
+    x <= Math.max(toolbar.right, block.right) + padding
+  );
 }

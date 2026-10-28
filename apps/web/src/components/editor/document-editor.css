@@ -1,6 +1,7 @@
 /* Journl owns its editor typography, page spacing, and sticky toolbar layout. */
 .journl-document-editor {
-  --better-editor-font-family: var(--font-editor, Inter), sans-serif;
+  --better-editor-font-family:
+    Inter, "SF Pro Display", -apple-system, BlinkMacSystemFont, "Open Sans", "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
 }
 
 .journl-document-editor .better-editor-mobile-toolbar {

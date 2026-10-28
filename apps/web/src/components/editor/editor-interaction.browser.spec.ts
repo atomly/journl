@@ -40,9 +40,9 @@ test("handle menu opens once, add picker leaves no slash, and divider needs no s
   await editor.pressSequentially("---");
   await expect(editor.locator("hr")).toHaveCount(1);
   await editor.pressSequentially("After divider");
-  await expect(editor.locator('[data-open-editor-body="paragraph"]')).toHaveText(
-    "After divider",
-  );
+  await expect(
+    editor.locator('[data-open-editor-body="paragraph"]'),
+  ).toHaveText("After divider");
 });
 
 test("code language picker produces visible colors and survives save/reload", async ({
@@ -173,7 +173,10 @@ test("mobile handle opens block actions in one tap with a usable touch target", 
 }, info) => {
   test.skip(info.project.name !== "mobile-webkit", "Touch handle acceptance");
   await page.goto("/journal/1988-08-28");
-  await page.locator(".open-editor-tiptap [data-open-editor-body]").first().tap();
+  await page
+    .locator(".open-editor-tiptap [data-open-editor-body]")
+    .first()
+    .tap();
   const handle = page.getByRole("button", {
     exact: true,
     name: "Block actions",

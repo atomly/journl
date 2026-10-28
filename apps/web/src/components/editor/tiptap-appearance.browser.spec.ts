@@ -68,10 +68,11 @@ for (const theme of ["light", "dark"]) {
       await expect(toolbar).toHaveCSS("flex-wrap", "nowrap");
       expect((await toolbar.boundingBox())?.height).toBeLessThan(50);
     }
-    await editor
+    const paragraph = editor
       .locator('[data-better-editor-body="paragraph"]')
-      .first()
-      .hover();
+      .first();
+    if (info.project.name === "mobile-webkit") await paragraph.tap();
+    else await paragraph.hover();
     await expect(
       page.getByRole("button", { exact: true, name: "Block actions" }),
     ).toBeVisible();

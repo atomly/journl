@@ -1,5 +1,5 @@
 import type { Page } from "@playwright/test";
-import { expect, test } from "~/testing/browser/fixtures";
+import { expect, test, typeParagraphs } from "~/testing/browser/fixtures";
 
 test.use({ journalPagination: true });
 
@@ -23,9 +23,7 @@ test("only the initiating pointer can finish a pending handle press", async ({
 }, info) => {
   test.skip(info.project.name !== "desktop-chromium", "Mouse ownership checks");
   const editor = await newEditor(page);
-  await editor.fill("Alpha");
-  await page.keyboard.press("Enter");
-  await page.keyboard.insertText("Beta");
+  await typeParagraphs(editor, ["Alpha", "Beta"]);
   const rows = editor.locator('[data-better-editor-body="paragraph"]');
   const alpha = rows.first();
   const beta = rows.last();
@@ -88,9 +86,9 @@ test("nested code handles align with the writing line below the language picker"
   page,
 }, info) => {
   const editor = await newEditor(page);
-  await editor.fill("Parent");
-  await page.keyboard.press("Enter");
-  await page.keyboard.press("Tab");
+  await typeParagraphs(editor, ["Parent", ""]);
+  await editor.press("Tab");
+  await expect(editor.locator("[data-better-editor-children]")).toHaveCount(1);
   await editor.pressSequentially("```javascript ");
   await editor.pressSequentially("console.log('nested');");
   const body = editor.locator(

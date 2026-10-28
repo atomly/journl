@@ -346,6 +346,20 @@ test("table extension belongs to one pointer and trailing touch clicks never add
     enabled: true,
     maxTouchPoints: 2,
   });
+  // Column reveal and Floating UI reposition the rail after each insertion.
+  await expect
+    .poll(() =>
+      add.evaluate((element) => {
+        const box = element.getBoundingClientRect();
+        const target = document.elementFromPoint(
+          box.x + box.width / 2,
+          box.y + box.height / 2,
+        );
+        return target === element || element.contains(target);
+      }),
+    )
+    .toBe(true);
+  await add.hover();
   const box = await add.boundingBox();
   if (!box) throw new Error("Missing column rail");
   const first = { id: 1, x: box.x + box.width / 2, y: box.y + box.height / 2 };

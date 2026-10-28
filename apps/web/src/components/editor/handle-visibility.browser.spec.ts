@@ -1,4 +1,4 @@
-import { expect, test } from "~/testing/browser/fixtures";
+import { expect, test, typeParagraphs } from "~/testing/browser/fixtures";
 
 test.use({ journalPagination: true });
 test("handles follow focus and navigation, hide only for desktop typing, and persist on mobile", async ({
@@ -14,11 +14,13 @@ test("handles follow focus and navigation, hide only for desktop typing, and per
   await expect(page).toHaveURL(/\/pages\//);
   await page.keyboard.press("Escape");
   const editor = page.locator(".better-editor-tiptap");
-  await editor.fill("Alpha");
-  for (const text of ["Middle 1", "Middle 2", "Middle 3", "Beta"]) {
-    await page.keyboard.press("Enter");
-    await page.keyboard.insertText(text);
-  }
+  await typeParagraphs(editor, [
+    "Alpha",
+    "Middle 1",
+    "Middle 2",
+    "Middle 3",
+    "Beta",
+  ]);
   const mobile = info.project.name === "mobile-webkit";
   const rows = editor.locator('[data-better-editor-body="paragraph"]');
   if (mobile) await rows.last().tap();

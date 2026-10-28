@@ -151,6 +151,7 @@ test("reference selection highlights its own frame and native handles still move
   await page.keyboard.press("Escape");
   await card.getByRole("button", { name: "Reference actions" }).click();
   await page
+    .getByRole("menu", { exact: true, name: "Reference actions" })
     .getByRole("menuitem", { exact: true, name: "Embedded content" })
     .click();
   const embed = editor.locator(".content-embed");

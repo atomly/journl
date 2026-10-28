@@ -1,5 +1,5 @@
 import type { Locator } from "@playwright/test";
-import { expect, test } from "~/testing/browser/fixtures";
+import { expect, test, typeParagraphs } from "~/testing/browser/fixtures";
 
 test.use({ journalPagination: true });
 async function touch(
@@ -48,11 +48,7 @@ test("mobile block handles follow taps and move nested blocks with stable identi
   await expect(page).not.toHaveURL(old, { timeout: 30000 });
   await page.keyboard.press("Escape");
   const editor = page.locator(".better-editor-tiptap");
-  await editor.fill("Alpha");
-  await page.keyboard.press("Enter");
-  await page.keyboard.insertText("Beta");
-  await page.keyboard.press("Enter");
-  await page.keyboard.insertText("Gamma");
+  await typeParagraphs(editor, ["Alpha", "Beta", "Gamma"]);
   const beta = editor
     .locator('[data-better-editor-body="paragraph"]')
     .filter({ hasText: /^Beta$/ });

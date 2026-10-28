@@ -1,3 +1,4 @@
+import type { Editor } from "@tiptap/core";
 import { fixtureId } from "~/testing/browser/data";
 import { expect, test } from "~/testing/browser/fixtures";
 
@@ -54,8 +55,8 @@ test("journal slash commands, checkboxes, and collapsible writing save with stab
         const element =
           anchor instanceof Element ? anchor : anchor?.parentElement;
         return element
-          ?.closest("[data-journl-body]")
-          ?.getAttribute("data-journl-body");
+          ?.closest("[data-better-editor-body]")
+          ?.getAttribute("data-better-editor-body");
       }),
     )
     .toBe("paragraph");
@@ -67,7 +68,7 @@ test("journal slash commands, checkboxes, and collapsible writing save with stab
   });
   await checkbox.check();
   await expect(checkbox).toBeChecked();
-  await editor.locator('[data-journl-body="checkListItem"]').click();
+  await editor.locator('[data-better-editor-body="checkListItem"]').click();
   await page.keyboard.press("End");
   await page.keyboard.press("Enter");
   await expect(editor.getByRole("checkbox")).toHaveCount(2);
@@ -76,17 +77,17 @@ test("journal slash commands, checkboxes, and collapsible writing save with stab
   await page.keyboard.press("Enter");
   await page.keyboard.type("Details");
   const details = editor
-    .locator('[data-journl-body="toggleListItem"]')
+    .locator('[data-better-editor-body="toggleListItem"]')
     .filter({ hasText: /^Details$/ });
   await expect(details).toHaveCount(1);
   await page.keyboard.press("Enter");
   await expect(
-    editor.locator('[data-journl-body="toggleListItem"]'),
+    editor.locator('[data-better-editor-body="toggleListItem"]'),
   ).toHaveCount(2);
   await page.keyboard.press("Tab");
   await page.keyboard.type("Nested writing survives collapse");
   const child = editor
-    .locator("[data-journl-children] [data-block-id]")
+    .locator("[data-better-editor-children] [data-block-id]")
     .filter({ hasText: "Nested writing survives collapse" });
   await expect(child).toHaveCount(1);
   const childId = await child.getAttribute("data-block-id");
@@ -135,27 +136,35 @@ test("page code indentation and table navigation edit bodies without moving bloc
   });
   const source = editor
     .locator(
-      `[data-block-id="${fixtureId(pageNumber + 1)}"] [data-journl-body]`,
+      `[data-block-id="${fixtureId(pageNumber + 1)}"] [data-better-editor-body]`,
     )
     .first();
   await source.click();
-  await page.keyboard.press("Home");
-  await page.keyboard.press("Shift+End");
+  await source.evaluate((element) => {
+    // Select this body on both macOS and Linux; Home/End have different
+    // native meanings and can include the following reference on macOS.
+    const range = document.createRange();
+    range.selectNodeContents(element);
+    const selection = window.getSelection();
+    selection?.removeAllRanges();
+    selection?.addRange(range);
+    document.dispatchEvent(new Event("selectionchange"));
+  });
   await page.getByRole("combobox", { exact: true, name: "Block type" }).click();
   await page.getByRole("option", { exact: true, name: "Code" }).click();
   const code = editor.locator(
     `[data-block-id="${fixtureId(pageNumber + 1)}"] pre`,
   );
   await expect(code).toBeVisible();
-  await code.click();
-  await page.keyboard.press("Home");
-  await page.keyboard.press("Shift+End");
-  await page
-    .getByRole("button", { exact: true, name: "More formatting" })
-    .click();
-  await page.getByLabel("Code language", { exact: true }).fill("typescript");
-  await page.keyboard.press("Escape");
-  await expect(page.getByRole("menu")).toBeHidden();
+  const language = editor.getByRole("combobox", {
+    exact: true,
+    name: "Code language",
+  });
+  await language.click();
+  await page.getByRole("option", { exact: true, name: "typescript" }).click();
+  await expect(language.locator('[data-slot="select-value"]')).toHaveText(
+    "typescript",
+  );
   await code.click();
   await page.keyboard.press("Tab");
   const codeText = ` // code ${info.project.name}`;
@@ -168,21 +177,32 @@ test("page code indentation and table navigation edit bodies without moving bloc
   );
   const cells = table.locator("td");
   await cells.first().click();
+  // The browser can expose its new DOM range before ProseMirror has processed
+  // selectionchange. Wait for the installed editor's selection before typing.
   await expect
     .poll(() =>
-      page.evaluate(() => {
-        const anchor = window.getSelection()?.anchorNode;
-        return (
-          anchor instanceof Element ? anchor : anchor?.parentElement
-        )?.closest("td")?.tagName;
-      }),
+      editor.evaluate(
+        (element) =>
+          (element as HTMLElement & { editor: Editor }).editor.state.selection
+            .$from.parent.type.name,
+      ),
     )
-    .toBe("TD");
+    .toBe("tableParagraph");
   await page.keyboard.press("Enter");
+  // Table Enter moves down; Tab then moves to the next cell in that row.
+  await expect
+    .poll(() =>
+      cells
+        .nth(2)
+        .evaluate((cell) =>
+          cell.contains(window.getSelection()?.anchorNode ?? null),
+        ),
+    )
+    .toBe(true);
   await page.keyboard.press("Tab");
   const cellText = ` table ${info.project.name}`;
   await page.keyboard.insertText(cellText);
-  await expect(cells.nth(1)).toContainText(cellText);
+  await expect(cells.nth(3)).toContainText(cellText);
   await expect(table.locator("tr")).toHaveCount(2);
   await expect(editor).toContainText("Stored reference");
   await expect(page.locator("[data-save-status]")).toContainText("Saved");
@@ -193,7 +213,10 @@ test("page code indentation and table navigation edit bodies without moving bloc
     );
   await page.reload();
   await expect(editor.locator("pre")).toContainText(codeText);
-  await expect(editor.locator("td").nth(1)).toContainText(cellText);
+  await expect(language.locator('[data-slot="select-value"]')).toHaveText(
+    "typescript",
+  );
+  await expect(editor.locator("td").nth(3)).toContainText(cellText);
   expect(
     await editor
       .locator("[data-block-id]")
@@ -242,7 +265,7 @@ test("block menus move, copy, delete and undo the selected block while text form
       items.map((item) => item.getAttribute("data-block-id")),
     );
   await editor
-    .locator(`[data-block-id="${original[1]}"] [data-journl-body]`)
+    .locator(`[data-block-id="${original[1]}"] [data-better-editor-body]`)
     .first()
     .hover();
   await page
@@ -264,7 +287,7 @@ test("block menus move, copy, delete and undo the selected block while text form
       ),
   ).toEqual([...original].reverse());
   await editor
-    .locator(`[data-block-id="${original[1]}"] [data-journl-body]`)
+    .locator(`[data-block-id="${original[1]}"] [data-better-editor-body]`)
     .first()
     .hover();
   await page
@@ -291,7 +314,7 @@ test("block menus move, copy, delete and undo the selected block while text form
   await page.keyboard.press("Escape");
   await expect(contextMenu).toBeHidden();
   await editor
-    .locator(`[data-block-id="${copied}"] [data-journl-body]`)
+    .locator(`[data-block-id="${copied}"] [data-better-editor-body]`)
     .first()
     .hover();
   await page
@@ -314,6 +337,6 @@ test("block menus move, copy, delete and undo the selected block while text form
     editor.locator(`[data-block-id="${copied}"] strong`),
   ).toContainText("bold writing");
   await expect(
-    editor.locator(`[data-block-id="${copied}"] [data-journl-body]`),
+    editor.locator(`[data-block-id="${copied}"] [data-better-editor-body]`),
   ).toHaveCSS("text-align", "right");
 });

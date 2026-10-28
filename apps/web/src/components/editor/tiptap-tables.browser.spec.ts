@@ -15,7 +15,7 @@ test.beforeEach(async ({ page, context }) => {
   await create.click();
   await expect(page).not.toHaveURL(previous);
   await page.keyboard.press("Escape");
-  const editor = page.locator(".journl-tiptap");
+  const editor = page.locator(".better-editor-tiptap");
   await editor.fill("/table");
   await page.getByRole("option", { exact: true, name: "Table" }).click();
 });
@@ -23,7 +23,7 @@ test.beforeEach(async ({ page, context }) => {
 test("table edge rails and border menus add, select, delete and undo the intended axes", async ({
   page,
 }) => {
-  const table = page.locator(".journl-tiptap table");
+  const table = page.locator(".better-editor-tiptap table");
   const rows = table.locator("tr");
   const id = await table
     .locator("xpath=ancestor::*[@data-block-id]")
@@ -61,7 +61,7 @@ test("table edge rails and border menus add, select, delete and undo the intende
     .getByRole("menuitem", { exact: true, name: "Delete column" })
     .click();
   await expect(rows.first().locator("td")).toHaveCount(3);
-  await expect(page.locator(".journl-tiptap")).toBeFocused();
+  await expect(page.locator(".better-editor-tiptap")).toBeFocused();
   await page.keyboard.press("ControlOrMeta+z");
   await expect(rows.first().locator("td")).toHaveCount(4);
   await expect(rows).toHaveCount(5);
@@ -80,7 +80,7 @@ test("row dragging preserves cell contents and an extension drag undoes as one a
     info.project.name !== "desktop-chromium",
     "Native mouse dragging is a desktop interaction",
   );
-  const table = page.locator(".journl-tiptap table");
+  const table = page.locator(".better-editor-tiptap table");
   const rows = table.locator("tr");
   for (let i = 0; i < 3; i++) {
     await rows.nth(i).locator("td").first().click();
@@ -146,6 +146,8 @@ test("row dragging preserves cell contents and an extension drag undoes as one a
   await expect(rows.last().locator("td").first()).toContainText("Row 1");
   await rows.last().locator("td").last().hover();
   const rail = page.getByRole("button", { exact: true, name: "Add row" });
+  // Wait for Floating UI to position the rail before taking gesture coordinates.
+  await rail.hover();
   const box = await rail.boundingBox();
   if (!box) throw new Error("Missing table extension rail");
   await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
@@ -165,19 +167,31 @@ test("scrolled table gutters resolve drops and extension gestures cancel cleanly
     info.project.name !== "desktop-chromium",
     "Native mouse dragging is a desktop interaction",
   );
-  const editor = page.locator(".journl-tiptap");
+  const editor = page.locator(".better-editor-tiptap");
   const table = editor.locator("table");
   const rows = table.locator("tr");
+  const wrapper = editor.locator(".better-editor-table-wrapper");
+  const hoverRightEdge = async () => {
+    await wrapper.evaluate(async (el) => {
+      el.scrollLeft = el.scrollWidth;
+      await new Promise(requestAnimationFrame);
+      await new Promise(requestAnimationFrame);
+    });
+    // Scroll hides handles. Move deliberately even when the new last cell's
+    // center occupies the same screen position as the previous last cell.
+    const cell = rows.last().locator("td").last();
+    await cell.hover({ position: { x: 2, y: 2 } });
+    await cell.hover();
+  };
   for (let i = 0; i < 3; i++) {
     await rows.nth(i).locator("td").first().click();
     await page.keyboard.insertText(`Row ${i + 1}`);
   }
   for (let c = 3; c < 8; c++) {
-    await rows.last().locator("td").last().hover();
+    await hoverRightEdge();
     await page.getByRole("button", { exact: true, name: "Add column" }).click();
     await expect(rows.first().locator("td")).toHaveCount(c + 1);
   }
-  const wrapper = editor.locator(".journl-table-wrapper");
   await rows.last().locator("td").last().click();
   await wrapper.evaluate((el) => {
     el.scrollLeft = 0;
@@ -187,9 +201,7 @@ test("scrolled table gutters resolve drops and extension gestures cancel cleanly
     name: "Add column",
   });
   await expect(columnRail).toBeHidden();
-  await wrapper.evaluate((el) => {
-    el.scrollLeft = el.scrollWidth;
-  });
+  await hoverRightEdge();
   await expect(columnRail).toBeVisible();
   await rows.first().locator("td").last().hover();
   const handle = page.getByRole("button", { exact: true, name: "Row actions" });
@@ -227,7 +239,7 @@ test("scrolled table gutters resolve drops and extension gestures cancel cleanly
   await page.keyboard.press("ControlOrMeta+z");
   await expect(rows.first()).toContainText("Row 1");
   const extend = async () => {
-    await rows.last().locator("td").last().hover();
+    await hoverRightEdge();
     const rail = page.getByRole("button", { exact: true, name: "Add row" });
     await rail.hover();
     const box = await rail.boundingBox();
@@ -253,7 +265,7 @@ test("scrolled table gutters resolve drops and extension gestures cancel cleanly
   await page.mouse.up();
   await page.keyboard.press("ControlOrMeta+z");
   await expect(table).toHaveCount(1);
-  await rows.last().locator("td").last().hover();
+  await hoverRightEdge();
   await page.getByRole("button", { exact: true, name: "Add row" }).click();
   await expect(rows).toHaveCount(extendedCount + 1);
 });
@@ -265,7 +277,7 @@ test("merged cells and outer gutters keep the table extension rails reachable", 
     info.project.name !== "desktop-chromium",
     "Cell range selection uses Shift-click",
   );
-  const table = page.locator(".journl-tiptap table");
+  const table = page.locator(".better-editor-tiptap table");
   const rows = table.locator("tr");
   await rows.first().locator("td").first().click();
   await rows
@@ -292,7 +304,7 @@ test("merged cells and outer gutters keep the table extension rails reachable", 
   await page.getByRole("button", { exact: true, name: "Add row" }).click();
   await expect(rows).toHaveCount(4);
   await merged.click();
-  await expect(page.locator(".journl-tiptap")).toBeFocused();
+  await expect(page.locator(".better-editor-tiptap")).toBeFocused();
   const box = await table.boundingBox();
   if (!box) throw new Error("Missing table geometry");
   await page.mouse.move(box.x + box.width / 2, box.y + box.height + 8);

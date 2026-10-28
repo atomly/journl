@@ -7,14 +7,13 @@ const config: NextConfig = {
   allowedDevOrigins: parseAuthDevOrigins(env.AUTH_DEV_ORIGINS),
   /** Enables hot reloading for local packages without a build step */
   transpilePackages: [
+    "@acme/better-editor",
+    "@acme/document",
+    "@acme/references",
     "@acme/auth",
     "@acme/blocknote",
     "@acme/db",
-    "@acme/document",
-    "@acme/editor",
     "@acme/graph",
-    "@acme/references",
-    "@acme/tiptap",
     "@acme/ui",
   ],
   typescript: { ignoreBuildErrors: true },

@@ -9,11 +9,11 @@ import { getExternalGraphTitle } from "~/references/graph-utils";
 import { encodeExploreCursor } from "./cursor";
 
 import {
-  exploreContext,
-  metadata,
-  loadNotes,
   type Database,
   type ExploreInput,
+  exploreContext,
+  loadNotes,
+  metadata,
 } from "./query-context";
 export async function listClusterMembers(
   database: Database,

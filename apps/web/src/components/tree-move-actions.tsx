@@ -2,6 +2,7 @@
 
 import { Button } from "@acme/ui/button";
 import { DropdownMenuItem } from "@acme/ui/dropdown-menu";
+import { Input } from "@acme/ui/input";
 import { ArrowDown, ArrowUp, FolderInput } from "lucide-react";
 import { type ComponentProps, useEffect, useId, useState } from "react";
 import {
@@ -12,7 +13,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "~/components/ui/dialog";
-import { Input } from "~/components/ui/input";
 
 export function TreeMoveMenuItems({
   disabled = false,

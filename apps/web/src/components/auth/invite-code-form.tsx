@@ -1,12 +1,12 @@
 "use client";
 
 import { Button } from "@acme/ui/button";
+import { Input } from "@acme/ui/input";
 import { ArrowRight } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { type SubmitEvent, useId, useState } from "react";
 import { normalizeInviteCode } from "~/components/auth/invite-code";
 import { Field, FieldError, FieldLabel } from "~/components/ui/field";
-import { Input } from "~/components/ui/input";
 import { cn } from "~/lib/cn";
 
 type InviteCodeFormProps = {

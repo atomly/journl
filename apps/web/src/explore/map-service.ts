@@ -2,14 +2,13 @@ import { and, asc, count, eq, inArray, or, sql } from "@acme/db";
 import { BlockSearchText, DocumentReference } from "@acme/db/schema";
 import type { ExploreGraph } from "~/references/explore-graph";
 import { encodeExploreCursor } from "./cursor";
-
+import { listClusterMembers, listClusterSources } from "./members-service";
 import {
-  exploreContext,
-  metadata,
   type Database,
   type ExploreInput,
+  exploreContext,
+  metadata,
 } from "./query-context";
-import { listClusterMembers, listClusterSources } from "./members-service";
 export async function getClusterMap(
   database: Database,
   userId: string,

@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@acme/ui/button";
+import { Input } from "@acme/ui/input";
 import {
   getViewURL,
   isPasswordCompromisedError,
@@ -20,7 +21,6 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { Card, CardContent, CardFooter } from "~/components/ui/card";
 import { Field, FieldError, FieldLabel } from "~/components/ui/field";
-import { Input } from "~/components/ui/input";
 import {
   InputGroup,
   InputGroupAddon,

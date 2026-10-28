@@ -1,7 +1,7 @@
 import type { TRPCRouterRecord } from "@trpc/server";
+import { referenceBacklinksProcedures } from "./reference-backlinks-procedures";
 import { referenceEmbedProcedures } from "./reference-embed-procedures";
 import { referenceGraphProcedures } from "./reference-graph-procedures";
-import { referenceBacklinksProcedures } from "./reference-backlinks-procedures";
 import { referenceNeighborsProcedures } from "./reference-neighbors-procedures";
 import { referenceSearchProcedures } from "./reference-search-procedures";
 

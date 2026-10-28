@@ -5,7 +5,6 @@ import { SidebarTrigger } from "~/components/ui/sidebar";
 import { AppHeader } from "./_components/app-header";
 import { HeaderJournalButton } from "./_components/header-journal-button";
 import { HeaderSearchButton } from "./_components/header-search-modal";
-import { HeaderSearchTrigger } from "./_components/header-search-trigger";
 import { HeaderSubscriptionButton } from "./_components/header-subscription-button";
 
 export default function JournalHeader() {
@@ -24,9 +23,7 @@ export default function JournalHeader() {
             </Suspense>
             <EditorPreviewSwitch />
             <SaveStatus />
-            <HeaderSearchButton>
-              <HeaderSearchTrigger />
-            </HeaderSearchButton>
+            <HeaderSearchButton />
           </div>
         </div>
       </div>

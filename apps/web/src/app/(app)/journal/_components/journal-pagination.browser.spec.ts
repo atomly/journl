@@ -1,4 +1,4 @@
-import type { Page } from "@playwright/test";
+import type { Locator, Page } from "@playwright/test";
 import { expect, test } from "~/testing/browser/fixtures";
 
 test.use({ journalPagination: true });
@@ -17,6 +17,20 @@ async function entriesView(page: Page) {
     .filter({ has: page.locator("[data-viewport-type]") });
 }
 
+// Virtualized rows may unmount as soon as they leave a narrow viewport. Visit
+// each assertion target instead of assuming previously loaded rows stay in DOM.
+async function scrollToOlder(scroller: Locator, target: Locator) {
+  await expect(async () => {
+    if (await target.count())
+      await target.scrollIntoViewIfNeeded({ timeout: 1000 });
+    else
+      await scroller.evaluate((element) => {
+        element.scrollTop += Math.max(1, element.clientHeight * 0.5);
+      });
+    await expect(target).toBeInViewport({ timeout: 1000 });
+  }).toPass({ timeout: 30_000 });
+}
+
 test("Entries scrolls past an unreadable stored document to healthy older writing", async ({
   page,
 }) => {
@@ -26,20 +40,17 @@ test("Entries scrolls past an unreadable stored document to healthy older writin
       writes.push(request.url());
   });
   const scroller = await entriesView(page);
-  await expect(async () => {
-    await scroller.evaluate((element) => {
-      element.scrollTop = element.scrollHeight;
-    });
-    await expect(
-      page.getByText("Pagination entry 12", { exact: true }),
-    ).toBeVisible({ timeout: 1000 });
-  }).toPass({ timeout: 30_000 });
   const unavailable = page.locator("[data-journal-content-unavailable]");
+  await scrollToOlder(scroller, unavailable);
   await expect(unavailable).toContainText("Its saved content is unchanged");
   await expect(unavailable.locator('[contenteditable="true"]')).toHaveCount(0);
   await expect(
     page.getByText("Failed to fetch journal entries", { exact: false }),
   ).toHaveCount(0);
+  await scrollToOlder(
+    scroller,
+    page.getByText("Pagination entry 12", { exact: true }),
+  );
   await scroller.evaluate((element) => {
     element.scrollTop = 0;
   });
@@ -52,12 +63,22 @@ test("Entries scrolls past an unreadable stored document to healthy older writin
 test("a failed next-page request preserves loaded entries and Retry resumes pagination", async ({
   page,
 }) => {
-  const pattern = "**/api/trpc/journal.getEntries**";
+  const pattern = "**/api/trpc/**";
+  let aborted = 0;
   await page.route(pattern, async (route) => {
-    const input =
-      new URL(route.request().url()).searchParams.get("input") ?? "";
-    if (/"cursor":"/.test(input)) await route.abort();
-    else await route.continue();
+    const url = new URL(route.request().url());
+    // tRPC can batch this query after backlink requests. Match the procedure
+    // and its own input rather than assuming it is the first URL segment.
+    const procedures = url.pathname.split("/").at(-1)?.split(",") ?? [];
+    const index = procedures.indexOf("journal.getEntries");
+    const input = JSON.parse(url.searchParams.get("input") ?? "{}") as Record<
+      string,
+      { json?: { cursor?: unknown } }
+    >;
+    if (index >= 0 && typeof input[index]?.json?.cursor === "string") {
+      aborted++;
+      await route.abort();
+    } else await route.continue();
   });
   const scroller = await entriesView(page);
   await expect(async () => {
@@ -70,6 +91,7 @@ test("a failed next-page request preserves loaded entries and Retry resumes pagi
       ),
     ).toBeVisible({ timeout: 1000 });
   }).toPass({ timeout: 30_000 });
+  expect(aborted).toBeGreaterThan(0);
   await expect(page.getByText("Sorry, something went wrong.")).toHaveCount(0);
   await scroller.evaluate((element) => {
     element.scrollTop = 0;
@@ -82,12 +104,8 @@ test("a failed next-page request preserves loaded entries and Retry resumes pagi
     element.scrollTop = element.scrollHeight;
   });
   await page.getByRole("button", { exact: true, name: "Try again" }).click();
-  await expect(async () => {
-    await scroller.evaluate((element) => {
-      element.scrollTop = element.scrollHeight;
-    });
-    await expect(
-      page.getByText("Pagination entry 12", { exact: true }),
-    ).toBeVisible({ timeout: 1000 });
-  }).toPass({ timeout: 30_000 });
+  await scrollToOlder(
+    scroller,
+    page.getByText("Pagination entry 12", { exact: true }),
+  );
 });

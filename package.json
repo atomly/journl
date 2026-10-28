@@ -11,7 +11,7 @@
   "packageManager": "pnpm@10.29.3+sha512.498e1fb4cca5aa06c1dcf2611e6fafc50972ffe7189998c409e90de74566444298ffe43e6cd2acdc775ba1aa7cc5e092a8b7054c811ba8c5770f84693d33d2dc",
   "scripts": {
     "build": "turbo run build",
-    "check": "turbo run check --continue -- --write --unsafe",
+    "check": "turbo run check --continue",
     "check:dependencies": "pnpm dlx sherif@latest",
     "check:dependencies:fix": "pnpm dlx sherif@latest --fix",
     "clean": "turbo run clean && git clean -xdf .turbo node_modules",
@@ -23,9 +23,11 @@
     "supabase:stop": "supabase stop",
     "supabase:status": "supabase status",
     "test:integration": "turbo run test:integration",
-    "test:unit": "turbo run test:unit",
+    "test:unit": "pnpm registry:test && turbo run test:unit",
     "test": "turbo run test:unit test:integration test:browser",
-    "test:browser": "turbo run test:browser"
+    "test:browser": "turbo run test:browser",
+    "registry:build": "node scripts/build-editor-registry.mjs",
+    "registry:test": "node --test scripts/build-editor-registry.spec.mjs"
   },
   "devDependencies": {
     "@biomejs/biome": "~2.5.15",

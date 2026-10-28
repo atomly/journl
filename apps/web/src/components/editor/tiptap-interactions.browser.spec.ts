@@ -16,13 +16,13 @@ test.beforeEach(async ({ page, context }) => {
   await create.click();
   await expect(page).not.toHaveURL(previous);
   await page.keyboard.press("Escape");
-  await expect(page.locator(".journl-tiptap")).toBeVisible();
+  await expect(page.locator(".better-editor-tiptap")).toBeVisible();
 });
 
 test("selected blocks indent together and a child handle remains stable across its gutter", async ({
   page,
 }) => {
-  const editor = page.locator(".journl-tiptap");
+  const editor = page.locator(".better-editor-tiptap");
   await editor.fill("Parent");
   await page.keyboard.press("Enter");
   await page.keyboard.insertText("First");
@@ -33,7 +33,7 @@ test("selected blocks indent together and a child handle remains stable across i
     nodes.map((node) => node.getAttribute("data-block-id")),
   );
   await editor.evaluate(async (root) => {
-    const rows = [...root.querySelectorAll("[data-journl-body]")];
+    const rows = [...root.querySelectorAll("[data-better-editor-body]")];
     const first = rows[1]?.firstChild;
     const last = rows[2]?.firstChild;
     if (!first || !last) throw new Error("Selection rows missing");
@@ -58,8 +58,11 @@ test("selected blocks indent together and a child handle remains stable across i
   await page.keyboard.press("ControlOrMeta+z");
   await expect(roots).toHaveCount(1);
   const child = editor.locator(
-    `[data-block-id="${ids[2]}"] [data-journl-body]`,
+    `[data-block-id="${ids[2]}"] [data-better-editor-body]`,
   );
+  // Undo restores the multi-block selection. Place a caret before testing a
+  // single-block handle; clicking a selected group intentionally retains it.
+  await child.click();
   await child.hover();
   const rect = await child.boundingBox();
   if (!rect) throw new Error("Child row missing");
@@ -91,16 +94,48 @@ test("selected blocks indent together and a child handle remains stable across i
   ).toHaveCount(2);
 });
 
+test("select-all text keeps formatting controls available and saves their changes", async ({
+  page,
+}) => {
+  const editor = page.locator(".better-editor-tiptap");
+  await editor.fill("First paragraph");
+  await page.keyboard.press("Enter");
+  await page.keyboard.insertText("Second paragraph");
+  await page.keyboard.press("ControlOrMeta+a");
+  const colors = page.getByRole("button", { exact: true, name: "Colors" });
+  await expect(colors).toBeEnabled();
+  await colors.click();
+  await page.getByRole("button", { exact: true, name: "Text purple" }).click();
+  await expect(
+    editor.locator('[style*="--better-editor-text-purple"]'),
+  ).toHaveCount(2);
+  await page.keyboard.press("ControlOrMeta+a");
+  await page.getByRole("button", { exact: true, name: "Bold" }).click();
+  await expect(editor.locator("strong")).toHaveText([
+    "First paragraph",
+    "Second paragraph",
+  ]);
+  await expect(page.locator("[data-save-status]")).toContainText("Saved");
+  await page.reload();
+  await expect(editor.locator("strong")).toHaveText([
+    "First paragraph",
+    "Second paragraph",
+  ]);
+  await expect(
+    editor.locator('[style*="--better-editor-text-purple"]'),
+  ).toHaveCount(2);
+});
+
 test("tables are discoverable and row/column edits save on the actual route", async ({
   page,
 }) => {
-  const editor = page.locator(".journl-tiptap");
+  const editor = page.locator(".better-editor-tiptap");
   await editor.fill("/table");
   await page.getByRole("option", { exact: true, name: "Table" }).click();
   const table = editor.locator("table");
   await expect(table.locator("tr")).toHaveCount(3);
   await expect(table.locator("tr").first().locator("td")).toHaveCount(3);
-  await table.hover();
+  await table.locator("td").first().hover();
   await page
     .getByRole("button", { exact: true, name: "Block actions" })
     .click();
@@ -108,7 +143,7 @@ test("tables are discoverable and row/column edits save on the actual route", as
     .getByRole("menuitem", { exact: true, name: "Insert row below" })
     .click();
   await expect(table.locator("tr")).toHaveCount(4);
-  await table.hover();
+  await table.locator("td").first().hover();
   await page
     .getByRole("button", { exact: true, name: "Block actions" })
     .click();
@@ -116,6 +151,39 @@ test("tables are discoverable and row/column edits save on the actual route", as
     .getByRole("menuitem", { exact: true, name: "Insert column right" })
     .click();
   await expect(table.locator("tr").first().locator("td")).toHaveCount(4);
+  const wrapper = editor.locator(".better-editor-table-wrapper");
+  await wrapper.evaluate(async (element) => {
+    element.scrollLeft = element.scrollWidth;
+    await new Promise(requestAnimationFrame);
+    await new Promise(requestAnimationFrame);
+  });
+  const last = table.locator("td").last();
+  await last.hover({ position: { x: 2, y: 2 } });
+  await last.hover();
+  const rowHandle = page.getByRole("button", {
+    exact: true,
+    name: "Row actions",
+  });
+  const columnRail = page.getByRole("button", {
+    exact: true,
+    name: "Add column",
+  });
+  await expect(rowHandle).toBeVisible();
+  await expect(columnRail).toBeVisible();
+  await expect
+    .poll(async () => {
+      const row = await rowHandle.boundingBox();
+      const rail = await columnRail.boundingBox();
+      return row && rail
+        ? row.x - rail.x - rail.width
+        : Number.NEGATIVE_INFINITY;
+    })
+    .toBeGreaterThanOrEqual(1);
+  await rowHandle.click();
+  await expect(
+    page.getByRole("menuitem", { exact: true, name: "Insert row below" }),
+  ).toBeVisible();
+  await page.keyboard.press("Escape");
   await expect(page.locator("[data-save-status]")).toContainText("Saved");
   await page.reload();
   await expect(table.locator("tr")).toHaveCount(4);
@@ -125,7 +193,7 @@ test("tables are discoverable and row/column edits save on the actual route", as
 test("a plain link exposes consistent display choices and converts to a card", async ({
   page,
 }) => {
-  const editor = page.locator(".journl-tiptap");
+  const editor = page.locator(".better-editor-tiptap");
   await editor.fill("Example link");
   await page.keyboard.press("ControlOrMeta+a");
   await page.keyboard.press("ControlOrMeta+k");
@@ -133,7 +201,7 @@ test("a plain link exposes consistent display choices and converts to a card", a
     .getByRole("textbox", { name: "Reference URL" })
     .fill("https://example.com");
   await page.getByRole("button", { exact: true, name: "Apply link" }).click();
-  await editor.locator("a[data-journl-link]").click();
+  await editor.locator("a[data-better-editor-link]").click();
   await page.getByRole("button", { exact: true, name: "Display as" }).click();
   await expect(
     page.getByRole("menuitem", { exact: true, name: "Mention" }),
@@ -141,23 +209,21 @@ test("a plain link exposes consistent display choices and converts to a card", a
   await expect(
     page.getByRole("menuitem", { exact: true, name: "Embedded content" }),
   ).toBeHidden();
-  await page
-    .getByRole("menuitem", { exact: true, name: "Card preview" })
-    .click();
+  await page.getByRole("menuitem", { exact: true, name: "Card" }).click();
   await expect(editor.locator(".content-reference-card")).toBeVisible();
   await expect(page.locator("[data-save-status]")).toContainText("Saved");
   await page.reload();
   await expect(editor.locator(".content-reference-card")).toBeVisible();
 });
 
-test("native handle drag moves nested blocks and Alt-drag copies their identities", async ({
+test("native handle drag moves nested blocks and copies receive fresh identities", async ({
   page,
 }, info) => {
   test.skip(
     info.project.name !== "desktop-chromium",
     "Native mouse drag is a desktop interaction",
   );
-  const editor = page.locator(".journl-tiptap");
+  const editor = page.locator(".better-editor-tiptap");
   await editor.fill("Parent move");
   await page.keyboard.press("Enter");
   await page.keyboard.insertText("Child move");
@@ -173,16 +239,21 @@ test("native handle drag moves nested blocks and Alt-drag copies their identitie
     .locator("[data-block-id]")
     .getAttribute("data-block-id");
   const lastId = await roots.last().getAttribute("data-block-id");
+  const copyModifier = (await page.evaluate(() =>
+    /Mac/.test(navigator.platform),
+  ))
+    ? "Alt"
+    : "Control";
   const drag = async (copy: boolean) => {
     const source = copy ? roots.last() : roots.first();
     const target = copy ? roots.first() : roots.last();
-    await source.locator("[data-journl-body]").first().hover();
+    await source.locator("[data-better-editor-body]").first().hover();
     const handle = await page
       .getByRole("button", { exact: true, name: "Block actions" })
       .boundingBox();
     const end = await target.boundingBox();
     if (!handle || !end) throw new Error("Drag surface unavailable");
-    if (copy) await page.keyboard.down("Alt");
+    if (copy) await page.keyboard.down(copyModifier);
     await page.mouse.move(
       handle.x + handle.width / 2,
       handle.y + handle.height / 2,
@@ -195,7 +266,7 @@ test("native handle drag moves nested blocks and Alt-drag copies their identitie
     );
     await page.mouse.move(end.x + 100, end.y + end.height + 10, { steps: 15 });
     await page.mouse.up();
-    if (copy) await page.keyboard.up("Alt");
+    if (copy) await page.keyboard.up(copyModifier);
   };
   await drag(false);
   await expect(roots.first()).toHaveAttribute("data-block-id", lastId ?? "");

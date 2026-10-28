@@ -88,11 +88,10 @@ test("mobile handles stay aligned with their block as the viewport shrinks and r
   await expect(page).not.toHaveURL(previous);
   await page.keyboard.press("Escape");
   const editor = page.locator(".better-editor-tiptap");
-  await editor.fill("First row");
-  for (let index = 1; index <= 7; index++) {
-    await page.keyboard.press("Enter");
-    await page.keyboard.insertText(`Row ${index}`);
-  }
+  await typeParagraphs(editor, [
+    "First row",
+    ...Array.from({ length: 7 }, (_, index) => `Row ${index + 1}`),
+  ]);
   const row = editor.locator('[data-better-editor-body="paragraph"]').last();
   if (info.project.name === "mobile-webkit") await row.tap();
   else await row.click();

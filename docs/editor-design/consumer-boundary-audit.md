@@ -18,8 +18,8 @@ editor assembly in `apps/web/src/components/editor/document-editor-view.tsx`.
 | Editability depended on a persistence callback. | Default to editable independently of persistence. Journl explicitly applies its own read-only policy. |
 
 The package exports leaf modules explicitly. Removed presets and private
-implementation modules have no compatibility exports. Registry checks reject
-preset files and imports from consumer application modules.
+implementation modules have no compatibility exports. The earlier registry
+prototype and its checks have been removed; registry installation is deferred.
 
 ## Interaction corrections
 
@@ -89,3 +89,10 @@ typechecks and frozen installation passed, along with lint, dependency checks,
 446 unit/UI tests, and a fresh project-store Turbopack build. The held-click
 regression passed three times on the new toolchain. The build produced no registry
 output. No registry endpoint or generation step is required for development.
+
+## Independent implementation audit
+
+The [post-implementation audit](post-implementation-audit.md) records two
+independent read-only reviews, the stale/read-only mutation-control fixes, verified
+results, and a finding-by-finding comparison with the original audit. Several
+performance and presentation-separation findings remain partial or open.

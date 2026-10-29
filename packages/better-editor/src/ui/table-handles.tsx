@@ -41,6 +41,7 @@ import {
 } from "../engine/table-actions";
 import { EditorHint, isPointerClick, restoreEditorFocus } from "./controls";
 import { revealTableColumn } from "./table-reveal";
+import { useEditorEditable } from "./use-editor-editable";
 import { useEditorSnapshot } from "./use-editor-snapshot";
 
 type ActiveTable = {
@@ -128,6 +129,7 @@ export function TiptapTableHandles({
   }) => React.ReactNode;
   renderHandle?: (axis: TableAxis) => React.ReactNode;
 }) {
+  const editable = useEditorEditable(editor);
   const state = useEditorSnapshot(editor);
   const [active, setActive] = useState<ActiveTable | null>(null);
   const [menu, setMenu] = useState<TableAxis | null>(null);
@@ -135,6 +137,13 @@ export function TiptapTableHandles({
   const [extending, setExtending] = useState<TableAxis | null>(null);
   const locked = Boolean(menu || drag || extending);
   const hasActive = active !== null;
+  useEffect(() => {
+    if (editable) return;
+    setActive(null);
+    setMenu(null);
+    setDrag(null);
+    setExtending(null);
+  }, [editable]);
   useEffect(() => {
     let frame = 0;
     const move = (event: PointerEvent) => {
@@ -304,6 +313,7 @@ export function TiptapTableHandles({
   }, [active, editor, state]);
   const context = active && state ? tableContext(state, active.id) : null;
   if (
+    !editable ||
     (!visible && !locked) ||
     !active ||
     !context ||
@@ -634,7 +644,7 @@ function TableExtendRail({
       if (current.target.hasPointerCapture(current.pointerId))
         current.target.releasePointerCapture(current.pointerId);
       onExtending(null);
-      if (editor.isDestroyed) return;
+      if (editor.isDestroyed || !editor.isEditable) return;
       if (cancel && current.changed) undo(editor.state, editor.view.dispatch);
       editor.view.dispatch(closeHistory(editor.state.tr));
       editor.view.focus();
@@ -693,7 +703,7 @@ function TableExtendRail({
           visibility: show && !clipped ? undefined : "hidden",
         }}
         onPointerDown={(event) => {
-          if (event.button !== 0) return;
+          if (event.button !== 0 || !editor.isEditable) return;
           const current = gesture.current;
           if (!event.isPrimary || current) {
             event.preventDefault();
@@ -724,6 +734,10 @@ function TableExtendRail({
         onPointerMove={(event) => {
           const current = gesture.current;
           if (!current || event.pointerId !== current.pointerId) return;
+          if (!editor.isEditable) {
+            end();
+            return;
+          }
           const delta =
             (axis === "row" ? event.clientY : event.clientX) - current.origin;
           const count = Math.max(
@@ -745,6 +759,10 @@ function TableExtendRail({
         onPointerUp={(event) => {
           const current = gesture.current;
           if (!current || event.pointerId !== current.pointerId) return;
+          if (!editor.isEditable) {
+            end();
+            return;
+          }
           if (!current.changed) {
             const tr = resizeTableAxis(
               editor.state,
@@ -771,6 +789,7 @@ function TableExtendRail({
           if (event.pointerId === gesture.current?.pointerId) end(true);
         }}
         onClick={(event) => {
+          if (!editor.isEditable) return;
           if (!isPointerClick(event)) {
             const context = tableContext(editor.state, active.id);
             if (context) {

@@ -34,6 +34,7 @@ import { slashKey } from "../engine/suggestions";
 import { EditorHint, isPointerClick, restoreEditorFocus } from "./controls";
 import { inToolbarCorridor } from "./pointer-corridor";
 import { BLOCK_DRAG_DISTANCE, TouchBlockDrag } from "./touch-block-drag";
+import { useEditorEditable } from "./use-editor-editable";
 import { useEditorSnapshot } from "./use-editor-snapshot";
 
 /** A handle selects the complete BetterEditor wrapper, including descendants. Native
@@ -49,6 +50,7 @@ export function TiptapSideMenu({
   renderMenu: (target: { editor: Editor; blockId?: string }) => React.ReactNode;
   renderHandle?: React.ReactNode;
 }) {
+  const editable = useEditorEditable(editor);
   const state = useEditorSnapshot(editor);
   const compact = useIsMobile();
   const [touchPointer, setTouchPointer] = useState(
@@ -105,6 +107,15 @@ export function TiptapSideMenu({
   const [open, setOpen] = useState(false);
   const frozen = useRef(false);
   const [pressed, setPressed] = useState(false);
+  useEffect(() => {
+    if (editable) return;
+    pressPoint.current = null;
+    consumedClick.current = true;
+    frozen.current = false;
+    setPressed(false);
+    setOpen(false);
+    setId(undefined);
+  }, [editable, setId]);
   useEffect(() => {
     const owner = pressPoint.current?.pointerId;
     if (!pressed || owner === undefined) return;
@@ -285,6 +296,7 @@ export function TiptapSideMenu({
     });
   }, [editor, id, state, mobile, setId, floating.refs]);
   if (
+    !editable ||
     !id ||
     (!visible &&
       !open &&
@@ -322,6 +334,7 @@ export function TiptapSideMenu({
         size="icon-sm"
         onMouseDown={(event) => event.preventDefault()}
         onClick={() => {
+          if (editor.isDestroyed || !editor.isEditable) return;
           const target = select(false);
           const body = target.node.firstChild;
           const reuse = body?.type.name === "paragraph" && !body.content.size;

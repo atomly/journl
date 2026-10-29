@@ -1,4 +1,6 @@
 import type { Page } from "@playwright/test";
+import type { Editor } from "@tiptap/core";
+import { fixtureId } from "~/testing/browser/data";
 import { expect, test, typeParagraphs } from "~/testing/browser/fixtures";
 
 async function menuClosed(page: Page) {
@@ -165,4 +167,47 @@ test("added columns reveal themselves without moving the document vertically", a
   await expect(cells).toHaveCount(3);
   await expect(editor.locator('td[colspan="8"]')).toHaveCount(1);
   await expect(lower).toHaveCount(10);
+});
+
+test("table controls stop a pending gesture when the editor becomes read-only", async ({
+  page,
+}, info) => {
+  await page.goto(`/pages/${fixtureId(980)}`);
+  const editor = page.locator(".better-editor-tiptap").first();
+  const cell = editor.locator("table").first().locator("td,th").last();
+  if (info.project.name === "mobile-webkit") await cell.tap();
+  else await cell.hover();
+  const add = page.getByRole("button", { exact: true, name: "Add column" });
+  await expect(add).toBeVisible();
+  const before = await editor.evaluate((root) =>
+    (root as HTMLElement & { editor: Editor }).editor.state.doc.toJSON(),
+  );
+  if (info.project.name === "desktop-chromium") {
+    const rect = await add.boundingBox();
+    if (!rect) throw new Error("Missing column control");
+    await page.mouse.move(rect.x + rect.width / 2, rect.y + rect.height / 2);
+    await page.mouse.down();
+  }
+  await editor.evaluate((root) =>
+    (root as HTMLElement & { editor: Editor }).editor.setEditable(false),
+  );
+  await expect(add).toHaveCount(0);
+  await expect(
+    page.getByRole("button", { exact: true, name: "Add block" }),
+  ).toHaveCount(0);
+  await expect(
+    page.getByRole("button", { exact: true, name: "Block actions" }),
+  ).toHaveCount(0);
+  if (info.project.name === "desktop-chromium") await page.mouse.up();
+  expect(
+    await editor.evaluate((root) =>
+      (root as HTMLElement & { editor: Editor }).editor.state.doc.toJSON(),
+    ),
+  ).toEqual(before);
+  await editor.evaluate((root) =>
+    (root as HTMLElement & { editor: Editor }).editor.setEditable(true),
+  );
+  if (info.project.name === "mobile-webkit") await cell.tap();
+  else await cell.hover();
+  await expect(add).toBeVisible();
 });

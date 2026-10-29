@@ -37,16 +37,18 @@ and mobile WebKit. These checks cover layout changes without engine replacement,
 formatting, link editing, custom slash items, read-only behavior, and explicit reset.
 
 The final local CI run passed frozen installation, dependency checks, lint,
-workspace typechecks, registry checks, 430 unit/UI tests, 43 database tests,
-104 browser tests, and the Turbopack production build. There were 20 configured
+workspace typechecks, registry checks, 445 unit/UI tests, 43 database tests,
+109 browser tests, and the Turbopack production build. There were 21 configured
 platform skips. Both browsers passed link-to-card conversion after the portal
 ownership correction. The build logged auth configuration warnings in its
 isolated fixture environment but exited successfully.
 
-An earlier run stopped on PostgreSQL disk exhaustion. Reusing development output
-also produced setup/navigation failures. The final complete run cleared the
-container's generated Next output before testing and passed without changing
-application acceptance assertions.
+The final run used Node 26.12.1, pnpm 12.8.2, and a project-local virtual store.
+The global-store default installs and typechecks, but Workflow/Turbopack cannot
+transform dependency files in that external store. CI explicitly selects the
+project layout. Browser fixtures wait for route readiness and popup closure.
+The complete log is retained locally at
+`.cache/openeditor-validation/unification-results/final-toolchain-ci.log`.
 
 ## Scope retained
 

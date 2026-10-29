@@ -59,3 +59,19 @@ portion without alternating between their edges. Vertical scrolling is preserved
 The regression tests simulate delayed popup scrolling, merged rows, oversized
 columns, and interruption. Browser checks wait for popup closure before the next
 gesture and verify that typing lands in the intended cell.
+
+## Verification
+
+The final complete local CI run passed frozen installation, dependency checks,
+lint/format checks, workspace typechecks, registry checks, 445 unit/UI tests,
+43 database tests, and 109 actual-app browser tests. There were 21 configured
+platform skips. The uncached Next.js 16.4.3 build passed using Turbopack.
+
+Three consecutive mobile WebKit table-reveal runs also passed before the full
+suite. The unit regression fails against the earlier reveal implementation and
+covers delayed native scrolling, interruption, merged rows, and oversized columns.
+
+The run used Node 26.12.1 and pnpm 12.8.2 in an isolated container with the project
+store override and disposable build credentials. Cloud Actions remain billing
+limited. The local log is
+`.cache/openeditor-validation/unification-results/final-toolchain-ci.log`.

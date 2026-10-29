@@ -36,8 +36,17 @@ TypeScript. A minimal consumer passes standalone composition checks in Chromium
 and mobile WebKit. These checks cover layout changes without engine replacement,
 formatting, link editing, custom slash items, read-only behavior, and explicit reset.
 
-The full local CI run is still pending. Its result must be recorded before this
-cleanup is reported as complete.
+The final local CI run passed frozen installation, dependency checks, lint,
+workspace typechecks, registry checks, 430 unit/UI tests, 43 database tests,
+104 browser tests, and the Turbopack production build. There were 20 configured
+platform skips. Both browsers passed link-to-card conversion after the portal
+ownership correction. The build logged auth configuration warnings in its
+isolated fixture environment but exited successfully.
+
+An earlier run stopped on PostgreSQL disk exhaustion. Reusing development output
+also produced setup/navigation failures. The final complete run cleared the
+container's generated Next output before testing and passed without changing
+application acceptance assertions.
 
 ## Scope retained
 

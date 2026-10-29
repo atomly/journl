@@ -89,7 +89,14 @@ integration, actual-app Chromium/WebKit acceptance, and a Turbopack build locall
 Also install the registry into a separate consumer and compile the copied sources.
 The registry test rejects library presets and consumer imports.
 
-The earlier composition implementation passed 428 unit/UI tests, 43 database tests,
-104 browser cases with 20 platform skips, and its production build. Those results
-precede the consumer-ownership cleanup. Current results belong in the PR validation
-record; they must not be inferred from that earlier run.
+The consumer-ownership cleanup passed frozen installation, dependency checks,
+lint/format checks, workspace typechecks, registry checks, 430 unit/UI tests,
+43 database tests, and 104 actual-app browser tests with 20 configured platform
+skips. The Next.js 16.4.3 production build passed using Turbopack. The build used
+an isolated environment with disposable Stripe values and logged missing auth
+configuration warnings. It did not use production credentials.
+
+The copied-source registry installed and compiled in a separate consumer.
+Standalone composition checks passed in Chromium and mobile WebKit. Package
+packing succeeded without publishing. The final complete CI log is retained at
+`.cache/openeditor-validation/unification-results/consumer-owned-ci.log` locally.

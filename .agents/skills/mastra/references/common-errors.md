@@ -1,6 +1,16 @@
-# Common Errors and Troubleshooting
+# Common errors and troubleshooting
 
 Comprehensive guide to common Mastra errors and their solutions.
+
+## Quickstart
+
+In a lot of cases, debugging errors can be greatly simplified by first checking the behavior in Mastra Studio. This allows you to interactively test agents and workflows, inspect logs, and see real-time error messages.
+
+```bash
+npm run dev
+```
+
+Open `http://localhost:4111` in your browser to access Mastra Studio.
 
 ## Build and configuration errors
 
@@ -61,7 +71,7 @@ Property 'memory' does not exist on type 'AgentConfig'
 **Solutions**:
 
 1. Check embedded docs (see `embedded-docs.md`) to check current API
-2. Check `node_modules/@mastra/core/dist/docs/SOURCE_MAP.json` for current exports
+2. Check `node_modules/@mastra/core/dist/docs/assets/SOURCE_MAP.json` for current exports
 3. Verify package versions: `npm list @mastra/core`
 4. Update dependencies: `npm update @mastra/core`
 
@@ -472,16 +482,16 @@ Error: Invalid model format
 
 ```typescript
 const agent = new Agent({
-  model: "openai/gpt-4o", // ✅ Correct
-  // NOT: model: 'gpt-4o'       // ❌ Missing provider
+  model: "openai/gpt-5.4", // ✅ Correct
+  // NOT: model: 'gpt-5.4'       // ❌ Missing provider
 });
 ```
 
 **Common models**:
 
-- OpenAI: `openai/gpt-4o`, `openai/gpt-4o-mini`, `openai/gpt-4-turbo`
-- Anthropic: `anthropic/claude-sonnet-4-5-20250929`, `anthropic/claude-opus-4-5`
-- Google: `google/gemini-2.0-pro`, `google/gemini-2.0-flash`
+- OpenAI: `openai/gpt-5.4`, `openai/gpt-5-mini`
+- Anthropic: `anthropic/claude-sonnet-4-5`, `anthropic/claude-haiku-4-5`, `anthropic/claude-opus-4-6`
+- Google: `google/gemini-2.5-pro`, `google/gemini-2.5-flash`
 
 **Use embedded docs to verify**:
 
@@ -502,14 +512,6 @@ const mastra = new Mastra({
     level: "debug", // or 'trace' for even more detail
   }),
 });
-```
-
-### Test in Studio
-
-```bash
-npm run dev
-# Open http://localhost:4111
-# Test agents and workflows interactively
 ```
 
 ### Check package versions

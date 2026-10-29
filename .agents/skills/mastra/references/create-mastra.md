@@ -4,7 +4,7 @@ Complete guide for creating new Mastra projects. Includes both quickstart CLI me
 
 **Official documentation: [mastra.ai/docs](https://mastra.ai/docs)**
 
-## Getting Started
+## Get started
 
 Ask: **"How would you like to create your Mastra project?"**
 
@@ -35,6 +35,14 @@ bun create mastra@latest
 ```
 
 ## CLI flags
+
+**Create an empty project:**
+
+```bash
+npm create mastra@latest my-project --empty
+```
+
+`--empty` and `--template` are separate creation modes. The `--llm` (`-l`) and `--llm-api-key` options apply only to the default starter.
 
 **Skip the example agent:**
 
@@ -168,8 +176,8 @@ export const weatherAgent = new Agent({
 **Note:** Model format is `"provider/model-name"`. Examples:
 
 - `"google/gemini-2.5-pro"`
-- `"openai/gpt-4o"`
-- `"anthropic/claude-3-5-sonnet-20241022"`
+- `"openai/gpt-5.4"`
+- `"anthropic/claude-sonnet-4-5"`
 
 ### Step 8: Create mastra entry point
 
@@ -184,7 +192,9 @@ export const mastra = new Mastra({
 });
 ```
 
-### Step 9: Launch development server
+### Step 9: Launch Mastra Studio
+
+Launch the development server:
 
 ```bash
 npm run dev

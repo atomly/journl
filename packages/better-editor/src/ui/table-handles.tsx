@@ -4,7 +4,6 @@ import { Button } from "@acme/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@acme/ui/dropdown-menu";
 import {
@@ -17,7 +16,6 @@ import {
 } from "@floating-ui/react";
 import type { Editor } from "@tiptap/core";
 import { closeHistory, undo } from "@tiptap/pm/history";
-import { NodeSelection } from "@tiptap/pm/state";
 import { cellAround } from "@tiptap/pm/tables";
 import { GripHorizontal, GripVertical, Plus } from "lucide-react";
 import {
@@ -41,14 +39,7 @@ import {
   tableAxisSelection,
   tableContext,
 } from "../engine/table-actions";
-import { removeSelectedBlock } from "../engine/writing";
-import {
-  EditorHint,
-  EditorMenuItem,
-  isPointerClick,
-  restoreEditorFocus,
-} from "./controls";
-import { TableMenuItems } from "./table-controls";
+import { EditorHint, isPointerClick, restoreEditorFocus } from "./controls";
 import { revealTableColumn } from "./table-reveal";
 import { useEditorSnapshot } from "./use-editor-snapshot";
 
@@ -130,7 +121,7 @@ export function TiptapTableHandles({
 }: {
   editor: Editor;
   visible: boolean;
-  renderMenu?: (target: {
+  renderMenu: (target: {
     editor: Editor;
     axis: TableAxis;
     blockId: string;
@@ -496,7 +487,7 @@ function TableAxisHandle({
   draggable: boolean;
   onDragStart: () => void;
   onDragEnd: () => void;
-  renderMenu?: (target: {
+  renderMenu: (target: {
     editor: Editor;
     axis: TableAxis;
     blockId: string;
@@ -598,33 +589,7 @@ function TableAxisHandle({
           return dragClosedMenu.current ? false : restoreEditorFocus(editor);
         }}
       >
-        {renderMenu ? (
-          renderMenu({ axis, blockId: active.id, editor })
-        ) : (
-          <>
-            <TableMenuItems editor={editor} axis={axis} />
-            <DropdownMenuSeparator />
-            <EditorMenuItem
-              hint="Remove the whole table"
-              variant="destructive"
-              onClick={() => {
-                const block = blockAt(editor.state.doc, active.id);
-                editor.view.dispatch(
-                  editor.state.tr.setSelection(
-                    NodeSelection.create(editor.state.doc, block.pos),
-                  ),
-                );
-                const tr = removeSelectedBlock(editor.state, () =>
-                  crypto.randomUUID(),
-                );
-                if (tr) applyTableEdit(editor, tr);
-                editor.view.focus();
-              }}
-            >
-              Delete table
-            </EditorMenuItem>
-          </>
-        )}
+        {renderMenu({ axis, blockId: active.id, editor })}
       </DropdownMenuContent>
     </DropdownMenu>
   );

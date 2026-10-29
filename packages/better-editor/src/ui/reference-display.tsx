@@ -148,6 +148,7 @@ export function ReferenceDisplayControl({
       </EditorToolbarControl>
       <DropdownMenuContent
         data-tiptap-controls=""
+        data-tiptap-owner={editor.instanceId}
         finalFocus={() => {
           return restoreEditorFocus(editor);
         }}

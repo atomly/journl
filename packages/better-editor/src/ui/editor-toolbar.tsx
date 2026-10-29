@@ -8,6 +8,7 @@ import {
   offset,
   type Placement,
   shift,
+  size,
   useFloating,
   type VirtualElement,
 } from "@floating-ui/react";
@@ -86,15 +87,28 @@ export function EditorToolbar({
           requested ||
           (focused && (!state?.empty || state?.link))));
   const floating = useFloating({
-    middleware: [
-      offset(sideOffset),
-      flip({ boundary: collisionBoundary, padding: collisionPadding }),
-      shift({ boundary: collisionBoundary, padding: collisionPadding }),
-    ],
+    middleware:
+      mode === "floating"
+        ? [
+            offset(sideOffset),
+            flip({ boundary: collisionBoundary, padding: collisionPadding }),
+            shift({
+              boundary: collisionBoundary ?? editor?.view.dom,
+              padding: collisionPadding,
+            }),
+            size({
+              apply({ availableWidth, elements }) {
+                elements.floating.style.maxWidth = `${Math.max(0, availableWidth)}px`;
+              },
+              boundary: collisionBoundary ?? editor?.view.dom,
+              padding: collisionPadding,
+            }),
+          ]
+        : [],
     open: visible && mode === "floating",
     placement,
     strategy: "fixed",
-    whileElementsMounted: autoUpdate,
+    whileElementsMounted: mode === "floating" ? autoUpdate : undefined,
   });
 
   useEffect(() => {

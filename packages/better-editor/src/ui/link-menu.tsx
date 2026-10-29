@@ -5,10 +5,11 @@ import { Input } from "@acme/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@acme/ui/popover";
 import { Toolbar } from "@base-ui/react/toolbar";
 import type { Editor } from "@tiptap/core";
-import { type SelectionBookmark, TextSelection } from "@tiptap/pm/state";
+import type { SelectionBookmark } from "@tiptap/pm/state";
 import {
   type ComponentProps,
   type ReactElement,
+  type ReactNode,
   useEffect,
   useRef,
   useState,
@@ -18,7 +19,6 @@ import { captureLink } from "../engine/references";
 import { safeEditorUrl } from "../engine/schema";
 import { restoreEditorFocus } from "./controls";
 import { useEditorInstance, useEditorSelector } from "./editor-root";
-import type { InsertReference } from "./reference-display";
 
 export type LinkMenuProps = {
   editor?: Editor;
@@ -26,7 +26,12 @@ export type LinkMenuProps = {
   onOpenChange?: (open: boolean) => void;
   label?: string;
   inputLabel?: string;
-  insertReference?: InsertReference;
+  children?: (context: {
+    url: string;
+    editor: Editor;
+    restoreSelection: () => boolean;
+    close: () => void;
+  }) => ReactNode;
   renderTrigger?: ReactElement;
   contentProps?: ComponentProps<typeof PopoverContent>;
 };
@@ -38,7 +43,7 @@ export function LinkMenu({
   onOpenChange,
   label = "Insert link",
   inputLabel = "Link URL",
-  insertReference,
+  children,
   renderTrigger,
   contentProps,
 }: LinkMenuProps) {
@@ -140,7 +145,7 @@ export function LinkMenu({
           }}
         >
           <label htmlFor={`link-${editor.instanceId}`}>
-            Link to a note or URL
+            {inputLabel}
             <Input
               id={`link-${editor.instanceId}`}
               aria-label={inputLabel}
@@ -153,38 +158,26 @@ export function LinkMenu({
           <Button type="submit" size="sm">
             Apply link
           </Button>
-          {insertReference && (
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              disabled={!safeEditorUrl(url)}
-              onClick={() => {
-                if (!editor.isEditable || !valid.current || !bookmark.current)
-                  return;
-                const selection = bookmark.current.resolve(editor.state.doc);
-                const captured = editor.state.apply(
-                  editor.state.tr.setSelection(selection),
-                );
-                const existing = captureLink(captured);
+          {children?.({
+            close: () => change(false),
+            editor,
+            restoreSelection: () => {
+              if (!editor.isEditable || !valid.current || !bookmark.current)
+                return false;
+              try {
                 editor.view.dispatch(
                   editor.state.tr.setSelection(
-                    existing
-                      ? TextSelection.create(
-                          editor.state.doc,
-                          existing.from,
-                          existing.to,
-                        )
-                      : selection,
+                    bookmark.current.resolve(editor.state.doc),
                   ),
                 );
-                insertReference(url, existing?.label, "contentReference");
-                change(false);
-              }}
-            >
-              Insert mention
-            </Button>
-          )}
+                return true;
+              } catch {
+                valid.current = false;
+                return false;
+              }
+            },
+            url,
+          })}
         </form>
       </PopoverContent>
     </Popover>

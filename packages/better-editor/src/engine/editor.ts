@@ -62,11 +62,11 @@ export function createDocumentEditor({
   attributes = {},
   onError,
   onCommitError,
-  editable = Boolean(onCommit),
+  editable = true,
   openLink,
   normalizeReferenceUrl,
-  slashItems,
-  referenceBehavior = true,
+  slashItems = [],
+  referenceBehavior = false,
 }: DocumentEditorOptions) {
   const blocks = initialBlocks?.length
     ? initialBlocks

@@ -1,5 +1,33 @@
 "use client";
 
+import {
+  indentBlock,
+  selectedBlock,
+} from "@acme/better-editor/engine/commands";
+import { captureLink } from "@acme/better-editor/engine/references";
+import { safeEditorUrl } from "@acme/better-editor/engine/schema";
+import { blockChoices } from "@acme/better-editor/engine/suggestions";
+import {
+  changeBlockType,
+  setBlockProperties,
+  setTextColor,
+} from "@acme/better-editor/engine/writing";
+import {
+  EditorHint,
+  EditorMenuItem,
+  EditorToolbarControl,
+  restoreEditorFocus,
+} from "@acme/better-editor/ui/controls";
+import { useEditorSelector } from "@acme/better-editor/ui/editor-root";
+import { EditorToolbar } from "@acme/better-editor/ui/editor-toolbar";
+import { LinkMenu } from "@acme/better-editor/ui/link-menu";
+import { MarkButton } from "@acme/better-editor/ui/mark-button";
+import {
+  type InsertReference,
+  ReferenceDisplayControl,
+  ReferenceDisplayItems,
+} from "@acme/better-editor/ui/reference-display";
+import { TableMenuItems } from "@acme/better-editor/ui/table-controls";
 import { Button } from "@acme/ui/button";
 import {
   DropdownMenu,
@@ -21,6 +49,7 @@ import { TooltipProvider } from "@acme/ui/tooltip";
 import { useIsMobile } from "@acme/ui/use-mobile";
 import { Button as SurfaceButton } from "@base-ui/react/button";
 import type { Editor } from "@tiptap/core";
+import { TextSelection } from "@tiptap/pm/state";
 import { CellSelection } from "@tiptap/pm/tables";
 import {
   AlignLeft,
@@ -37,31 +66,8 @@ import {
   Underline,
 } from "lucide-react";
 import { type ReactNode, useState } from "react";
-import { indentBlock, selectedBlock } from "../engine/commands";
-import { blockChoices } from "../engine/suggestions";
-import {
-  changeBlockType,
-  setBlockProperties,
-  setTextColor,
-} from "../engine/writing";
-import {
-  EditorHint,
-  EditorMenuItem,
-  EditorToolbarControl,
-  restoreEditorFocus,
-} from "./controls";
-import { useEditorServices } from "./editor-services";
-import { EditorToolbar } from "./editor-toolbar";
-import { LinkMenu } from "./link-menu";
-import { MarkButton } from "./mark-button";
-import {
-  type InsertReference,
-  ReferenceDisplayControl,
-  ReferenceDisplayItems,
-} from "./reference-display";
-import { TableMenuItems } from "./table-controls";
-import { useEditorSnapshot } from "./use-editor-snapshot";
-import { BlockActions } from "./writing-controls";
+import { BlockActions } from "./block-actions";
+import type { DocumentEditorServices } from "./document-editor-services";
 
 function EditorTool({
   label,
@@ -135,7 +141,11 @@ function BlockTypeMenu({ editor }: { editor: Editor }) {
 }
 
 function BlockTypeSelector({ editor }: { editor: Editor }) {
-  const state = useEditorSnapshot(editor);
+  const state = useEditorSelector(
+    (instance) => instance.state,
+    editor,
+    Object.is,
+  );
   const mobile = useIsMobile();
   const body = state && selectedBlock(state)?.node.firstChild;
   const value =
@@ -206,11 +216,13 @@ function BlockTypeSelector({ editor }: { editor: Editor }) {
 
 export function DocumentToolbar({
   editor,
+  services = {},
   insertReference,
   mode = "floating",
   visibility = "selection",
 }: {
   editor: Editor;
+  services?: DocumentEditorServices;
   insertReference: InsertReference;
   mode?: "floating" | "sticky" | "inline";
   visibility?: "always" | "selection";
@@ -236,6 +248,7 @@ export function DocumentToolbar({
         }}
       >
         <EditorToolbarItems
+          services={services}
           editor={editor}
           insertReference={insertReference}
           linkOpen={linkOpen}
@@ -247,17 +260,22 @@ export function DocumentToolbar({
 }
 export function EditorToolbarItems({
   editor,
+  services = {},
   insertReference,
   linkOpen,
   onLinkOpenChange,
 }: {
   editor: Editor;
+  services?: DocumentEditorServices;
   insertReference: InsertReference;
   linkOpen: boolean;
   onLinkOpenChange: (open: boolean) => void;
 }) {
-  const state = useEditorSnapshot(editor);
-  const services = useEditorServices();
+  const state = useEditorSelector(
+    (instance) => instance.state,
+    editor,
+    Object.is,
+  );
   const [colorsOpen, setColorsOpen] = useState(false);
   const dispatch = (tr: import("@tiptap/pm/state").Transaction | null) => {
     if (tr) editor.view.dispatch(tr.scrollIntoView());
@@ -288,13 +306,40 @@ export function EditorToolbarItems({
         open={linkOpen}
         onOpenChange={onLinkOpenChange}
         inputLabel="Reference URL"
-        insertReference={insertReference}
         renderTrigger={
           <Button variant="ghost" size="icon" aria-label="Insert link">
             <Link2 />
           </Button>
         }
-      />
+      >
+        {({ url, editor, restoreSelection, close }) => (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            disabled={!safeEditorUrl(url)}
+            onClick={() => {
+              if (!restoreSelection()) return;
+              const existing = captureLink(editor.state);
+              if (existing)
+                editor.view.dispatch(
+                  editor.state.tr.setSelection(
+                    TextSelection.create(
+                      editor.state.doc,
+                      existing.from,
+                      existing.to,
+                    ),
+                  ),
+                );
+              insertReference(url, existing?.label, "contentReference");
+              close();
+              editor.view.focus();
+            }}
+          >
+            Insert mention
+          </Button>
+        )}
+      </LinkMenu>
       <BlockTypeSelector editor={editor} />
       <ReferenceDisplayControl
         editor={editor}
@@ -479,7 +524,11 @@ export function EditorToolbarItems({
             return restoreEditorFocus(editor);
           }}
         >
-          <BlockMenuContent editor={editor} insertReference={insertReference} />
+          <BlockMenuContent
+            services={services}
+            editor={editor}
+            insertReference={insertReference}
+          />
         </DropdownMenuContent>
       </DropdownMenu>
     </>
@@ -489,10 +538,12 @@ export function EditorToolbarItems({
 /** Identical block/reference/history actions from the handle and toolbar menus. */
 export function BlockMenuContent({
   editor,
+  services = {},
   blockId,
   insertReference,
 }: {
   editor: Editor;
+  services?: DocumentEditorServices;
   blockId?: string;
   insertReference?: InsertReference;
 }) {
@@ -504,7 +555,7 @@ export function BlockMenuContent({
         editor={editor}
         insertReference={insertReference}
       />
-      <BlockActions editor={editor} blockId={blockId} />
+      <BlockActions services={services} editor={editor} blockId={blockId} />
     </>
   );
 }

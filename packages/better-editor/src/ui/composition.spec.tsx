@@ -187,7 +187,6 @@ test("minimal content does not capture slash keys without a mounted command menu
   let controller: ReturnType<typeof useBetterEditor> | undefined;
   function View() {
     controller = useBetterEditor({
-      editable: true,
       initialBlocks: [{ id: "p", type: "paragraph" }],
     });
     return (
@@ -198,6 +197,7 @@ test("minimal content does not capture slash keys without a mounted command menu
   }
   try {
     await act(async () => root.render(<View />));
+    expect(controller?.editor?.isEditable).toBe(true);
     await act(async () => {
       controller?.editor?.view.focus();
       controller?.editor?.commands.insertContent("/paragraph");
@@ -265,5 +265,87 @@ test("Alt+F10 focuses an already visible toolbar", async () => {
     await act(async () => root.unmount());
     container.remove();
     vi.unstubAllGlobals();
+  }
+});
+
+test("reference views fetch and render embedded content only through consumer composition", async () => {
+  const { ReferenceClientContext } = await import("./reference-client");
+  const { ReferenceViews, useReferenceViews } = await import(
+    "./reference-views"
+  );
+  const loadEmbedContent = vi.fn(async () => ({
+    blocks: [{ content: "Consumer content", id: "child", type: "paragraph" }],
+    status: "ready" as const,
+  }));
+  const client: import("@acme/references").ReferenceClient = {
+    loadEmbedContent,
+    loadPreview: async () => ({
+      href: "https://example.com/source",
+      status: "ready",
+      title: "Embedded source",
+    }),
+    openTarget: () => {},
+    resolveUrl: async () => ({ items: [] }),
+  };
+  const container = document.createElement("div");
+  document.body.append(container);
+  const root = createRoot(container);
+  function View({ render }: { render: boolean }) {
+    const views = useReferenceViews();
+    const { editor } = useBetterEditor({
+      extensions: [views.extension],
+      initialBlocks: [
+        {
+          id: "embed",
+          props: {
+            blockId: "",
+            documentId: "source",
+            label: "Embedded",
+            resolutionToken: "",
+            targetKind: "document",
+            url: "https://example.com/source",
+            version: 1,
+          },
+          type: "contentEmbed",
+        },
+      ],
+    });
+    return (
+      <ReferenceClientContext.Provider value={client}>
+        <EditorRoot editor={editor}>
+          <EditorContent />
+          <ReferenceViews
+            store={views}
+            renderEmbeddedContent={
+              render
+                ? (blocks) => <p data-consumer-preview="">{blocks[0]?.id}</p>
+                : undefined
+            }
+          />
+        </EditorRoot>
+      </ReferenceClientContext.Provider>
+    );
+  }
+  try {
+    await act(async () => root.render(<View render={false} />));
+    expect(
+      container.querySelector('[aria-label="Reference actions"]'),
+    ).toBeNull();
+    const toggle = container.querySelector<HTMLButtonElement>(
+      ".content-embed-toggle",
+    );
+    expect(toggle).not.toBeNull();
+    await act(async () => toggle?.click());
+    expect(loadEmbedContent).not.toHaveBeenCalled();
+    expect(container.querySelectorAll(".better-editor-tiptap")).toHaveLength(1);
+    await act(async () => root.render(<View render={true} />));
+    expect(loadEmbedContent).toHaveBeenCalledTimes(1);
+    expect(
+      container.querySelector("[data-consumer-preview]")?.textContent,
+    ).toBe("child");
+    expect(container.querySelectorAll(".better-editor-tiptap")).toHaveLength(1);
+  } finally {
+    await act(async () => root.unmount());
+    container.remove();
   }
 });

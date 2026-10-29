@@ -1,9 +1,9 @@
 "use client";
-import { DocumentEditor } from "@acme/better-editor/ui/document-editor";
-import type { EditorServices } from "@acme/better-editor/ui/editor-services";
 import { cn } from "cn";
 import { type ComponentProps, useMemo } from "react";
 import { toast } from "sonner";
+import type { DocumentEditorServices } from "./document-editor-services";
+import { DocumentEditor } from "./document-editor-view";
 import "./document-editor.css";
 import { useIsMobile } from "@acme/ui/use-mobile";
 import { useReferenceClient } from "~/components/references/use-reference-client";
@@ -13,7 +13,7 @@ export function ConnectedDocumentEditor(
 ) {
   const references = useReferenceClient();
   const mobile = useIsMobile();
-  const services = useMemo<EditorServices>(
+  const services = useMemo<DocumentEditorServices>(
     () => ({
       getBlockUrl: (id) => {
         const url = new URL(window.location.href);
@@ -34,7 +34,7 @@ export function ConnectedDocumentEditor(
     <DocumentEditor
       {...props}
       className={cn("journl-document-editor", props.className)}
-      references={references}
+      references={references ?? undefined}
       services={services}
       toolbarMode={props.toolbarMode ?? (mobile ? "sticky" : "floating")}
       toolbarVisibility={

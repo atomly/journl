@@ -1,7 +1,6 @@
 # BetterEditor
 
-A source-first editor built on Tiptap and ProseMirror. This package combines the
-former editor, editor-core, and tiptap packages. The document contract remains in
+A source-first editor built on Tiptap and ProseMirror. Engine, UI, and serialization sources live in one package. The document contract remains in
 `@acme/document`, reference contracts in `@acme/references`, and shared controls in
 `@acme/ui`.
 
@@ -16,10 +15,10 @@ Each public module has an explicit export in `package.json`. There is no root
 barrel. Import the module you use:
 
 ```tsx
-import { DocumentEditor } from "@acme/better-editor/ui/document-editor";
+import { useBetterEditor } from "@acme/better-editor/ui/use-better-editor";
 ```
 
-The React component supplies stable presentation extensions to the engine.
+The consumer supplies stable presentation extensions to the engine.
 Extensions with the same name replace the default schema extension. The engine
 owns editing plugins, validation, clipboard handling, and commit delivery. The
 caller owns the draft and save queue. `createDocumentEditor` is also available at
@@ -44,7 +43,7 @@ into the consumer's configured components directory. Imports are relative betwee
 copied modules. Consumers own and can edit all installed sources. For example:
 
 ```tsx
-import { DocumentEditor } from "@/components/better-editor/better-editor/ui/better-editor-ui-document-editor";
+import { EditorContent } from "@/components/better-editor/better-editor/ui/better-editor-ui-editor-content";
 ```
 
 The component imports `better-editor-ui-editor.css`. The host must configure Tailwind
@@ -56,15 +55,11 @@ Run `pnpm --filter @acme/better-editor test:unit` for engine and UI tests, and
 
 ## Compose an experience
 
-`DocumentEditor` assembles the same public parts used by custom compositions,
-including `EditorToolbar`, `MarkButton`, `LinkMenu`, `BlockHandle`, `TableControls`,
-`ReferenceViews`, and `SlashMenu`. Its default toolbar items live in `ui/toolbar`;
-positioning, keyboard access, and engine lifecycle each have one implementation.
-
-`DocumentEditor` remains the full preset. Use the independent parts to arrange
-controls or omit them entirely. The lifecycle hook returns an editor instance and
-diagnostic state; the root shares the stable instance without broadcasting the
-whole document through React context.
+The consumer application owns its editor component and chooses its extensions,
+controls, menu items, responsive layout, and read-only behavior. The package exports
+composable parts, with no document-editor preset or application toolbar.
+The lifecycle hook returns an editor instance and diagnostic state. The root
+shares that stable instance without broadcasting the document through context.
 
 ```tsx
 import { EditorRoot } from "@acme/better-editor/ui/editor-root";
@@ -121,7 +116,7 @@ reference package during the planned later decoupling.
 
 ### Slash commands
 
-`SlashMenu` accepts a readonly item collection, or a source function receiving the
+`SlashMenu` requires a readonly item collection, or a source function receiving the
 query and `{ editor, signal }`. Async sources provide already filtered/ranked
 results; static collections filter title and keywords. Superseded requests are
 aborted and late results cannot replace a newer query.
@@ -162,16 +157,21 @@ to retry the latest valid snapshot, or continue editing to deliver the accumulat
 changes on the next commit. The consumer still owns asynchronous save retries and
 persistence errors.
 
-The preset's `services` prop accepts `getBlockUrl`, `openLink`,
-`normalizeReferenceUrl`, and `onActionError`. Without a block URL callback, its copy
-link action is unavailable. The engine never derives application routes or opens
-windows itself. Raw hook consumers can pass `openLink` and `normalizeReferenceUrl`
-as engine options and provide UI services to `EditorRoot`. Reference URLs are
-absolute by default; consumers can normalize relative inputs explicitly.
+Pass `openLink` and `normalizeReferenceUrl` explicitly to `useBetterEditor` when
+needed. `EditorRoot` accepts an `onActionError` callback. Block URL
+construction, navigation, persistence, and menu ordering belong to the application.
+Editability defaults to true and is independent of commit callback presence.
+Set `editable: false` explicitly for read-only views.
 
-The preset also accepts `editable`, `resetKey`, `onReady`, `toolbar`, `toolbarMode`,
-`toolbarVisibility`, `slashMenu`, and `slashItems`. Passing null omits the corresponding
-preset UI. Ordinary JSX composition replaces the old component-injection approach.
+Handle and context-menu parts require `renderMenu`; they retain targeting and
+gestures while the consumer supplies the menu contents. `LinkMenu` accepts a child
+render function with `url`, `editor`, `restoreSelection`, and `close` for optional
+consumer actions. Reference insertion buttons belong in that consumer content.
+
+`ReferenceViews` accepts `renderActions` and `renderEmbeddedContent`. It does not
+create nested editors or choose an action menu. Without an embedded renderer it
+leaves an Open source link and does not fetch embedded content. Cycle detection
+is built in; consumers can set `maxEmbedDepth` to bound expanded previews.
 
 ### Performance and optional presentation
 
@@ -182,7 +182,7 @@ consumer mutation. Data-only diffs use reusable indexes; structural commands emi
 targeted steps and leave the caller transaction untouched if validation fails.
 
 Highlighting is no longer part of the schema. Include `syntaxHighlightExtension`
-from `engine/code-block` explicitly; the full preset includes it. A basic hook
+from `engine/code-block` explicitly. A basic hook
 import does not include the menus, drag UI, reference views, or language grammars.
 The schema still supports existing document block kinds for content preservation.
 

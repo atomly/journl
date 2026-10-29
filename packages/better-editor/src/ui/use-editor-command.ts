@@ -3,13 +3,16 @@
 import type { Editor } from "@tiptap/core";
 import { useCallback } from "react";
 import type { EditorCommand } from "../engine/actions";
-import { useEditorInstance, useEditorSelector } from "./editor-root";
-import { useEditorServices } from "./editor-services";
+import {
+  useEditorActionError,
+  useEditorInstance,
+  useEditorSelector,
+} from "./editor-root";
 
 /** Shared command behavior for custom buttons, menu items, and other presentations. */
 export function useEditorCommand(command: EditorCommand, explicit?: Editor) {
   const editor = useEditorInstance(explicit);
-  const services = useEditorServices();
+  const onActionError = useEditorActionError();
   const state = useEditorSelector(
     (instance) => ({
       active: command.isActive?.(instance),
@@ -30,11 +33,11 @@ export function useEditorCommand(command: EditorCommand, explicit?: Editor) {
       editor.view.focus();
       return true;
     } catch (error) {
-      if (services.onActionError) services.onActionError(error);
+      if (onActionError) onActionError(error);
       else throw error;
       return false;
     }
-  }, [editor, command, services]);
+  }, [editor, command, onActionError]);
   return {
     active: state?.active,
     disabled: !editor || (state?.disabled ?? true),

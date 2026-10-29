@@ -49,7 +49,7 @@ export function useBetterEditor({
   const [callbackError, setCallbackError] = useState<unknown>();
   const [configurationError, setConfigurationError] = useState<Error>();
   const { resetKey } = options;
-  const editable = options.editable ?? Boolean(options.onCommit);
+  const editable = options.editable ?? true;
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: resetKey deliberately owns engine lifetime; other options are live refs or mount-time configuration.
   useEffect(() => {
@@ -65,12 +65,12 @@ export function useBetterEditor({
         ...currentOptions,
         attributes: {
           "aria-label":
-            (currentOptions.editable ?? Boolean(currentOptions.onCommit))
+            (currentOptions.editable ?? true)
               ? "Document editor"
               : "Document content",
           class: "better-editor-tiptap min-h-32 outline-none",
         },
-        editable: currentOptions.editable ?? Boolean(currentOptions.onCommit),
+        editable: currentOptions.editable ?? true,
         element: host.current ?? document.createElement("div"),
         normalizeReferenceUrl: (url) =>
           latest.current.normalizeReferenceUrl?.(url) ?? url,

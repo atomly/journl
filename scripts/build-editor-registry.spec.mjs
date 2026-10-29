@@ -10,6 +10,24 @@ test("registry includes the full local import graph without private workspace im
   execFileSync(process.execPath, ["scripts/build-editor-registry.mjs"], {
     cwd: root,
   });
+  const editorPackage = JSON.parse(
+    await readFile(`${root}/packages/better-editor/package.json`, "utf8"),
+  );
+  for (const name of [
+    "document-editor",
+    "toolbar",
+    "writing-controls",
+    "editor-services",
+    "use-document-editor",
+    "node-views",
+    "side-menu",
+    "table-handles",
+  ]) {
+    assert.ok(
+      !Object.hasOwn(editorPackage.exports, `./ui/${name}`),
+      `Removed entry point must stay private or absent: ${name}`,
+    );
+  }
   const registry = JSON.parse(
     await readFile(`${root}/apps/web/public/r/registry.json`, "utf8"),
   );
@@ -45,6 +63,12 @@ test("registry includes the full local import graph without private workspace im
     }
     for (const file of item.files) {
       assert.doesNotMatch(file.path, /\.(spec|test|bench)\./);
+      assert.doesNotMatch(
+        file.path,
+        /better-editor-ui-(document-editor|toolbar|writing-controls|editor-services)\./,
+      );
+      assert.doesNotMatch(file.content, /<DocumentEditor\b/);
+      assert.doesNotMatch(file.content, /["'](?:~|@)\/components\/editor\//);
       assert.doesNotMatch(file.content, /["']@acme\//);
       const imports = [
         ...file.content.matchAll(/(?:from\s*|import\s*\(?)["']([^"']+)["']/g),

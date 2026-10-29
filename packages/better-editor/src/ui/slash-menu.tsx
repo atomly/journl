@@ -20,7 +20,6 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 import {
-  defaultSlashItems,
   executeSlashItem,
   type SlashItemSource,
   type SlashMenuItem,
@@ -31,13 +30,13 @@ import { useEditorInstance, useEditorSelector } from "./editor-root";
 
 export function useSlashMenu({
   editor: explicit,
-  items = defaultSlashItems(),
+  items,
   onError,
 }: {
   editor?: Editor;
-  items?: SlashItemSource;
+  items: SlashItemSource;
   onError?: (error: unknown) => void;
-} = {}) {
+}) {
   const editor = useEditorInstance(explicit);
   const query = useEditorSelector(
     (instance) => slashKey.getState(instance.state),
@@ -115,7 +114,7 @@ export function useSlashMenu({
 
 export type SlashMenuProps = Omit<ComponentProps<"div">, "children"> & {
   editor?: Editor;
-  items?: SlashItemSource;
+  items: SlashItemSource;
   renderItem?: (item: SlashMenuItem, state: { active: boolean }) => ReactNode;
   empty?: ReactNode;
   loadingContent?: ReactNode;

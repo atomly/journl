@@ -5,9 +5,12 @@ import { useEditorState } from "@tiptap/react";
 import { cn } from "cn";
 import { type ComponentProps, createContext, useContext } from "react";
 
-import { type EditorServices, EditorServicesContext } from "./editor-services";
-
-const emptyServices: EditorServices = {};
+const ActionErrorContext = createContext<
+  ((error: unknown) => void) | undefined
+>(undefined);
+export function useEditorActionError() {
+  return useContext(ActionErrorContext);
+}
 const EditorContext = createContext<Editor | undefined>(undefined);
 
 export function useEditorInstance(explicit?: Editor) {
@@ -33,22 +36,23 @@ export function useEditorSelector<T>(
 
 export function EditorRoot({
   editor,
-  services,
+  onActionError,
   className,
   ...props
-}: ComponentProps<"section"> & { editor?: Editor; services?: EditorServices }) {
-  const parentServices = useContext(EditorServicesContext);
+}: ComponentProps<"section"> & {
+  editor?: Editor;
+  onActionError?: (error: unknown) => void;
+}) {
+  const parentError = useContext(ActionErrorContext);
   return (
     <EditorContext.Provider value={editor}>
-      <EditorServicesContext.Provider
-        value={services ?? parentServices ?? emptyServices}
-      >
+      <ActionErrorContext.Provider value={onActionError ?? parentError}>
         <section
           data-better-editor-root=""
           {...props}
           className={cn("better-editor-editor-shell min-w-0", className)}
         />
-      </EditorServicesContext.Provider>
+      </ActionErrorContext.Provider>
     </EditorContext.Provider>
   );
 }

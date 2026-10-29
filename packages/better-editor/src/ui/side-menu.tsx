@@ -29,7 +29,6 @@ import { blockAt } from "../engine/identity";
 import { slashKey } from "../engine/suggestions";
 import { EditorHint, isPointerClick, restoreEditorFocus } from "./controls";
 import { inToolbarCorridor } from "./pointer-corridor";
-import { BlockMenuContent } from "./toolbar";
 import { BLOCK_DRAG_DISTANCE, TouchBlockDrag } from "./touch-block-drag";
 import { useEditorSnapshot } from "./use-editor-snapshot";
 
@@ -43,10 +42,7 @@ export function TiptapSideMenu({
 }: {
   editor: Editor;
   visible: boolean;
-  renderMenu?: (target: {
-    editor: Editor;
-    blockId?: string;
-  }) => React.ReactNode;
+  renderMenu: (target: { editor: Editor; blockId?: string }) => React.ReactNode;
   renderHandle?: React.ReactNode;
 }) {
   const state = useEditorSnapshot(editor);
@@ -518,20 +514,11 @@ export function TiptapSideMenu({
                     : restoreEditorFocus(editor);
                 }}
               >
-                {renderMenu ? (
-                  renderMenu({
-                    blockId:
-                      selectedBlocks(editor.state).length > 1 ? undefined : id,
-                    editor,
-                  })
-                ) : (
-                  <BlockMenuContent
-                    editor={editor}
-                    blockId={
-                      selectedBlocks(editor.state).length > 1 ? undefined : id
-                    }
-                  />
-                )}
+                {renderMenu({
+                  blockId:
+                    selectedBlocks(editor.state).length > 1 ? undefined : id,
+                  editor,
+                })}
               </DropdownMenuContent>
             </DropdownMenu>
           </div>,

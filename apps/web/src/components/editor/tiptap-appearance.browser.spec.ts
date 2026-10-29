@@ -65,6 +65,10 @@ for (const theme of ["light", "dark"]) {
       await expect(toolbar).toBeHidden();
     else {
       await expect(toolbar).toBeVisible();
+      await expect(toolbar).toHaveAttribute(
+        "data-better-editor-toolbar-mode",
+        "sticky",
+      );
       await expect(toolbar).toHaveCSS("flex-wrap", "nowrap");
       expect((await toolbar.boundingBox())?.height).toBeLessThan(50);
     }
@@ -100,7 +104,8 @@ test("editor styles do not adopt the host application's toolbar layout", async (
     const content = document.createElement("div");
     content.className = "better-editor-tiptap";
     const toolbar = document.createElement("div");
-    toolbar.className = "better-editor-mobile-toolbar";
+    toolbar.className = "better-editor-formatting-toolbar";
+    toolbar.dataset.betterEditorToolbarMode = "inline";
     const host = document.createElement("div");
     host.className = "better-editor-tiptap-host";
     consumer.append(content, toolbar, host);

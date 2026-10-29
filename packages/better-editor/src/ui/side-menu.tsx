@@ -26,23 +26,32 @@ import {
   selectedBlocks,
 } from "../engine/commands";
 import { blockAt } from "../engine/identity";
+import {
+  beginNativeBlockDrag,
+  nativeBlockDragActive,
+} from "../engine/native-block-drag";
 import { slashKey } from "../engine/suggestions";
 import { EditorHint, isPointerClick, restoreEditorFocus } from "./controls";
 import { inToolbarCorridor } from "./pointer-corridor";
-import { BlockMenuContent } from "./toolbar";
 import { BLOCK_DRAG_DISTANCE, TouchBlockDrag } from "./touch-block-drag";
-import { useTiptapState } from "./writing-controls";
+import { useEditorEditable } from "./use-editor-editable";
+import { useEditorSnapshot } from "./use-editor-snapshot";
 
 /** A handle selects the complete BetterEditor wrapper, including descendants. Native
  * ProseMirror drag/drop owns moves; the identity adapter gives copies fresh IDs. */
 export function TiptapSideMenu({
   editor,
   visible,
+  renderMenu,
+  renderHandle,
 }: {
   editor: Editor;
   visible: boolean;
+  renderMenu: (target: { editor: Editor; blockId?: string }) => React.ReactNode;
+  renderHandle?: React.ReactNode;
 }) {
-  const state = useTiptapState(editor);
+  const editable = useEditorEditable(editor);
+  const state = useEditorSnapshot(editor);
   const compact = useIsMobile();
   const [touchPointer, setTouchPointer] = useState(
     () =>
@@ -99,6 +108,15 @@ export function TiptapSideMenu({
   const frozen = useRef(false);
   const [pressed, setPressed] = useState(false);
   useEffect(() => {
+    if (editable) return;
+    pressPoint.current = null;
+    consumedClick.current = true;
+    frozen.current = false;
+    setPressed(false);
+    setOpen(false);
+    setId(undefined);
+  }, [editable, setId]);
+  useEffect(() => {
     const owner = pressPoint.current?.pointerId;
     if (!pressed || owner === undefined) return;
     const release = (event: PointerEvent) => {
@@ -134,6 +152,7 @@ export function TiptapSideMenu({
         pressed ||
         frozen.current ||
         editor.view.dragging ||
+        nativeBlockDragActive(editor) ||
         event.buttons
       )
         return;
@@ -187,7 +206,8 @@ export function TiptapSideMenu({
         setId(row.closest<HTMLElement>("[data-block-id]")?.dataset.blockId);
     };
     const focus = () => {
-      if (open || pressed || frozen.current) return;
+      if (open || pressed || frozen.current || nativeBlockDragActive(editor))
+        return;
       const target = selectedBlock(editor.state);
       if (target) setId(target.id);
     };
@@ -201,7 +221,8 @@ export function TiptapSideMenu({
         open ||
         pressed ||
         frozen.current ||
-        editor.view.dragging
+        editor.view.dragging ||
+        nativeBlockDragActive(editor)
       )
         return;
       setTouchPointer(true);
@@ -236,10 +257,17 @@ export function TiptapSideMenu({
       contextElement: node,
       getBoundingClientRect() {
         const rect = body.getBoundingClientRect();
-        const line =
+        const codeHeader =
           body.dataset.betterEditorBody === "codeBlock"
-            ? (body.querySelector("pre") ?? body)
-            : body;
+            ? (body.querySelector(
+                '.better-editor-code-controls [role="combobox"]',
+              ) ?? body.querySelector(".better-editor-code-controls"))
+            : null;
+        const divider =
+          body.dataset.betterEditorBody === "divider"
+            ? body.querySelector("hr")
+            : null;
+        const line = codeHeader ?? divider ?? body;
         const style = getComputedStyle(line);
         const padding = Number.parseFloat(style.paddingTop) || 0;
         const lineHeight = Number.parseFloat(style.lineHeight) || 24;
@@ -253,12 +281,14 @@ export function TiptapSideMenu({
           : (body
               .closest(".better-editor-table-wrapper")
               ?.getBoundingClientRect().left ?? rect.left);
+        const lineRect = line.getBoundingClientRect();
+        const center =
+          codeHeader || divider
+            ? lineRect.top + lineRect.height / 2
+            : lineRect.top + padding + lineHeight / 2;
         return new DOMRect(
           left,
-          line.getBoundingClientRect().top +
-            padding +
-            (lineHeight - handleHeight) / 2 -
-            2,
+          center - handleHeight / 2 - 2,
           rect.width,
           mobile ? Math.max(handleHeight, rect.height) : handleHeight,
         );
@@ -266,8 +296,14 @@ export function TiptapSideMenu({
     });
   }, [editor, id, state, mobile, setId, floating.refs]);
   if (
+    !editable ||
     !id ||
-    (!visible && !open && !pressed && !frozen.current && !editor.view.dragging)
+    (!visible &&
+      !open &&
+      !pressed &&
+      !frozen.current &&
+      !editor.view.dragging &&
+      !nativeBlockDragActive(editor))
   )
     return null;
   const select = (preserve = true) => {
@@ -298,6 +334,7 @@ export function TiptapSideMenu({
         size="icon-sm"
         onMouseDown={(event) => event.preventDefault()}
         onClick={() => {
+          if (editor.isDestroyed || !editor.isEditable) return;
           const target = select(false);
           const body = target.node.firstChild;
           const reuse = body?.type.name === "paragraph" && !body.content.size;
@@ -386,7 +423,8 @@ export function TiptapSideMenu({
                     !event.isPrimary ||
                     pressPoint.current ||
                     frozen.current ||
-                    editor.view.dragging
+                    editor.view.dragging ||
+                    nativeBlockDragActive(editor)
                   )
                     return;
                   pressPoint.current = {
@@ -482,6 +520,10 @@ export function TiptapSideMenu({
                       event.dataTransfer.setData("text/html", dom.innerHTML);
                       event.dataTransfer.setData("text/plain", text);
                       event.dataTransfer.effectAllowed = "copyMove";
+                      if (!beginNativeBlockDrag(editor, event.dataTransfer)) {
+                        event.preventDefault();
+                        return;
+                      }
                       const element = editor.view.nodeDOM(target.pos);
                       if (element instanceof HTMLElement)
                         event.dataTransfer.setDragImage(element, 0, 0);
@@ -498,7 +540,7 @@ export function TiptapSideMenu({
                       editor.view.dragging = null;
                     }}
                   >
-                    <GripVertical />
+                    {renderHandle ?? <GripVertical />}
                   </Button>
                 </EditorHint>
               </DropdownMenuTrigger>
@@ -511,12 +553,11 @@ export function TiptapSideMenu({
                     : restoreEditorFocus(editor);
                 }}
               >
-                <BlockMenuContent
-                  editor={editor}
-                  blockId={
-                    selectedBlocks(editor.state).length > 1 ? undefined : id
-                  }
-                />
+                {renderMenu({
+                  blockId:
+                    selectedBlocks(editor.state).length > 1 ? undefined : id,
+                  editor,
+                })}
               </DropdownMenuContent>
             </DropdownMenu>
           </div>,

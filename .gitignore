@@ -54,6 +54,3 @@ mastra.db*
 **/test-results/
 **/playwright-report/
 **/playwright/.auth/
-
-# Generated from the editor workspace sources before web dev/build
-apps/web/public/r/

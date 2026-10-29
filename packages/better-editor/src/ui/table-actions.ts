@@ -40,15 +40,38 @@ export function tableMenuActions(
   editor: Editor,
   axis?: TableAxis,
 ): TableMenuAction[] {
+  if (editor.isDestroyed) return [];
   const target = selectedBlock(editor.state);
   const table = target?.node.firstChild;
   if (!target || table?.type.name !== "table") return [];
+  const currentTarget = () => {
+    if (editor.isDestroyed || !editor.isEditable) return null;
+    const current = selectedBlock(editor.state);
+    return current?.id === target.id &&
+      current.node.firstChild?.type.name === "table"
+      ? { ...current, table: current.node.firstChild }
+      : null;
+  };
+  const prepare = () => {
+    const current = currentTarget();
+    if (!current?.table.firstChild?.childCount) return null;
+    if (!isInTable(editor.state))
+      editor.view.dispatch(
+        editor.state.tr.setSelection(
+          TextSelection.near(editor.state.doc.resolve(current.pos + 5)),
+        ),
+      );
+    return selectedTableCell(editor.state);
+  };
   if (!table.firstChild?.childCount)
     return [
       {
+        disabled: !editor.isEditable,
         hint: "Add editable cells to this empty table",
         label: "Add table cells",
         run() {
+          const current = currentTarget();
+          if (!current || current.table.firstChild?.childCount) return;
           const tr = changeBlockType(editor.state, "table");
           if (tr) applyTableEdit(editor, tr);
           editor.view.focus();
@@ -63,8 +86,7 @@ export function tableMenuActions(
         ),
       );
   const run = (command: Command) => {
-    if (state !== editor.state)
-      editor.view.dispatch(editor.state.tr.setSelection(state.selection));
+    if (!prepare()) return;
     const rect = selectedRect(editor.state);
     const added = command === addColumnBefore ? rect.left : rect.right;
     const changed = command(
@@ -134,11 +156,13 @@ export function tableMenuActions(
         hint: `Select every cell in this ${orientation}`,
         label: `Select ${orientation}`,
         run() {
+          const current = prepare();
+          if (!current) return;
           const selection = tableAxisSelection(
             editor.state,
-            cell.id,
+            current.id,
             orientation,
-            orientation === "row" ? cell.row : cell.column,
+            orientation === "row" ? current.row : current.column,
           );
           if (selection)
             editor.view.dispatch(editor.state.tr.setSelection(selection));
@@ -166,9 +190,12 @@ export function tableMenuActions(
           hint: `${label} without dragging`,
           label,
           run() {
+            const current = prepare();
+            if (!current) return;
+            const from = orientation === "row" ? current.row : current.column;
             const tr = moveTableAxis(
               editor.state,
-              cell.id,
+              current.id,
               orientation,
               from,
               from + direction,
@@ -192,10 +219,16 @@ export function tableMenuActions(
           hint: `${label} to ${width} pixels without dragging`,
           label,
           run() {
+            const current = prepare();
+            if (!current) return;
+            const width = Math.max(
+              TABLE_MIN_COLUMN_WIDTH,
+              tableColumnWidth(current.table, current.column) + delta,
+            );
             const tr = setTableColumnWidth(
               editor.state,
-              cell.id,
-              cell.column,
+              current.id,
+              current.column,
               width,
             );
             if (tr) applyTableEdit(editor, tr);
@@ -214,10 +247,12 @@ export function tableMenuActions(
           : "Style the first column as a header",
       label: `${table.attrs[key] ? "Remove" : "Add"} ${key === "headerRows" ? "header row" : "header column"}`,
       run() {
+        const current = currentTarget();
+        if (!current) return;
         applyTableEdit(
           editor,
-          editor.state.tr.setNodeMarkup(target.pos + 1, undefined, {
-            ...table.attrs,
+          editor.state.tr.setNodeMarkup(current.pos + 1, undefined, {
+            ...current.table.attrs,
             [key]: table.attrs[key] ? 0 : 1,
           }),
         );
@@ -225,5 +260,6 @@ export function tableMenuActions(
       },
     });
   }
+  if (!editor.isEditable) for (const action of actions) action.disabled = true;
   return actions;
 }

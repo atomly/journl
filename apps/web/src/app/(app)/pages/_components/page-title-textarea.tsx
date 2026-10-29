@@ -55,7 +55,7 @@ export function PageTitleTextarea({
     )
       return;
     const content = e.currentTarget
-      .closest("[data-editor-frontend]")
+      .closest("[data-better-editor-root]")
       ?.querySelector<HTMLElement>('[role="textbox"][contenteditable="true"]');
     if (content) {
       e.preventDefault();

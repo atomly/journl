@@ -16,9 +16,10 @@ Look up API signatures from embedded docs in `node_modules/@mastra/*/dist/docs/`
 
 ```
 node_modules/@mastra/core/dist/docs/
-├── SKILL.md           # Package overview, exports
-├── SOURCE_MAP.json    # Export→file mappings
-└── [topics]/          # Feature docs (agents/, workflows/, etc.)
+├── SKILL.md # Package overview, exports
+├── assets/
+│   └── SOURCE_MAP.json # Export -> file mappings
+└── references/ # Individual topic docs
 ```
 
 ## Lookup process
@@ -31,35 +32,39 @@ ls node_modules/@mastra/
 
 If you see packages like `core`, `memory`, `rag`, etc., proceed with embedded docs lookup.
 
-### 2. Find the export in SOURCE_MAP.json
+### 2. Look through topic docs
+
+Use `grep` to find relevant docs in `references/`:
 
 ```bash
-cat node_modules/@mastra/core/dist/docs/SOURCE_MAP.json | grep '"Agent"'
+grep -r "Agent" node_modules/@mastra/core/dist/docs/references
+```
+
+### Naming convention
+
+Documents are typically formatted as `<category>-<topic>.md` where category is one of: `"docs", "reference", "guides", "models"`.
+
+### Optional: Check source code for type definitions / additional details
+
+Look at the `SOURCE_MAP.json` to find the file path for the export:
+
+```bash
+cat node_modules/@mastra/core/dist/docs/assets/SOURCE_MAP.json | grep '"Agent"'
 ```
 
 Returns: `{ "Agent": { "types": "dist/agent/agent.d.ts", ... } }`
 
-### 3. Read the type definition
+Read the type definition for exact constructor parameters, types, and JSDoc:
 
 ```bash
 cat node_modules/@mastra/core/dist/agent/agent.d.ts
 ```
 
-This shows the exact TypeScript interface, constructor parameters, and JSDoc.
-
-### 4. Check topic docs (optional)
-
-```bash
-cat node_modules/@mastra/core/dist/docs/agents/01-overview.md
-```
-
-Topic docs provide conceptual explanations and usage examples.
-
 ## Common packages
 
 | Package          | Path                                     | Contains                                  |
 | ---------------- | ---------------------------------------- | ----------------------------------------- |
-| `@mastra/core`   | `node_modules/@mastra/core/dist/docs/`   | Agents, Workflows, Tools, Mastra instance |
+| `@mastra/core`   | `node_modules/@mastra/core/dist/docs/`   | Agents, Workflows, Tools, Mastra instance  |
 | `@mastra/memory` | `node_modules/@mastra/memory/dist/docs/` | Memory systems, conversation history      |
 | `@mastra/rag`    | `node_modules/@mastra/rag/dist/docs/`    | RAG features, vector stores               |
 | `@mastra/pg`     | `node_modules/@mastra/pg/dist/docs/`     | PostgreSQL storage                        |
@@ -71,40 +76,17 @@ Topic docs provide conceptual explanations and usage examples.
 # List installed @mastra packages
 ls node_modules/@mastra/
 
+# List available topic documentation
+ls node_modules/@mastra/core/dist/docs/references/
+
 # Find specific export in SOURCE_MAP
-cat node_modules/@mastra/core/dist/docs/SOURCE_MAP.json | grep '"ExportName"'
+cat node_modules/@mastra/core/dist/docs/assets/SOURCE_MAP.json | grep '"ExportName"'
 
 # Read type definition from path
 cat node_modules/@mastra/core/dist/[path-from-source-map]
 
-# List available topic documentation
-ls node_modules/@mastra/core/dist/docs/
-
 # View package overview
 cat node_modules/@mastra/core/dist/docs/SKILL.md
-
-# Search for specific functionality in source
-grep -r "functionName" node_modules/@mastra/core/src/
-```
-
-## Example: Looking up agent constructor
-
-**1. Find Agent in SOURCE_MAP:**
-
-```bash
-cat node_modules/@mastra/core/dist/docs/SOURCE_MAP.json | grep '"Agent"'
-```
-
-**2. Read the type definition:**
-
-```bash
-cat node_modules/@mastra/core/dist/agent/agent.d.ts
-```
-
-**3. Check topic docs for usage examples:**
-
-```bash
-cat node_modules/@mastra/core/dist/docs/agents/01-overview.md
 ```
 
 ## When embedded docs are not available
@@ -116,8 +98,6 @@ If packages aren't installed or `dist/docs/` doesn't exist:
 
 ## Best Practices
 
-1. **Always check SOURCE_MAP.json first** to find the correct file path
-2. **Read type definitions** for exact parameter names and types
-3. **Check topic docs** for conceptual understanding and patterns
-4. **Search source code** if docs don't answer the question
-5. **Verify imports** match what's exported in the type definitions
+1. **Check topic docs** for conceptual understanding and patterns
+2. **Search source code** if docs don't answer the question
+3. **Verify imports** match what's exported in the type definitions

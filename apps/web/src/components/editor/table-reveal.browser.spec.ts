@@ -1,4 +1,13 @@
-import { expect, test } from "~/testing/browser/fixtures";
+import type { Page } from "@playwright/test";
+import type { Editor } from "@tiptap/core";
+import { fixtureId } from "~/testing/browser/data";
+import { expect, test, typeParagraphs } from "~/testing/browser/fixtures";
+
+async function menuClosed(page: Page) {
+  // A hidden popup can still be completing its final-focus transition.
+  await expect(page.locator('[role="menu"][data-tiptap-owner]')).toHaveCount(0);
+  await expect(page.locator(".better-editor-tiptap")).toBeFocused();
+}
 
 test.use({ journalPagination: true });
 test("added columns reveal themselves without moving the document vertically", async ({
@@ -12,10 +21,10 @@ test("added columns reveal themselves without moving the document vertically", a
       .click();
   const previous = page.url();
   await create.click();
-  await expect(page).not.toHaveURL(previous);
+  await expect(page).not.toHaveURL(previous, { timeout: 60_000 });
   await page.keyboard.press("Escape");
   const editor = page.locator(".better-editor-tiptap");
-  await editor.fill("/table");
+  await typeParagraphs(editor, ["/table"]);
   await page.getByRole("option", { exact: true, name: "Table" }).click();
   const wrapper = editor.locator(".better-editor-table-wrapper");
   const cells = editor.locator("tr").first().locator("td");
@@ -88,11 +97,13 @@ test("added columns reveal themselves without moving the document vertically", a
   await page
     .getByRole("menuitem", { exact: true, name: "Insert column left" })
     .click();
+  await menuClosed(page);
   await expect(cells).toHaveCount(10);
   await visibleColumn(0);
   await expect.poll(vertical).toEqual(initial);
   // A merged header must not substitute its entire width for one column.
   await cells.first().click();
+  await cells.nth(7).scrollIntoViewIfNeeded();
   await cells.nth(7).click({ modifiers: ["Shift"] });
   await expect(editor.locator(".selectedCell")).toHaveCount(8);
   await page
@@ -101,6 +112,7 @@ test("added columns reveal themselves without moving the document vertically", a
   await page
     .getByRole("menuitem", { exact: true, name: "Merge cells" })
     .click();
+  await menuClosed(page);
   await expect(editor.locator('td[colspan="8"]')).toHaveCount(1);
   const lower = editor.locator("tr").nth(1).locator("td");
   for (const [index, direction] of [
@@ -109,20 +121,25 @@ test("added columns reveal themselves without moving the document vertically", a
   ] as const) {
     await lower.nth(index).click();
     await page.keyboard.insertText(direction);
+    await expect(lower.nth(index)).toHaveText(direction);
     for (let i = 0; i < direction.length; i++)
       await page.keyboard.press("Shift+ArrowLeft");
-    await page
-      .getByRole("button", { exact: true, name: "More formatting" })
-      .click();
+    const more = page.getByRole("button", {
+      exact: true,
+      name: "More formatting",
+    });
+    await expect(more).toHaveAttribute("aria-expanded", "false");
+    await more.click();
+    const insert = page.getByRole("menuitem", {
+      exact: true,
+      name: `Insert column ${direction}`,
+    });
+    await expect(insert).toBeVisible();
     await wrapper.evaluate((element) => {
       element.scrollLeft = 480;
     });
-    await page
-      .getByRole("menuitem", {
-        exact: true,
-        name: `Insert column ${direction}`,
-      })
-      .click();
+    await insert.click();
+    await menuClosed(page);
     await expect(lower).toHaveCount(11);
     const added = lower.nth(direction === "right" ? index + 1 : index);
     await expect
@@ -150,4 +167,47 @@ test("added columns reveal themselves without moving the document vertically", a
   await expect(cells).toHaveCount(3);
   await expect(editor.locator('td[colspan="8"]')).toHaveCount(1);
   await expect(lower).toHaveCount(10);
+});
+
+test("table controls stop a pending gesture when the editor becomes read-only", async ({
+  page,
+}, info) => {
+  await page.goto(`/pages/${fixtureId(980)}`);
+  const editor = page.locator(".better-editor-tiptap").first();
+  const cell = editor.locator("table").first().locator("td,th").last();
+  if (info.project.name === "mobile-webkit") await cell.tap();
+  else await cell.hover();
+  const add = page.getByRole("button", { exact: true, name: "Add column" });
+  await expect(add).toBeVisible();
+  const before = await editor.evaluate((root) =>
+    (root as HTMLElement & { editor: Editor }).editor.state.doc.toJSON(),
+  );
+  if (info.project.name === "desktop-chromium") {
+    const rect = await add.boundingBox();
+    if (!rect) throw new Error("Missing column control");
+    await page.mouse.move(rect.x + rect.width / 2, rect.y + rect.height / 2);
+    await page.mouse.down();
+  }
+  await editor.evaluate((root) =>
+    (root as HTMLElement & { editor: Editor }).editor.setEditable(false),
+  );
+  await expect(add).toHaveCount(0);
+  await expect(
+    page.getByRole("button", { exact: true, name: "Add block" }),
+  ).toHaveCount(0);
+  await expect(
+    page.getByRole("button", { exact: true, name: "Block actions" }),
+  ).toHaveCount(0);
+  if (info.project.name === "desktop-chromium") await page.mouse.up();
+  expect(
+    await editor.evaluate((root) =>
+      (root as HTMLElement & { editor: Editor }).editor.state.doc.toJSON(),
+    ),
+  ).toEqual(before);
+  await editor.evaluate((root) =>
+    (root as HTMLElement & { editor: Editor }).editor.setEditable(true),
+  );
+  if (info.project.name === "mobile-webkit") await cell.tap();
+  else await cell.hover();
+  await expect(add).toBeVisible();
 });

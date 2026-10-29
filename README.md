@@ -60,7 +60,7 @@ installed editor contract, synthetic recovery fixtures, remaining production
 uncertainty, and preservation checks for the Tiptap frontend migration on Journl-owned
 block documents. Performance benchmarks are outside this migration scope.
 Content checks run with `pnpm --filter @acme/document test:unit` and
-`pnpm --filter @acme/tiptap test:unit`. The remaining BlockNote compatibility
+`pnpm --filter @acme/better-editor test:unit`. The remaining BlockNote compatibility
 suite is separate from the current editor's acceptance checks.
 
 ## Development Workflow
@@ -68,10 +68,29 @@ suite is separate from the current editor's acceptance checks.
 Use the scripts in [`package.json`](./package.json) as the canonical source for
 day-to-day commands.
 
-- Install dependencies: `pnpm install`
-- Start development tasks: `pnpm dev`
+- Install the toolchain: `mise install` (Node 26 from `mise.toml`, pnpm 12.15.0 from `package.json`).
+- Install dependencies: `mise run pnpm-install`
+- Start development tasks: `mise run dev`
 - Run quality gates: `pnpm check` and `pnpm typecheck`
 - Build the workspace: `pnpm build`
+
+The default install uses pnpm's global virtual store. `PNPM_VIRTUAL_STORE_TYPE=project`
+selects a project-local store instead; CI uses that layout because the current
+Workflow/Turbopack loader cannot transform dependency files in an external store.
+This is a loader compatibility limit, not an installation or TypeScript failure.
+pnpm's native `addMissingPeerTypes` setting makes workspace-declared type packages
+available to dependencies in the shared store.
+For app development or builds, reinstall with
+`PNPM_VIRTUAL_STORE_TYPE=project pnpm install` and keep that variable set when
+running `pnpm dev` or `pnpm build`. The repository default remains global.
+
+Renovate replaces Dependabot version updates. It covers npm workspace packages,
+GitHub Actions, Node in `mise.toml`, and pnpm in `devEngines.packageManager`.
+Updates stay in one cross-ecosystem group during Monday's 09:00–09:59 window in
+`America/New_York`. Renovate polls within that window rather than starting at an
+exact minute. Security updates bypass the weekly window. The organization's
+Renovate GitHub App covers all repositories, so no Actions runner or bot token
+is required. The configuration takes effect after it reaches the default branch.
 
 Environment variables are loaded from a root `.env` file. See
 [`turbo.json`](./turbo.json) for shared env names used by tasks.

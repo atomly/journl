@@ -131,8 +131,17 @@
 .better-editor-tiptap [data-better-editor-body="bulletListItem"]::before {
   content: "•";
 }
+.better-editor-tiptap [data-better-editor-body="numberedListItem"] {
+  padding-left: 3ch;
+}
 .better-editor-tiptap [data-better-editor-body="numberedListItem"]::before {
   content: attr(data-start) ".";
+  white-space: nowrap;
+  width: max-content;
+  min-width: 3ch;
+  left: auto;
+  right: calc(100% - 3ch);
+  text-align: right;
 }
 .better-editor-tiptap [data-better-editor-body="checkListItem"],
 .better-editor-tiptap [data-better-editor-body="toggleListItem"],
@@ -295,7 +304,7 @@
   overflow-x: auto;
 }
 
-.better-editor-mobile-toolbar .better-editor-formatting-toolbar {
+.better-editor-formatting-toolbar[data-better-editor-toolbar-mode="sticky"] {
   max-width: 100%;
   box-shadow: 0 1px 3px rgb(0 0 0 / 8%);
 }
@@ -359,7 +368,9 @@
   position: relative;
 }
 .better-editor-tiptap .selectedCell::after {
-  background: color-mix(in srgb, var(--ring) 15%, transparent);
+  background: var(--better-editor-cell-selection, rgb(80 130 245 / 35%));
+  box-shadow: inset 0 0 0 1px
+    var(--better-editor-cell-selection-border, rgb(100 155 255 / 75%));
   content: "";
   position: absolute;
   inset: 0;
@@ -466,4 +477,10 @@
 }
 .better-editor-code-controls {
   padding: 8px 16px 0;
+}
+
+.better-editor-formatting-toolbar:where(
+  [data-better-editor-toolbar-mode="sticky"]
+) {
+  top: 0;
 }

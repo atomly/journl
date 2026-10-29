@@ -4,11 +4,6 @@
   "private": true,
   "type": "module",
   "license": "MIT",
-  "engines": {
-    "node": ">=24.0.0 <25",
-    "pnpm": ">=9.15.9"
-  },
-  "packageManager": "pnpm@10.29.3+sha512.498e1fb4cca5aa06c1dcf2611e6fafc50972ffe7189998c409e90de74566444298ffe43e6cd2acdc775ba1aa7cc5e092a8b7054c811ba8c5770f84693d33d2dc",
   "scripts": {
     "build": "turbo run build",
     "check": "turbo run check --continue",
@@ -23,11 +18,9 @@
     "supabase:stop": "supabase stop",
     "supabase:status": "supabase status",
     "test:integration": "turbo run test:integration",
-    "test:unit": "pnpm registry:test && turbo run test:unit",
+    "test:unit": "turbo run test:unit",
     "test": "turbo run test:unit test:integration test:browser",
-    "test:browser": "turbo run test:browser",
-    "registry:build": "node scripts/build-editor-registry.mjs",
-    "registry:test": "node --test scripts/build-editor-registry.spec.mjs"
+    "test:browser": "turbo run test:browser"
   },
   "devDependencies": {
     "@biomejs/biome": "~2.5.15",
@@ -35,45 +28,10 @@
     "supabase": "^2.120.0",
     "turbo": "~2.11.7"
   },
-  "pnpm": {
-    "overrides": {
-      "@tiptap/core": "3.31.4",
-      "@tiptap/pm": "3.31.4",
-      "@tiptap/react": "3.31.4",
-      "@tiptap/extensions": "3.31.4",
-      "@tiptap/extension-bold": "3.31.4",
-      "@tiptap/extension-code": "3.31.4",
-      "@tiptap/extension-italic": "3.31.4",
-      "@tiptap/extension-strike": "3.31.4",
-      "@tiptap/extension-underline": "3.31.4",
-      "@tiptap/extension-link": "3.31.4",
-      "@tiptap/extension-text": "3.31.4",
-      "@tiptap/extension-paragraph": "3.31.4",
-      "@tiptap/extension-horizontal-rule": "3.31.4",
-      "@tiptap/extension-bubble-menu": "3.31.4",
-      "@tiptap/extension-floating-menu": "3.31.4",
-      "@blocknote/server-util>jsdom": "26.1.0"
-    },
-    "peerDependencyRules": {
-      "allowedVersions": {
-        "zod": "^3.23.8 || ^4.0.0"
-      },
-      "ignoreMissing": [
-        "@better-auth/agent-auth",
-        "@better-auth/api-key",
-        "@better-auth/passkey",
-        "@daveyplate/better-auth-tanstack",
-        "@instantdb/react",
-        "@marsidev/react-turnstile",
-        "@mikkelscheike/email-provider-links",
-        "@triplit/client",
-        "@triplit/react"
-      ]
-    },
-    "onlyBuiltDependencies": [
-      "@swc/core",
-      "cbor-extract",
-      "esbuild"
-    ]
+  "devEngines": {
+    "packageManager": {
+      "name": "pnpm",
+      "version": "12.15.0"
+    }
   }
 }

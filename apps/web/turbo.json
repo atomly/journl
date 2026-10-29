@@ -4,11 +4,7 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "inputs": [
-        "$TURBO_DEFAULT$",
-        "$TURBO_ROOT$/scripts/build-editor-registry.mjs"
-      ],
-      "outputs": [".next/**", "!.next/cache/**", "next-env.d.ts", "public/r/**"]
+      "outputs": [".next/**", "!.next/cache/**", "next-env.d.ts"]
     },
     "dev": {
       "persistent": true

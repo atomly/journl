@@ -31,8 +31,8 @@ editor ownership marker so they do not dismiss their parent toolbar.
 
 ## Verification
 
-The copied-source registry installs into a separate consumer and compiles with
-TypeScript. A minimal consumer passes standalone composition checks in Chromium
+The earlier copied-source registry prototype installed into a separate consumer and compiled with
+TypeScript. A minimal consumer passed standalone composition checks in Chromium
 and mobile WebKit. These checks cover layout changes without engine replacement,
 formatting, link editing, custom slash items, read-only behavior, and explicit reset.
 
@@ -75,3 +75,17 @@ Follow-up validation passed 446 unit/UI tests, ten consecutive held-click runs,
 workspace typechecks, registry checks, lint, and an uncached Turbopack build.
 The related browser run covers feedback, editor interactions, and accessibility;
 the complete browser sweep recorded above predates this follow-up.
+
+## Distribution scope clarification
+
+Registry generation, hosting, installation instructions, and build/test wiring
+have been removed. The earlier registry checks above describe prototype validation.
+The package retains source namespaces, relative internal imports, explicit leaf
+exports, and consumer-owned composition for future npm or shadcn distribution.
+
+The pnpm follow-up removes `.pnpmfile.cjs` and pins pnpm 12.15.0. Native
+`addMissingPeerTypes` resolution replaces the hook. Global-store workspace
+typechecks and frozen installation passed, along with lint, dependency checks,
+446 unit/UI tests, and a fresh project-store Turbopack build. The held-click
+regression passed three times on the new toolchain. The build produced no registry
+output. No registry endpoint or generation step is required for development.

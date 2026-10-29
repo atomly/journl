@@ -68,7 +68,7 @@ suite is separate from the current editor's acceptance checks.
 Use the scripts in [`package.json`](./package.json) as the canonical source for
 day-to-day commands.
 
-- Install the toolchain: `mise install` (Node 26 from `mise.toml`, pnpm 12.8.2 from `package.json`).
+- Install the toolchain: `mise install` (Node 26 from `mise.toml`, pnpm 12.15.0 from `package.json`).
 - Install dependencies: `mise run pnpm-install`
 - Start development tasks: `mise run dev`
 - Run quality gates: `pnpm check` and `pnpm typecheck`
@@ -78,6 +78,8 @@ The default install uses pnpm's global virtual store. `PNPM_VIRTUAL_STORE_TYPE=p
 selects a project-local store instead; CI uses that layout because the current
 Workflow/Turbopack loader cannot transform dependency files in an external store.
 This is a loader compatibility limit, not an installation or TypeScript failure.
+pnpm's native `addMissingPeerTypes` setting makes workspace-declared type packages
+available to dependencies in the shared store.
 For app development or builds, reinstall with
 `PNPM_VIRTUAL_STORE_TYPE=project pnpm install` and keep that variable set when
 running `pnpm dev` or `pnpm build`. The repository default remains global.

@@ -84,10 +84,11 @@ AI replacement is outside this cleanup.
 
 ## Verification
 
-Run lint, typechecks, frozen installation, registry checks, unit/UI tests, database
-integration, actual-app Chromium/WebKit acceptance, and a Turbopack build locally.
-Also install the registry into a separate consumer and compile the copied sources.
-The registry test rejects library presets and consumer imports.
+Run lint, typechecks, frozen installation, unit/UI tests, database integration,
+actual-app Chromium/WebKit acceptance, and a Turbopack build locally.
+Registry generation and hosting are deferred. Explicit subpath exports, relative
+internal imports, and consumer-owned composition keep future source distribution
+possible without requiring registry tooling today.
 
 The final local CI run on Node 26.12.1 and pnpm 12.8.2 passed frozen installation,
 dependency checks,
@@ -106,3 +107,6 @@ CI uses `PNPM_VIRTUAL_STORE_TYPE=project`. The requested global-store default
 installs and typechecks successfully, but the current Workflow/Turbopack loaders
 cannot transform dependencies outside the project filesystem. A separate global
 build reproduced that limitation on the same Node/pnpm toolchain.
+
+The earlier registry prototype and its checks recorded above were removed after
+scope clarification. They are historical validation, not current build requirements.

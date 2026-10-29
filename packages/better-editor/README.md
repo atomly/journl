@@ -28,30 +28,16 @@ call `destroy()` when the editor is no longer needed.
 ## Distribution
 
 Workspace consumers use package subpaths. The package metadata supports a future
-npm release; the scope and release version remain provisional. Nothing is
-published by the registry build or application build.
+npm release; the scope and release version remain provisional. No packages are
+published by an application build.
 
-For source ownership through shadcn, generate the registry in the host repository
-and serve its output at a URL you control. Set `REGISTRY_URL` to that URL, then install:
+A future shadcn registry can distribute these sources for consumers to own and
+edit. The separate source namespaces, relative internal imports, explicit module
+exports, and consumer-owned composition preserve that option. This repository
+does not currently generate or host an editor registry. Installation manifests,
+source-copy import rewriting, and registry hosting are deferred until needed.
 
-```sh
-pnpm dlx shadcn@latest add "$REGISTRY_URL/better-editor.json"
-```
-
-The registry copies BetterEditor and its document, reference, and shared UI sources
-into the consumer's configured components directory. Imports are relative between
-copied modules. Consumers own and can edit all installed sources. For example:
-
-```tsx
-import { EditorContent } from "@/components/better-editor/better-editor/ui/better-editor-ui-editor-content";
-```
-
-The component imports `better-editor-ui-editor.css`. The host must configure Tailwind
-and scan the installed sources. Regenerate registry output after source changes;
-`apps/web/public/r` is generated and ignored by Git.
-
-Run `pnpm --filter @acme/better-editor test:unit` for engine and UI tests, and
-`pnpm registry:test` for the copied import graph.
+Run `pnpm --filter @acme/better-editor test:unit` for engine and UI tests.
 
 ## Compose an experience
 
@@ -195,5 +181,5 @@ The schema still supports existing document block kinds for content preservation
 
 Run `pnpm --filter @acme/better-editor bench` for repeatable 100/1,000/5,000-paragraph
 benchmarks. The report separates full decoding from the cached engine-delivery
-path; neither measures browser input-to-paint latency. Benchmark sources and tests
-are excluded from generated registry items.
+path; neither measures browser input-to-paint latency. Benchmark sources and tests are development tools, separate from the public module
+exports.

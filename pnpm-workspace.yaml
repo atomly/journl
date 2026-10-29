@@ -10,6 +10,7 @@ packageExtensions:
   ngraph.leiden@0.3.0:
     dependencies:
       ngraph.graph: 20.1.2
+addMissingPeerTypes: true
 autoInstallPeers: false
 nodeLinker: isolated
 linkWorkspacePackages: true

@@ -1,4 +1,11 @@
+import type { Page } from "@playwright/test";
 import { expect, test, typeParagraphs } from "~/testing/browser/fixtures";
+
+async function menuClosed(page: Page) {
+  // A hidden popup can still be completing its final-focus transition.
+  await expect(page.locator('[role="menu"][data-tiptap-owner]')).toHaveCount(0);
+  await expect(page.locator(".better-editor-tiptap")).toBeFocused();
+}
 
 test.use({ journalPagination: true });
 test("added columns reveal themselves without moving the document vertically", async ({
@@ -88,6 +95,7 @@ test("added columns reveal themselves without moving the document vertically", a
   await page
     .getByRole("menuitem", { exact: true, name: "Insert column left" })
     .click();
+  await menuClosed(page);
   await expect(cells).toHaveCount(10);
   await visibleColumn(0);
   await expect.poll(vertical).toEqual(initial);
@@ -102,6 +110,7 @@ test("added columns reveal themselves without moving the document vertically", a
   await page
     .getByRole("menuitem", { exact: true, name: "Merge cells" })
     .click();
+  await menuClosed(page);
   await expect(editor.locator('td[colspan="8"]')).toHaveCount(1);
   const lower = editor.locator("tr").nth(1).locator("td");
   for (const [index, direction] of [
@@ -110,6 +119,7 @@ test("added columns reveal themselves without moving the document vertically", a
   ] as const) {
     await lower.nth(index).click();
     await page.keyboard.insertText(direction);
+    await expect(lower.nth(index)).toHaveText(direction);
     for (let i = 0; i < direction.length; i++)
       await page.keyboard.press("Shift+ArrowLeft");
     const more = page.getByRole("button", {
@@ -127,8 +137,7 @@ test("added columns reveal themselves without moving the document vertically", a
       element.scrollLeft = 480;
     });
     await insert.click();
-    await expect(insert).toBeHidden();
-    await expect(editor).toBeFocused();
+    await menuClosed(page);
     await expect(lower).toHaveCount(11);
     const added = lower.nth(direction === "right" ? index + 1 : index);
     await expect

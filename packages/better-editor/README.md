@@ -101,6 +101,9 @@ Floating controls accept placement, offset, collision padding, and a portal
 container. Use a portal container within your theme scope when themes vary by
 editor. Controls support Base UI element/ref composition through `render`.
 
+Set `--better-editor-cell-selection` and `--better-editor-cell-selection-border`
+on the editor container to customize the table-selection fill and border.
+
 `CommandButton` accepts an independent command with `run`, `canRun`, and `isActive`.
 `useEditorCommand` supplies the same state, execution guard, and focus behavior
 for custom menu items. `useEditorSelector` from the root module subscribes to selected values, with an

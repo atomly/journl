@@ -49,3 +49,13 @@ numbers therefore keep their dot on the same line at larger text sizes.
 
 Table selection uses a visible fill and inset border with independent consumer
 CSS tokens. It no longer relies on a low-opacity host ring color.
+
+Acceptance checks also exposed native scrolling after a table popup closes.
+Column reveal now checks for three stable frames, with an eight-frame limit.
+Fresh pointer, keyboard, wheel, or touch input cancels it immediately. Document
+changes and editor destruction also cancel it. Wide columns reveal the available
+portion without alternating between their edges. Vertical scrolling is preserved.
+
+The regression tests simulate delayed popup scrolling, merged rows, oversized
+columns, and interruption. Browser checks wait for popup closure before the next
+gesture and verify that typing lands in the intended cell.

@@ -14,7 +14,7 @@ concurrency:
 # You can leverage Vercel Remote Caching with Turbo to speed up your builds
 # @link https://turborepo.org/docs/core-concepts/remote-caching#remote-caching-on-vercel-builds
 env:
-  # CI has no shared warm store; Workflow transforms require project-local files.
+  # Workflow's Turbopack loaders require project-local dependency files.
   PNPM_VIRTUAL_STORE_TYPE: project
   FORCE_COLOR: 3
   TURBO_TEAM: ${{ vars.TURBO_TEAM }}

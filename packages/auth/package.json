@@ -28,13 +28,17 @@
     "@better-auth/stripe": "1.7.7",
     "@better-auth/utils": "0.4.2",
     "@t3-oss/env-nextjs": "~0.13.11",
+    "drizzle-orm": "~0.45.4",
     "zod": "~4.6.5"
   },
   "devDependencies": {
     "@acme/tsconfig": "workspace:*",
     "@better-auth/utils": "0.4.2",
+    "@types/node": "~26.6.5",
     "@types/react": "~19.3.0",
     "better-auth": "1.7.7",
-    "better-call": "1.4.0"
+    "better-call": "1.4.0",
+    "stripe": "~22.6.2",
+    "typescript": "~7.0.2"
   }
 }

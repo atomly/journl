@@ -18,6 +18,7 @@ import { diffDocumentSnapshots } from "./changes";
 import { clipboardPasteExtension } from "./clipboard-paste";
 import { editingExtension } from "./commands";
 import { identityExtension } from "./identity";
+import { nativeBlockDragExtension } from "./native-block-drag";
 import { insertTiptapReference } from "./reference-insertion";
 import { referenceSelectionPlugin } from "./reference-selection";
 import { documentExtensions, safeEditorUrl } from "./schema";
@@ -220,6 +221,7 @@ export function createDocumentEditor({
       writingExtension(() => crypto.randomUUID()),
       suggestionExtension(() => crypto.randomUUID()),
       identityExtension(() => crypto.randomUUID()),
+      nativeBlockDragExtension,
       Extension.create({
         addProseMirrorPlugins: () => [referenceSelectionPlugin()],
         name: "better-editor-references",

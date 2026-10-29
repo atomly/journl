@@ -202,7 +202,8 @@ test("table formatting, headers, movement and widths work through accessible con
   page,
 }) => {
   const editor = page.locator(".better-editor-tiptap");
-  await editor.fill("/table");
+  // Exercise keyboard input without replacing ProseMirror's block wrappers.
+  await typeParagraphs(editor, ["/table"]);
   await page.getByRole("option", { exact: true, name: "Table" }).click();
   const table = editor.locator("table");
   const rows = table.locator("tr");

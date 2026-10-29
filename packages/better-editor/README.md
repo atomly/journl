@@ -107,7 +107,11 @@ for custom menu items. `useEditorSelector` from the root module subscribes to se
 optional equality function. Applicability checks should not construct transactions.
 Use `BlockHandle` and `TableControls` from their leaf modules to retain native
 selection, drag, and touch behavior while replacing handle contents or menu
-contents through `renderHandle` and `renderMenu`.
+contents through `renderHandle` and `renderMenu`. `useBetterEditor` installs the
+native block-drag controller. When constructing your own Tiptap engine for
+`BlockHandle`, include `nativeBlockDragExtension` from `engine/native-block-drag`
+alongside the required block schema. A handle cancels native drag start if that
+controller is absent, rather than falling back to an unsafe clipboard move.
 
 `useReferenceViews` returns a stable presentation store and its extension. Include
 that extension at mount, and render `ReferenceViews` with the store when opting

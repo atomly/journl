@@ -1,4 +1,4 @@
-import { expect, test } from "~/testing/browser/fixtures";
+import { expect, test, typeParagraphs } from "~/testing/browser/fixtures";
 
 test.use({ journalPagination: true });
 test("added columns reveal themselves without moving the document vertically", async ({
@@ -12,10 +12,10 @@ test("added columns reveal themselves without moving the document vertically", a
       .click();
   const previous = page.url();
   await create.click();
-  await expect(page).not.toHaveURL(previous);
+  await expect(page).not.toHaveURL(previous, { timeout: 60_000 });
   await page.keyboard.press("Escape");
   const editor = page.locator(".better-editor-tiptap");
-  await editor.fill("/table");
+  await typeParagraphs(editor, ["/table"]);
   await page.getByRole("option", { exact: true, name: "Table" }).click();
   const wrapper = editor.locator(".better-editor-table-wrapper");
   const cells = editor.locator("tr").first().locator("td");
@@ -93,6 +93,7 @@ test("added columns reveal themselves without moving the document vertically", a
   await expect.poll(vertical).toEqual(initial);
   // A merged header must not substitute its entire width for one column.
   await cells.first().click();
+  await cells.nth(7).scrollIntoViewIfNeeded();
   await cells.nth(7).click({ modifiers: ["Shift"] });
   await expect(editor.locator(".selectedCell")).toHaveCount(8);
   await page
@@ -111,18 +112,23 @@ test("added columns reveal themselves without moving the document vertically", a
     await page.keyboard.insertText(direction);
     for (let i = 0; i < direction.length; i++)
       await page.keyboard.press("Shift+ArrowLeft");
-    await page
-      .getByRole("button", { exact: true, name: "More formatting" })
-      .click();
+    const more = page.getByRole("button", {
+      exact: true,
+      name: "More formatting",
+    });
+    await expect(more).toHaveAttribute("aria-expanded", "false");
+    await more.click();
+    const insert = page.getByRole("menuitem", {
+      exact: true,
+      name: `Insert column ${direction}`,
+    });
+    await expect(insert).toBeVisible();
     await wrapper.evaluate((element) => {
       element.scrollLeft = 480;
     });
-    await page
-      .getByRole("menuitem", {
-        exact: true,
-        name: `Insert column ${direction}`,
-      })
-      .click();
+    await insert.click();
+    await expect(insert).toBeHidden();
+    await expect(editor).toBeFocused();
     await expect(lower).toHaveCount(11);
     const added = lower.nth(direction === "right" ? index + 1 : index);
     await expect

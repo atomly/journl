@@ -24,6 +24,7 @@ import {
   useState,
 } from "react";
 import { createPortal } from "react-dom";
+import { nativeBlockDragActive } from "../engine/native-block-drag";
 import { captureLink } from "../engine/references";
 import { useEditorInstance, useEditorSelector } from "./editor-root";
 
@@ -65,6 +66,7 @@ export function EditorToolbar({
   const editor = useEditorInstance(explicit);
   const state = useEditorSelector(
     (instance) => ({
+      dragging: nativeBlockDragActive(instance),
       empty: instance.state.selection.empty,
       from: instance.state.selection.from,
       link: Boolean(captureLink(instance.state)),
@@ -79,13 +81,14 @@ export function EditorToolbar({
   const [requested, setRequested] = useState(false);
   const [focused, setFocused] = useState(false);
   const [focusRequest, requestFocus] = useState(0);
-  const visible =
+  const requestedVisible =
     visibility === "manual"
       ? Boolean(open)
       : (open ??
         (visibility === "always" ||
           requested ||
           (focused && (!state?.empty || state?.link))));
+  const visible = requestedVisible && !(mode === "floating" && state?.dragging);
   const floating = useFloating({
     middleware:
       mode === "floating"

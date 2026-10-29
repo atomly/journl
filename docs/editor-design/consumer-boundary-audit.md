@@ -56,3 +56,22 @@ The existing document and reference contracts remain, as agreed. This cleanup
 does not replace their schemas or dependencies. Optional schema features,
 transaction-mapped indexes, bounded pointer hit testing, and AI replacement
 remain separate work.
+
+## Toolbar callback regression follow-up
+
+A parent rerender could replace an inline keyboard callback while a picker owned
+focus. That restarted the toolbar effect, copied `editor.isFocused` (false during
+popup focus), and unmounted the toolbar and picker. React Effect Events now keep
+callback values current without restarting the focus listeners.
+
+The regression unit test fails against the earlier toolbar and passes with the
+fix. It preserves the same toolbar node through callback replacement and checks
+that the latest keyboard and visibility handlers run. Browser acceptance holds
+the opening click for 700 ms, checks the same trigger identity, and verifies that
+both selected list items convert and retain clipboard markers.
+
+Follow-up validation passed 446 unit/UI tests, ten consecutive held-click runs,
+16 related browser tests across Chromium and WebKit (eight platform skips),
+workspace typechecks, registry checks, lint, and an uncached Turbopack build.
+The related browser run covers feedback, editor interactions, and accessibility;
+the complete browser sweep recorded above predates this follow-up.

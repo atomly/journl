@@ -349,3 +349,62 @@ test("reference views fetch and render embedded content only through consumer co
     container.remove();
   }
 });
+
+test("toolbar callback updates preserve owned popup focus and use the latest handlers", async () => {
+  const container = document.createElement("div");
+  const popup = document.createElement("button");
+  document.body.append(container, popup);
+  const root = createRoot(container);
+  let controller: ReturnType<typeof useBetterEditor> | undefined;
+  const keys: number[] = [];
+  const changes: number[] = [];
+  function View({ revision }: { revision: number }) {
+    controller = useBetterEditor({
+      initialBlocks: [{ content: "Selected", id: "p", type: "paragraph" }],
+    });
+    return (
+      <EditorRoot editor={controller.editor}>
+        <EditorContent />
+        <EditorToolbar
+          visibility="selection"
+          onEditorKeyDown={() => keys.push(revision)}
+          onOpenChange={() => changes.push(revision)}
+        >
+          <button type="button">Control</button>
+        </EditorToolbar>
+      </EditorRoot>
+    );
+  }
+  try {
+    await act(async () => root.render(<View revision={1} />));
+    const editor = controller?.editor;
+    if (!editor) throw new Error("Missing engine");
+    await act(async () => {
+      editor.view.focus();
+      editor.commands.selectAll();
+    });
+    const toolbar = container.querySelector('[role="toolbar"]');
+    expect(toolbar).not.toBeNull();
+    popup.dataset.tiptapOwner = editor.instanceId;
+    await act(async () => popup.focus());
+    expect(editor.isFocused).toBe(false);
+    await act(async () => root.render(<View revision={2} />));
+    expect(document.activeElement).toBe(popup);
+    expect(container.querySelector('[role="toolbar"]')).toBe(toolbar);
+    await act(async () => {
+      editor.view.dom.dispatchEvent(
+        new KeyboardEvent("keydown", {
+          altKey: true,
+          bubbles: true,
+          key: "F10",
+        }),
+      );
+    });
+    expect(keys).toEqual([2]);
+    expect(changes).toEqual([2]);
+  } finally {
+    await act(async () => root.unmount());
+    popup.remove();
+    container.remove();
+  }
+});

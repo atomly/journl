@@ -19,6 +19,7 @@ import {
   type ComponentProps,
   useCallback,
   useEffect,
+  useEffectEvent,
   useId,
   useRef,
   useState,
@@ -81,6 +82,13 @@ export function EditorToolbar({
   const [requested, setRequested] = useState(false);
   const [focused, setFocused] = useState(false);
   const [focusRequest, requestFocus] = useState(0);
+  // Callback changes must not restart focus tracking while a popup owns focus.
+  const handleEditorKeyDown = useEffectEvent((event: KeyboardEvent) => {
+    onEditorKeyDown?.(event);
+  });
+  const notifyOpenChange = useEffectEvent((next: boolean) => {
+    onOpenChange?.(next);
+  });
   const requestedVisible =
     visibility === "manual"
       ? Boolean(open)
@@ -140,7 +148,7 @@ export function EditorToolbar({
         return;
       setFocused(false);
       setRequested(false);
-      onOpenChange?.(false);
+      notifyOpenChange(false);
     };
     const outside = (event: PointerEvent) => {
       if (!(event.target instanceof Element)) return;
@@ -151,12 +159,12 @@ export function EditorToolbar({
       if (!dom.contains(event.target) && !ownControl) {
         setFocused(false);
         setRequested(false);
-        onOpenChange?.(false);
+        notifyOpenChange(false);
       }
     };
     const keyboard = (event: KeyboardEvent) => {
       if (event.isComposing) return;
-      onEditorKeyDown?.(event);
+      handleEditorKeyDown(event);
       if (event.defaultPrevented) return;
       if (
         event.ctrlKey &&
@@ -184,7 +192,7 @@ export function EditorToolbar({
       event.stopPropagation();
       requestFocus((value) => value + 1);
       setRequested(true);
-      onOpenChange?.(true);
+      notifyOpenChange(true);
     };
     editor.on("focus", focus);
     editor.on("blur", blur);
@@ -200,7 +208,7 @@ export function EditorToolbar({
       dom.removeEventListener("keydown", keyboard, true);
       document.removeEventListener("pointerdown", outside);
     };
-  }, [editor, onOpenChange, onEditorKeyDown, hintId]);
+  }, [editor, hintId]);
 
   useEffect(() => {
     if (!editor || mode !== "floating") return;

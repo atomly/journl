@@ -14,7 +14,6 @@ export function HeroCtaButton({
   return (
     <Button
       asChild
-      type="submit"
       size="lg"
       className={cn(
         "relative z-10 w-full px-8 py-4 text-lg transition-all duration-200 hover:scale-105",

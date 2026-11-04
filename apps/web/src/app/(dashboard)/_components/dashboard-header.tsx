@@ -1,6 +1,14 @@
 "use client";
 
 import { Button } from "@acme/ui/button";
+import {
+  NavigationMenu,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuList,
+  navigationMenuTriggerStyle,
+} from "@acme/ui/navigation-menu";
+import { cn } from "@acme/ui/utils";
 import { useSession } from "@better-auth-ui/react";
 import { ArrowLeft, LogOut } from "lucide-react";
 import Link from "next/link";
@@ -8,15 +16,6 @@ import type { ReactNode } from "react";
 import { signOutAction } from "~/app/_actions/sign-out.action";
 import { authClient } from "~/auth/client";
 import { SaveStatus } from "~/components/editor/save-status";
-
-import {
-  NavigationMenu,
-  NavigationMenuItem,
-  NavigationMenuLink,
-  NavigationMenuList,
-  navigationMenuTriggerStyle,
-} from "~/components/ui/navigation-menu";
-import { cn } from "~/lib/cn";
 
 type UserHeaderProps = {
   className?: string;
@@ -55,47 +54,47 @@ export function DashboardHeader({ className }: UserHeaderProps) {
           <SessionGate authenticated={false}>
             <NavigationMenuItem>
               <NavigationMenuLink
-                asChild
                 className={navigationMenuTriggerStyle()}
-              >
-                <Link href="/">
-                  <div className="flex flex-row items-center gap-x-2">
-                    <ArrowLeft />
-                    Go back
-                  </div>
-                </Link>
-              </NavigationMenuLink>
+                render={
+                  <Link href="/">
+                    <div className="flex flex-row items-center gap-x-2">
+                      <ArrowLeft />
+                      Go back
+                    </div>
+                  </Link>
+                }
+              />
             </NavigationMenuItem>
           </SessionGate>
           <SessionGate authenticated>
             <SaveStatus />
             <NavigationMenuItem>
               <NavigationMenuLink
-                asChild
                 className={navigationMenuTriggerStyle()}
-              >
-                <Link href="/journal">
-                  <div className="flex flex-row items-center gap-x-2">
-                    <ArrowLeft />
-                    Go back
-                  </div>
-                </Link>
-              </NavigationMenuLink>
+                render={
+                  <Link href="/journal">
+                    <div className="flex flex-row items-center gap-x-2">
+                      <ArrowLeft />
+                      Go back
+                    </div>
+                  </Link>
+                }
+              />
             </NavigationMenuItem>
             <NavigationMenuItem onClick={signOutAction}>
               <NavigationMenuLink
-                asChild
                 className={navigationMenuTriggerStyle()}
-              >
-                <Button
-                  className="flex flex-row items-center gap-x-2"
-                  variant="ghost"
-                  onClick={signOutAction}
-                >
-                  <LogOut />
-                  Sign out
-                </Button>
-              </NavigationMenuLink>
+                render={
+                  <Button
+                    className="flex flex-row items-center gap-x-2"
+                    variant="ghost"
+                    onClick={signOutAction}
+                  >
+                    <LogOut />
+                    Sign out
+                  </Button>
+                }
+              />
             </NavigationMenuItem>
           </SessionGate>
         </NavigationMenuList>

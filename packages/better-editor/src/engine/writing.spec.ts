@@ -5,9 +5,10 @@ import { NodeSelection, TextSelection } from "@tiptap/pm/state";
 import { expect, test } from "vitest";
 import { clipboardText } from "../serialization/clipboard";
 import { fromTiptapDocument, toTiptapDocument } from "../serialization/tiptap";
+import { testDocumentExtensions } from "../testing/extensions";
+import { blockPresentationExtensions } from "../ui/block-presentation";
 import { editingExtension, selectedBlock } from "./commands";
 import { blockAt, identityExtension } from "./identity";
-import { documentExtensions } from "./schema";
 import { slashKey, suggestionExtension } from "./suggestions";
 import {
   changeBlockType,
@@ -31,7 +32,8 @@ function setup(
     editorProps: { handleScrollToSelection: () => true },
     element,
     extensions: [
-      ...documentExtensions(),
+      ...testDocumentExtensions(),
+      ...blockPresentationExtensions(),
       editingExtension(createId),
       identityExtension(createId),
       writingExtension(createId),

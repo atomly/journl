@@ -4,8 +4,8 @@ import { Editor } from "@tiptap/core";
 import { act } from "react";
 import { createRoot } from "react-dom/client";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
-import { documentExtensions } from "../engine/schema";
 import { toTiptapDocument } from "../serialization/tiptap";
+import { testDocumentExtensions } from "../testing/extensions";
 import { useHandleVisibility } from "./handle-visibility";
 
 Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
@@ -27,7 +27,7 @@ test("pointer focus can enter editor controls without unmounting the pending cli
   const editor = new Editor({
     content: toTiptapDocument([{ id: "text", type: "paragraph" }]).toJSON(),
     element: surface,
-    extensions: documentExtensions(),
+    extensions: testDocumentExtensions(),
   });
   const root = createRoot(host);
   function Handles() {
@@ -64,7 +64,7 @@ test("touch controls persist; desktop typing hides and interactions restore them
   const editor = new Editor({
     content: toTiptapDocument([{ id: "text", type: "paragraph" }]).toJSON(),
     element: surface,
-    extensions: documentExtensions(),
+    extensions: testDocumentExtensions(),
   });
   const root = createRoot(host);
   function Handles() {
@@ -131,7 +131,7 @@ test("keyboard navigation and input in owned controls keep the focused control m
   const editor = new Editor({
     content: toTiptapDocument([{ id: "text", type: "paragraph" }]).toJSON(),
     element: surface,
-    extensions: documentExtensions(),
+    extensions: testDocumentExtensions(),
   });
   const root = createRoot(host);
   function Handles() {

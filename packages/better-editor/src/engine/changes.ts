@@ -8,11 +8,13 @@ import {
 import type { Node } from "@tiptap/pm/model";
 import { fromTiptapDocument } from "../serialization/tiptap";
 
+type BlockLocation = {
+  block: DocumentBlock;
+  parentId: string | null;
+  afterId: string | null;
+};
 function locations(blocks: readonly DocumentBlock[]) {
-  const result = new Map<
-    string,
-    { block: DocumentBlock; parentId: string | null; afterId: string | null }
-  >();
+  const result = new Map<string, BlockLocation>();
   const walk = (items: readonly DocumentBlock[], parentId: string | null) => {
     items.forEach((block, index) => {
       result.set(block.id, {
@@ -40,39 +42,35 @@ export function documentChanges(
   return diffDocumentSnapshots(validated, after);
 }
 
-/** Both snapshots must already have passed the document reader's validation. */
+/** Both snapshots must be immutable and already validated by the document reader. */
 export function diffDocumentSnapshots(
   before: readonly DocumentBlock[],
   after: readonly DocumentBlock[],
 ): DocumentOperation[] {
-  let current = [...before];
+  const updates: DocumentOperation[] = [];
+  // Unchanged immutable blocks skip their entire subtree. Ordinary typing builds
+  // no document-wide ID maps and serializes only the affected block's payload.
+  const sameStructure = (
+    previous: readonly DocumentBlock[],
+    next: readonly DocumentBlock[],
+  ): boolean => {
+    if (previous.length !== next.length) return false;
+    for (let i = 0; i < next.length; i++) {
+      const a = previous[i];
+      const b = next[i];
+      if (!a || !b || a.id !== b.id) return false;
+      if (a === b) continue;
+      if (JSON.stringify(data(a)) !== JSON.stringify(data(b)))
+        updates.push({ data: data(b), id: b.id, type: "update" });
+      if (!sameStructure(a.children ?? [], b.children ?? [])) return false;
+    }
+    return true;
+  };
+  if (sameStructure(before, after)) return updates;
+  let current: readonly DocumentBlock[] = before;
   const desired = locations(after);
   const operations: DocumentOperation[] = [];
   let index = locations(current);
-  // Most keystrokes change data, not block structure. Diff those in linear time
-  // without repeatedly cloning and validating the entire document per operation.
-  if (
-    index.size === desired.size &&
-    [...desired].every(([id, target]) => {
-      const existing = index.get(id);
-      return (
-        existing?.parentId === target.parentId &&
-        existing?.afterId === target.afterId
-      );
-    })
-  ) {
-    for (const [id, target] of desired) {
-      const existing = index.get(id);
-      if (
-        existing &&
-        existing.block !== target.block &&
-        JSON.stringify(data(existing.block)) !==
-          JSON.stringify(data(target.block))
-      )
-        operations.push({ data: data(target.block), id, type: "update" });
-    }
-    return operations;
-  }
   const apply = (operation: DocumentOperation) => {
     current = applyDocumentOperations(current, [operation]);
     index = locations(current);

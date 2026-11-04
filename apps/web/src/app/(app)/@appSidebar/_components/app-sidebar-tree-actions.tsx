@@ -1,5 +1,7 @@
 "use client";
 
+import { createEditorId } from "@acme/better-editor/engine/id";
+
 import type { Folder } from "@acme/db/schema";
 import { Button } from "@acme/ui/button";
 import {
@@ -8,6 +10,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@acme/ui/dropdown-menu";
+import { cn } from "@acme/ui/utils";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   FilePlus2,
@@ -22,7 +25,6 @@ import { useAppEventEmitter } from "~/components/events/app-event-context";
 import { useSidebar } from "~/components/ui/sidebar";
 import { PageCreatedEvent } from "~/events/page-created-event";
 import { useTreeItemMoves } from "~/hooks/use-tree-item-moves";
-import { cn } from "~/lib/cn";
 import {
   findNodeInQueries,
   insertItem,
@@ -98,9 +100,9 @@ export function AppSidebarTreeActions({
       onMutate: async (variables) => {
         await queryClient.cancelQueries(treeQueryFilter);
 
-        const optimisticNodeId = crypto.randomUUID();
-        const optimisticEdgeId = crypto.randomUUID();
-        const optimisticFolderId = crypto.randomUUID();
+        const optimisticNodeId = createEditorId();
+        const optimisticEdgeId = createEditorId();
+        const optimisticFolderId = createEditorId();
         const now = new Date().toISOString();
         const parentId = variables.destination.parent_node_id;
 
@@ -193,10 +195,10 @@ export function AppSidebarTreeActions({
       onMutate: async (variables) => {
         await queryClient.cancelQueries(treeQueryFilter);
 
-        const optimisticNodeId = crypto.randomUUID();
-        const optimisticEdgeId = crypto.randomUUID();
-        const optimisticPageId = crypto.randomUUID();
-        const optimisticDocumentId = crypto.randomUUID();
+        const optimisticNodeId = createEditorId();
+        const optimisticEdgeId = createEditorId();
+        const optimisticPageId = createEditorId();
+        const optimisticDocumentId = createEditorId();
         const now = new Date().toISOString();
         const parentId = variables.destination.parent_node_id;
 
@@ -350,34 +352,40 @@ export function AppSidebarTreeActions({
   const menu = (
     <>
       <DropdownMenu modal={false}>
-        <DropdownMenuTrigger asChild>
-          <Button
-            aria-label={
-              folder ? `Actions for ${folder.name || "New folder"}` : "Add item"
-            }
-            variant="ghost"
-            size={triggerVariant === "empty-state" ? "default" : "sm"}
-            className={cn(
-              triggerVariant === "sidebar"
-                ? "absolute top-1/2 right-1.5 z-10 h-6 w-6 -translate-y-1/2 rounded-sm p-0 text-sidebar-foreground transition-opacity hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:bg-sidebar-accent focus-visible:text-sidebar-accent-foreground group-data-[collapsible=icon]:hidden md:pointer-events-none md:opacity-0 md:group-hover/tree-row:pointer-events-auto md:group-hover/tree-row:opacity-100 md:group-focus-within/tree-row:pointer-events-auto md:group-focus-within/tree-row:opacity-100"
-                : triggerVariant === "empty-state"
-                  ? "h-10 rounded-full px-4 text-muted-foreground hover:bg-accent/50 hover:text-foreground"
-                  : "h-8 w-8 rounded-md p-0",
-              className,
-            )}
-            onClick={(event) => {
-              event.stopPropagation();
-            }}
-            disabled={showLoading}
-          >
-            {folder ? (
-              <MoreHorizontal className="size-3.5" />
-            ) : (
-              <Plus className="size-3.5" />
-            )}
-            {triggerVariant === "empty-state" ? <span>Add content</span> : null}
-          </Button>
-        </DropdownMenuTrigger>
+        <DropdownMenuTrigger
+          render={
+            <Button
+              aria-label={
+                folder
+                  ? `Actions for ${folder.name || "New folder"}`
+                  : "Add item"
+              }
+              variant="ghost"
+              size={triggerVariant === "empty-state" ? "default" : "sm"}
+              className={cn(
+                triggerVariant === "sidebar"
+                  ? "absolute top-1/2 right-1.5 z-10 h-6 w-6 -translate-y-1/2 rounded-sm p-0 text-sidebar-foreground transition-opacity hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:bg-sidebar-accent focus-visible:text-sidebar-accent-foreground group-data-[collapsible=icon]:hidden md:pointer-events-none md:opacity-0 md:group-hover/tree-row:pointer-events-auto md:group-hover/tree-row:opacity-100 md:group-focus-within/tree-row:pointer-events-auto md:group-focus-within/tree-row:opacity-100"
+                  : triggerVariant === "empty-state"
+                    ? "h-10 rounded-full px-4 text-muted-foreground hover:bg-accent/50 hover:text-foreground"
+                    : "h-8 w-8 rounded-md p-0",
+                className,
+              )}
+              onClick={(event) => {
+                event.stopPropagation();
+              }}
+              disabled={showLoading}
+            >
+              {folder ? (
+                <MoreHorizontal className="size-3.5" />
+              ) : (
+                <Plus className="size-3.5" />
+              )}
+              {triggerVariant === "empty-state" ? (
+                <span>Add content</span>
+              ) : null}
+            </Button>
+          }
+        />
         <DropdownMenuContent
           align="end"
           side={isMobile ? "bottom" : "right"}

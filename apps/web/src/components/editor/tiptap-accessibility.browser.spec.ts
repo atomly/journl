@@ -19,7 +19,7 @@ test.beforeEach(async ({ page }) => {
 async function focusMore(page: Page) {
   const more = page.getByRole("button", {
     exact: true,
-    name: "More formatting",
+    name: "More actions",
   });
   for (let i = 0; i < 20; i++) {
     if (await more.evaluate((el) => el === document.activeElement)) return;
@@ -44,6 +44,20 @@ async function openMore(page: Page) {
     .toBe(true);
 }
 async function menuAction(page: Page, name: string) {
+  const group = /header/.test(name)
+    ? "Headers"
+    : /column/.test(name)
+      ? "Columns"
+      : /row/.test(name)
+        ? "Rows"
+        : /cell/.test(name)
+          ? "Cells"
+          : undefined;
+  if (group) {
+    const trigger = page.getByRole("menuitem", { exact: true, name: group });
+    await trigger.focus();
+    await page.keyboard.press("ArrowRight");
+  }
   const item = page.getByRole("menuitem", { exact: true, name });
   await expect(item).toBeVisible();
   await expect(item).toBeEnabled();

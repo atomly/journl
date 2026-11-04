@@ -1,30 +1,15 @@
 "use client";
 
+import { cn } from "@acme/ui/utils";
 import { Collapsible as CollapsiblePrimitive } from "@base-ui/react/collapsible";
-import * as React from "react";
-import { cn } from "~/lib/cn";
 
 function Collapsible({ ...props }: CollapsiblePrimitive.Root.Props) {
   return <CollapsiblePrimitive.Root data-slot="collapsible" {...props} />;
 }
 
-function CollapsibleTrigger({
-  asChild = false,
-  children,
-  ...props
-}: CollapsiblePrimitive.Trigger.Props & { asChild?: boolean }) {
+function CollapsibleTrigger({ ...props }: CollapsiblePrimitive.Trigger.Props) {
   return (
-    <CollapsiblePrimitive.Trigger
-      data-slot="collapsible-trigger"
-      render={
-        asChild
-          ? (React.Children.only(children) as React.ReactElement)
-          : undefined
-      }
-      {...props}
-    >
-      {asChild ? undefined : children}
-    </CollapsiblePrimitive.Trigger>
+    <CollapsiblePrimitive.Trigger data-slot="collapsible-trigger" {...props} />
   );
 }
 

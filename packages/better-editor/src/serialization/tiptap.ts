@@ -8,11 +8,17 @@ import {
 import { getSchema } from "@tiptap/core";
 import { Fragment, type Mark, type Node, type Schema } from "@tiptap/pm/model";
 import { TableMap } from "@tiptap/pm/tables";
+import { referenceExtensions } from "../engine/reference-schema";
 import { required } from "../engine/required";
 import { documentExtensions } from "../engine/schema";
+import { tableExtensions } from "../engine/table-schema";
 
 export function documentSchema(): Schema {
-  return getSchema(documentExtensions());
+  return getSchema([
+    ...documentExtensions(),
+    ...tableExtensions(),
+    ...referenceExtensions(),
+  ]);
 }
 
 /** Failed loads retain independent input; never return a partially normalized doc. */
@@ -334,6 +340,7 @@ function readTiptapDocument(
       }
     };
     validate(result);
+    if (cache) Object.freeze(result);
     return result;
   } catch (cause) {
     throw new AdapterReadError(doc.toJSON(), cause);

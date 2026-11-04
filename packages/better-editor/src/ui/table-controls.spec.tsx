@@ -10,9 +10,9 @@ import { CellSelection } from "@tiptap/pm/tables";
 import { act } from "react";
 import { createRoot } from "react-dom/client";
 import { expect, test } from "vitest";
-import { documentExtensions } from "../engine/schema";
 import { tableContext } from "../engine/table-actions";
 import { toTiptapDocument } from "../serialization/tiptap";
+import { testDocumentExtensions } from "../testing/extensions";
 import { TableMenuItems } from "./table-controls";
 
 Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
@@ -34,7 +34,7 @@ test("independently composed table menus follow selection and editability withou
       }),
     ]).toJSON(),
     element: surface,
-    extensions: documentExtensions(),
+    extensions: testDocumentExtensions(),
   });
   const root = createRoot(host);
   let renders = 0;

@@ -1,7 +1,7 @@
 import type { NodeViewRendererProps } from "@tiptap/core";
 import type { NodeView } from "@tiptap/pm/view";
-import { editorColor } from "./colors";
-import { TOGGLE_BLOCK_META } from "./metadata";
+import { editorColor } from "../engine/colors";
+import { TOGGLE_BLOCK_META } from "../engine/metadata";
 
 /** Controls are view state, outside contentDOM and clipboard/storage serialization. */
 export function blockView({

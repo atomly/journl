@@ -526,7 +526,6 @@ function TableAxisHandle({
       }}
     >
       <DropdownMenuTrigger
-        asChild
         onPointerDown={(event) => {
           event.preventBaseUIHandler();
           if (!dragging.current) consumedClick.current = false;
@@ -546,52 +545,53 @@ function TableAxisHandle({
           dragClosedMenu.current = false;
           onOpenChange(!open);
         }}
-      >
-        <EditorHint label={axis === "row" ? "Row actions" : "Column actions"}>
-          <Button
-            ref={refs.setFloating}
-            aria-label={`${axis === "row" ? "Row" : "Column"} actions`}
-            variant="ghost"
-            size="icon-sm"
-            data-table-handle={axis}
-            data-table-index={index}
-            className="better-editor-table-handle"
-            style={{
-              ...floatingStyles,
-              visibility: hidden || clipped ? "hidden" : undefined,
-            }}
-            draggable={draggable}
-            onMouseDown={() => {
-              const selection = tableAxisSelection(
-                editor.state,
-                active.id,
-                axis,
-                index,
-              );
-              if (selection)
-                editor.view.dispatch(editor.state.tr.setSelection(selection));
-            }}
-            onDragStart={(event) => {
-              dragging.current = true;
-              consumedClick.current = true;
-              dragClosedMenu.current = true;
-              event.dataTransfer.setData(
-                "application/x-better-editor-table-axis",
-                axis,
-              );
-              event.dataTransfer.effectAllowed = "move";
-              onDragStart();
-            }}
-            onDragEnd={() => {
-              dragging.current = false;
-              onDragEnd();
-            }}
-          >
-            {renderHandle?.(axis) ??
-              (axis === "row" ? <GripVertical /> : <GripHorizontal />)}
-          </Button>
-        </EditorHint>
-      </DropdownMenuTrigger>
+        render={
+          <EditorHint label={axis === "row" ? "Row actions" : "Column actions"}>
+            <Button
+              ref={refs.setFloating}
+              aria-label={`${axis === "row" ? "Row" : "Column"} actions`}
+              variant="ghost"
+              size="icon-sm"
+              data-table-handle={axis}
+              data-table-index={index}
+              className="better-editor-table-handle"
+              style={{
+                ...floatingStyles,
+                visibility: hidden || clipped ? "hidden" : undefined,
+              }}
+              draggable={draggable}
+              onMouseDown={() => {
+                const selection = tableAxisSelection(
+                  editor.state,
+                  active.id,
+                  axis,
+                  index,
+                );
+                if (selection)
+                  editor.view.dispatch(editor.state.tr.setSelection(selection));
+              }}
+              onDragStart={(event) => {
+                dragging.current = true;
+                consumedClick.current = true;
+                dragClosedMenu.current = true;
+                event.dataTransfer.setData(
+                  "application/x-better-editor-table-axis",
+                  axis,
+                );
+                event.dataTransfer.effectAllowed = "move";
+                onDragStart();
+              }}
+              onDragEnd={() => {
+                dragging.current = false;
+                onDragEnd();
+              }}
+            >
+              {renderHandle?.(axis) ??
+                (axis === "row" ? <GripVertical /> : <GripHorizontal />)}
+            </Button>
+          </EditorHint>
+        }
+      />
       <DropdownMenuContent
         data-tiptap-controls=""
         data-tiptap-owner={editor.instanceId}

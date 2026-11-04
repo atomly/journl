@@ -1,17 +1,23 @@
 import type { ReferenceProps } from "@acme/document";
-import type { ReferenceClient } from "@acme/references";
+import type { ReferenceTarget } from "@acme/references";
 import { NodeSelection, TextSelection } from "@tiptap/pm/state";
 import type { EditorView } from "@tiptap/pm/view";
 import { selectedBlock } from "./commands";
+import { createEditorId } from "./id";
 import { convertReference } from "./references";
 
-type Resolve = ReferenceClient["resolveUrl"];
+export type ReferenceResolver = (url: string) => Promise<{
+  items: {
+    target: ReferenceTarget | null;
+    preview: { status: string; href?: string };
+  }[];
+}>;
 
 /** Resolution follows a token, never a stale ProseMirror position or DOM wrapper. */
 export function insertTiptapReference(
   view: EditorView,
   url: string,
-  resolve: Resolve,
+  resolve: ReferenceResolver,
   label = "",
   display?: "contentReference" | "referenceCard",
   normalizeUrl?: (url: string) => string,
@@ -38,7 +44,7 @@ export function insertTiptapReference(
     view.state.selection.$from.parent.type.name === "codeBlock"
   )
     return false;
-  const token = crypto.randomUUID();
+  const token = createEditorId();
   const props: ReferenceProps = {
     blockId: "",
     documentId: "",
@@ -75,7 +81,7 @@ export function insertTiptapReference(
     const nextPos = target.pos + changed.nodeSize;
     transaction.insert(
       nextPos,
-      wrapper.createChecked({ id: crypto.randomUUID() }, paragraph.create()),
+      wrapper.createChecked({ id: createEditorId() }, paragraph.create()),
     );
     transaction.setSelection(
       TextSelection.create(transaction.doc, nextPos + 2),
@@ -89,7 +95,7 @@ export function insertTiptapReference(
   view.dispatch(transaction);
   if (!rootCard && display === "referenceCard") {
     const conversion = convertReference(view.state, display, () =>
-      crypto.randomUUID(),
+      createEditorId(),
     );
     if (conversion) {
       view.dispatch(conversion);

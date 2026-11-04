@@ -3,6 +3,7 @@
 import {
   indentBlock,
   selectedBlock,
+  selectedBlocks,
 } from "@acme/better-editor/engine/commands";
 import { captureLink } from "@acme/better-editor/engine/references";
 import { safeEditorUrl } from "@acme/better-editor/engine/schema";
@@ -27,14 +28,10 @@ import {
   ReferenceDisplayControl,
   ReferenceDisplayItems,
 } from "@acme/better-editor/ui/reference-display";
-import { TableMenuItems } from "@acme/better-editor/ui/table-controls";
 import { Button } from "@acme/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@acme/ui/dropdown-menu";
 import { Popover, PopoverContent, PopoverTrigger } from "@acme/ui/popover";
@@ -53,21 +50,23 @@ import { TextSelection } from "@tiptap/pm/state";
 import { CellSelection } from "@tiptap/pm/tables";
 import {
   AlignLeft,
+  AtSign,
   Bold,
   Code,
   Copy,
   IndentDecrease,
   IndentIncrease,
   Italic,
-  Link2,
   MoreHorizontal,
   Paintbrush,
   Strikethrough,
   Underline,
 } from "lucide-react";
 import { type ReactNode, useState } from "react";
+import { copyTextToClipboard } from "~/lib/clipboard";
 import { BlockActions } from "./block-actions";
 import type { DocumentEditorServices } from "./document-editor-services";
+import { DocumentTableMenu } from "./table-menu";
 
 function EditorTool({
   label,
@@ -105,59 +104,31 @@ function blockTypeOptions(editor: Editor) {
   );
 }
 
-function BlockTypeMenu({ editor }: { editor: Editor }) {
-  const choices = blockTypeOptions(editor);
-  return (
-    <DropdownMenuSub>
-      <EditorHint label="Block type">
-        <DropdownMenuSubTrigger disabled={!choices.length}>
-          Turn into
-        </DropdownMenuSubTrigger>
-      </EditorHint>
-      <DropdownMenuSubContent
-        data-tiptap-controls=""
-        data-tiptap-owner={editor.instanceId}
-      >
-        {choices.map((choice) => (
-          <EditorMenuItem
-            key={choice.title}
-            hint={`Turn into ${choice.title.toLowerCase()}`}
-            onClick={() => {
-              const tr = changeBlockType(
-                editor.state,
-                choice.type,
-                choice.props,
-              );
-              if (tr) editor.view.dispatch(tr);
-              editor.view.focus();
-            }}
-          >
-            {choice.title === "Text" ? "Paragraph" : choice.title}
-          </EditorMenuItem>
-        ))}
-      </DropdownMenuSubContent>
-    </DropdownMenuSub>
-  );
-}
-
 function BlockTypeSelector({ editor }: { editor: Editor }) {
-  const state = useEditorSelector(
-    (instance) => instance.state,
-    editor,
-    Object.is,
-  );
+  const selection = useEditorSelector((instance) => {
+    const body = selectedBlock(instance.state)?.node.firstChild;
+    return {
+      enabled: Boolean(body?.isTextblock),
+      value:
+        body?.type.name === "heading"
+          ? body.attrs.props?.isToggleable
+            ? "Toggle heading"
+            : `Heading ${body.attrs.props?.level ?? 1}`
+          : (blockChoices.find((choice) => choice.type === body?.type.name)
+              ?.title ?? ""),
+    };
+  }, editor);
   const mobile = useIsMobile();
-  const body = state && selectedBlock(state)?.node.firstChild;
-  const value =
-    body?.type.name === "heading"
-      ? body.attrs.props?.isToggleable
-        ? "Toggle heading"
-        : `Heading ${body.attrs.props?.level ?? 1}`
-      : (blockChoices.find((choice) => choice.type === body?.type.name)
-          ?.title ?? "");
+  const value = selection?.value ?? "";
   return (
     <Select
       value={value}
+      items={Object.fromEntries(
+        blockTypeOptions(editor).map((choice) => [
+          choice.title,
+          choice.title === "Text" ? "Paragraph" : choice.title,
+        ]),
+      )}
       onValueChange={(value) => {
         const choice = blockChoices.find((choice) => choice.title === value);
         if (choice) {
@@ -166,25 +137,24 @@ function BlockTypeSelector({ editor }: { editor: Editor }) {
           editor.view.focus();
         }
       }}
-      disabled={!body?.isTextblock}
+      disabled={!selection?.enabled}
     >
       <EditorToolbarControl
         label="Turn into a different block type"
-        disabled={!body?.isTextblock}
+        disabled={!selection?.enabled}
       >
         <SelectTrigger
           aria-label="Block type"
           className="border-none bg-transparent! shadow-none"
           onMouseDown={(event) => event.preventDefault()}
         >
-          <SelectValue>
-            {value === "Text" ? "Paragraph" : value || "Block"}
-          </SelectValue>
+          <SelectValue placeholder="Block" />
         </SelectTrigger>
       </EditorToolbarControl>
       <SelectContent
         data-tiptap-controls=""
         data-tiptap-owner={editor.instanceId}
+        className="max-h-[min(20rem,var(--available-height))]"
         alignItemWithTrigger={false}
         onFocusCapture={(event) => {
           const from = event.relatedTarget;
@@ -271,32 +241,42 @@ export function EditorToolbarItems({
   linkOpen: boolean;
   onLinkOpenChange: (open: boolean) => void;
 }) {
-  const state = useEditorSelector(
-    (instance) => instance.state,
-    editor,
-    Object.is,
-  );
+  const capabilities = useEditorSelector((instance) => {
+    const body = selectedBlock(instance.state)?.node.firstChild;
+    return {
+      alignable: Boolean(
+        body?.isTextblock &&
+          body.type.name !== "quote" &&
+          body.type.name !== "codeBlock",
+      ),
+      copyBlockId:
+        selectedBlock(instance.state)?.id ??
+        selectedBlocks(instance.state)[0]?.id,
+      formattable:
+        instance.state.selection instanceof CellSelection ||
+        instance.can().setMark("bold"),
+    };
+  }, editor);
   const [colorsOpen, setColorsOpen] = useState(false);
   const dispatch = (tr: import("@tiptap/pm/state").Transaction | null) => {
     if (tr) editor.view.dispatch(tr.scrollIntoView());
     editor.view.focus();
   };
-  const body = state && selectedBlock(state)?.node.firstChild;
-  const formattable = Boolean(
-    state?.selection instanceof CellSelection || editor.can().setMark("bold"),
-  );
+  const formattable = capabilities?.formattable ?? false;
   return (
     <>
       <EditorTool
         label="Copy block link"
-        disabled={!services.getBlockUrl}
+        disabled={!services.getBlockUrl || !capabilities?.copyBlockId}
         onClick={() => {
-          const id = selectedBlock(editor.state)?.id;
+          const id =
+            selectedBlock(editor.state)?.id ??
+            selectedBlocks(editor.state)[0]?.id;
           const url = id && services.getBlockUrl?.(id);
           if (url)
-            void navigator.clipboard
-              .writeText(url)
-              .catch((error) => services.onActionError?.(error));
+            void copyTextToClipboard(url).catch((error) =>
+              services.onActionError?.(error),
+            );
         }}
       >
         <Copy />
@@ -307,9 +287,11 @@ export function EditorToolbarItems({
         onOpenChange={onLinkOpenChange}
         inputLabel="Reference URL"
         renderTrigger={
-          <Button variant="ghost" size="icon" aria-label="Insert link">
-            <Link2 />
-          </Button>
+          <EditorHint label="Insert link or reference">
+            <Button variant="ghost" size="icon" aria-label="Insert link">
+              <AtSign />
+            </Button>
+          </EditorHint>
         }
       >
         {({ url, editor, restoreSelection, close }) => (
@@ -371,27 +353,21 @@ export function EditorToolbarItems({
       <DropdownMenu modal={false}>
         <EditorToolbarControl
           label="Text alignment"
-          disabled={
-            !body?.isTextblock ||
-            body?.type.name === "quote" ||
-            body?.type.name === "codeBlock"
-          }
+          disabled={!capabilities?.alignable}
         >
-          <DropdownMenuTrigger asChild>
-            <Button
-              aria-label="Text alignment"
-              variant="ghost"
-              size="icon"
-              disabled={
-                !body?.isTextblock ||
-                body?.type.name === "quote" ||
-                body?.type.name === "codeBlock"
-              }
-              onMouseDown={(event) => event.preventDefault()}
-            >
-              <AlignLeft />
-            </Button>
-          </DropdownMenuTrigger>
+          <DropdownMenuTrigger
+            render={
+              <Button
+                aria-label="Text alignment"
+                variant="ghost"
+                size="icon"
+                disabled={!capabilities?.alignable}
+                onMouseDown={(event) => event.preventDefault()}
+              >
+                <AlignLeft />
+              </Button>
+            }
+          />
         </EditorToolbarControl>
         <DropdownMenuContent
           data-tiptap-controls=""
@@ -506,16 +482,18 @@ export function EditorToolbarItems({
       </EditorTool>
       <DropdownMenu modal={false}>
         <EditorToolbarControl label="More actions">
-          <DropdownMenuTrigger asChild>
-            <Button
-              aria-label="More formatting"
-              variant="ghost"
-              size="icon"
-              onMouseDown={(event) => event.preventDefault()}
-            >
-              <MoreHorizontal />
-            </Button>
-          </DropdownMenuTrigger>
+          <DropdownMenuTrigger
+            render={
+              <Button
+                aria-label="More actions"
+                variant="ghost"
+                size="icon"
+                onMouseDown={(event) => event.preventDefault()}
+              >
+                <MoreHorizontal />
+              </Button>
+            }
+          />
         </EditorToolbarControl>
         <DropdownMenuContent
           data-tiptap-controls=""
@@ -528,6 +506,7 @@ export function EditorToolbarItems({
             services={services}
             editor={editor}
             insertReference={insertReference}
+            surface="toolbar"
           />
         </DropdownMenuContent>
       </DropdownMenu>
@@ -541,21 +520,33 @@ export function BlockMenuContent({
   services = {},
   blockId,
   insertReference,
+  surface = "block",
 }: {
   editor: Editor;
   services?: DocumentEditorServices;
   blockId?: string;
+  surface?: "block" | "toolbar";
   insertReference?: InsertReference;
 }) {
   return (
     <>
-      <BlockTypeMenu editor={editor} />
-      <TableMenuItems editor={editor} />
-      <ReferenceDisplayItems
+      <DocumentTableMenu editor={editor} />
+      {surface === "block" && (
+        <ReferenceDisplayItems
+          editor={editor}
+          insertReference={insertReference}
+        />
+      )}
+      <BlockActions
+        services={services}
         editor={editor}
-        insertReference={insertReference}
+        blockId={blockId}
+        includeFormatting={surface === "block"}
+        includeCopyLink={surface === "block"}
+        includeDelete={
+          selectedBlock(editor.state)?.node.firstChild?.type.name !== "table"
+        }
       />
-      <BlockActions services={services} editor={editor} blockId={blockId} />
     </>
   );
 }

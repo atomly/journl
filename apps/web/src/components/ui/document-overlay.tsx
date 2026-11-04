@@ -1,6 +1,6 @@
+import { cn } from "@acme/ui/utils";
 import type { ComponentProps } from "react";
 import { createPortal } from "react-dom";
-import { cn } from "../utils";
 
 type DocumentOverlayProps = ComponentProps<"div"> & {
   isOpen: boolean;

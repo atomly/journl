@@ -2,6 +2,7 @@
 import { act } from "react";
 import { createRoot } from "react-dom/client";
 import { expect, test, vi } from "vitest";
+import { referenceExtensions } from "../engine/reference-schema";
 import type { SlashMenuItem } from "../engine/slash-items";
 import { slashKey } from "../engine/suggestions";
 import { EditorContent } from "./editor-content";
@@ -293,7 +294,7 @@ test("reference views fetch and render embedded content only through consumer co
   function View({ render }: { render: boolean }) {
     const views = useReferenceViews();
     const { editor } = useBetterEditor({
-      extensions: [views.extension],
+      extensions: [...referenceExtensions(), views.extension],
       initialBlocks: [
         {
           id: "embed",

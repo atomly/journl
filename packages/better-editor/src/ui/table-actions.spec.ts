@@ -3,13 +3,13 @@ import { parseBlock } from "@acme/document";
 import { Editor } from "@tiptap/core";
 import { TextSelection } from "@tiptap/pm/state";
 import { expect, test } from "vitest";
-import { documentExtensions } from "../engine/schema";
 import {
   selectedTableCell,
   setTableColumnWidth,
   tableContext,
 } from "../engine/table-actions";
 import { fromTiptapDocument, toTiptapDocument } from "../serialization/tiptap";
+import { testDocumentExtensions } from "../testing/extensions";
 import { tableMenuActions } from "./table-actions";
 
 function fixture() {
@@ -26,7 +26,7 @@ function fixture() {
       }),
     ]).toJSON(),
     element: document.createElement("div"),
-    extensions: documentExtensions(),
+    extensions: testDocumentExtensions(),
   });
 }
 

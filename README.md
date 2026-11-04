@@ -74,15 +74,18 @@ day-to-day commands.
 - Run quality gates: `pnpm check` and `pnpm typecheck`
 - Build the workspace: `pnpm build`
 
-The default install uses pnpm's global virtual store. `PNPM_VIRTUAL_STORE_TYPE=project`
-selects a project-local store instead; CI uses that layout because the current
-Workflow/Turbopack loader cannot transform dependency files in an external store.
-This is a loader compatibility limit, not an installation or TypeScript failure.
-pnpm's native `addMissingPeerTypes` setting makes workspace-declared type packages
-available to dependencies in the shared store.
-For app development or builds, reinstall with
-`PNPM_VIRTUAL_STORE_TYPE=project pnpm install` and keep that variable set when
-running `pnpm dev` or `pnpm build`. The repository default remains global.
+Dependencies use a project-local virtual store and pnpm's shared global content
+store. Main and worktrees keep separate dependency links while reusing package
+files through hard links on the same filesystem. This layout supports the current
+Workflow/Turbopack transforms. React type peers are declared explicitly in package
+manifests and targeted `packageExtensions`.
+After changing the dependency layout, stop Next processes and run `pnpm clean:cache`
+before restarting.
+CI dev servers disable the persistent Turbopack dev cache because each run uses
+disposable services. Normal development and production builds retain caching.
+Turbo caches and CI artifacts exclude dev output and Workflow state.
+Run `pnpm test:ci` for the CI checks, tests, and production build. Browser tests use
+Playwright directly; install its browsers with the command below.
 
 Renovate replaces Dependabot version updates. It covers npm workspace packages,
 GitHub Actions, Node in `mise.toml`, and pnpm in `devEngines.packageManager`.
@@ -159,6 +162,12 @@ its browser dependencies before running it. Unit tests remain Docker-free.
 
 Recurring Explore refresh and folder cleanup recovery jobs remain required
 runtime functionality.
+
+Stop development and test processes before running `pnpm clean:cache` to remove
+generated Next and Turbo caches. Workflow state and failure reports are preserved.
+Local Workflow state lives in `apps/web/.workflow-data`, outside Next's build
+output. Browser tests use a separate temporary directory. Keep existing local
+Workflow data when changing build or storage settings.
 
 ---
 

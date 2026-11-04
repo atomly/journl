@@ -1,5 +1,20 @@
 "use client";
 
+import { Card, CardContent, CardHeader, CardTitle } from "@acme/ui/card";
+import {
+  Field,
+  FieldDescription,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+} from "@acme/ui/field";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupButton,
+  InputGroupInput,
+} from "@acme/ui/input-group";
+import { cn } from "@acme/ui/utils";
 import {
   getAuthLinkURL,
   isPasswordCompromisedError,
@@ -10,22 +25,6 @@ import { useAuth, useResetPassword } from "@better-auth-ui/react";
 import { Eye, EyeOff } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-
-import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
-import {
-  Field,
-  FieldDescription,
-  FieldError,
-  FieldGroup,
-  FieldLabel,
-} from "~/components/ui/field";
-import {
-  InputGroup,
-  InputGroupAddon,
-  InputGroupButton,
-  InputGroupInput,
-} from "~/components/ui/input-group";
-import { cn } from "~/lib/cn";
 import { isAuthFormFieldInvalid, useAuthForm } from "./auth-form";
 import { PasswordStrengthMeter } from "./password-strength-meter";
 

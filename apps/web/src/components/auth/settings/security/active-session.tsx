@@ -1,12 +1,7 @@
 "use client";
 
+import { Badge } from "@acme/ui/badge";
 import { Button } from "@acme/ui/button";
-import { useAuth, useRevokeSession, useSession } from "@better-auth-ui/react";
-import type { Session } from "better-auth";
-import Bowser from "bowser";
-import { LogOut, Monitor, Smartphone, X } from "lucide-react";
-import { toast } from "sonner";
-import { Badge } from "~/components/ui/badge";
 import {
   Item,
   ItemActions,
@@ -14,8 +9,13 @@ import {
   ItemDescription,
   ItemMedia,
   ItemTitle,
-} from "~/components/ui/item";
-import { Spinner } from "~/components/ui/spinner";
+} from "@acme/ui/item";
+import { Spinner } from "@acme/ui/spinner";
+import { useAuth, useRevokeSession, useSession } from "@better-auth-ui/react";
+import type { Session } from "better-auth";
+import Bowser from "bowser";
+import { LogOut, Monitor, Smartphone, X } from "lucide-react";
+import { toast } from "sonner";
 
 function timeAgo(date: Date) {
   const seconds = Math.floor((Date.now() - date.getTime()) / 1000);

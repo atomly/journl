@@ -16,102 +16,13 @@ import {
 } from "@acme/references/react";
 import { Popover, PopoverContent, PopoverTrigger } from "@acme/ui/popover";
 import { Button as SurfaceButton } from "@base-ui/react/button";
-import { type Editor, Extension } from "@tiptap/core";
-import type { Node as PMNode } from "@tiptap/pm/model";
-import { Plugin } from "@tiptap/pm/state";
-import type { NodeView } from "@tiptap/pm/view";
 import { ChevronRight, ExternalLink } from "lucide-react";
 import { createContext, memo, useContext, useMemo, useState } from "react";
 import { safeEditorUrl } from "../engine/schema";
 import { ReferenceClientContext } from "./reference-client";
+import type { ReferenceView } from "./reference-view-store";
 import type { ReferenceViewsOptions } from "./reference-views";
 
-export type ReferenceView = {
-  key: number;
-  dom: HTMLElement;
-  node: PMNode;
-  getPos: () => number | undefined;
-  editor: Editor;
-};
-/** Portals keep the app's query/router/theme context. Views never write content
- * while resolving previews; clipboard/storage still use the adapter's schema. */
-export function referenceViewStore() {
-  let views: ReferenceView[] = [];
-  let key = 0;
-  const listeners = new Set<() => void>();
-  const notify = () => {
-    for (const listener of listeners) listener();
-  };
-  const extension = Extension.create({
-    addProseMirrorPlugins() {
-      const editor = this.editor;
-      const nodeViews = Object.fromEntries(
-        ["contentReference", "referenceCard", "contentEmbed"].map((type) => [
-          type,
-          (
-            node: PMNode,
-            _view: import("@tiptap/pm/view").EditorView,
-            getPos: () => number | undefined,
-          ): NodeView => {
-            const dom = document.createElement(
-              type === "contentReference" ? "span" : "div",
-            );
-            dom.contentEditable = "false";
-            if (type === "contentReference")
-              dom.dataset.betterEditorReference = "";
-            else dom.dataset.betterEditorBody = type;
-            const id = key++;
-            let current = node;
-            const sync = (next: PMNode) => {
-              current = next;
-              dom.setAttribute(
-                "data-better-editor-attrs",
-                JSON.stringify(next.attrs),
-              );
-              views = [
-                ...views.filter((item) => item.key !== id),
-                { dom, editor, getPos, key: id, node: next },
-              ];
-              notify();
-            };
-            sync(node);
-            return {
-              deselectNode: () =>
-                dom.classList.remove("ProseMirror-selectednode"),
-              destroy() {
-                views = views.filter((item) => item.key !== id);
-                notify();
-              },
-              dom,
-              ignoreMutation: () => true,
-              selectNode: () => dom.classList.add("ProseMirror-selectednode"),
-              stopEvent: (event) =>
-                event.target instanceof Element &&
-                Boolean(event.target.closest('a,button,input,[role="menu"]')),
-              update(next) {
-                if (next.type !== node.type) return false;
-                if (next !== current) sync(next);
-                return true;
-              },
-            };
-          },
-        ]),
-      );
-      return [new Plugin({ props: { nodeViews } })];
-    },
-    name: "better-editor-presentation",
-  });
-  return {
-    extension,
-    getSnapshot: () => views,
-    subscribe: (listener: () => void) => {
-      listeners.add(listener);
-      return () => {
-        listeners.delete(listener);
-      };
-    },
-  };
-}
 const EmbedPath = createContext<string[]>([]);
 type Target =
   | { kind: "document"; documentId: string; blockId?: string }

@@ -1,5 +1,6 @@
 import type { Editor } from "@tiptap/core";
 import type { Transaction } from "@tiptap/pm/state";
+import { createEditorId } from "./id";
 import {
   applySlashChoice,
   blockChoices,
@@ -86,7 +87,7 @@ export function setSlashItems(
 export function executeSlashItem(
   editor: Editor,
   id: string,
-  createId: () => string = () => crypto.randomUUID(),
+  createId: () => string = () => createEditorId(),
 ) {
   const query = slashKey.getState(editor.state);
   const item = query?.items.find((candidate) => candidate.id === id);

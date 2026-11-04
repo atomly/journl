@@ -106,9 +106,8 @@ test("added columns reveal themselves without moving the document vertically", a
   await cells.nth(7).scrollIntoViewIfNeeded();
   await cells.nth(7).click({ modifiers: ["Shift"] });
   await expect(editor.locator(".selectedCell")).toHaveCount(8);
-  await page
-    .getByRole("button", { exact: true, name: "More formatting" })
-    .click();
+  await page.getByRole("button", { exact: true, name: "More actions" }).click();
+  await page.getByRole("menuitem", { exact: true, name: "Cells" }).hover();
   await page
     .getByRole("menuitem", { exact: true, name: "Merge cells" })
     .click();
@@ -126,10 +125,11 @@ test("added columns reveal themselves without moving the document vertically", a
       await page.keyboard.press("Shift+ArrowLeft");
     const more = page.getByRole("button", {
       exact: true,
-      name: "More formatting",
+      name: "More actions",
     });
     await expect(more).toHaveAttribute("aria-expanded", "false");
     await more.click();
+    await page.getByRole("menuitem", { exact: true, name: "Columns" }).hover();
     const insert = page.getByRole("menuitem", {
       exact: true,
       name: `Insert column ${direction}`,

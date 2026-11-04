@@ -1,7 +1,7 @@
 import { Extension } from "@tiptap/core";
 import { Slice } from "@tiptap/pm/model";
 import { Plugin } from "@tiptap/pm/state";
-import { normalizePastedLists } from "../serialization/html-paste";
+import { normalizePastedHTML } from "../serialization/html-paste";
 import { markdownClipboard } from "../serialization/markdown-paste";
 import type { IdFactory } from "./identity";
 
@@ -19,7 +19,7 @@ export function clipboardPasteExtension(createId: IdFactory) {
             plain && slice.content.firstChild?.type.name === "betterEditorBlock"
               ? new Slice(slice.content, 0, 0)
               : slice,
-          transformPastedHTML: (html) => normalizePastedLists(html, createId),
+          transformPastedHTML: (html) => normalizePastedHTML(html, createId),
         },
       }),
     ],

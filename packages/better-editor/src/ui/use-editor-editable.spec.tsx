@@ -3,8 +3,8 @@ import { Editor } from "@tiptap/core";
 import { act } from "react";
 import { createRoot } from "react-dom/client";
 import { expect, test } from "vitest";
-import { documentExtensions } from "../engine/schema";
 import { toTiptapDocument } from "../serialization/tiptap";
+import { testDocumentExtensions } from "../testing/extensions";
 import { useEditorEditable } from "./use-editor-editable";
 
 Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
@@ -16,7 +16,7 @@ test("independent editability subscriptions observe destruction and editor repla
     new Editor({
       content: toTiptapDocument([{ id: "p", type: "paragraph" }]).toJSON(),
       element: document.createElement("div"),
-      extensions: documentExtensions(),
+      extensions: testDocumentExtensions(),
     });
   const first = create();
   const second = create();

@@ -1,12 +1,11 @@
 "use client";
 
+import { Card, CardContent, CardHeader, CardTitle } from "@acme/ui/card";
+import { FieldDescription } from "@acme/ui/field";
+import { cn } from "@acme/ui/utils";
 import { getAuthLinkURL } from "@better-auth-ui/core";
 import { useAuth } from "@better-auth-ui/react";
 import { useEffect, useState } from "react";
-
-import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
-import { FieldDescription } from "~/components/ui/field";
-import { cn } from "~/lib/cn";
 import { OpenEmailButton } from "./open-email-button";
 import { useIsHydrated } from "./use-is-hydrated";
 

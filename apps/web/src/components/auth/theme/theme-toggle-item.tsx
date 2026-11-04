@@ -3,10 +3,10 @@
 // Source: https://better-auth-ui.com/r/base-nova/theme.json
 
 import { DropdownMenuItem } from "@acme/ui/dropdown-menu";
+import { Tabs, TabsList, TabsTrigger } from "@acme/ui/tabs";
 import { useAuthPlugin } from "@better-auth-ui/react";
 import { Monitor, Moon, PaletteIcon, Sun } from "lucide-react";
 import { useRef } from "react";
-import { Tabs, TabsList, TabsTrigger } from "~/components/ui/tabs";
 import { themePlugin } from "~/lib/auth/theme-plugin";
 
 /**

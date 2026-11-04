@@ -2,7 +2,7 @@ import { NavigationMenu as NavigationMenuPrimitive } from "@base-ui/react/naviga
 import { cva } from "class-variance-authority";
 import { cn } from "cn";
 import { ChevronDownIcon } from "lucide-react";
-import * as React from "react";
+import type * as React from "react";
 
 function NavigationMenu({
   align = "start",
@@ -131,26 +131,17 @@ function NavigationMenuPositioner({
 
 function NavigationMenuLink({
   className,
-  asChild = false,
-  children,
   ...props
-}: NavigationMenuPrimitive.Link.Props & { asChild?: boolean }) {
+}: NavigationMenuPrimitive.Link.Props) {
   return (
     <NavigationMenuPrimitive.Link
       data-slot="navigation-menu-link"
-      render={
-        asChild
-          ? (React.Children.only(children) as React.ReactElement)
-          : undefined
-      }
       className={cn(
         "flex items-center gap-2 in-data-[slot=navigation-menu-content]:rounded-md rounded-lg p-2 text-sm outline-none transition-all hover:bg-muted focus:bg-muted focus-visible:outline-1 focus-visible:ring-3 focus-visible:ring-ring/50 data-active:bg-muted/50 data-active:focus:bg-muted data-active:hover:bg-muted [&_svg:not([class*='size-'])]:size-4",
         className,
       )}
       {...props}
-    >
-      {asChild ? undefined : children}
-    </NavigationMenuPrimitive.Link>
+    />
   );
 }
 
@@ -162,7 +153,7 @@ function NavigationMenuIndicator({
     <NavigationMenuPrimitive.Icon
       data-slot="navigation-menu-indicator"
       className={cn(
-        "data-[state=hidden]:fade-out data-[state=visible]:fade-in top-full z-1 flex h-1.5 items-end justify-center overflow-hidden data-[state=hidden]:animate-out data-[state=visible]:animate-in",
+        "top-full z-1 flex h-1.5 items-end justify-center overflow-hidden",
         className,
       )}
       {...props}

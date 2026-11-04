@@ -2,11 +2,6 @@
 
 import type { Page } from "@acme/db/schema";
 import { Button } from "@acme/ui/button";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Loader2, Trash2 } from "lucide-react";
-import { usePathname, useRouter } from "next/navigation";
-import type { ComponentProps, ReactNode } from "react";
-import { useCallback, useMemo, useState, useTransition } from "react";
 import {
   Dialog,
   DialogContent,
@@ -15,7 +10,12 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "~/components/ui/dialog";
+} from "@acme/ui/dialog";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { Loader2, Trash2 } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import type { ComponentProps, ReactNode } from "react";
+import { useCallback, useMemo, useState, useTransition } from "react";
 import { removeNode, removePageFromNestedPages } from "~/trpc/cache/tree-cache";
 import { useTRPC } from "~/trpc/react";
 

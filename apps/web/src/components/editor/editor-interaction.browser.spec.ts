@@ -267,9 +267,7 @@ test("crossing the toolbar gap keeps the handle on its block and leaving release
     const current = await handle.boundingBox();
     expect(current?.y).toBeCloseTo(before.y, 0);
   }
-  await page
-    .getByRole("button", { exact: true, name: "More formatting" })
-    .hover();
+  await page.getByRole("button", { exact: true, name: "More actions" }).hover();
   expect((await handle.boundingBox())?.y).toBeCloseTo(before.y, 0);
   const other = await rows.first().boundingBox();
   if (!other) throw new Error("Missing neighboring block");

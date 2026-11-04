@@ -1,9 +1,9 @@
 "use client";
+import { Skeleton } from "@acme/ui/skeleton";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { useEffect } from "react";
-import { Skeleton } from "~/components/ui/skeleton";
 import { getExploreTitle } from "~/references/explore-graph";
 import { useTRPC } from "~/trpc/react";
 import { ExploreError, PageButtons } from "./explore-overview";

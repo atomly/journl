@@ -8,6 +8,7 @@ import {
 } from "@tiptap/pm/state";
 import { dropPoint } from "@tiptap/pm/transform";
 import { selectedBlocks } from "./commands";
+import { createEditorId } from "./id";
 import { blockAt, copySlice } from "./identity";
 
 export const BLOCK_DRAG_MIME = "application/x-better-editor-block-drag";
@@ -33,7 +34,7 @@ export function beginNativeBlockDrag(
   const session: Session = {
     bookmark: editor.state.selection.getBookmark(),
     ids: selectedBlocks(editor.state).map(({ id }) => id),
-    token: crypto.randomUUID(),
+    token: createEditorId(),
     valid: true,
   };
   if (!session.ids.length) return false;
@@ -111,7 +112,7 @@ export const nativeBlockDragExtension = Extension.create({
                 }
                 const source = selection.content();
                 const slice = copy
-                  ? copySlice(source, () => crypto.randomUUID())
+                  ? copySlice(source, () => createEditorId())
                   : source;
                 // Whole blocks use the target row's vertical half, not the
                 // horizontal caret position inside its text. This matches the

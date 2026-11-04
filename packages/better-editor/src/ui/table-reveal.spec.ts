@@ -2,8 +2,8 @@
 import { parseBlock } from "@acme/document";
 import { Editor } from "@tiptap/core";
 import { expect, test, vi } from "vitest";
-import { documentExtensions } from "../engine/schema";
 import { toTiptapDocument } from "../serialization/tiptap";
+import { testDocumentExtensions } from "../testing/extensions";
 import { revealTableColumn } from "./table-reveal";
 
 for (const unmergedRow of [true, false]) {
@@ -31,7 +31,7 @@ for (const unmergedRow of [true, false]) {
           }),
         ]).toJSON(),
         element: document.createElement("div"),
-        extensions: documentExtensions(),
+        extensions: testDocumentExtensions(),
       });
       const frames: FrameRequestCallback[] = [];
       vi.stubGlobal(

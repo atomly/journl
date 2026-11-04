@@ -20,7 +20,9 @@
     "test:integration": "turbo run test:integration",
     "test:unit": "turbo run test:unit",
     "test": "turbo run test:unit test:integration test:browser",
-    "test:browser": "turbo run test:browser"
+    "test:browser": "turbo run test:browser",
+    "clean:cache": "node scripts/clean-cache.mjs",
+    "test:ci": "pnpm check:dependencies && pnpm check && pnpm typecheck && pnpm test && pnpm build"
   },
   "devDependencies": {
     "@biomejs/biome": "~2.5.15",

@@ -1,7 +1,6 @@
+import { cn } from "@acme/ui/utils";
 import { Tooltip as TooltipPrimitive } from "@base-ui/react/tooltip";
-import * as React from "react";
-
-import { cn } from "~/lib/cn";
+import type * as React from "react";
 
 export function TooltipProvider({
   delay = 0,
@@ -27,25 +26,9 @@ export function Tooltip(
 }
 
 export function TooltipTrigger({
-  asChild = false,
-  children,
   ...props
-}: React.ComponentProps<typeof TooltipPrimitive.Trigger> & {
-  asChild?: boolean;
-}) {
-  return (
-    <TooltipPrimitive.Trigger
-      data-slot="tooltip-trigger"
-      render={
-        asChild
-          ? (React.Children.only(children) as React.ReactElement)
-          : undefined
-      }
-      {...props}
-    >
-      {asChild ? undefined : children}
-    </TooltipPrimitive.Trigger>
-  );
+}: React.ComponentProps<typeof TooltipPrimitive.Trigger>) {
+  return <TooltipPrimitive.Trigger data-slot="tooltip-trigger" {...props} />;
 }
 
 export function TooltipContent({

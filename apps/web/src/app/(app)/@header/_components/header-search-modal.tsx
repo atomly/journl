@@ -1,13 +1,6 @@
 "use client";
+import { Badge } from "@acme/ui/badge";
 import { Button } from "@acme/ui/button";
-import { useIsMobile } from "@acme/ui/use-mobile";
-import { useQuery } from "@tanstack/react-query";
-import { X } from "lucide-react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-import { useDebounce } from "use-debounce";
-import { Badge } from "~/components/ui/badge";
 import {
   Command,
   CommandEmpty,
@@ -15,7 +8,7 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-} from "~/components/ui/command";
+} from "@acme/ui/command";
 import {
   Dialog,
   DialogContent,
@@ -23,9 +16,16 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "~/components/ui/dialog";
-import { ScrollArea } from "~/components/ui/scroll-area";
-import { Skeleton } from "~/components/ui/skeleton";
+} from "@acme/ui/dialog";
+import { ScrollArea } from "@acme/ui/scroll-area";
+import { Skeleton } from "@acme/ui/skeleton";
+import { useIsMobile } from "@acme/ui/use-mobile";
+import { useQuery } from "@tanstack/react-query";
+import { X } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useDebounce } from "use-debounce";
 import { useTRPC } from "~/trpc/react";
 import { HeaderSearchTrigger } from "./header-search-trigger";
 

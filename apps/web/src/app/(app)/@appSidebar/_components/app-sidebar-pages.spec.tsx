@@ -45,7 +45,7 @@ vi.mock("~/app/(app)/@appSidebar/_components/delete-page-button", async () => {
         {open && <div role="dialog">Confirm delete</div>}
       </DeleteContext.Provider>
     ),
-    DeletePageDialogTrigger: ({ children }: { children: ReactNode }) => {
+    DeletePageDialogTrigger: ({ render: children }: { render: ReactNode }) => {
       const setOpen = useContext(DeleteContext);
       if (!isValidElement<{ onClick: () => void }>(children))
         throw new Error("Expected a trigger element");

@@ -54,3 +54,9 @@ mastra.db*
 **/test-results/
 **/playwright-report/
 **/playwright/.auth/
+
+# Next-generated duplicate guidance; use the root AGENTS.md.
+apps/web/AGENTS.md
+
+# Persistent local Workflow state is separate from generated Next output.
+**/.workflow-data/

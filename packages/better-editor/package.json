@@ -5,7 +5,6 @@
   "type": "module",
   "exports": {
     "./engine/actions": "./src/engine/actions.ts",
-    "./engine/block-view": "./src/engine/block-view.ts",
     "./engine/changes": "./src/engine/changes.ts",
     "./engine/clipboard-paste": "./src/engine/clipboard-paste.ts",
     "./engine/code-block": "./src/engine/code-block.ts",
@@ -19,7 +18,6 @@
     "./engine/reference-insertion": "./src/engine/reference-insertion.ts",
     "./engine/reference-selection": "./src/engine/reference-selection.ts",
     "./engine/references": "./src/engine/references.ts",
-    "./engine/required": "./src/engine/required.ts",
     "./engine/schema": "./src/engine/schema.ts",
     "./engine/selection": "./src/engine/selection.ts",
     "./engine/slash-items": "./src/engine/slash-items.ts",
@@ -45,7 +43,6 @@
     "./ui/handle-visibility": "./src/ui/handle-visibility.ts",
     "./ui/link-menu": "./src/ui/link-menu.tsx",
     "./ui/mark-button": "./src/ui/mark-button.tsx",
-    "./ui/pointer-corridor": "./src/ui/pointer-corridor.ts",
     "./ui/reference-client": "./src/ui/reference-client.ts",
     "./ui/reference-display": "./src/ui/reference-display.tsx",
     "./ui/reference-views": "./src/ui/reference-views.tsx",
@@ -54,10 +51,15 @@
     "./ui/table-actions": "./src/ui/table-actions.ts",
     "./ui/table-controls": "./src/ui/table-controls.tsx",
     "./ui/table-controls-root": "./src/ui/table-controls-root.tsx",
-    "./ui/table-reveal": "./src/ui/table-reveal.ts",
     "./ui/touch-block-drag": "./src/ui/touch-block-drag.tsx",
     "./ui/use-better-editor": "./src/ui/use-better-editor.ts",
-    "./ui/use-editor-command": "./src/ui/use-editor-command.ts"
+    "./ui/use-editor-command": "./src/ui/use-editor-command.ts",
+    "./ui/block-presentation": "./src/ui/block-presentation.ts",
+    "./ui/use-editor-editable": "./src/ui/use-editor-editable.ts",
+    "./engine/table-schema": "./src/engine/table-schema.ts",
+    "./engine/reference-schema": "./src/engine/reference-schema.ts",
+    "./ui/table-presentation": "./src/ui/table-presentation.ts",
+    "./engine/id": "./src/engine/id.ts"
   },
   "scripts": {
     "check": "biome check",
@@ -86,6 +88,8 @@
     "zod": "~4.6.5"
   },
   "peerDependencies": {
+    "@types/react": "~19.3.0",
+    "@types/react-dom": "~19.3.0",
     "react": "~19.3.0",
     "react-dom": "~19.3.0"
   },
@@ -117,5 +121,13 @@
   },
   "sideEffects": [
     "**/*.css"
-  ]
+  ],
+  "peerDependenciesMeta": {
+    "@types/react": {
+      "optional": true
+    },
+    "@types/react-dom": {
+      "optional": true
+    }
+  }
 }

@@ -1,6 +1,9 @@
 import { spawn } from "node:child_process";
 import { once } from "node:events";
+import { mkdtemp, rm } from "node:fs/promises";
 import { createRequire } from "node:module";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import * as schema from "@acme/db/schema";
 import { documentRows } from "@acme/document";
 import { parityBlocks } from "@acme/document/fixtures";
@@ -10,8 +13,12 @@ import { hashPassword } from "better-auth/crypto";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import { insertEdgeAtPosition } from "../../trpc/procedures/tree-helpers";
+import { prepareLocalWorkflowStorage } from "../../workflows/local-storage";
 import { createTestTables } from "../postgres-schema";
 import { browserFixture as data, fixtureId } from "./data";
+
+// Preserve developer history before the child selects disposable test storage.
+prepareLocalWorkflowStorage(process.cwd(), ".workflow-data");
 
 // No environment file or supplied database URL is consulted. This server owns its database.
 const container = await new PostgreSqlContainer("pgvector/pgvector:pg17")
@@ -21,6 +28,7 @@ const container = await new PostgreSqlContainer("pgvector/pgvector:pg17")
 const client = postgres(container.getConnectionUri(), { max: 1 });
 let child: ReturnType<typeof spawn> | undefined;
 let stopping = false;
+let workflowDataDir: string | undefined;
 async function cleanup() {
   if (stopping) return;
   stopping = true;
@@ -31,7 +39,12 @@ async function cleanup() {
   try {
     await client.end({ timeout: 5 });
   } finally {
-    await container.stop();
+    try {
+      await container.stop();
+    } finally {
+      if (workflowDataDir)
+        await rm(workflowDataDir, { force: true, recursive: true });
+    }
   }
 }
 process.once("SIGTERM", () => {
@@ -41,6 +54,7 @@ process.once("SIGINT", () => {
   void cleanup().then(() => process.exit(0));
 });
 try {
+  workflowDataDir = await mkdtemp(join(tmpdir(), "journl-browser-workflows-"));
   await client.unsafe("CREATE EXTENSION IF NOT EXISTS vector");
   await createTestTables(client, schema);
   const db = drizzle(client, { casing: "snake_case", schema });
@@ -470,6 +484,7 @@ try {
         AUTH_SECRET: "disposable-browser-auth-secret-at-least-32-characters",
         CI: "1",
         CRON_SECRET: "disposable-browser-cron-secret",
+        NEXT_TELEMETRY_DISABLED: "1",
         NODE_ENV: "development",
         OPENAI_API_KEY: "fixture",
         OPENAI_API_URL: "https://api.openai.com/v1/",
@@ -479,9 +494,12 @@ try {
         STRIPE_SECRET_KEY: "sk_test_placeholder_for_build",
         STRIPE_WEBHOOK_SECRET: "whsec_build_placeholder",
         VERCEL_BRANCH_URL: "",
+        VERCEL_DEPLOYMENT_ID: "",
         VERCEL_ENV: "development",
         VERCEL_PROJECT_PRODUCTION_URL: "",
         VERCEL_URL: "",
+        WORKFLOW_LOCAL_DATA_DIR: workflowDataDir,
+        WORKFLOW_TARGET_WORLD: "local",
       },
       stdio: "inherit",
     },

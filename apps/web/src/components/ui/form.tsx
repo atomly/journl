@@ -1,5 +1,9 @@
 "use client";
 
+import { Label } from "@acme/ui/label";
+import { cn } from "@acme/ui/utils";
+import { mergeProps } from "@base-ui/react/merge-props";
+import { useRender } from "@base-ui/react/use-render";
 import { standardSchemaResolver } from "@hookform/resolvers/standard-schema";
 import * as React from "react";
 import type {
@@ -14,9 +18,6 @@ import {
   useFormContext,
 } from "react-hook-form";
 import type { ZodType } from "zod/v4";
-import { cn } from "~/lib/cn";
-import { Slot } from "./base-slot";
-import { Label } from "./label";
 
 export { FormProvider as Form, useFieldArray } from "react-hook-form";
 
@@ -110,22 +111,26 @@ export function FormLabel({
   );
 }
 
-export function FormControl({ ...props }: React.ComponentProps<typeof Slot>) {
+export function FormControl({
+  render,
+  ...props
+}: useRender.ComponentProps<"input">) {
   const { error, formItemId, formDescriptionId, formMessageId } =
     useFormField();
-
-  return (
-    <Slot
-      id={formItemId}
-      aria-describedby={
-        !error
-          ? `${formDescriptionId}`
-          : `${formDescriptionId} ${formMessageId}`
-      }
-      aria-invalid={!!error}
-      {...props}
-    />
-  );
+  return useRender({
+    defaultTagName: "input",
+    props: mergeProps<"input">(
+      {
+        "aria-describedby": error
+          ? `${formDescriptionId} ${formMessageId}`
+          : formDescriptionId,
+        "aria-invalid": !!error,
+        id: formItemId,
+      },
+      props,
+    ),
+    render,
+  });
 }
 
 export function FormDescription({

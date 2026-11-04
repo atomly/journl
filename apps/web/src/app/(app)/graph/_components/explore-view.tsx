@@ -8,19 +8,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@acme/ui/select";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetTitle,
+} from "@acme/ui/sheet";
+import { Skeleton } from "@acme/ui/skeleton";
 import { useIsMobile } from "@acme/ui/use-mobile";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { ArrowLeft, ChevronRight, Compass, X } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetTitle,
-} from "~/components/ui/sheet";
-import { Skeleton } from "~/components/ui/skeleton";
 import {
   type ExploreEdge,
   type ExploreNode,
@@ -302,6 +302,7 @@ export function ExploreView({
                     </p>
                   </div>
                   <Select
+                    items={{ latest: "Latest first", oldest: "Oldest first" }}
                     value={noteOrder}
                     onValueChange={(value) => {
                       if (value === "latest" || value === "oldest") {
@@ -314,11 +315,7 @@ export function ExploreView({
                       aria-label="Sort unlinked notes"
                       className="min-h-11"
                     >
-                      <SelectValue>
-                        {noteOrder === "latest"
-                          ? "Latest first"
-                          : "Oldest first"}
-                      </SelectValue>
+                      <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="latest">Latest first</SelectItem>

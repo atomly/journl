@@ -1,0 +1,20 @@
+{
+  "$schema": "https://ui.shadcn.com/schema.json",
+  "aliases": {
+    "components": "@acme/ui",
+    "hooks": "@acme/ui",
+    "lib": "@acme/ui",
+    "ui": "@acme/ui",
+    "utils": "@acme/ui/utils"
+  },
+  "iconLibrary": "lucide",
+  "rsc": true,
+  "style": "base-nova",
+  "tailwind": {
+    "baseColor": "zinc",
+    "config": "",
+    "css": "../../apps/web/src/app/styles.css",
+    "cssVariables": true
+  },
+  "tsx": true
+}

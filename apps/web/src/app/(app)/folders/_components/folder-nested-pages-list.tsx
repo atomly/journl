@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@acme/ui/button";
+import { Collapsible, CollapsibleContent } from "@acme/ui/collapsible";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -8,6 +9,8 @@ import {
   DropdownMenuTrigger,
 } from "@acme/ui/dropdown-menu";
 import { Input } from "@acme/ui/input";
+import { Skeleton } from "@acme/ui/skeleton";
+import { cn } from "@acme/ui/utils";
 import { DndContext, useDraggable, useDroppable } from "@dnd-kit/core";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
@@ -33,16 +36,13 @@ import {
   useState,
 } from "react";
 import { TreeInsertDropBands } from "~/components/tree-insert-drop-bands";
-import { Collapsible, CollapsibleContent } from "~/components/ui/collapsible";
 import { useSidebar } from "~/components/ui/sidebar";
-import { Skeleton } from "~/components/ui/skeleton";
 import { useTreeChildren } from "~/hooks/use-tree-children";
 import { useTreeController } from "~/hooks/use-tree-controller";
 import {
   TreeMoveProvider,
   useTreeItemMoves,
 } from "~/hooks/use-tree-item-moves";
-import { cn } from "~/lib/cn";
 import {
   TREE_INSIDE_DROP_ZONE_CLASSNAME,
   TreeDragOverlay,
@@ -432,24 +432,26 @@ function DraggablePageRow({
             )}
 
             <DropdownMenu modal={false}>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  type="button"
-                  aria-label="Page settings"
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 rounded-md bg-transparent! p-0 text-muted-foreground"
-                  onPointerDown={(event) => {
-                    event.stopPropagation();
-                  }}
-                  onClick={(event) => {
-                    event.preventDefault();
-                    event.stopPropagation();
-                  }}
-                >
-                  <MoreHorizontal className="size-4" />
-                </Button>
-              </DropdownMenuTrigger>
+              <DropdownMenuTrigger
+                render={
+                  <Button
+                    type="button"
+                    aria-label="Page settings"
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 rounded-md bg-transparent! p-0 text-muted-foreground"
+                    onPointerDown={(event) => {
+                      event.stopPropagation();
+                    }}
+                    onClick={(event) => {
+                      event.preventDefault();
+                      event.stopPropagation();
+                    }}
+                  >
+                    <MoreHorizontal className="size-4" />
+                  </Button>
+                }
+              />
               <DropdownMenuContent align="end">
                 <DropdownMenuItem
                   onClick={() => {
@@ -812,25 +814,27 @@ function DraggableFolderRow({
                 ) : null}
 
                 <DropdownMenu modal={false}>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      type="button"
-                      aria-label="Folder settings"
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 rounded-md bg-transparent! p-0 text-muted-foreground"
-                      disabled={isPending}
-                      onPointerDown={(event) => {
-                        event.stopPropagation();
-                      }}
-                      onClick={(event) => {
-                        event.preventDefault();
-                        event.stopPropagation();
-                      }}
-                    >
-                      <MoreHorizontal className="size-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
+                  <DropdownMenuTrigger
+                    render={
+                      <Button
+                        type="button"
+                        aria-label="Folder settings"
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 rounded-md bg-transparent! p-0 text-muted-foreground"
+                        disabled={isPending}
+                        onPointerDown={(event) => {
+                          event.stopPropagation();
+                        }}
+                        onClick={(event) => {
+                          event.preventDefault();
+                          event.stopPropagation();
+                        }}
+                      >
+                        <MoreHorizontal className="size-4" />
+                      </Button>
+                    }
+                  />
                   <DropdownMenuContent align="end">
                     <DropdownMenuItem
                       onClick={() => {

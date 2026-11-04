@@ -1,21 +1,20 @@
 "use client";
 
-import { syntaxHighlightExtension } from "@acme/better-editor/engine/code-block";
+import { createSyntaxHighlighting } from "@acme/better-editor/engine/code-block";
 import { dropCursorExtension } from "@acme/better-editor/engine/drop-cursor";
 import type { EditorCommit } from "@acme/better-editor/engine/editor";
-import { blockAt } from "@acme/better-editor/engine/identity";
 import { insertTiptapReference } from "@acme/better-editor/engine/reference-insertion";
+import { referenceExtensions } from "@acme/better-editor/engine/reference-schema";
 import { documentExtensions } from "@acme/better-editor/engine/schema";
 import {
   defaultSlashItems,
   type SlashItemSource,
 } from "@acme/better-editor/engine/slash-items";
-import { applyTableEdit } from "@acme/better-editor/engine/table-actions";
-import { removeSelectedBlock } from "@acme/better-editor/engine/writing";
+import { tableExtensions } from "@acme/better-editor/engine/table-schema";
 import { BlockHandle } from "@acme/better-editor/ui/block-handle";
-import { codeBlockPresentation } from "@acme/better-editor/ui/code-block";
+import { blockPresentationExtensions } from "@acme/better-editor/ui/block-presentation";
+import { createCodeBlockPresentation } from "@acme/better-editor/ui/code-block";
 import { EditorContextMenu } from "@acme/better-editor/ui/context-menu";
-import { EditorMenuItem } from "@acme/better-editor/ui/controls";
 import { EditorContent } from "@acme/better-editor/ui/editor-content";
 import { EditorError } from "@acme/better-editor/ui/editor-error";
 import { EditorRoot } from "@acme/better-editor/ui/editor-root";
@@ -26,20 +25,25 @@ import {
   useReferenceViews,
 } from "@acme/better-editor/ui/reference-views";
 import { SlashMenu } from "@acme/better-editor/ui/slash-menu";
-import { TableMenuItems } from "@acme/better-editor/ui/table-controls";
 import { TableControls } from "@acme/better-editor/ui/table-controls-root";
+import { tablePresentationExtensions } from "@acme/better-editor/ui/table-presentation";
 import { useBetterEditor } from "@acme/better-editor/ui/use-better-editor";
 import type { DocumentBlock } from "@acme/document";
 import type { ReferenceClient } from "@acme/references";
-import { DropdownMenuSeparator } from "@acme/ui/dropdown-menu";
 import type { Editor } from "@tiptap/core";
-import { NodeSelection } from "@tiptap/pm/state";
 import { cn } from "cn";
+import { common } from "lowlight";
 import { useContext, useMemo } from "react";
 import { BlockActions } from "./block-actions";
 import type { DocumentEditorServices } from "./document-editor-services";
 import { BlockMenuContent, DocumentToolbar } from "./document-toolbar";
 import { ReferenceActions } from "./reference-actions";
+import { DocumentTableMenu } from "./table-menu";
+
+const highlighting = createSyntaxHighlighting(common);
+const codePresentation = createCodeBlockPresentation({
+  languages: highlighting.languages,
+});
 
 /** Owns a mounted view, never the draft or its persistence queue. */
 type DocumentEditorProps = {
@@ -87,11 +91,15 @@ function EditorView({
   const referenceViews = useReferenceViews();
   const extensions = useMemo(
     () => [
-      syntaxHighlightExtension,
+      ...tableExtensions(),
+      ...referenceExtensions(),
+      ...tablePresentationExtensions(),
+      highlighting.extension,
+      ...blockPresentationExtensions(),
       dropCursorExtension.configure({ color: "var(--ring)", width: 2 }),
       ...documentExtensions()
         .filter((extension) => extension.name === "codeBlock")
-        .map((extension) => extension.extend(codeBlockPresentation)),
+        .map((extension) => extension.extend(codePresentation)),
       referenceViews.extension,
     ],
     [referenceViews.extension],
@@ -181,30 +189,8 @@ function EditorView({
               <TableControls
                 editor={editor}
                 visible={handlesVisible}
-                renderMenu={({ editor, axis, blockId }) => (
-                  <>
-                    <TableMenuItems editor={editor} axis={axis} />
-                    <DropdownMenuSeparator />
-                    <EditorMenuItem
-                      hint="Remove the whole table"
-                      variant="destructive"
-                      onClick={() => {
-                        const block = blockAt(editor.state.doc, blockId);
-                        editor.view.dispatch(
-                          editor.state.tr.setSelection(
-                            NodeSelection.create(editor.state.doc, block.pos),
-                          ),
-                        );
-                        const tr = removeSelectedBlock(editor.state, () =>
-                          crypto.randomUUID(),
-                        );
-                        if (tr) applyTableEdit(editor, tr);
-                        editor.view.focus();
-                      }}
-                    >
-                      Delete table
-                    </EditorMenuItem>
-                  </>
+                renderMenu={({ editor, axis }) => (
+                  <DocumentTableMenu editor={editor} axis={axis} />
                 )}
               />
             </>

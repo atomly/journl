@@ -5,10 +5,10 @@
 
 import { Button } from "@acme/ui/button";
 import { Input } from "@acme/ui/input";
+import { Textarea } from "@acme/ui/textarea";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "cn";
 import type * as React from "react";
-import { Textarea } from "~/components/ui/textarea";
 
 function InputGroup({ className, ...props }: React.ComponentProps<"div">) {
   return (

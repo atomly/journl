@@ -11,7 +11,6 @@
     "CRON_SECRET",
     "OPENAI_API_KEY",
     "OPENAI_API_URL",
-    "PNPM_VIRTUAL_STORE_TYPE",
     "PORT",
     "POSTGRES_SSL_MODE",
     "POSTGRES_URL",
@@ -22,9 +21,17 @@
     "VERCEL_BRANCH_URL",
     "VERCEL_ENV",
     "VERCEL_PROJECT_PRODUCTION_URL",
-    "VERCEL_URL"
+    "VERCEL_URL",
+    "WORKFLOW_TARGET_WORLD",
+    "WORKFLOW_LOCAL_DATA_DIR"
   ],
-  "globalPassThroughEnv": ["NODE_ENV", "CI", "VERCEL", "npm_lifecycle_event"],
+  "globalPassThroughEnv": [
+    "NODE_ENV",
+    "CI",
+    "VERCEL",
+    "npm_lifecycle_event",
+    "VERCEL_DEPLOYMENT_ID"
+  ],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],

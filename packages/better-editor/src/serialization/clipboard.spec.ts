@@ -1,11 +1,16 @@
 // @vitest-environment jsdom
 import { parseBlock } from "@acme/document";
 import { Editor } from "@tiptap/core";
+import javascript from "highlight.js/lib/languages/javascript";
 import { expect, test } from "vitest";
-import { syntaxHighlightExtension } from "../engine/code-block";
-import { documentExtensions } from "../engine/schema";
+import { createSyntaxHighlighting } from "../engine/code-block";
+import { testDocumentExtensions } from "../testing/extensions";
 import { clipboardText } from "./clipboard";
 import { toTiptapDocument } from "./tiptap";
+
+const { extension: syntaxHighlightExtension } = createSyntaxHighlighting({
+  javascript,
+});
 
 test("plain clipboard keeps list markers, nesting and partial text without unselected content", () => {
   const doc = toTiptapDocument([
@@ -37,7 +42,7 @@ test("highlighting decorates code and leaves unsupported languages and storage c
         }),
       ]).toJSON(),
       element: document.createElement("div"),
-      extensions: [...documentExtensions(), syntaxHighlightExtension],
+      extensions: [...testDocumentExtensions(), syntaxHighlightExtension],
     });
     expect(editor.view.dom.querySelector("pre")?.textContent).toBe(
       "const value = 42;",

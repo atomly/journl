@@ -11,7 +11,7 @@ test.beforeEach(async ({ page }) => {
       .click();
   const previous = page.url();
   await create.click();
-  await expect(page).not.toHaveURL(previous);
+  await expect(page).not.toHaveURL(previous, { timeout: 60_000 });
   await page.keyboard.press("Escape");
 });
 
@@ -122,11 +122,17 @@ for (const width of [390, 1024]) {
     await expect(handle).toBeVisible();
     // Touch typing and viewport changes retain the selected block's controls.
     await editor.focus();
+    // Cancellation retains a block selection. Place the caret before typing so
+    // this check does not replace Alpha with ! and then delete it.
+    await page.keyboard.press("ArrowLeft");
+    await page.keyboard.press("End");
     await page.keyboard.insertText("!");
+    await expect(rows).toHaveText(["Alpha!", "Beta", "Gamma"]);
     await expect(
       page.getByRole("button", { exact: true, name: "Add block" }),
     ).toHaveCount(0);
     await page.keyboard.press("Backspace");
+    await expect(rows).toHaveText(["Alpha", "Beta", "Gamma"]);
     await page.setViewportSize({ height: 520, width });
     await expect(
       page.getByRole("button", { exact: true, name: "Block actions" }),

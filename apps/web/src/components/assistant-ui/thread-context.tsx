@@ -7,11 +7,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@acme/ui/select";
+import { cn } from "@acme/ui/utils";
 import type { ComponentProps, ReactNode } from "react";
 import type { JournlReasoning } from "~/ai/mastra/agents/journl-agent-reasoning";
 import { useThreadRuntime } from "~/components/assistant-ui/thread-runtime";
 import { useJournlAgent } from "~/hooks/use-journl-agent";
-import { cn } from "~/lib/cn";
 
 const REASONING_MODES = ["instant", "thinking"] satisfies JournlReasoning[];
 

@@ -3,11 +3,8 @@ import {
   type DocumentOperation,
   parseBlock,
 } from "@acme/document";
-import {
-  getPlainUrlForAutomaticReference,
-  type ReferenceClient,
-} from "@acme/references";
-import { type AnyExtension, Editor, Extension } from "@tiptap/core";
+import { getPlainUrlForAutomaticReference } from "@acme/references";
+import { type AnyExtension, Editor, getSchema } from "@tiptap/core";
 import { TextSelection } from "@tiptap/pm/state";
 import { clipboardText } from "../serialization/clipboard";
 import {
@@ -17,10 +14,13 @@ import {
 import { diffDocumentSnapshots } from "./changes";
 import { clipboardPasteExtension } from "./clipboard-paste";
 import { editingExtension } from "./commands";
+import { createEditorId } from "./id";
 import { identityExtension } from "./identity";
 import { nativeBlockDragExtension } from "./native-block-drag";
-import { insertTiptapReference } from "./reference-insertion";
-import { referenceSelectionPlugin } from "./reference-selection";
+import {
+  insertTiptapReference,
+  type ReferenceResolver,
+} from "./reference-insertion";
 import { documentExtensions, safeEditorUrl } from "./schema";
 import { type SlashMenuItem, setSlashItems } from "./slash-items";
 import { suggestionExtension } from "./suggestions";
@@ -35,7 +35,7 @@ export type DocumentEditorOptions = {
   element: HTMLElement;
   initialBlocks: readonly DocumentBlock[] | undefined;
   onCommit?: EditorCommit;
-  resolveUrl: ReferenceClient["resolveUrl"];
+  resolveUrl: ReferenceResolver;
   extensions: readonly AnyExtension[];
   attributes?: Record<string, string>;
   onError?: (error: unknown) => void;
@@ -71,7 +71,7 @@ export function createDocumentEditor({
 }: DocumentEditorOptions) {
   const blocks = initialBlocks?.length
     ? initialBlocks
-    : [{ id: crypto.randomUUID(), type: "paragraph" as const }];
+    : [{ id: createEditorId(), type: "paragraph" as const }];
   let previous: readonly DocumentBlock[] = (initialBlocks ?? []).map(
     parseBlock,
   );
@@ -114,9 +114,18 @@ export function createDocumentEditor({
       delivering = false;
     }
   };
-  const defaults = documentExtensions();
+  // Later consumer extensions replace matching schema names, including optional
+  // feature schemas. Presentation overrides must not register duplicate nodes.
+  const schemaExtensions = [
+    ...new Map(
+      [...documentExtensions(), ...extensions].map((extension) => [
+        extension.name,
+        extension,
+      ]),
+    ).values(),
+  ];
   const editor = new Editor({
-    content: toTiptapDocument(blocks).toJSON(),
+    content: toTiptapDocument(blocks, getSchema(schemaExtensions)).toJSON(),
     editable,
     editorProps: {
       attributes,
@@ -209,23 +218,13 @@ export function createDocumentEditor({
     element,
     enableContentCheck: true,
     extensions: [
-      ...defaults.map(
-        (base) =>
-          extensions.find((extension) => extension.name === base.name) ?? base,
-      ),
-      ...extensions.filter(
-        (extension) => !defaults.some((base) => base.name === extension.name),
-      ),
-      clipboardPasteExtension(() => crypto.randomUUID()),
-      editingExtension(() => crypto.randomUUID()),
-      writingExtension(() => crypto.randomUUID()),
-      suggestionExtension(() => crypto.randomUUID()),
-      identityExtension(() => crypto.randomUUID()),
+      ...schemaExtensions,
+      clipboardPasteExtension(() => createEditorId()),
+      editingExtension(() => createEditorId()),
+      writingExtension(() => createEditorId()),
+      suggestionExtension(() => createEditorId()),
+      identityExtension(() => createEditorId()),
       nativeBlockDragExtension,
-      Extension.create({
-        addProseMirrorPlugins: () => [referenceSelectionPlugin()],
-        name: "better-editor-references",
-      }),
     ],
     onUpdate: ({ editor: updated }) => {
       try {

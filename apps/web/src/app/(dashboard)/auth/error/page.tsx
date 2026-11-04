@@ -1,4 +1,5 @@
-import { Button } from "@acme/ui/button";
+import { buttonVariants } from "@acme/ui/button";
+import { cn } from "cn";
 import Link from "next/link";
 import { withoutAuth } from "~/app/_guards/page-guards";
 
@@ -19,9 +20,14 @@ async function AuthErrorPage({
       <h1 className="mt-2 text-3xl">{title}</h1>
       <p className="mt-3 text-muted-foreground">{description}</p>
       <div className="mt-6 flex flex-wrap gap-3">
-        <Button asChild>
-          <Link href="/">Go home</Link>
-        </Button>
+        <Link
+          href="/"
+          className={cn(
+            buttonVariants({ size: "default", variant: "default" }),
+          )}
+        >
+          Go home
+        </Link>
       </div>
     </div>
   );

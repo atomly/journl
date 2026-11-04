@@ -1,3 +1,4 @@
+import { cn } from "@acme/ui/utils";
 import {
   type Collision,
   type CollisionDetection,
@@ -8,7 +9,6 @@ import {
   TouchSensor,
   useDroppable,
 } from "@dnd-kit/core";
-import { cn } from "~/lib/cn";
 import { parseDropTarget } from "~/lib/tree-model";
 
 function canStartTreeDrag(target: EventTarget | null) {

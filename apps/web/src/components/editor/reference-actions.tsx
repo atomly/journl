@@ -1,4 +1,6 @@
 "use client";
+
+import { createEditorId } from "@acme/better-editor/engine/id";
 import {
   convertReference,
   referenceDisplayAllowed,
@@ -34,26 +36,26 @@ export function ReferenceActions({
     editor.view.dispatch(
       state.tr.setSelection(NodeSelection.create(state.doc, pos)),
     );
-    const tr = convertReference(editor.state, display, () =>
-      crypto.randomUUID(),
-    );
+    const tr = convertReference(editor.state, display, () => createEditorId());
     if (tr) editor.view.dispatch(tr);
     editor.view.focus();
   };
   return (
     editor.isEditable && (
       <DropdownMenu modal={false}>
-        <DropdownMenuTrigger asChild>
-          <EditorHint label="Display as">
-            <SurfaceButton
-              type="button"
-              className="content-reference-action"
-              aria-label="Reference actions"
-            >
-              <MoreHorizontal />
-            </SurfaceButton>
-          </EditorHint>
-        </DropdownMenuTrigger>
+        <DropdownMenuTrigger
+          render={
+            <EditorHint label="Display as">
+              <SurfaceButton
+                type="button"
+                className="content-reference-action"
+                aria-label="Reference actions"
+              >
+                <MoreHorizontal />
+              </SurfaceButton>
+            </EditorHint>
+          }
+        />
         <DropdownMenuContent
           data-tiptap-controls=""
           data-tiptap-owner={editor.instanceId}

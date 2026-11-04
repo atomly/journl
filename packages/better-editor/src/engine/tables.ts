@@ -1,4 +1,4 @@
-import { Extension, type NodeViewRendererProps } from "@tiptap/core";
+import { Extension } from "@tiptap/core";
 import type { Node } from "@tiptap/pm/model";
 import { Plugin, PluginKey, TextSelection } from "@tiptap/pm/state";
 import {
@@ -9,7 +9,6 @@ import {
   nextCell,
   selectionCell,
   TableMap,
-  TableView,
   tableEditing,
 } from "@tiptap/pm/tables";
 import { Decoration, DecorationSet } from "@tiptap/pm/view";
@@ -116,11 +115,4 @@ export function tableExtension() {
     name: "better-editor-tables",
     priority: 1100,
   });
-}
-
-export function tableNodeView({ node }: NodeViewRendererProps) {
-  const view = new TableView(node, TABLE_DEFAULT_COLUMN_WIDTH);
-  view.dom.classList.add("better-editor-table-wrapper");
-  view.table.dataset.betterEditorBody = "table";
-  return view;
 }

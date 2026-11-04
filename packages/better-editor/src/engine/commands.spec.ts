@@ -4,6 +4,7 @@ import { Editor } from "@tiptap/core";
 import { NodeSelection, TextSelection } from "@tiptap/pm/state";
 import { expect, test } from "vitest";
 import { fromTiptapDocument, toTiptapDocument } from "../serialization/tiptap";
+import { testDocumentExtensions } from "../testing/extensions";
 import {
   applyAcceptedOperations,
   blockDragSelection,
@@ -15,7 +16,6 @@ import {
 } from "./commands";
 import { blockAt, identityExtension } from "./identity";
 import { captureLink, convertReference } from "./references";
-import { documentExtensions } from "./schema";
 
 const p = (id: string, text = id) =>
   parseBlock({ content: text, id, type: "paragraph" });
@@ -26,7 +26,7 @@ function setup(blocks = [p("a", "abcdef"), p("b")]) {
     content: toTiptapDocument(blocks).toJSON(),
     element: document.createElement("div"),
     extensions: [
-      ...documentExtensions(),
+      ...testDocumentExtensions(),
       editingExtension(createId),
       identityExtension(createId),
     ],

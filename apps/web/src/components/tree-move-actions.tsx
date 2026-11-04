@@ -1,10 +1,6 @@
 "use client";
 
 import { Button } from "@acme/ui/button";
-import { DropdownMenuItem } from "@acme/ui/dropdown-menu";
-import { Input } from "@acme/ui/input";
-import { ArrowDown, ArrowUp, FolderInput } from "lucide-react";
-import { type ComponentProps, useEffect, useId, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -12,7 +8,11 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "~/components/ui/dialog";
+} from "@acme/ui/dialog";
+import { DropdownMenuItem } from "@acme/ui/dropdown-menu";
+import { Input } from "@acme/ui/input";
+import { ArrowDown, ArrowUp, FolderInput } from "lucide-react";
+import { type ComponentProps, useEffect, useId, useState } from "react";
 
 export function TreeMoveMenuItems({
   disabled = false,

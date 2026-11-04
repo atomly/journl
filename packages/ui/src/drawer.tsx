@@ -1,9 +1,9 @@
 "use client";
 
+import { cn } from "@acme/ui/utils";
 import type * as React from "react";
 import { createContext, useCallback, useContext, useState } from "react";
 import { Drawer as DrawerPrimitive } from "vaul";
-import { cn } from "~/lib/cn";
 
 type DrawerContextValue = React.ComponentProps<typeof DrawerPrimitive.Root> & {
   setOpen: React.Dispatch<React.SetStateAction<boolean>>;
@@ -34,6 +34,7 @@ function Drawer({
     <DrawerPrimitive.Root
       data-slot="drawer"
       {...context}
+      open={open ?? context?.open}
       onOpenChange={handleOpenChange}
       {...props}
     />

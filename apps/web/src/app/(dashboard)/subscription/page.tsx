@@ -1,7 +1,7 @@
+import { Card, CardContent } from "@acme/ui/card";
 import { CreditCard, Shield } from "lucide-react";
 import { redirect } from "next/navigation";
 import { withAuth } from "~/app/_guards/page-guards";
-import { Card, CardContent } from "~/components/ui/card";
 import { centsToDollars } from "~/lib/currency";
 import { api } from "~/trpc/server";
 import { SubscriptionView } from "./_components/subscription-view";

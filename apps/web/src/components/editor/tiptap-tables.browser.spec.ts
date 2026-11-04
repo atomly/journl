@@ -283,9 +283,8 @@ test("merged cells and outer gutters keep the table extension rails reachable", 
     .last()
     .click({ modifiers: ["Shift"] });
   await expect(table.locator(".selectedCell")).toHaveCount(9);
-  await page
-    .getByRole("button", { exact: true, name: "More formatting" })
-    .click();
+  await page.getByRole("button", { exact: true, name: "More actions" }).click();
+  await page.getByRole("menuitem", { exact: true, name: "Cells" }).hover();
   await page
     .getByRole("menuitem", { exact: true, name: "Merge cells" })
     .click();

@@ -12,6 +12,7 @@ import type { Editor } from "@tiptap/core";
 import { TextSelection } from "@tiptap/pm/state";
 import { ChevronDown } from "lucide-react";
 import { selectedBlock } from "../engine/commands";
+import { createEditorId } from "../engine/id";
 import {
   captureLink,
   convertReference,
@@ -102,7 +103,7 @@ export function ReferenceDisplayItems({
                 insertReference(link.href, link.label, type);
               } else {
                 const tr = convertReference(editor.state, type, () =>
-                  crypto.randomUUID(),
+                  createEditorId(),
                 );
                 if (tr) editor.view.dispatch(tr.scrollIntoView());
               }
@@ -135,16 +136,18 @@ export function ReferenceDisplayControl({
   return (
     <DropdownMenu modal={false}>
       <EditorToolbarControl label="Display as">
-        <DropdownMenuTrigger asChild>
-          <Button
-            variant="ghost"
-            size="sm"
-            onMouseDown={(event) => event.preventDefault()}
-          >
-            Display as
-            <ChevronDown className="size-4" />
-          </Button>
-        </DropdownMenuTrigger>
+        <DropdownMenuTrigger
+          render={
+            <Button
+              variant="ghost"
+              size="sm"
+              onMouseDown={(event) => event.preventDefault()}
+            >
+              Display as
+              <ChevronDown className="size-4" />
+            </Button>
+          }
+        />
       </EditorToolbarControl>
       <DropdownMenuContent
         data-tiptap-controls=""

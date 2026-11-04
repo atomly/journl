@@ -1,8 +1,8 @@
 "use client";
 
 import { useIsMobile } from "@acme/ui/use-mobile";
+import { cn } from "@acme/ui/utils";
 import { useEffect, useState } from "react";
-import { cn } from "~/lib/cn";
 import { useAppLayout } from "../../../_components/app-layout-provider";
 
 type AppHeaderProps = React.ComponentProps<"header">;

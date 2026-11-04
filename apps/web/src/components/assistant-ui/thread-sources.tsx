@@ -1,5 +1,6 @@
 "use client";
 
+import { Badge } from "@acme/ui/badge";
 import { Button, buttonVariants } from "@acme/ui/button";
 import {
   DropdownMenu,
@@ -7,11 +8,10 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@acme/ui/dropdown-menu";
+import { ScrollArea } from "@acme/ui/scroll-area";
+import { cn } from "@acme/ui/utils";
 import { X } from "lucide-react";
 import { type BlockSelection, useJournlAgent } from "~/hooks/use-journl-agent";
-import { Badge } from "../ui/badge";
-import { ScrollArea } from "../ui/scroll-area";
-import { cn } from "../utils";
 
 type Source = {
   id: string;
@@ -70,15 +70,17 @@ export function ComposerSources({ className }: ComposerContextProps) {
       })}
       {dropdown.length > 0 && (
         <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              variant="outline"
-              size="icon"
-              className="h-6.5 w-auto rounded-md border-sidebar-border/80 bg-muted/95 px-2 py-1 text-xs"
-            >
-              +{dropdown.length}
-            </Button>
-          </DropdownMenuTrigger>
+          <DropdownMenuTrigger
+            render={
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-6.5 w-auto rounded-md border-sidebar-border/80 bg-muted/95 px-2 py-1 text-xs"
+              >
+                +{dropdown.length}
+              </Button>
+            }
+          />
           <DropdownMenuContent className="z-1600 space-y-2 p-2">
             <div className="text-muted-foreground text-xs">Selections</div>
             <ScrollArea className="flex h-full max-h-42 flex-col [&_div:has(button)]:space-y-1">

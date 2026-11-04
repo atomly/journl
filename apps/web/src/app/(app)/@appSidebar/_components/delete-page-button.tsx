@@ -24,6 +24,7 @@ type DeletePageDialogProps = {
   children: ReactNode;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
+  finalFocus?: ComponentProps<typeof DialogContent>["finalFocus"];
 };
 
 type DeletePageDialogTriggerProps = ComponentProps<typeof DialogTrigger>;
@@ -64,6 +65,7 @@ export function DeletePageDialog({
   children,
   open,
   onOpenChange,
+  finalFocus,
 }: DeletePageDialogProps) {
   const pathname = usePathname();
   const router = useRouter();
@@ -162,7 +164,7 @@ export function DeletePageDialog({
     <Dialog open={isDialogOpen} onOpenChange={setDialogOpen}>
       {children}
 
-      <DialogContent>
+      <DialogContent finalFocus={finalFocus}>
         <DialogHeader>
           <DialogTitle>Delete Page</DialogTitle>
           <DialogDescription>

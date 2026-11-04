@@ -5,6 +5,7 @@ import { Button } from "@acme/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuTrigger,
 } from "@acme/ui/dropdown-menu";
 import { cn } from "@acme/ui/utils";
@@ -84,7 +85,9 @@ export function AppSidebarPageItem({
           </Button>
         }
       />
-      <DropdownMenuContent align="end">{moves.menuItems}</DropdownMenuContent>
+      <DropdownMenuContent align="end">
+        <DropdownMenuGroup>{moves.menuItems}</DropdownMenuGroup>
+      </DropdownMenuContent>
     </DropdownMenu>
   );
 

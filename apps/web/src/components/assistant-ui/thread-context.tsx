@@ -3,6 +3,7 @@
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
   SelectTrigger,
   SelectValue,
@@ -79,11 +80,13 @@ type ComposerReasoningContentProps = Omit<
 export function ComposerReasoningContent(props: ComposerReasoningContentProps) {
   return (
     <SelectContent {...props}>
-      {REASONING_MODES.map((reasoning) => (
-        <SelectItem key={reasoning} value={reasoning}>
-          {REASONING_MODE_LABELS[reasoning]}
-        </SelectItem>
-      ))}
+      <SelectGroup>
+        {REASONING_MODES.map((reasoning) => (
+          <SelectItem key={reasoning} value={reasoning}>
+            {REASONING_MODE_LABELS[reasoning]}
+          </SelectItem>
+        ))}
+      </SelectGroup>
     </SelectContent>
   );
 }

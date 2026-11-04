@@ -196,10 +196,12 @@ export function ReferenceDisplayControl({
           return restoreEditorFocus(editor);
         }}
       >
-        <ReferenceDisplayItems
-          editor={editor}
-          insertReference={insertReference}
-        />
+        <DropdownMenuGroup>
+          <ReferenceDisplayItems
+            editor={editor}
+            insertReference={insertReference}
+          />
+        </DropdownMenuGroup>
       </DropdownMenuContent>
     </DropdownMenu>
   );

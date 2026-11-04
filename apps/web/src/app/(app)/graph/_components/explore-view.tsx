@@ -4,6 +4,7 @@ import { Button } from "@acme/ui/button";
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
   SelectTrigger,
   SelectValue,
@@ -318,8 +319,10 @@ export function ExploreView({
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="latest">Latest first</SelectItem>
-                      <SelectItem value="oldest">Oldest first</SelectItem>
+                      <SelectGroup>
+                        <SelectItem value="latest">Latest first</SelectItem>
+                        <SelectItem value="oldest">Oldest first</SelectItem>
+                      </SelectGroup>
                     </SelectContent>
                   </Select>
                 </div>

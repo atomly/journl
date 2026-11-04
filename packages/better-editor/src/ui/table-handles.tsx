@@ -4,6 +4,7 @@ import { Button } from "@acme/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuTrigger,
 } from "@acme/ui/dropdown-menu";
 import {
@@ -22,6 +23,7 @@ import {
   type CSSProperties,
   useCallback,
   useEffect,
+  useLayoutEffect,
   useRef,
   useState,
 } from "react";
@@ -454,7 +456,7 @@ function useTablePosition(
     strategy: "fixed",
     whileElementsMounted: autoUpdate,
   });
-  useEffect(() => {
+  useLayoutEffect(() => {
     floating.refs.setPositionReference({
       contextElement: table,
       getBoundingClientRect: reference,
@@ -507,7 +509,7 @@ function TableAxisHandle({
   const dragging = useRef(false);
   const consumedClick = useRef(false);
   const dragClosedMenu = useRef(false);
-  const { refs, floatingStyles, clipped } = useTablePosition(
+  const { refs, floatingStyles, clipped, isPositioned } = useTablePosition(
     active.element,
     cell,
     axis === "row" ? "right" : "top",
@@ -557,7 +559,8 @@ function TableAxisHandle({
               className="better-editor-table-handle"
               style={{
                 ...floatingStyles,
-                visibility: hidden || clipped ? "hidden" : undefined,
+                visibility:
+                  !isPositioned || hidden || clipped ? "hidden" : undefined,
               }}
               draggable={draggable}
               onMouseDown={() => {
@@ -599,7 +602,9 @@ function TableAxisHandle({
           return dragClosedMenu.current ? false : restoreEditorFocus(editor);
         }}
       >
-        {renderMenu({ axis, blockId: active.id, editor })}
+        <DropdownMenuGroup>
+          {renderMenu({ axis, blockId: active.id, editor })}
+        </DropdownMenuGroup>
       </DropdownMenuContent>
     </DropdownMenu>
   );
@@ -620,7 +625,7 @@ function TableExtendRail({
   extending: boolean;
   onExtending: (value: TableAxis | null) => void;
 }) {
-  const { refs, floatingStyles, clipped } = useTablePosition(
+  const { refs, floatingStyles, clipped, isPositioned } = useTablePosition(
     active.element,
     active.element,
     axis === "row" ? "bottom" : "right",
@@ -700,7 +705,7 @@ function TableExtendRail({
         data-table-extend={axis}
         style={{
           ...floatingStyles,
-          visibility: show && !clipped ? undefined : "hidden",
+          visibility: isPositioned && show && !clipped ? undefined : "hidden",
         }}
         onPointerDown={(event) => {
           if (event.button !== 0 || !editor.isEditable) return;

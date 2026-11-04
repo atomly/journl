@@ -198,7 +198,7 @@ export function HeaderSearchButton({
             </CommandList>
           </ScrollArea>
         </Command>
-        <DialogFooter className="mx-0 mb-0 flex flex-row items-center bg-muted p-1">
+        <DialogFooter className="mx-0 mb-0 flex flex-row items-center rounded-none bg-muted p-1">
           {isMobile ? (
             <Button
               className="ms-auto bg-background py-1 text-background-foreground text-sm hover:bg-background/80 hover:text-background-foreground"

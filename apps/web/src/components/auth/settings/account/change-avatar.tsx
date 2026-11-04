@@ -4,6 +4,7 @@ import { Button, buttonVariants } from "@acme/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@acme/ui/dropdown-menu";
@@ -128,21 +129,23 @@ export function ChangeAvatar({ className }: ChangeAvatarProps) {
           </DropdownMenuTrigger>
 
           <DropdownMenuContent>
-            <DropdownMenuItem onClick={() => fileInputRef.current?.click()}>
-              <Upload className="text-muted-foreground" />
+            <DropdownMenuGroup>
+              <DropdownMenuItem onClick={() => fileInputRef.current?.click()}>
+                <Upload className="text-muted-foreground" />
 
-              {localization.settings.uploadAvatar}
-            </DropdownMenuItem>
+                {localization.settings.uploadAvatar}
+              </DropdownMenuItem>
 
-            <DropdownMenuItem
-              variant="destructive"
-              disabled={!session?.user.image}
-              onClick={handleDelete}
-            >
-              <Trash2 />
+              <DropdownMenuItem
+                variant="destructive"
+                disabled={!session?.user.image}
+                onClick={handleDelete}
+              >
+                <Trash2 />
 
-              {localization.settings.deleteAvatar}
-            </DropdownMenuItem>
+                {localization.settings.deleteAvatar}
+              </DropdownMenuItem>
+            </DropdownMenuGroup>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>

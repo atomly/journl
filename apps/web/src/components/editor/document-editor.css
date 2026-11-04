@@ -27,3 +27,9 @@
     margin-top: 32px;
   }
 }
+
+/* The floating toolbar is portaled, so its consumer class owns this skin. */
+.better-editor-formatting-toolbar.journl-editor-toolbar {
+  border-color: var(--sidebar-border);
+  border-radius: var(--radius);
+}

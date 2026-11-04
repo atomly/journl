@@ -33,12 +33,14 @@ import { Button } from "@acme/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuTrigger,
 } from "@acme/ui/dropdown-menu";
 import { Popover, PopoverContent, PopoverTrigger } from "@acme/ui/popover";
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
   SelectTrigger,
   SelectValue,
@@ -164,20 +166,22 @@ function BlockTypeSelector({ editor }: { editor: Editor }) {
           return restoreEditorFocus(editor);
         }}
       >
-        {options.map((choice) => (
-          <EditorHint
-            key={choice.title}
-            label={`Turn this block into ${choice.title === "Text" ? "a paragraph" : choice.title.toLowerCase()}`}
-          >
-            <SelectItem
+        <SelectGroup>
+          {options.map((choice) => (
+            <EditorHint
               key={choice.title}
-              value={choice.title}
-              onMouseDown={(event) => event.preventDefault()}
+              label={`Turn this block into ${choice.title === "Text" ? "a paragraph" : choice.title.toLowerCase()}`}
             >
-              {choice.title === "Text" ? "Paragraph" : choice.title}
-            </SelectItem>
-          </EditorHint>
-        ))}
+              <SelectItem
+                key={choice.title}
+                value={choice.title}
+                onMouseDown={(event) => event.preventDefault()}
+              >
+                {choice.title === "Text" ? "Paragraph" : choice.title}
+              </SelectItem>
+            </EditorHint>
+          ))}
+        </SelectGroup>
       </SelectContent>
     </Select>
   );
@@ -200,6 +204,7 @@ export function DocumentToolbar({
   return (
     <TooltipProvider>
       <EditorToolbar
+        className="journl-editor-toolbar"
         editor={editor}
         mode={mode}
         visibility={visibility}
@@ -375,21 +380,23 @@ export function EditorToolbarItems({
             return restoreEditorFocus(editor);
           }}
         >
-          {["left", "center", "right", "justify"].map((value) => (
-            <EditorMenuItem
-              hint={`Align text ${value}`}
-              key={value}
-              onClick={() =>
-                dispatch(
-                  setBlockProperties(editor.state, {
-                    textAlignment: value,
-                  }),
-                )
-              }
-            >
-              {value.charAt(0).toUpperCase() + value.slice(1)}
-            </EditorMenuItem>
-          ))}
+          <DropdownMenuGroup>
+            {["left", "center", "right", "justify"].map((value) => (
+              <EditorMenuItem
+                hint={`Align text ${value}`}
+                key={value}
+                onClick={() =>
+                  dispatch(
+                    setBlockProperties(editor.state, {
+                      textAlignment: value,
+                    }),
+                  )
+                }
+              >
+                {value.charAt(0).toUpperCase() + value.slice(1)}
+              </EditorMenuItem>
+            ))}
+          </DropdownMenuGroup>
         </DropdownMenuContent>
       </DropdownMenu>
       <Popover open={colorsOpen} onOpenChange={setColorsOpen}>
@@ -501,12 +508,14 @@ export function EditorToolbarItems({
             return restoreEditorFocus(editor);
           }}
         >
-          <BlockMenuContent
-            services={services}
-            editor={editor}
-            insertReference={insertReference}
-            surface="toolbar"
-          />
+          <DropdownMenuGroup>
+            <BlockMenuContent
+              services={services}
+              editor={editor}
+              insertReference={insertReference}
+              surface="toolbar"
+            />
+          </DropdownMenuGroup>
         </DropdownMenuContent>
       </DropdownMenu>
     </>

@@ -108,9 +108,11 @@ export function DocumentTableMenu({
                   data-tiptap-controls=""
                   data-tiptap-owner={editor.instanceId}
                 >
-                  {entries.map((action) => (
-                    <Action key={action.label} action={action} />
-                  ))}
+                  <DropdownMenuGroup>
+                    {entries.map((action) => (
+                      <Action key={action.label} action={action} />
+                    ))}
+                  </DropdownMenuGroup>
                 </DropdownMenuSubContent>
               </DropdownMenuSub>
             );

@@ -4,6 +4,7 @@ import { Button } from "@acme/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuTrigger,
 } from "@acme/ui/dropdown-menu";
 import { useIsMobile } from "@acme/ui/use-mobile";
@@ -549,11 +550,13 @@ export function TiptapSideMenu({
                     : restoreEditorFocus(editor);
                 }}
               >
-                {renderMenu({
-                  blockId:
-                    selectedBlocks(editor.state).length > 1 ? undefined : id,
-                  editor,
-                })}
+                <DropdownMenuGroup>
+                  {renderMenu({
+                    blockId:
+                      selectedBlocks(editor.state).length > 1 ? undefined : id,
+                    editor,
+                  })}
+                </DropdownMenuGroup>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>,

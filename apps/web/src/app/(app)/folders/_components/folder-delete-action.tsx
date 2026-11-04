@@ -5,6 +5,7 @@ import { Button } from "@acme/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@acme/ui/dropdown-menu";
@@ -31,15 +32,17 @@ export function FolderDeleteAction({ folder }: FolderDeleteActionProps) {
           }
         />
         <DropdownMenuContent align="end">
-          <DropdownMenuItem
-            variant="destructive"
-            onClick={() => {
-              setOpen(true);
-            }}
-          >
-            <Trash2 />
-            Delete folder
-          </DropdownMenuItem>
+          <DropdownMenuGroup>
+            <DropdownMenuItem
+              variant="destructive"
+              onClick={() => {
+                setOpen(true);
+              }}
+            >
+              <Trash2 />
+              Delete folder
+            </DropdownMenuItem>
+          </DropdownMenuGroup>
         </DropdownMenuContent>
       </DropdownMenu>
     </DeleteFolderDialog>

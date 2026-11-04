@@ -26,7 +26,7 @@ export function PageShell({
   return (
     <div
       className={cn(
-        "mx-auto flex min-h-full max-w-5xl flex-col gap-4 pt-8 pb-52",
+        "mx-auto flex min-h-full max-w-5xl flex-col gap-4 pt-8",
         className,
       )}
       {...props}

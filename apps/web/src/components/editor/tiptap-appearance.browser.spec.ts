@@ -72,6 +72,22 @@ for (const theme of ["light", "dark"]) {
       await expect(toolbar).toHaveCSS("flex-wrap", "nowrap");
       expect((await toolbar.boundingBox())?.height).toBeLessThan(50);
     }
+    await page.keyboard.press("Escape");
+    await editor.focus();
+    await page.keyboard.press("Alt+F10");
+    await expect(toolbar).toBeVisible();
+    const toolbarSkin = await toolbar.evaluate((node) => {
+      const header = document.querySelector("header .border-sidebar-border");
+      const style = getComputedStyle(node);
+      return {
+        border: style.borderTopColor,
+        header: header ? getComputedStyle(header).borderTopColor : null,
+        radius: Number.parseFloat(style.borderTopLeftRadius),
+      };
+    });
+    expect(toolbarSkin.radius).toBeGreaterThan(10);
+    expect(toolbarSkin.border).toBe(toolbarSkin.header);
+    await page.keyboard.press("Escape");
     const paragraph = editor
       .locator('[data-better-editor-body="paragraph"]')
       .first();

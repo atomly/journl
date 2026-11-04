@@ -46,10 +46,7 @@ export function DashboardHeader({ className }: UserHeaderProps) {
           <span className="font-bold text-xl">Dashboard</span>
         </div>
       </div>
-      <NavigationMenu
-        className="mx-auto flex max-w-svw flex-1 justify-between [&>div]:w-full"
-        viewport={false}
-      >
+      <NavigationMenu className="mx-auto flex max-w-svw flex-1 justify-between [&>div]:w-full">
         <NavigationMenuList className="w-full justify-end gap-x-2">
           <SessionGate authenticated={false}>
             <NavigationMenuItem>

@@ -20,6 +20,7 @@ vi.mock("@acme/ui/select", () => {
       return null;
     },
     SelectContent: Pass,
+    SelectGroup: Pass,
     SelectItem: Pass,
     SelectTrigger: Pass,
     SelectValue: Pass,

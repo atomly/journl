@@ -3,6 +3,7 @@
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
   SelectTrigger,
   SelectValue,
@@ -78,11 +79,13 @@ const LanguageMenu = memo(function LanguageMenu({
           data-tiptap-owner={editor.instanceId}
           finalFocus={() => restoreEditorFocus(editor)}
         >
-          {options.map((value) => (
-            <SelectItem key={value} value={value}>
-              {languageLabel(value)}
-            </SelectItem>
-          ))}
+          <SelectGroup>
+            {options.map((value) => (
+              <SelectItem key={value} value={value}>
+                {languageLabel(value)}
+              </SelectItem>
+            ))}
+          </SelectGroup>
         </SelectContent>
       </Select>
     </div>

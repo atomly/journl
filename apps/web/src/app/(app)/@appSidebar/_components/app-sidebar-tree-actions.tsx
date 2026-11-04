@@ -7,6 +7,7 @@ import { Button } from "@acme/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@acme/ui/dropdown-menu";
@@ -391,36 +392,38 @@ export function AppSidebarTreeActions({
           side={isMobile ? "bottom" : "right"}
           sideOffset={6}
         >
-          <DropdownMenuItem
-            onClick={() => {
-              handleCreatePage();
-            }}
-            disabled={showLoading}
-          >
-            <FilePlus2 />
-            New page
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            onClick={() => {
-              handleCreateFolder();
-            }}
-            disabled={showLoading}
-          >
-            <FolderPlus />
-            New folder
-          </DropdownMenuItem>
-          {moves.menuItems}
-          {kind === "folder" ? (
+          <DropdownMenuGroup>
             <DropdownMenuItem
-              variant="destructive"
               onClick={() => {
-                setIsDeleteDialogOpen(true);
+                handleCreatePage();
               }}
+              disabled={showLoading}
             >
-              <Trash2 />
-              Delete folder
+              <FilePlus2 />
+              New page
             </DropdownMenuItem>
-          ) : null}
+            <DropdownMenuItem
+              onClick={() => {
+                handleCreateFolder();
+              }}
+              disabled={showLoading}
+            >
+              <FolderPlus />
+              New folder
+            </DropdownMenuItem>
+            {moves.menuItems}
+            {kind === "folder" ? (
+              <DropdownMenuItem
+                variant="destructive"
+                onClick={() => {
+                  setIsDeleteDialogOpen(true);
+                }}
+              >
+                <Trash2 />
+                Delete folder
+              </DropdownMenuItem>
+            ) : null}
+          </DropdownMenuGroup>
         </DropdownMenuContent>
       </DropdownMenu>
     </>

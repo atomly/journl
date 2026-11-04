@@ -5,6 +5,7 @@ import { Collapsible, CollapsibleContent } from "@acme/ui/collapsible";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@acme/ui/dropdown-menu";
@@ -453,27 +454,29 @@ function DraggablePageRow({
                 }
               />
               <DropdownMenuContent align="end">
-                <DropdownMenuItem
-                  onClick={() => {
-                    titleVersionRef.current = page.updated_at;
-                    setTitleError(false);
-                    setDraftTitle(page.title);
-                    setIsEditing(true);
-                  }}
-                >
-                  <Pencil className="size-3.5" />
-                  Rename
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  variant="destructive"
-                  onClick={() => {
-                    setIsDeleteDialogOpen(true);
-                  }}
-                >
-                  <Trash2 className="size-3.5" />
-                  Delete
-                </DropdownMenuItem>
-                {moves.menuItems}
+                <DropdownMenuGroup>
+                  <DropdownMenuItem
+                    onClick={() => {
+                      titleVersionRef.current = page.updated_at;
+                      setTitleError(false);
+                      setDraftTitle(page.title);
+                      setIsEditing(true);
+                    }}
+                  >
+                    <Pencil className="size-3.5" />
+                    Rename
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    variant="destructive"
+                    onClick={() => {
+                      setIsDeleteDialogOpen(true);
+                    }}
+                  >
+                    <Trash2 className="size-3.5" />
+                    Delete
+                  </DropdownMenuItem>
+                  {moves.menuItems}
+                </DropdownMenuGroup>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
@@ -836,25 +839,27 @@ function DraggableFolderRow({
                     }
                   />
                   <DropdownMenuContent align="end">
-                    <DropdownMenuItem
-                      onClick={() => {
-                        setDraftName(folder.name);
-                        setIsEditing(true);
-                      }}
-                    >
-                      <Pencil className="size-3.5" />
-                      Rename
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      variant="destructive"
-                      onClick={() => {
-                        setIsDeleteDialogOpen(true);
-                      }}
-                    >
-                      <Trash2 className="size-3.5" />
-                      Delete
-                    </DropdownMenuItem>
-                    {moves.menuItems}
+                    <DropdownMenuGroup>
+                      <DropdownMenuItem
+                        onClick={() => {
+                          setDraftName(folder.name);
+                          setIsEditing(true);
+                        }}
+                      >
+                        <Pencil className="size-3.5" />
+                        Rename
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        variant="destructive"
+                        onClick={() => {
+                          setIsDeleteDialogOpen(true);
+                        }}
+                      >
+                        <Trash2 className="size-3.5" />
+                        Delete
+                      </DropdownMenuItem>
+                      {moves.menuItems}
+                    </DropdownMenuGroup>
                   </DropdownMenuContent>
                 </DropdownMenu>
 

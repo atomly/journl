@@ -17,6 +17,34 @@ test.beforeEach(async ({ page }) => {
   await page.getByRole("option", { exact: true, name: "Table" }).click();
 });
 
+test("table controls first appear at their table edge without a geometry transition", async ({
+  page,
+}) => {
+  const table = page.locator(".better-editor-tiptap table");
+  await table.locator("tr").last().locator("td").last().hover();
+  const controls = [
+    page.getByRole("button", { exact: true, name: "Row actions" }),
+    page.getByRole("button", { exact: true, name: "Column actions" }),
+    page.getByRole("button", { exact: true, name: "Add row" }),
+    page.getByRole("button", { exact: true, name: "Add column" }),
+  ];
+  for (const control of controls) {
+    await expect(control).toBeVisible();
+    const transition = await control.evaluate(
+      (node) => getComputedStyle(node).transitionProperty,
+    );
+    expect(transition).not.toMatch(
+      /\b(all|transform|translate|top|left|width|height)\b/,
+    );
+    const box = await control.boundingBox();
+    const edge = await table.boundingBox();
+    if (!box || !edge) throw new Error("Missing positioned table controls");
+    // Even the first visible sample must be beside the table, never at (0, 0).
+    expect(box.x).toBeGreaterThan(edge.x - 32);
+    expect(box.y).toBeGreaterThan(edge.y - 32);
+  }
+});
+
 test("table edge rails and border menus add, select, delete and undo the intended axes", async ({
   page,
 }) => {

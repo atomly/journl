@@ -1,21 +1,9 @@
-import { expect, test } from "~/testing/browser/fixtures";
+import { expect, observePageErrors, test } from "~/testing/browser/fixtures";
 
 test("shipped account dropdown hosts the shipped theme control and signs out", async ({
   page,
 }, info) => {
-  const errors: string[] = [];
-  page.on("pageerror", (error) => {
-    // WebKit can cancel Next devtools' frame lookup during reload. Keep actual
-    // application exceptions in this assertion, including all other fetch errors.
-    if (
-      error.message.includes(
-        "/__nextjs_original-stack-frames due to access control checks",
-      ) &&
-      error.stack?.includes("next-devtools")
-    )
-      return;
-    errors.push(error.message);
-  });
+  const errors = await observePageErrors(page);
   await page.goto("/journal");
   await expect(page.getByRole("button", { name: "Toggle theme" })).toHaveCount(
     0,
@@ -98,7 +86,10 @@ test("shipped account dropdown hosts the shipped theme control and signs out", a
     page.getByRole("menuitem", { name: /^sign out$/i }),
   ).toBeFocused();
   await page.keyboard.press("Enter");
-  await expect(page).toHaveURL(/\/auth\/sign-in(?:[?#].*)?$/);
+  // The cold dev server compiles both the sign-out and sign-in routes.
+  await expect(page).toHaveURL(/\/auth\/sign-in(?:[?#].*)?$/, {
+    timeout: 60_000,
+  });
   const session = await page.request.get("/api/auth/get-session");
   expect(await session.json()).toBeNull();
   expect(errors).toEqual([]);
@@ -162,4 +153,33 @@ test("shipped account dropdown works in the collapsed desktop sidebar", async ({
   await expect(search).toBeVisible();
   await page.keyboard.press("Escape");
   expect(errors).toEqual([]);
+});
+
+test("page error observation keeps real exceptions and rejections across documents", async ({
+  page,
+}) => {
+  const errors = await observePageErrors(page);
+  await page.goto("/");
+  await page.addScriptTag({
+    content:
+      'setTimeout(() => { throw new Error("uncaught exception control"); }, 0);',
+  });
+  await expect.poll(() => errors).toEqual(["uncaught exception control"]);
+  await page.goto("/");
+  await page.addScriptTag({
+    content: 'void Promise.reject(new Error("rejection control"));',
+  });
+  await expect
+    .poll(() => errors)
+    .toEqual(["uncaught exception control", "rejection control"]);
+  await page.addScriptTag({
+    content: 'void Promise.reject({ code: "non-error rejection control" });',
+  });
+  await expect
+    .poll(() => errors)
+    .toEqual([
+      "uncaught exception control",
+      "rejection control",
+      '{"code":"non-error rejection control"}',
+    ]);
 });

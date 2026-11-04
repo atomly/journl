@@ -2,6 +2,7 @@
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuTrigger,
 } from "@acme/ui/dropdown-menu";
 import type { Editor } from "@tiptap/core";
@@ -112,7 +113,9 @@ export function EditorContextMenu({
           return restoreEditorFocus(editor);
         }}
       >
-        {renderMenu({ blockId: context.id, editor })}
+        <DropdownMenuGroup>
+          {renderMenu({ blockId: context.id, editor })}
+        </DropdownMenuGroup>
       </DropdownMenuContent>
     </DropdownMenu>
   );

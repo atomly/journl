@@ -5,6 +5,7 @@ import { Button, buttonVariants } from "@acme/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@acme/ui/dropdown-menu";
@@ -82,26 +83,28 @@ export function ComposerSources({ className }: ComposerContextProps) {
             }
           />
           <DropdownMenuContent className="z-1600 space-y-2 p-2">
-            <div className="text-muted-foreground text-xs">Selections</div>
-            <ScrollArea className="flex h-full max-h-42 flex-col [&_div:has(button)]:space-y-1">
-              {dropdown.map((source) => {
-                return (
-                  <DropdownMenuItem
-                    className={cn(
-                      buttonVariants({ variant: "outline" }),
-                      "!px-1 !py-1.5 h-auto w-full max-w-72 cursor-pointer justify-between gap-x-1.5 text-xs",
-                    )}
-                    key={source.id}
-                    closeOnClick={false}
-                    onClick={() => unsetSelection(source.selection)}
-                    aria-label="Remove selection"
-                  >
-                    <span className="truncate">{source.displayText}</span>
-                    <X className="size-4" />
-                  </DropdownMenuItem>
-                );
-              })}
-            </ScrollArea>
+            <DropdownMenuGroup>
+              <div className="text-muted-foreground text-xs">Selections</div>
+              <ScrollArea className="flex h-full max-h-42 flex-col [&_div:has(button)]:space-y-1">
+                {dropdown.map((source) => {
+                  return (
+                    <DropdownMenuItem
+                      className={cn(
+                        buttonVariants({ variant: "outline" }),
+                        "!px-1 !py-1.5 h-auto w-full max-w-72 cursor-pointer justify-between gap-x-1.5 text-xs",
+                      )}
+                      key={source.id}
+                      closeOnClick={false}
+                      onClick={() => unsetSelection(source.selection)}
+                      aria-label="Remove selection"
+                    >
+                      <span className="truncate">{source.displayText}</span>
+                      <X className="size-4" />
+                    </DropdownMenuItem>
+                  );
+                })}
+              </ScrollArea>
+            </DropdownMenuGroup>
           </DropdownMenuContent>
         </DropdownMenu>
       )}

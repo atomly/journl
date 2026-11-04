@@ -29,6 +29,7 @@ import {
   ReferenceDisplayControl,
   ReferenceDisplayItems,
 } from "@acme/better-editor/ui/reference-display";
+import { useEditorEditable } from "@acme/better-editor/ui/use-editor-editable";
 import { Button } from "@acme/ui/button";
 import {
   DropdownMenu,
@@ -49,7 +50,11 @@ import { TooltipProvider } from "@acme/ui/tooltip";
 import { useIsMobile } from "@acme/ui/use-mobile";
 import { Button as SurfaceButton } from "@base-ui/react/button";
 import type { Editor } from "@tiptap/core";
-import { TextSelection } from "@tiptap/pm/state";
+import {
+  type EditorState,
+  TextSelection,
+  type Transaction,
+} from "@tiptap/pm/state";
 import { CellSelection } from "@tiptap/pm/tables";
 import {
   AlignLeft,
@@ -102,7 +107,9 @@ function EditorTool({
 }
 
 function BlockTypeSelector({ editor }: { editor: Editor }) {
+  const editable = useEditorEditable(editor);
   const selection = useEditorSelector((instance) => {
+    if (instance.isDestroyed) return undefined;
     const body = selectedBlock(instance.state)?.node.firstChild;
     return {
       enabled: Boolean(body?.isTextblock),
@@ -131,6 +138,7 @@ function BlockTypeSelector({ editor }: { editor: Editor }) {
         ]),
       )}
       onValueChange={(value) => {
+        if (editor.isDestroyed || !editor.isEditable) return;
         const choice = blockChoices.find((choice) => choice.title === value);
         if (choice) {
           const tr = changeBlockType(editor.state, choice.type, choice.props);
@@ -138,11 +146,11 @@ function BlockTypeSelector({ editor }: { editor: Editor }) {
           editor.view.focus();
         }
       }}
-      disabled={!selection?.enabled}
+      disabled={!editable || !selection?.enabled}
     >
       <EditorToolbarControl
         label="Turn into a different block type"
-        disabled={!selection?.enabled}
+        disabled={!editable || !selection?.enabled}
       >
         <SelectTrigger
           aria-label="Block type"
@@ -245,7 +253,9 @@ export function EditorToolbarItems({
   linkOpen: boolean;
   onLinkOpenChange: (open: boolean) => void;
 }) {
+  const editable = useEditorEditable(editor);
   const capabilities = useEditorSelector((instance) => {
+    if (instance.isDestroyed) return undefined;
     const body = selectedBlock(instance.state)?.node.firstChild;
     return {
       alignable: Boolean(
@@ -262,17 +272,20 @@ export function EditorToolbarItems({
     };
   }, editor);
   const [colorsOpen, setColorsOpen] = useState(false);
-  const dispatch = (tr: import("@tiptap/pm/state").Transaction | null) => {
+  const dispatch = (create: (state: EditorState) => Transaction | null) => {
+    if (editor.isDestroyed || !editor.isEditable) return;
+    const tr = create(editor.state);
     if (tr) editor.view.dispatch(tr.scrollIntoView());
     editor.view.focus();
   };
-  const formattable = capabilities?.formattable ?? false;
+  const formattable = editable && (capabilities?.formattable ?? false);
   return (
     <>
       <EditorTool
         label="Copy block link"
         disabled={!services.getBlockUrl || !capabilities?.copyBlockId}
         onClick={() => {
+          if (editor.isDestroyed) return;
           const id =
             selectedBlock(editor.state)?.id ??
             selectedBlocks(editor.state)[0]?.id;
@@ -305,7 +318,12 @@ export function EditorToolbarItems({
             size="sm"
             disabled={!safeEditorUrl(url)}
             onClick={() => {
-              if (!restoreSelection()) return;
+              if (
+                editor.isDestroyed ||
+                !editor.isEditable ||
+                !restoreSelection()
+              )
+                return;
               const existing = captureLink(editor.state);
               if (existing)
                 editor.view.dispatch(
@@ -357,7 +375,7 @@ export function EditorToolbarItems({
       <DropdownMenu modal={false}>
         <EditorToolbarControl
           label="Text alignment"
-          disabled={!capabilities?.alignable}
+          disabled={!editable || !capabilities?.alignable}
         >
           <DropdownMenuTrigger
             render={
@@ -365,7 +383,7 @@ export function EditorToolbarItems({
                 aria-label="Text alignment"
                 variant="ghost"
                 size="icon"
-                disabled={!capabilities?.alignable}
+                disabled={!editable || !capabilities?.alignable}
                 onMouseDown={(event) => event.preventDefault()}
               >
                 <AlignLeft />
@@ -384,10 +402,11 @@ export function EditorToolbarItems({
             {["left", "center", "right", "justify"].map((value) => (
               <EditorMenuItem
                 hint={`Align text ${value}`}
+                disabled={!editable}
                 key={value}
                 onClick={() =>
-                  dispatch(
-                    setBlockProperties(editor.state, {
+                  dispatch((state) =>
+                    setBlockProperties(state, {
                       textAlignment: value,
                     }),
                   )
@@ -451,6 +470,7 @@ export function EditorToolbarItems({
                       key={value}
                       type="button"
                       aria-label={`${name === "textColor" ? "Text" : "Highlight"} ${value}`}
+                      disabled={!editable}
                       className="flex size-7 items-center justify-center rounded border hover:bg-muted"
                       style={{
                         backgroundColor:
@@ -461,7 +481,7 @@ export function EditorToolbarItems({
                       }}
                       onMouseDown={(event) => event.preventDefault()}
                       onClick={() => {
-                        dispatch(setTextColor(editor.state, name, value));
+                        dispatch((state) => setTextColor(state, name, value));
                         setColorsOpen(false);
                       }}
                     >
@@ -476,13 +496,15 @@ export function EditorToolbarItems({
       </Popover>
       <EditorTool
         label="Indent"
-        onClick={() => dispatch(indentBlock(editor.state))}
+        disabled={!editable}
+        onClick={() => dispatch((state) => indentBlock(state))}
       >
         <IndentIncrease />
       </EditorTool>
       <EditorTool
         label="Outdent"
-        onClick={() => dispatch(indentBlock(editor.state, true))}
+        disabled={!editable}
+        onClick={() => dispatch((state) => indentBlock(state, true))}
       >
         <IndentDecrease />
       </EditorTool>

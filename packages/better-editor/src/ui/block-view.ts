@@ -2,6 +2,7 @@ import type { NodeViewRendererProps } from "@tiptap/core";
 import type { NodeView } from "@tiptap/pm/view";
 import { editorColor } from "../engine/colors";
 import { TOGGLE_BLOCK_META } from "../engine/metadata";
+import { editorEditability } from "./editor-editability";
 
 /** Controls are view state, outside contentDOM and clipboard/storage serialization. */
 export function blockView({
@@ -26,6 +27,11 @@ export function blockView({
   contentDOM.dataset.betterEditorContent = "";
   controls.append(check, toggle);
   dom.append(controls, contentDOM);
+  const editable = editorEditability(editor);
+  const syncEditable = () => {
+    check.disabled = !editable.snapshot();
+  };
+  const unsubscribeEditable = editable.subscribe(syncEditable);
   const sync = () => {
     dom.dataset.blockId = node.attrs.id;
     const body = node.firstChild;
@@ -37,7 +43,7 @@ export function blockView({
     );
     check.hidden = body?.type.name !== "checkListItem";
     check.checked = Boolean(body?.attrs.props?.checked);
-    check.disabled = !editor.options.editable;
+    syncEditable();
     toggle.hidden = !(
       body?.type.name === "toggleListItem" ||
       (body?.type.name === "heading" && body.attrs.props?.isToggleable)
@@ -96,6 +102,7 @@ export function blockView({
     contentDOM,
     destroy: () => {
       editor.off("transaction", keyboardToggle);
+      unsubscribeEditable();
     },
     dom,
     ignoreMutation: (mutation) =>

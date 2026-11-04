@@ -19,6 +19,7 @@ import { captureLink } from "../engine/references";
 import { safeEditorUrl } from "../engine/schema";
 import { restoreEditorFocus } from "./controls";
 import { useEditorInstance, useEditorSelector } from "./editor-root";
+import { useEditorEditable } from "./use-editor-editable";
 
 export type LinkMenuProps = {
   editor?: Editor;
@@ -48,8 +49,10 @@ export function LinkMenu({
   contentProps,
 }: LinkMenuProps) {
   const editor = useEditorInstance(explicit);
+  const editable = useEditorEditable(editor);
   const available = useEditorSelector(
-    (instance) => instance.isEditable && Boolean(instance.schema.marks.link),
+    (instance) =>
+      editable && !instance.isDestroyed && Boolean(instance.schema.marks.link),
     editor,
   );
   const [uncontrolled, setOpen] = useState(false);
@@ -62,7 +65,7 @@ export function LinkMenu({
     onOpenChange?.(value);
   };
   useEffect(() => {
-    if (!editor || !open) return;
+    if (!editor || !editable || editor.isDestroyed || !open) return;
     bookmark.current = editor.state.selection.getBookmark();
     valid.current = true;
     setUrl(captureLink(editor.state)?.href ?? "");
@@ -90,12 +93,12 @@ export function LinkMenu({
       editor.off("transaction", map);
       bookmark.current = undefined;
     };
-  }, [editor, open]);
+  }, [editor, open, editable]);
   if (!editor) return null;
   return (
-    <Popover open={open} onOpenChange={change}>
+    <Popover open={open && editable} onOpenChange={change}>
       <Toolbar.Button
-        disabled={!available}
+        disabled={!editable || !available}
         aria-label={label}
         render={
           <PopoverTrigger
@@ -117,6 +120,7 @@ export function LinkMenu({
             const href = safeEditorUrl(url);
             if (
               !href ||
+              editor.isDestroyed ||
               !valid.current ||
               !bookmark.current ||
               !editor.isEditable
@@ -162,7 +166,12 @@ export function LinkMenu({
             close: () => change(false),
             editor,
             restoreSelection: () => {
-              if (!editor.isEditable || !valid.current || !bookmark.current)
+              if (
+                editor.isDestroyed ||
+                !editor.isEditable ||
+                !valid.current ||
+                !bookmark.current
+              )
                 return false;
               try {
                 editor.view.dispatch(

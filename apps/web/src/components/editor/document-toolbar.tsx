@@ -9,6 +9,7 @@ import { captureLink } from "@acme/better-editor/engine/references";
 import { safeEditorUrl } from "@acme/better-editor/engine/schema";
 import { blockChoices } from "@acme/better-editor/engine/suggestions";
 import {
+  canChangeBlockType,
   changeBlockType,
   setBlockProperties,
   setTextColor,
@@ -98,17 +99,14 @@ function EditorTool({
   );
 }
 
-function blockTypeOptions(editor: Editor) {
-  return blockChoices.filter((choice) =>
-    Boolean(changeBlockType(editor.state, choice.type, choice.props)),
-  );
-}
-
 function BlockTypeSelector({ editor }: { editor: Editor }) {
   const selection = useEditorSelector((instance) => {
     const body = selectedBlock(instance.state)?.node.firstChild;
     return {
       enabled: Boolean(body?.isTextblock),
+      options: blockChoices.filter((choice) =>
+        canChangeBlockType(instance.state, choice.type, choice.props),
+      ),
       value:
         body?.type.name === "heading"
           ? body.attrs.props?.isToggleable
@@ -120,11 +118,12 @@ function BlockTypeSelector({ editor }: { editor: Editor }) {
   }, editor);
   const mobile = useIsMobile();
   const value = selection?.value ?? "";
+  const options = selection?.options ?? [];
   return (
     <Select
       value={value}
       items={Object.fromEntries(
-        blockTypeOptions(editor).map((choice) => [
+        options.map((choice) => [
           choice.title,
           choice.title === "Text" ? "Paragraph" : choice.title,
         ]),
@@ -165,7 +164,7 @@ function BlockTypeSelector({ editor }: { editor: Editor }) {
           return restoreEditorFocus(editor);
         }}
       >
-        {blockTypeOptions(editor).map((choice) => (
+        {options.map((choice) => (
           <EditorHint
             key={choice.title}
             label={`Turn this block into ${choice.title === "Text" ? "a paragraph" : choice.title.toLowerCase()}`}

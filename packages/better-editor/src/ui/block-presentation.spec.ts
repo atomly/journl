@@ -28,3 +28,29 @@ test("engine DOM omits presentation controls until the consumer installs them", 
     presented.destroy();
   }
 });
+
+test("checkbox disabled state follows option changes without changing stored content", () => {
+  const editor = createDocumentEditor({
+    element: document.createElement("div"),
+    extensions: blockPresentationExtensions(),
+    initialBlocks: [{ content: "Task", id: "task", type: "checkListItem" }],
+    resolveUrl: async () => ({ items: [] }),
+  });
+  try {
+    const checkbox = editor.view.dom.querySelector<HTMLInputElement>(
+      'input[type="checkbox"]',
+    );
+    if (!checkbox) throw new Error("Missing checkbox");
+    const before = editor.state.doc;
+    expect(checkbox.disabled).toBe(false);
+    editor.setEditable(false);
+    expect(checkbox.disabled).toBe(true);
+    expect(editor.state.doc).toBe(before);
+    editor.setEditable(true);
+    expect(checkbox.disabled).toBe(false);
+    editor.destroy();
+    expect(checkbox.disabled).toBe(true);
+  } finally {
+    editor.destroy();
+  }
+});

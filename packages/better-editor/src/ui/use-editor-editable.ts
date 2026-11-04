@@ -1,35 +1,17 @@
 import type { Editor } from "@tiptap/core";
-import { useCallback, useRef, useSyncExternalStore } from "react";
+import { useCallback, useSyncExternalStore } from "react";
+import { editorEditability } from "./editor-editability";
 
-/** setEditable emits update, not transaction; option-only changes need a listener. */
+/** Observe option-only readonly changes and destruction without content rerenders. */
 export function useEditorEditable(editor: Editor | undefined) {
-  const destroyed = useRef<Editor | undefined>(undefined);
+  const store = editor ? editorEditability(editor) : undefined;
   const subscribe = useCallback(
-    (notify: () => void) => {
-      if (!editor) return () => {};
-      editor.on("update", notify);
-      // Tiptap emits destroy before its view's isDestroyed flag changes.
-      const destroy = () => {
-        destroyed.current = editor;
-        notify();
-      };
-      editor.on("destroy", destroy);
-      return () => {
-        editor.off("update", notify);
-        editor.off("destroy", destroy);
-      };
-    },
-    [editor],
+    (notify: () => void) => store?.subscribe(notify) ?? (() => {}),
+    [store],
   );
   return useSyncExternalStore(
     subscribe,
-    () =>
-      Boolean(
-        editor &&
-          destroyed.current !== editor &&
-          !editor.isDestroyed &&
-          editor.isEditable,
-      ),
+    () => Boolean(editor && !editor.isDestroyed && store?.snapshot()),
     () => false,
   );
 }

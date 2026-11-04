@@ -89,6 +89,7 @@ export function executeSlashItem(
   id: string,
   createId: () => string = () => createEditorId(),
 ) {
+  if (editor.isDestroyed || !editor.isEditable) return false;
   const query = slashKey.getState(editor.state);
   const item = query?.items.find((candidate) => candidate.id === id);
   if (

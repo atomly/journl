@@ -112,6 +112,42 @@ export function turnInto(
   return transaction;
 }
 
+/** Inspect selected bodies only; never allocate a transaction or decode a document. */
+export function canChangeBlockType(
+  state: EditorState,
+  type: DocumentBlock["type"],
+  properties: Record<string, unknown> = {},
+): boolean {
+  const targets = selectedBlocks(state);
+  if (!targets.length || !state.schema.nodes[type]) return false;
+  return targets.every(({ node, id }) => {
+    const body = node.firstChild;
+    if (!body || (!body.isTextblock && body.type.name !== type)) return false;
+    if (!inlineTypes.has(type) && type !== "codeBlock" && body.content.size)
+      return false;
+    if (type === "codeBlock") {
+      let reference = false;
+      body.descendants((child) => {
+        if (child.type.name === "contentReference") reference = true;
+      });
+      if (reference) return false;
+    }
+    try {
+      parseBlock({
+        id,
+        props: {
+          ...(body.type.name === type ? body.attrs.props : {}),
+          ...properties,
+        },
+        type,
+      });
+      return true;
+    } catch {
+      return false;
+    }
+  });
+}
+
 export function changeBlockType(
   state: EditorState,
   type: DocumentBlock["type"],

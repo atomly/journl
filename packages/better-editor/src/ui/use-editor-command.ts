@@ -8,16 +8,22 @@ import {
   useEditorInstance,
   useEditorSelector,
 } from "./editor-root";
+import { useEditorEditable } from "./use-editor-editable";
 
 /** Shared command behavior for custom buttons, menu items, and other presentations. */
 export function useEditorCommand(command: EditorCommand, explicit?: Editor) {
   const editor = useEditorInstance(explicit);
+  const editable = useEditorEditable(editor);
   const onActionError = useEditorActionError();
   const state = useEditorSelector(
-    (instance) => ({
-      active: command.isActive?.(instance),
-      disabled: !instance.isEditable || !(command.canRun?.(instance) ?? true),
-    }),
+    (instance) =>
+      !editable || instance.isDestroyed
+        ? { active: undefined, disabled: true }
+        : {
+            active: command.isActive?.(instance),
+            disabled:
+              !instance.isEditable || !(command.canRun?.(instance) ?? true),
+          },
     editor,
   );
   const run = useCallback(() => {
@@ -40,7 +46,7 @@ export function useEditorCommand(command: EditorCommand, explicit?: Editor) {
   }, [editor, command, onActionError]);
   return {
     active: state?.active,
-    disabled: !editor || (state?.disabled ?? true),
+    disabled: !editable || (state?.disabled ?? true),
     editor,
     run,
   };

@@ -22,6 +22,7 @@ import { safeEditorUrl } from "../engine/schema";
 import { ReferenceClientContext } from "./reference-client";
 import type { ReferenceView } from "./reference-view-store";
 import type { ReferenceViewsOptions } from "./reference-views";
+import { useEditorEditable } from "./use-editor-editable";
 
 const EmbedPath = createContext<string[]>([]);
 type Target =
@@ -145,7 +146,8 @@ function ResolvedReference({
       {title}
     </a>
   );
-  const menu = view.editor.isEditable
+  const editable = useEditorEditable(view.editor);
+  const menu = editable
     ? renderActions?.({
         editor: view.editor,
         getPos: view.getPos,
@@ -206,7 +208,7 @@ function ResolvedReference({
     return (
       <section
         className="content-embed"
-        data-block-surface={view.editor.isEditable ? "true" : undefined}
+        data-block-surface={editable ? "true" : undefined}
       >
         <div className="content-embed-heading">
           <SurfaceButton
@@ -258,7 +260,7 @@ function ResolvedReference({
   return (
     <article
       className="content-reference-card"
-      data-block-surface={view.editor.isEditable ? "true" : undefined}
+      data-block-surface={editable ? "true" : undefined}
       aria-label={`${title} reference card`}
     >
       <PreviewImage

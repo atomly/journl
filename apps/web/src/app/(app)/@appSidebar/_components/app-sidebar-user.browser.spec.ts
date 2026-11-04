@@ -4,7 +4,18 @@ test("shipped account dropdown hosts the shipped theme control and signs out", a
   page,
 }, info) => {
   const errors: string[] = [];
-  page.on("pageerror", (error) => errors.push(error.message));
+  page.on("pageerror", (error) => {
+    // WebKit can cancel Next devtools' frame lookup during reload. Keep actual
+    // application exceptions in this assertion, including all other fetch errors.
+    if (
+      error.message.includes(
+        "/__nextjs_original-stack-frames due to access control checks",
+      ) &&
+      error.stack?.includes("next-devtools")
+    )
+      return;
+    errors.push(error.message);
+  });
   await page.goto("/journal");
   await expect(page.getByRole("button", { name: "Toggle theme" })).toHaveCount(
     0,

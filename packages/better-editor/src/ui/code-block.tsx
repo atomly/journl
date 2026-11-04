@@ -15,6 +15,7 @@ import {
 } from "@tiptap/react";
 import { memo } from "react";
 import { EditorHint, restoreEditorFocus } from "./controls";
+import { useEditorEditable } from "./use-editor-editable";
 
 const languageLabel = (value: string) =>
   value === "auto" ? "Auto detect" : value === "text" ? "Plain text" : value;
@@ -23,12 +24,14 @@ const languageLabel = (value: string) =>
 const LanguageMenu = memo(function LanguageMenu({
   editor,
   updateAttributes,
+  getPos,
   blockProps,
   languages,
-}: Pick<ReactNodeViewProps, "editor" | "updateAttributes"> & {
+}: Pick<ReactNodeViewProps, "editor" | "updateAttributes" | "getPos"> & {
   blockProps?: Record<string, unknown> | null;
   languages: readonly string[];
 }) {
+  const editable = useEditorEditable(editor);
   const language =
     typeof blockProps?.language === "string" ? blockProps.language : "auto";
   const options = languages.includes(language)
@@ -46,10 +49,16 @@ const LanguageMenu = memo(function LanguageMenu({
         items={Object.fromEntries(
           options.map((value) => [value, languageLabel(value)]),
         )}
-        disabled={!editor.isEditable}
+        disabled={!editable}
         onValueChange={(value) => {
-          if (value)
-            updateAttributes({ props: { ...blockProps, language: value } });
+          if (!value || editor.isDestroyed || !editor.isEditable) return;
+          const pos = getPos();
+          const current =
+            pos === undefined ? null : editor.state.doc.nodeAt(pos);
+          if (current?.type.name !== "codeBlock") return;
+          updateAttributes({
+            props: { ...current.attrs.props, language: value },
+          });
         }}
       >
         <EditorHint label="Code language">
@@ -84,6 +93,7 @@ function CodeBlock({
   node,
   editor,
   updateAttributes,
+  getPos,
   languages,
 }: ReactNodeViewProps & { languages: readonly string[] }) {
   return (
@@ -95,6 +105,7 @@ function CodeBlock({
       <LanguageMenu
         editor={editor}
         updateAttributes={updateAttributes}
+        getPos={getPos}
         blockProps={node.attrs.props}
         languages={languages}
       />

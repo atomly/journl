@@ -2,7 +2,7 @@
 import { type DocumentBlock, parseBlock } from "@acme/document";
 import { Editor } from "@tiptap/core";
 import { NodeSelection, TextSelection } from "@tiptap/pm/state";
-import { expect, test } from "vitest";
+import { expect, test, vi } from "vitest";
 import { clipboardText } from "../serialization/clipboard";
 import { fromTiptapDocument, toTiptapDocument } from "../serialization/tiptap";
 import { testDocumentExtensions } from "../testing/extensions";
@@ -11,6 +11,7 @@ import { editingExtension, selectedBlock } from "./commands";
 import { blockAt, identityExtension } from "./identity";
 import { slashKey, suggestionExtension } from "./suggestions";
 import {
+  canChangeBlockType,
   changeBlockType,
   moveSelectedBlock,
   removeSelectedBlock,
@@ -500,4 +501,30 @@ test("the add-block picker opens on empty content without inserting a slash and 
   expect(editor.state.doc.textContent).toBe("");
   expect(slashKey.getState(editor.state)).toBeNull();
   editor.destroy();
+});
+
+test("block type capabilities inspect selected content without transactions or full document scans", () => {
+  const { editor } = setup(
+    Array.from({ length: 1000 }, (_, i) =>
+      parseBlock({ content: "Text", id: `p-${i}`, type: "paragraph" }),
+    ),
+  );
+  try {
+    const scan = vi.spyOn(editor.state.doc, "descendants");
+    const transaction = vi.spyOn(editor.state, "tr", "get");
+    expect(canChangeBlockType(editor.state, "heading", { level: 2 })).toBe(
+      true,
+    );
+    expect(canChangeBlockType(editor.state, "codeBlock")).toBe(true);
+    expect(canChangeBlockType(editor.state, "divider")).toBe(false);
+    expect(canChangeBlockType(editor.state, "heading", { level: 9 })).toBe(
+      false,
+    );
+    expect(scan).not.toHaveBeenCalled();
+    expect(transaction).not.toHaveBeenCalled();
+    scan.mockRestore();
+    transaction.mockRestore();
+  } finally {
+    editor.destroy();
+  }
 });

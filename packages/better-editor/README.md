@@ -176,7 +176,7 @@ targeted steps and leave the caller transaction untouched if validation fails.
 
 The engine schema installs no checkbox/toggle controls or table node views. Add
 `blockPresentationExtensions()` from `ui/block-presentation` when those views are
-wanted. Journl installs these explicitly alongside its code and reference views.
+wanted. Install these explicitly alongside any code and reference views.
 
 Highlighting is opt-in. `createSyntaxHighlighting(grammars)` from
 `engine/code-block` returns an extension and its language names. Pass those names
@@ -187,8 +187,8 @@ A basic hook import does not include menus, drag UI, reference views, or grammar
 `documentExtensions()` supplies the base schema. Tables and references are opt-in
 through `tableExtensions()` (`engine/table-schema`) and `referenceExtensions()`
 (`engine/reference-schema`). Table DOM layout is separately enabled with
-`tablePresentationExtensions()` (`ui/table-presentation`). Journl installs all of
-these explicitly. Features are mount-time configuration, like other extensions.
+`tablePresentationExtensions()` (`ui/table-presentation`). Consumers install each
+feature explicitly. Features are mount-time configuration, like other extensions.
 Opening content whose feature is absent reports a preserved-content error instead
 of removing its nodes. The serialization adapter retains the full document contract
 for storage compatibility, so these runtime choices do not yet prove bundle removal

@@ -47,7 +47,7 @@ function tableHeaders(doc: Node) {
   return DecorationSet.create(doc, decorations);
 }
 
-/** The same open-source editing and resize foundation used by BlockNote.
+/** ProseMirror table editing and resizing.
  * Only the frontend schema knows the library's cell attributes/paragraphs. */
 export function tableExtension() {
   return Extension.create({

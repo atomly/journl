@@ -85,7 +85,7 @@
     "mdast-util-from-markdown": "^2.1.0",
     "prosemirror-highlight": "0.15.3",
     "sonner": "~2.0.8",
-    "zod": "~4.6.5"
+    "zod": "~4.6.6"
   },
   "peerDependencies": {
     "@types/react": "~19.3.0",

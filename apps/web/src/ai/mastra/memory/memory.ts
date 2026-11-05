@@ -1,3 +1,5 @@
+import "server-only";
+
 import { Memory } from "@mastra/memory";
 import { memoryEmbedder as embedder } from "~/ai/providers/openai/compatibility";
 import { miniModel } from "~/ai/providers/openai/text";

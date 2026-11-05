@@ -1,3 +1,5 @@
+import "server-only";
+
 import { Mastra } from "@mastra/core";
 import { journlMini, journlNano } from "./agents/journl-agent";
 import { journlStore } from "./memory/store";

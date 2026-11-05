@@ -53,7 +53,12 @@ export function getLastUserMessage(messages: unknown): string {
       continue;
     }
 
-    const content = "content" in message ? message.content : undefined;
+    const content =
+      "parts" in message && Array.isArray(message.parts)
+        ? message.parts
+        : "content" in message
+          ? message.content
+          : undefined;
     if (typeof content === "string") {
       return content;
     }

@@ -1,3 +1,5 @@
+import "server-only";
+
 import { LibSQLStore } from "@mastra/libsql";
 import { PostgresStore } from "@mastra/pg";
 import { env } from "~/env";

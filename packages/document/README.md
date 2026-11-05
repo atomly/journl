@@ -23,10 +23,11 @@ or second writable representation is introduced.
   Existing frontend clipboard/import behavior stays with the editor adapter;
   no import/export screen or new parser API is introduced here.
 
-The current BlockNote consumer uses `@acme/blocknote/adapter` only at its frontend
-boundary. The Tiptap adapter follows in #370. AI extension orchestration remains
-in the current editor until #374/#376; server content reconstruction, embeddings,
-and AI search serialization use this package now.
+The BetterEditor Tiptap adapter is implemented in `packages/better-editor/src/serialization`.
+Legacy BlockNote compatibility tests retain `@acme/blocknote/adapter` at their
+frontend boundary. AI extension replacement remains tracked in #374/#376;
+server content reconstruction, embeddings, and AI search serialization use this
+package now.
 
 Run `pnpm --filter @acme/document test:unit` for pure codec/operation/serialization
 checks. The BlockNote package tests additionally round-trip the full inventory

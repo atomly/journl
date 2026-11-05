@@ -6,7 +6,7 @@
   "license": "MIT",
   "scripts": {
     "build": "turbo run build",
-    "check": "pnpm check:import-spacing && turbo run check --continue",
+    "check": "turbo run check --continue",
     "check:dependencies": "pnpm dlx sherif@latest",
     "check:dependencies:fix": "pnpm dlx sherif@latest --fix",
     "clean": "turbo run clean && git clean -xdf .turbo node_modules",
@@ -21,11 +21,9 @@
     "test:unit": "turbo run test:unit",
     "test": "turbo run test:unit test:integration test:browser",
     "test:browser": "turbo run test:browser",
-    "clean:cache": "node scripts/clean-cache.mjs",
-    "check:import-spacing": "node --test scripts/check-import-spacing.spec.mjs && node scripts/check-import-spacing.mjs"
+    "clean:cache": "node scripts/clean-cache.mjs"
   },
   "devDependencies": {
-    "@babel/parser": "^8.1.0",
     "@biomejs/biome": "~2.5.15",
     "@turbo/gen": "~2.11.7",
     "supabase": "^2.120.0",

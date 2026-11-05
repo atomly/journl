@@ -1,10 +1,9 @@
-import { expect, test } from "~/testing/browser/fixtures";
+import { expect, observePageErrors, test } from "~/testing/browser/fixtures";
 
 test("shipped account dropdown hosts the shipped theme control and signs out", async ({
   page,
 }, info) => {
-  const errors: string[] = [];
-  page.on("pageerror", (error) => errors.push(error.message));
+  const errors = await observePageErrors(page);
   await page.goto("/journal");
   await expect(page.getByRole("button", { name: "Toggle theme" })).toHaveCount(
     0,
@@ -87,7 +86,10 @@ test("shipped account dropdown hosts the shipped theme control and signs out", a
     page.getByRole("menuitem", { name: /^sign out$/i }),
   ).toBeFocused();
   await page.keyboard.press("Enter");
-  await expect(page).toHaveURL(/\/auth\/sign-in(?:[?#].*)?$/);
+  // The cold dev server compiles both the sign-out and sign-in routes.
+  await expect(page).toHaveURL(/\/auth\/sign-in(?:[?#].*)?$/, {
+    timeout: 60_000,
+  });
   const session = await page.request.get("/api/auth/get-session");
   expect(await session.json()).toBeNull();
   expect(errors).toEqual([]);
@@ -125,12 +127,59 @@ test("shipped account dropdown works in the collapsed desktop sidebar", async ({
     info.project.name === "mobile-webkit",
     "Mobile uses the sidebar sheet rather than the desktop rail",
   );
+  const errors: string[] = [];
+  page.on("pageerror", (error) => errors.push(error.message));
   await page.goto("/journal");
-  await page.getByRole("button", { name: "Toggle Sidebar" }).first().click();
+  const sidebar = page.locator('[data-slot="sidebar"][data-side="left"]');
+  await expect(sidebar).toBeVisible();
+  if ((await sidebar.getAttribute("data-state")) === "expanded")
+    await page.getByRole("button", { name: "Toggle Sidebar" }).first().click();
+  await expect(sidebar).toHaveAttribute("data-state", "collapsed");
   await page.getByRole("button", { exact: true, name: "Account" }).click();
   await expect(
     page.getByRole("tab", { exact: true, name: "Light" }),
   ).toBeVisible();
   await page.getByRole("tab", { exact: true, name: "Light" }).click();
   await expect(page.locator("html")).toHaveClass(/\blight\b/);
+  await page.keyboard.press("Escape");
+  await page.getByRole("button", { exact: true, name: "Search notes" }).click();
+  const search = page.getByRole("dialog", {
+    name: "Search pages and journal entries",
+  });
+  await expect(search).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(search).toBeHidden();
+  await page.keyboard.press("ControlOrMeta+k");
+  await expect(search).toBeVisible();
+  await page.keyboard.press("Escape");
+  expect(errors).toEqual([]);
+});
+
+test("page error observation keeps real exceptions and rejections across documents", async ({
+  page,
+}) => {
+  const errors = await observePageErrors(page);
+  await page.goto("/");
+  await page.addScriptTag({
+    content:
+      'setTimeout(() => { throw new Error("uncaught exception control"); }, 0);',
+  });
+  await expect.poll(() => errors).toEqual(["uncaught exception control"]);
+  await page.goto("/");
+  await page.addScriptTag({
+    content: 'void Promise.reject(new Error("rejection control"));',
+  });
+  await expect
+    .poll(() => errors)
+    .toEqual(["uncaught exception control", "rejection control"]);
+  await page.addScriptTag({
+    content: 'void Promise.reject({ code: "non-error rejection control" });',
+  });
+  await expect
+    .poll(() => errors)
+    .toEqual([
+      "uncaught exception control",
+      "rejection control",
+      '{"code":"non-error rejection control"}',
+    ]);
 });

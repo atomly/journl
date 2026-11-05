@@ -1,5 +1,10 @@
 "use client";
 
+import { Card, CardContent, CardFooter } from "@acme/ui/card";
+import { Field, FieldLabel } from "@acme/ui/field";
+import { Input } from "@acme/ui/input";
+import { Skeleton } from "@acme/ui/skeleton";
+import { cn } from "@acme/ui/utils";
 import {
   fieldsWithModelValues,
   getAdditionalFieldDefaultValues,
@@ -10,12 +15,6 @@ import type { UsernameAuthClient } from "@better-auth-ui/core/plugins/username";
 import { useAuth, useSession, useUpdateUser } from "@better-auth-ui/react";
 import { useEffect, useMemo } from "react";
 import { toast } from "sonner";
-
-import { Card, CardContent, CardFooter } from "~/components/ui/card";
-import { Field, FieldLabel } from "~/components/ui/field";
-import { Input } from "~/components/ui/input";
-import { Skeleton } from "~/components/ui/skeleton";
-import { cn } from "~/lib/cn";
 import {
   getAuthAdditionalFieldValidators,
   isAuthFormFieldInvalid,

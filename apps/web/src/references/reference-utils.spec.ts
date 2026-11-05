@@ -1,8 +1,8 @@
+import { getPlainUrlForAutomaticReference } from "@acme/references";
 import { describe, expect, test } from "vitest";
 import {
   classifyInternalUrl,
   extractReferenceOccurrences,
-  getPlainUrlForAutomaticReference,
   getTargetKey,
   normalizeExternalUrl,
 } from "./reference-utils";

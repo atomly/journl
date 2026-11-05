@@ -1,8 +1,8 @@
 "use client";
 
+import { cn } from "@acme/ui/utils";
 import { ThreadPrimitive } from "@assistant-ui/react";
 import type { ComponentProps } from "react";
-import { cn } from "../utils";
 
 type ThreadViewportProps = ComponentProps<typeof ThreadPrimitive.Viewport>;
 

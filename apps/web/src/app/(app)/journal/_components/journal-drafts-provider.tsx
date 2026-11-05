@@ -7,14 +7,15 @@ import {
 } from "@tanstack/react-query";
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { useDraftActivity } from "~/components/editor/draft-activity-provider";
-import type { JournalListEntry } from "~/trpc";
+import { useDraftSession } from "~/components/editor/draft-sessions-provider";
+import type { JournalListEntry, RouterOutputs } from "~/trpc";
 import { useTRPC } from "~/trpc/react";
 import { JournalEntryDraft } from "./journal-entry-draft";
 
 type JournalDraftsContextValue = {
   drafts: Map<string, JournalEntryDraft>;
   save: ConstructorParameters<typeof JournalEntryDraft>[2];
-  load: (date: string) => Promise<JournalListEntry>;
+  load: (date: string) => Promise<RouterOutputs["journal"]["getByDate"]>;
   onSaved: ConstructorParameters<typeof JournalEntryDraft>[4];
 };
 
@@ -27,7 +28,8 @@ export function JournalDraftsProvider({
 }: {
   children: React.ReactNode;
 }) {
-  const [drafts] = useState(() => new Map<string, JournalEntryDraft>());
+  const [local] = useState(() => new Map<string, JournalEntryDraft>());
+  const drafts = useDraftSession()?.journals ?? local;
   useEffect(() => {
     const beforeUnload = (event: BeforeUnloadEvent) => {
       if ([...drafts.values()].some((draft) => draft.hasUnsavedChanges())) {
@@ -51,7 +53,11 @@ export function JournalDraftsProvider({
           ...trpc.journal.getByDate.queryOptions({ date }),
           staleTime: 0,
         }),
-      onSaved: (entry: Extract<JournalListEntry, { document_id: string }>) => {
+      onSaved: (
+        entry: Parameters<
+          ConstructorParameters<typeof JournalEntryDraft>[4]
+        >[0],
+      ) => {
         if (trpc.references) {
           for (const referenceQueryKey of [
             trpc.references.getPreviews.queryKey(),
@@ -134,5 +140,18 @@ export function useJournalEntryDraft(
         label: `Journal · ${date}`,
       });
     },
+  };
+}
+
+/** Read the retained session at action time, including edits made since render. */
+export function useJournalDraftActions() {
+  const context = useContext(JournalDraftsContext);
+  if (!context)
+    throw new Error("Journal actions require JournalDraftsProvider");
+  return {
+    forget: (date: string) => {
+      context.drafts.delete(date);
+    },
+    get: (date: string) => context.drafts.get(date),
   };
 }

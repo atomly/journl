@@ -12,15 +12,6 @@ import {
   referenceCard,
 } from "./reference-specs";
 
-export type {
-  ReferenceEmbedBlock,
-  ReferenceEmbedResult,
-  ReferencePreviewData,
-  ReferenceRenderAdapter,
-  ReferenceRenderTarget,
-} from "./reference-context";
-export { ReferenceRenderContext } from "./reference-context";
-
 export const schema = BlockNoteSchema.create({
   blockSpecs: {
     ...defaultBlockSpecs,

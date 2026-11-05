@@ -1,6 +1,7 @@
 import { and, eq } from "@acme/db";
 import { BlockEdge, BlockNode, JournalEntry, Page } from "@acme/db/schema";
 import { documentBlocks } from "@acme/document";
+import type { ReferenceTarget } from "@acme/references";
 import type { TRPCRouterRecord } from "@trpc/server";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod/v4";
@@ -9,7 +10,6 @@ import {
   classifyInternalUrl,
   getTargetKey,
   normalizeExternalUrl,
-  type ReferenceTarget,
 } from "~/references/reference-utils";
 import { protectedProcedure } from "../trpc";
 

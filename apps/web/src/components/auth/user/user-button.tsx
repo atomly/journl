@@ -2,6 +2,16 @@
 
 // Source: https://better-auth-ui.com/r/base-nova/user-button.json
 
+import { buttonVariants } from "@acme/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@acme/ui/dropdown-menu";
 import type { MultiSessionAuthClient } from "@better-auth-ui/core/plugins/multi-session";
 import { useAuth, useSession } from "@better-auth-ui/react";
 import { useSetActiveSession } from "@better-auth-ui/react/plugins/multi-session";
@@ -14,16 +24,6 @@ import {
   UserPlus2,
 } from "lucide-react";
 import { isValidElement, type ReactElement, type ReactNode } from "react";
-import { buttonVariants } from "~/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "~/components/ui/dropdown-menu";
 import { UserAvatar } from "./user-avatar";
 import { UserView } from "./user-view";
 
@@ -181,91 +181,93 @@ export function UserButton({
         sideOffset={sideOffset}
         align={align}
       >
-        {session && (
-          <>
-            <DropdownMenuGroup>
-              <DropdownMenuLabel className="font-normal text-sm">
-                <UserView />
-              </DropdownMenuLabel>
-            </DropdownMenuGroup>
+        <DropdownMenuGroup>
+          {session && (
+            <>
+              <DropdownMenuGroup>
+                <DropdownMenuLabel className="font-normal text-sm">
+                  <UserView />
+                </DropdownMenuLabel>
+              </DropdownMenuGroup>
 
-            {hasSessionMenuItems && <DropdownMenuSeparator />}
-          </>
-        )}
+              {hasSessionMenuItems && <DropdownMenuSeparator />}
+            </>
+          )}
 
-        {session ? (
-          <>
-            {userLinks}
+          {session ? (
+            <>
+              {userLinks}
 
-            {!hideSettings && (
+              {!hideSettings && (
+                <DropdownMenuItem
+                  onClick={() =>
+                    navigate({
+                      to: `${basePaths.settings}/${viewPaths.settings.account}`,
+                    })
+                  }
+                >
+                  <Settings className="text-muted-foreground" />
+
+                  {localization.settings.settings}
+                </DropdownMenuItem>
+              )}
+
+              {plugins.flatMap((plugin) =>
+                plugin.userMenuItems?.map((Item, index) => (
+                  <Item key={`${plugin.id}-${index.toString()}`} />
+                )),
+              )}
+
+              <DropdownMenuSeparator />
+
               <DropdownMenuItem
                 onClick={() =>
                   navigate({
-                    to: `${basePaths.settings}/${viewPaths.settings.account}`,
+                    to: `${basePaths.auth}/${viewPaths.auth.signOut}`,
                   })
                 }
               >
-                <Settings className="text-muted-foreground" />
+                <LogOut className="text-muted-foreground" />
 
-                {localization.settings.settings}
+                {localization.auth.signOut}
               </DropdownMenuItem>
-            )}
+            </>
+          ) : (
+            <>
+              {userLinks}
 
-            {plugins.flatMap((plugin) =>
-              plugin.userMenuItems?.map((Item, index) => (
-                <Item key={`${plugin.id}-${index.toString()}`} />
-              )),
-            )}
+              <DropdownMenuItem
+                onClick={() =>
+                  navigate({
+                    to: `${basePaths.auth}/${viewPaths.auth.signIn}`,
+                  })
+                }
+              >
+                <LogIn className="text-muted-foreground" />
 
-            <DropdownMenuSeparator />
+                {localization.auth.signIn}
+              </DropdownMenuItem>
 
-            <DropdownMenuItem
-              onClick={() =>
-                navigate({
-                  to: `${basePaths.auth}/${viewPaths.auth.signOut}`,
-                })
-              }
-            >
-              <LogOut className="text-muted-foreground" />
+              <DropdownMenuItem
+                onClick={() =>
+                  navigate({
+                    to: `${basePaths.auth}/${viewPaths.auth.signUp}`,
+                  })
+                }
+              >
+                <UserPlus2 className="text-muted-foreground" />
 
-              {localization.auth.signOut}
-            </DropdownMenuItem>
-          </>
-        ) : (
-          <>
-            {userLinks}
+                {localization.auth.signUp}
+              </DropdownMenuItem>
 
-            <DropdownMenuItem
-              onClick={() =>
-                navigate({
-                  to: `${basePaths.auth}/${viewPaths.auth.signIn}`,
-                })
-              }
-            >
-              <LogIn className="text-muted-foreground" />
-
-              {localization.auth.signIn}
-            </DropdownMenuItem>
-
-            <DropdownMenuItem
-              onClick={() =>
-                navigate({
-                  to: `${basePaths.auth}/${viewPaths.auth.signUp}`,
-                })
-              }
-            >
-              <UserPlus2 className="text-muted-foreground" />
-
-              {localization.auth.signUp}
-            </DropdownMenuItem>
-
-            {plugins.flatMap((plugin) =>
-              plugin.userMenuItems?.map((Item, index) => (
-                <Item key={`${plugin.id}-${index.toString()}`} />
-              )),
-            )}
-          </>
-        )}
+              {plugins.flatMap((plugin) =>
+                plugin.userMenuItems?.map((Item, index) => (
+                  <Item key={`${plugin.id}-${index.toString()}`} />
+                )),
+              )}
+            </>
+          )}
+        </DropdownMenuGroup>
       </DropdownMenuContent>
     </DropdownMenu>
   );

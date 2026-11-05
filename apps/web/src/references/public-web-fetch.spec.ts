@@ -116,14 +116,11 @@ test("deadline aborts a stalled DNS lookup", async () => {
   await expect(result).rejects.toThrow("Deadline");
 });
 
-test("reads a bounded head from a large page without downloading its body", async () => {
-  const head = "<head><title>Large public page</title></head>";
-  response(
-    200,
-    { "content-length": "2000000", "content-type": "text/html" },
-    head + "a".repeat(300_000),
-  );
+test("reads the bounded body so JSON-LD after the head remains available", async () => {
+  const html =
+    '<head><title>Article</title></head><body><script type="application/ld+json">{"headline":"Body"}</script></body>';
+  response(200, { "content-type": "text/html" }, html);
   expect(
     await readPublicHtml("https://example.com", new AbortController().signal),
-  ).toMatchObject({ html: head });
+  ).toMatchObject({ html });
 });

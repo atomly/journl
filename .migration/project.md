@@ -4,7 +4,7 @@
 
 ## Changed
 
-- Migrated 22 app-owned wrappers listed in the component reports; updated `components.json` to `"base": "base"`.
+- Migrated 22 app-owned wrappers listed in the component reports; selected the `base-nova` style, which the current CLI identifies as Base UI.
 - Added `@base-ui/react`; removed all app-owned direct Radix packages from `apps/web/package.json`.
 - Upgraded workspace dependencies to current releases, with compatibility pins where upstream peer ranges prohibit the newest major (Stripe 22 for Better Auth; other pins are documented in manifests).
 - Added the Better Auth 1.7 schema fields for user Stripe customer IDs, subscription cancellation/billing metadata, and invitation creation timestamps.
@@ -31,3 +31,11 @@
 - Open select and menu popups; test arrow keys, typeahead, Escape, and outside dismissal.
 - Check tooltip delay and all popover/select/menu placement at viewport edges.
 - Check sidebar collapse and accordion/tabs behavior.
+
+## Current ownership and composition
+
+Reusable primitives now live in `packages/ui/src`, with native Base UI `render`
+composition and explicit leaf exports. `components.json` routes CLI installs to
+that workspace. Journl keeps its custom sidebar, React Hook Form helpers and
+application overlays. See [shared UI guidance](../packages/ui/README.md) for
+current ownership, deliberate style differences and retained third-party APIs.

@@ -1,11 +1,10 @@
+import type { ReferenceEmbedBlock } from "@acme/references";
 import type { ReactNode } from "react";
 import { ReferenceBadge } from "./reference-badge";
 import { ReferenceCardView } from "./reference-card";
-import type { ReferenceEmbedBlock } from "./reference-context";
+
 import { ReferenceEmbedView } from "./reference-embed";
 import { safeReferenceHref as safeHref } from "./reference-href";
-
-export { referenceProps } from "./reference-config";
 
 function renderInline(value: unknown, key: number): ReactNode {
   if (typeof value === "string") return value;

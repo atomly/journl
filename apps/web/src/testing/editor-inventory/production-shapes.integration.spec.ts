@@ -1,12 +1,12 @@
 import { readFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
+import * as schema from "@acme/db/schema";
 import {
   historicalFixtures,
   inventoryDocumentId,
   inventoryId,
   savedNode,
-} from "@acme/blocknote/inventory";
-import * as schema from "@acme/db/schema";
+} from "@acme/document/fixtures";
 import { expect, test } from "vitest";
 import { createPostgresFixture } from "../postgres";
 

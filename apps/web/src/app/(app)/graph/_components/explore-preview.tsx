@@ -1,5 +1,7 @@
 "use client";
 
+import { Button } from "@acme/ui/button";
+import { Skeleton } from "@acme/ui/skeleton";
 import { useQuery } from "@tanstack/react-query";
 import {
   ArrowUpRight,
@@ -9,8 +11,6 @@ import {
   NotebookPen,
 } from "lucide-react";
 import Link from "next/link";
-import { Button } from "~/components/ui/button";
-import { Skeleton } from "~/components/ui/skeleton";
 import {
   type ExploreEdge,
   type ExploreGraph,

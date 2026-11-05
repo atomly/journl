@@ -1,6 +1,6 @@
 import { expect, test, vi } from "vitest";
 import { DocumentDraft } from "./document-draft";
-import { DraftActivity } from "./draft-activity-provider";
+import { DraftActivity } from "./draft-activity";
 
 function fixture() {
   const save = vi

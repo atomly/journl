@@ -1,9 +1,9 @@
 "use client";
 
+import { useIsMobile } from "@acme/ui/use-mobile";
 import * as React from "react";
 import { useAppPreferences } from "~/components/preferences/app-preferences-provider";
 import { SidebarProvider } from "~/components/ui/sidebar";
-import { useIsMobile } from "~/hooks/use-mobile";
 
 type AppSidebarProviderProps = Omit<
   React.ComponentProps<typeof SidebarProvider>,

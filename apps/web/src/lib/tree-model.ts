@@ -166,3 +166,30 @@ export function isValidTreeDestination(
   }
   return ancestorId === null;
 }
+
+/** Destination labels share one index and distinguish folders with the same name. */
+export function folderDestinationLabels(
+  folders: readonly {
+    node_id: string | null;
+    parent_node_id: string | null;
+    name: string;
+  }[],
+) {
+  const byId = new Map(folders.map((folder) => [folder.node_id, folder]));
+  const labels = new Map<string, string>();
+  for (const folder of folders) {
+    if (!folder.node_id) continue;
+    const names: string[] = [];
+    const visited = new Set<string>();
+    let current: string | null = folder.node_id;
+    while (current && !visited.has(current)) {
+      visited.add(current);
+      const parent = byId.get(current);
+      if (!parent) break;
+      names.unshift(parent.name || "New folder");
+      current = parent.parent_node_id;
+    }
+    labels.set(folder.node_id, names.join(" / "));
+  }
+  return labels;
+}

@@ -1,5 +1,10 @@
 // @vitest-environment jsdom
 
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from "@acme/ui/dropdown-menu";
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
@@ -7,11 +12,6 @@ import {
   TreeMoveDialog,
   TreeMoveMenuItems,
 } from "~/components/tree-move-actions";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuTrigger,
-} from "~/components/ui/dropdown-menu";
 
 let container: HTMLDivElement;
 let root: Root;

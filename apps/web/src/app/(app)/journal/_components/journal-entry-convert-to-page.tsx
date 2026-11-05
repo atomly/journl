@@ -1,0 +1,190 @@
+"use client";
+
+import { Button } from "@acme/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@acme/ui/dialog";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@acme/ui/tooltip";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { FileOutput } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { folderDestinationLabels } from "~/lib/tree-model";
+import { useTRPC } from "~/trpc/react";
+import { useJournalDraftActions } from "./journal-drafts-provider";
+
+export function JournalEntryConvertToPage({
+  date,
+  title,
+  documentId,
+  updatedAt,
+}: {
+  date: string;
+  title: string;
+  documentId: string;
+  updatedAt: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const [name, setName] = useState(title);
+  const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [parentNodeId, setParentNodeId] = useState<string | null>(null);
+  const drafts = useJournalDraftActions();
+  const trpc = useTRPC();
+  const queryClient = useQueryClient();
+  const folders = useQuery({
+    ...trpc.folders.getByUser.queryOptions(),
+    enabled: open,
+  });
+  const labels = folderDestinationLabels(folders.data ?? []);
+  const router = useRouter();
+  const convert = useMutation(trpc.journal.convertToPage.mutationOptions());
+  return (
+    <>
+      <Tooltip>
+        <TooltipTrigger
+          render={
+            <Button
+              variant="ghost"
+              size="icon"
+              className="pointer-coarse:size-11 size-10 text-muted-foreground"
+              aria-label="Convert entry to page"
+              onClick={() => {
+                setError("");
+                setOpen(true);
+              }}
+            >
+              <FileOutput />
+            </Button>
+          }
+        />
+        <TooltipContent>Convert to page</TooltipContent>
+      </Tooltip>
+      <Dialog
+        open={open}
+        onOpenChange={(next) => {
+          if (!busy) setOpen(next);
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Convert entry to a page</DialogTitle>
+            <DialogDescription>
+              The entry becomes a page in Library. The journal keeps a reference
+              to the new page.
+            </DialogDescription>
+          </DialogHeader>
+          <form
+            className="flex flex-col gap-4"
+            onSubmit={async (event) => {
+              event.preventDefault();
+              setBusy(true);
+              setError("");
+              try {
+                const draft = drafts.get(date);
+                await draft?.flush();
+                if (draft?.hasUnsavedChanges())
+                  throw new Error(
+                    "Resolve the unsaved changes before converting this entry.",
+                  );
+                const saved = draft?.getSnapshot();
+                const result = await convert.mutateAsync({
+                  date,
+                  documentId: saved?.documentId ?? documentId,
+                  expectedUpdatedAt: saved?.updatedAt ?? updatedAt,
+                  parentNodeId,
+                  title: name,
+                });
+                drafts.forget(date);
+                queryClient.setQueryData(
+                  trpc.journal.getByDate.queryKey({ date }),
+                  result.entry,
+                );
+                await Promise.all(
+                  [
+                    trpc.journal.getEntries.infiniteQueryKey(),
+                    trpc.journal.getTimeline.infiniteQueryKey(),
+                    trpc.tree.getChildrenPaginated.infiniteQueryKey(),
+                    trpc.pages.getByUser.queryKey(),
+                    trpc.folders.getByUser.queryKey(),
+                    trpc.references.getPreviews.queryKey(),
+                    trpc.references.getEmbedContent.queryKey(),
+                    trpc.references.listBacklinks.queryKey(),
+                    trpc.references.getGraph.infiniteQueryKey(),
+                  ].map((queryKey) =>
+                    queryClient.invalidateQueries({ queryKey }),
+                  ),
+                );
+                router.push(`/pages/${result.page.id}`);
+                router.refresh();
+              } catch (error) {
+                setError(
+                  error instanceof Error
+                    ? error.message
+                    : "Unable to convert this entry. Your writing has been kept.",
+                );
+                setBusy(false);
+              }
+            }}
+          >
+            <label className="flex flex-col gap-2 text-sm">
+              Page title
+              <input
+                autoFocus
+                required
+                maxLength={255}
+                value={name}
+                onChange={(event) => setName(event.target.value)}
+                disabled={busy}
+                className="rounded-md border bg-background px-3 py-2"
+              />
+            </label>
+            <label className="flex flex-col gap-2 text-sm">
+              Destination
+              <select
+                aria-label="Destination"
+                value={parentNodeId ?? ""}
+                disabled={busy || folders.isPending}
+                onChange={(event) =>
+                  setParentNodeId(event.target.value || null)
+                }
+                className="rounded-md border bg-background px-3 py-2"
+              >
+                <option value="">Library</option>
+                {(folders.data ?? [])
+                  .filter((folder) => folder.node_id && folder.edge_id)
+                  .map((folder) => (
+                    <option key={folder.node_id} value={folder.node_id ?? ""}>
+                      {labels.get(folder.node_id ?? "") ?? folder.name}
+                    </option>
+                  ))}
+              </select>
+            </label>
+            {error && (
+              <p role="alert" className="text-destructive text-sm">
+                {error}
+              </p>
+            )}
+            <div className="flex justify-end gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                disabled={busy}
+                onClick={() => setOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button type="submit" disabled={busy || !name.trim()}>
+                {busy ? "Converting…" : "Convert to page"}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}

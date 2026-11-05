@@ -1,7 +1,7 @@
 "use client";
 
-import { fromBlockNoteBlocks } from "@acme/blocknote/adapter";
 import type { DocumentBlock } from "@acme/document";
+import { cn } from "@acme/ui/utils";
 import Link from "next/link";
 import {
   type ComponentProps,
@@ -11,15 +11,15 @@ import {
   useMemo,
   useSyncExternalStore,
 } from "react";
-import { BlockEditor } from "~/components/editor/block-editor";
-import { useBlockEditor } from "~/components/editor/use-block-editor";
+import { ConnectedDocumentEditor } from "~/components/editor/document-editor";
+import { acceptedDocumentChange } from "~/components/editor/document-save-adapter";
 import { ExploreNoteLink } from "~/components/references/explore-note-link";
 import { ReferenceBacklinks } from "~/components/references/reference-backlinks";
 import { useJournlAgent } from "~/hooks/use-journl-agent";
-import { cn } from "~/lib/cn";
 import { formatDate } from "~/lib/format-date";
-import type { BlockTransaction, JournalListEntry } from "~/trpc";
+import type { JournalListEntry } from "~/trpc";
 import { useJournalEntryDraft } from "./journal-drafts-provider";
+import { JournalEntryConvertToPage } from "./journal-entry-convert-to-page";
 
 const DEFAULT_DEBOUNCE_TIME = 1000;
 
@@ -105,53 +105,52 @@ export function JournalEntryWrapper({
   );
 }
 
-export function JournalEntryLink({ className, ...rest }: ComponentProps<"a">) {
-  const { date } = useJournalEntry();
-
-  return (
-    <Link
-      className={cn("text-muted-foreground", className)}
-      href={`/journal/${date}`}
-      {...rest}
-    />
-  );
-}
-
 type JournalEntryHeaderProps = Omit<ComponentProps<"div">, "children"> & {
   forceDate?: boolean;
+  linkDate?: boolean;
 };
 
 export function JournalEntryHeader({
   className,
   forceDate = false,
+  linkDate = false,
   ...rest
 }: JournalEntryHeaderProps) {
-  const { formattedDate, isToday, documentId } = useJournalEntry();
+  const { date, formattedDate, isToday, documentId, updatedAt } =
+    useJournalEntry();
+  const label = isToday && !forceDate ? "Today" : formattedDate;
 
   return (
     <div className={cn("flex items-start gap-3", className)} {...rest}>
       <h2 className="min-w-0 flex-1 font-semibold text-3xl text-muted-foreground md:text-4xl lg:text-5xl">
-        {isToday && !forceDate ? "Today" : formattedDate}
+        {linkDate ? <Link href={`/journal/${date}`}>{label}</Link> : label}
       </h2>
-      {documentId && <ExploreNoteLink documentId={documentId} />}
+      <div className="flex shrink-0 items-center gap-0">
+        {documentId && <ExploreNoteLink documentId={documentId} />}
+        {documentId && updatedAt && (
+          <JournalEntryConvertToPage
+            date={date}
+            title={formattedDate}
+            documentId={documentId}
+            updatedAt={updatedAt}
+          />
+        )}
+      </div>
     </div>
   );
 }
 
 type JournalEntryEditorProps = Omit<
-  React.ComponentProps<typeof BlockEditor>,
-  "editor" | "onChange" | "formattingToolbar" | "slashMenu"
+  React.ComponentProps<typeof ConnectedDocumentEditor>,
+  "initialBlocks" | "onCommit"
 > & {
   debounceTime?: number;
   onCreateAction?: (newEntry: JournalListEntry) => void;
 };
 
-export function JournalEntryEditor({
-  debounceTime = DEFAULT_DEBOUNCE_TIME,
-  onCreateAction,
-  ...rest
-}: JournalEntryEditorProps) {
-  const { initialBlocks, documentId, updatedAt, date } = useJournalEntry();
+export function JournalEntryEditor(props: JournalEntryEditorProps) {
+  const entry = useJournalEntry();
+  const { initialBlocks, documentId, updatedAt, date } = entry;
   const { draft, retainDraft } = useJournalEntryDraft(date, {
     blocks: initialBlocks,
     documentId,
@@ -162,53 +161,44 @@ export function JournalEntryEditor({
     draft.getSnapshot,
     draft.getSnapshot,
   );
-  const { setEditor, unsetEditor } = useJournlAgent();
-  const editor = useBlockEditor({
-    initialBlocks: snapshot.blocks,
-    resetKey: snapshot.resetKey,
-  });
-
-  function handleEditorChange(transactions: BlockTransaction[]) {
-    retainDraft();
-    draft.update(
-      fromBlockNoteBlocks(editor.document),
-      transactions,
-      debounceTime,
-      onCreateAction,
-    );
-  }
-
   useEffect(
     () => () => {
       void draft.flush();
     },
     [draft],
   );
-
-  useEffect(() => {
-    const id = `journal-entry:${date}` as const;
-    setEditor({ editor, id });
-    return () => {
-      unsetEditor(id);
-    };
-  }, [date, editor, setEditor, unsetEditor]);
-
   return (
-    <>
-      <BlockEditor
+    <JournalEntryContext.Provider
+      value={{
+        ...entry,
+        documentId: snapshot.documentId,
+        updatedAt: snapshot.updatedAt,
+      }}
+    >
+      <ConnectedDocumentEditor
         key={snapshot.resetKey}
-        editor={editor}
-        onChange={handleEditorChange}
-        // Disabling the default because we're using a formatting toolbar with the AI option.
-        formattingToolbar={false}
-        // Disabling the default because we're using a slash menu with the AI option.
-        slashMenu={false}
-        {...rest}
-      />
+        initialBlocks={snapshot.blocks}
+        className={props.className}
+        onCommit={(blocks, operations) => {
+          const change = acceptedDocumentChange(
+            draft.getSnapshot().blocks ?? [],
+            blocks,
+            operations,
+          );
+          retainDraft();
+          draft.update(
+            change,
+            props.debounceTime ?? DEFAULT_DEBOUNCE_TIME,
+            props.onCreateAction,
+          );
+        }}
+      >
+        {props.children}
+      </ConnectedDocumentEditor>
       {snapshot.documentId && (
         <ReferenceBacklinks documentId={snapshot.documentId} />
       )}
-    </>
+    </JournalEntryContext.Provider>
   );
 }
 

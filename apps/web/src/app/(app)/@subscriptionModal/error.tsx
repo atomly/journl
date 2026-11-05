@@ -1,14 +1,14 @@
 "use client";
-
-import Link from "next/link";
-import { useEffect } from "react";
-import { Button } from "~/components/ui/button";
+import { Button, buttonVariants } from "@acme/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from "~/components/ui/dialog";
+} from "@acme/ui/dialog";
+import { cn } from "cn";
+import Link from "next/link";
+import { useEffect } from "react";
 
 export default function SubscriptionModalError({
   error,
@@ -32,9 +32,14 @@ export default function SubscriptionModalError({
             We encountered an error while loading your subscription information.
           </p>
           <div className="flex justify-end space-x-2">
-            <Button asChild>
-              <Link href="/journal">Go back to your Journal</Link>
-            </Button>
+            <Link
+              href="/journal"
+              className={cn(
+                buttonVariants({ size: "default", variant: "default" }),
+              )}
+            >
+              Go back to your Journal
+            </Link>
             <Button onClick={reset}>Try Again</Button>
           </div>
         </div>

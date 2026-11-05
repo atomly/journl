@@ -1,12 +1,6 @@
 "use client";
-import { useQuery } from "@tanstack/react-query";
-import { X } from "lucide-react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-import { useDebounce } from "use-debounce";
-import { Badge } from "~/components/ui/badge";
-import { Button } from "~/components/ui/button";
+import { Badge } from "@acme/ui/badge";
+import { Button } from "@acme/ui/button";
 import {
   Command,
   CommandEmpty,
@@ -14,7 +8,7 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-} from "~/components/ui/command";
+} from "@acme/ui/command";
 import {
   Dialog,
   DialogContent,
@@ -22,11 +16,18 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "~/components/ui/dialog";
-import { ScrollArea } from "~/components/ui/scroll-area";
-import { Skeleton } from "~/components/ui/skeleton";
-import { useIsMobile } from "~/hooks/use-mobile";
+} from "@acme/ui/dialog";
+import { ScrollArea } from "@acme/ui/scroll-area";
+import { Skeleton } from "@acme/ui/skeleton";
+import { useIsMobile } from "@acme/ui/use-mobile";
+import { useQuery } from "@tanstack/react-query";
+import { X } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useDebounce } from "use-debounce";
 import { useTRPC } from "~/trpc/react";
+import { HeaderSearchTrigger } from "./header-search-trigger";
 
 const MIN_QUERY_LENGTH = 2;
 const DEFAULT_THRESHOLD = 0.25;
@@ -34,15 +35,16 @@ const DEFAULT_LIMIT = 10;
 const DEFAULT_DEBOUNCE_TIME = 150;
 const HEADER_SEARCH_DIALOG_CONTENT_ID = "header-search-dialog-content";
 
-type HeaderSearchButtonProps = React.ComponentProps<typeof Dialog> & {
-  children: React.ReactNode;
+type HeaderSearchButtonProps = Omit<
+  React.ComponentProps<typeof Dialog>,
+  "children"
+> & {
   limit?: number;
   threshold?: number;
   debounceTime?: number;
 };
 
 export function HeaderSearchButton({
-  children,
   limit = DEFAULT_LIMIT,
   threshold = DEFAULT_THRESHOLD,
   debounceTime = DEFAULT_DEBOUNCE_TIME,
@@ -87,9 +89,10 @@ export function HeaderSearchButton({
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen} {...rest}>
-      <DialogTrigger asChild aria-controls={HEADER_SEARCH_DIALOG_CONTENT_ID}>
-        {children}
-      </DialogTrigger>
+      <DialogTrigger
+        render={<HeaderSearchTrigger />}
+        aria-controls={HEADER_SEARCH_DIALOG_CONTENT_ID}
+      />
       <DialogContent
         id={HEADER_SEARCH_DIALOG_CONTENT_ID}
         className="gap-0 overflow-hidden rounded-2xl border-4 border-muted bg-sidebar p-0"
@@ -195,7 +198,7 @@ export function HeaderSearchButton({
             </CommandList>
           </ScrollArea>
         </Command>
-        <DialogFooter className="mx-0 mb-0 flex flex-row items-center bg-muted p-1">
+        <DialogFooter className="mx-0 mb-0 flex flex-row items-center rounded-none bg-muted p-1">
           {isMobile ? (
             <Button
               className="ms-auto bg-background py-1 text-background-foreground text-sm hover:bg-background/80 hover:text-background-foreground"

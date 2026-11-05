@@ -1,12 +1,7 @@
 "use client";
 
 import type { Folder } from "@acme/db/schema";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Loader2, Trash2 } from "lucide-react";
-import { usePathname, useRouter } from "next/navigation";
-import type { ComponentProps, ReactNode } from "react";
-import { useCallback, useMemo, useState, useTransition } from "react";
-import { Button } from "~/components/ui/button";
+import { Button } from "@acme/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -15,7 +10,12 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "~/components/ui/dialog";
+} from "@acme/ui/dialog";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { Loader2, Trash2 } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import type { ComponentProps, ReactNode } from "react";
+import { useCallback, useMemo, useState, useTransition } from "react";
 import {
   collectDescendantNodeIds,
   getLoadedTreeItems,

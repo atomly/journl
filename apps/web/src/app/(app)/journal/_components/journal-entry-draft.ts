@@ -1,12 +1,9 @@
 import { DocumentDraft } from "~/components/editor/document-draft";
-import type { JournalListEntry } from "~/trpc";
+import type { RouterOutputs } from "~/trpc";
 
 export type { DraftInitial } from "~/components/editor/document-draft";
 
-type SavedEntry = Omit<
-  Extract<JournalListEntry, { document_id: string }>,
-  "blocks"
->;
+type SavedEntry = RouterOutputs["journal"]["saveTransactions"];
 type DraftArgs = ConstructorParameters<typeof DocumentDraft<SavedEntry>>;
 
 export class JournalEntryDraft extends DocumentDraft<SavedEntry> {

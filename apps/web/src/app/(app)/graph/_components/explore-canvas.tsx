@@ -1,4 +1,6 @@
 "use client";
+import { describeExternal } from "@acme/references";
+import { PreviewIcon } from "@acme/references/react";
 
 import {
   type Edge,
@@ -7,13 +9,7 @@ import {
   type NodeProps,
   Position,
 } from "@xyflow/react";
-import {
-  CircleDot,
-  FileText,
-  GitPullRequest,
-  Globe,
-  NotebookPen,
-} from "lucide-react";
+import { FileText, Globe, NotebookPen } from "lucide-react";
 import { useId, useMemo, useState } from "react";
 import {
   type ExploreEdge,
@@ -34,18 +30,7 @@ function NoteCard({
   sourcePosition,
   targetPosition,
 }: NodeProps<NoteNode>) {
-  const Icon =
-    note.kind === "journal"
-      ? NotebookPen
-      : note.kind === "external"
-        ? note.href?.startsWith("https://github.com/") &&
-          note.href.includes("/pull/")
-          ? GitPullRequest
-          : note.href?.startsWith("https://github.com/") &&
-              note.href.includes("/issues/")
-            ? CircleDot
-            : Globe
-        : FileText;
+  const Icon = note.kind === "journal" ? NotebookPen : FileText;
   return (
     <div
       className={`flex h-[68px] w-full flex-col justify-center gap-1 rounded-xl border px-3 text-left shadow-xs transition-colors ${selected ? "border-primary bg-accent" : focused ? "border-primary/50 bg-card" : "border-border bg-card hover:bg-accent"}`}
@@ -55,7 +40,14 @@ function NoteCard({
         {note.title}
       </span>
       <span className="flex items-center gap-1 text-[10px] text-muted-foreground">
-        <Icon aria-hidden="true" className="size-3" />
+        {note.kind === "external" ? (
+          <PreviewIcon
+            icon={note.href ? describeExternal(note.href)?.icon : undefined}
+            className="size-3"
+          />
+        ) : (
+          <Icon aria-hidden="true" className="size-3" />
+        )}
         {focused
           ? "Starting note"
           : note.kind === "journal"

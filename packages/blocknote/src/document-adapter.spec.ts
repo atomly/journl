@@ -4,17 +4,17 @@ import {
   documentMarkdown,
   documentRows,
 } from "@acme/document";
-import { ServerBlockNoteEditor } from "@blocknote/server-util";
-import { expect, test } from "vitest";
-import { fromBlockNoteBlocks, toBlockNoteBlocks } from "./document-adapter";
 import {
   historicalFixtures,
   inventoryDocumentId,
   parityBlocks,
-} from "./inventory/fixtures";
-import { serverSchema } from "./server/blocknote-schema";
+} from "@acme/document/fixtures";
+import { ServerBlockNoteEditor } from "@blocknote/server-util";
+import { expect, test } from "vitest";
+import { fromBlockNoteBlocks, toBlockNoteBlocks } from "./document-adapter";
+import { inventorySchema } from "./inventory/server-schema";
 
-const editor = ServerBlockNoteEditor.create({ schema: serverSchema });
+const editor = ServerBlockNoteEditor.create({ schema: inventorySchema });
 const normalize = (
   blocks: Parameters<typeof editor._blocksToProsemirrorNode>[0],
 ) =>

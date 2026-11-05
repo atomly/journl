@@ -32,3 +32,8 @@ Run `pnpm --filter @acme/document test:unit` for pure codec/operation/serializat
 checks. The BlockNote package tests additionally round-trip the full inventory
 through the actual installed editor and serialized storage. App database/browser
 suites check the unchanged guarded save path and real routes.
+
+The `/fixtures` export contains synthetic compatibility examples shared by adapter,
+API, database and browser tests. It is separate from the runtime entry and has
+no editor-framework or database dependencies. Legacy editor comparisons consume
+these fixtures; the fixtures do not depend on that editor.

@@ -1,12 +1,12 @@
 "use client";
 
+import { Button } from "@acme/ui/button";
+import { useIsMobile } from "@acme/ui/use-mobile";
 import { CalendarDays, List } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useAppPreferences } from "~/components/preferences/app-preferences-provider";
-import { Button } from "~/components/ui/button";
-import { useIsMobile } from "~/hooks/use-mobile";
 
 export function HeaderJournalButton() {
   const isMobile = useIsMobile();

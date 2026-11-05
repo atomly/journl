@@ -1,15 +1,16 @@
 "use client";
 
 import type { Folder } from "@acme/db/schema";
-import { Settings, Trash2 } from "lucide-react";
-import { useState } from "react";
-import { Button } from "~/components/ui/button";
+import { Button } from "@acme/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "~/components/ui/dropdown-menu";
+} from "@acme/ui/dropdown-menu";
+import { Settings, Trash2 } from "lucide-react";
+import { useState } from "react";
 import { DeleteFolderDialog } from "../../@appSidebar/_components/delete-folder-button";
 
 type FolderDeleteActionProps = {
@@ -22,22 +23,26 @@ export function FolderDeleteAction({ folder }: FolderDeleteActionProps) {
   return (
     <DeleteFolderDialog folder={folder} open={open} onOpenChange={setOpen}>
       <DropdownMenu modal={false}>
-        <DropdownMenuTrigger asChild>
-          <Button type="button" variant="outline" size="icon">
-            <Settings className="size-4" />
-            <span className="sr-only">Folder settings</span>
-          </Button>
-        </DropdownMenuTrigger>
+        <DropdownMenuTrigger
+          render={
+            <Button type="button" variant="outline" size="icon">
+              <Settings className="size-4" />
+              <span className="sr-only">Folder settings</span>
+            </Button>
+          }
+        />
         <DropdownMenuContent align="end">
-          <DropdownMenuItem
-            variant="destructive"
-            onClick={() => {
-              setOpen(true);
-            }}
-          >
-            <Trash2 />
-            Delete folder
-          </DropdownMenuItem>
+          <DropdownMenuGroup>
+            <DropdownMenuItem
+              variant="destructive"
+              onClick={() => {
+                setOpen(true);
+              }}
+            >
+              <Trash2 />
+              Delete folder
+            </DropdownMenuItem>
+          </DropdownMenuGroup>
         </DropdownMenuContent>
       </DropdownMenu>
     </DeleteFolderDialog>

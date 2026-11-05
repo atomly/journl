@@ -1,7 +1,8 @@
+import { cn } from "@acme/ui/utils";
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Inter } from "next/font/google";
+import { DraftSessionsProvider } from "~/components/editor/draft-sessions-provider";
 import { env } from "~/env";
-import { cn } from "~/lib/cn";
 import { getPublicWebUrl } from "~/lib/public-web-url";
 
 import "~/app/styles.css";
@@ -43,6 +44,12 @@ export const viewport: Viewport = {
   ],
 };
 
+const editorFont = Inter({
+  style: ["normal", "italic"],
+  subsets: ["latin"],
+  variable: "--font-editor",
+});
+
 const geistSans = Geist({
   subsets: ["latin"],
   variable: "--font-geist-sans",
@@ -66,6 +73,7 @@ export default function RootLayout({
           "min-h-svh bg-background font-sans text-foreground antialiased",
           geistSans.variable,
           geistMono.variable,
+          editorFont.variable,
         )}
       >
         <BetterAuthProvider
@@ -73,8 +81,10 @@ export default function RootLayout({
             env.VERCEL_ENV === "preview" || env.NODE_ENV === "development"
           }
         >
-          {children}
-          {authModal}
+          <DraftSessionsProvider>
+            {children}
+            {authModal}
+          </DraftSessionsProvider>
         </BetterAuthProvider>
       </body>
     </html>

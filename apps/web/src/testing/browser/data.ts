@@ -5,6 +5,8 @@ export const browserFixture = {
   otherEmail: "browser-other@example.invalid",
   otherOwner: "browser-other",
   owner: "browser-owner",
+  paginationEmail: "journal-pagination@example.invalid",
+  paginationOwner: "journal-pagination",
   password: "disposable-browser-password-354",
 };
 export const fixtureId = (n: number) =>

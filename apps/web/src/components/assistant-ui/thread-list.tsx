@@ -1,11 +1,10 @@
+import { Button } from "@acme/ui/button";
 import {
   ThreadListItemPrimitive,
   ThreadListPrimitive,
 } from "@assistant-ui/react";
 import { ArchiveIcon, PlusIcon } from "lucide-react";
-
 import { TooltipIconButton } from "~/components/assistant-ui/tooltip-icon-button";
-import { Button } from "~/components/ui/button";
 
 export function ThreadList() {
   return (

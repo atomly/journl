@@ -1,8 +1,8 @@
 "use client";
 
+import { Progress } from "@acme/ui/progress";
 import { usePathname, useSearchParams } from "next/navigation";
 import React from "react";
-import { Progress } from "~/components/ui/progress";
 
 const START_PROGRESS_INTERVAL_MS = 120;
 const END_PROGRESS_TIMEOUT_MS = START_PROGRESS_INTERVAL_MS * 3;

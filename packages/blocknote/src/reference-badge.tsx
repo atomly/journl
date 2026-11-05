@@ -1,3 +1,4 @@
+import { PreviewStatus } from "@acme/references/react";
 import { useComponentsContext, usePortalElement } from "@blocknote/react";
 import {
   type MouseEvent as ReactMouseEvent,
@@ -9,8 +10,6 @@ import {
 } from "react";
 import { safeReferenceHref as safeHref } from "./reference-href";
 
-export { referenceProps } from "./reference-config";
-
 import {
   type Display,
   DisplayMenu,
@@ -20,6 +19,7 @@ import {
   targetFromProps,
   usePreview,
 } from "./reference-render-helpers";
+
 export function ReferenceBadge({
   props,
   contentRef,
@@ -130,6 +130,7 @@ export function ReferenceBadge({
   const href = safeHref(
     preview?.status === "ready" ? (preview.href ?? fallbackHref) : fallbackHref,
   );
+  const targetUnavailable = preview?.unavailableReason === "target-unavailable";
   const authoredLabel = typeof props.label === "string" ? props.label : "";
   const label =
     authoredLabel ||
@@ -162,7 +163,7 @@ export function ReferenceBadge({
   const badge = (
     <a
       className="content-reference"
-      href={href}
+      href={targetUnavailable ? undefined : href}
       rel={target?.kind === "external" ? "noopener noreferrer" : undefined}
       target={target?.kind === "external" ? "_blank" : undefined}
       draggable={false}
@@ -178,7 +179,7 @@ export function ReferenceBadge({
       }}
       aria-label={`${label} reference`}
     >
-      <ReferenceIcon target={target} />
+      <ReferenceIcon target={target} preview={preview} />
       <span>{label}</span>
     </a>
   );
@@ -216,7 +217,7 @@ export function ReferenceBadge({
               onMouseLeave={leave}
             >
               <div className="content-reference-card-heading">
-                <ReferenceIcon target={target} />
+                <ReferenceIcon target={target} preview={preview} />
                 <strong>
                   {preview?.status === "ready"
                     ? (preview.title ?? label)
@@ -231,15 +232,16 @@ export function ReferenceBadge({
                   ×
                 </button>
               </div>
-              <p className="content-reference-card-excerpt">
-                {loading
-                  ? "Loading preview…"
-                  : preview?.status === "unavailable"
-                    ? "Content unavailable"
-                    : preview?.excerpt || ""}
-              </p>
+              <PreviewStatus
+                className="content-reference-card-excerpt"
+                loading={loading}
+                unavailable={preview?.status === "unavailable"}
+                targetUnavailable={targetUnavailable}
+              >
+                {preview?.excerpt || ""}
+              </PreviewStatus>
               <div className="content-reference-preview-footer">
-                {target && preview?.status === "ready" && (
+                {target && !targetUnavailable && (
                   <button
                     className="content-reference-open"
                     type="button"

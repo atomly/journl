@@ -3,6 +3,7 @@
 import type { Page } from "@acme/db/schema";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createContext, useContext, useEffect, useState } from "react";
+import { useDraftSession } from "~/components/editor/draft-sessions-provider";
 import {
   updateNode,
   updatePageTitleInNestedPages,
@@ -22,7 +23,8 @@ export function PageDraftsProvider({
 }: {
   children: React.ReactNode;
 }) {
-  const [drafts] = useState(() => new Map<string, PageDraft>());
+  const [local] = useState(() => new Map<string, PageDraft>());
+  const drafts = useDraftSession()?.pages ?? local;
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const { mutateAsync } = useMutation(

@@ -1,10 +1,10 @@
 "use client";
 
+import { Spinner } from "@acme/ui/spinner";
+import { cn } from "@acme/ui/utils";
 import { getAuthRedirectAction } from "@better-auth-ui/core";
 import { useAuth, useSession } from "@better-auth-ui/react";
 import { useEffect, useRef } from "react";
-import { Spinner } from "~/components/ui/spinner";
-import { cn } from "~/lib/cn";
 
 export type AuthRedirectProps = {
   className?: string;

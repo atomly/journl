@@ -1,3 +1,6 @@
+import { Badge } from "@acme/ui/badge";
+import { Card, CardContent, CardHeader } from "@acme/ui/card";
+import { cn } from "@acme/ui/utils";
 import {
   Ban,
   Calendar,
@@ -8,9 +11,6 @@ import {
   SquareArrowUpRight,
   Zap,
 } from "lucide-react";
-import { Badge } from "~/components/ui/badge";
-import { Card, CardContent, CardHeader } from "~/components/ui/card";
-import { cn } from "~/lib/cn";
 import { centsToDollars } from "~/lib/currency";
 import type { Subscription } from "~/trpc";
 import { SubscriptionManageButton } from "./subscription-manage-button";

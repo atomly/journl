@@ -1,5 +1,5 @@
-import { Skeleton } from "~/components/ui/skeleton";
-import { cn } from "~/lib/cn";
+import { Skeleton } from "@acme/ui/skeleton";
+import { cn } from "@acme/ui/utils";
 
 type PageSkeletonProps = Omit<React.ComponentProps<"div">, "children">;
 

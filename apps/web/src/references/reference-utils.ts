@@ -1,19 +1,12 @@
 import { createHash } from "node:crypto";
 import { zReferenceProps as zDocumentReferenceProps } from "@acme/document";
+import type { ReferenceTarget } from "@acme/references";
 
 // Storage validation and reference projection share Journl's reference contract.
 // The short-lived resolution token is consumed separately, not persisted in projections.
 export const zReferenceProps = zDocumentReferenceProps
   .omit({ resolutionToken: true })
   .strip();
-
-export type InternalReferenceTarget = {
-  kind: "document";
-  documentId: string;
-  blockId?: string;
-};
-export type ExternalReferenceTarget = { kind: "external"; url: string };
-export type ReferenceTarget = InternalReferenceTarget | ExternalReferenceTarget;
 
 export type CanonicalRoute =
   | { kind: "page"; entityId: string; blockId?: string }
@@ -93,8 +86,6 @@ export function normalizeExternalUrl(value: string) {
   parsed.hash = "";
   return parsed.toString();
 }
-
-export { getPlainUrlForAutomaticReference } from "./reference-paste-url";
 
 export function getTargetKey(target: ReferenceTarget) {
   if (target.kind === "document") {

@@ -16,7 +16,7 @@ replacement editor, adapter, or AI implementation has passed compatibility check
 ## Evidence and reproducibility
 
 - [Accepted schema snapshot](../../packages/blocknote/src/inventory/accepted-schema.json) records every block/inline/style config, including property defaults and values. `fixtures.spec.ts` compares both client and server schemas to it; dependency changes require an explicit inventory review.
-- [Synthetic fixtures](../../packages/blocknote/src/inventory/fixtures.ts) include all accepted block types and text styles, nested writing, both table cell encodings, stable IDs, internal/external/block references, unavailable targets, Unicode and incomplete historical-shaped rows. Every name, ID, URL and passage is synthetic.
+- [Synthetic fixtures](../../packages/document/src/fixtures.ts) include all accepted block types and text styles, nested writing, both table cell encodings, stable IDs, internal/external/block references, unavailable targets, Unicode and incomplete historical-shaped rows. Every name, ID, URL and passage is synthetic.
 - [Executable content checks](../../packages/blocknote/src/inventory/fixtures.spec.ts) exercise the installed server editor and real row reconstruction. They check accepted shapes, ProseMirror JSON round trips, identities/nesting, readable lossy exports, and raw recovery specimens. They do not implement a migration codec.
 - [Read-only aggregate SQL](production-shapes.sql) is ready for a separately identified production inventory. Its integration test uses disposable PostgreSQL and checks that reports contain counts/shapes rather than authored passages, titles, target URLs or IDs.
 

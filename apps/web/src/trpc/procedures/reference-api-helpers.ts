@@ -8,11 +8,11 @@ import {
   Page,
 } from "@acme/db/schema";
 import { documentBlocks } from "@acme/document";
+import type { ReferenceTarget } from "@acme/references";
 import { z } from "zod/v4";
 import { env } from "~/env";
-import { getGithubMetadata } from "~/references/github-provider";
-import type { ReferenceTarget } from "~/references/reference-utils";
-import { getWebsiteMetadata } from "~/references/website-provider";
+import { externalPreviews } from "~/references/external-preview";
+
 import type { TRPCContext } from "../trpc";
 
 export const zTarget = z.discriminatedUnion("kind", [
@@ -166,51 +166,8 @@ export function blockSnippet(
     .join(" ");
 }
 
-export async function externalPreview(url: string, userId: string) {
-  const parsed = new URL(url);
-  const isGithub = parsed.hostname.toLowerCase() === "github.com";
-  const segments = parsed.pathname.split("/").filter(Boolean);
-  const [githubMetadata, websiteMetadata] = await Promise.all([
-    isGithub ? getGithubMetadata(userId, url) : Promise.resolve(null),
-    getWebsiteMetadata(userId, url),
-  ]);
-  let title = parsed.hostname;
-  let excerpt = parsed.href;
-  if (isGithub && segments.length >= 2) {
-    title = `${segments[0]}/${segments[1]}`;
-    if (
-      segments.length >= 4 &&
-      ["issues", "pull"].includes(segments[2] ?? "")
-    ) {
-      title += ` #${segments[3]}`;
-    }
-    excerpt = `GitHub · ${title}`;
-  }
-  if (websiteMetadata) {
-    title = websiteMetadata.title || title;
-    excerpt = websiteMetadata.excerpt || excerpt;
-  }
-  if (githubMetadata) {
-    title = githubMetadata.title;
-    excerpt = githubMetadata.excerpt || excerpt;
-  }
-  return {
-    excerpt,
-    href: url,
-    kind: "external" as const,
-    metadataState:
-      githubMetadata || websiteMetadata
-        ? ("enriched" as const)
-        : ("url-only" as const),
-    provider: isGithub ? ("github" as const) : ("generic" as const),
-    status: "ready" as const,
-    title,
-    truncated: false,
-    ...(githubMetadata?.status ? { sourceStatus: githubMetadata.status } : {}),
-    ...(websiteMetadata?.imageUrl
-      ? { imageUrl: websiteMetadata.imageUrl }
-      : {}),
-  };
+export function externalPreview(url: string, userId: string) {
+  return externalPreviews.resolve(url, { ownerId: userId });
 }
 
 export async function resolveInternal(
@@ -225,7 +182,11 @@ export async function resolveInternal(
       and(eq(Document.id, target.documentId), eq(Document.user_id, userId)),
     )
     .limit(1);
-  if (!document) return { status: "unavailable" as const };
+  if (!document)
+    return {
+      status: "unavailable" as const,
+      unavailableReason: "target-unavailable" as const,
+    };
 
   const [page] = await db
     .select()
@@ -243,7 +204,10 @@ export async function resolveInternal(
     )
     .limit(1);
   if ((!page && !entry) || (page && entry))
-    return { status: "unavailable" as const };
+    return {
+      status: "unavailable" as const,
+      unavailableReason: "target-unavailable" as const,
+    };
 
   const blocks = await db
     .select()
@@ -255,7 +219,10 @@ export async function resolveInternal(
       ),
     );
   if (target.blockId && !blocks.some((block) => block.id === target.blockId)) {
-    return { status: "unavailable" as const };
+    return {
+      status: "unavailable" as const,
+      unavailableReason: "target-unavailable" as const,
+    };
   }
   const edges = await db
     .select()

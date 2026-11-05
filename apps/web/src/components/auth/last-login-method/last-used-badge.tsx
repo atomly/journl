@@ -1,8 +1,7 @@
 "use client";
 
+import { Badge } from "@acme/ui/badge";
 import { useLastLoginMethod } from "@better-auth-ui/react";
-
-import { Badge } from "~/components/ui/badge";
 
 export type LastUsedBadgeProps = {
   /** Login method IDs that should display the indicator. */

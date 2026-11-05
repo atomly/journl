@@ -6,18 +6,19 @@ import {
   JournalEntry,
   Page,
 } from "@acme/db/schema";
+import type { ReferenceTarget } from "@acme/references";
 import type { TRPCRouterRecord } from "@trpc/server";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod/v4";
 import { env } from "~/env";
-import { type ReferenceTarget } from "~/references/reference-utils";
+
 import { protectedProcedure } from "../trpc";
 
 import {
-  truncate,
   blockText,
   externalPreview,
   resolveInternal,
+  truncate,
 } from "./reference-api-helpers";
 
 export const referenceNeighborsProcedures = {

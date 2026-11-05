@@ -1,4 +1,5 @@
-import { Toaster } from "~/components/ui/toast";
+import { Toaster } from "@acme/ui/toast";
+import { getSession } from "~/auth/server";
 import { DashboardHeader } from "./_components/dashboard-header";
 import { DashboardProviders } from "./_components/dashboard-providers";
 
@@ -6,9 +7,10 @@ type AppLayoutProps = {
   children: React.ReactNode;
 };
 
-function UserLayout({ children }: AppLayoutProps) {
+async function UserLayout({ children }: AppLayoutProps) {
+  const session = await getSession();
   return (
-    <DashboardProviders>
+    <DashboardProviders owner={session?.user.id}>
       <div className="flex min-h-svh flex-col">
         <DashboardHeader className="container mx-auto sm:mt-4" />
         <main className="container mx-auto flex flex-1 grow flex-col items-center justify-start gap-4 self-center p-4 md:p-6">

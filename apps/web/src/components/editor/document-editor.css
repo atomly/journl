@@ -1,0 +1,35 @@
+/* Journl owns its editor typography, page spacing, and sticky toolbar layout. */
+.journl-document-editor {
+  --better-editor-font-family:
+    var(--font-editor, Inter), "SF Pro Display", -apple-system, BlinkMacSystemFont, "Open Sans", "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
+}
+
+.journl-document-editor [data-better-editor-toolbar-mode="sticky"] {
+  /* Keep the toolbar visually above writing, after it in keyboard order. */
+  order: -1;
+  position: sticky;
+  z-index: 40;
+  top: calc(
+    var(--app-visual-viewport-offset-top, 0px) +
+    var(--app-header-offset, 0px)
+  );
+  margin-inline: 24px;
+  max-width: calc(100% - 48px);
+  margin-bottom: 24px;
+}
+
+.journl-document-editor .better-editor-tiptap-host {
+  margin-top: 24px;
+}
+
+@media (min-width: 768px) {
+  .journl-document-editor .better-editor-tiptap-host {
+    margin-top: 32px;
+  }
+}
+
+/* The floating toolbar is portaled, so its consumer class owns this skin. */
+.better-editor-formatting-toolbar.journl-editor-toolbar {
+  border-color: var(--sidebar-border);
+  border-radius: var(--radius);
+}

@@ -1,16 +1,16 @@
 "use client";
 
-import { useActionState } from "react";
-import { Button } from "~/components/ui/button";
+import { Button } from "@acme/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "~/components/ui/card";
-import { Input } from "~/components/ui/input";
-import { Label } from "~/components/ui/label";
+} from "@acme/ui/card";
+import { Input } from "@acme/ui/input";
+import { Label } from "@acme/ui/label";
+import { useActionState } from "react";
 import { savePasswordAction } from "./password.actions";
 
 export function PasswordCard({ hasPassword }: { hasPassword: boolean }) {

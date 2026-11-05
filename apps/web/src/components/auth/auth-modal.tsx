@@ -1,6 +1,6 @@
 "use client";
+import { Dialog, DialogContent, DialogTitle } from "@acme/ui/dialog";
 import { usePathname, useRouter } from "next/navigation";
-import { Dialog, DialogContent, DialogTitle } from "~/components/ui/dialog";
 
 type AuthModalProps = {
   /**

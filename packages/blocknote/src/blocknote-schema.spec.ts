@@ -1,6 +1,6 @@
 import { schema } from "@acme/blocknote/schema";
-import { serverSchema } from "@acme/blocknote/server";
 import { describe, expect, test } from "vitest";
+import { inventorySchema } from "./inventory/server-schema";
 
 describe("shared content reference schema", () => {
   test("registers all custom specs and retains defaults", () => {
@@ -11,9 +11,9 @@ describe("shared content reference schema", () => {
     expect(schema.inlineContentSchema).toHaveProperty("link");
   });
 
-  test("keeps persisted block and inline configs identical on server and client", () => {
-    expect(serverSchema.blockSchema).toEqual(schema.blockSchema);
-    expect(serverSchema.inlineContentSchema).toEqual(
+  test("keeps legacy inventory and installed frontend configs aligned", () => {
+    expect(inventorySchema.blockSchema).toEqual(schema.blockSchema);
+    expect(inventorySchema.inlineContentSchema).toEqual(
       schema.inlineContentSchema,
     );
   });

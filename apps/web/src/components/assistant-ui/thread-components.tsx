@@ -1,6 +1,14 @@
 "use client";
 
 import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@acme/ui/accordion";
+import { Button } from "@acme/ui/button";
+import { cn } from "@acme/ui/utils";
+import {
   ActionBarPrimitive,
   type AssistantState,
   BranchPickerPrimitive,
@@ -31,14 +39,6 @@ import type { Tools } from "~/ai/mastra/agents/journl-agent";
 import { MarkdownText } from "~/components/assistant-ui/markdown-text";
 import { useThreadRuntime } from "~/components/assistant-ui/thread-runtime";
 import { TooltipIconButton } from "~/components/assistant-ui/tooltip-icon-button";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "~/components/ui/accordion";
-import { Button } from "~/components/ui/button";
-import { cn } from "~/lib/cn";
 import { getHumanReadableChatError } from "~/usage/quota-error";
 
 type ToolResultListItem = {

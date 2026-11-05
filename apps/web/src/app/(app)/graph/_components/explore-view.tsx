@@ -1,26 +1,27 @@
 "use client";
 
-import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
-import { ArrowLeft, ChevronRight, Compass, X } from "lucide-react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Button } from "~/components/ui/button";
+import { Button } from "@acme/ui/button";
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "~/components/ui/select";
+} from "@acme/ui/select";
 import {
   Sheet,
   SheetContent,
   SheetDescription,
   SheetTitle,
-} from "~/components/ui/sheet";
-import { Skeleton } from "~/components/ui/skeleton";
-import { useIsMobile } from "~/hooks/use-mobile";
+} from "@acme/ui/sheet";
+import { Skeleton } from "@acme/ui/skeleton";
+import { useIsMobile } from "@acme/ui/use-mobile";
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
+import { ArrowLeft, ChevronRight, Compass, X } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   type ExploreEdge,
   type ExploreNode,
@@ -302,6 +303,7 @@ export function ExploreView({
                     </p>
                   </div>
                   <Select
+                    items={{ latest: "Latest first", oldest: "Oldest first" }}
                     value={noteOrder}
                     onValueChange={(value) => {
                       if (value === "latest" || value === "oldest") {
@@ -314,15 +316,13 @@ export function ExploreView({
                       aria-label="Sort unlinked notes"
                       className="min-h-11"
                     >
-                      <SelectValue>
-                        {noteOrder === "latest"
-                          ? "Latest first"
-                          : "Oldest first"}
-                      </SelectValue>
+                      <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="latest">Latest first</SelectItem>
-                      <SelectItem value="oldest">Oldest first</SelectItem>
+                      <SelectGroup>
+                        <SelectItem value="latest">Latest first</SelectItem>
+                        <SelectItem value="oldest">Oldest first</SelectItem>
+                      </SelectGroup>
                     </SelectContent>
                   </Select>
                 </div>

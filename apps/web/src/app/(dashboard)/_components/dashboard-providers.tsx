@@ -4,6 +4,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ThemeProvider } from "next-themes";
 import type { ComponentProps } from "react";
+import { DraftActivityProvider } from "~/components/editor/draft-activity-provider";
+import { DraftOwnerProvider } from "~/components/editor/draft-sessions-provider";
 import { TRPCReactProvider } from "~/trpc/react";
 import { BetterAuthProvider } from "../../../components/auth/better-auth-provider";
 
@@ -30,13 +32,23 @@ function AuthLink({
 
 export function DashboardProviders({
   children,
+  owner,
 }: {
   children: React.ReactNode;
+  owner?: string;
 }) {
   return (
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-      <TRPCReactProvider>
-        <BetterAuthProvider Link={AuthLink}>{children}</BetterAuthProvider>
+      <TRPCReactProvider owner={owner}>
+        <BetterAuthProvider Link={AuthLink}>
+          {owner ? (
+            <DraftOwnerProvider owner={owner}>
+              <DraftActivityProvider>{children}</DraftActivityProvider>
+            </DraftOwnerProvider>
+          ) : (
+            children
+          )}
+        </BetterAuthProvider>
       </TRPCReactProvider>
     </ThemeProvider>
   );

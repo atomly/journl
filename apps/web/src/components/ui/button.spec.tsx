@@ -1,10 +1,10 @@
 // @vitest-environment jsdom
 
+import { Button } from "@acme/ui/button";
 import Link from "next/link";
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
-import { Button } from "~/components/ui/button";
 
 let container: HTMLDivElement;
 let root: Root;
@@ -24,7 +24,7 @@ afterEach(async () => {
 });
 
 test.each(["anchor", "Next Link"])(
-  "Button asChild supports %s without native button warnings",
+  "Button render supports %s without native button warnings",
   async (kind) => {
     const error = vi.spyOn(console, "error").mockImplementation(() => {});
     const onClick = vi.fn((event: { preventDefault: () => void }) =>
@@ -32,17 +32,20 @@ test.each(["anchor", "Next Link"])(
     );
     await act(async () => {
       root.render(
-        <Button asChild>
-          {kind === "anchor" ? (
-            <a href="/journal" onClick={onClick}>
-              Journal
-            </a>
-          ) : (
-            <Link href="/journal" onClick={onClick}>
-              Journal
-            </Link>
-          )}
-        </Button>,
+        <Button
+          nativeButton={false}
+          render={
+            kind === "anchor" ? (
+              <a href="/journal" onClick={onClick}>
+                Journal
+              </a>
+            ) : (
+              <Link href="/journal" onClick={onClick}>
+                Journal
+              </Link>
+            )
+          }
+        />,
       );
     });
     const link = container.querySelector("a");
@@ -53,13 +56,16 @@ test.each(["anchor", "Next Link"])(
   },
 );
 
-test("disabled asChild links expose their disabled state and prevent activation", async () => {
+test("disabled non-native buttons expose their disabled state and prevent activation", async () => {
   const onClick = vi.fn();
   await act(async () => {
     root.render(
-      <Button asChild disabled onClick={onClick}>
-        <a href="/journal">Journal</a>
-      </Button>,
+      <Button
+        disabled
+        onClick={onClick}
+        nativeButton={false}
+        render={<a href="/journal">Journal</a>}
+      />,
     );
   });
   const link = container.querySelector("a");
@@ -68,7 +74,7 @@ test("disabled asChild links expose their disabled state and prevent activation"
   expect(onClick).not.toHaveBeenCalled();
 });
 
-test("asChild native buttons retain form submission semantics", async () => {
+test("rendered native buttons retain form submission semantics", async () => {
   const error = vi.spyOn(console, "error").mockImplementation(() => {});
   const onSubmit = vi.fn((event: { preventDefault: () => void }) =>
     event.preventDefault(),
@@ -76,9 +82,7 @@ test("asChild native buttons retain form submission semantics", async () => {
   await act(async () => {
     root.render(
       <form onSubmit={onSubmit}>
-        <Button asChild>
-          <button type="submit">Save</button>
-        </Button>
+        <Button render={<button type="submit">Save</button>} />
       </form>,
     );
   });

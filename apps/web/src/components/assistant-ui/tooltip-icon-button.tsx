@@ -1,12 +1,12 @@
 "use client";
 
+import { Button } from "@acme/ui/button";
 import type { ComponentProps } from "react";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "~/components/assistant-ui/tooltip";
-import { Button } from "~/components/ui/button";
 
 export type TooltipIconButtonProps = ComponentProps<typeof Button> & {
   tooltip: string;
@@ -22,12 +22,14 @@ export function TooltipIconButton({
 }: TooltipIconButtonProps) {
   return (
     <Tooltip>
-      <TooltipTrigger asChild>
-        <Button variant="ghost" size="icon" {...rest} ref={ref}>
-          {children}
-          <span className="sr-only">{tooltip}</span>
-        </Button>
-      </TooltipTrigger>
+      <TooltipTrigger
+        render={
+          <Button variant="ghost" size="icon" {...rest} ref={ref}>
+            {children}
+            <span className="sr-only">{tooltip}</span>
+          </Button>
+        }
+      />
       <TooltipContent side={side}>{tooltip}</TooltipContent>
     </Tooltip>
   );

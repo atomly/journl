@@ -1,0 +1,48 @@
+{
+  "name": "@acme/references",
+  "version": "0.0.0",
+  "private": false,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./react": "./src/presentation.tsx"
+  },
+  "scripts": {
+    "check": "biome check",
+    "typecheck": "tsc --noEmit",
+    "test:unit": "vitest run --maxWorkers=4"
+  },
+  "peerDependencies": {
+    "@types/react": "~19.3.0",
+    "react": "~19.3.0"
+  },
+  "devDependencies": {
+    "@acme/tsconfig": "workspace:*",
+    "@types/react": "~19.3.0",
+    "react": "~19.3.0",
+    "typescript": "~7.0.2",
+    "vitest": "^5.0.3"
+  },
+  "dependencies": {
+    "lucide-react": "~1.55.0"
+  },
+  "files": [
+    "src",
+    "README.md",
+    "LICENSE"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/atomly/journl.git",
+    "directory": "packages/references"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "peerDependenciesMeta": {
+    "@types/react": {
+      "optional": true
+    }
+  }
+}

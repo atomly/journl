@@ -4,9 +4,6 @@
   "private": true,
   "type": "module",
   "exports": {
-    "./ai": "./src/blocknote-ai.ts",
-    "./inventory": "./src/inventory/fixtures.ts",
-    "./server": "./src/server/index.ts",
     "./schema": "./src/blocknote-schema.ts",
     "./adapter": "./src/document-adapter.ts"
   },
@@ -20,23 +17,18 @@
   "peerDependencies": {
     "@blocknote/core": "~0.55.0",
     "@blocknote/react": "~0.55.0",
-    "@blocknote/server-util": "~0.55.0",
-    "@blocknote/xl-ai": "~0.55.0",
     "@tiptap/extensions": ">=3.19.0 <4.0.0-0"
   },
   "dependencies": {
-    "@acme/db": "workspace:*",
     "@acme/document": "workspace:*",
-    "@ai-sdk/openai": "~4.0.84",
-    "ai": "~7.0.128",
-    "zod": "~4.6.5"
+    "@acme/references": "workspace:*"
   },
   "devDependencies": {
     "@acme/tsconfig": "workspace:*",
     "@blocknote/core": "~0.55.0",
     "@blocknote/react": "~0.55.0",
     "@blocknote/server-util": "~0.55.0",
-    "@blocknote/xl-ai": "~0.55.0",
+    "@floating-ui/dom": "1.8.0",
     "@tiptap/extensions": "3.31.4",
     "@types/react": "~19.3.0",
     "@types/react-dom": "~19.3.0",

@@ -1,10 +1,10 @@
 "use client";
 
 import type { Page } from "@acme/db/schema";
+import { cn } from "@acme/ui/utils";
 import { useEffect } from "react";
 import { useAppEventEmitter } from "~/components/events/app-event-context";
 import { PageCreatedEvent } from "~/events/page-created-event";
-import { cn } from "~/lib/cn";
 
 type PageShellProps = React.ComponentProps<"div"> & {
   page: Pick<Page, "id">;
@@ -26,7 +26,7 @@ export function PageShell({
   return (
     <div
       className={cn(
-        "mx-auto flex min-h-full max-w-5xl flex-col gap-4 pt-8 pb-52",
+        "mx-auto flex min-h-full max-w-5xl flex-col gap-4 pt-8",
         className,
       )}
       {...props}

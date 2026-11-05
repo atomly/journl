@@ -1,11 +1,11 @@
 "use client";
 
+import { Button } from "@acme/ui/button";
 import type { BaseUIEvent } from "@base-ui/react/types";
 import { useMutation } from "@tanstack/react-query";
 import { usePathname, useRouter } from "next/navigation";
 import type { ComponentProps } from "react";
 import { toast } from "sonner";
-import { Button } from "~/components/ui/button";
 import type { Subscription } from "~/trpc";
 import { useTRPC } from "~/trpc/react";
 

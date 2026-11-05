@@ -3,6 +3,8 @@
 @import "@assistant-ui/react-markdown/styles/dot.css";
 
 @source "../../**/*.{js,ts,jsx,tsx}";
+@source "../../../../packages/ui/src";
+@source "../../../../packages/better-editor/src";
 
 @custom-variant dark (&:is(.dark *));
 

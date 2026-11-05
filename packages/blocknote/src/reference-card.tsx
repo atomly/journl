@@ -1,13 +1,12 @@
+import { PreviewImage, PreviewStatus } from "@acme/references/react";
 import type {
   BlockNoteEditor,
   BlockSchema,
   InlineContentSchema,
   StyleSchema,
 } from "@blocknote/core";
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { safeReferenceHref as safeHref } from "./reference-href";
-
-export { referenceProps } from "./reference-config";
 
 import {
   blockSurface,
@@ -17,6 +16,7 @@ import {
   targetFromProps,
   usePreview,
 } from "./reference-render-helpers";
+
 export function ReferenceCardView<
   BS extends BlockSchema,
   IS extends InlineContentSchema,
@@ -28,10 +28,10 @@ export function ReferenceCardView<
   block: { id?: string; props: Record<string, unknown> };
   editor?: BlockNoteEditor<BS, IS, SS>;
 }) {
-  const [failedImage, setFailedImage] = useState<string>();
   const props = block.props;
   const target = useMemo(() => targetFromProps(props), [props]);
   const { adapter, loading, preview } = usePreview(target, true);
+  const targetUnavailable = preview?.unavailableReason === "target-unavailable";
   const authoredLabel = typeof props.label === "string" ? props.label : "";
   const title =
     (preview?.status === "ready" ? preview.title : undefined) ||
@@ -47,31 +47,25 @@ export function ReferenceCardView<
       {...blockSurface(editor, block.id, adapter?.editable)}
       aria-label={`${title} reference card`}
     >
-      {preview?.status === "ready" &&
-        preview.imageUrl &&
-        preview.imageUrl !== failedImage && (
-          <img
-            key={preview.imageUrl}
-            className="content-reference-thumbnail"
-            draggable={false}
-            onError={() => setFailedImage(preview.imageUrl)}
-            src={safeHref(preview.imageUrl)}
-            alt=""
-            loading="lazy"
-            referrerPolicy="no-referrer"
-          />
-        )}
+      <PreviewImage
+        className="content-reference-thumbnail"
+        src={preview?.status === "ready" ? preview.imageUrl : undefined}
+      />
       <div className="content-reference-card-body">
         <div className="content-reference-card-heading">
-          <ReferenceIcon target={target} />
+          <ReferenceIcon target={target} preview={preview} />
           <a
             draggable={false}
-            href={href}
+            href={targetUnavailable ? undefined : href}
             rel={
               target?.kind === "external" ? "noopener noreferrer" : undefined
             }
             target={target?.kind === "external" ? "_blank" : undefined}
             onClick={(event) => {
+              if (targetUnavailable) {
+                event.preventDefault();
+                return;
+              }
               if (adapter && target && !event.metaKey && !event.ctrlKey) {
                 event.preventDefault();
                 adapter.openTarget(target, href);
@@ -101,20 +95,21 @@ export function ReferenceCardView<
             />
           )}
         </div>
-        <p className="content-reference-card-excerpt">
-          {loading
-            ? "Loading preview…"
-            : preview?.status === "unavailable"
-              ? "Content unavailable"
-              : preview?.excerpt || String(props.url ?? "")}
-        </p>
+        <PreviewStatus
+          className="content-reference-card-excerpt"
+          loading={loading}
+          unavailable={preview?.status === "unavailable"}
+          targetUnavailable={targetUnavailable}
+        >
+          {preview?.excerpt || String(props.url ?? "")}
+        </PreviewStatus>
         <span className="content-reference-source">
           {preview?.kind === "journal"
             ? "Journal entry"
             : preview?.kind === "page"
               ? "Page"
               : target?.kind === "external"
-                ? new URL(target.url).hostname
+                ? (preview?.sourceLabel ?? new URL(target.url).hostname)
                 : "Note"}
           {preview?.sourceStatus ? ` · ${preview.sourceStatus}` : ""}
         </span>

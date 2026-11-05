@@ -1,120 +1,114 @@
 "use client";
 
-import { fromBlockNoteBlocks } from "@acme/blocknote/adapter";
 import type { Page } from "@acme/db/schema";
 import type { DocumentBlock } from "@acme/document";
-import { useEffect, useSyncExternalStore } from "react";
-import { BlockEditor } from "~/components/editor/block-editor";
+import type { Editor } from "@tiptap/core";
+import { useEffect, useRef, useSyncExternalStore } from "react";
+import { ConnectedDocumentEditor } from "~/components/editor/document-editor";
+import { acceptedDocumentChange } from "~/components/editor/document-save-adapter";
 import {
   PageEditorDraftContext,
   usePageDraft,
 } from "~/components/editor/page-drafts-provider";
-import { useBlockEditor } from "~/components/editor/use-block-editor";
 import { ReferenceBacklinks } from "~/components/references/reference-backlinks";
 import { PageCreatedEvent } from "~/events/page-created-event";
 import { useAppEventHandler } from "~/hooks/use-app-event-handler";
 import { useJournlAgent } from "~/hooks/use-journl-agent";
-import type { BlockTransaction } from "~/trpc";
 
 const DEFAULT_DEBOUNCE_TIME = 1000;
 
 type PageEditorProps = Omit<
-  React.ComponentProps<typeof BlockEditor>,
-  "editor" | "onChange" | "formattingToolbar" | "slashMenu"
+  React.ComponentProps<typeof ConnectedDocumentEditor>,
+  "initialBlocks" | "onCommit"
 > & {
   page: Page;
   initialBlocks: [DocumentBlock, ...DocumentBlock[]] | undefined;
   debounceTime?: number;
 };
 
-export function PageEditor({
-  page,
-  initialBlocks,
-  debounceTime = DEFAULT_DEBOUNCE_TIME,
-  ...rest
-}: PageEditorProps) {
-  const { draft, retainDraft } = usePageDraft(page, {
-    blocks: initialBlocks,
-    documentId: page.document_id,
-    title: page.title,
-    updatedAt: page.updated_at,
+export function PageEditor(props: PageEditorProps) {
+  const editor = useRef<Editor | null>(null);
+  const { draft, retainDraft } = usePageDraft(props.page, {
+    blocks: props.initialBlocks,
+    documentId: props.page.document_id,
+    title: props.page.title,
+    updatedAt: props.page.updated_at,
   });
+  const { setView } = useJournlAgent();
+  useEffect(() => {
+    setView({ id: props.page.id, name: "page", title: props.page.title });
+    return () => setView({ name: "other" });
+  }, [props.page.id, props.page.title, setView]);
+  useAppEventHandler(
+    ({ payload }) => {
+      if (payload.tool)
+        void payload.tool.chat.addToolOutput({
+          output: `Opened new page: ${payload.title}`,
+          tool: payload.tool.toolName,
+          toolCallId: payload.tool.toolCallId,
+        });
+    },
+    [PageCreatedEvent, props.page.id],
+  );
   const snapshot = useSyncExternalStore(
     draft.subscribe,
     draft.getSnapshot,
     draft.getSnapshot,
   );
-  const { setEditor, unsetEditor, setView } = useJournlAgent();
-  const editor = useBlockEditor({
-    initialBlocks: snapshot.blocks,
-    resetKey: snapshot.resetKey,
-  });
-  function handleEditorChange(transactions: BlockTransaction[]) {
-    retainDraft();
-    draft.update(
-      fromBlockNoteBlocks(editor.document),
-      transactions,
-      debounceTime,
-    );
-  }
-
   useEffect(
     () => () => {
       void draft.flush();
     },
     [draft],
   );
-
-  useEffect(() => {
-    setView({
-      id: page.id,
-      name: "page",
-      title: page.title,
-    });
-    return () => {
-      setView({
-        name: "other",
-      });
-    };
-  }, [page.id, page.title, setView]);
-
-  useEffect(() => {
-    const id = `page:${page.id}` as const;
-    setEditor({ editor, id });
-    return () => {
-      unsetEditor(id);
-    };
-  }, [page.id, editor, setEditor, unsetEditor]);
-
-  useAppEventHandler(
-    ({ payload }) => {
-      if (payload.tool) {
-        void payload.tool.chat.addToolOutput({
-          output: `Opened new page: ${payload.title}`,
-          tool: payload.tool.toolName,
-          toolCallId: payload.tool.toolCallId,
-        });
-      }
-      if (payload.title) {
-        editor.focus();
-      }
-    },
-    [PageCreatedEvent, page.id],
-  );
-
   return (
     <PageEditorDraftContext.Provider value={draft}>
-      <BlockEditor
-        key={snapshot.resetKey}
-        editor={editor}
-        onChange={handleEditorChange}
-        // Disabling the default because we're using a formatting toolbar with the AI option.
-        formattingToolbar={false}
-        // Disabling the default because we're using a slash menu with the AI option.
-        slashMenu={false}
-        {...rest}
-      />
-      <ReferenceBacklinks documentId={page.document_id} />
+      <div
+        className="flex flex-1 flex-col pb-52"
+        data-page-writing-canvas=""
+        onPointerDown={(event) => {
+          const current = editor.current;
+          if (
+            event.defaultPrevented ||
+            event.button !== 0 ||
+            !event.isPrimary ||
+            !current ||
+            current.isDestroyed ||
+            !current.isEditable ||
+            !(event.target instanceof Element) ||
+            event.target.closest(
+              'a,button,input,textarea,select,[contenteditable],[role="button"],[data-tiptap-controls],[data-page-backlinks]',
+            ) ||
+            !current.isEmpty
+          )
+            return;
+          current.commands.focus("start");
+        }}
+      >
+        <ConnectedDocumentEditor
+          key={snapshot.resetKey}
+          initialBlocks={snapshot.blocks}
+          onCommit={(blocks, operations) => {
+            const change = acceptedDocumentChange(
+              draft.getSnapshot().blocks ?? [],
+              blocks,
+              operations,
+            );
+            retainDraft();
+            draft.update(change, props.debounceTime ?? DEFAULT_DEBOUNCE_TIME);
+          }}
+          className={props.className}
+          onReady={(instance) => {
+            editor.current = instance;
+            props.onReady?.(instance);
+          }}
+        >
+          {props.children}
+        </ConnectedDocumentEditor>
+        <div data-page-backlinks="">
+          <ReferenceBacklinks documentId={props.page.document_id} />
+        </div>
+      </div>
     </PageEditorDraftContext.Provider>
   );
 }

@@ -1,15 +1,6 @@
 "use client";
 
 import {
-  useAuth,
-  useRevokeOtherSessions,
-  useRevokeSessions,
-} from "@better-auth-ui/react";
-import { LogOut } from "lucide-react";
-import { useState } from "react";
-import { toast } from "sonner";
-
-import {
   AlertDialog,
   AlertDialogCancel,
   AlertDialogContent,
@@ -18,9 +9,17 @@ import {
   AlertDialogHeader,
   AlertDialogMedia,
   AlertDialogTitle,
-} from "~/components/ui/alert-dialog";
-import { Button } from "~/components/ui/button";
-import { Spinner } from "~/components/ui/spinner";
+} from "@acme/ui/alert-dialog";
+import { Button } from "@acme/ui/button";
+import { Spinner } from "@acme/ui/spinner";
+import {
+  useAuth,
+  useRevokeOtherSessions,
+  useRevokeSessions,
+} from "@better-auth-ui/react";
+import { LogOut } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
 
 type PendingAction = "other" | "all";
 

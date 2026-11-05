@@ -1,0 +1,9 @@
+{
+  "extends": "@acme/tsconfig/tsconfig.react.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "module": "ESNext",
+    "moduleResolution": "Bundler"
+  },
+  "include": ["src"]
+}

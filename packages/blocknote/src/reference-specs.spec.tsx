@@ -1,11 +1,9 @@
+import type { ReferencePreviewData } from "@acme/references";
 // @vitest-environment jsdom
 import { act, type ReactNode } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeAll, expect, test, vi } from "vitest";
-import {
-  type ReferencePreviewData,
-  ReferenceRenderContext,
-} from "./reference-context";
+import { ReferenceRenderContext } from "./reference-context";
 import { contentReference } from "./reference-specs";
 
 vi.mock("@blocknote/react", async () => {

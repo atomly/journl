@@ -3,6 +3,7 @@ import {
   addGraphOccurrence,
   createGraphSourceExcerpt,
   type GraphSourceExcerpt,
+  resolveInternal,
 } from "./reference-api-helpers";
 
 vi.mock("~/env", () => ({ env: { PUBLIC_WEB_URL: "https://journl.example" } }));
@@ -79,3 +80,41 @@ test("graph edges expose stable occurrence IDs and deduplicate counts", () => {
   expect(edge.sources).toEqual([excerpt]);
   expect([...edge.presentations]).toEqual(["badge"]);
 });
+
+test.each([
+  { name: "missing document", rows: [] },
+  {
+    name: "document without a page or journal",
+    rows: [[{ id: "document" }], [], []],
+  },
+  {
+    name: "deleted block",
+    rows: [[{ id: "document" }], [{ id: "page" }], [], []],
+  },
+])(
+  "internal lookup distinguishes unavailable targets from transport failures: $name",
+  async ({ rows }) => {
+    const results = [...rows];
+    const query = {
+      from: () => query,
+      limit: async () => results.shift() ?? [],
+      // biome-ignore lint/suspicious/noThenProperty: Drizzle select queries are intentionally awaitable.
+      then: (resolve: (value: unknown) => void) =>
+        resolve(results.shift() ?? []),
+      where: () => query,
+    };
+    const db = { select: () => query } as unknown as Parameters<
+      typeof resolveInternal
+    >[0];
+    expect(
+      await resolveInternal(db, "owner", {
+        blockId: "missing",
+        documentId: "document",
+        kind: "document",
+      }),
+    ).toEqual({
+      status: "unavailable",
+      unavailableReason: "target-unavailable",
+    });
+  },
+);

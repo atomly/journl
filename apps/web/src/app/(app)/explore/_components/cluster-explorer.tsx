@@ -1,25 +1,25 @@
 "use client";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Pencil, X } from "lucide-react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
-import { Button } from "~/components/ui/button";
+import { Button } from "@acme/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogTitle,
-} from "~/components/ui/dialog";
-import { Input } from "~/components/ui/input";
+} from "@acme/ui/dialog";
+import { Input } from "@acme/ui/input";
 import {
   Sheet,
   SheetContent,
   SheetDescription,
   SheetTitle,
-} from "~/components/ui/sheet";
-import { Skeleton } from "~/components/ui/skeleton";
-import { useIsMobile } from "~/hooks/use-mobile";
+} from "@acme/ui/sheet";
+import { Skeleton } from "@acme/ui/skeleton";
+import { useIsMobile } from "@acme/ui/use-mobile";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { ArrowLeft, Pencil, X } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
 import {
   type ExploreEdge,
   type ExploreNode,

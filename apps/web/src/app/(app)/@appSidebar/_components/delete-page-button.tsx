@@ -1,12 +1,7 @@
 "use client";
 
 import type { Page } from "@acme/db/schema";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Loader2, Trash2 } from "lucide-react";
-import { usePathname, useRouter } from "next/navigation";
-import type { ComponentProps, ReactNode } from "react";
-import { useCallback, useMemo, useState, useTransition } from "react";
-import { Button } from "~/components/ui/button";
+import { Button } from "@acme/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -15,7 +10,12 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "~/components/ui/dialog";
+} from "@acme/ui/dialog";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { Loader2, Trash2 } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import type { ComponentProps, ReactNode } from "react";
+import { useCallback, useMemo, useState, useTransition } from "react";
 import { removeNode, removePageFromNestedPages } from "~/trpc/cache/tree-cache";
 import { useTRPC } from "~/trpc/react";
 
@@ -24,6 +24,7 @@ type DeletePageDialogProps = {
   children: ReactNode;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
+  finalFocus?: ComponentProps<typeof DialogContent>["finalFocus"];
 };
 
 type DeletePageDialogTriggerProps = ComponentProps<typeof DialogTrigger>;
@@ -64,6 +65,7 @@ export function DeletePageDialog({
   children,
   open,
   onOpenChange,
+  finalFocus,
 }: DeletePageDialogProps) {
   const pathname = usePathname();
   const router = useRouter();
@@ -162,7 +164,7 @@ export function DeletePageDialog({
     <Dialog open={isDialogOpen} onOpenChange={setDialogOpen}>
       {children}
 
-      <DialogContent>
+      <DialogContent finalFocus={finalFocus}>
         <DialogHeader>
           <DialogTitle>Delete Page</DialogTitle>
           <DialogDescription>

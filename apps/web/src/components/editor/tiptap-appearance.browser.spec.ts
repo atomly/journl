@@ -65,9 +65,29 @@ for (const theme of ["light", "dark"]) {
       await expect(toolbar).toBeHidden();
     else {
       await expect(toolbar).toBeVisible();
+      await expect(toolbar).toHaveAttribute(
+        "data-better-editor-toolbar-mode",
+        "sticky",
+      );
       await expect(toolbar).toHaveCSS("flex-wrap", "nowrap");
       expect((await toolbar.boundingBox())?.height).toBeLessThan(50);
     }
+    await page.keyboard.press("Escape");
+    await editor.focus();
+    await page.keyboard.press("Alt+F10");
+    await expect(toolbar).toBeVisible();
+    const toolbarSkin = await toolbar.evaluate((node) => {
+      const header = document.querySelector("header .border-sidebar-border");
+      const style = getComputedStyle(node);
+      return {
+        border: style.borderTopColor,
+        header: header ? getComputedStyle(header).borderTopColor : null,
+        radius: Number.parseFloat(style.borderTopLeftRadius),
+      };
+    });
+    expect(toolbarSkin.radius).toBeGreaterThan(10);
+    expect(toolbarSkin.border).toBe(toolbarSkin.header);
+    await page.keyboard.press("Escape");
     const paragraph = editor
       .locator('[data-better-editor-body="paragraph"]')
       .first();
@@ -100,7 +120,8 @@ test("editor styles do not adopt the host application's toolbar layout", async (
     const content = document.createElement("div");
     content.className = "better-editor-tiptap";
     const toolbar = document.createElement("div");
-    toolbar.className = "better-editor-mobile-toolbar";
+    toolbar.className = "better-editor-formatting-toolbar";
+    toolbar.dataset.betterEditorToolbarMode = "inline";
     const host = document.createElement("div");
     host.className = "better-editor-tiptap-host";
     consumer.append(content, toolbar, host);

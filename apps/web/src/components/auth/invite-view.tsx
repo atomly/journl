@@ -1,15 +1,15 @@
 "use client";
 
-import { useAuth } from "@better-auth-ui/react";
-import { BookOpen } from "lucide-react";
-import { InviteCodeForm } from "~/components/auth/invite-code-form";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "~/components/ui/card";
+} from "@acme/ui/card";
+import { useAuth } from "@better-auth-ui/react";
+import { BookOpen } from "lucide-react";
+import { InviteCodeForm } from "~/components/auth/invite-code-form";
 
 type InviteViewProps = {
   inviteCode?: string;

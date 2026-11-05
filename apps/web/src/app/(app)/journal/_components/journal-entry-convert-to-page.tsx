@@ -1,18 +1,18 @@
 "use client";
 
 import { Button } from "@acme/ui/button";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@acme/ui/tooltip";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { FileOutput } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "~/components/ui/dialog";
+} from "@acme/ui/dialog";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@acme/ui/tooltip";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { FileOutput } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { folderDestinationLabels } from "~/lib/tree-model";
 import { useTRPC } from "~/trpc/react";
 import { useJournalDraftActions } from "./journal-drafts-provider";

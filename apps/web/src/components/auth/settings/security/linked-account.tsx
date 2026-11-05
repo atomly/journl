@@ -2,6 +2,23 @@
 
 import { Button } from "@acme/ui/button";
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@acme/ui/dialog";
+import {
+  Item,
+  ItemActions,
+  ItemContent,
+  ItemDescription,
+  ItemMedia,
+  ItemTitle,
+} from "@acme/ui/item";
+import { Skeleton } from "@acme/ui/skeleton";
+import { Spinner } from "@acme/ui/spinner";
+import { cn } from "@acme/ui/utils";
+import {
   type AuthSocialProvider,
   getAuthErrorMessage,
   getProviderId,
@@ -18,23 +35,6 @@ import {
 import type { Account } from "better-auth";
 import { Link2, Link2Off, Plug } from "lucide-react";
 import { toast } from "sonner";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "~/components/ui/dialog";
-import {
-  Item,
-  ItemActions,
-  ItemContent,
-  ItemDescription,
-  ItemMedia,
-  ItemTitle,
-} from "~/components/ui/item";
-import { Skeleton } from "~/components/ui/skeleton";
-import { Spinner } from "~/components/ui/spinner";
-import { cn } from "~/lib/cn";
 import { ReauthenticationAction } from "../../reauthentication";
 
 export type LinkedAccountProps = {

@@ -1,18 +1,18 @@
 "use client";
 
-import { isReauthenticationRequiredError } from "@better-auth-ui/core";
-import { useAuth, useListSessions, useSession } from "@better-auth-ui/react";
-import { Fragment } from "react";
-import { Card, CardContent } from "~/components/ui/card";
+import { Card, CardContent } from "@acme/ui/card";
 import {
   Item,
   ItemContent,
   ItemGroup,
   ItemMedia,
   ItemSeparator,
-} from "~/components/ui/item";
-import { Skeleton } from "~/components/ui/skeleton";
-import { cn } from "~/lib/cn";
+} from "@acme/ui/item";
+import { Skeleton } from "@acme/ui/skeleton";
+import { cn } from "@acme/ui/utils";
+import { isReauthenticationRequiredError } from "@better-auth-ui/core";
+import { useAuth, useListSessions, useSession } from "@better-auth-ui/react";
+import { Fragment } from "react";
 import { ReauthenticationAction } from "../../reauthentication";
 import { ActiveSession } from "./active-session";
 import { SessionActions } from "./session-actions";

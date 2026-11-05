@@ -4,7 +4,7 @@ import { Button } from "@acme/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuSeparator,
+  DropdownMenuGroup,
   DropdownMenuTrigger,
 } from "@acme/ui/dropdown-menu";
 import {
@@ -17,18 +17,19 @@ import {
 } from "@floating-ui/react";
 import type { Editor } from "@tiptap/core";
 import { closeHistory, undo } from "@tiptap/pm/history";
-import { NodeSelection } from "@tiptap/pm/state";
 import { cellAround } from "@tiptap/pm/tables";
 import { GripHorizontal, GripVertical, Plus } from "lucide-react";
 import {
   type CSSProperties,
   useCallback,
   useEffect,
+  useLayoutEffect,
   useRef,
   useState,
 } from "react";
 import { createPortal } from "react-dom";
 import { blockAt } from "../engine/identity";
+import { TABLE_EXTENSION_META } from "../engine/metadata";
 import {
   applyTableEdit,
   canDropTableAxis,
@@ -40,16 +41,10 @@ import {
   tableAxisSelection,
   tableContext,
 } from "../engine/table-actions";
-import { removeSelectedBlock } from "../engine/writing";
-import {
-  EditorHint,
-  EditorMenuItem,
-  isPointerClick,
-  restoreEditorFocus,
-} from "./controls";
-import { TableMenuItems } from "./table-controls";
+import { EditorHint, isPointerClick, restoreEditorFocus } from "./controls";
 import { revealTableColumn } from "./table-reveal";
-import { useTiptapState } from "./writing-controls";
+import { useEditorEditable } from "./use-editor-editable";
+import { useEditorSnapshot } from "./use-editor-snapshot";
 
 type ActiveTable = {
   id: string;
@@ -124,17 +119,33 @@ function tableDropTarget(
 export function TiptapTableHandles({
   editor,
   visible,
+  renderMenu,
+  renderHandle,
 }: {
   editor: Editor;
   visible: boolean;
+  renderMenu: (target: {
+    editor: Editor;
+    axis: TableAxis;
+    blockId: string;
+  }) => React.ReactNode;
+  renderHandle?: (axis: TableAxis) => React.ReactNode;
 }) {
-  const state = useTiptapState(editor);
+  const editable = useEditorEditable(editor);
+  const state = useEditorSnapshot(editor);
   const [active, setActive] = useState<ActiveTable | null>(null);
   const [menu, setMenu] = useState<TableAxis | null>(null);
   const [drag, setDrag] = useState<Drag | null>(null);
   const [extending, setExtending] = useState<TableAxis | null>(null);
   const locked = Boolean(menu || drag || extending);
   const hasActive = active !== null;
+  useEffect(() => {
+    if (editable) return;
+    setActive(null);
+    setMenu(null);
+    setDrag(null);
+    setExtending(null);
+  }, [editable]);
   useEffect(() => {
     let frame = 0;
     const move = (event: PointerEvent) => {
@@ -304,6 +315,7 @@ export function TiptapTableHandles({
   }, [active, editor, state]);
   const context = active && state ? tableContext(state, active.id) : null;
   if (
+    !editable ||
     (!visible && !locked) ||
     !active ||
     !context ||
@@ -336,6 +348,8 @@ export function TiptapTableHandles({
           axis={axis}
           index={axis === "row" ? row : column}
           active={active}
+          renderMenu={renderMenu}
+          renderHandle={renderHandle}
           cell={cell}
           open={menu === axis}
           hidden={
@@ -442,7 +456,7 @@ function useTablePosition(
     strategy: "fixed",
     whileElementsMounted: autoUpdate,
   });
-  useEffect(() => {
+  useLayoutEffect(() => {
     floating.refs.setPositionReference({
       contextElement: table,
       getBoundingClientRect: reference,
@@ -471,6 +485,8 @@ function TableAxisHandle({
   draggable,
   onDragStart,
   onDragEnd,
+  renderMenu,
+  renderHandle,
 }: {
   editor: Editor;
   axis: TableAxis;
@@ -483,11 +499,17 @@ function TableAxisHandle({
   draggable: boolean;
   onDragStart: () => void;
   onDragEnd: () => void;
+  renderMenu: (target: {
+    editor: Editor;
+    axis: TableAxis;
+    blockId: string;
+  }) => React.ReactNode;
+  renderHandle?: (axis: TableAxis) => React.ReactNode;
 }) {
   const dragging = useRef(false);
   const consumedClick = useRef(false);
   const dragClosedMenu = useRef(false);
-  const { refs, floatingStyles, clipped } = useTablePosition(
+  const { refs, floatingStyles, clipped, isPositioned } = useTablePosition(
     active.element,
     cell,
     axis === "row" ? "right" : "top",
@@ -506,7 +528,6 @@ function TableAxisHandle({
       }}
     >
       <DropdownMenuTrigger
-        asChild
         onPointerDown={(event) => {
           event.preventBaseUIHandler();
           if (!dragging.current) consumedClick.current = false;
@@ -526,51 +547,54 @@ function TableAxisHandle({
           dragClosedMenu.current = false;
           onOpenChange(!open);
         }}
-      >
-        <EditorHint label={axis === "row" ? "Row actions" : "Column actions"}>
-          <Button
-            ref={refs.setFloating}
-            aria-label={`${axis === "row" ? "Row" : "Column"} actions`}
-            variant="ghost"
-            size="icon-sm"
-            data-table-handle={axis}
-            data-table-index={index}
-            className="better-editor-table-handle"
-            style={{
-              ...floatingStyles,
-              visibility: hidden || clipped ? "hidden" : undefined,
-            }}
-            draggable={draggable}
-            onMouseDown={() => {
-              const selection = tableAxisSelection(
-                editor.state,
-                active.id,
-                axis,
-                index,
-              );
-              if (selection)
-                editor.view.dispatch(editor.state.tr.setSelection(selection));
-            }}
-            onDragStart={(event) => {
-              dragging.current = true;
-              consumedClick.current = true;
-              dragClosedMenu.current = true;
-              event.dataTransfer.setData(
-                "application/x-better-editor-table-axis",
-                axis,
-              );
-              event.dataTransfer.effectAllowed = "move";
-              onDragStart();
-            }}
-            onDragEnd={() => {
-              dragging.current = false;
-              onDragEnd();
-            }}
-          >
-            {axis === "row" ? <GripVertical /> : <GripHorizontal />}
-          </Button>
-        </EditorHint>
-      </DropdownMenuTrigger>
+        render={
+          <EditorHint label={axis === "row" ? "Row actions" : "Column actions"}>
+            <Button
+              ref={refs.setFloating}
+              aria-label={`${axis === "row" ? "Row" : "Column"} actions`}
+              variant="ghost"
+              size="icon-sm"
+              data-table-handle={axis}
+              data-table-index={index}
+              className="better-editor-table-handle"
+              style={{
+                ...floatingStyles,
+                visibility:
+                  !isPositioned || hidden || clipped ? "hidden" : undefined,
+              }}
+              draggable={draggable}
+              onMouseDown={() => {
+                const selection = tableAxisSelection(
+                  editor.state,
+                  active.id,
+                  axis,
+                  index,
+                );
+                if (selection)
+                  editor.view.dispatch(editor.state.tr.setSelection(selection));
+              }}
+              onDragStart={(event) => {
+                dragging.current = true;
+                consumedClick.current = true;
+                dragClosedMenu.current = true;
+                event.dataTransfer.setData(
+                  "application/x-better-editor-table-axis",
+                  axis,
+                );
+                event.dataTransfer.effectAllowed = "move";
+                onDragStart();
+              }}
+              onDragEnd={() => {
+                dragging.current = false;
+                onDragEnd();
+              }}
+            >
+              {renderHandle?.(axis) ??
+                (axis === "row" ? <GripVertical /> : <GripHorizontal />)}
+            </Button>
+          </EditorHint>
+        }
+      />
       <DropdownMenuContent
         data-tiptap-controls=""
         data-tiptap-owner={editor.instanceId}
@@ -578,27 +602,9 @@ function TableAxisHandle({
           return dragClosedMenu.current ? false : restoreEditorFocus(editor);
         }}
       >
-        <TableMenuItems editor={editor} axis={axis} />
-        <DropdownMenuSeparator />
-        <EditorMenuItem
-          hint="Remove the whole table"
-          variant="destructive"
-          onClick={() => {
-            const block = blockAt(editor.state.doc, active.id);
-            editor.view.dispatch(
-              editor.state.tr.setSelection(
-                NodeSelection.create(editor.state.doc, block.pos),
-              ),
-            );
-            const tr = removeSelectedBlock(editor.state, () =>
-              crypto.randomUUID(),
-            );
-            if (tr) applyTableEdit(editor, tr);
-            editor.view.focus();
-          }}
-        >
-          Delete table
-        </EditorMenuItem>
+        <DropdownMenuGroup>
+          {renderMenu({ axis, blockId: active.id, editor })}
+        </DropdownMenuGroup>
       </DropdownMenuContent>
     </DropdownMenu>
   );
@@ -619,7 +625,7 @@ function TableExtendRail({
   extending: boolean;
   onExtending: (value: TableAxis | null) => void;
 }) {
-  const { refs, floatingStyles, clipped } = useTablePosition(
+  const { refs, floatingStyles, clipped, isPositioned } = useTablePosition(
     active.element,
     active.element,
     axis === "row" ? "bottom" : "right",
@@ -643,7 +649,7 @@ function TableExtendRail({
       if (current.target.hasPointerCapture(current.pointerId))
         current.target.releasePointerCapture(current.pointerId);
       onExtending(null);
-      if (editor.isDestroyed) return;
+      if (editor.isDestroyed || !editor.isEditable) return;
       if (cancel && current.changed) undo(editor.state, editor.view.dispatch);
       editor.view.dispatch(closeHistory(editor.state.tr));
       editor.view.focus();
@@ -667,8 +673,7 @@ function TableExtendRail({
     }) => {
       if (
         (transaction.docChanged || transaction.selectionSet) &&
-        transaction.getMeta("better-editor-table-extension") !==
-          gesture.current?.time
+        transaction.getMeta(TABLE_EXTENSION_META) !== gesture.current?.time
       )
         end();
     };
@@ -700,10 +705,10 @@ function TableExtendRail({
         data-table-extend={axis}
         style={{
           ...floatingStyles,
-          visibility: show && !clipped ? undefined : "hidden",
+          visibility: isPositioned && show && !clipped ? undefined : "hidden",
         }}
         onPointerDown={(event) => {
-          if (event.button !== 0) return;
+          if (event.button !== 0 || !editor.isEditable) return;
           const current = gesture.current;
           if (!event.isPrimary || current) {
             event.preventDefault();
@@ -734,6 +739,10 @@ function TableExtendRail({
         onPointerMove={(event) => {
           const current = gesture.current;
           if (!current || event.pointerId !== current.pointerId) return;
+          if (!editor.isEditable) {
+            end();
+            return;
+          }
           const delta =
             (axis === "row" ? event.clientY : event.clientX) - current.origin;
           const count = Math.max(
@@ -746,7 +755,7 @@ function TableExtendRail({
             editor.view.dispatch(
               tr
                 .setTime(current.time)
-                .setMeta("better-editor-table-extension", current.time),
+                .setMeta(TABLE_EXTENSION_META, current.time),
             );
             if (axis === "column" && count > current.count)
               revealTableColumn(editor, active.id, count - 1);
@@ -755,6 +764,10 @@ function TableExtendRail({
         onPointerUp={(event) => {
           const current = gesture.current;
           if (!current || event.pointerId !== current.pointerId) return;
+          if (!editor.isEditable) {
+            end();
+            return;
+          }
           if (!current.changed) {
             const tr = resizeTableAxis(
               editor.state,
@@ -766,7 +779,7 @@ function TableExtendRail({
               editor.view.dispatch(
                 tr
                   .setTime(current.time)
-                  .setMeta("better-editor-table-extension", current.time),
+                  .setMeta(TABLE_EXTENSION_META, current.time),
               );
               if (axis === "column")
                 revealTableColumn(editor, active.id, current.count);
@@ -781,6 +794,7 @@ function TableExtendRail({
           if (event.pointerId === gesture.current?.pointerId) end(true);
         }}
         onClick={(event) => {
+          if (!editor.isEditable) return;
           if (!isPointerClick(event)) {
             const context = tableContext(editor.state, active.id);
             if (context) {

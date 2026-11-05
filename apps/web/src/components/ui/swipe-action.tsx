@@ -1,7 +1,7 @@
 "use client";
 
+import { cn } from "@acme/ui/utils";
 import * as React from "react";
-import { cn } from "~/lib/cn";
 
 type SwipeActionContextValue = {
   actionElementRef: React.RefObject<HTMLDivElement | null>;

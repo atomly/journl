@@ -5,10 +5,10 @@ import { Editor } from "@tiptap/core";
 import { TextSelection } from "@tiptap/pm/state";
 import { expect, test, vi } from "vitest";
 import { fromTiptapDocument, toTiptapDocument } from "../serialization/tiptap";
+import { testDocumentExtensions } from "../testing/extensions";
 import { editingExtension } from "./commands";
 import { identityExtension } from "./identity";
 import { insertTiptapReference } from "./reference-insertion";
-import { documentExtensions } from "./schema";
 
 const url = "https://example.invalid/source";
 type Result = Awaited<ReturnType<ReferenceClient["resolveUrl"]>>;
@@ -19,7 +19,7 @@ function setup(text = "") {
     ]).toJSON(),
     element: document.createElement("div"),
     extensions: [
-      ...documentExtensions(),
+      ...testDocumentExtensions(),
       editingExtension(() => crypto.randomUUID()),
       identityExtension(() => crypto.randomUUID()),
     ],

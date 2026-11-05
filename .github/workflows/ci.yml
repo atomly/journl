@@ -82,6 +82,8 @@ jobs:
           path: |
             apps/web/.next/
             !apps/web/.next/cache/
+            !apps/web/.next/dev/
+            !apps/web/.next/workflow-data/
           retention-days: 1
 
   unit:

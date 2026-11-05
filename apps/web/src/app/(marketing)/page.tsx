@@ -1,3 +1,4 @@
+import { Separator } from "@acme/ui/separator";
 import {
   ArrowRight,
   BookOpen,
@@ -10,7 +11,6 @@ import type { Metadata, Viewport } from "next";
 import Link from "next/link";
 import { RiSparkling2Fill } from "react-icons/ri";
 import { withoutAuth } from "~/app/_guards/page-guards";
-import { Separator } from "~/components/ui/separator";
 import { getPublicWebUrl } from "~/lib/public-web-url";
 import { HydrateClient } from "~/trpc/server";
 import { HeroCtaButton } from "./_components/hero-cta-button";
@@ -125,16 +125,18 @@ export default withoutAuth(function RootPage() {
                 </p>
               </div>
               <div className="grid gap-4 md:grid-cols-2">
-                <HeroCtaButton className="group h-12 w-full bg-primary text-primary-foreground hover:bg-primary/90">
-                  <Link href="/invite">
-                    <span className="font-semibold">Start writing</span>
-                    <ArrowRight className="ml-2 h-5 w-5 transition-transform duration-200 group-hover:translate-x-1" />
-                  </Link>
+                <HeroCtaButton
+                  className="group h-12 w-full bg-primary text-primary-foreground hover:bg-primary/90"
+                  href="/invite"
+                >
+                  <span className="font-semibold">Start writing</span>
+                  <ArrowRight className="ml-2 h-5 w-5 transition-transform duration-200 group-hover:translate-x-1" />
                 </HeroCtaButton>
-                <HeroCtaButton className="h-12 w-full border border-border bg-card/60 text-foreground hover:bg-card/80">
-                  <Link href="/auth/sign-in">
-                    <span className="font-semibold">Sign in</span>
-                  </Link>
+                <HeroCtaButton
+                  className="h-12 w-full border border-border bg-card/60 text-foreground hover:bg-card/80"
+                  href="/auth/sign-in"
+                >
+                  <span className="font-semibold">Sign in</span>
                 </HeroCtaButton>
               </div>
               <div className="grid gap-4 text-foreground/85 text-sm sm:grid-cols-3">
@@ -282,11 +284,12 @@ export default withoutAuth(function RootPage() {
               Start with a single entry and watch Journl organize your
               narrative, surface what matters, and keep you moving forward.
             </p>
-            <HeroCtaButton className="marketing-cta-animated-border group bg-primary text-primary-foreground hover:bg-primary/90 sm:w-52">
-              <Link href="/invite">
-                <span className="font-semibold">Start writing</span>
-                <ArrowRight className="ml-2 h-5 w-5 transition-transform duration-200 group-hover:translate-x-1" />
-              </Link>
+            <HeroCtaButton
+              className="marketing-cta-animated-border group bg-primary text-primary-foreground hover:bg-primary/90 sm:w-52"
+              href="/invite"
+            >
+              <span className="font-semibold">Start writing</span>
+              <ArrowRight className="ml-2 h-5 w-5 transition-transform duration-200 group-hover:translate-x-1" />
             </HeroCtaButton>
           </section>
         </main>

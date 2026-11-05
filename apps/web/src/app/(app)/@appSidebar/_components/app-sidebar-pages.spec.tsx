@@ -45,7 +45,7 @@ vi.mock("~/app/(app)/@appSidebar/_components/delete-page-button", async () => {
         {open && <div role="dialog">Confirm delete</div>}
       </DeleteContext.Provider>
     ),
-    DeletePageDialogTrigger: ({ children }: { children: ReactNode }) => {
+    DeletePageDialogTrigger: ({ render: children }: { render: ReactNode }) => {
       const setOpen = useContext(DeleteContext);
       if (!isValidElement<{ onClick: () => void }>(children))
         throw new Error("Expected a trigger element");
@@ -307,13 +307,13 @@ test("dragging a page into a folder works", async () => {
   });
 });
 
-test.each(["Delete page", "Drag reference to Source page"])(
+test.each(["Actions for Source page", "Drag reference to Source page"])(
   "%s controls do not activate tree dragging",
   async (label) => {
     await render();
-    const control = pageLink("page").parentElement?.querySelector<HTMLElement>(
-      `button[aria-label='${label}']`,
-    );
+    const control = pageLink("page")
+      .closest("li")
+      ?.querySelector<HTMLElement>(`button[aria-label='${label}']`);
     if (!control) throw new Error("Action control missing");
     await mouse(control, "mousedown", 18);
     await mouse(document, "mousemove", 96);

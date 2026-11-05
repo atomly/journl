@@ -1,9 +1,8 @@
 "use client";
 
+import { cn } from "@acme/ui/utils";
 import { useAuth } from "@better-auth-ui/react";
 import type { ComponentProps } from "react";
-
-import { cn } from "~/lib/cn";
 import { ChangeEmail } from "./change-email";
 import { UserProfile } from "./user-profile";
 

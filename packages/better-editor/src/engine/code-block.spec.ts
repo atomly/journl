@@ -1,10 +1,14 @@
 // @vitest-environment jsdom
 import { Editor } from "@tiptap/core";
+import javascript from "highlight.js/lib/languages/javascript";
 import { expect, test } from "vitest";
 import { fromTiptapDocument, toTiptapDocument } from "../serialization/tiptap";
-import { codeLanguages } from "./code-block";
-import { documentExtensions } from "./schema";
+import { testDocumentExtensions } from "../testing/extensions";
+import { createSyntaxHighlighting } from "./code-block";
 import { setBlockProperties } from "./writing";
+
+const { extension: syntaxHighlightExtension, languages: codeLanguages } =
+  createSyntaxHighlighting({ javascript });
 
 test("code language selection highlights through Lowlight and stays out of stored text", () => {
   const editor = new Editor({
@@ -17,10 +21,10 @@ test("code language selection highlights through Lowlight and stays out of store
       },
     ]).toJSON(),
     element: document.createElement("div"),
-    extensions: documentExtensions(),
+    extensions: [...testDocumentExtensions(), syntaxHighlightExtension],
   });
   try {
-    expect(codeLanguages.length).toBeGreaterThan(100);
+    expect(codeLanguages).toEqual(["javascript"]);
     expect(editor.view.dom.querySelector(".hljs-keyword")).toBeNull();
     const language = setBlockProperties(editor.state, {
       language: "javascript",

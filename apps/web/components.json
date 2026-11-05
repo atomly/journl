@@ -4,8 +4,8 @@
     "components": "~/components",
     "hooks": "~/hooks",
     "lib": "~/lib",
-    "ui": "~/components/ui",
-    "utils": "~/components/utils"
+    "ui": "@acme/ui",
+    "utils": "@acme/ui/utils"
   },
   "iconLibrary": "lucide",
   "registries": {

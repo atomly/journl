@@ -1,5 +1,11 @@
 "use client";
 
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@acme/ui/collapsible";
+import { cn } from "@acme/ui/utils";
 import { DndContext, useDraggable, useDroppable } from "@dnd-kit/core";
 import { useIsFetching, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
@@ -22,11 +28,6 @@ import {
 import { TreeEmptyDropTarget } from "~/components/tree-empty-drop-target";
 import { TreeInsertDropBands } from "~/components/tree-insert-drop-bands";
 import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "~/components/ui/collapsible";
-import {
   SidebarMenuButton,
   SidebarMenuSub,
   SidebarMenuSubButton,
@@ -37,7 +38,6 @@ import { useSidebarExpansion } from "~/hooks/use-sidebar-expansion";
 import { useTreeChildren } from "~/hooks/use-tree-children";
 import { useTreeController } from "~/hooks/use-tree-controller";
 import { TreeMoveProvider } from "~/hooks/use-tree-item-moves";
-import { cn } from "~/lib/cn";
 import {
   TREE_INSIDE_DROP_ZONE_CLASSNAME,
   TreeDragOverlay,
@@ -324,31 +324,31 @@ function DraggableFolderRow({
             )}
           >
             <SidebarMenuSubButton
-              asChild
               isActive={isActive}
               className="w-full pr-12"
-            >
-              <button
-                type="button"
-                data-tree-drag-handle
-                aria-expanded={isOpen}
-                aria-label={`${isOpen ? "Collapse" : "Expand"} ${folder.name || "New folder"}`}
-                onClick={handleFolderToggle}
-                className="flex w-full min-w-0 items-center gap-1"
-              >
-                <span className="relative flex size-3 shrink-0 items-center justify-center">
-                  {isOpen ? (
-                    <FolderOpen className="size-3 shrink-0 transition-opacity duration-150 group-focus-within/folder-navigation:opacity-0 group-hover/folder-navigation:opacity-0" />
-                  ) : (
-                    <FolderClosed className="size-3 shrink-0 transition-opacity duration-150 group-focus-within/folder-navigation:opacity-0 group-hover/folder-navigation:opacity-0" />
-                  )}
-                  <ChevronRight className="absolute inset-0 size-3 shrink-0 opacity-0 transition-all duration-150 group-focus-within/folder-navigation:opacity-100 group-hover/folder-navigation:opacity-100 group-data-[open]/folder-collapsible:rotate-90" />
-                </span>
-                <span className="line-clamp-1 min-w-0 flex-1 truncate text-left">
-                  {folder.name || "New folder"}
-                </span>
-              </button>
-            </SidebarMenuSubButton>
+              render={
+                <button
+                  type="button"
+                  data-tree-drag-handle
+                  aria-expanded={isOpen}
+                  aria-label={`${isOpen ? "Collapse" : "Expand"} ${folder.name || "New folder"}`}
+                  onClick={handleFolderToggle}
+                  className="flex w-full min-w-0 items-center gap-1"
+                >
+                  <span className="relative flex size-3 shrink-0 items-center justify-center">
+                    {isOpen ? (
+                      <FolderOpen className="size-3 shrink-0 transition-opacity duration-150 group-focus-within/folder-navigation:opacity-0 group-hover/folder-navigation:opacity-0" />
+                    ) : (
+                      <FolderClosed className="size-3 shrink-0 transition-opacity duration-150 group-focus-within/folder-navigation:opacity-0 group-hover/folder-navigation:opacity-0" />
+                    )}
+                    <ChevronRight className="absolute inset-0 size-3 shrink-0 opacity-0 transition-all duration-150 group-focus-within/folder-navigation:opacity-100 group-hover/folder-navigation:opacity-100 group-data-[open]/folder-collapsible:rotate-90" />
+                  </span>
+                  <span className="line-clamp-1 min-w-0 flex-1 truncate text-left">
+                    {folder.name || "New folder"}
+                  </span>
+                </button>
+              }
+            />
 
             {isPending ? (
               <output className="absolute top-1/2 right-7 z-10 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-sm text-sidebar-foreground/70 opacity-100">
@@ -635,27 +635,27 @@ export const AppSidebarPages = ({
     >
       <div className="group/tree-row relative">
         <CollapsibleTrigger
-          asChild
           aria-controls={APP_SIDEBAR_PAGES_CONTENT_ID}
-        >
-          <SidebarMenuButton
-            isActive={isPagesRoute}
-            className={cn(
-              "min-h-8 border border-transparent pr-2 text-foreground!",
-              isPagesRoute && "border-sidebar-primary/50",
-            )}
-            tooltip="Library"
-            onClick={handlePagesClick}
-          >
-            {isRootFetching > 0 ? (
-              <Loader2 className="size-3 animate-spin" />
-            ) : (
-              <BookOpen />
-            )}
-            <span>Library</span>
-            <ChevronRight className="ml-auto transition-transform duration-200 group-data-[open]/collapsible:rotate-90" />
-          </SidebarMenuButton>
-        </CollapsibleTrigger>
+          render={
+            <SidebarMenuButton
+              isActive={isPagesRoute}
+              className={cn(
+                "min-h-8 border border-transparent pr-2 text-foreground!",
+                isPagesRoute && "border-sidebar-primary/50",
+              )}
+              tooltip="Library"
+              onClick={handlePagesClick}
+            >
+              {isRootFetching > 0 ? (
+                <Loader2 className="size-3 animate-spin" />
+              ) : (
+                <BookOpen />
+              )}
+              <span>Library</span>
+              <ChevronRight className="ml-auto transition-transform duration-200 group-data-[open]/collapsible:rotate-90" />
+            </SidebarMenuButton>
+          }
+        />
         <AppSidebarTreeActions
           className="right-8"
           kind="root"

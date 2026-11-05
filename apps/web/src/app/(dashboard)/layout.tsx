@@ -1,5 +1,5 @@
+import { Toaster } from "@acme/ui/toast";
 import { getSession } from "~/auth/server";
-import { Toaster } from "~/components/ui/toast";
 import { DashboardHeader } from "./_components/dashboard-header";
 import { DashboardProviders } from "./_components/dashboard-providers";
 

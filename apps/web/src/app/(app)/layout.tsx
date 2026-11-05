@@ -1,7 +1,7 @@
+import { Toaster } from "@acme/ui/toast";
 import { withAuth } from "~/app/_guards/page-guards";
 import { getUser } from "~/auth/server";
 import { SidebarInset } from "~/components/ui/sidebar";
-import { Toaster } from "~/components/ui/toast";
 import { getAppPreferences } from "~/preferences/get-preferences";
 import "./styles.css";
 import { AppLayoutProvider } from "../_components/app-layout-provider";

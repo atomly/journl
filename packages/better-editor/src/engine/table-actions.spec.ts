@@ -5,6 +5,7 @@ import { undo } from "@tiptap/pm/history";
 import { CellSelection } from "@tiptap/pm/tables";
 import { expect, test } from "vitest";
 import { fromTiptapDocument, toTiptapDocument } from "../serialization/tiptap";
+import { testDocumentExtensions } from "../testing/extensions";
 import {
   editingExtension,
   setTextMark,
@@ -13,7 +14,6 @@ import {
 } from "./commands";
 import { identityExtension } from "./identity";
 import { captureLink } from "./references";
-import { documentExtensions } from "./schema";
 import {
   canDropTableAxis,
   canMoveTableAxis,
@@ -48,7 +48,7 @@ function setup() {
     ]).toJSON(),
     element: document.createElement("div"),
     extensions: [
-      ...documentExtensions(),
+      ...testDocumentExtensions(),
       editingExtension(() => crypto.randomUUID()),
       identityExtension(() => crypto.randomUUID()),
     ],
@@ -362,3 +362,21 @@ test("non-drag width changes cover the column, preserve other widths and undo", 
     editor.destroy();
   }
 });
+
+for (const reason of ["read-only", "stale"] as const) {
+  test(`pending table edits do not commit when ${reason}`, async () => {
+    const { applyTableEdit } = await import("./table-actions");
+    const { editor } = setup();
+    try {
+      const pending = resizeTableAxis(editor.state, "table", "row", 5);
+      if (!pending) throw new Error("Missing pending edit");
+      if (reason === "read-only") editor.setEditable(false);
+      else editor.commands.insertContent("new");
+      const before = editor.state.doc.toJSON();
+      expect(() => applyTableEdit(editor, pending)).not.toThrow();
+      expect(editor.state.doc.toJSON()).toEqual(before);
+    } finally {
+      editor.destroy();
+    }
+  });
+}

@@ -2,6 +2,14 @@
 
 import { Button } from "@acme/ui/button";
 import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@acme/ui/card";
+import { cn } from "@acme/ui/utils";
+import {
   type AuthResult,
   getAuthResultMessage,
   parseAuthResult,
@@ -9,14 +17,6 @@ import {
 import { useAuth } from "@better-auth-ui/react";
 import { CircleCheckIcon, CircleXIcon, TriangleAlertIcon } from "lucide-react";
 import { useEffect, useState } from "react";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "~/components/ui/card";
-import { cn } from "~/lib/cn";
 
 type AuthResultProps = {
   className?: string;

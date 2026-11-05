@@ -1,15 +1,15 @@
 "use client";
 
+import { Alert, AlertDescription, AlertTitle } from "@acme/ui/alert";
 import { Button } from "@acme/ui/button";
+import { Spinner } from "@acme/ui/spinner";
+import { cn } from "@acme/ui/utils";
 import {
   getReauthenticationSignInURL,
   isReauthenticationSignInURL,
 } from "@better-auth-ui/core";
 import { useAuth, useSignOut } from "@better-auth-ui/react";
 import { useSyncExternalStore } from "react";
-import { Alert, AlertDescription, AlertTitle } from "~/components/ui/alert";
-import { Spinner } from "~/components/ui/spinner";
-import { cn } from "~/lib/cn";
 
 const subscribeToLocation = () => () => undefined;
 

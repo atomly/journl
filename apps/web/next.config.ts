@@ -1,11 +1,20 @@
 import type { NextConfig } from "next";
 import { withWorkflow } from "workflow/next";
-import { env, parseAuthDevOrigins } from "~/env";
+import {
+  env,
+  loadWorkflowEnvironmentVariables,
+  parseNextDevOrigins,
+} from "~/env";
+import { prepareLocalWorkflowStorage } from "./src/workflows/local-storage";
+
+// Preserve local Workflow history outside Next.js build artifacts.
+prepareLocalWorkflowStorage(process.cwd(), loadWorkflowEnvironmentVariables());
 
 const config: NextConfig = {
-  /* Adding support for cross origin request in development */
-  allowedDevOrigins: parseAuthDevOrigins(env.AUTH_DEV_ORIGINS),
-  /** Enables hot reloading for local packages without a build step */
+  allowedDevOrigins: parseNextDevOrigins(env.AUTH_DEV_ORIGINS),
+  experimental: {
+    turbopackFileSystemCacheForDev: !env.CI,
+  },
   transpilePackages: [
     "@acme/better-editor",
     "@acme/document",
@@ -16,7 +25,9 @@ const config: NextConfig = {
     "@acme/graph",
     "@acme/ui",
   ],
-  typescript: { ignoreBuildErrors: true },
+  typescript: {
+    ignoreBuildErrors: true,
+  },
 };
 
 export default withWorkflow(config);

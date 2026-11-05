@@ -1,4 +1,5 @@
-import { Button } from "@acme/ui/button";
+import { Button, buttonVariants } from "@acme/ui/button";
+import { cn } from "cn";
 import Link from "next/link";
 
 export default function NotFound() {
@@ -19,9 +20,15 @@ export default function NotFound() {
       </Link>
       <div className="flex items-center gap-x-1">
         <span className="text-muted-foreground text-sm">No account?</span>
-        <Button className="p-0 text-blue-600" variant="link" asChild>
-          <a href="/invite">Use an invite</a>
-        </Button>{" "}
+        <a
+          href="/invite"
+          className={cn(
+            buttonVariants({ size: "default", variant: "link" }),
+            "p-0 text-blue-600",
+          )}
+        >
+          Use an invite
+        </a>{" "}
       </div>
     </div>
   );

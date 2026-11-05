@@ -1,3 +1,4 @@
+import { createEditorId } from "@acme/better-editor/engine/id";
 import { type DocumentBlock, documentRows } from "@acme/document";
 import type { BlockTransaction } from "~/trpc";
 import { documentSaveTransactions } from "./document-save-adapter";
@@ -288,7 +289,7 @@ export class DocumentDraft<T extends SavedDocument> {
       const recoveryCopy: DraftRecoveryCopy = {
         blocks: structuredClone(blocks),
         createdAt: new Date().toISOString(),
-        id: crypto.randomUUID(),
+        id: createEditorId(),
         ...(backedUpTitle !== undefined ? { title: backedUpTitle } : {}),
       };
       const remote = await this.load();

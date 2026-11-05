@@ -2,11 +2,11 @@
 
 // Source: https://better-auth-ui.com/r/base-nova/user-button.json
 
+import { Skeleton } from "@acme/ui/skeleton";
 import type { UsernameAuthClient } from "@better-auth-ui/core/plugins/username";
 import { useAuth, useSession } from "@better-auth-ui/react";
 import type { User } from "better-auth";
 import { cn } from "cn";
-import { Skeleton } from "~/components/ui/skeleton";
 import { UserAvatar } from "./user-avatar";
 
 export type UserViewProps = {

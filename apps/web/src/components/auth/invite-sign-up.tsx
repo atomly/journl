@@ -1,8 +1,8 @@
 "use client";
 
+import { Card, CardContent, CardHeader, CardTitle } from "@acme/ui/card";
 import { useAuth } from "@better-auth-ui/react";
 import { ProviderButtons } from "~/components/auth/provider-buttons";
-import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 
 export function InviteSignUp({ className }: { className?: string }) {
   const { basePaths, localization, viewPaths, Link } = useAuth();

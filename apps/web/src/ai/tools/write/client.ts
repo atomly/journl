@@ -1,8 +1,8 @@
 "use client";
 
+import { useDrawer } from "@acme/ui/drawer";
 import { stripOpenAICitationTokens } from "~/ai/utils/openai-utils";
 import type { BlockNoteRequest } from "~/app/api/ai/blocknote/route";
-import { useDrawer } from "~/components/ui/drawer";
 import { env } from "~/env";
 import { useJournlAgent } from "../../../hooks/use-journl-agent";
 import { createClientTool } from "../../utils/create-client-tool";

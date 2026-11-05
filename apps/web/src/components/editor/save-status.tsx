@@ -2,6 +2,14 @@
 
 import { Button } from "@acme/ui/button";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@acme/ui/dialog";
+import {
   AlertCircleIcon,
   CloudCheckIcon,
   CloudOffIcon,
@@ -10,14 +18,6 @@ import {
 import Link from "next/link";
 import { lazy, Suspense, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "~/components/ui/dialog";
 import type { DraftRecoveryCopy } from "./document-draft";
 import { useTrackedDrafts } from "./draft-activity-provider";
 import {

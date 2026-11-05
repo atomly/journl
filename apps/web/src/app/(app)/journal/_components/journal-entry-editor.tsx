@@ -1,6 +1,7 @@
 "use client";
 
 import type { DocumentBlock } from "@acme/document";
+import { cn } from "@acme/ui/utils";
 import Link from "next/link";
 import {
   type ComponentProps,
@@ -15,7 +16,6 @@ import { acceptedDocumentChange } from "~/components/editor/document-save-adapte
 import { ExploreNoteLink } from "~/components/references/explore-note-link";
 import { ReferenceBacklinks } from "~/components/references/reference-backlinks";
 import { useJournlAgent } from "~/hooks/use-journl-agent";
-import { cn } from "~/lib/cn";
 import { formatDate } from "~/lib/format-date";
 import type { JournalListEntry } from "~/trpc";
 import { useJournalEntryDraft } from "./journal-drafts-provider";

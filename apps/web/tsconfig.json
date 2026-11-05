@@ -2,7 +2,9 @@
   "extends": "@acme/tsconfig/tsconfig.nextjs.json",
   "compilerOptions": {
     "paths": {
-      "~/*": ["./src/*"]
+      "~/*": ["./src/*"],
+      "@acme/ui": ["../../packages/ui/src"],
+      "@acme/ui/*": ["../../packages/ui/src/*"]
     },
     "incremental": false,
     /* Enables helpful hints for the Workflow SDK */

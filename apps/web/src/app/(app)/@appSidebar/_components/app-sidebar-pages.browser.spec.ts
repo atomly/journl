@@ -140,3 +140,76 @@ test("active ancestors reopen on a new target while manual collapse wins on the 
     page.getByRole("button", { exact: true, name: "Collapse Browser folder" }),
   ).toBeVisible();
 });
+
+test("page actions appear on hover or focus and delete stays inside the menu", async ({
+  page,
+}, info) => {
+  await page.goto("/explore");
+  if (info.project.name === "mobile-webkit")
+    await page.getByRole("button", { name: "Toggle Sidebar" }).first().click();
+  await page
+    .getByRole("button", { exact: true, name: "Expand Browser folder" })
+    .click();
+  const link = page.getByRole("link", { exact: true, name: "Browser note 01" });
+  await expect(link).toBeVisible();
+  const row = link.locator("xpath=ancestor::li[1]");
+  const actions = row.getByRole("button", {
+    exact: true,
+    name: "Actions for Browser note 01",
+  });
+  if (info.project.name === "desktop-chromium") {
+    // Touch retains the existing swipe-to-delete affordance.
+    await expect(
+      row.getByRole("button", { exact: true, name: "Delete page" }),
+    ).toHaveCount(0);
+    await page.mouse.move(1, 1);
+    await expect(actions).toHaveCSS("opacity", "0");
+    await row.hover();
+    await expect(actions).toHaveCSS("opacity", "1");
+    await page.mouse.move(1, 1);
+    await expect(actions).toHaveCSS("opacity", "0");
+    await actions.focus();
+    await expect(actions).toHaveCSS("opacity", "1");
+    await page.keyboard.press("Enter");
+  } else await actions.tap();
+  const remove = page.getByRole("menuitem", {
+    exact: true,
+    name: "Delete page",
+  });
+  await expect(remove).toBeVisible();
+  await expect(
+    page.getByRole("menuitem", { exact: true, name: "Move to…" }),
+  ).toBeVisible();
+  await remove.click();
+  const dialog = page.getByRole("dialog", { name: "Delete Page" });
+  await expect(dialog).toBeVisible();
+  await expect(dialog).toContainText("Browser note 01");
+  await dialog.getByRole("button", { exact: true, name: "Cancel" }).click();
+  await expect(dialog).toBeHidden();
+  await expect(link).toBeVisible();
+  await expect(actions).toBeFocused();
+});
+
+test.describe("wide touchscreens", () => {
+  test.use({ hasTouch: true, viewport: { height: 900, width: 1024 } });
+  test("page actions remain available without hover", async ({ page }) => {
+    await page.goto("/explore");
+    await page
+      .getByRole("button", { exact: true, name: "Expand Browser folder" })
+      .tap();
+    const actions = page.getByRole("button", {
+      exact: true,
+      name: "Actions for Browser note 01",
+    });
+    expect(
+      await page.evaluate(
+        () => matchMedia("(hover: hover) and (pointer: fine)").matches,
+      ),
+    ).toBe(false);
+    await expect(actions).toHaveCSS("opacity", "1");
+    await actions.tap();
+    await expect(
+      page.getByRole("menuitem", { exact: true, name: "Delete page" }),
+    ).toBeVisible();
+  });
+});

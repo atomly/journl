@@ -1,4 +1,5 @@
 import type { DocumentDraft } from "./document-draft";
+
 export type TrackedDraft = {
   key: string;
   label: string;

@@ -1,7 +1,8 @@
+import { Separator } from "@acme/ui/separator";
+import { Skeleton } from "@acme/ui/skeleton";
 import { Calendar, Compass } from "lucide-react";
 import { type ComponentProps, Suspense } from "react";
 import { getUser } from "~/auth/server";
-import { Separator } from "~/components/ui/separator";
 import {
   Sidebar,
   SidebarContent,
@@ -10,7 +11,6 @@ import {
   SidebarGroupLabel,
   SidebarHeader,
 } from "~/components/ui/sidebar";
-import { Skeleton } from "~/components/ui/skeleton";
 import { env } from "~/env";
 import { infiniteSidebarTreeQueryOptions } from "~/trpc/options/sidebar-tree-query-options";
 import { prefetch, trpc } from "~/trpc/server";

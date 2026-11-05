@@ -9,9 +9,10 @@ import {
   DropdownMenuTrigger,
 } from "@acme/ui/dropdown-menu";
 import type { Editor } from "@tiptap/core";
-import { TextSelection } from "@tiptap/pm/state";
+import { type EditorState, TextSelection } from "@tiptap/pm/state";
 import { ChevronDown } from "lucide-react";
 import { selectedBlock } from "../engine/commands";
+import { createEditorId } from "../engine/id";
 import {
   captureLink,
   convertReference,
@@ -22,6 +23,8 @@ import {
   EditorToolbarControl,
   restoreEditorFocus,
 } from "./controls";
+import { useEditorSelector } from "./editor-root";
+import { useEditorEditable } from "./use-editor-editable";
 
 export type InsertReference = (
   url: string,
@@ -47,15 +50,7 @@ export const referenceDisplays = [
   },
 ] as const;
 
-/** Shared language and eligibility for every link/reference surface. */
-export function ReferenceDisplayItems({
-  editor,
-  insertReference,
-}: {
-  editor: Editor;
-  insertReference?: InsertReference;
-}) {
-  const { state } = editor;
+function referenceContext(state: EditorState) {
   const at = state.doc.nodeAt(state.selection.from);
   const reference =
     at?.type.name === "betterEditorBlock"
@@ -68,6 +63,30 @@ export function ReferenceDisplayItems({
     );
   const link = !isReference && captureLink(state);
   const inTable = selectedBlock(state)?.node.firstChild?.type.name === "table";
+  return {
+    blockId: selectedBlock(state)?.id,
+    inTable,
+    isReference,
+    link,
+    reference,
+  };
+}
+
+/** Shared language and eligibility for every link/reference surface. */
+export function ReferenceDisplayItems({
+  editor,
+  insertReference,
+}: {
+  editor: Editor;
+  insertReference?: InsertReference;
+}) {
+  const editable = useEditorEditable(editor);
+  const context = useEditorSelector(
+    (instance) => referenceContext(instance.state),
+    editor,
+  );
+  if (!context) return null;
+  const { isReference, reference, link, inTable } = context;
   if (!isReference && !(link && insertReference)) return null;
   return (
     <DropdownMenuGroup>
@@ -77,32 +96,57 @@ export function ReferenceDisplayItems({
           ({ type }) =>
             referenceDisplayAllowed(
               type,
-              isReference ? reference.attrs.props?.targetKind : "external",
+              isReference ? reference?.attrs.props?.targetKind : "external",
               inTable,
             ) &&
             (isReference
-              ? type !== reference.type.name
+              ? type !== reference?.type.name
               : type === "contentReference" || type === "referenceCard"),
         )
         .map(({ type, label, hint }) => (
           <EditorMenuItem
             key={type}
             hint={hint}
+            disabled={!editable}
             onClick={() => {
+              if (editor.isDestroyed || !editor.isEditable) return;
+              const current = referenceContext(editor.state);
+              if (
+                current.blockId !== context.blockId ||
+                Boolean(current.isReference) !== Boolean(isReference) ||
+                !referenceDisplayAllowed(
+                  type,
+                  current.isReference
+                    ? current.reference?.attrs.props?.targetKind
+                    : "external",
+                  current.inTable,
+                )
+              )
+                return;
               if (
                 link &&
+                current.link &&
+                current.link.href === link.href &&
                 insertReference &&
                 (type === "contentReference" || type === "referenceCard")
               ) {
                 editor.view.dispatch(
-                  state.tr.setSelection(
-                    TextSelection.create(state.doc, link.from, link.to),
+                  editor.state.tr.setSelection(
+                    TextSelection.create(
+                      editor.state.doc,
+                      current.link.from,
+                      current.link.to,
+                    ),
                   ),
                 );
-                insertReference(link.href, link.label, type);
-              } else {
+                insertReference(current.link.href, current.link.label, type);
+              } else if (
+                current.isReference &&
+                current.reference?.attrs.props?.url ===
+                  reference?.attrs.props?.url
+              ) {
                 const tr = convertReference(editor.state, type, () =>
-                  crypto.randomUUID(),
+                  createEditorId(),
                 );
                 if (tr) editor.view.dispatch(tr.scrollIntoView());
               }
@@ -123,39 +167,41 @@ export function ReferenceDisplayControl({
   editor: Editor;
   insertReference: InsertReference;
 }) {
-  const at = editor.state.doc.nodeAt(editor.state.selection.from);
-  const reference = at?.type.name === "betterEditorBlock" ? at.firstChild : at;
-  if (
-    !captureLink(editor.state) &&
-    !["contentReference", "referenceCard", "contentEmbed"].includes(
-      reference?.type.name ?? "",
-    )
-  )
-    return null;
+  const editable = useEditorEditable(editor);
+  const available = useEditorSelector((instance) => {
+    const context = referenceContext(instance.state);
+    return Boolean(context.link || context.isReference);
+  }, editor);
+  if (!available) return null;
   return (
     <DropdownMenu modal={false}>
-      <EditorToolbarControl label="Display as">
-        <DropdownMenuTrigger asChild>
-          <Button
-            variant="ghost"
-            size="sm"
-            onMouseDown={(event) => event.preventDefault()}
-          >
-            Display as
-            <ChevronDown className="size-4" />
-          </Button>
-        </DropdownMenuTrigger>
+      <EditorToolbarControl label="Display as" disabled={!editable}>
+        <DropdownMenuTrigger
+          render={
+            <Button
+              variant="ghost"
+              size="sm"
+              onMouseDown={(event) => event.preventDefault()}
+            >
+              Display as
+              <ChevronDown className="size-4" />
+            </Button>
+          }
+        />
       </EditorToolbarControl>
       <DropdownMenuContent
         data-tiptap-controls=""
+        data-tiptap-owner={editor.instanceId}
         finalFocus={() => {
           return restoreEditorFocus(editor);
         }}
       >
-        <ReferenceDisplayItems
-          editor={editor}
-          insertReference={insertReference}
-        />
+        <DropdownMenuGroup>
+          <ReferenceDisplayItems
+            editor={editor}
+            insertReference={insertReference}
+          />
+        </DropdownMenuGroup>
       </DropdownMenuContent>
     </DropdownMenu>
   );

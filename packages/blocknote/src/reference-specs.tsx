@@ -11,6 +11,7 @@ import {
 } from "./reference-config";
 import { ReferenceEmbedView } from "./reference-embed";
 import { safeReferenceHref as safeHref } from "./reference-href";
+
 export const contentReference = createReactInlineContentSpec(
   contentReferenceConfig,
   {

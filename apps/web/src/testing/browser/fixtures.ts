@@ -1,4 +1,9 @@
-import { test as base, expect, type Locator } from "@playwright/test";
+import {
+  test as base,
+  expect,
+  type Locator,
+  type Page,
+} from "@playwright/test";
 import type { Editor } from "@tiptap/core";
 import { browserFixture } from "./data";
 
@@ -67,4 +72,40 @@ export async function selectEditorText(editor: Locator) {
       }),
     )
     .toMatchObject({ empty: false });
+}
+
+/** Observe uncaught page JS across navigation. WebKit also emits native loader
+ * diagnostics as pageerror (playwright#43120); those are not DOM exceptions.
+ * Worker-only errors remain outside this page-specific assertion. */
+export async function observePageErrors(page: Page): Promise<string[]> {
+  const errors: string[] = [];
+  await page.exposeFunction("__journlReportPageError", (message: string) => {
+    errors.push(message);
+  });
+  await page.addInitScript(() => {
+    const report = (reason: unknown) => {
+      let message: string;
+      if (reason instanceof Error) message = reason.message;
+      else if (typeof reason === "string") message = reason;
+      else {
+        try {
+          message = JSON.stringify(reason) ?? String(reason);
+        } catch {
+          message = String(reason);
+        }
+      }
+      const bridge = (
+        window as unknown as {
+          __journlReportPageError: (message: string) => Promise<void>;
+        }
+      ).__journlReportPageError;
+      // Only the test bridge can disappear while its document is being torn down.
+      void bridge(message).catch(() => {});
+    };
+    addEventListener("error", (event) => {
+      if (event instanceof ErrorEvent) report(event.error ?? event.message);
+    });
+    addEventListener("unhandledrejection", (event) => report(event.reason));
+  });
+  return errors;
 }

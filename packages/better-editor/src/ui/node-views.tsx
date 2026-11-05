@@ -14,138 +14,16 @@ import {
   useReferenceEmbed,
   useReferencePreview,
 } from "@acme/references/react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuLabel,
-  DropdownMenuTrigger,
-} from "@acme/ui/dropdown-menu";
 import { Popover, PopoverContent, PopoverTrigger } from "@acme/ui/popover";
 import { Button as SurfaceButton } from "@base-ui/react/button";
-import { type Editor, Extension } from "@tiptap/core";
-import { dropCursor } from "@tiptap/pm/dropcursor";
-import type { Node as PMNode } from "@tiptap/pm/model";
-import { NodeSelection, Plugin } from "@tiptap/pm/state";
-import type { NodeView } from "@tiptap/pm/view";
-import { ChevronRight, ExternalLink, MoreHorizontal } from "lucide-react";
-import {
-  createContext,
-  useContext,
-  useMemo,
-  useState,
-  useSyncExternalStore,
-} from "react";
-import { createPortal } from "react-dom";
-import {
-  convertReference,
-  referenceDisplayAllowed,
-} from "../engine/references";
+import { ChevronRight, ExternalLink } from "lucide-react";
+import { createContext, memo, useContext, useMemo, useState } from "react";
 import { safeEditorUrl } from "../engine/schema";
-import { EditorHint, EditorMenuItem, restoreEditorFocus } from "./controls";
-import { DocumentEditor } from "./document-editor";
 import { ReferenceClientContext } from "./reference-client";
-import { referenceDisplays } from "./reference-display";
+import type { ReferenceView } from "./reference-view-store";
+import type { ReferenceViewsOptions } from "./reference-views";
+import { useEditorEditable } from "./use-editor-editable";
 
-type ReferenceView = {
-  key: number;
-  dom: HTMLElement;
-  node: PMNode;
-  getPos: () => number | undefined;
-  editor: Editor;
-};
-/** Portals keep the app's query/router/theme context. Views never write content
- * while resolving previews; clipboard/storage still use the adapter's schema. */
-export function referenceViewStore() {
-  let views: ReferenceView[] = [];
-  let key = 0;
-  const listeners = new Set<() => void>();
-  const notify = () => {
-    for (const listener of listeners) listener();
-  };
-  const extension = Extension.create({
-    addProseMirrorPlugins() {
-      const editor = this.editor;
-      const nodeViews = Object.fromEntries(
-        ["contentReference", "referenceCard", "contentEmbed"].map((type) => [
-          type,
-          (
-            node: PMNode,
-            _view: import("@tiptap/pm/view").EditorView,
-            getPos: () => number | undefined,
-          ): NodeView => {
-            const dom = document.createElement(
-              type === "contentReference" ? "span" : "div",
-            );
-            dom.contentEditable = "false";
-            if (type === "contentReference")
-              dom.dataset.betterEditorReference = "";
-            else dom.dataset.betterEditorBody = type;
-            const id = key++;
-            const sync = (next: PMNode) => {
-              dom.setAttribute(
-                "data-better-editor-attrs",
-                JSON.stringify(next.attrs),
-              );
-              views = [
-                ...views.filter((item) => item.key !== id),
-                { dom, editor, getPos, key: id, node: next },
-              ];
-              notify();
-            };
-            sync(node);
-            return {
-              deselectNode: () =>
-                dom.classList.remove("ProseMirror-selectednode"),
-              destroy() {
-                views = views.filter((item) => item.key !== id);
-                notify();
-              },
-              dom,
-              ignoreMutation: () => true,
-              selectNode: () => dom.classList.add("ProseMirror-selectednode"),
-              stopEvent: (event) =>
-                event.target instanceof Element &&
-                Boolean(event.target.closest('a,button,input,[role="menu"]')),
-              update(next) {
-                if (next.type !== node.type) return false;
-                sync(next);
-                return true;
-              },
-            };
-          },
-        ]),
-      );
-      return [
-        new Plugin({ props: { nodeViews } }),
-        dropCursor({ color: "var(--ring)", width: 2 }),
-      ];
-    },
-    name: "better-editor-presentation",
-  });
-  return {
-    extension,
-    getSnapshot: () => views,
-    subscribe: (listener: () => void) => {
-      listeners.add(listener);
-      return () => {
-        listeners.delete(listener);
-      };
-    },
-  };
-}
-export type ReferenceViewStore = ReturnType<typeof referenceViewStore>;
-const EMPTY: ReferenceView[] = [];
-export function TiptapReferenceViews({ store }: { store: ReferenceViewStore }) {
-  const views = useSyncExternalStore(
-    store.subscribe,
-    store.getSnapshot,
-    () => EMPTY,
-  );
-  return views.map((view) =>
-    createPortal(<ReferenceSurface view={view} />, view.dom, view.key),
-  );
-}
 const EmbedPath = createContext<string[]>([]);
 type Target =
   | { kind: "document"; documentId: string; blockId?: string }
@@ -183,19 +61,23 @@ function embedTree(value: unknown): DocumentBlock[] | null {
     return null;
   }
 }
-function ReferenceSurface({ view }: { view: ReferenceView }) {
+export const ReferenceSurface = memo(function ReferenceSurface({
+  view,
+  ...options
+}: { view: ReferenceView } & ReferenceViewsOptions) {
   const parsed = zReferenceProps.safeParse(view.node.attrs.props);
   if (!parsed.success)
     return <span className="content-reference-status">Unavailable target</span>;
-  return <ResolvedReference view={view} props={parsed.data} />;
-}
+  return <ResolvedReference view={view} props={parsed.data} {...options} />;
+});
+
 function ResolvedReference({
   view,
   props,
-}: {
-  view: ReferenceView;
-  props: ReferenceProps;
-}) {
+  renderEmbeddedContent,
+  renderActions,
+  maxEmbedDepth = Number.POSITIVE_INFINITY,
+}: { view: ReferenceView; props: ReferenceProps } & ReferenceViewsOptions) {
   const references = useContext(ReferenceClientContext);
   const path = useContext(EmbedPath);
   const target = useMemo(() => targetOf(props), [props]);
@@ -227,11 +109,15 @@ function ResolvedReference({
   const [expanded, setExpanded] = useState(false);
   const embed = view.node.type.name === "contentEmbed";
   const key = `${props.documentId}#${props.blockId}`;
-  const limited = path.length >= 2 || path.includes(key);
+  const limited = path.length >= maxEmbedDepth || path.includes(key);
   const { content, loading: loadingEmbed } = useReferenceEmbed(
     references,
     target?.kind === "document" ? target : null,
-    embed && expanded && !limited && !targetUnavailable,
+    embed &&
+      expanded &&
+      !limited &&
+      !targetUnavailable &&
+      Boolean(renderEmbeddedContent),
   );
   const blocks = content?.status === "ready" ? embedTree(content.blocks) : null;
   const open = (event: React.MouseEvent) => {
@@ -260,64 +146,16 @@ function ResolvedReference({
       {title}
     </a>
   );
-  const change = (display: Parameters<typeof convertReference>[1]) => {
-    const pos = view.getPos();
-    if (pos === undefined || !view.editor.isEditable) return;
-    const state = view.editor.state;
-    view.editor.view.dispatch(
-      state.tr.setSelection(NodeSelection.create(state.doc, pos)),
-    );
-    const tr = convertReference(view.editor.state, display, () =>
-      crypto.randomUUID(),
-    );
-    if (tr) view.editor.view.dispatch(tr);
-    view.editor.view.focus();
-  };
-  const menu = view.editor.isEditable && (
-    <DropdownMenu modal={false}>
-      <DropdownMenuTrigger asChild>
-        <EditorHint label="Display as">
-          <SurfaceButton
-            type="button"
-            className="content-reference-action"
-            aria-label="Reference actions"
-          >
-            <MoreHorizontal />
-          </SurfaceButton>
-        </EditorHint>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent
-        data-tiptap-controls=""
-        data-tiptap-owner={view.editor.instanceId}
-        finalFocus={() => {
-          return restoreEditorFocus(view.editor);
-        }}
-      >
-        <DropdownMenuGroup>
-          <DropdownMenuLabel>Display as</DropdownMenuLabel>
-          {referenceDisplays
-            .filter(
-              ({ type }) =>
-                type !== view.node.type.name &&
-                referenceDisplayAllowed(
-                  type,
-                  props.targetKind,
-                  Boolean(view.dom.closest("table")),
-                ),
-            )
-            .map(({ type, label, hint }) => (
-              <EditorMenuItem
-                key={type}
-                hint={hint}
-                onClick={() => change(type)}
-              >
-                {label}
-              </EditorMenuItem>
-            ))}
-        </DropdownMenuGroup>
-      </DropdownMenuContent>
-    </DropdownMenu>
-  );
+  const editable = useEditorEditable(view.editor);
+  const menu = editable
+    ? renderActions?.({
+        editor: view.editor,
+        getPos: view.getPos,
+        node: view.node,
+        props,
+        withinTable: Boolean(view.dom.closest("table")),
+      })
+    : null;
   if (inline)
     return (
       <Popover>
@@ -370,7 +208,7 @@ function ResolvedReference({
     return (
       <section
         className="content-embed"
-        data-block-surface={view.editor.isEditable ? "true" : undefined}
+        data-block-surface={editable ? "true" : undefined}
       >
         <div className="content-embed-heading">
           <SurfaceButton
@@ -400,13 +238,13 @@ function ResolvedReference({
         {targetUnavailable && <PreviewStatus targetUnavailable />}
         {expanded && !targetUnavailable && (
           <div className="content-embed-content">
-            {limited ? (
+            {limited || !renderEmbeddedContent ? (
               <p className="content-reference-status">
-                Open source to view this nested reference.
+                Open source to view this reference.
               </p>
-            ) : blocks ? (
+            ) : blocks && renderEmbeddedContent ? (
               <EmbedPath.Provider value={[...path, key]}>
-                <DocumentEditor initialBlocks={blocks} />
+                {renderEmbeddedContent(blocks)}
               </EmbedPath.Provider>
             ) : (
               <p className="content-reference-status">
@@ -422,7 +260,7 @@ function ResolvedReference({
   return (
     <article
       className="content-reference-card"
-      data-block-surface={view.editor.isEditable ? "true" : undefined}
+      data-block-surface={editable ? "true" : undefined}
       aria-label={`${title} reference card`}
     >
       <PreviewImage

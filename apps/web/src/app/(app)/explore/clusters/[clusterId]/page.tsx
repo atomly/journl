@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { z } from "zod/v4";
 import { withAuth } from "~/app/_guards/page-guards";
 import { ClusterExplorer } from "../../_components/cluster-explorer";
+
 export default withAuth(async function ClusterPage({
   params,
 }: {

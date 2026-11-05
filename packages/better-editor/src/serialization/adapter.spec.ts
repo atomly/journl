@@ -28,7 +28,7 @@ import { documentChanges } from "../engine/changes";
 import { blockAt } from "../engine/identity";
 import { referenceSelectionPlugin } from "../engine/reference-selection";
 import { required } from "../engine/required";
-import { documentExtensions } from "../engine/schema";
+import { testDocumentExtensions } from "../testing/extensions";
 import {
   AdapterReadError,
   fromTiptapDocument,
@@ -77,7 +77,7 @@ test("the complete inventory survives the real Tiptap schema and JSON storage bo
     content: original.toJSON(),
     element: document.createElement("div"),
     enableContentCheck: true,
-    extensions: documentExtensions(),
+    extensions: testDocumentExtensions(),
   });
   expect(editor.state.doc.toJSON()).toEqual(original.toJSON());
   expect(fromTiptapDocument(editor.state.doc)).toEqual(domain);
@@ -295,7 +295,7 @@ test("native editor paste refreshes nested identities and keeps reference target
   const editor = new Editor({
     content: toTiptapDocument([paragraph("destination")], schema).toJSON(),
     element: document.createElement("div"),
-    extensions: documentExtensions(),
+    extensions: testDocumentExtensions(),
   });
   editor.registerPlugin(plugin);
   editor.view.dispatch(

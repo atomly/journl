@@ -1,8 +1,11 @@
-import { Extension, type Extensions, Mark, Node } from "@tiptap/core";
-import { blockView } from "./block-view";
-import { codeHighlightPlugin } from "./code-block";
+import { type Extensions, Mark, Node } from "@tiptap/core";
 import { editorColor as color } from "./colors";
-import { tableExtension, tableNodeView } from "./tables";
+import {
+  htmlAttrs,
+  parseAttrs,
+  propsAttribute,
+  textStyle,
+} from "./schema-attributes";
 
 export const inlineBlockTypes = [
   "paragraph",
@@ -19,8 +22,6 @@ export const atomBlockTypes = [
   "video",
   "audio",
   "file",
-  "referenceCard",
-  "contentEmbed",
 ] as const;
 
 export function safeEditorUrl(value: string): string {
@@ -32,33 +33,13 @@ export function safeEditorUrl(value: string): string {
     ? value
     : "";
 }
-const textStyle = (props: Record<string, unknown> | null) =>
-  `text-align:${props?.textAlignment ?? "left"};${props?.textColor && props.textColor !== "default" ? `color:${color(props.textColor)};` : ""}background-color:${color(props?.backgroundColor, true)}`;
-const parseAttrs = (element: HTMLElement) => {
-  const value = element.getAttribute("data-better-editor-attrs");
-  return value ? JSON.parse(value) : null;
-};
-const htmlAttrs = (attrs: Record<string, unknown>) => ({
-  "data-better-editor-attrs": JSON.stringify(attrs),
-});
-
-const propsAttribute = () => ({
-  props: { default: null, rendered: false },
-});
-
 /** Each BetterEditor block has one identity, one body, and an optional child group. */
 export function documentExtensions(): Extensions {
   return [
-    tableExtension(),
-    Extension.create({
-      name: "better-editor-syntax-highlight",
-      addProseMirrorPlugins: () => [codeHighlightPlugin()],
-    }),
     Node.create({ name: "doc", topNode: true, content: "betterEditorBlock*" }),
     Node.create({ name: "text", group: "inline" }),
     Node.create({
       name: "betterEditorBlock",
-      addNodeView: () => blockView,
       draggable: true,
       content: "betterEditorBody betterEditorChildren?",
       defining: true,
@@ -260,93 +241,6 @@ export function documentExtensions(): Extensions {
         },
       }),
     ),
-    Node.create({
-      name: "table",
-      addNodeView: () => tableNodeView,
-      group: "betterEditorBody",
-      content: "tableRow*",
-      isolating: true,
-      addAttributes: () => ({
-        ...propsAttribute(),
-        columnWidths: { default: null, rendered: false },
-        headerRows: { default: null, rendered: false },
-        headerCols: { default: null, rendered: false },
-        contentPresent: { default: true, rendered: false },
-      }),
-      parseHTML: () => [{ tag: "table", getAttrs: parseAttrs }],
-      renderHTML: ({ node }) => [
-        "table",
-        {
-          "data-better-editor-body": "table",
-          ...htmlAttrs(node.attrs),
-          style: textStyle(node.attrs.props),
-        },
-        [
-          "colgroup",
-          ...(
-            node.attrs.columnWidths ??
-            Array(node.firstChild?.childCount ?? 0).fill(null)
-          ).map((width: number | null) => [
-            "col",
-            { style: `width:${width ?? 200}px` },
-          ]),
-        ],
-        ["tbody", 0],
-      ],
-    }),
-    Node.create({
-      name: "tableRow",
-      content: "tableCell*",
-      addAttributes: () => ({ legacy: { default: false, rendered: false } }),
-      parseHTML: () => [{ tag: "tr", getAttrs: parseAttrs }],
-      renderHTML: ({ node }) => ["tr", htmlAttrs(node.attrs), 0],
-    }),
-    Node.create({
-      name: "tableCell",
-      content: "tableParagraph+",
-      isolating: true,
-      addAttributes: () => ({
-        ...propsAttribute(),
-        colspan: { default: 1, rendered: false },
-        rowspan: { default: 1, rendered: false },
-        colwidth: { default: null, rendered: false },
-      }),
-      parseHTML: () => [
-        { tag: "td", getAttrs: parseAttrs, preserveWhitespace: "full" },
-      ],
-      renderHTML: ({ node }) => [
-        "td",
-        {
-          ...htmlAttrs(node.attrs),
-          style: textStyle(node.attrs.props),
-          colspan: node.attrs.colspan,
-          rowspan: node.attrs.rowspan,
-        },
-        0,
-      ],
-    }),
-    Node.create({
-      name: "tableParagraph",
-      priority: 1100,
-      content: "inline*",
-      parseHTML: () => [{ tag: "p[data-table-paragraph]" }],
-      renderHTML: () => ["p", { "data-table-paragraph": "" }, 0],
-    }),
-    Node.create({
-      name: "contentReference",
-      group: "inline",
-      inline: true,
-      atom: true,
-      addAttributes: propsAttribute,
-      parseHTML: () => [
-        { tag: "span[data-better-editor-reference]", getAttrs: parseAttrs },
-      ],
-      renderHTML: ({ node }) => [
-        "span",
-        { "data-better-editor-reference": "", ...htmlAttrs(node.attrs) },
-        String(node.attrs.props?.label || node.attrs.props?.url || "Reference"),
-      ],
-    }),
     ...(["bold", "italic", "underline", "strike", "code"] as const).map(
       (name) => {
         const tag = {

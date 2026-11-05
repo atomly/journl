@@ -25,8 +25,7 @@ The server pipeline uses bounded LRU caches and a bounded admission queue with
 `p-limit`. These are per-process resource protections, not distributed quotas.
 Admission refusal is retryable and is not stored as a negative metadata result.
 
-Website metadata uses Metascraper's title, description, and image rules against
-supplied, bounded HTML. No scripts, browser, hosted API, or discovered oEmbed
+Website metadata uses `open-graph-scraper` against supplied, bounded HTML. No scripts, browser, hosted API, or discovered oEmbed
 endpoints execute. Public thumbnails load directly with no referrer and disappear
 on failure. They are not authenticated media; future private sources need an
 explicit media-delivery policy before exposing images.

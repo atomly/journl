@@ -1,3 +1,5 @@
+import "server-only";
+
 import { LibSQLVector } from "@mastra/libsql";
 import { PgVector } from "@mastra/pg";
 import { env } from "~/env";

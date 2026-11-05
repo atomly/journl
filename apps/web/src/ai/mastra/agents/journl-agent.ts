@@ -1,3 +1,5 @@
+import "server-only";
+
 import { Agent } from "@mastra/core/agent";
 import { RequestContext } from "@mastra/core/request-context";
 import type { User } from "better-auth";
@@ -7,7 +9,6 @@ import {
 } from "~/ai/mastra/agents/journl-agent-context";
 import { miniModel, nanoModel } from "~/ai/providers/openai/text";
 import { webSearch } from "~/ai/tools/web-search";
-import { env } from "~/env";
 import { applyChanges } from "../../tools/apply-changes/tool";
 import { createPage } from "../../tools/create-page/tool";
 import { navigateJournalEntry } from "../../tools/navigate-journal-entry/tool";
@@ -28,9 +29,6 @@ function instructions({ requestContext }: { requestContext?: RequestContext }) {
   const context = getJournlRequestContext(requestContext);
   if (!context) {
     throw new Error("Missing Journl context");
-  }
-  if (env.NODE_ENV === "development") {
-    console.debug("[JournlAgentContext]", context);
   }
   return `# Role
 

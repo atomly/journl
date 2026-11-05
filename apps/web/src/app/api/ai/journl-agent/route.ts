@@ -1,127 +1,40 @@
-import { USAGE_UNITS, type UsageUnit } from "@acme/db/usage";
-import { handleChatStream } from "@mastra/ai-sdk";
-import type { LLMStepResult } from "@mastra/core/agent";
-import { createUIMessageStreamResponse, type UIMessageChunk } from "ai";
+import { streamJournlChat } from "~/ai/server/chat";
 import {
-  getJournlUserThread,
-  journlMini,
-  journlNano,
-  setJournlRequestContext,
-} from "~/ai/mastra/agents/journl-agent";
-import type { JournlAgentContext } from "~/ai/mastra/agents/journl-agent-context";
-import {
-  getLastUserMessage,
-  inferUserIntent,
-} from "~/ai/mastra/agents/journl-agent-intent";
-import {
-  getOpenAIReasoningEffort,
-  parseJournlAgentReasoning,
-} from "~/ai/mastra/agents/journl-agent-reasoning";
-import { mastra } from "~/ai/mastra/mastra";
-import { isOpenAIWebSearchCall } from "~/ai/utils/openai-utils";
+  InvalidChatRequest,
+  parseJournlChatRequest,
+} from "~/ai/server/chat-request";
 import { handler as corsHandler } from "~/app/api/_cors/cors";
 import { withAuthGuard } from "~/auth/guards";
-import { env } from "~/env";
 import { withUsageGuard } from "~/usage/guards";
 import { buildUsageQuotaExceededPayload } from "~/usage/quota-error";
-import { startModelUsage } from "~/workflows/model-usage";
 
-export const maxDuration = 30; // Allow streaming responses up to 30 seconds
-
-const JOURNL_AGENT_MAX_STEPS = 5;
-const JOURNL_AGENT_TOOL_CALL_CONCURRENCY = 4;
+export const maxDuration = 30;
 
 const handler = withAuthGuard(
   withUsageGuard(
     async ({ user }, req: Request) => {
       try {
-        const { messages, ...rest } = await req.json();
-        const memoryThreadId = getJournlUserThread(user);
-        const reasoning = parseJournlAgentReasoning(rest.context?.reasoning);
-        const intent = inferUserIntent(getLastUserMessage(messages));
-        const journlAgent = intent === "search" ? journlNano : journlMini;
-
-        const stream = await handleChatStream({
-          agentId: journlAgent.id,
-          mastra,
-          params: {
-            maxSteps: JOURNL_AGENT_MAX_STEPS,
-            memory: {
-              resource: user.id,
-              thread: memoryThreadId,
-            },
-            messages,
-            onFinish: async ({ steps, totalUsage }) => {
-              try {
-                const { provider, modelId } = await journlAgent.getModel();
-
-                if (env.NODE_ENV === "development") {
-                  console.debug("[Usage] JournlAgent", {
-                    steps,
-                    totalUsage,
-                  });
-                }
-
-                const metrics: Array<{ quantity: number; unit: UsageUnit }> = [
-                  {
-                    quantity: totalUsage.inputTokens || 0,
-                    unit: USAGE_UNITS.INPUT_TOKENS,
-                  },
-                  {
-                    quantity: totalUsage.outputTokens || 0,
-                    unit: USAGE_UNITS.OUTPUT_TOKENS,
-                  },
-                  {
-                    quantity: totalUsage.reasoningTokens || 0,
-                    unit: USAGE_UNITS.REASONING_TOKENS,
-                  },
-                ];
-
-                const webSearchCalls = countBillableWebSearchCalls(steps);
-                if (webSearchCalls > 0) {
-                  metrics.push({
-                    quantity: webSearchCalls,
-                    unit: USAGE_UNITS.WEB_SEARCH_CALLS,
-                  });
-                }
-
-                await startModelUsage({
-                  metrics,
-                  modelId,
-                  modelProvider: provider,
-                  userId: user.id,
-                });
-              } catch (error) {
-                console.error("[usage tracking] error:", error);
-              }
-            },
-            providerOptions: {
-              openai: {
-                include: ["reasoning.encrypted_content"],
-                reasoningEffort: getOpenAIReasoningEffort(reasoning),
-                // When using OpenAI, the `store` has to be turned off to avoid this
-                // issue with Mastra's message history: https://github.com/vercel/ai/issues/7099#issuecomment-3567630392
-                store: false,
-              },
-            },
-            requestContext: setJournlRequestContext({
-              ...rest.context,
-              user: {
-                email: user.email,
-                name: user.name,
-              },
-            } satisfies JournlAgentContext),
-            toolCallConcurrency: JOURNL_AGENT_TOOL_CALL_CONCURRENCY,
-          },
-          sendSources: true,
-        });
-
-        return createUIMessageStreamResponse({
-          stream: stream as ReadableStream<UIMessageChunk>,
-        });
+        let body: unknown;
+        try {
+          body = await req.json();
+        } catch {
+          throw new InvalidChatRequest();
+        }
+        const request = await parseJournlChatRequest(body);
+        return await streamJournlChat({ request, signal: req.signal, user });
       } catch (error) {
-        console.error("[api.chat.route] error 👀", error);
-        return new Response("Internal Server Error", { status: 500 });
+        if (error instanceof InvalidChatRequest) {
+          return Response.json(
+            { error: "Invalid chat request" },
+            { status: 400 },
+          );
+        }
+        if (req.signal.aborted) return new Response(null, { status: 499 });
+        console.error("[ai.chat] request failed", error);
+        return Response.json(
+          { error: "The assistant is unavailable. Please retry." },
+          { status: 500 },
+        );
       }
     },
     {
@@ -137,17 +50,3 @@ const handler = withAuthGuard(
 );
 
 export { corsHandler as OPTIONS, handler as POST };
-
-function countBillableWebSearchCalls(steps: LLMStepResult<undefined>[]) {
-  let count = 0;
-
-  for (const { toolResults } of steps) {
-    for (const result of toolResults) {
-      if (isOpenAIWebSearchCall(result)) {
-        count += 1;
-      }
-    }
-  }
-
-  return count;
-}

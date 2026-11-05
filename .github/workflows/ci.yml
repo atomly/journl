@@ -105,7 +105,7 @@ jobs:
         run: pnpm build
 
       # Reuse the real app build for local browser QA without recompiling it.
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: github.event_name == 'pull_request'
         with:
           name: web-preview-build
@@ -122,7 +122,7 @@ jobs:
     if: needs.stack-policy.outputs.run == 'true'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Setup
         uses: ./tooling/github/setup
       - name: Unit and UI tests
@@ -133,7 +133,7 @@ jobs:
     if: needs.stack-policy.outputs.run == 'true'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Setup
         uses: ./tooling/github/setup
       - name: Database integration tests
@@ -144,14 +144,14 @@ jobs:
     if: needs.stack-policy.outputs.run == 'true'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Setup
         uses: ./tooling/github/setup
       - name: Install Playwright browsers
         run: pnpm --filter @acme/web exec playwright install --with-deps chromium webkit
       - name: Browser acceptance
         run: pnpm test:browser
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: playwright-results

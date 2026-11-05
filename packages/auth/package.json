@@ -31,7 +31,7 @@
     "@better-auth/utils": "0.4.2",
     "@t3-oss/env-nextjs": "~0.13.11",
     "drizzle-orm": "~0.45.4",
-    "zod": "~4.6.5"
+    "zod": "~4.6.6"
   },
   "devDependencies": {
     "@acme/tsconfig": "workspace:*",

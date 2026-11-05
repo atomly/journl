@@ -84,7 +84,7 @@ before restarting.
 CI dev servers disable the persistent Turbopack dev cache because each run uses
 disposable services. Normal development and production builds retain caching.
 Turbo caches and CI artifacts exclude dev output and Workflow state.
-Run `pnpm test:ci` for the CI checks, tests, and production build. Browser tests use
+CI runs the individual check, typecheck, test, and build commands. Browser tests use
 Playwright directly; install its browsers with the command below.
 
 Renovate replaces Dependabot version updates. It covers npm workspace packages,

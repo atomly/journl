@@ -10,6 +10,7 @@ import {
 import { createPortal } from "react-dom";
 import { ReferenceSurface } from "./node-views";
 import { type ReferenceView, referenceViewStore } from "./reference-view-store";
+
 export type ReferenceViewStore = ReturnType<typeof referenceViewStore>;
 export type ReferenceActionTarget = Pick<
   ReferenceView,

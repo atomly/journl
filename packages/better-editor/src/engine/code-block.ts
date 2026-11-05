@@ -3,7 +3,12 @@ import { createLowlight, type LanguageFn } from "lowlight";
 import { createHighlightPlugin } from "prosemirror-highlight";
 import { createParser } from "prosemirror-highlight/lowlight";
 
-/** Consumers choose grammars; importing this factory does not register any. */
+/**
+ * Build an opt-in Tiptap highlighting extension from consumer-selected grammars.
+ * Code blocks use their stored language, auto-detect when requested, and remain
+ * plain text for unavailable grammars. Pass `extension` to the editor extensions
+ * and `languages` to code-block presentation; importing this module loads no catalog.
+ */
 export function createSyntaxHighlighting(grammars: Record<string, LanguageFn>) {
   const lowlight = createLowlight(grammars);
   const highlight = createParser(lowlight);

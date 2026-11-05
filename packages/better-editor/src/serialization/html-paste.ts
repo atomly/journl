@@ -1,5 +1,30 @@
 import type { IdFactory } from "../engine/identity";
 
+// External HTML interoperability policy, not the editor's document schema.
+// Keep the detection selector derived from the same tags used by normalization.
+const containers = new Set([
+  "DIV",
+  "ARTICLE",
+  "SECTION",
+  "MAIN",
+  "HEADER",
+  "FOOTER",
+]);
+const bodies = new Set([
+  "P",
+  "H1",
+  "H2",
+  "H3",
+  "H4",
+  "H5",
+  "H6",
+  "PRE",
+  "TABLE",
+  "HR",
+  "BLOCKQUOTE",
+]);
+const externalBlockSelector = [...containers, ...bodies].join(",");
+
 /** Give external HTML blocks explicit siblings while retaining authored lists.
  * ProseMirror still parses marks, links, filtering and insertion. */
 export function normalizePastedHTML(html: string, createId: IdFactory): string {
@@ -66,27 +91,6 @@ export function normalizePastedHTML(html: string, createId: IdFactory): string {
     wrapper.append(body);
     return wrapper;
   };
-  const containers = new Set([
-    "DIV",
-    "ARTICLE",
-    "SECTION",
-    "MAIN",
-    "HEADER",
-    "FOOTER",
-  ]);
-  const bodies = new Set([
-    "P",
-    "H1",
-    "H2",
-    "H3",
-    "H4",
-    "H5",
-    "H6",
-    "PRE",
-    "TABLE",
-    "HR",
-    "BLOCKQUOTE",
-  ]);
   const normalize = (container: HTMLElement | DocumentFragment) => {
     for (const node of [...container.children]) {
       if (!(node instanceof HTMLElement)) continue;
@@ -146,12 +150,7 @@ export function normalizePastedHTML(html: string, createId: IdFactory): string {
     }
     flush();
   };
-  if (
-    !isOwned &&
-    template.content.querySelector(
-      "div,article,section,main,header,footer,p,h1,h2,h3,h4,h5,h6,pre,table,hr,blockquote",
-    )
-  )
+  if (!isOwned && template.content.querySelector(externalBlockSelector))
     normalize(template.content);
   // A single paragraph is an inline rich-text insertion. Keep ProseMirror's
   // open slice so it joins the destination instead of splitting it into blocks.

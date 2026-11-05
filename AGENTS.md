@@ -8,7 +8,7 @@ Read [README.md](README.md) for setup and commands.
 - Cache production output only. Exclude `.next/dev` and Workflow state from Turbo caches and build artifacts.
 - Before Next.js changes, read the installed guides in `apps/web/node_modules/next/dist/docs`. Keep Next-generated guidance out of the change set.
 - Use Turbopack. Do not add Webpack overrides or loader/watch-path patches to conceal unsupported dependency layouts. Verify production builds after toolchain changes.
-- Run `pnpm test:ci` locally when cloud CI is unavailable. Report actual failures and skips; never imply browser acceptance passed from unit tests or static checks.
+- Report actual failures and skips; never imply browser acceptance passed from unit tests or static checks.
 - Keep BetterEditor independent of Journl behavior, routes, persistence policy, menu choices, and styling. Consumers compose the experience. Do not add library presets or component-injection providers.
 - Keep one BetterEditor package with explicit leaf exports and no barrels. Keep document/reference dependencies for now; do not add a second stored-content schema or speculative AI/server abstractions.
 - Preserve draft/history, stored identities, selection, accessibility, read-only enforcement, and gesture cancellation. Resolve retained actions against current editor state.
@@ -16,3 +16,6 @@ Read [README.md](README.md) for setup and commands.
 - Keep durable guidance here and API examples in package READMEs. Do not add audit diaries, historical validation Markdown, or duplicate plans. Keep temporary logs outside tracked source.
 - Legacy BlockNote remains only for the existing AI integration and compatibility tests. Do not add consumers; removal follows the AI replacement tracked in #374–#376.
 - Keep reusable UI primitives in `@acme/ui` and app compositions in Journl. Use native Base UI `render`, explicit non-native button semantics, and real styled links for navigation. Do not reintroduce owned `asChild` shims or Slot adapters. Verify shadcn install destinations with a dry run.
+
+For BetterEditor consumer work, use `.agents/skills/better-editor-consume/SKILL.md`
+and the package README for extension composition and lifecycle contracts.

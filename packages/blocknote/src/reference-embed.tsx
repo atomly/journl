@@ -16,6 +16,7 @@ import {
   targetFromProps,
   usePreview,
 } from "./reference-render-helpers";
+
 export function ReferenceEmbedView<
   BS extends BlockSchema,
   IS extends InlineContentSchema,

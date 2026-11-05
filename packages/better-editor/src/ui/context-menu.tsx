@@ -12,6 +12,7 @@ import { selectedBlock } from "../engine/commands";
 import { blockAt } from "../engine/identity";
 import { restoreEditorFocus } from "./controls";
 import { useEditorInstance } from "./editor-root";
+
 /** Context actions do not replace native link, selected-text, touch or pen menus. */
 export function EditorContextMenu({
   editor: explicit,

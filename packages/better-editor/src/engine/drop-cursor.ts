@@ -1,5 +1,6 @@
 import { Extension } from "@tiptap/core";
 import { dropCursor } from "@tiptap/pm/dropcursor";
+
 /** Optional drag feedback, independent of reference presentation. */
 export const dropCursorExtension = Extension.create<{
   color: string;

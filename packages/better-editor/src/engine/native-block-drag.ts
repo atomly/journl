@@ -20,11 +20,17 @@ type Session = {
 };
 const key = new PluginKey<Session | null>("better-editor-native-block-drag");
 
+/** Report whether this editor owns a drag session, including one awaiting cancellation. */
 export function nativeBlockDragActive(editor: Editor): boolean {
   return Boolean(key.getState(editor.state));
 }
 
-/** Capture the source independently of focus, live selection, and view.dragging. */
+/**
+ * Start an owned block drag by retaining stable IDs and a mapped selection bookmark.
+ * Write an editor-specific token to DataTransfer so unrelated or stale drops cannot
+ * move this source. Return false when editing, the controller, or selected blocks
+ * are unavailable; starting a drag does not change document content.
+ */
 export function beginNativeBlockDrag(
   editor: Editor,
   transfer: DataTransfer,
@@ -46,6 +52,12 @@ export function beginNativeBlockDrag(
   return true;
 }
 
+/**
+ * Map the retained source through edits and validate it again at drop time.
+ * Moves preserve block IDs; modifier-key copies receive fresh IDs. Owned stale
+ * drops cancel instead of falling back to clipboard import. Successful drops form
+ * an undo boundary, and drag end or editor destruction releases session state.
+ */
 export const nativeBlockDragExtension = Extension.create({
   addProseMirrorPlugins() {
     const editor = this.editor;

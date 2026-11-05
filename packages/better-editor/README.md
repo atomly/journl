@@ -198,3 +198,53 @@ Run `pnpm --filter @acme/better-editor bench` for repeatable 100/1,000/5,000-par
 benchmarks. The report separates full decoding from the cached engine-delivery
 path; neither measures browser input-to-paint latency. Benchmark sources and tests are development tools, separate from the public module
 exports.
+
+### Extension contract
+
+Factories return Tiptap extensions, arrays of extensions, or an object containing
+an extension and related consumer data. There is no separate BetterEditor plugin
+registry. Pass the extensions to `useBetterEditor` (or `createDocumentEditor`);
+`EditorRoot` receives the resulting editor instance, not extension factories.
+Keep factories outside React render or memoize their results. Extensions are
+mount-time configuration; use `resetKey` for an intentional reconfiguration.
+
+```ts
+const highlighting = createSyntaxHighlighting({ javascript });
+const codeView = createCodeBlockPresentation({ languages: highlighting.languages });
+const extensions = [
+  highlighting.extension,
+  ...documentExtensions()
+    .filter((extension) => extension.name === "codeBlock")
+    .map((extension) => extension.extend(codeView)),
+];
+// Inside a React component:
+const { editor } = useBetterEditor({ initialBlocks, extensions });
+```
+
+Choose unique Tiptap names for additional behaviors. Schema replacements use the
+same name intentionally; consumers own compatibility with stored document shapes.
+Engine extensions must not import React presentation or application services.
+Presentation factories may expose language lists or stores alongside extensions
+when the consumer needs to compose corresponding UI.
+
+### Source conventions
+
+`*.spec.ts` and `*.spec.tsx` are executable correctness tests selected by Vitest.
+`*.bench.ts` measures performance through the separate `bench` command; benchmark
+numbers are not browser latency or correctness assertions. Neither is a public API.
+
+`createEditorId` is used in browser edits and optimistic UI. It uses Web Crypto,
+works in compatible server environments, and must not be marked `server-only`.
+Server credentials, persistence, and authorization belong in application server
+modules, not this helper.
+
+HTML paste tag lists describe external interoperability, not a second document
+schema. Keep the detection selector and normalization policy in sync. Transaction
+metadata shared across modules belongs in `engine/metadata.ts`; local plugin state
+uses typed `PluginKey`s. Standard ProseMirror metadata such as `uiEvent` remains
+compatible with upstream consumers.
+
+Base UI Toolbar supplies keyboard/ARIA composition. Floating UI supplies geometry
+for text selections, virtual anchors, and drag handles. Shared styled primitives
+belong in `@acme/ui`; editor selection behavior belongs here. A triggered popover
+is not interchangeable with a selection-anchored toolbar.

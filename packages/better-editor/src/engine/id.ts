@@ -1,4 +1,9 @@
-/** UUID v4 identities also work on HTTP LAN origins, where randomUUID is absent. */
+/**
+ * Create a UUID v4 for client-side blocks, copied content, and optimistic edits.
+ * Uses Web Crypto bytes so HTTP LAN origins work without `crypto.randomUUID`.
+ * This environment-neutral helper also works on servers with Web Crypto; it
+ * contains no server credentials or privileged operations.
+ */
 export function createEditorId(): string {
   const bytes = globalThis.crypto.getRandomValues(new Uint8Array(16));
   bytes[6] = ((bytes[6] ?? 0) & 0x0f) | 0x40;

@@ -9,7 +9,11 @@ import {
   SelectValue,
 } from "@acme/ui/select";
 import { cn } from "@acme/ui/utils";
-import type { ComponentProps, ReactNode } from "react";
+import {
+  type ComponentProps,
+  type ReactNode,
+  useSyncExternalStore,
+} from "react";
 import type { JournlReasoning } from "~/ai/mastra/agents/journl-agent-reasoning";
 import { useThreadRuntime } from "~/components/assistant-ui/thread-runtime";
 import { useJournlAgent } from "~/hooks/use-journl-agent";
@@ -26,7 +30,8 @@ type ComposerReasoningProps = {
 };
 
 export function ComposerReasoning({ children }: ComposerReasoningProps) {
-  const { getReasoning, setReasoning } = useJournlAgent();
+  const { getReasoning, setReasoning, subscribe } = useJournlAgent();
+  const reasoning = useSyncExternalStore(subscribe, getReasoning, getReasoning);
   const { exceeded } = useThreadRuntime();
   function handleReasoningModeChange(value: JournlReasoning) {
     setReasoning(value);
@@ -36,7 +41,7 @@ export function ComposerReasoning({ children }: ComposerReasoningProps) {
     <Select
       items={REASONING_MODE_LABELS}
       disabled={Boolean(exceeded)}
-      value={getReasoning()}
+      value={reasoning}
       onValueChange={(value) => {
         if (value) handleReasoningModeChange(value);
       }}
@@ -92,9 +97,8 @@ export function ComposerReasoningContent(props: ComposerReasoningContentProps) {
 }
 
 export function ComposerView() {
-  const { getView } = useJournlAgent();
-
-  const view = getView();
+  const { getView, subscribe } = useJournlAgent();
+  const view = useSyncExternalStore(subscribe, getView, getView);
 
   const activeViewLabel =
     view.name === "journal-entry"

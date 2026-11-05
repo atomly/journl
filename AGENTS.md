@@ -14,5 +14,5 @@ Read [README.md](README.md) for setup and commands.
 - Preserve draft/history, stored identities, selection, accessibility, read-only enforcement, and gesture cancellation. Resolve retained actions against current editor state.
 - Prefer narrow subscriptions, targeted transactions, bounded geometry work, and optional presentation/highlighting. Measure performance and bundle claims.
 - Keep durable guidance here and API examples in package READMEs. Do not add audit diaries, historical validation Markdown, or duplicate plans. Keep temporary logs outside tracked source.
-- Legacy BlockNote remains only for the existing AI integration and compatibility tests. Do not add consumers; removal follows the AI replacement tracked in #374–#376.
+- Legacy BlockNote remains only for content compatibility tests. Do not add consumers; removal follows the AI replacement tracked in #374–#376.
 - Keep reusable UI primitives in `@acme/ui` and app compositions in Journl. Use native Base UI `render`, explicit non-native button semantics, and real styled links for navigation. Do not reintroduce owned `asChild` shims or Slot adapters. Verify shadcn install destinations with a dry run.

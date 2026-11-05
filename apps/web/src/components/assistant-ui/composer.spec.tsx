@@ -11,22 +11,27 @@ import {
 import { ComposerSources } from "~/components/assistant-ui/thread-sources";
 
 const fixture = vi.hoisted(() => ({
+  listeners: new Set<() => void>(),
+  reasoning: "instant" as "instant" | "thinking",
+  revision: 0,
   setReasoning: vi.fn(),
-  unsetSelection: vi.fn(),
+  text: "Selected writing",
 }));
 vi.mock("~/components/assistant-ui/thread-runtime", () => ({
   useThreadRuntime: () => ({ exceeded: false }),
 }));
 vi.mock("~/hooks/use-journl-agent", () => ({
   useJournlAgent: () => ({
-    getReasoning: () => "instant",
-    getSelections: () =>
-      Array.from({ length: 5 }, (_, index) => ({
-        blockIds: new Set([`block-${index}`]),
-        text: `Selection ${index}`,
-      })),
+    getReasoning: () => fixture.reasoning,
+    getRevision: () => fixture.revision,
+    getSelections: () => (fixture.text ? [{ text: fixture.text }] : []),
     setReasoning: fixture.setReasoning,
-    unsetSelection: fixture.unsetSelection,
+    subscribe: (listener: () => void) => {
+      fixture.listeners.add(listener);
+      return () => {
+        fixture.listeners.delete(listener);
+      };
+    },
   }),
 }));
 
@@ -36,7 +41,14 @@ let root: Root;
 beforeEach(() => {
   vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
   fixture.setReasoning.mockReset();
-  fixture.unsetSelection.mockReset();
+  fixture.reasoning = "instant";
+  fixture.setReasoning.mockImplementation((value: "instant" | "thinking") => {
+    fixture.reasoning = value;
+    for (const listener of fixture.listeners) listener();
+  });
+  fixture.text = "Selected writing";
+  fixture.revision = 0;
+  fixture.listeners.clear();
   container = document.createElement("div");
   document.body.append(container);
   root = createRoot(container);
@@ -68,36 +80,26 @@ test("reasoning mode shows its label before opening and changes on selection", a
   expect(option).toBeDefined();
   await act(async () => option?.click());
   expect(fixture.setReasoning).toHaveBeenCalledExactlyOnceWith("thinking");
+  expect(trigger?.querySelector("[data-slot=select-value]")?.textContent).toBe(
+    "Thinking",
+  );
 });
 
-test.each(["click", "Enter"])(
-  "removing an overflow selection via %s keeps the menu open",
-  async (activation) => {
-    await act(async () => root.render(<ComposerSources />));
-    expect(container.querySelector("button button")).toBeNull();
-    const trigger = container.querySelector<HTMLButtonElement>(
-      "[data-slot=dropdown-menu-trigger]",
-    );
-    expect(trigger).not.toBeNull();
-    await act(async () => trigger?.click());
-    const item = Array.from(
-      document.querySelectorAll<HTMLElement>("[role=menuitem]"),
-    ).find((element) => element.textContent?.includes("Selection 3"));
-    expect(item).toBeDefined();
-    await act(async () => {
-      if (activation === "click") item?.click();
-      else {
-        item?.focus();
-        item?.dispatchEvent(
-          new KeyboardEvent("keydown", { bubbles: true, key: "Enter" }),
-        );
-      }
-    });
-    expect(fixture.unsetSelection).toHaveBeenCalledExactlyOnceWith({
-      blockIds: new Set(["block-3"]),
-      text: "Selection 3",
-    });
-    expect(trigger?.getAttribute("aria-expanded")).toBe("true");
-    expect(document.querySelector("[role=menu]")).not.toBeNull();
-  },
-);
+test("chat context follows the current highlighted selection without a second selection store", async () => {
+  await act(async () => root.render(<ComposerSources />));
+  expect(container.textContent).toContain("Selected writing");
+  expect(container.querySelector("button")).toBeNull();
+  await act(async () => {
+    fixture.text = "Updated selection";
+    fixture.revision++;
+    for (const listener of fixture.listeners) listener();
+  });
+  expect(container.textContent).toContain("Updated selection");
+  expect(container.textContent).not.toContain("Selected writing");
+  await act(async () => {
+    fixture.text = "";
+    fixture.revision++;
+    for (const listener of fixture.listeners) listener();
+  });
+  expect(container.textContent).toBe("");
+});

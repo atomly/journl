@@ -600,12 +600,10 @@ function summarizeThoughtPart(part: unknown) {
 }
 
 const toolActionMap: Record<string, string> = {
-  applyChanges: "Accepting changes",
   createPage: "Creating page",
   navigateJournalEntry: "Opening journal",
   navigatePage: "Opening page",
   queryNoteReferences: "Exploring note references",
-  rejectChanges: "Rejecting changes",
   semanticJournalSearch: "Searching entries",
   semanticPageSearch: "Searching pages",
   temporalJournalSearch: "Reading journal",

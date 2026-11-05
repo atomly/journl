@@ -5,7 +5,7 @@ import { zWriteInput } from "./schema";
 export const write = createTool({
   description: `Write in the target editor.
 
-Use when the user wants reviewable AI edits (draft/rewrite/expand/restructure) in an active editor.
+Use when the user wants AI edits (draft/rewrite/expand/restructure) in an active editor.
 
 Contract:
 - targetEditor must be a valid active editor id.
@@ -13,8 +13,10 @@ Contract:
 - agentPrompt must be self-contained and include all required constraints (sections/structure, tone, depth/length, and required facts).
 - agentPrompt must instruct writing in the user's voice and must not include assistant/app attribution or sign-offs unless the user explicitly asks.
 - Do not put JSON, tool payload prose, or internal IDs in agentPrompt.
-- This tool uses the draft flow (Accept / Revert in editor).
-- Use "accept changes" and "reject changes" terminology, not publishing terms.
+- Scope is the highlighted text when present, otherwise the current document.
+- Preview is transient. Completed validated edits apply automatically with normal Undo.
+- If the target changes, generation stops. Report the conflict and let the user choose Retry.
+- Never automatically retry a failed or cancelled edit.
 
 Chaining from createPage:
 - If write follows createPage in the same run, derive targetEditor from createPage output from that run.

@@ -32,7 +32,7 @@ This is a monorepo powered by [Turborepo](https://turborepo.dev/) and
 - **Shared packages:** [`packages`](./packages) for auth, database access,
   usage domain logic, the framework-independent [`document contract`](packages/document/README.md),
   the [`BetterEditor engine and React UI`](packages/better-editor/README.md),
-  reference previews, shared UI primitives, and compatibility code for the legacy AI integration.
+  reference previews, shared UI primitives, and legacy content compatibility checks.
 - **Local dev utilities:** [`apps/drizzle-studio`](./apps/drizzle-studio) and
   [`apps/stripe`](./apps/stripe).
 - **Agents & Contributor guidance:** [`AGENTS.md`](./AGENTS.md).
@@ -105,6 +105,15 @@ the dedicated utility app in [`apps/drizzle-studio`](./apps/drizzle-studio).
 Database schema changes live in [`packages/db/src`](./packages/db/src) and are
 applied through `pnpm db:push`, which runs Drizzle Kit's schema comparison and
 update flow.
+
+AI writing starts from chat and targets the current page or journal entry, using
+highlighted text when present. Its preview stays outside accepted content.
+Completed, validated edits use the normal editor commit and save queue, with one
+Undo step. The editor stays editable: changes outside the target continue normally;
+changes inside it stop generation and offer explicit Retry against the latest text.
+The first implementation supports exact selections inside one text block and
+complete sibling blocks. Partial selections across blocks and structural rewrites
+of partial inline selections return an error instead of expanding their scope.
 
 Page and journal content saves require the version loaded by the editor. The
 version check and write run in one transaction, including the first journal

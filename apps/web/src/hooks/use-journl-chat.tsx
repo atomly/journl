@@ -8,11 +8,9 @@ import {
 } from "ai";
 import { createContext, useContext, useState } from "react";
 import type { JournlAgentContext } from "~/ai/mastra/agents/journl-agent-context";
-import { useApplyChangesTool } from "~/ai/tools/apply-changes/client";
 import { useCreatePageTool } from "~/ai/tools/create-page/client";
 import { useNavigateJournalEntryTool } from "~/ai/tools/navigate-journal-entry/client";
 import { useNavigatePageTool } from "~/ai/tools/navigate-page/client";
-import { useRejectChangesTool } from "~/ai/tools/reject-changes/client";
 import { useWriteTool } from "~/ai/tools/write/client";
 import type { ClientTool } from "~/ai/utils/create-client-tool";
 import { env } from "~/env";
@@ -38,26 +36,24 @@ export function JournlChatProvider({
     getEditors,
     getView,
     getReasoning,
+    prepareEdits,
+    cancelEdits,
   } = useJournlAgent();
 
   const createPage = useCreatePageTool();
-  const applyChanges = useApplyChangesTool();
   const navigateJournalEntry = useNavigateJournalEntryTool();
   const navigatePage = useNavigatePageTool();
   const write = useWriteTool();
-  const rejectChanges = useRejectChangesTool();
 
   const [chat] = useState(() => {
     const tools = new Map<string, ClientTool<string, Chat<UIMessage>>>([
       [createPage.name, createPage],
-      [applyChanges.name, applyChanges],
       [navigateJournalEntry.name, navigateJournalEntry],
       [navigatePage.name, navigatePage],
       [write.name, write],
-      [rejectChanges.name, rejectChanges],
     ]);
 
-    return new Chat({
+    const instance = new Chat({
       messages,
       onToolCall: async ({ toolCall }) => {
         if (env.NODE_ENV === "development") {
@@ -77,6 +73,7 @@ export function JournlChatProvider({
       transport: new DefaultChatTransport({
         ...transport,
         prepareSendMessagesRequest: ({ id, messages, trigger, messageId }) => {
+          if (messages.at(-1)?.role === "user") prepareEdits();
           const selections = getAllSelections();
           const view = getView();
 
@@ -100,6 +97,12 @@ export function JournlChatProvider({
         },
       }),
     });
+    const stop = instance.stop;
+    instance.stop = async () => {
+      cancelEdits();
+      await stop();
+    };
+    return instance;
   });
 
   return (

@@ -1,0 +1,328 @@
+import {
+  applyDocumentOperations,
+  type DocumentBlock,
+  type DocumentOperation,
+  zDocumentOperation,
+} from "@acme/document";
+import type { Editor } from "@tiptap/core";
+import { DefaultChatTransport, type UIMessageChunk } from "ai";
+import { z } from "zod";
+import type { DocumentWriterRequest } from "../server/document-writer-request";
+import {
+  captureDocumentEditTarget,
+  type DocumentEditTarget,
+} from "./document-edit-target";
+
+type Instruction = Pick<
+  DocumentWriterRequest,
+  "instruction" | "reasoningEffort"
+>;
+type Status =
+  | "idle"
+  | "prepared"
+  | "generating"
+  | "applied"
+  | "conflict"
+  | "cancelled"
+  | "error";
+type Snapshot = {
+  requested: boolean;
+  canRetry: boolean;
+  status: Status;
+  message: string;
+  blocks: readonly DocumentBlock[];
+  revision: number;
+};
+export type EditTransport = (
+  request: DocumentWriterRequest,
+  signal: AbortSignal,
+) => Promise<ReadableStream<UIMessageChunk>>;
+const operationsSchema = z.array(zDocumentOperation);
+const finalSchema = z.object({
+  operations: operationsSchema,
+  status: z.literal("generated"),
+});
+
+const transport: EditTransport = (request, signal) =>
+  new DefaultChatTransport({
+    api: "/api/ai/document-writer",
+    prepareSendMessagesRequest: () => ({ body: request }),
+  }).sendMessages({
+    abortSignal: signal,
+    chatId: request.targetEditor,
+    messageId: undefined,
+    messages: [],
+    trigger: "submit-message",
+  });
+
+/** Owns transient generation only. Accepted edits use the editor's ordinary commit/save path. */
+export class DocumentEditSession {
+  private target: DocumentEditTarget | undefined;
+  private instruction: Instruction | undefined;
+  private controller: AbortController | undefined;
+  private applying = false;
+  private destroyed = false;
+  private listeners = new Set<() => void>();
+  private snapshot: Snapshot = {
+    blocks: [],
+    canRetry: false,
+    message: "",
+    requested: false,
+    revision: 0,
+    status: "idle",
+  };
+  constructor(
+    readonly editor: Editor,
+    readonly id: DocumentWriterRequest["targetEditor"],
+    private stream: EditTransport = transport,
+  ) {
+    editor.on("transaction", this.onTransaction);
+    editor.on("destroy", this.destroy);
+  }
+  getSnapshot = () => this.snapshot;
+  subscribe = (listener: () => void) => {
+    this.listeners.add(listener);
+    return () => {
+      this.listeners.delete(listener);
+    };
+  };
+  private publish(
+    status: Status,
+    message: string,
+    blocks: readonly DocumentBlock[] = [],
+  ) {
+    if (this.destroyed) return;
+    this.snapshot = {
+      blocks,
+      canRetry: Boolean(this.instruction && this.target),
+      message,
+      requested: Boolean(this.instruction),
+      revision: this.snapshot.revision + 1,
+      status,
+    };
+    for (const listener of this.listeners) listener();
+  }
+  private onTransaction = ({
+    transaction,
+  }: {
+    transaction: import("@tiptap/pm/state").Transaction;
+  }) => {
+    if (this.applying || !this.target) return;
+    const valid = this.target.map(transaction);
+    if (
+      (!valid || !this.editor.isEditable) &&
+      ["prepared", "generating"].includes(this.snapshot.status)
+    ) {
+      this.controller?.abort({
+        message: "The target changed. Retry using your latest text.",
+        status: "conflict",
+      });
+      this.publish(
+        "conflict",
+        "The target changed. Retry using your latest text.",
+      );
+    }
+  };
+  /** Freeze the target when the user submits chat, before the assistant calls write. */
+  prepare() {
+    this.controller?.abort({
+      message: "AI edit cancelled. Your writing was kept.",
+      status: "cancelled",
+    });
+    this.target = undefined;
+    this.instruction = undefined;
+    try {
+      this.target = captureDocumentEditTarget(this.editor);
+    } catch (error) {
+      this.publish(
+        "error",
+        error instanceof Error ? error.message : "Select text and retry.",
+      );
+      throw error;
+    }
+    this.instruction = undefined;
+    this.publish("prepared", "");
+  }
+  highlightedText() {
+    return this.editor.state.selection.empty
+      ? ""
+      : this.editor.state.doc.textBetween(
+          this.editor.state.selection.from,
+          this.editor.state.selection.to,
+          "\n",
+        );
+  }
+  cancel = () => {
+    this.controller?.abort({
+      message: "AI edit cancelled. Your writing was kept.",
+      status: "cancelled",
+    });
+    this.publish("cancelled", "AI edit cancelled. Your writing was kept.");
+  };
+  retry = async () => {
+    if (
+      !this.instruction ||
+      !this.target ||
+      this.destroyed ||
+      this.snapshot.status === "generating"
+    )
+      return;
+    try {
+      this.target = this.target.recapture();
+      this.publish("prepared", "");
+    } catch (error) {
+      this.publish(
+        "error",
+        error instanceof Error
+          ? error.message
+          : "Select text and send your request again.",
+      );
+      return;
+    }
+    return this.run(this.instruction);
+  };
+  async run(
+    instruction: Instruction,
+  ): Promise<{ status: Status; message: string }> {
+    if (this.destroyed)
+      return { message: "The editor was closed.", status: "cancelled" };
+    if (this.snapshot.status === "generating")
+      return {
+        message: "An AI edit is already running in this editor.",
+        status: "error",
+      };
+    if (this.snapshot.status === "applied")
+      return {
+        message:
+          "This request already edited its target. Send a new message to make another edit.",
+        status: "error",
+      };
+    this.instruction = instruction;
+    if (["conflict", "cancelled", "error"].includes(this.snapshot.status)) {
+      this.publish(this.snapshot.status, this.snapshot.message);
+      return this.snapshot;
+    }
+    if (!this.target || this.snapshot.status === "idle") {
+      try {
+        this.target = captureDocumentEditTarget(this.editor);
+      } catch (error) {
+        this.publish(
+          "error",
+          error instanceof Error ? error.message : "Select text and retry.",
+        );
+        return this.snapshot;
+      }
+    }
+    const target = this.target;
+    const controller = new AbortController();
+    this.controller = controller;
+    this.publish(
+      "generating",
+      "AI is editing. You can keep writing outside the target.",
+    );
+    let reader: ReadableStreamDefaultReader<UIMessageChunk> | undefined;
+    try {
+      const stream = await this.stream(
+        { ...instruction, blocks: target.blocks, targetEditor: this.id },
+        controller.signal,
+      );
+      reader = stream.getReader();
+      let proposed: DocumentOperation[] | undefined;
+      let finished = false;
+      while (true) {
+        const { value, done } = await reader.read();
+        if (controller.signal.aborted)
+          return controller.signal.reason as {
+            status: Status;
+            message: string;
+          };
+        if (this.destroyed)
+          return { message: "The editor was closed.", status: "cancelled" };
+        if (done) break;
+        if (value.type === "error" || value.type === "abort")
+          throw new Error("The AI edit did not complete. Please retry.");
+        if (value.type === "finish") {
+          if (finished || value.finishReason !== "stop")
+            throw new Error("The AI edit did not complete. Please retry.");
+          finished = true;
+        }
+        if (value.type === "data-document-edit") {
+          if (finished)
+            throw new Error("The AI edit contained data after completion.");
+          const final = finalSchema.safeParse(value.data);
+          if (final.success) {
+            if (proposed)
+              throw new Error("The AI edit completed more than once.");
+            proposed = final.data.operations;
+            applyDocumentOperations(target.blocks, proposed);
+          } else {
+            const partial = z
+              .object({
+                operations: z.unknown().optional(),
+                status: z.literal("generating"),
+              })
+              .parse(value.data);
+            if (proposed)
+              throw new Error("The AI edit resumed after completion.");
+            // Only complete, valid operations enter the read-only preview. Partial JSON stays out of the document.
+            if (Array.isArray(partial.operations)) {
+              const complete: DocumentOperation[] = [];
+              for (const operation of partial.operations) {
+                const parsed = zDocumentOperation.safeParse(operation);
+                if (!parsed.success) break;
+                complete.push(parsed.data);
+              }
+              try {
+                this.publish(
+                  "generating",
+                  this.snapshot.message,
+                  applyDocumentOperations(target.blocks, complete),
+                );
+              } catch {
+                /* Wait for a complete valid batch. */
+              }
+            }
+          }
+        }
+      }
+      if (!finished || !proposed)
+        throw new Error("The AI edit did not complete. Please retry.");
+      controller.signal.throwIfAborted();
+      this.applying = true;
+      try {
+        if (!target.apply(proposed))
+          throw new Error("The target changed. Retry using your latest text.");
+      } finally {
+        this.applying = false;
+      }
+      this.target = undefined;
+      this.publish("applied", "AI edit applied. Use Undo to revert it.");
+    } catch (error) {
+      if (!controller.signal.aborted && !this.destroyed)
+        this.publish(
+          "error",
+          error instanceof Error
+            ? error.message
+            : "The AI edit failed. Please retry.",
+        );
+    } finally {
+      await reader?.cancel().catch(() => {});
+      reader?.releaseLock();
+      if (this.controller === controller) this.controller = undefined;
+    }
+    if (controller.signal.aborted)
+      return controller.signal.reason as { status: Status; message: string };
+    return { message: this.snapshot.message, status: this.snapshot.status };
+  }
+  destroy = () => {
+    if (this.destroyed) return;
+    this.controller?.abort({
+      message: "AI edit cancelled. Your writing was kept.",
+      status: "cancelled",
+    });
+    this.destroyed = true;
+    this.editor.off("transaction", this.onTransaction);
+    this.editor.off("destroy", this.destroy);
+    this.listeners.clear();
+  };
+}

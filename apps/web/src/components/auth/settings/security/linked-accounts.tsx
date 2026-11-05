@@ -1,18 +1,18 @@
 "use client";
 
-import { getProviderId } from "@better-auth-ui/core";
-import { useAuth, useListAccounts } from "@better-auth-ui/react";
-import { Fragment } from "react";
-import { Card, CardContent } from "~/components/ui/card";
+import { Card, CardContent } from "@acme/ui/card";
 import {
   Item,
   ItemContent,
   ItemGroup,
   ItemMedia,
   ItemSeparator,
-} from "~/components/ui/item";
-import { Skeleton } from "~/components/ui/skeleton";
-import { cn } from "~/lib/cn";
+} from "@acme/ui/item";
+import { Skeleton } from "@acme/ui/skeleton";
+import { cn } from "@acme/ui/utils";
+import { getProviderId } from "@better-auth-ui/core";
+import { useAuth, useListAccounts } from "@better-auth-ui/react";
+import { Fragment } from "react";
 import { LinkedAccount } from "./linked-account";
 
 export type LinkedAccountsProps = {

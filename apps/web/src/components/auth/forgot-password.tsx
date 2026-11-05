@@ -1,20 +1,20 @@
 "use client";
 
+import { Card, CardContent, CardHeader, CardTitle } from "@acme/ui/card";
+import {
+  Field,
+  FieldDescription,
+  FieldGroup,
+  FieldLabel,
+} from "@acme/ui/field";
 import { Input } from "@acme/ui/input";
+import { cn } from "@acme/ui/utils";
 import { getViewURL, validateEmailAddress } from "@better-auth-ui/core";
 import {
   useAuth,
   useFetchOptions,
   useRequestPasswordReset,
 } from "@better-auth-ui/react";
-import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
-import {
-  Field,
-  FieldDescription,
-  FieldGroup,
-  FieldLabel,
-} from "~/components/ui/field";
-import { cn } from "~/lib/cn";
 import { isAuthFormFieldInvalid, useAuthForm } from "./auth-form";
 import { RESET_LINK_SENT_STORAGE_KEY } from "./reset-link-sent";
 

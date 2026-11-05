@@ -82,7 +82,7 @@ test("only the initiating pointer can finish a pending handle press", async ({
   await expect(actions).toBeVisible();
 });
 
-test("nested code handles align with the writing line below the language picker", async ({
+test("nested code handles align with the language picker", async ({
   page,
 }, info) => {
   const editor = await newEditor(page);
@@ -106,14 +106,12 @@ test("nested code handles align with the writing line below the language picker"
   await expect
     .poll(async () => {
       const grip = await handle.boundingBox();
-      const center = await code.evaluate((element) => {
-        const style = getComputedStyle(element);
-        return (
-          element.getBoundingClientRect().top +
-          Number.parseFloat(style.paddingTop) +
-          Number.parseFloat(style.lineHeight) / 2
-        );
-      });
+      const center = await body
+        .getByRole("combobox", { name: "Code language" })
+        .evaluate((element) => {
+          const rect = element.getBoundingClientRect();
+          return rect.top + rect.height / 2;
+        });
       return grip
         ? Math.abs(grip.y + grip.height / 2 - center)
         : Number.POSITIVE_INFINITY;

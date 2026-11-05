@@ -8,11 +8,13 @@ import {
 import type { Node } from "@tiptap/pm/model";
 import { fromTiptapDocument } from "../serialization/tiptap";
 
+type BlockLocation = {
+  block: DocumentBlock;
+  parentId: string | null;
+  afterId: string | null;
+};
 function locations(blocks: readonly DocumentBlock[]) {
-  const result = new Map<
-    string,
-    { block: DocumentBlock; parentId: string | null; afterId: string | null }
-  >();
+  const result = new Map<string, BlockLocation>();
   const walk = (items: readonly DocumentBlock[], parentId: string | null) => {
     items.forEach((block, index) => {
       result.set(block.id, {
@@ -35,17 +37,48 @@ export function documentChanges(
   doc: Node,
 ): DocumentOperation[] {
   const after = fromTiptapDocument(doc);
-  let current = before.map(parseBlock);
-  documentRows(current);
+  const validated = before.map(parseBlock);
+  documentRows(validated);
+  return diffDocumentSnapshots(validated, after);
+}
+
+/** Both snapshots must be immutable and already validated by the document reader. */
+export function diffDocumentSnapshots(
+  before: readonly DocumentBlock[],
+  after: readonly DocumentBlock[],
+): DocumentOperation[] {
+  const updates: DocumentOperation[] = [];
+  // Unchanged immutable blocks skip their entire subtree. Ordinary typing builds
+  // no document-wide ID maps and serializes only the affected block's payload.
+  const sameStructure = (
+    previous: readonly DocumentBlock[],
+    next: readonly DocumentBlock[],
+  ): boolean => {
+    if (previous.length !== next.length) return false;
+    for (let i = 0; i < next.length; i++) {
+      const a = previous[i];
+      const b = next[i];
+      if (!a || !b || a.id !== b.id) return false;
+      if (a === b) continue;
+      if (JSON.stringify(data(a)) !== JSON.stringify(data(b)))
+        updates.push({ data: data(b), id: b.id, type: "update" });
+      if (!sameStructure(a.children ?? [], b.children ?? [])) return false;
+    }
+    return true;
+  };
+  if (sameStructure(before, after)) return updates;
+  let current: readonly DocumentBlock[] = before;
   const desired = locations(after);
   const operations: DocumentOperation[] = [];
+  let index = locations(current);
   const apply = (operation: DocumentOperation) => {
     current = applyDocumentOperations(current, [operation]);
+    index = locations(current);
     operations.push(operation);
   };
   // Parents and preceding siblings are placed before their descendants.
   for (const [id, target] of desired) {
-    const existing = locations(current).get(id);
+    const existing = index.get(id);
     if (!existing)
       apply({
         afterId: target.afterId,
@@ -65,16 +98,16 @@ export function documentChanges(
           type: "move",
         });
       if (
+        existing.block !== target.block &&
         JSON.stringify(data(existing.block)) !==
-        JSON.stringify(data(target.block))
+          JSON.stringify(data(target.block))
       )
         apply({ data: data(target.block), id, type: "update" });
     }
   }
   // Move surviving descendants out before deleting their former ancestors.
-  for (const [id] of locations(current)) {
-    if (!desired.has(id) && locations(current).has(id))
-      apply({ id, type: "remove" });
+  for (const [id] of index) {
+    if (!desired.has(id) && index.has(id)) apply({ id, type: "remove" });
   }
   return operations;
 }

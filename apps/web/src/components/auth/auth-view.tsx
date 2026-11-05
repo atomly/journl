@@ -1,8 +1,8 @@
+import { cn } from "@acme/ui/utils";
 import { redirect } from "next/navigation";
 import { Auth } from "~/components/auth/auth";
 import { normalizeInviteCode } from "~/components/auth/invite-code";
 import { InviteSignUp } from "~/components/auth/invite-sign-up";
-import { cn } from "~/lib/cn";
 
 export const IDENTITY_VIEWS = new Set(["sign-in", "sign-up"]);
 

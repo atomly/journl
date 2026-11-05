@@ -12,9 +12,9 @@ import {
 } from "@tiptap/pm/tables";
 import { expect, test } from "vitest";
 import { fromTiptapDocument, toTiptapDocument } from "../serialization/tiptap";
+import { testDocumentExtensions } from "../testing/extensions";
 import { editingExtension } from "./commands";
 import { blockAt, identityExtension } from "./identity";
-import { documentExtensions } from "./schema";
 
 test("native table commands preserve BetterEditor identity, content, spans and resized widths", () => {
   let id = 0;
@@ -33,7 +33,7 @@ test("native table commands preserve BetterEditor identity, content, spans and r
     ]).toJSON(),
     element: document.createElement("div"),
     extensions: [
-      ...documentExtensions(),
+      ...testDocumentExtensions(),
       editingExtension(() => `new-${++id}`),
       identityExtension(() => `new-${++id}`),
     ],

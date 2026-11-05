@@ -1,8 +1,8 @@
 "use client";
 
 import { Button } from "@acme/ui/button";
+import { cn } from "@acme/ui/utils";
 import { useEffect, useRef, useState } from "react";
-import { cn } from "~/lib/cn";
 
 function useNavbarShadow() {
   const [isAtTop, setIsAtTop] = useState(true);

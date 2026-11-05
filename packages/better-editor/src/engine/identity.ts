@@ -7,17 +7,34 @@ import {
   TextSelection,
   type Transaction,
 } from "@tiptap/pm/state";
-import { dropPoint } from "@tiptap/pm/transform";
+import {
+  AddMarkStep,
+  dropPoint,
+  RemoveMarkStep,
+  ReplaceStep,
+} from "@tiptap/pm/transform";
 import { required } from "./required";
 
 export type IdFactory = () => string;
 
+const blockIndexes = new WeakMap<
+  Node,
+  Map<string, { node: Node; pos: number }>
+>();
+
+/** ProseMirror documents are immutable: reuse lookups until the document changes. */
 export function blockAt(doc: Node, id: string): { node: Node; pos: number } {
-  let result: { node: Node; pos: number } | undefined;
-  doc.descendants((node, pos) => {
-    if (node.type.name === "betterEditorBlock" && node.attrs.id === id)
-      result = { node, pos };
-  });
+  let index = blockIndexes.get(doc);
+  if (!index) {
+    const entries = new Map<string, { node: Node; pos: number }>();
+    doc.descendants((node, pos) => {
+      if (node.type.name === "betterEditorBlock")
+        entries.set(node.attrs.id, { node, pos });
+    });
+    index = entries;
+    blockIndexes.set(doc, index);
+  }
+  const result = index.get(id);
   if (!result) throw new Error(`Block not found: ${id}`);
   return result;
 }
@@ -64,10 +81,43 @@ export function copySlice(slice: Slice, createId: IdFactory): Slice {
   );
 }
 
+/** Inline leaf edits and mark changes cannot add, remove, or rename block IDs. */
+function preservesBlockIdentities(transaction: Transaction) {
+  return transaction.steps.every((step, index) => {
+    if (step instanceof AddMarkStep || step instanceof RemoveMarkStep)
+      return true;
+    if (!(step instanceof ReplaceStep)) return false;
+    const doc = transaction.docs[index];
+    if (!doc) return false;
+    const from = doc.resolve(step.from);
+    const to = doc.resolve(step.to);
+    if (!from.sameParent(to) || !from.parent.isTextblock) return false;
+    const leafInline = (fragment: Fragment) => {
+      let valid = true;
+      fragment.forEach((node) => {
+        if (!node.isInline || !node.isLeaf) valid = false;
+      });
+      return valid;
+    };
+    return (
+      leafInline(step.slice.content) &&
+      leafInline(doc.slice(step.from, step.to).content)
+    );
+  });
+}
+
 export function identityPlugin(createId: IdFactory): Plugin {
+  const validDocuments = new WeakSet<Node>();
   return new Plugin({
     appendTransaction(transactions, oldState, state) {
       if (!transactions.some((tr) => tr.docChanged)) return null;
+      if (
+        validDocuments.has(oldState.doc) &&
+        transactions.every(preservesBlockIdentities)
+      ) {
+        validDocuments.add(state.doc);
+        return null;
+      }
       // ProseMirror permits an empty root; the writing surface still needs a caret.
       if (!state.doc.childCount) {
         const wrapper = state.schema.nodes.betterEditorBlock;
@@ -118,6 +168,7 @@ export function identityPlugin(createId: IdFactory): Plugin {
           });
         }
       }
+      validDocuments.add(transaction.docChanged ? transaction.doc : state.doc);
       return transaction.docChanged ? transaction : null;
     },
     props: {

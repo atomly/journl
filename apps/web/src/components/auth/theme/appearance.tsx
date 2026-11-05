@@ -2,6 +2,9 @@
 
 // Source: https://better-auth-ui.com/r/base-nova/theme.json
 
+import { Card, CardContent } from "@acme/ui/card";
+import { Field, FieldContent, FieldLabel, FieldTitle } from "@acme/ui/field";
+import { RadioGroup, RadioGroupItem } from "@acme/ui/radio-group";
 import {
   ThemePreviewDark,
   ThemePreviewLight,
@@ -11,14 +14,6 @@ import {
 import { cn } from "cn";
 import { Monitor, Moon, Sun } from "lucide-react";
 import { useEffect, useState } from "react";
-import { Card, CardContent } from "~/components/ui/card";
-import {
-  Field,
-  FieldContent,
-  FieldLabel,
-  FieldTitle,
-} from "~/components/ui/field";
-import { RadioGroup, RadioGroupItem } from "~/components/ui/radio-group";
 import { themePlugin } from "~/lib/auth/theme-plugin";
 
 export type AppearanceProps = {

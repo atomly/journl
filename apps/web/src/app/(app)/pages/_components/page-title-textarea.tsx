@@ -1,12 +1,12 @@
 "use client";
 
 import type { Page } from "@acme/db/schema";
+import { cn } from "@acme/ui/utils";
 import { useRef, useSyncExternalStore } from "react";
 import { usePageEditorDraft } from "~/components/editor/page-drafts-provider";
 import { ExpandingTextarea } from "~/components/ui/expanding-textarea";
 import { PageCreatedEvent } from "~/events/page-created-event";
 import { useAppEventHandler } from "~/hooks/use-app-event-handler";
-import { cn } from "~/lib/cn";
 
 const DEFAULT_PLACEHOLDER = "New page";
 const DEFAULT_DEBOUNCE_TIME = 1000;
@@ -55,7 +55,7 @@ export function PageTitleTextarea({
     )
       return;
     const content = e.currentTarget
-      .closest("[data-editor-frontend]")
+      .closest("[data-better-editor-root]")
       ?.querySelector<HTMLElement>('[role="textbox"][contenteditable="true"]');
     if (content) {
       e.preventDefault();

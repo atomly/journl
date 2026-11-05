@@ -4,9 +4,12 @@ import { Button, buttonVariants } from "@acme/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@acme/ui/dropdown-menu";
+import { Field, FieldLabel } from "@acme/ui/field";
+import { Spinner } from "@acme/ui/spinner";
 import { fileToAvatarDataUrl } from "@better-auth-ui/core";
 import { useAuth, useSession, useUpdateUser } from "@better-auth-ui/react";
 import { cn } from "cn";
@@ -14,8 +17,6 @@ import { Trash2, Upload } from "lucide-react";
 import { type ChangeEvent, useRef, useState } from "react";
 import { toast } from "sonner";
 import { UserAvatar } from "~/components/auth/user/user-avatar";
-import { Field, FieldLabel } from "~/components/ui/field";
-import { Spinner } from "~/components/ui/spinner";
 
 export type ChangeAvatarProps = {
   className?: string;
@@ -128,21 +129,23 @@ export function ChangeAvatar({ className }: ChangeAvatarProps) {
           </DropdownMenuTrigger>
 
           <DropdownMenuContent>
-            <DropdownMenuItem onClick={() => fileInputRef.current?.click()}>
-              <Upload className="text-muted-foreground" />
+            <DropdownMenuGroup>
+              <DropdownMenuItem onClick={() => fileInputRef.current?.click()}>
+                <Upload className="text-muted-foreground" />
 
-              {localization.settings.uploadAvatar}
-            </DropdownMenuItem>
+                {localization.settings.uploadAvatar}
+              </DropdownMenuItem>
 
-            <DropdownMenuItem
-              variant="destructive"
-              disabled={!session?.user.image}
-              onClick={handleDelete}
-            >
-              <Trash2 />
+              <DropdownMenuItem
+                variant="destructive"
+                disabled={!session?.user.image}
+                onClick={handleDelete}
+              >
+                <Trash2 />
 
-              {localization.settings.deleteAvatar}
-            </DropdownMenuItem>
+                {localization.settings.deleteAvatar}
+              </DropdownMenuItem>
+            </DropdownMenuGroup>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>

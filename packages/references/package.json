@@ -13,6 +13,7 @@
     "test:unit": "vitest run --maxWorkers=4"
   },
   "peerDependencies": {
+    "@types/react": "~19.3.0",
     "react": "~19.3.0"
   },
   "devDependencies": {
@@ -38,5 +39,10 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "peerDependenciesMeta": {
+    "@types/react": {
+      "optional": true
+    }
   }
 }

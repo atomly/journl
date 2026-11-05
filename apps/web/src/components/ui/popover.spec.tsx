@@ -22,6 +22,7 @@ test.each(["button", "span"])(
         root.render(
           <Popover>
             <PopoverTrigger
+              nativeButton={kind === "button"}
               render={kind === "span" ? <span /> : <button type="button" />}
             >
               Choose date

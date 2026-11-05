@@ -3,7 +3,11 @@
   "compilerOptions": {
     "noEmit": true,
     "module": "ESNext",
-    "moduleResolution": "Bundler"
+    "moduleResolution": "Bundler",
+    "paths": {
+      "@acme/ui": ["./src"],
+      "@acme/ui/*": ["./src/*"]
+    }
   },
   "include": ["src"]
 }

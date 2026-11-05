@@ -13,7 +13,7 @@ test("selected lists convert together, typing dismisses handles and plain copy k
   await context.grantPermissions(["clipboard-read", "clipboard-write"]);
   await page.goto("/journal");
   await page.getByRole("button", { exact: true, name: "New page" }).click();
-  await expect(page).toHaveURL(/\/pages\//);
+  await expect(page).toHaveURL(/\/pages\//, { timeout: 60_000 });
   await page.keyboard.press("Escape");
   const editor = page.locator(".better-editor-tiptap");
   await editor.pressSequentially("- One");
@@ -37,7 +37,16 @@ test("selected lists convert together, typing dismisses handles and plain copy k
     document.dispatchEvent(new Event("selectionchange"));
     await new Promise(requestAnimationFrame);
   });
-  await page.getByRole("combobox", { exact: true, name: "Block type" }).click();
+  const blockType = page.getByRole("combobox", {
+    exact: true,
+    name: "Block type",
+  });
+  const triggerId = await blockType.getAttribute("id");
+  // A slow runner can rerender the parent while the opening press is held.
+  // The toolbar and its picker must survive those live callback updates.
+  await blockType.click({ delay: 700 });
+  await expect(blockType).toHaveAttribute("id", triggerId ?? "");
+  await expect(blockType).toHaveAttribute("aria-expanded", "true");
   await expect(
     page.getByRole("option", { exact: true, name: "Table" }),
   ).toHaveCount(0);

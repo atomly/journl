@@ -22,12 +22,14 @@ export function TooltipIconButton({
 }: TooltipIconButtonProps) {
   return (
     <Tooltip>
-      <TooltipTrigger asChild>
-        <Button variant="ghost" size="icon" {...rest} ref={ref}>
-          {children}
-          <span className="sr-only">{tooltip}</span>
-        </Button>
-      </TooltipTrigger>
+      <TooltipTrigger
+        render={
+          <Button variant="ghost" size="icon" {...rest} ref={ref}>
+            {children}
+            <span className="sr-only">{tooltip}</span>
+          </Button>
+        }
+      />
       <TooltipContent side={side}>{tooltip}</TooltipContent>
     </Tooltip>
   );

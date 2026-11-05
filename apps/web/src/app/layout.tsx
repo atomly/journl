@@ -1,8 +1,8 @@
+import { cn } from "@acme/ui/utils";
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono, Inter } from "next/font/google";
 import { DraftSessionsProvider } from "~/components/editor/draft-sessions-provider";
 import { env } from "~/env";
-import { cn } from "~/lib/cn";
 import { getPublicWebUrl } from "~/lib/public-web-url";
 
 import "~/app/styles.css";

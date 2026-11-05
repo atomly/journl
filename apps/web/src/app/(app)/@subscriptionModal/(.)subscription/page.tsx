@@ -1,9 +1,5 @@
+import { DialogContent, DialogHeader, DialogTitle } from "@acme/ui/dialog";
 import { redirect } from "next/navigation";
-import {
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "~/components/ui/dialog";
 import { api } from "~/trpc/server";
 import { SubscriptionView } from "../../../(dashboard)/subscription/_components/subscription-view";
 import { SubscriptionModal } from "../_components/subscription-modal";

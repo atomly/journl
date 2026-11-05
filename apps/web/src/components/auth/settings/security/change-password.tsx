@@ -1,7 +1,18 @@
 "use client";
 
 import { Button } from "@acme/ui/button";
+import { Card, CardContent, CardFooter } from "@acme/ui/card";
+import { Field, FieldError, FieldLabel } from "@acme/ui/field";
 import { Input } from "@acme/ui/input";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupButton,
+  InputGroupInput,
+} from "@acme/ui/input-group";
+import { Skeleton } from "@acme/ui/skeleton";
+import { Spinner } from "@acme/ui/spinner";
+import { cn } from "@acme/ui/utils";
 import {
   getViewURL,
   isPasswordCompromisedError,
@@ -19,17 +30,6 @@ import {
 import { Eye, EyeOff } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Card, CardContent, CardFooter } from "~/components/ui/card";
-import { Field, FieldError, FieldLabel } from "~/components/ui/field";
-import {
-  InputGroup,
-  InputGroupAddon,
-  InputGroupButton,
-  InputGroupInput,
-} from "~/components/ui/input-group";
-import { Skeleton } from "~/components/ui/skeleton";
-import { Spinner } from "~/components/ui/spinner";
-import { cn } from "~/lib/cn";
 import { isAuthFormFieldInvalid, useAuthForm } from "../../auth-form";
 import { OpenEmailButton } from "../../open-email-button";
 import { PasswordStrengthMeter } from "../../password-strength-meter";

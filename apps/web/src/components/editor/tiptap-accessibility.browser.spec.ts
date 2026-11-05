@@ -12,14 +12,14 @@ test.beforeEach(async ({ page }) => {
       .click();
   const previous = page.url();
   await create.click();
-  await expect(page).not.toHaveURL(previous);
+  await expect(page).not.toHaveURL(previous, { timeout: 60_000 });
   await page.keyboard.press("Escape");
 });
 
 async function focusMore(page: Page) {
   const more = page.getByRole("button", {
     exact: true,
-    name: "More formatting",
+    name: "More actions",
   });
   for (let i = 0; i < 20; i++) {
     if (await more.evaluate((el) => el === document.activeElement)) return;
@@ -44,6 +44,20 @@ async function openMore(page: Page) {
     .toBe(true);
 }
 async function menuAction(page: Page, name: string) {
+  const group = /header/.test(name)
+    ? "Headers"
+    : /column/.test(name)
+      ? "Columns"
+      : /row/.test(name)
+        ? "Rows"
+        : /cell/.test(name)
+          ? "Cells"
+          : undefined;
+  if (group) {
+    const trigger = page.getByRole("menuitem", { exact: true, name: group });
+    await trigger.focus();
+    await page.keyboard.press("ArrowRight");
+  }
   const item = page.getByRole("menuitem", { exact: true, name });
   await expect(item).toBeVisible();
   await expect(item).toBeEnabled();
@@ -202,7 +216,8 @@ test("table formatting, headers, movement and widths work through accessible con
   page,
 }) => {
   const editor = page.locator(".better-editor-tiptap");
-  await editor.fill("/table");
+  // Exercise keyboard input without replacing ProseMirror's block wrappers.
+  await typeParagraphs(editor, ["/table"]);
   await page.getByRole("option", { exact: true, name: "Table" }).click();
   const table = editor.locator("table");
   const rows = table.locator("tr");

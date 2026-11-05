@@ -8,6 +8,12 @@ import {
 } from "@tiptap/pm/state";
 import { selectedBlock } from "./commands";
 import type { IdFactory } from "./identity";
+import {
+  executeSlashItem,
+  matchingSlashItems,
+  type SlashMenuItem,
+  slashMenuEnabled,
+} from "./slash-items";
 import { turnInto } from "./writing";
 
 export type BlockChoice = {
@@ -51,21 +57,16 @@ export const blockChoices: BlockChoice[] = [
 ];
 export type SlashQuery = {
   explicit?: boolean;
+  items: readonly SlashMenuItem[];
   from: number;
   to: number;
   query: string;
   index: number;
 };
 export const slashKey = new PluginKey<SlashQuery | null>("better-editor-slash");
-export const filteredBlockChoices = (query: string) =>
-  blockChoices.filter((choice) =>
-    `${choice.title} ${choice.aliases}`
-      .toLowerCase()
-      .includes(query.toLowerCase()),
-  );
 export function slashQuery(
   state: EditorState,
-): Omit<SlashQuery, "index"> | null {
+): Omit<SlashQuery, "index" | "items"> | null {
   const { selection } = state;
   if (
     !selection.empty ||
@@ -144,6 +145,7 @@ export function suggestionExtension(createId: IdFactory) {
                 );
                 return true;
               }
+              if (!current.items.some((item) => !item.disabled)) return false;
               if (event.key === "ArrowDown" || event.key === "ArrowUp") {
                 view.dispatch(
                   view.state.tr.setMeta(slashKey, {
@@ -153,17 +155,15 @@ export function suggestionExtension(createId: IdFactory) {
                 return true;
               }
               if (event.key !== "Enter") return false;
-              const choice = filteredBlockChoices(current.query)[current.index];
-              const tr =
-                choice && applySlashChoice(view.state, choice, createId);
-              if (!tr) return false;
-              view.dispatch(tr);
-              return true;
+              const choice = current.items[current.index];
+              return choice
+                ? executeSlashItem(editor, choice.id, createId)
+                : false;
             },
           },
           state: {
             apply(tr, previous, _, state) {
-              if (!editor.isFocused) return null;
+              if (!editor.isFocused || !slashMenuEnabled(editor)) return null;
               const meta = tr.getMeta(slashKey);
               const explicit =
                 meta?.open ||
@@ -194,15 +194,27 @@ export function suggestionExtension(createId: IdFactory) {
                 return null;
               const same =
                 previous?.from === query.from && previous.query === query.query;
-              const count = filteredBlockChoices(query.query).length;
+              const items =
+                same && !meta?.refresh
+                  ? previous.items
+                  : matchingSlashItems(editor, query);
+              const enabled = items.flatMap((item, index) =>
+                item.disabled ? [] : [index],
+              );
+              const previousId = previous?.items[previous.index]?.id;
+              const preserved = same
+                ? items.findIndex(
+                    (item) => item.id === previousId && !item.disabled,
+                  )
+                : -1;
+              const start = enabled.indexOf(preserved);
+              const next =
+                (Math.max(0, start) + (meta?.direction ?? 0) + enabled.length) %
+                enabled.length;
               return {
                 ...query,
-                index: count
-                  ? ((same ? previous.index : 0) +
-                      (meta?.direction ?? 0) +
-                      count) %
-                    count
-                  : 0,
+                index: enabled[next] ?? -1,
+                items,
               };
             },
             init: () => null,

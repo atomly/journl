@@ -1,6 +1,6 @@
 "use client";
+import { cn } from "@acme/ui/utils";
 import { useDndContext, useDroppable } from "@dnd-kit/core";
-import { cn } from "~/lib/cn";
 import {
   TREE_REORDER_AFTER_BAND_CLASSNAME,
   TREE_REORDER_AFTER_LINE_CLASSNAME,

@@ -1,8 +1,8 @@
 "use client";
 
+import { Textarea } from "@acme/ui/textarea";
+import { cn } from "@acme/ui/utils";
 import { useCallback, useEffect, useRef } from "react";
-import { cn } from "~/lib/cn";
-import { Textarea } from "./textarea";
 
 /**
  * A textarea that expands to fit content as you type.

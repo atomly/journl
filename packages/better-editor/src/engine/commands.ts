@@ -1,19 +1,17 @@
-import {
-  applyDocumentOperations,
-  type DocumentOperation,
-  duplicateBlock,
-} from "@acme/document";
+import { type DocumentOperation, duplicateBlock } from "@acme/document";
 import { Extension } from "@tiptap/core";
 import { NodeRangeSelection } from "@tiptap/extension-node-range";
 import { closeHistory, history, redo, undo } from "@tiptap/pm/history";
 import {
-  type EditorState,
+  EditorState,
   NodeSelection,
+  Selection,
   TextSelection,
   type Transaction,
 } from "@tiptap/pm/state";
 import { fromTiptapDocument, toTiptapDocument } from "../serialization/tiptap";
 import { blockAt, type IdFactory, joinBlocks, splitBlock } from "./identity";
+import { TOGGLE_BLOCK_META } from "./metadata";
 import { restoreBlockSelection } from "./selection";
 
 export function selectedBlock(state: Pick<EditorState, "doc" | "selection">) {
@@ -61,10 +59,17 @@ export function selectedBlock(state: Pick<EditorState, "doc" | "selection">) {
 
 /** Structural edits cross the same domain-operation boundary as accepted proposals. */
 export function editBlocks(
-  transaction: Transaction,
+  input: Transaction,
   operations: DocumentOperation[],
   focusId?: string,
 ) {
+  // Build in isolation so a late invalid operation cannot leave the caller's
+  // transaction partially modified. Only successful steps enter its history.
+  const transaction = EditorState.create({
+    doc: input.doc,
+    selection: input.selection,
+    storedMarks: input.storedMarks,
+  }).tr;
   const focused = selectedBlock(transaction);
   const selection = transaction.selection;
   const preserve =
@@ -78,16 +83,98 @@ export function editBlocks(
           node: selection instanceof NodeSelection,
         }
       : null;
-  const next = applyDocumentOperations(
-    fromTiptapDocument(transaction.doc),
-    operations,
-  );
-  const doc = toTiptapDocument(next, transaction.doc.type.schema);
-  closeHistory(transaction).replaceWith(
-    0,
-    transaction.doc.content.size,
-    doc.content,
-  );
+  const destination = (parentId: string | null, afterId: string | null) => {
+    let start = 0;
+    let group = transaction.doc;
+    if (parentId) {
+      const parent = blockAt(transaction.doc, parentId);
+      if (parent.node.childCount === 1) {
+        const children = transaction.doc.type.schema.nodes.betterEditorChildren;
+        if (!children) throw new Error("Missing block children schema");
+        transaction.insert(
+          parent.pos + parent.node.nodeSize - 1,
+          children.createChecked(),
+        );
+      }
+      const current = blockAt(transaction.doc, parentId);
+      const children = current.node.child(1);
+      start = current.pos + 1 + current.node.child(0).nodeSize + 1;
+      group = children;
+    }
+    if (afterId) {
+      const preceding = blockAt(transaction.doc, afterId);
+      if (transaction.doc.resolve(preceding.pos).parent !== group)
+        throw new Error(
+          "Preceding block must belong to the destination parent",
+        );
+      return preceding.pos + preceding.node.nodeSize;
+    }
+    return start;
+  };
+  for (const operation of operations) {
+    if (operation.type === "remove") {
+      const target = blockAt(transaction.doc, operation.id);
+      transaction.delete(target.pos, target.pos + target.node.nodeSize);
+    } else if (operation.type === "update") {
+      const target = blockAt(transaction.doc, operation.id);
+      const replacement = toTiptapDocument(
+        [{ ...operation.data, id: operation.id }],
+        transaction.doc.type.schema,
+      ).firstChild?.firstChild;
+      if (!replacement || !target.node.firstChild)
+        throw new Error("Invalid block update");
+      transaction.replaceWith(
+        target.pos + 1,
+        target.pos + 1 + target.node.firstChild.nodeSize,
+        replacement,
+      );
+    } else if (operation.type === "move") {
+      const target = blockAt(transaction.doc, operation.id);
+      if (operation.afterId === operation.id)
+        throw new Error("Cannot move a block after itself");
+      if (operation.parentId) {
+        const parent = blockAt(transaction.doc, operation.parentId);
+        if (
+          parent.pos >= target.pos &&
+          parent.pos < target.pos + target.node.nodeSize
+        )
+          throw new Error("Cannot move a block into itself");
+      }
+      transaction.delete(target.pos, target.pos + target.node.nodeSize);
+      transaction.insert(
+        destination(operation.parentId, operation.afterId),
+        target.node,
+      );
+    } else {
+      const node = toTiptapDocument(
+        [operation.block],
+        transaction.doc.type.schema,
+      ).firstChild;
+      if (!node) throw new Error("Invalid inserted block");
+      const ids = new Set<string>();
+      transaction.doc.descendants((item) => {
+        if (item.type.name === "betterEditorBlock") ids.add(item.attrs.id);
+      });
+      node.descendants((item) => {
+        if (item.type.name === "betterEditorBlock") {
+          if (ids.has(item.attrs.id)) throw new Error("Duplicate block ID");
+          ids.add(item.attrs.id);
+        }
+      });
+      if (ids.has(node.attrs.id)) throw new Error("Duplicate block ID");
+      transaction.insert(
+        destination(operation.parentId, operation.afterId),
+        node,
+      );
+    }
+  }
+  const emptyGroups: number[] = [];
+  transaction.doc.descendants((node, pos) => {
+    if (node.type.name === "betterEditorChildren" && !node.childCount)
+      emptyGroups.push(pos);
+  });
+  for (const pos of emptyGroups.reverse()) transaction.delete(pos, pos + 2);
+  transaction.doc.check();
   if (focusId) {
     const block = blockAt(transaction.doc, focusId);
     transaction.setSelection(
@@ -102,7 +189,13 @@ export function editBlocks(
         : TextSelection.near(transaction.doc.resolve(block.pos + 2)),
     );
   }
-  return transaction;
+  closeHistory(input);
+  for (const step of transaction.steps) input.step(step);
+  input.setSelection(
+    Selection.fromJSON(input.doc, transaction.selection.toJSON()),
+  );
+  input.setStoredMarks(transaction.storedMarks);
+  return input;
 }
 
 /** Select the sibling range at the nearest shared level. Descendants move with
@@ -137,6 +230,12 @@ export function selectedBlocks(state: EditorState) {
     return result;
   }
   return [];
+}
+
+/** Cheap applicability check: does not serialize content or construct an edit. */
+export function canIndentBlock(state: EditorState, outdent = false): boolean {
+  const target = selectedBlocks(state)[0];
+  return Boolean(target && (outdent ? target.parentId : target.index > 0));
 }
 
 export function indentBlock(
@@ -403,9 +502,7 @@ export function editingExtension(createId: IdFactory) {
             body.type.name === "toggleListItem" ||
             (body.type.name === "heading" && body.attrs.props?.isToggleable)
           ) {
-            view.dispatch(
-              state.tr.setMeta("better-editor-toggle-block", target.id),
-            );
+            view.dispatch(state.tr.setMeta(TOGGLE_BLOCK_META, target.id));
             return true;
           }
           return false;

@@ -2,7 +2,8 @@
 
 import type { Page } from "@acme/db/schema";
 import type { DocumentBlock } from "@acme/document";
-import { useEffect, useSyncExternalStore } from "react";
+import type { Editor } from "@tiptap/core";
+import { useEffect, useRef, useSyncExternalStore } from "react";
 import { ConnectedDocumentEditor } from "~/components/editor/document-editor";
 import { acceptedDocumentChange } from "~/components/editor/document-save-adapter";
 import {
@@ -26,6 +27,7 @@ type PageEditorProps = Omit<
 };
 
 export function PageEditor(props: PageEditorProps) {
+  const editor = useRef<Editor | null>(null);
   const { draft, retainDraft } = usePageDraft(props.page, {
     blocks: props.initialBlocks,
     documentId: props.page.document_id,
@@ -61,23 +63,52 @@ export function PageEditor(props: PageEditorProps) {
   );
   return (
     <PageEditorDraftContext.Provider value={draft}>
-      <ConnectedDocumentEditor
-        key={snapshot.resetKey}
-        initialBlocks={snapshot.blocks}
-        onCommit={(blocks, operations) => {
-          const change = acceptedDocumentChange(
-            draft.getSnapshot().blocks ?? [],
-            blocks,
-            operations,
-          );
-          retainDraft();
-          draft.update(change, props.debounceTime ?? DEFAULT_DEBOUNCE_TIME);
+      <div
+        className="flex flex-1 flex-col pb-52"
+        data-page-writing-canvas=""
+        onPointerDown={(event) => {
+          const current = editor.current;
+          if (
+            event.defaultPrevented ||
+            event.button !== 0 ||
+            !event.isPrimary ||
+            !current ||
+            current.isDestroyed ||
+            !current.isEditable ||
+            !(event.target instanceof Element) ||
+            event.target.closest(
+              'a,button,input,textarea,select,[contenteditable],[role="button"],[data-tiptap-controls],[data-page-backlinks]',
+            ) ||
+            !current.isEmpty
+          )
+            return;
+          current.commands.focus("start");
         }}
-        className={props.className}
       >
-        {props.children}
-      </ConnectedDocumentEditor>
-      <ReferenceBacklinks documentId={props.page.document_id} />
+        <ConnectedDocumentEditor
+          key={snapshot.resetKey}
+          initialBlocks={snapshot.blocks}
+          onCommit={(blocks, operations) => {
+            const change = acceptedDocumentChange(
+              draft.getSnapshot().blocks ?? [],
+              blocks,
+              operations,
+            );
+            retainDraft();
+            draft.update(change, props.debounceTime ?? DEFAULT_DEBOUNCE_TIME);
+          }}
+          className={props.className}
+          onReady={(instance) => {
+            editor.current = instance;
+            props.onReady?.(instance);
+          }}
+        >
+          {props.children}
+        </ConnectedDocumentEditor>
+        <div data-page-backlinks="">
+          <ReferenceBacklinks documentId={props.page.document_id} />
+        </div>
+      </div>
     </PageEditorDraftContext.Provider>
   );
 }

@@ -10,7 +10,42 @@
     "./button": "./src/button.tsx",
     "./dropdown-menu": "./src/dropdown-menu.tsx",
     "./select": "./src/select.tsx",
-    "./input": "./src/input.tsx"
+    "./input": "./src/input.tsx",
+    "./alert": "./src/alert.tsx",
+    "./input-group": "./src/input-group.tsx",
+    "./accordion": "./src/accordion.tsx",
+    "./dialog": "./src/dialog.tsx",
+    "./collapsible": "./src/collapsible.tsx",
+    "./textarea": "./src/textarea.tsx",
+    "./label": "./src/label.tsx",
+    "./field": "./src/field.tsx",
+    "./carousel": "./src/carousel.tsx",
+    "./alert-dialog": "./src/alert-dialog.tsx",
+    "./command": "./src/command.tsx",
+    "./radio-group": "./src/radio-group.tsx",
+    "./skeleton": "./src/skeleton.tsx",
+    "./sheet": "./src/sheet.tsx",
+    "./checkbox": "./src/checkbox.tsx",
+    "./calendar": "./src/calendar.tsx",
+    "./hover-card": "./src/hover-card.tsx",
+    "./badge": "./src/badge.tsx",
+    "./switch": "./src/switch.tsx",
+    "./avatar": "./src/avatar.tsx",
+    "./scroll-area": "./src/scroll-area.tsx",
+    "./sonner": "./src/sonner.tsx",
+    "./slider": "./src/slider.tsx",
+    "./item": "./src/item.tsx",
+    "./tabs": "./src/tabs.tsx",
+    "./card": "./src/card.tsx",
+    "./spinner": "./src/spinner.tsx",
+    "./separator": "./src/separator.tsx",
+    "./combobox": "./src/combobox.tsx",
+    "./breadcrumb": "./src/breadcrumb.tsx",
+    "./drawer": "./src/drawer.tsx",
+    "./progress": "./src/progress.tsx",
+    "./toast": "./src/toast.tsx",
+    "./navigation-menu": "./src/navigation-menu.tsx",
+    "./utils": "./src/utils.ts"
   },
   "scripts": {
     "check": "biome check",
@@ -19,10 +54,20 @@
   "dependencies": {
     "@base-ui/react": "^1.9.0",
     "class-variance-authority": "~0.7.1",
+    "clsx": "~2.1.1",
+    "cmdk": "~1.1.1",
     "cn": "^0.4.0",
-    "lucide-react": "~1.55.0"
+    "embla-carousel-react": "~8.6.0",
+    "lucide-react": "~1.55.0",
+    "next-themes": "~0.4.6",
+    "react-day-picker": "~10.0.2",
+    "sonner": "~2.0.8",
+    "tailwind-merge": "~3.7.0",
+    "vaul": "~1.1.2"
   },
   "peerDependencies": {
+    "@types/react": "~19.3.0",
+    "@types/react-dom": "~19.3.0",
     "react": "~19.3.0",
     "react-dom": "~19.3.0"
   },
@@ -30,6 +75,8 @@
     "@acme/tsconfig": "workspace:*",
     "@types/react": "~19.3.0",
     "@types/react-dom": "~19.3.0",
+    "react": "~19.3.0",
+    "react-dom": "~19.3.0",
     "typescript": "~7.0.2"
   },
   "files": [
@@ -45,5 +92,13 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "peerDependenciesMeta": {
+    "@types/react": {
+      "optional": true
+    },
+    "@types/react-dom": {
+      "optional": true
+    }
   }
 }

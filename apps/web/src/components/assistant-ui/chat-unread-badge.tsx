@@ -1,6 +1,6 @@
 "use client";
 
-import { cn } from "~/lib/cn";
+import { cn } from "@acme/ui/utils";
 
 type ChatUnreadBadgeProps = {
   hasUnreadMessages: boolean;

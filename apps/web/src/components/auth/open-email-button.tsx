@@ -7,6 +7,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@acme/ui/tooltip";
+import { cn } from "@acme/ui/utils";
 import {
   createQrCodeSvgData,
   getEmailProviderLink,
@@ -15,7 +16,6 @@ import { useAuth } from "@better-auth-ui/react";
 import type { VariantProps } from "class-variance-authority";
 import { QrCode } from "lucide-react";
 import { useMemo } from "react";
-import { cn } from "~/lib/cn";
 
 export type OpenEmailButtonProps = {
   /** Email address used to detect the provider, e.g. from the verify-email flow. */

@@ -5,8 +5,8 @@ import { NodeSelection } from "@tiptap/pm/state";
 import { act } from "react";
 import { createRoot } from "react-dom/client";
 import { expect, test } from "vitest";
-import { documentExtensions } from "../engine/schema";
 import { toTiptapDocument } from "../serialization/tiptap";
+import { testDocumentExtensions } from "../testing/extensions";
 import { TouchBlockDrag } from "./touch-block-drag";
 
 Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
@@ -21,7 +21,7 @@ for (const ending of ["touchend", "touchcancel"] as const) {
         { content: "First", id: "first", type: "paragraph" },
       ]).toJSON(),
       element: surface,
-      extensions: documentExtensions(),
+      extensions: testDocumentExtensions(),
     });
     const root = createRoot(host);
     const activity: boolean[] = [];

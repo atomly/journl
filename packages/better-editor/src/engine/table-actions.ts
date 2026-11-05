@@ -263,6 +263,12 @@ export function applyTableEdit(
   editor: import("@tiptap/core").Editor,
   tr: Transaction,
 ) {
+  if (
+    editor.isDestroyed ||
+    !editor.isEditable ||
+    tr.before !== editor.state.doc
+  )
+    return;
   editor.view.dispatch(closeHistory(tr));
   editor.view.dispatch(closeHistory(editor.state.tr));
 }

@@ -135,6 +135,7 @@ test("tables are discoverable and row/column edits save on the actual route", as
   await page
     .getByRole("button", { exact: true, name: "Block actions" })
     .click();
+  await page.getByRole("menuitem", { exact: true, name: "Rows" }).hover();
   await page
     .getByRole("menuitem", { exact: true, name: "Insert row below" })
     .click();
@@ -143,6 +144,7 @@ test("tables are discoverable and row/column edits save on the actual route", as
   await page
     .getByRole("button", { exact: true, name: "Block actions" })
     .click();
+  await page.getByRole("menuitem", { exact: true, name: "Columns" }).hover();
   await page
     .getByRole("menuitem", { exact: true, name: "Insert column right" })
     .click();

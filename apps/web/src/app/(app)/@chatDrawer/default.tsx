@@ -1,3 +1,9 @@
+import {
+  Drawer,
+  DrawerContent,
+  DrawerDivider,
+  DrawerTitle,
+} from "@acme/ui/drawer";
 import { ComposerPrimitive, ThreadPrimitive } from "@assistant-ui/react";
 import {
   ComposerAction,
@@ -13,12 +19,6 @@ import {
 import { ThreadMessages } from "~/components/assistant-ui/thread-messages";
 import { ComposerSources } from "~/components/assistant-ui/thread-sources";
 import { ThreadWelcome } from "~/components/assistant-ui/thread-welcome";
-import {
-  Drawer,
-  DrawerContent,
-  DrawerDivider,
-  DrawerTitle,
-} from "~/components/ui/drawer";
 import { ChatDrawerTrigger } from "./_components/chat-drawer-trigger";
 
 const CHAT_DRAWER_CONTENT_ID = "chat-drawer-content";

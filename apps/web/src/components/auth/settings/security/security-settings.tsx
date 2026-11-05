@@ -1,7 +1,7 @@
 "use client";
 
+import { cn } from "@acme/ui/utils";
 import { useAuth } from "@better-auth-ui/react";
-import { cn } from "~/lib/cn";
 import { ActiveSessions } from "./active-sessions";
 import { ChangePassword } from "./change-password";
 import { LinkedAccounts } from "./linked-accounts";

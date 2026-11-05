@@ -2,6 +2,8 @@
 
 import "@assistant-ui/react-markdown/styles/dot.css";
 
+import { useDrawer } from "@acme/ui/drawer";
+import { cn } from "@acme/ui/utils";
 import {
   type CodeHeaderProps,
   MarkdownTextPrimitive,
@@ -14,8 +16,6 @@ import { memo, useState } from "react";
 import remarkGfm from "remark-gfm";
 import { stripOpenAICitationTokens } from "~/ai/utils/openai-utils";
 import { TooltipIconButton } from "~/components/assistant-ui/tooltip-icon-button";
-import { cn } from "~/lib/cn";
-import { useDrawer } from "../ui/drawer";
 
 function MarkdownTextImpl() {
   return (

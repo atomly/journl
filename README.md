@@ -60,7 +60,7 @@ installed editor contract, synthetic recovery fixtures, remaining production
 uncertainty, and preservation checks for the Tiptap frontend migration on Journl-owned
 block documents. Performance benchmarks are outside this migration scope.
 Content checks run with `pnpm --filter @acme/document test:unit` and
-`pnpm --filter @acme/tiptap test:unit`. The remaining BlockNote compatibility
+`pnpm --filter @acme/better-editor test:unit`. The remaining BlockNote compatibility
 suite is separate from the current editor's acceptance checks.
 
 ## Development Workflow
@@ -68,10 +68,32 @@ suite is separate from the current editor's acceptance checks.
 Use the scripts in [`package.json`](./package.json) as the canonical source for
 day-to-day commands.
 
-- Install dependencies: `pnpm install`
-- Start development tasks: `pnpm dev`
+- Install the toolchain: `mise install` (Node 26 from `mise.toml`, pnpm 12.15.0 from `package.json`).
+- Install dependencies: `mise run pnpm-install`
+- Start development tasks: `mise run dev`
 - Run quality gates: `pnpm check` and `pnpm typecheck`
 - Build the workspace: `pnpm build`
+
+Dependencies use a project-local virtual store and pnpm's shared global content
+store. Main and worktrees keep separate dependency links while reusing package
+files through hard links on the same filesystem. This layout supports the current
+Workflow/Turbopack transforms. React type peers are declared explicitly in package
+manifests and targeted `packageExtensions`.
+After changing the dependency layout, stop Next processes and run `pnpm clean:cache`
+before restarting.
+CI dev servers disable the persistent Turbopack dev cache because each run uses
+disposable services. Normal development and production builds retain caching.
+Turbo caches and CI artifacts exclude dev output and Workflow state.
+CI runs the individual check, typecheck, test, and build commands. Browser tests use
+Playwright directly; install its browsers with the command below.
+
+Renovate replaces Dependabot version updates. It covers npm workspace packages,
+GitHub Actions, Node in `mise.toml`, and pnpm in `devEngines.packageManager`.
+Updates stay in one cross-ecosystem group during Monday's 09:00–09:59 window in
+`America/New_York`. Renovate polls within that window rather than starting at an
+exact minute. Security updates bypass the weekly window. The organization's
+Renovate GitHub App covers all repositories, so no Actions runner or bot token
+is required. The configuration takes effect after it reaches the default branch.
 
 Environment variables are loaded from a root `.env` file. See
 [`turbo.json`](./turbo.json) for shared env names used by tasks.
@@ -140,6 +162,12 @@ its browser dependencies before running it. Unit tests remain Docker-free.
 
 Recurring Explore refresh and folder cleanup recovery jobs remain required
 runtime functionality.
+
+Stop development and test processes before running `pnpm clean:cache` to remove
+generated Next and Turbo caches. Workflow state and failure reports are preserved.
+Local Workflow state lives in `apps/web/.workflow-data`, outside Next's build
+output. Browser tests use a separate temporary directory. Keep existing local
+Workflow data when changing build or storage settings.
 
 ---
 

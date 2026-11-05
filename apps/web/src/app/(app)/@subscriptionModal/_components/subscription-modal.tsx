@@ -1,8 +1,8 @@
 "use client";
 
+import { Dialog } from "@acme/ui/dialog";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { Dialog } from "~/components/ui/dialog";
 
 export function SubscriptionModal({ children }: { children: React.ReactNode }) {
   const router = useRouter();

@@ -3,7 +3,9 @@ import "server-only";
 import { USAGE_UNITS } from "@acme/db/usage";
 import {
   applyDocumentOperations,
+  type DocumentBlock,
   type DocumentOperation,
+  zBlockData,
   zDocumentOperation,
 } from "@acme/document";
 import { Agent } from "@mastra/core/agent";
@@ -16,18 +18,41 @@ import {
 } from "ai";
 import type { User } from "better-auth";
 import { z } from "zod/v4";
+import { zDocumentWriterOperation } from "~/ai/document-writer-operation";
 import { miniModel } from "~/ai/providers/openai/text";
 import { startModelUsage } from "~/workflows/model-usage";
 import type { DocumentWriterRequest } from "./document-writer-request";
 
 const outputSchema = z.strictObject({
-  operations: z.array(zDocumentOperation),
+  operations: z.array(zDocumentWriterOperation),
 });
 
-// Derive the model description from the document contract. JSON cannot describe
-// its undefined fields and block transforms; the same contract validates output.
+// zDocumentBlock validates an unknown input through parseBlock. Describe inserts
+// with the same block variants so the model can see their actual fields, including
+// nested blocks. The original operation contract still validates every result.
+const insertedBlockSchema: z.ZodType<DocumentBlock> = z.lazy(() =>
+  z.union(
+    zBlockData.options.map((variant) =>
+      variant.extend({
+        children: z.array(insertedBlockSchema).optional(),
+        id: z.uuid(),
+      }),
+    ),
+  ),
+);
+const describedOutputSchema = z.strictObject({
+  operations: z.array(
+    z.discriminatedUnion("type", [
+      zDocumentOperation.options[0].extend({ block: insertedBlockSchema }),
+      ...zDocumentOperation.options.slice(1),
+    ]),
+  ),
+});
+
+// JSON cannot describe undefined fields; the shared runtime contract retains
+// those constraints while this derived input schema supplies model guidance.
 const modelOutputSchema = jsonSchema<z.infer<typeof outputSchema>>(
-  z.toJSONSchema(outputSchema, {
+  z.toJSONSchema(describedOutputSchema, {
     io: "input",
     target: "draft-7",
     unrepresentable: "any",
@@ -56,10 +81,17 @@ const documentWriter = new Agent({
   instructions: `Generate a proposed edit to the supplied Journl document blocks.
 Return only an object containing operations from the supplied DocumentOperation schema.
 Use insert, update, remove, and move operations only.
-Use existing block IDs for update, remove, move, parentId, and afterId.
-Use fresh unique IDs for inserted blocks and their children.
+Use existing block IDs for update, remove, and move.
+For parentId and afterId, use existing block IDs or IDs inserted earlier in this operation batch. Use null for the root parent or the first sibling.
+Use fresh unique UUID identifiers for inserted blocks and their children. Never use labels or sequential strings as IDs.
 An insert block has an id, a supported type, its content and props, and optional children, like the supplied blocks.
 Use the block types and data shapes described by update.data for inserted blocks.
+Write structured editor content, not Markdown source inside a paragraph.
+Create a separate block for each paragraph, heading, list item, quote, code block, and table.
+Use heading blocks with props.level for section titles, bulletListItem for each bullet, and numberedListItem for each numbered step.
+List items at the same level are siblings. Put children under an item only for an actual nested list, never to represent the next item.
+Use inline text styles and link objects for bold, italic, code, and links. Do not put Markdown markers in text to simulate formatting.
+Do not combine an entire recipe, article, or several paragraphs into one block with newline characters. Preserve intentional line breaks within one paragraph and code block contents.
 Preserve unrecognized content unchanged. Never invent an unknown block type or opaque legacy payload.
 An update replaces the block data. Preserve all unchanged content, formatting, props, links, and reference targets.
 Preserve existing block IDs and children. Use move to change a block's position.
@@ -111,9 +143,8 @@ export async function streamDocumentWriter({
             },
             structuredOutput: {
               errorStrategy: "strict",
-              // The shared insert schema validates blocks with a transform. Mastra's
-              // native injection mode retains partial objects and strict validation
-              // without sending an unconstrained block schema to OpenAI strict mode.
+              // Native injection retains partial-object streaming and the shared
+              // validator without requiring OpenAI's strict-mode schema subset.
               jsonPromptInjection: "system",
               schema: modelOutputSchema,
             },

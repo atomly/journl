@@ -281,6 +281,116 @@ describe("usage accounting through the installed Mastra Agent", () => {
 });
 
 describe("document writer proposal stream", () => {
+  it("streams a recipe as distinct headings, paragraphs, and sibling list blocks", async () => {
+    const recipe: DocumentOperation[] = [
+      {
+        data: {
+          content: "Smoky turkey melt",
+          props: { level: 1 },
+          type: "heading",
+        },
+        id: "a",
+        type: "update",
+      },
+      ...[
+        { content: "Ready in 25 minutes.", id: "intro", type: "paragraph" },
+        {
+          content: "Ingredients",
+          id: "ingredients",
+          props: { level: 2 },
+          type: "heading",
+        },
+        { content: "Turkey", id: "turkey", type: "bulletListItem" },
+        { content: "Chipotle mayo", id: "mayo", type: "bulletListItem" },
+        {
+          content: "Method",
+          id: "method",
+          props: { level: 2 },
+          type: "heading",
+        },
+        { content: "Toast the bread.", id: "toast", type: "numberedListItem" },
+        {
+          content: "Assemble the sandwich.",
+          id: "assemble",
+          type: "numberedListItem",
+        },
+      ]
+        .map((block, index) => ({
+          ...block,
+          id: `00000000-0000-4000-8000-${String(index + 1).padStart(12, "0")}`,
+        }))
+        .map((block, index, blocks) => ({
+          afterId: index === 0 ? "a" : (blocks[index - 1]?.id ?? "a"),
+          block: parseBlock(block),
+          parentId: null,
+          type: "insert" as const,
+        })),
+    ];
+    mocks.stream.mockImplementation(async () =>
+      output({
+        object: { operations: recipe },
+        partials: recipe.map((_operation, index) => ({
+          operations: recipe.slice(0, index + 1),
+        })),
+      }),
+    );
+    const { chunks, errors } = await consume(
+      await streamDocumentWriter({
+        request: { ...request, instruction: "Write a sandwich recipe." },
+        signal: new AbortController().signal,
+        user,
+      }),
+    );
+    expect(errors).toEqual([]);
+    expect(
+      chunks.filter((chunk) => chunk.type === "data-document-edit"),
+    ).toHaveLength(recipe.length + 1);
+    expect(generated(chunks)).toEqual([
+      {
+        data: { operations: recipe, status: "generated" },
+        type: "data-document-edit",
+      },
+    ]);
+    const accepted = applyDocumentOperations(request.blocks, recipe);
+    expect(accepted.map((item) => item.type)).toEqual([
+      "heading",
+      "paragraph",
+      "heading",
+      "bulletListItem",
+      "bulletListItem",
+      "heading",
+      "numberedListItem",
+      "numberedListItem",
+    ]);
+    expect(accepted.every((item) => !item.children?.length)).toBe(true);
+
+    const options = mocks.stream.mock.calls[0]?.[1];
+    const schema = standardSchemaToJSONSchema(
+      toStandardSchema(options.structuredOutput.schema),
+      { io: "input" },
+    );
+    // Insert payloads used to be {}, because the document parser accepts unknown
+    // input before validating it. The model now receives the recursive variants.
+    const insert = (
+      schema as {
+        properties: {
+          operations: {
+            items: {
+              oneOf: {
+                properties: { type: { const: string }; block?: unknown };
+              }[];
+            };
+          };
+        };
+      }
+    ).properties.operations.items.oneOf.find(
+      (variant) => variant.properties.type.const === "insert",
+    );
+    expect(insert?.properties.block).not.toEqual({});
+    expect(JSON.stringify(insert?.properties.block)).toContain("$ref");
+    expect(JSON.stringify(schema)).toContain('"children"');
+  });
+
   it("streams transient previews and emits only a complete, atomically valid proposal", async () => {
     const before = structuredClone(request);
     const response = await streamDocumentWriter({
@@ -330,7 +440,36 @@ describe("document writer proposal stream", () => {
       [
         {
           afterId: null,
-          block: { id: "new", type: "invented" },
+          block: {
+            id: "7de10000-0000-4000-8000-000000000001",
+            type: "invented",
+          },
+          parentId: null,
+          type: "insert",
+        },
+      ],
+    ],
+    [
+      "non-UUID insert",
+      [
+        {
+          afterId: null,
+          block: { content: "Cannot save", id: "new-block", type: "paragraph" },
+          parentId: null,
+          type: "insert",
+        },
+      ],
+    ],
+    [
+      "non-UUID nested insert",
+      [
+        {
+          afterId: null,
+          block: {
+            children: [{ id: "child", type: "paragraph" }],
+            id: "00000000-0000-4000-8000-000000000001",
+            type: "paragraph",
+          },
           parentId: null,
           type: "insert",
         },
@@ -344,7 +483,7 @@ describe("document writer proposal stream", () => {
         {
           afterId: null,
           block: {
-            id: "opaque",
+            id: "7de10000-0000-4000-8000-000000000002",
             payload: { private: "content" },
             type: "legacyUnknown",
           },
@@ -369,8 +508,14 @@ describe("document writer proposal stream", () => {
         {
           afterId: null,
           block: {
-            children: [{ id: "opaque", payload: {}, type: "legacyUnknown" }],
-            id: "new",
+            children: [
+              {
+                id: "7de10000-0000-4000-8000-000000000002",
+                payload: {},
+                type: "legacyUnknown",
+              },
+            ],
+            id: "7de10000-0000-4000-8000-000000000003",
             type: "paragraph",
           },
           parentId: null,

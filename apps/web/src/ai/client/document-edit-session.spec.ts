@@ -115,7 +115,7 @@ test("valid completion commits once and one Undo preserves the original rich doc
   expect(f.editor.state.doc.eq(before)).toBe(true);
 });
 
-test("progressive preview never enters the document or its ordinary commit path", async () => {
+test("inline drafts use the document surface without changing accepted content or saving", async () => {
   const f = fixture();
   f.select();
   const run = f.session.run(instruction);
@@ -131,19 +131,30 @@ test("progressive preview never enters the document or its ordinary commit path"
     expect(f.session.getSnapshot().blocks).toHaveLength(1),
   );
   expect(f.session.getSnapshot().blocks[0]?.content).toBe("preview");
+  expect(f.editor.isEditable).toBe(false);
+  expect(f.editor.view.dom.hidden).toBe(true);
+  expect(
+    f.editor.view.dom.parentElement?.querySelector("[data-ai-inline-draft]")
+      ?.textContent,
+  ).toContain("Before preview after");
   expect(f.text()).toBe("Before target afterUnrelated");
   expect(f.onCommit).not.toHaveBeenCalled();
   f.stream(0).finish([update("final")]);
   expect(await run).toMatchObject({ status: "applied" });
   expect(f.text()).toBe("Before final afterUnrelated");
+  expect(f.editor.isEditable).toBe(true);
+  expect(f.editor.view.dom.hidden).toBe(false);
+  expect(
+    f.editor.view.dom.parentElement?.querySelector("[data-ai-inline-draft]"),
+  ).toBeNull();
 });
 
 test("an unrelated edit shifts the target without overwriting the human edit", async () => {
   const f = fixture();
   f.select();
   f.session.prepare();
-  const run = f.session.run(instruction);
   f.editor.view.dispatch(f.editor.state.tr.insertText("Human ", 2));
+  const run = f.session.run(instruction);
   f.editor.view.dispatch(
     f.editor.state.tr.setSelection(
       TextSelection.create(
@@ -160,30 +171,55 @@ test("an unrelated edit shifts the target without overwriting the human edit", a
   expect(f.text()).toBe("Human Before target afterUnrelated");
 });
 
-test("overlap aborts immediately, ignores late output, and Retry retains the original scope", async () => {
+test("writing locks all content commands, cancellation restores the target, and Retry stays scoped", async () => {
   const f = fixture();
   f.select();
   f.session.prepare();
+  const before = f.editor.state.doc;
+  const selection = f.editor.state.selection;
   const run = f.session.run(instruction);
+  expect(f.editor.isEditable).toBe(false);
   f.editor.view.dispatch(f.editor.state.tr.insertText(" new", 2 + 10));
-  expect(f.transport.mock.calls[0]?.[1].aborted).toBe(true);
-  expect(f.session.getSnapshot()).toMatchObject({
-    blocks: [],
-    status: "conflict",
-  });
+  f.editor.view.dispatch(f.editor.state.tr.insertText("outside", 2));
+  expect(f.editor.state.doc).toBe(before);
+  expect(f.session.getSnapshot().status).toBe("generating");
+  f.session.cancel();
+  expect(await run).toMatchObject({ status: "cancelled" });
   expect(f.editor.isEditable).toBe(true);
-  const human = f.text();
-  f.stream(0).finish([update("Must not apply")]);
-  expect(await run).toMatchObject({ status: "conflict" });
-  expect(f.text()).toBe(human);
+  expect(f.editor.state.doc).toBe(before);
+  expect(f.editor.state.selection.eq(selection)).toBe(true);
+  expect(f.onCommit).not.toHaveBeenCalled();
   const retry = f.session.retry();
   expect(f.transport.mock.calls[1]?.[0].blocks).toHaveLength(1);
-  expect(f.transport.mock.calls[1]?.[0].blocks[0]?.content).toEqual([
-    { styles: {}, text: "tar newget", type: "text" },
-  ]);
   f.stream(1).finish([update("Recovered")]);
   expect(await retry).toMatchObject({ status: "applied" });
   expect(f.text()).toBe("Before Recovered afterUnrelated");
+});
+
+test("a terminal finish applies without waiting for usage accounting to close the HTTP stream", async () => {
+  const f = fixture();
+  const run = f.session.run(instruction);
+  f.stream().write({
+    data: { operations: [update("Done")], status: "generated" },
+    type: "data-document-edit",
+  });
+  f.stream().write({ finishReason: "stop", type: "finish" });
+  expect(await run).toMatchObject({ status: "applied" });
+  expect(f.text()).toBe("DoneUnrelated");
+  f.stream().close();
+});
+
+test("manual scrolling pauses following until explicitly resumed", async () => {
+  const f = fixture();
+  const run = f.session.run(instruction);
+  document.documentElement.dispatchEvent(
+    new WheelEvent("wheel", { deltaY: -20 }),
+  );
+  expect(f.session.getSnapshot().following).toBe(false);
+  f.session.followWriting();
+  expect(f.session.getSnapshot().following).toBe(true);
+  f.session.cancel();
+  expect(await run).toMatchObject({ status: "cancelled" });
 });
 
 test("a full-document request cancels on any content edit, including before the tool starts", async () => {
@@ -222,6 +258,7 @@ test.each([
   "missing-finish",
   "error",
   "invalid-operation",
+  "invalid-insert-id",
   "duplicate-final",
   "bad-finish",
 ] as const)("%s discards the entire proposal", async (failure) => {
@@ -231,6 +268,19 @@ test.each([
   if (failure === "missing-finish") stream.finish([update("Bad")], false);
   else if (failure === "invalid-operation")
     stream.finish([{ id: "outside", type: "remove" }]);
+  else if (failure === "invalid-insert-id")
+    stream.finish([
+      {
+        afterId: "a",
+        block: {
+          content: "Cannot persist",
+          id: "not-a-uuid",
+          type: "paragraph",
+        },
+        parentId: null,
+        type: "insert",
+      },
+    ]);
   else if (failure === "error") {
     stream.write({ errorText: "Provider failed", type: "error" });
     stream.close();
@@ -309,5 +359,19 @@ test("unsupported prepared selection cannot become a whole-document Retry", asyn
   expect(await f.session.run(instruction)).toMatchObject({ status: "error" });
   expect(f.session.getSnapshot()).toMatchObject({ canRetry: false });
   await f.session.retry();
+  expect(f.onCommit).not.toHaveBeenCalled();
+});
+
+test("failed draft initialization restores the source and leaves no draft host", async () => {
+  const f = fixture();
+  vi.spyOn(f.editor, "registerPlugin").mockImplementationOnce(() => {
+    throw new Error("Cannot mount draft");
+  });
+  expect(await f.session.run(instruction)).toMatchObject({ status: "error" });
+  expect(f.editor.isEditable).toBe(true);
+  expect(f.editor.view.dom.hidden).toBe(false);
+  expect(
+    f.editor.view.dom.parentElement?.querySelector("[data-ai-inline-draft]"),
+  ).toBeNull();
   expect(f.onCommit).not.toHaveBeenCalled();
 });

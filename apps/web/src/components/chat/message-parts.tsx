@@ -53,7 +53,17 @@ const labels: Record<string, string> = {
   webSearch: "Search web",
   write: "Edit writing",
 };
-function Activity({ part }: { part: Part }) {
+/** Empty assistant/step-start messages do not mean the model has answered. */
+export function isMessageActivelyStreaming(message?: UIMessage) {
+  if (message?.role !== "assistant") return false;
+  return message.parts.some((part) =>
+    part.type === "text" || part.type === "reasoning"
+      ? part.state === "streaming" && Boolean(part.text.trim())
+      : isToolUIPart(part) &&
+        (part.state === "input-streaming" || part.state === "input-available"),
+  );
+}
+function Activity({ part, active }: { part: Part; active: boolean }) {
   if (part.type === "source-url") {
     const href = safeChatLink(part.url);
     if (!href) return null;
@@ -88,13 +98,15 @@ function Activity({ part }: { part: Part }) {
       <TraceCollapsible>
         <TraceCollapsibleTrigger>
           <TraceLine
-            status={part.state === "streaming" ? "running" : undefined}
+            status={
+              active && part.state === "streaming" ? "running" : undefined
+            }
           >
             <TraceIcon>
               <BrainIcon />
             </TraceIcon>
             <TraceTitle>
-              {part.state === "streaming" ? "Thinking" : "Thought"}
+              {active && part.state === "streaming" ? "Thinking" : "Thought"}
             </TraceTitle>
           </TraceLine>
         </TraceCollapsibleTrigger>
@@ -105,10 +117,24 @@ function Activity({ part }: { part: Part }) {
     );
   if (!isToolUIPart(part)) return null;
   const name = getToolName(part);
-  const running =
+  const incomplete =
     part.state === "input-streaming" || part.state === "input-available";
+  const running = active && incomplete;
+  const outputStatus =
+    part.state === "output-available" &&
+    typeof part.output === "object" &&
+    part.output !== null &&
+    "status" in part.output
+      ? part.output.status
+      : undefined;
+  const cancelled = outputStatus === "cancelled";
+  const conflicted = outputStatus === "conflict";
   const failed =
-    part.state === "output-error" || part.state === "output-denied";
+    part.state === "output-error" ||
+    part.state === "output-denied" ||
+    (!active && incomplete) ||
+    outputStatus === "error" ||
+    conflicted;
   const output = "output" in part ? part.output : undefined;
   const summary =
     output &&
@@ -126,7 +152,15 @@ function Activity({ part }: { part: Part }) {
       </TraceIcon>
       <TraceTitle>{labels[name] ?? "Assistant action"}</TraceTitle>
       <TraceDescription>
-        {failed ? "Failed" : running ? "Running" : "Complete"}
+        {cancelled
+          ? "Cancelled"
+          : conflicted
+            ? "Conflict"
+            : failed
+              ? "Failed"
+              : running
+                ? "Running"
+                : "Complete"}
       </TraceDescription>
     </TraceLine>
   );
@@ -135,12 +169,21 @@ function Activity({ part }: { part: Part }) {
     <TraceCollapsible>
       <TraceCollapsibleTrigger>{line}</TraceCollapsibleTrigger>
       <TraceCollapsibleContent>
-        {failed ? "This action could not complete. Please retry." : summary}
+        {summary ??
+          (failed
+            ? "This action could not complete. Please retry."
+            : undefined)}
       </TraceCollapsibleContent>
     </TraceCollapsible>
   );
 }
-export function ChatMessageParts({ parts }: { parts: Part[] }) {
+export function ChatMessageParts({
+  parts,
+  active = false,
+}: {
+  parts: Part[];
+  active?: boolean;
+}) {
   return messageSegments(parts).map((segment, index) =>
     segment.kind === "text" ? (
       <ChatMarkdown key={index} text={segment.text} />
@@ -148,7 +191,7 @@ export function ChatMessageParts({ parts }: { parts: Part[] }) {
       <Trace key={index}>
         {segment.parts.map((part, partIndex) => (
           <Fragment key={partIndex}>
-            <Activity part={part} />
+            <Activity part={part} active={active} />
           </Fragment>
         ))}
       </Trace>

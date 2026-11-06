@@ -226,7 +226,14 @@ export function createDocumentEditor({
       identityExtension(() => createEditorId()),
       nativeBlockDragExtension,
     ],
-    onUpdate: ({ editor: updated }) => {
+    onUpdate: ({ editor: updated, transaction, appendedTransactions }) => {
+      // Tiptap also emits update for option-only changes such as setEditable.
+      // Those notifications must not normalize content into a persistence edit.
+      if (
+        !transaction.docChanged &&
+        !appendedTransactions.some((item) => item.docChanged)
+      )
+        return;
       try {
         pending = readDocument(updated.state.doc);
       } catch (error) {

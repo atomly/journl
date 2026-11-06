@@ -2,16 +2,17 @@ import {
   applyDocumentOperations,
   type DocumentBlock,
   type DocumentOperation,
-  zDocumentOperation,
 } from "@acme/document";
 import type { Editor } from "@tiptap/core";
 import { DefaultChatTransport, type UIMessageChunk } from "ai";
 import { z } from "zod";
+import { zDocumentWriterOperation } from "../document-writer-operation";
 import type { DocumentWriterRequest } from "../server/document-writer-request";
 import {
   captureDocumentEditTarget,
   type DocumentEditTarget,
 } from "./document-edit-target";
+import { InlineDocumentDraft } from "./inline-document-draft";
 
 type Instruction = Pick<
   DocumentWriterRequest,
@@ -32,12 +33,13 @@ type Snapshot = {
   message: string;
   blocks: readonly DocumentBlock[];
   revision: number;
+  following: boolean;
 };
 export type EditTransport = (
   request: DocumentWriterRequest,
   signal: AbortSignal,
 ) => Promise<ReadableStream<UIMessageChunk>>;
-const operationsSchema = z.array(zDocumentOperation);
+const operationsSchema = z.array(zDocumentWriterOperation);
 const finalSchema = z.object({
   operations: operationsSchema,
   status: z.literal("generated"),
@@ -61,11 +63,13 @@ export class DocumentEditSession {
   private instruction: Instruction | undefined;
   private controller: AbortController | undefined;
   private applying = false;
+  private draft: InlineDocumentDraft | undefined;
   private destroyed = false;
   private listeners = new Set<() => void>();
   private snapshot: Snapshot = {
     blocks: [],
     canRetry: false,
+    following: true,
     message: "",
     requested: false,
     revision: 0,
@@ -80,6 +84,9 @@ export class DocumentEditSession {
     editor.on("destroy", this.destroy);
   }
   getSnapshot = () => this.snapshot;
+  get draftSurface() {
+    return this.draft?.surface;
+  }
   subscribe = (listener: () => void) => {
     this.listeners.add(listener);
     return () => {
@@ -90,11 +97,13 @@ export class DocumentEditSession {
     status: Status,
     message: string,
     blocks: readonly DocumentBlock[] = [],
+    following = this.snapshot.following,
   ) {
     if (this.destroyed) return;
     this.snapshot = {
       blocks,
       canRetry: Boolean(this.instruction && this.target),
+      following,
       message,
       requested: Boolean(this.instruction),
       revision: this.snapshot.revision + 1,
@@ -110,7 +119,7 @@ export class DocumentEditSession {
     if (this.applying || !this.target) return;
     const valid = this.target.map(transaction);
     if (
-      (!valid || !this.editor.isEditable) &&
+      (!valid || (!this.draft && !this.editor.isEditable)) &&
       ["prepared", "generating"].includes(this.snapshot.status)
     ) {
       this.controller?.abort({
@@ -129,6 +138,7 @@ export class DocumentEditSession {
       message: "AI edit cancelled. Your writing was kept.",
       status: "cancelled",
     });
+    this.closeDraft();
     this.target = undefined;
     this.instruction = undefined;
     try {
@@ -157,6 +167,7 @@ export class DocumentEditSession {
       message: "AI edit cancelled. Your writing was kept.",
       status: "cancelled",
     });
+    this.closeDraft();
     this.publish("cancelled", "AI edit cancelled. Your writing was kept.");
   };
   retry = async () => {
@@ -216,17 +227,68 @@ export class DocumentEditSession {
     const target = this.target;
     const controller = new AbortController();
     this.controller = controller;
-    this.publish(
-      "generating",
-      "AI is editing. You can keep writing outside the target.",
-    );
     let reader: ReadableStreamDefaultReader<UIMessageChunk> | undefined;
+    let previewFrame: number | undefined;
+    let latestPartial: unknown[] | undefined;
+    let lastCompleteBatch: string | undefined;
+    const renderPartial = () => {
+      previewFrame = undefined;
+      if (
+        controller.signal.aborted ||
+        this.destroyed ||
+        this.controller !== controller ||
+        !latestPartial
+      )
+        return;
+      const complete: DocumentOperation[] = [];
+      for (const operation of latestPartial) {
+        const parsed = zDocumentWriterOperation.safeParse(operation);
+        if (!parsed.success) break;
+        complete.push(parsed.data);
+      }
+      const batch = JSON.stringify(complete);
+      if (batch === lastCompleteBatch) return;
+      try {
+        const document = target.preview(complete);
+        this.draft?.update(document);
+        lastCompleteBatch = batch;
+        this.publish(
+          "generating",
+          this.snapshot.message,
+          applyDocumentOperations(target.blocks, complete),
+        );
+      } catch {
+        // Wait for a complete valid batch, keeping the last visible draft intact.
+      }
+    };
     try {
+      this.draft = new InlineDocumentDraft(this.editor, (following) => {
+        this.publish(
+          this.snapshot.status,
+          this.snapshot.message,
+          this.snapshot.blocks,
+          following,
+        );
+      });
+      this.publish(
+        "generating",
+        "AI is writing. The editor is locked until writing finishes.",
+        [],
+        true,
+      );
       const stream = await this.stream(
         { ...instruction, blocks: target.blocks, targetEditor: this.id },
         controller.signal,
       );
       reader = stream.getReader();
+      controller.signal.addEventListener(
+        "abort",
+        () => {
+          void reader?.cancel().catch(() => {});
+        },
+        { once: true },
+      );
+      controller.signal.throwIfAborted();
       let proposed: DocumentOperation[] | undefined;
       let finished = false;
       while (true) {
@@ -245,6 +307,8 @@ export class DocumentEditSession {
           if (finished || value.finishReason !== "stop")
             throw new Error("The AI edit did not complete. Please retry.");
           finished = true;
+          // finish is terminal. Usage accounting may keep the HTTP stream open.
+          break;
         }
         if (value.type === "data-document-edit") {
           if (finished)
@@ -255,6 +319,8 @@ export class DocumentEditSession {
               throw new Error("The AI edit completed more than once.");
             proposed = final.data.operations;
             applyDocumentOperations(target.blocks, proposed);
+            if (previewFrame !== undefined) cancelAnimationFrame(previewFrame);
+            previewFrame = undefined;
           } else {
             const partial = z
               .object({
@@ -264,23 +330,11 @@ export class DocumentEditSession {
               .parse(value.data);
             if (proposed)
               throw new Error("The AI edit resumed after completion.");
-            // Only complete, valid operations enter the read-only preview. Partial JSON stays out of the document.
+            // Only complete, validated operations enter the inline draft.
             if (Array.isArray(partial.operations)) {
-              const complete: DocumentOperation[] = [];
-              for (const operation of partial.operations) {
-                const parsed = zDocumentOperation.safeParse(operation);
-                if (!parsed.success) break;
-                complete.push(parsed.data);
-              }
-              try {
-                this.publish(
-                  "generating",
-                  this.snapshot.message,
-                  applyDocumentOperations(target.blocks, complete),
-                );
-              } catch {
-                /* Wait for a complete valid batch. */
-              }
+              latestPartial = partial.operations;
+              if (previewFrame === undefined)
+                previewFrame = requestAnimationFrame(renderPartial);
             }
           }
         }
@@ -288,6 +342,7 @@ export class DocumentEditSession {
       if (!finished || !proposed)
         throw new Error("The AI edit did not complete. Please retry.");
       controller.signal.throwIfAborted();
+      this.closeDraft();
       this.applying = true;
       try {
         if (!target.apply(proposed))
@@ -306,13 +361,23 @@ export class DocumentEditSession {
             : "The AI edit failed. Please retry.",
         );
     } finally {
+      if (previewFrame !== undefined) cancelAnimationFrame(previewFrame);
+      if (this.controller === controller) this.closeDraft();
       await reader?.cancel().catch(() => {});
       reader?.releaseLock();
-      if (this.controller === controller) this.controller = undefined;
+      if (this.controller === controller) {
+        this.closeDraft();
+        this.controller = undefined;
+      }
     }
     if (controller.signal.aborted)
       return controller.signal.reason as { status: Status; message: string };
     return { message: this.snapshot.message, status: this.snapshot.status };
+  }
+  followWriting = () => this.draft?.follow();
+  private closeDraft() {
+    this.draft?.destroy();
+    this.draft = undefined;
   }
   destroy = () => {
     if (this.destroyed) return;
@@ -320,6 +385,7 @@ export class DocumentEditSession {
       message: "AI edit cancelled. Your writing was kept.",
       status: "cancelled",
     });
+    this.closeDraft();
     this.destroyed = true;
     this.editor.off("transaction", this.onTransaction);
     this.editor.off("destroy", this.destroy);

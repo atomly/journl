@@ -11,7 +11,7 @@ import type { DocumentEditSession } from "~/ai/client/document-edit-session";
 import type { JournlAgentContext } from "~/ai/mastra/agents/journl-agent-context";
 import { useReferenceClient } from "~/components/references/use-reference-client";
 import { useJournlAgent } from "~/hooks/use-journl-agent";
-import { DocumentEditPreview } from "./document-edit-preview";
+import { DocumentWritingStatus } from "./document-writing-status";
 
 export function ConnectedDocumentEditor(
   props: Omit<ComponentProps<typeof DocumentEditor>, "references"> & {
@@ -52,7 +52,7 @@ export function ConnectedDocumentEditor(
       className={cn("journl-document-editor", props.className)}
       references={references ?? undefined}
       afterContent={
-        session ? <DocumentEditPreview session={session} /> : undefined
+        session ? <DocumentWritingStatus session={session} /> : undefined
       }
       services={services}
       toolbarMode={props.toolbarMode ?? (mobile ? "sticky" : "floating")}

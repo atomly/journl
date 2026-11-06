@@ -18,12 +18,12 @@
   margin-bottom: 24px;
 }
 
-.journl-document-editor .better-editor-tiptap-host {
+.journl-document-editor > .better-editor-tiptap-host {
   margin-top: 24px;
 }
 
 @media (min-width: 768px) {
-  .journl-document-editor .better-editor-tiptap-host {
+  .journl-document-editor > .better-editor-tiptap-host {
     margin-top: 32px;
   }
 }
@@ -32,4 +32,10 @@
 .better-editor-formatting-toolbar.journl-editor-toolbar {
   border-color: var(--sidebar-border);
   border-radius: var(--radius);
+}
+
+/* AI writing uses the document surface. Mutation controls stay hidden while locked. */
+.journl-document-editor[data-ai-writing]
+:is([data-better-editor-toolbar-mode], [data-tiptap-controls]) {
+  display: none;
 }

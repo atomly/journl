@@ -17,6 +17,7 @@ import { useChatPresentation } from "./chat-presentation";
 import { ChatSurfaceContext } from "./chat-surface";
 import { ChatComposer } from "./composer";
 import { ChatMessage } from "./message";
+import { isMessageActivelyStreaming } from "./message-parts";
 import "./chat.css";
 
 export function ChatPanel({ welcome }: { welcome: ReactNode }) {
@@ -24,7 +25,8 @@ export function ChatPanel({ welcome }: { welcome: ReactNode }) {
   const { messages, status, error, clearError, regenerate } =
     useChatPresentation();
   const busy = status === "submitted" || status === "streaming";
-  const waiting = busy && messages.at(-1)?.role !== "assistant";
+  const lastMessage = messages.at(-1);
+  const waiting = busy && !isMessageActivelyStreaming(lastMessage);
   return (
     <ChatSurfaceContext.Provider value={surface}>
       <section
@@ -41,18 +43,21 @@ export function ChatPanel({ welcome }: { welcome: ReactNode }) {
                     {welcome}
                   </MessageScrollerItem>
                 )}
-                {messages.map((message) => (
+                {messages.map((message, index) => (
                   <MessageScrollerItem
                     key={message.id}
                     messageId={message.id}
                     scrollAnchor={message.role === "user"}
                   >
-                    <ChatMessage message={message} />
+                    <ChatMessage
+                      message={message}
+                      active={busy && index === messages.length - 1}
+                    />
                   </MessageScrollerItem>
                 ))}
                 {waiting && (
                   <MessageScrollerItem messageId="pending">
-                    <Trace>
+                    <Trace role="status" aria-label="Thinking">
                       <TraceLine status="running">
                         <TraceIcon>
                           <BrainIcon />

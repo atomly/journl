@@ -108,10 +108,11 @@ applied through `pnpm db:push`, which runs Drizzle Kit's schema comparison and
 update flow.
 
 AI writing starts from chat and targets the current page or journal entry, using
-highlighted text when present. Its preview stays outside accepted content.
-Completed, validated edits use the normal editor commit and save queue, with one
-Undo step. The editor stays editable: changes outside the target continue normally;
-changes inside it stop generation and offer explicit Retry against the latest text.
+highlighted text when present. Generated blocks appear inline while the editor is
+locked. Scrolling follows the changed blocks until the user scrolls away; Follow
+writing resumes it. The accepted document and history remain intact during
+streaming. Cancellation or failure restores them. Completed, validated edits use
+the normal editor commit and save queue, with one Undo step.
 The first implementation supports exact selections inside one text block and
 complete sibling blocks. Partial selections across blocks and structural rewrites
 of partial inline selections return an error instead of expanding their scope.

@@ -67,7 +67,18 @@ export function JournlChatProvider({
         if (!tool) {
           return;
         }
-        await tool.execute(toolCall, chat);
+        try {
+          await tool.execute(toolCall, instance);
+        } catch {
+          // Keep invalid arguments and failed client actions in the native tool
+          // lifecycle. Do not await a queued update inside onToolCall.
+          void instance.addToolOutput({
+            errorText: "This action could not complete. Please retry.",
+            state: "output-error",
+            tool: toolCall.toolName,
+            toolCallId: toolCall.toolCallId,
+          });
+        }
       },
       sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithToolCalls,
       transport: new DefaultChatTransport({

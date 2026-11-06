@@ -35,8 +35,10 @@ function Action({
 }
 export const ChatMessage = memo(function ChatMessage({
   message,
+  active = false,
 }: {
   message: UIMessage;
+  active?: boolean;
 }) {
   const { status, sendMessage, regenerate } = useChatActions();
   const busy = status === "submitted" || status === "streaming";
@@ -95,9 +97,9 @@ export const ChatMessage = memo(function ChatMessage({
             </BubbleContent>
           </Bubble>
         ) : (
-          <ChatMessageParts parts={message.parts} />
+          <ChatMessageParts parts={message.parts} active={active} />
         )}
-        {!editing && (
+        {!editing && (user || Boolean(text)) && (
           <MessageFooter>
             {user ? (
               <Action

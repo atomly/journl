@@ -208,6 +208,39 @@ export class DocumentEditTarget {
     return next;
   }
 
+  /** Build a visible draft without changing the accepted editor or consuming its target. */
+  preview(operations: readonly DocumentOperation[]): Node {
+    const after = applyDocumentOperations(this.blocks, operations);
+    const replacement = toTiptapDocument(after, this.editor.state.schema);
+    if (this.kind === "document") return replacement;
+    if (this.kind === "blocks") {
+      if (!this.firstId || !this.lastId) throw retryError();
+      const combined = replaceScope(
+        fromTiptapDocument(this.trackedDoc),
+        this.firstId,
+        this.lastId,
+        after,
+      );
+      documentRows(combined);
+      return toTiptapDocument(combined, this.editor.state.schema);
+    }
+    const body = replacement.firstChild?.firstChild;
+    const currentBody = this.trackedDoc.resolve(this.current.from).parent;
+    if (
+      after.length > 1 ||
+      (after.length === 1 &&
+        (after[0]?.id !== this.firstId ||
+          replacement.firstChild?.childCount !== 1 ||
+          !body?.sameMarkup(currentBody)))
+    )
+      throw new Error("Select complete blocks to change their structure.");
+    return this.editor.state.tr.replaceWith(
+      this.current.from,
+      this.current.to,
+      body?.content ?? Fragment.empty,
+    ).doc;
+  }
+
   apply(operations: readonly DocumentOperation[]): boolean {
     if (
       !this.valid ||

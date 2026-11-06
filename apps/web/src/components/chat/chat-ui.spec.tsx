@@ -4,7 +4,11 @@ import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import { ChatComposer } from "./composer";
 import { safeChatLink } from "./links";
-import { ChatMessageParts, messageSegments } from "./message-parts";
+import {
+  ChatMessageParts,
+  isMessageActivelyStreaming,
+  messageSegments,
+} from "./message-parts";
 
 const fixture = vi.hoisted(() => ({
   busy: false,
@@ -245,5 +249,112 @@ test.each(["missing", "rejected"])(
         Object.defineProperty(document, "execCommand", execCommand);
       else Reflect.deleteProperty(document, "execCommand");
     }
+  },
+);
+
+test("thinking remains necessary for empty assistant messages and gaps between completed steps", () => {
+  const message = { id: "answer", parts: [], role: "assistant" as const };
+  expect(isMessageActivelyStreaming(message)).toBe(false);
+  expect(
+    isMessageActivelyStreaming({ ...message, parts: [{ type: "step-start" }] }),
+  ).toBe(false);
+  expect(
+    isMessageActivelyStreaming({
+      ...message,
+      parts: [{ state: "done", text: "Checked", type: "reasoning" }],
+    }),
+  ).toBe(false);
+  expect(
+    isMessageActivelyStreaming({
+      ...message,
+      parts: [{ state: "streaming", text: "", type: "text" }],
+    }),
+  ).toBe(false);
+  expect(
+    isMessageActivelyStreaming({
+      ...message,
+      parts: [{ state: "streaming", text: "Answer", type: "text" }],
+    }),
+  ).toBe(true);
+  expect(
+    isMessageActivelyStreaming({
+      ...message,
+      parts: [
+        {
+          input: {},
+          state: "input-available",
+          toolCallId: "call",
+          type: "tool-write",
+        },
+      ],
+    }),
+  ).toBe(true);
+});
+
+test("unresolved tools stop showing Running after cancellation or stream completion", async () => {
+  const parts = [
+    {
+      input: {},
+      state: "input-available" as const,
+      toolCallId: "call",
+      type: "tool-write" as const,
+    },
+  ];
+  await act(async () => root.render(<ChatMessageParts parts={parts} active />));
+  expect(host.textContent).toContain("Running");
+  await act(async () =>
+    root.render(<ChatMessageParts parts={parts} active={false} />),
+  );
+  expect(host.textContent).toContain("Failed");
+  expect(host.textContent).not.toContain("Running");
+  expect(host.querySelector('[data-status="running"]')).toBeNull();
+});
+
+test("a writing session error is not labelled Complete", async () => {
+  await act(async () =>
+    root.render(
+      <ChatMessageParts
+        parts={[
+          {
+            input: {},
+            output: { message: "Could not write", status: "error" },
+            state: "output-available",
+            toolCallId: "call",
+            type: "tool-write",
+          },
+        ]}
+      />,
+    ),
+  );
+  expect(host.textContent).toContain("Failed");
+  expect(host.textContent).not.toContain("Complete");
+});
+
+test.each(["cancelled", "conflict"])(
+  "writing status %s is never reported as complete",
+  async (status) => {
+    await act(async () =>
+      root.render(
+        <ChatMessageParts
+          parts={[
+            {
+              input: {},
+              output: { message: "Your original writing was kept.", status },
+              state: "output-available",
+              toolCallId: "write",
+              type: "tool-write",
+            },
+          ]}
+        />,
+      ),
+    );
+    expect(host.textContent).toContain(
+      status === "cancelled" ? "Cancelled" : "Conflict",
+    );
+    expect(host.textContent).not.toContain("Complete");
+    await act(async () =>
+      host.querySelector<HTMLButtonElement>("button")?.click(),
+    );
+    expect(host.textContent).toContain("Your original writing was kept.");
   },
 );

@@ -5,10 +5,12 @@ import { createClientTool } from "../../utils/create-client-tool";
 import { zWriteInput } from "./schema";
 
 export function useWriteTool() {
-  const { getEditors } = useJournlAgent();
+  const { getEditors, getEditTarget } = useJournlAgent();
   return createClientTool({
     execute: async (toolCall, chat) => {
-      const entry = getEditors().get(toolCall.input.targetEditor);
+      const target = getEditTarget();
+      const entry =
+        target && getEditors().get(target.id) === target ? target : undefined;
       const output = entry
         ? await entry.session.run({
             instruction: stripOpenAICitationTokens(toolCall.input.agentPrompt),
@@ -16,7 +18,7 @@ export function useWriteTool() {
           })
         : {
             message:
-              "Open and focus the target page or journal entry, then retry.",
+              "The active document changed or is not ready. Send your request again from the page you want to edit.",
             status: "error",
           };
       // The SDK processes onToolCall inside its message queue. Awaiting this

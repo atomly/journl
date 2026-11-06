@@ -21,10 +21,11 @@ import { z } from "zod/v4";
 import { zDocumentWriterOperation } from "~/ai/document-writer-operation";
 import { miniModel } from "~/ai/providers/openai/text";
 import { startModelUsage } from "~/workflows/model-usage";
+import { createWriterIdentityMap } from "./document-writer-ids";
 import type { DocumentWriterRequest } from "./document-writer-request";
 
 const outputSchema = z.strictObject({
-  operations: z.array(zDocumentWriterOperation),
+  operations: z.array(zDocumentOperation),
 });
 
 // zDocumentBlock validates an unknown input through parseBlock. Describe inserts
@@ -35,7 +36,7 @@ const insertedBlockSchema: z.ZodType<DocumentBlock> = z.lazy(() =>
     zBlockData.options.map((variant) =>
       variant.extend({
         children: z.array(insertedBlockSchema).optional(),
-        id: z.uuid(),
+        id: z.string().min(1),
       }),
     ),
   ),
@@ -79,11 +80,16 @@ type WriterMessage = UIMessage<
 const documentWriter = new Agent({
   id: "document-writer",
   instructions: `Generate a proposed edit to the supplied Journl document blocks.
-Return only an object containing operations from the supplied DocumentOperation schema.
+Return only compact JSON containing operations from the supplied DocumentOperation schema.
+An insert has NO top-level id. Its id is INSIDE block. Example:
+{"operations":[{"type":"insert","parentId":null,"afterId":null,"block":{"id":"new-1","type":"heading","props":{"level":2},"content":"Ingredients"}},{"type":"insert","parentId":null,"afterId":"new-1","block":{"id":"new-2","type":"bulletListItem","content":"Steak"}}]}
+For simple unformatted text, use a content string as in the example. For formatted text, use only valid inline content objects, never a mixture of strings and objects.
+An update instead has a top-level existing id and data, e.g. {"type":"update","id":"EXISTING_ID","data":{"type":"paragraph","content":"Revised text"}}.
 Use insert, update, remove, and move operations only.
 Use existing block IDs for update, remove, and move.
 For parentId and afterId, use existing block IDs or IDs inserted earlier in this operation batch. Use null for the root parent or the first sibling.
-Use fresh unique UUID identifiers for inserted blocks and their children. Never use labels or sequential strings as IDs.
+Give new blocks and their children unique temporary labels such as new-1 and new-2. The application assigns their permanent IDs.
+Never reuse an existing block ID for an insert. Use update to change an existing block. Reference new blocks by their temporary labels in later operations.
 An insert block has an id, a supported type, its content and props, and optional children, like the supplied blocks.
 Use the block types and data shapes described by update.data for inserted blocks.
 Write structured editor content, not Markdown source inside a paragraph.
@@ -117,6 +123,7 @@ export async function streamDocumentWriter({
   const stream = createUIMessageStream<WriterMessage>({
     execute: async ({ writer }) => {
       writer.write({ type: "start" });
+      const assignIdentities = createWriterIdentityMap(request.blocks);
       const abort = () => {
         writer.write({ type: "abort" });
         writer.setOutcome({ status: "aborted" });
@@ -139,13 +146,15 @@ export async function streamDocumentWriter({
               openai: {
                 reasoningEffort: request.reasoningEffort ?? "low",
                 store: false,
+                strictJsonSchema: false,
               },
             },
             structuredOutput: {
               errorStrategy: "strict",
-              // Native injection retains partial-object streaming and the shared
-              // validator without requiring OpenAI's strict-mode schema subset.
-              jsonPromptInjection: "system",
+              // Native JSON output prevents malformed JSON in long edits.
+              // The full document schema needs non-strict provider mode; our
+              // shared runtime validator still rejects invalid operations.
+              jsonPromptInjection: false,
               schema: modelOutputSchema,
             },
           },
@@ -168,11 +177,26 @@ export async function streamDocumentWriter({
               !failed &&
               !aborted
             ) {
-              writer.write({
-                data: { ...chunk.object, status: "generating" },
-                transient: true,
-                type: "data-document-edit",
-              });
+              if (!chunk.object || typeof chunk.object !== "object") continue;
+              const partial = chunk.object as { operations?: unknown };
+              if (!Array.isArray(partial.operations)) continue;
+              const complete: DocumentOperation[] = [];
+              for (const operation of partial.operations) {
+                const parsed = zDocumentOperation.safeParse(operation);
+                if (!parsed.success) break;
+                complete.push(parsed.data);
+              }
+              try {
+                const operations = assignIdentities(complete);
+                applyDocumentOperations(request.blocks, operations);
+                writer.write({
+                  data: { operations, status: "generating" },
+                  transient: true,
+                  type: "data-document-edit",
+                });
+              } catch {
+                // The next object chunk may complete this batch's references.
+              }
             }
           }
           if (signal.aborted || aborted) {
@@ -188,7 +212,10 @@ export async function streamDocumentWriter({
             throw new Error("Document generation did not finish successfully");
           }
 
-          const { operations } = outputSchema.parse(await result.object);
+          const generated = outputSchema.parse(await result.object);
+          const operations = z
+            .array(zDocumentWriterOperation)
+            .parse(assignIdentities(generated.operations));
           applyDocumentOperations(request.blocks, operations);
           if (signal.aborted) {
             abort();

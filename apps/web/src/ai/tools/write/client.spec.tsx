@@ -6,11 +6,15 @@ import { createRoot } from "react-dom/client";
 import { expect, test, vi } from "vitest";
 import { useWriteTool } from "./client";
 
-const fixture = vi.hoisted(() => ({ run: vi.fn() }));
+const fixture = vi.hoisted(() => {
+  const run = vi.fn();
+  return { active: true, entry: { id: "page:one", session: { run } }, run };
+});
 vi.mock("~/hooks/use-journl-agent", () => ({
   useJournlAgent: () => ({
     getEditors: () =>
-      new Map([["page:one", { session: { run: fixture.run } }]]),
+      fixture.active ? new Map([["page:one", fixture.entry]]) : new Map(),
+    getEditTarget: () => fixture.entry,
   }),
 }));
 
@@ -40,7 +44,6 @@ test("a writing tool completes through the real SDK message queue without deadlo
               input: {
                 agentPrompt: "Rewrite the paragraph",
                 reasoningEffort: "low",
-                targetEditor: "page:one",
               },
               toolCallId: "write-one",
               toolName: "write",
@@ -70,6 +73,41 @@ test("a writing tool completes through the real SDK message queue without deadlo
     });
   } finally {
     await chat.stop();
+    await act(async () => root.unmount());
+    vi.unstubAllGlobals();
+  }
+});
+
+test("a stale captured target is rejected instead of writing in the newly active document", async () => {
+  vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
+  fixture.active = false;
+  fixture.run.mockClear();
+  let tool: ReturnType<typeof useWriteTool> | undefined;
+  function Mount() {
+    tool = useWriteTool();
+    return null;
+  }
+  const root = createRoot(document.createElement("div"));
+  await act(async () => root.render(<Mount />));
+  const chat = new Chat<UIMessage>({});
+  const output = vi.spyOn(chat, "addToolOutput").mockResolvedValue();
+  try {
+    await tool?.execute(
+      {
+        input: { agentPrompt: "Rewrite this" },
+        toolCallId: "stale",
+        toolName: "write",
+      },
+      chat,
+    );
+    expect(fixture.run).not.toHaveBeenCalled();
+    expect(output).toHaveBeenCalledWith(
+      expect.objectContaining({
+        output: expect.objectContaining({ status: "error" }),
+      }),
+    );
+  } finally {
+    fixture.active = true;
     await act(async () => root.unmount());
     vi.unstubAllGlobals();
   }

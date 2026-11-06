@@ -107,9 +107,11 @@ Database schema changes live in [`packages/db/src`](./packages/db/src) and are
 applied through `pnpm db:push`, which runs Drizzle Kit's schema comparison and
 update flow.
 
-AI writing starts from chat and targets the current page or journal entry, using
-highlighted text when present. Generated blocks appear inline while the editor is
-locked. Scrolling follows the changed blocks until the user scrolls away; Follow
+AI writing starts from chat. The application binds it to the current page or
+journal entry, using highlighted text when present. The model does not choose an
+editor ID. Explicit AI navigation rebinds writing only after the destination is
+ready. New block IDs are assigned by the server and remain stable while streaming.
+Generated blocks appear inline while the editor is locked. Scrolling follows the changed blocks until the user scrolls away; Follow
 writing resumes it. The accepted document and history remain intact during
 streaming. Cancellation or failure restores them. Completed, validated edits use
 the normal editor commit and save queue, with one Undo step.

@@ -1,5 +1,13 @@
 import type { Editor } from "@tiptap/core";
-import { createContext, useCallback, useContext, useMemo, useRef } from "react";
+import { usePathname } from "next/navigation";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+} from "react";
 import { DocumentEditSession } from "~/ai/client/document-edit-session";
 import type { JournlAgentContext as AgentState } from "~/ai/mastra/agents/journl-agent-context";
 
@@ -18,8 +26,9 @@ type Awareness = {
     editor: Editor,
   ) => { session: DocumentEditSession; dispose: () => void };
   getEditors: () => Map<EditorId, RegisteredEditor>;
+  getEditTarget: () => RegisteredEditor | undefined;
   getSelections: () => { text: string }[];
-  prepareEdits: () => void;
+  prepareEdits: (expected?: EditorId) => boolean;
   cancelEdits: () => void;
   getReasoning: () => AgentState["reasoning"];
   getView: () => AgentState["view"];
@@ -33,16 +42,33 @@ export function JournlAgentProvider({
 }: {
   children: React.ReactNode;
 }) {
+  const pathname = usePathname();
   const state = useRef({
     editors: new Map<EditorId, RegisteredEditor>(),
+    editTarget: undefined as RegisteredEditor | undefined,
     focused: undefined as EditorId | undefined,
     listeners: new Set<() => void>(),
+    pathname,
     reasoning: "instant" as AgentState["reasoning"],
     revision: 0,
     view: { name: "other" } as AgentState["view"],
   });
+  const getView = useCallback((): AgentState["view"] => {
+    const { pathname, view } = state.current;
+    const page = pathname?.match(/^\/pages\/([^/]+)\/?$/);
+    if (page)
+      return {
+        id: page[1] ?? "",
+        name: "page",
+        title: view.name === "page" && view.id === page[1] ? view.title : "",
+      };
+    const entry = pathname?.match(/^\/journal\/(\d{4}-\d{2}-\d{2})\/?$/);
+    if (entry) return { date: entry[1] ?? "", name: "journal-entry" };
+    return pathname === "/journal" ? { name: "journal" } : { name: "other" };
+  }, []);
   const getEditors = useCallback(() => {
-    const { editors, view, focused } = state.current;
+    const { editors, focused } = state.current;
+    const view = getView();
     const id: EditorId | undefined =
       view.name === "page"
         ? `page:${view.id}`
@@ -55,11 +81,19 @@ export function JournlAgentProvider({
     return new Map(
       entry && !entry.editor.isDestroyed ? [[entry.id, entry]] : [],
     );
-  }, []);
+  }, [getView]);
   const notify = useCallback(() => {
     state.current.revision++;
     for (const listener of state.current.listeners) listener();
   }, []);
+  useLayoutEffect(() => {
+    if (state.current.pathname === pathname) return;
+    state.current.pathname = pathname;
+    for (const { session } of state.current.editors.values())
+      if (["prepared", "generating"].includes(session.getSnapshot().status))
+        session.cancel();
+    notify();
+  }, [pathname, notify]);
   const value = useMemo<Awareness>(
     () => ({
       cancelEdits: () => {
@@ -68,21 +102,28 @@ export function JournlAgentProvider({
             session.cancel();
       },
       getEditors,
+      getEditTarget: () => state.current.editTarget,
       getReasoning: () => state.current.reasoning,
       getRevision: () => state.current.revision,
       getSelections: () =>
         Array.from(getEditors().values(), ({ session }) => ({
           text: session.highlightedText(),
         })).filter(({ text }) => text),
-      getView: () => state.current.view,
-      prepareEdits: () => {
-        for (const { session } of getEditors().values()) {
+      getView,
+      prepareEdits: (expected) => {
+        const editors = getEditors();
+        state.current.editTarget = expected
+          ? editors.get(expected)
+          : editors.values().next().value;
+        if (!state.current.editTarget) return false;
+        for (const { session } of [state.current.editTarget]) {
           try {
             session.prepare();
           } catch {
             /* The write tool reports unsupported selections without blocking read-only chat. */
           }
         }
+        return true;
       },
       registerEditor: (id, editor) => {
         const session = new DocumentEditSession(editor, id);
@@ -112,16 +153,6 @@ export function JournlAgentProvider({
         notify();
       },
       setView: (view) => {
-        if (
-          JSON.stringify({ ...state.current.view, title: undefined }) !==
-          JSON.stringify({ ...view, title: undefined })
-        ) {
-          for (const { session } of state.current.editors.values())
-            if (
-              ["prepared", "generating"].includes(session.getSnapshot().status)
-            )
-              session.cancel();
-        }
         state.current.view = view;
         notify();
       },
@@ -156,7 +187,7 @@ export function JournlAgentProvider({
           check();
         }),
     }),
-    [getEditors, notify],
+    [getEditors, getView, notify],
   );
   return (
     <JournlAgentContext.Provider value={value}>

@@ -7,7 +7,7 @@ import { zNavigateJournalEntryInput } from "./schema";
 
 export function useNavigateJournalEntryTool() {
   const router = useRouter();
-  const { whenEditorReady } = useJournlAgent();
+  const { whenEditorReady, prepareEdits } = useJournlAgent();
   const tool = createClientTool({
     execute: async (toolCall, chat) => {
       const entry = `/journal/${toolCall.input.date}`;
@@ -26,6 +26,8 @@ export function useNavigateJournalEntryTool() {
         });
         return;
       }
+      if (!prepareEdits(`journal-entry:${toolCall.input.date}`))
+        throw new Error("The destination changed before writing became ready.");
       void chat.addToolOutput({
         output: {
           link: entry,

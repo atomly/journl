@@ -7,7 +7,7 @@ import { zNavigatePageInput } from "./schema";
 
 export function useNavigatePageTool() {
   const router = useRouter();
-  const { whenEditorReady } = useJournlAgent();
+  const { whenEditorReady, prepareEdits } = useJournlAgent();
   const tool = createClientTool({
     execute: async (toolCall, chat) => {
       const page = `/pages/${toolCall.input.id}`;
@@ -25,6 +25,8 @@ export function useNavigatePageTool() {
         });
         return;
       }
+      if (!prepareEdits(`page:${toolCall.input.id}`))
+        throw new Error("The destination changed before writing became ready.");
       void chat.addToolOutput({
         output: {
           link: page,

@@ -2,6 +2,7 @@ import {
   applyDocumentOperations,
   type DocumentOperation,
   parseBlock,
+  zDocumentOperation,
 } from "@acme/document";
 import {
   standardSchemaToJSONSchema,
@@ -15,6 +16,7 @@ import {
 } from "ai";
 import { MockLanguageModelV4 } from "ai/test";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { z } from "zod";
 
 const mocks = vi.hoisted(() => ({
   agentOptions: {} as Record<string, unknown>,
@@ -314,17 +316,12 @@ describe("document writer proposal stream", () => {
           id: "assemble",
           type: "numberedListItem",
         },
-      ]
-        .map((block, index) => ({
-          ...block,
-          id: `00000000-0000-4000-8000-${String(index + 1).padStart(12, "0")}`,
-        }))
-        .map((block, index, blocks) => ({
-          afterId: index === 0 ? "a" : (blocks[index - 1]?.id ?? "a"),
-          block: parseBlock(block),
-          parentId: null,
-          type: "insert" as const,
-        })),
+      ].map((block, index, blocks) => ({
+        afterId: index === 0 ? "a" : (blocks[index - 1]?.id ?? "a"),
+        block: parseBlock(block),
+        parentId: null,
+        type: "insert" as const,
+      })),
     ];
     mocks.stream.mockImplementation(async () =>
       output({
@@ -345,13 +342,29 @@ describe("document writer proposal stream", () => {
     expect(
       chunks.filter((chunk) => chunk.type === "data-document-edit"),
     ).toHaveLength(recipe.length + 1);
-    expect(generated(chunks)).toEqual([
-      {
-        data: { operations: recipe, status: "generated" },
-        type: "data-document-edit",
-      },
-    ]);
-    const accepted = applyDocumentOperations(request.blocks, recipe);
+    const final = generated(chunks)[0];
+    if (final?.type !== "data-document-edit")
+      throw new Error("Missing final edit");
+    const operations = z
+      .object({ operations: z.array(zDocumentOperation) })
+      .parse(final.data).operations;
+    const accepted = applyDocumentOperations(request.blocks, operations);
+    const progress = chunks
+      .map((chunk) =>
+        chunk.type === "data-document-edit" ? chunk.data : undefined,
+      )
+      .filter(
+        (data) =>
+          z.object({ status: z.literal("generating") }).safeParse(data).success,
+      );
+    expect(
+      z.object({ operations: z.array(zDocumentOperation) }).parse(progress[1])
+        .operations[1],
+    ).toEqual(operations[1]);
+    expect(accepted[0]?.id).toBe("a");
+    expect(
+      accepted.slice(1).every((block) => /^[a-f0-9-]{36}$/.test(block.id)),
+    ).toBe(true);
     expect(accepted.map((item) => item.type)).toEqual([
       "heading",
       "paragraph",
@@ -403,7 +416,7 @@ describe("document writer proposal stream", () => {
     const { chunks, errors, messages } = await consume(response);
     expect(errors).toEqual([]);
     expect(chunks).toContainEqual({
-      data: { operations: [{ id: "a", type: "update" }], status: "generating" },
+      data: { operations: [], status: "generating" },
       transient: true,
       type: "data-document-edit",
     });
@@ -443,32 +456,6 @@ describe("document writer proposal stream", () => {
           block: {
             id: "7de10000-0000-4000-8000-000000000001",
             type: "invented",
-          },
-          parentId: null,
-          type: "insert",
-        },
-      ],
-    ],
-    [
-      "non-UUID insert",
-      [
-        {
-          afterId: null,
-          block: { content: "Cannot save", id: "new-block", type: "paragraph" },
-          parentId: null,
-          type: "insert",
-        },
-      ],
-    ],
-    [
-      "non-UUID nested insert",
-      [
-        {
-          afterId: null,
-          block: {
-            children: [{ id: "child", type: "paragraph" }],
-            id: "00000000-0000-4000-8000-000000000001",
-            type: "paragraph",
           },
           parentId: null,
           type: "insert",
@@ -631,7 +618,7 @@ describe("document writer proposal stream", () => {
     expect(mocks.stream.mock.calls[0]?.[1].abortSignal).toBe(controller.signal);
     expect(generated(chunks)).toEqual([]);
     expect(chunks).toContainEqual({
-      data: { operations: [{ id: "a", type: "update" }], status: "generating" },
+      data: { operations: [], status: "generating" },
       transient: true,
       type: "data-document-edit",
     });
@@ -715,10 +702,16 @@ describe("document writer proposal stream", () => {
     });
     expect(options).toMatchObject({
       maxSteps: 1,
-      providerOptions: { openai: { reasoningEffort: "high", store: false } },
+      providerOptions: {
+        openai: {
+          reasoningEffort: "high",
+          store: false,
+          strictJsonSchema: false,
+        },
+      },
       structuredOutput: {
         errorStrategy: "strict",
-        jsonPromptInjection: "system",
+        jsonPromptInjection: false,
       },
     });
     expect(options).not.toHaveProperty("tools");

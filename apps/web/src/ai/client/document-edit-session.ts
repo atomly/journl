@@ -301,7 +301,8 @@ export class DocumentEditSession {
         if (this.destroyed)
           return { message: "The editor was closed.", status: "cancelled" };
         if (done) break;
-        if (value.type === "error" || value.type === "abort")
+        if (value.type === "error") throw new Error(value.errorText);
+        if (value.type === "abort")
           throw new Error("The AI edit did not complete. Please retry.");
         if (value.type === "finish") {
           if (finished || value.finishReason !== "stop")

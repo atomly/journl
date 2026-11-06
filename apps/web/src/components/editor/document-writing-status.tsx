@@ -1,7 +1,7 @@
 "use client";
 import { EditorContent } from "@acme/better-editor/ui/editor-content";
-import { Alert, AlertDescription } from "@acme/ui/alert";
 import { Button } from "@acme/ui/button";
+import { Spinner } from "@acme/ui/spinner";
 import { useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import type { DocumentEditSession } from "~/ai/client/document-edit-session";
@@ -16,7 +16,18 @@ export function DocumentWritingStatus({
     session.getSnapshot,
     session.getSnapshot,
   );
-  if (!snapshot.requested || ["idle", "prepared"].includes(snapshot.status))
+  if (snapshot.requested && ["applied", "cancelled"].includes(snapshot.status))
+    return (
+      <span role="status" className="sr-only">
+        {snapshot.status === "applied"
+          ? "Writing complete."
+          : "Writing stopped. Your original writing was kept."}
+      </span>
+    );
+  if (
+    !snapshot.requested ||
+    ["idle", "prepared", "applied", "cancelled"].includes(snapshot.status)
+  )
     return null;
   const surface = session.draftSurface;
   return (
@@ -26,34 +37,46 @@ export function DocumentWritingStatus({
           <EditorContent editor={surface.editor} />,
           surface.element,
         )}
-      <Alert
-        role="region"
-        className="sticky bottom-3 z-10 mx-6 my-3 w-auto"
-        aria-label="AI edit"
+      <section
+        className="sticky bottom-3 mx-12 my-2 flex w-fit max-w-full items-center gap-2 text-muted-foreground text-xs"
+        aria-label="AI writing"
         data-ai-edit-status={snapshot.status}
       >
-        <AlertDescription role="status">{snapshot.message}</AlertDescription>
+        {snapshot.status === "generating" && (
+          <Spinner aria-hidden="true" className="size-3" />
+        )}
+        <span role="status" title={snapshot.message}>
+          {snapshot.status === "generating"
+            ? "Writing…"
+            : "Couldn’t finish writing."}
+          <span className="sr-only"> {snapshot.message}</span>
+        </span>
         {snapshot.status === "generating" && !snapshot.following && (
-          <Button variant="outline" size="sm" onClick={session.followWriting}>
+          <Button variant="ghost" size="xs" onClick={session.followWriting}>
             Follow writing
           </Button>
         )}
         {snapshot.status === "generating" && (
-          <Button variant="outline" size="sm" onClick={session.cancel}>
-            Cancel AI edit
+          <Button
+            aria-label="Stop AI writing"
+            variant="ghost"
+            size="xs"
+            onClick={session.cancel}
+          >
+            Stop
           </Button>
         )}
         {snapshot.canRetry &&
-          ["conflict", "error", "cancelled"].includes(snapshot.status) && (
+          ["conflict", "error"].includes(snapshot.status) && (
             <Button
-              variant="outline"
-              size="sm"
+              variant="ghost"
+              size="xs"
               onClick={() => void session.retry()}
             >
-              Retry AI edit
+              Retry
             </Button>
           )}
-      </Alert>
+      </section>
     </>
   );
 }

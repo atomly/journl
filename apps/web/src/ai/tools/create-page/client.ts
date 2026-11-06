@@ -13,7 +13,7 @@ import { zCreatePageInput } from "./schema";
 
 export function useCreatePageTool() {
   const router = useRouter();
-  const { whenEditorReady } = useJournlAgent();
+  const { whenEditorReady, prepareEdits } = useJournlAgent();
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const eventEmitter = useAppEventEmitter();
@@ -57,12 +57,13 @@ export function useCreatePageTool() {
         });
         return;
       }
+      if (!prepareEdits(`page:${newPage.page.id}`))
+        throw new Error("The destination changed before writing became ready.");
       void chat.addToolOutput({
         output: {
           link,
           message: `Opened new page: ${toolCall.input.title}`,
           page: newPage.page,
-          targetEditor: `page:${newPage.page.id}`,
         },
         tool: toolCall.toolName,
         toolCallId: toolCall.toolCallId,

@@ -7,7 +7,7 @@ export const createPage = createTool({
 
 Use when the user asks to create/add/new a page. Infer a concise, accurate title from the request and ask for clarification only when the intended title is genuinely unclear.
 
-If the user asks to create and write in the same request, chain this tool immediately with write using the targetEditor derived from this run's createPage output.
+If the user asks to create and write in the same request, chain this tool immediately with write. The application binds writing to the new page automatically.
 
 Do not call navigation tools after this tool; page navigation is handled automatically after creation.`,
   id: "create-page",

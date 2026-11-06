@@ -7,10 +7,17 @@ import { afterEach, expect, test, vi } from "vitest";
 import { useNavigateJournalEntryTool } from "./navigate-journal-entry/client";
 import { useNavigatePageTool } from "./navigate-page/client";
 
-const mocks = vi.hoisted(() => ({ push: vi.fn(), ready: vi.fn() }));
+const mocks = vi.hoisted(() => ({
+  prepare: vi.fn(() => true),
+  push: vi.fn(),
+  ready: vi.fn(),
+}));
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push: mocks.push }) }));
 vi.mock("~/hooks/use-journl-agent", () => ({
-  useJournlAgent: () => ({ whenEditorReady: mocks.ready }),
+  useJournlAgent: () => ({
+    prepareEdits: mocks.prepare,
+    whenEditorReady: mocks.ready,
+  }),
 }));
 afterEach(() => {
   vi.clearAllMocks();

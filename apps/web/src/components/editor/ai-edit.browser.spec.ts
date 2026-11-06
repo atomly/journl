@@ -102,7 +102,6 @@ for (const mode of ["complete", "cancel", "blocks"] as const)
               writer.write({
                 input: {
                   agentPrompt: "Rewrite the target",
-                  targetEditor: `journal-entry:${date}`,
                 },
                 toolCallId: "write-one",
                 toolName: "write",
@@ -302,7 +301,7 @@ for (const mode of ["complete", "cancel", "blocks"] as const)
     await expect(page.locator("[data-save-status]")).toContainText("Saved");
     if (mode === "cancel") {
       await page
-        .getByRole("button", { exact: true, name: "Cancel AI edit" })
+        .getByRole("button", { exact: true, name: "Stop AI writing" })
         .click();
       await expect(draft).toHaveCount(0);
       await expect(editor.locator("[data-better-editor-body]")).toHaveText(

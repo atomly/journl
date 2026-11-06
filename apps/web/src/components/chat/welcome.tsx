@@ -1,15 +1,12 @@
-import { ThreadPrimitive } from "@assistant-ui/react";
 import { getUser, type User } from "~/auth/server";
 
-export function ThreadWelcome() {
+export function ChatWelcome() {
   return (
-    <ThreadPrimitive.Empty>
-      <div className="flex w-full max-w-(--thread-max-width) grow flex-col">
-        <div className="flex w-full grow flex-col items-center justify-center">
-          <ThreadWelcomeMessage />
-        </div>
+    <div className="flex w-full max-w-(--thread-max-width) grow flex-col">
+      <div className="flex w-full grow flex-col items-center justify-center">
+        <ThreadWelcomeMessage />
       </div>
-    </ThreadPrimitive.Empty>
+    </div>
   );
 }
 

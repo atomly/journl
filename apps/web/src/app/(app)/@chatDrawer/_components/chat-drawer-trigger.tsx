@@ -7,8 +7,8 @@ import { RiSparkling2Fill } from "react-icons/ri";
 import {
   ChatUnreadA11yHint,
   ChatUnreadBadge,
-} from "~/components/assistant-ui/chat-unread-badge";
-import { useChatUnread } from "~/components/assistant-ui/use-chat-unread";
+} from "~/components/chat/chat-unread-badge";
+import { useChatUnread } from "~/components/chat/use-chat-unread";
 
 type ChatDrawerTriggerProps = Omit<
   React.ComponentProps<typeof DrawerTrigger>,

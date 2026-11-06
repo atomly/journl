@@ -3,7 +3,7 @@
 import { DrawerProvider } from "@acme/ui/drawer";
 import { ThemeProvider } from "next-themes";
 import { JournalDraftsProvider } from "~/app/(app)/journal/_components/journal-drafts-provider";
-import { ThreadRuntime } from "~/components/assistant-ui/thread-runtime";
+import { ChatPresentationProvider } from "~/components/chat/chat-presentation";
 import { DraftActivityProvider } from "~/components/editor/draft-activity-provider";
 import { DraftOwnerProvider } from "~/components/editor/draft-sessions-provider";
 import { PageDraftsProvider } from "~/components/editor/page-drafts-provider";
@@ -42,7 +42,9 @@ export function AppProviders({
                     <DraftActivityProvider>
                       <PageDraftsProvider>
                         <JournalDraftsProvider>
-                          <ThreadRuntime>{children}</ThreadRuntime>
+                          <ChatPresentationProvider>
+                            {children}
+                          </ChatPresentationProvider>
                         </JournalDraftsProvider>
                       </PageDraftsProvider>
                     </DraftActivityProvider>

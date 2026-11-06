@@ -7,8 +7,8 @@ import {
   ComposerReasoning,
   ComposerReasoningContent,
   ComposerReasoningTrigger,
-} from "~/components/assistant-ui/thread-context";
-import { ComposerSources } from "~/components/assistant-ui/thread-sources";
+} from "~/components/chat/composer-context";
+import { ComposerSources } from "~/components/chat/composer-selection";
 
 const fixture = vi.hoisted(() => ({
   listeners: new Set<() => void>(),
@@ -17,8 +17,8 @@ const fixture = vi.hoisted(() => ({
   setReasoning: vi.fn(),
   text: "Selected writing",
 }));
-vi.mock("~/components/assistant-ui/thread-runtime", () => ({
-  useThreadRuntime: () => ({ exceeded: false }),
+vi.mock("~/components/chat/chat-presentation", () => ({
+  useChatActions: () => ({ exceeded: false }),
 }));
 vi.mock("~/hooks/use-journl-agent", () => ({
   useJournlAgent: () => ({

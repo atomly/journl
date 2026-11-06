@@ -32,7 +32,7 @@ This is a monorepo powered by [Turborepo](https://turborepo.dev/) and
 - **Shared packages:** [`packages`](./packages) for auth, database access,
   usage domain logic, the framework-independent [`document contract`](packages/document/README.md),
   the [`BetterEditor engine and React UI`](packages/better-editor/README.md),
-  reference previews, shared UI primitives, and legacy content compatibility checks.
+  reference previews, shared UI primitives.
 - **Local dev utilities:** [`apps/drizzle-studio`](./apps/drizzle-studio) and
   [`apps/stripe`](./apps/stripe).
 - **Agents & Contributor guidance:** [`AGENTS.md`](./AGENTS.md).
@@ -46,6 +46,7 @@ Use these paths as the fastest way to understand the product and core systems.
 - **App surfaces:** [`apps/web/src/app`](./apps/web/src/app)
 - **Journal experience:** `apps/web/src/app/(app)/journal`
 - **API routes:** [`apps/web/src/app/api`](./apps/web/src/app/api)
+- **Chat UI:** `apps/web/src/components/chat` composes shadcn AI Elements from `@acme/ui` around the existing AI SDK chat.
 - **Editor UI:** [`packages/better-editor`](./packages/better-editor), with app sessions and data integration in [`apps/web/src/components/editor`](./apps/web/src/components/editor)
 - **AI/workflow logic:** [`apps/web/src/ai`](./apps/web/src/ai) and [`apps/web/src/workflows`](./apps/web/src/workflows)
 - **Auth and usage guards:** [`apps/web/src/auth`](./apps/web/src/auth) and [`apps/web/src/usage`](./apps/web/src/usage)
@@ -60,8 +61,8 @@ installed editor contract, synthetic recovery fixtures, remaining production
 uncertainty, and preservation checks for the Tiptap frontend migration on Journl-owned
 block documents. Performance benchmarks are outside this migration scope.
 Content checks run with `pnpm --filter @acme/document test:unit` and
-`pnpm --filter @acme/better-editor test:unit`. The remaining BlockNote compatibility
-suite is separate from the current editor's acceptance checks.
+`pnpm --filter @acme/better-editor test:unit`. Historical content fixtures run
+through the document contract and current editor without a legacy editor dependency.
 
 ## Development Workflow
 

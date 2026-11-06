@@ -12,11 +12,13 @@ import { cn } from "@acme/ui/utils";
 import {
   type ComponentProps,
   type ReactNode,
+  useContext,
   useSyncExternalStore,
 } from "react";
 import type { JournlReasoning } from "~/ai/mastra/agents/journl-agent-reasoning";
-import { useThreadRuntime } from "~/components/assistant-ui/thread-runtime";
+import { useChatActions } from "~/components/chat/chat-presentation";
 import { useJournlAgent } from "~/hooks/use-journl-agent";
+import { ChatSurfaceContext } from "./chat-surface";
 
 const REASONING_MODES = ["instant", "thinking"] satisfies JournlReasoning[];
 
@@ -32,7 +34,7 @@ type ComposerReasoningProps = {
 export function ComposerReasoning({ children }: ComposerReasoningProps) {
   const { getReasoning, setReasoning, subscribe } = useJournlAgent();
   const reasoning = useSyncExternalStore(subscribe, getReasoning, getReasoning);
-  const { exceeded } = useThreadRuntime();
+  const { exceeded } = useChatActions();
   function handleReasoningModeChange(value: JournlReasoning) {
     setReasoning(value);
   }
@@ -83,8 +85,9 @@ type ComposerReasoningContentProps = Omit<
 >;
 
 export function ComposerReasoningContent(props: ComposerReasoningContentProps) {
+  const container = useContext(ChatSurfaceContext);
   return (
-    <SelectContent {...props}>
+    <SelectContent container={container ?? undefined} {...props}>
       <SelectGroup>
         {REASONING_MODES.map((reasoning) => (
           <SelectItem key={reasoning} value={reasoning}>

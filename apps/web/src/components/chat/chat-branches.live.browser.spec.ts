@@ -10,7 +10,7 @@ test.skip(
   "Set BROWSER_TEST_OPENAI_API_KEY for real conversation branching acceptance",
 );
 
-test("Edit and Retry preserve the original history during the session and start fresh after reload", async ({
+test("Edit and Retry work without conversation switching and start fresh after reload", async ({
   page,
 }, info) => {
   test.skip(
@@ -33,17 +33,12 @@ test("Edit and Retry preserve the original history during the session and start 
   await expect(
     panel.getByRole("textbox", { exact: true, name: "Message" }),
   ).toBeEnabled({ timeout: 60_000 });
-  const sourceTitle = await panel
-    .getByRole("combobox", { name: "Conversation branch" })
-    .locator('[data-slot="select-value"]')
-    .innerText();
   const baseUsers = await panel.locator('[data-chat-role="user"]').count();
   const baseAnswers = await panel
     .locator('[data-chat-role="assistant"]')
     .count();
   await ask(panel, first, "BRANCH_ORIGINAL_CEDAR");
   await ask(panel, later, "BRANCH_LATER_WILLOW");
-  const original = await transcript(panel);
   await panel
     .locator('[data-chat-role="user"]')
     .filter({ hasText: first })
@@ -62,17 +57,6 @@ test("Edit and Retry preserve the original history during the session and start 
   await expect(panel.locator("[data-chat-role]")).not.toContainText([
     "BRANCH_LATER_WILLOW",
   ]);
-  const edited = await panel
-    .getByRole("combobox", { name: "Conversation branch" })
-    .locator('[data-slot="select-value"]')
-    .innerText();
-
-  await switchBranch(panel, sourceTitle);
-  expect(await transcript(panel)).toEqual(original);
-  await switchBranch(panel, edited.trim());
-  await expect(
-    panel.locator('[data-chat-role="assistant"]').last(),
-  ).toContainText("BRANCH_REVISED_MAPLE");
   await panel
     .locator('[data-chat-role="assistant"]')
     .last()
@@ -81,7 +65,7 @@ test("Edit and Retry preserve the original history during the session and start 
   await answered(panel, "BRANCH_REVISED_MAPLE");
   await expect(
     panel.getByRole("combobox", { name: "Conversation branch" }),
-  ).toContainText("Retry:");
+  ).toHaveCount(0);
   await expect(panel.locator('[data-chat-role="user"]')).toHaveCount(
     baseUsers + 1,
   );
@@ -95,7 +79,7 @@ test("Edit and Retry preserve the original history during the session and start 
   await expect(panel.locator("[data-chat-role]")).toHaveCount(0);
   await expect(
     panel.getByRole("combobox", { name: "Conversation branch" }),
-  ).not.toContainText("Retry:");
+  ).toHaveCount(0);
 });
 
 async function ask(panel: Locator, prompt: string, answer: string) {
@@ -115,23 +99,10 @@ async function answered(panel: Locator, answer: string) {
     panel.getByRole("button", { exact: true, name: "Cancel" }),
   ).toHaveCount(0, { timeout: 90_000 });
   await expect(
-    panel.getByRole("combobox", { name: "Conversation branch" }),
+    panel.getByRole("textbox", { exact: true, name: "Message" }),
   ).toBeEnabled({ timeout: 60_000 });
   await expect(panel.getByRole("alert")).toHaveCount(0);
 }
-async function switchBranch(panel: Locator, title: string) {
-  await panel.getByRole("combobox", { name: "Conversation branch" }).click();
-  await panel.page().getByRole("option", { exact: true, name: title }).click();
-  await expect(
-    panel
-      .getByRole("combobox", { name: "Conversation branch" })
-      .locator('[data-slot="select-value"]'),
-  ).toHaveText(title);
-  await expect(
-    panel.getByRole("textbox", { exact: true, name: "Message" }),
-  ).toBeEnabled({ timeout: 60_000 });
-}
-
 test("Retry recovers a prompt after an HTTP failure before native memory saved it", async ({
   page,
 }, info) => {
@@ -180,20 +151,10 @@ test("Retry recovers a prompt after an HTTP failure before native memory saved i
   await answered(panel, "RETRY_RECOVERED_ORCHID");
   await expect(
     panel.getByRole("combobox", { name: "Conversation branch" }),
-  ).toContainText("Retry:");
+  ).toHaveCount(0);
   await page.reload();
   await expect(
     panel.getByRole("textbox", { exact: true, name: "Message" }),
   ).toBeEnabled();
   await expect(panel.locator("[data-chat-role]")).toHaveCount(0);
 });
-
-// Mastra intentionally strips its internal working-memory tool from saved
-// history. Compare writing independently from that transient bookkeeping trace.
-function transcript(panel: Locator) {
-  return panel
-    .locator(
-      '[data-chat-role="user"] [data-slot="bubble-content"], [data-chat-role="assistant"] [data-slot="message-content"] > .chat-markdown',
-    )
-    .allTextContents();
-}

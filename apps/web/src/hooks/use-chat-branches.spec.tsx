@@ -10,7 +10,6 @@ const api = vi.hoisted(() => ({
   branch: vi.fn(),
   create: vi.fn(),
   history: vi.fn(),
-  list: vi.fn(),
 }));
 vi.mock("~/trpc/react", () => {
   const client = {
@@ -18,7 +17,6 @@ vi.mock("~/trpc/react", () => {
       branch: { mutate: api.branch },
       create: { mutate: api.create },
       history: { query: api.history },
-      list: { query: api.list },
     },
   };
   return { useTRPCClient: () => client };
@@ -46,9 +44,6 @@ beforeEach(() => {
     threadId: "journl:owner",
     title: "New chat",
   });
-  api.list.mockResolvedValue([
-    { id: "journl:owner", title: "Original conversation" },
-  ]);
   api.history.mockResolvedValue({ messages: [], threadId: "journl:owner" });
   api.branch.mockResolvedValue({
     messages: [],
@@ -69,7 +64,6 @@ test("always starts fresh even when the tab has a previously selected chat", asy
   sessionStorage.setItem("journl:active-chat:owner", "saved-branch");
   await mount();
   expect(api.history).not.toHaveBeenCalled();
-  expect(api.list).not.toHaveBeenCalled();
   expect(api.create).toHaveBeenCalledTimes(1);
   expect(current.ready).toBe(true);
   expect(chat.messages).toEqual([]);
@@ -80,7 +74,7 @@ test("failed creation keeps sending disabled and supports an explicit retry", as
   await mount();
   expect(current.ready).toBe(false);
   expect(current.error).toContain("Could not start");
-  await act(async () => current.newChat());
+  await act(async () => current.retryStart());
   expect(current.ready).toBe(true);
   expect(current.error).toBeNull();
   expect(api.history).not.toHaveBeenCalled();
@@ -153,30 +147,11 @@ test("an edited prompt is a new SDK message on its branch", async () => {
   expect(current.threadId).toBe("branch");
 });
 
-test("does not switch branches during a native generation or an outstanding history request", async () => {
+test("does not fork during generation", async () => {
   await mount();
-  const status = vi.spyOn(chat, "status", "get").mockReturnValue("streaming");
-  api.history.mockClear();
-  await act(async () => current.select("other"));
-  expect(api.history).not.toHaveBeenCalled();
-  status.mockRestore();
-  let finish!: (value: { messages: []; threadId: string }) => void;
-  api.history.mockReturnValueOnce(
-    new Promise((resolve) => {
-      finish = resolve;
-    }),
-  );
-  let switching: Promise<void>;
-  await act(async () => {
-    switching = current.select("other");
-  });
+  vi.spyOn(chat, "status", "get").mockReturnValue("streaming");
   await act(async () => current.editMessage("old-user", "Changed"));
   expect(api.branch).not.toHaveBeenCalled();
-  await act(async () => {
-    finish({ messages: [], threadId: "other" });
-    await switching;
-  });
-  expect(current.threadId).toBe("other");
 });
 
 test("first load creates a fresh chat and does not open account-wide history", async () => {
@@ -194,25 +169,19 @@ test("first load creates a fresh chat and does not open account-wide history", a
   expect(chat.messages).toEqual([]);
 });
 
-test("New chat clears only the active view and preserves the previous conversation", async () => {
+test("startup retry cannot replace an active conversation", async () => {
   await mount();
-  chat.messages = [
+  const original = [
     {
       id: "old",
-      parts: [{ text: "An old prompt", type: "text" }],
-      role: "user",
+      parts: [{ text: "An existing prompt", type: "text" as const }],
+      role: "user" as const,
     },
   ];
-  api.create.mockResolvedValue({
-    hasMore: false,
-    messages: [],
-    threadId: "next-chat",
-    title: "New chat",
-  });
-  await act(async () => current.newChat());
-  expect(current.threadId).toBe("next-chat");
-  expect(chat.messages).toEqual([]);
-  expect(current.branches.map((item) => item.id)).toContain("journl:owner");
+  chat.messages = original;
+  await act(async () => current.retryStart());
+  expect(api.create).toHaveBeenCalledTimes(1);
+  expect(chat.messages).toEqual(original);
 });
 
 test("StrictMode creates only one initial native chat", async () => {

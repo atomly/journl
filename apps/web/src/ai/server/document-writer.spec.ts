@@ -497,6 +497,22 @@ describe("document writer proposal stream", () => {
     expect(insert?.properties.block).not.toEqual({});
     expect(JSON.stringify(insert?.properties.block)).toContain("$ref");
     expect(JSON.stringify(schema)).toContain('"children"');
+    const atomSchemas: { properties: Record<string, unknown> }[] = [];
+    const visitSchema = (value: unknown) => {
+      if (!value || typeof value !== "object") return;
+      if (Array.isArray(value)) {
+        value.forEach(visitSchema);
+        return;
+      }
+      const entry = value as { properties?: { type?: { const?: string } } };
+      if (["image", "divider"].includes(entry.properties?.type?.const ?? ""))
+        atomSchemas.push(entry as { properties: Record<string, unknown> });
+      Object.values(value).forEach(visitSchema);
+    };
+    visitSchema(schema);
+    expect(atomSchemas.length).toBeGreaterThanOrEqual(2);
+    for (const atom of atomSchemas)
+      expect(atom.properties).not.toHaveProperty("content");
   });
 
   it("streams transient previews and emits only a complete, atomically valid proposal", async () => {
@@ -558,6 +574,33 @@ describe("document writer proposal stream", () => {
       ],
     ],
     ["malformed operation", [{ type: "delete-everything" }]],
+    [
+      "image with invalid empty content",
+      [
+        {
+          afterId: "a",
+          block: {
+            content: "",
+            id: "image",
+            props: { url: "https://example.com/image.png" },
+            type: "image",
+          },
+          parentId: null,
+          type: "insert",
+        },
+      ],
+    ],
+    [
+      "divider with invalid empty content",
+      [
+        {
+          afterId: "a",
+          block: { content: "", id: "divider", type: "divider" },
+          parentId: null,
+          type: "insert",
+        },
+      ],
+    ],
     ["unknown operation fields", [{ ...operation, userId: "forged" }]],
     [
       "opaque legacy insert",

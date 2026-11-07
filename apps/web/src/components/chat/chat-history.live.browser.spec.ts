@@ -44,11 +44,12 @@ test("fresh chats do not restore historical messages and requests send only new 
   await expect(
     panel.getByRole("button", { name: "Load earlier messages" }),
   ).toHaveCount(0);
-  await panel.getByRole("combobox", { name: "Conversation branch" }).click();
   await expect(
-    page.getByRole("option", { exact: true, name: "Original conversation" }),
+    panel.getByRole("combobox", { name: "Conversation branch" }),
   ).toHaveCount(0);
-  await page.keyboard.press("Escape");
+  await expect(
+    panel.getByRole("button", { exact: true, name: "New chat" }),
+  ).toHaveCount(0);
   await input.fill(
     "Reply with exactly HISTORY_REQUEST_RECOVERED. Do not use tools.",
   );
@@ -64,12 +65,6 @@ test("fresh chats do not restore historical messages and requests send only new 
   expect(requestSizes.length).toBeGreaterThan(0);
   expect(requestSizes.every((size) => size === 1)).toBe(true);
   await expect(panel.getByRole("alert")).toHaveCount(0);
-  await page.reload();
-  await expect(input).toBeEnabled();
-  await expect(panel.locator("[data-chat-role]")).toHaveCount(0);
-  await panel.getByRole("button", { exact: true, name: "New chat" }).click();
-  await expect(input).toBeEnabled();
-  await expect(panel.locator("[data-chat-role]")).toHaveCount(0);
   await page.reload();
   await expect(input).toBeEnabled();
   await expect(panel.locator("[data-chat-role]")).toHaveCount(0);

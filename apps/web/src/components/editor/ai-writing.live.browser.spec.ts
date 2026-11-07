@@ -260,6 +260,61 @@ test("live tools keep the current write contract despite obsolete calls in histo
   expect(Object.keys(calls[0] as object)).toEqual(["agentPrompt"]);
 });
 
+test("live writer appends mixed structured content including tables", async ({
+  page,
+}, info) => {
+  test.skip(
+    info.project.name !== "desktop-chromium",
+    "Real-provider desktop mixed content",
+  );
+  test.setTimeout(360_000);
+  const responses: Promise<string>[] = [];
+  page.on("response", (response) => {
+    if (response.url().endsWith("/api/ai/document-writer"))
+      responses.push(response.text().catch(() => "Writer stream closed"));
+  });
+  try {
+    await page.goto(`/pages/${fixtureId(1)}`);
+    await openChat(page);
+    await expect(
+      page.getByPlaceholder("Ask anything...").filter({ visible: true }),
+    ).toBeEnabled({ timeout: 60_000 });
+    await ask(
+      page,
+      "Append complex structured content to this page: a Complex Examples heading; a four-column table with a header and three data rows; a three-item ordered list with a nested bullet list under item two; a checklist with checked and unchecked tasks; a JavaScript code block; a quote; an image using https://example.com/image.png; a divider; and a second two-column table with Sidebar and Main Content headers. Keep existing writing. Put the content in the editor, not in chat.",
+    );
+    const editor = page.locator(".better-editor-tiptap");
+    await expect(editor.locator("table")).toHaveCount(2, { timeout: 180_000 });
+    await expect(
+      page.getByRole("button", { exact: true, name: "Cancel" }),
+    ).toHaveCount(0, { timeout: 180_000 });
+    await expect(editor).toHaveAttribute("contenteditable", "true");
+    await expect(editor.locator("table")).toHaveCount(2);
+    await expect(page.locator("[data-save-status]")).toContainText("Saved", {
+      timeout: 60_000,
+    });
+    await expect(
+      editor.locator('[data-better-editor-body="codeBlock"]'),
+    ).toHaveCount(1);
+    await expect(
+      editor.locator('[data-better-editor-body="checkListItem"]'),
+    ).not.toHaveCount(0);
+    await expect(page.locator('[data-ai-edit-status="error"]')).toHaveCount(0);
+    const written = await editor.innerText();
+    await page.reload();
+    await expect(editor).toHaveText(written, { useInnerText: true });
+    await expect(editor.locator("table")).toHaveCount(2);
+    await expect(
+      editor.locator('[data-better-editor-body="codeBlock"]'),
+    ).toHaveCount(1);
+  } finally {
+    await info.attach("mixed-writer-responses", {
+      body: JSON.stringify(await Promise.all(responses)),
+      contentType: "application/json",
+    });
+  }
+});
+
 async function openChat(page: Page) {
   const toggle = page.getByRole("button", {
     exact: true,

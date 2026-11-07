@@ -16,9 +16,9 @@ import { getHumanReadableChatError } from "~/usage/quota-error";
 import { useChatPresentation } from "./chat-presentation";
 import { ChatSurfaceContext } from "./chat-surface";
 import { ChatComposer } from "./composer";
-import { ChatConversations, EarlierChatMessages } from "./conversations";
 import { ChatMessage } from "./message";
 import { isMessageActivelyStreaming } from "./message-parts";
+import { ChatSessionStatus, EarlierChatMessages } from "./session-status";
 import "./chat.css";
 
 export function ChatPanel({ welcome }: { welcome: ReactNode }) {
@@ -35,7 +35,7 @@ export function ChatPanel({ welcome }: { welcome: ReactNode }) {
         aria-label="Chat"
         className="flex h-full min-h-0 min-w-0 flex-col"
       >
-        <ChatConversations />
+        <ChatSessionStatus />
         <MessageScrollerProvider autoScroll>
           <MessageScroller>
             <MessageScrollerViewport aria-label="Conversation" className="px-4">

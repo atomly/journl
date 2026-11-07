@@ -109,10 +109,9 @@ update flow.
 
 Editing a chat prompt or retrying a response creates a separate Mastra thread.
 Each application load starts a fresh conversation, including after a reload.
-Navigation keeps that conversation active. New chat clears the chat view without
-deleting saved conversations or changing the document. The branch selector opens
-only conversations created during the current app session. A saved-chat browser
-can be added later. Mastra owns saved history; requests send only new input or the
+Navigation keeps that conversation active. There are no chat creation or switching
+controls while conversation management UX is deferred. Saved history remains intact.
+Mastra owns saved history; requests send only new input or the
 current tool continuation. Branching preserves chat history; it does not reverse
 editor changes already saved by a tool. User-level working memory, including
 preferences, remains shared across conversations and branches.

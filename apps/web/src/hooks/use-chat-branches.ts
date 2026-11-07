@@ -10,8 +10,6 @@ import {
 import { getChatRootThreadId } from "~/ai/chat-thread";
 import { useTRPCClient } from "~/trpc/react";
 
-type Branch = { id: string; title: string };
-
 /** Mastra owns saved history. AI SDK owns the active branch's streaming state. */
 export function useChatBranches(
   chat: Chat<UIMessage>,
@@ -20,7 +18,6 @@ export function useChatBranches(
 ) {
   const client = useTRPCClient();
   const root = getChatRootThreadId(owner);
-  const [branches, setBranches] = useState<Branch[]>([]);
   const [threadId, setThreadId] = useState(root);
   const [loading, setLoading] = useState(true);
   const [ready, setReady] = useState(false);
@@ -60,7 +57,6 @@ export function useChatBranches(
     void createInitialChat()
       .then((history) => {
         if (!current) return;
-        setBranches([{ id: history.threadId, title: history.title }]);
         activate(history.threadId, history.messages, history.hasMore);
       })
       .catch(() => {
@@ -107,28 +103,14 @@ export function useChatBranches(
     [chat],
   );
 
-  const select = useCallback(
-    (id: string) =>
-      run(async () => {
-        const history = await client.chat.history.query({ threadId: id });
-        if (!mounted.current) return;
-        activate(history.threadId, history.messages, history.hasMore);
-      }),
-    [activate, client, run],
-  );
-
-  const newChat = useCallback(
+  const retryStart = useCallback(
     () =>
       run(async () => {
+        if (ready) return;
         const history = await client.chat.create.mutate();
-        if (!mounted.current) return;
-        activate(history.threadId, history.messages);
-        setBranches((items) => [
-          ...items,
-          { id: history.threadId, title: history.title },
-        ]);
+        if (mounted.current) activate(history.threadId, history.messages);
       }),
-    [activate, client, run],
+    [activate, client, ready, run],
   );
 
   const loadEarlier = useCallback(
@@ -176,10 +158,6 @@ export function useChatBranches(
         });
         if (!mounted.current) return;
         activate(branch.threadId, branch.messages, branch.hasMore);
-        setBranches((items) => [
-          ...items,
-          { id: branch.threadId, title: branch.title },
-        ]);
         if (kind === "edit")
           void chat.sendMessage({ text: text ?? "" }).catch(() => {});
         else void chat.regenerate().catch(() => {});
@@ -205,16 +183,15 @@ export function useChatBranches(
   );
 
   return {
-    branches,
+    dismissError: () => setError(null),
     editMessage,
     error,
     hasEarlier,
     loadEarlier,
     loading,
-    newChat,
     ready,
     retryResponse,
-    select,
+    retryStart,
     threadId,
   };
 }

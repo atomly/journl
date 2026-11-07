@@ -55,6 +55,15 @@ const describedOutputSchema = z.strictObject({
 const modelOutputSchema = jsonSchema<z.infer<typeof outputSchema>>(
   z.toJSONSchema(describedOutputSchema, {
     io: "input",
+    override: ({ zodSchema, jsonSchema }) => {
+      if (!(zodSchema instanceof z.ZodObject) || !jsonSchema.properties) return;
+      // JSON has no undefined value. Omit absent-only properties rather than
+      // describing them as {}, which invites invalid content on atom blocks.
+      for (const [key, field] of Object.entries(zodSchema.shape)) {
+        const schema = field instanceof z.ZodOptional ? field.unwrap() : field;
+        if (schema instanceof z.ZodUndefined) delete jsonSchema.properties[key];
+      }
+    },
     target: "draft-7",
     unrepresentable: "any",
   }) as JSONSchema7,
@@ -86,7 +95,7 @@ An insert has NO top-level id. Its id is INSIDE block. Example:
 For simple unformatted text, use a content string as in the example. For formatted text, use only valid inline content objects, never a mixture of strings and objects.
 An update instead has a top-level existing id and data, e.g. {"type":"update","id":"EXISTING_ID","data":{"type":"paragraph","content":"Revised text"}}.
 Use insert, update, remove, and move operations only.
-Use existing block IDs for update, remove, and move.
+Use existing block IDs for update, remove, and move. Never move a block into itself or its descendants.
 For parentId and afterId, use existing block IDs or IDs inserted earlier in this operation batch. Use null for the root parent or the first sibling.
 Give new blocks and their children unique temporary labels such as new-1 and new-2. The application assigns their permanent IDs.
 Never reuse an existing block ID for an insert. Use update to change an existing block. Reference new blocks by their temporary labels in later operations.
@@ -164,7 +173,7 @@ export async function streamDocumentWriter({
                     // Mastra retries this step once with this feedback. Keep
                     // document values and provider error payloads out of it.
                     abort(
-                      "The operation batch is invalid. Regenerate the complete batch. Use unique insert labels. Each parentId and afterId must refer to an existing block or an earlier insert that has not been removed. afterId must be a sibling in the destination parent. Preserve all unrelated content.",
+                      "The operation batch is invalid. Regenerate the complete batch. Use unique insert labels. Each parentId and afterId must refer to an existing block or an earlier insert that has not been removed. afterId must be a sibling in the destination parent. Never move a block into itself or its descendants. Preserve all unrelated content.",
                       { retry: true },
                     );
                   }

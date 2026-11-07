@@ -3,16 +3,26 @@ import { Chat } from "@ai-sdk/react";
 import type { UIMessage } from "ai";
 import { act } from "react";
 import { createRoot } from "react-dom/client";
-import { expect, test, vi } from "vitest";
+import { beforeEach, expect, test, vi } from "vitest";
 import { InvalidClientToolCall } from "~/ai/utils/create-client-tool";
 import { useWriteTool } from "./client";
 
 const fixture = vi.hoisted(() => {
   const run = vi.fn();
-  return { active: true, entry: { id: "page:one", session: { run } }, run };
+  return {
+    active: true,
+    claimed: false,
+    entry: { id: "page:one", session: { run } },
+    run,
+  };
 });
 vi.mock("~/hooks/use-journl-agent", () => ({
   useJournlAgent: () => ({
+    claimWriteRun: () => {
+      if (fixture.claimed) return false;
+      fixture.claimed = true;
+      return true;
+    },
     getEditors: () =>
       fixture.active ? new Map([["page:one", fixture.entry]]) : new Map(),
     getEditTarget: () => fixture.entry,
@@ -20,7 +30,12 @@ vi.mock("~/hooks/use-journl-agent", () => ({
   }),
 }));
 
-test("a writing tool completes through the real SDK message queue without deadlocking", async () => {
+beforeEach(() => {
+  fixture.claimed = false;
+  fixture.run.mockClear();
+});
+
+test("the real SDK queue completes one writing run and rejects repeated calls", async () => {
   vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
   fixture.run.mockResolvedValue({ message: "Applied", status: "applied" });
   let tool: ReturnType<typeof useWriteTool> | undefined;
@@ -42,14 +57,15 @@ test("a writing tool completes through the real SDK message queue without deadlo
           start(controller) {
             controller.enqueue({ messageId: "assistant", type: "start" });
             controller.enqueue({ type: "start-step" });
-            controller.enqueue({
-              input: {
-                agentPrompt: "Rewrite the paragraph",
-              },
-              toolCallId: "write-one",
-              toolName: "write",
-              type: "tool-input-available",
-            });
+            for (const toolCallId of ["write-one", "write-two"])
+              controller.enqueue({
+                input: {
+                  agentPrompt: "Rewrite the paragraph",
+                },
+                toolCallId,
+                toolName: "write",
+                type: "tool-input-available",
+              });
             controller.enqueue({ type: "finish-step" });
             controller.enqueue({ finishReason: "tool-calls", type: "finish" });
             controller.close();
@@ -72,6 +88,17 @@ test("a writing tool completes through the real SDK message queue without deadlo
       instruction: "Rewrite the paragraph",
       reasoningEffort: "low",
     });
+    expect(chat.lastMessage?.parts).toContainEqual(
+      expect.objectContaining({
+        output: expect.objectContaining({
+          message: expect.stringContaining("already used its writing run"),
+          status: "error",
+        }),
+        state: "output-available",
+        toolCallId: "write-two",
+        type: "tool-write",
+      }),
+    );
   } finally {
     await chat.stop();
     await act(async () => root.unmount());

@@ -45,6 +45,7 @@ export function JournlChatProvider({
     getView,
     getReasoning,
     prepareEdits,
+    beginEditRequest,
     cancelEdits,
   } = useJournlAgent();
 
@@ -96,7 +97,10 @@ export function JournlChatProvider({
       transport: new DefaultChatTransport({
         ...transport,
         prepareSendMessagesRequest: ({ id, messages, trigger, messageId }) => {
-          if (messages.at(-1)?.role === "user") prepareEdits();
+          if (messages.at(-1)?.role === "user") {
+            beginEditRequest();
+            prepareEdits();
+          }
           const selections = getAllSelections();
           const view = getView();
 

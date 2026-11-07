@@ -9,6 +9,7 @@ import {
   toStandardSchema,
 } from "@mastra/core/schema";
 import {
+  APICallError,
   parseJsonEventStream,
   readUIMessageStream,
   type UIMessageChunk,
@@ -96,6 +97,7 @@ function output({
           });
         if (error) controller.error(error);
         else {
+          controller.enqueue({ object, type: "object-result" });
           if (!omitFinish)
             controller.enqueue({
               payload: { finishReason, totalUsage: reportedUsage },
@@ -161,7 +163,14 @@ beforeEach(() => {
 });
 
 describe("usage accounting through the installed Mastra Agent", () => {
-  it.each(["success", "error", "malformed", "aborted"] as const)(
+  it.each([
+    "success",
+    "error",
+    "malformed",
+    "aborted",
+    "unauthorized",
+    "quota",
+  ] as const)(
     "accounts for native %s exactly once after the stream drains",
     async (outcome) => {
       const { Agent: RealAgent } =
@@ -171,52 +180,63 @@ describe("usage accounting through the installed Mastra Agent", () => {
       const controller = new AbortController();
       const nativeFinish = vi.fn();
       const model = new MockLanguageModelV4({
-        doStream: async ({ abortSignal }) => ({
-          stream: new ReadableStream({
-            start(stream) {
-              stream.enqueue({ type: "stream-start", warnings: [] });
-              stream.enqueue({ id: "proposal", type: "text-start" });
-              stream.enqueue({
-                delta: JSON.stringify(
-                  outcome === "malformed"
-                    ? { operations: [{ type: "delete-everything" }] }
-                    : { operations: [operation] },
-                ),
-                id: "proposal",
-                type: "text-delta",
-              });
-              stream.enqueue({ id: "proposal", type: "text-end" });
-              if (outcome === "aborted") {
-                abortSignal?.addEventListener(
-                  "abort",
-                  () =>
-                    stream.error(
-                      new DOMException("Request cancelled", "AbortError"),
-                    ),
-                  { once: true },
-                );
-                return;
-              }
-              stream.enqueue({
-                finishReason: {
-                  raw: undefined,
-                  unified: outcome === "error" ? "error" : "stop",
-                },
-                type: "finish",
-                usage: {
-                  inputTokens: {
-                    cacheRead: 0,
-                    cacheWrite: 0,
-                    noCache: 10,
-                    total: 10,
+        doStream: async ({ abortSignal }) => {
+          if (outcome === "unauthorized" || outcome === "quota") {
+            throw new APICallError({
+              isRetryable: true,
+              message: "Synthetic API failure",
+              requestBodyValues: {},
+              statusCode: outcome === "quota" ? 429 : 401,
+              url: "https://example.invalid",
+            });
+          }
+          return {
+            stream: new ReadableStream({
+              start(stream) {
+                stream.enqueue({ type: "stream-start", warnings: [] });
+                stream.enqueue({ id: "proposal", type: "text-start" });
+                stream.enqueue({
+                  delta: JSON.stringify(
+                    outcome === "malformed"
+                      ? { operations: [{ type: "delete-everything" }] }
+                      : { operations: [operation] },
+                  ),
+                  id: "proposal",
+                  type: "text-delta",
+                });
+                stream.enqueue({ id: "proposal", type: "text-end" });
+                if (outcome === "aborted") {
+                  abortSignal?.addEventListener(
+                    "abort",
+                    () =>
+                      stream.error(
+                        new DOMException("Request cancelled", "AbortError"),
+                      ),
+                    { once: true },
+                  );
+                  return;
+                }
+                stream.enqueue({
+                  finishReason: {
+                    raw: undefined,
+                    unified: outcome === "error" ? "error" : "stop",
                   },
-                  outputTokens: { reasoning: 3, text: 17, total: 20 },
-                },
-              });
-              stream.close();
-            },
-          }),
-        }),
+                  type: "finish",
+                  usage: {
+                    inputTokens: {
+                      cacheRead: 0,
+                      cacheWrite: 0,
+                      noCache: 10,
+                      total: 10,
+                    },
+                    outputTokens: { reasoning: 3, text: 17, total: 20 },
+                  },
+                });
+                stream.close();
+              },
+            }),
+          };
+        },
         modelId: "gpt-5-mini",
         provider: "openai.responses",
       });
@@ -248,21 +268,22 @@ describe("usage accounting through the installed Mastra Agent", () => {
               controller.abort();
           },
         );
-        const attempts = outcome === "malformed" ? 2 : 1;
+        const attempts = outcome === "malformed" ? 3 : 1;
+        const noUsage = ["aborted", "quota", "unauthorized"].includes(outcome);
         expect(model.doStreamCalls).toHaveLength(attempts);
         expect(mocks.usage).toHaveBeenCalledTimes(1);
         expect(mocks.usage).toHaveBeenCalledWith({
           metrics: [
             {
-              quantity: outcome === "aborted" ? 0 : 10 * attempts,
+              quantity: noUsage ? 0 : 10 * attempts,
               unit: "input_tokens",
             },
             {
-              quantity: outcome === "aborted" ? 0 : 20 * attempts,
+              quantity: noUsage ? 0 : 20 * attempts,
               unit: "output_tokens",
             },
             {
-              quantity: outcome === "aborted" ? 0 : 3 * attempts,
+              quantity: noUsage ? 0 : 3 * attempts,
               unit: "reasoning_tokens",
             },
           ],
@@ -290,9 +311,15 @@ describe("usage accounting through the installed Mastra Agent", () => {
 });
 
 describe("native validation retries", () => {
-  it.each([true, false])(
-    "bounds correction of invalid block references (corrected: %s)",
-    async (corrected) => {
+  it.each([
+    { correctOn: 2, kind: "atom" },
+    { correctOn: 3, kind: "atom" },
+    { correctOn: 0, kind: "atom" },
+    { correctOn: 2, kind: "reference" },
+    { correctOn: 3, kind: "move" },
+  ])(
+    "bounds correction of $kind errors (success attempt: $correctOn)",
+    async ({ correctOn, kind }) => {
       const { Agent: RealAgent } =
         await vi.importActual<typeof import("@mastra/core/agent")>(
           "@mastra/core/agent",
@@ -304,9 +331,31 @@ describe("native validation retries", () => {
             start(stream) {
               calls += 1;
               const operations =
-                corrected && calls === 2
+                correctOn && calls === correctOn
                   ? [operation]
-                  : [{ id: "missing", type: "remove" }];
+                  : kind === "reference"
+                    ? [{ id: "missing", type: "remove" }]
+                    : kind === "move"
+                      ? [
+                          {
+                            afterId: null,
+                            id: "a",
+                            parentId: "a",
+                            type: "move",
+                          },
+                        ]
+                      : [
+                          {
+                            afterId: "a",
+                            block: {
+                              content: "PRIVATE_DOC_TEXT",
+                              id: "image",
+                              type: "image",
+                            },
+                            parentId: null,
+                            type: "insert",
+                          },
+                        ];
               stream.enqueue({ type: "stream-start", warnings: [] });
               stream.enqueue({ id: "proposal", type: "text-start" });
               stream.enqueue({
@@ -354,21 +403,32 @@ describe("native validation retries", () => {
             user,
           }),
         );
-        expect(calls).toBe(2);
+        const corrected = correctOn > 0;
+        expect(calls).toBe(correctOn || 3);
         expect(request.blocks).toEqual(before);
         expect(generated(chunks)).toHaveLength(corrected ? 1 : 0);
         expect(errors).toHaveLength(corrected ? 0 : 1);
         expect(mocks.usage).toHaveBeenCalledExactlyOnceWith(
           expect.objectContaining({
             metrics: [
-              { quantity: 20, unit: "input_tokens" },
-              { quantity: 40, unit: "output_tokens" },
-              { quantity: 6, unit: "reasoning_tokens" },
+              { quantity: 10 * calls, unit: "input_tokens" },
+              { quantity: 20 * calls, unit: "output_tokens" },
+              { quantity: 3 * calls, unit: "reasoning_tokens" },
             ],
           }),
         );
         expect(JSON.stringify(model.doStreamCalls[1]?.prompt)).toContain(
-          "The operation batch is invalid",
+          kind === "atom"
+            ? "operations[0].block.content: this field must be absent; omit it"
+            : kind === "reference"
+              ? "An operation references a block outside the current editable scope"
+              : "A move must not place a block inside itself or any of its descendants",
+        );
+        const systemFeedback = model.doStreamCalls[1]?.prompt.filter(
+          (message) => message.role === "system",
+        );
+        expect(JSON.stringify(systemFeedback)).not.toContain(
+          "PRIVATE_DOC_TEXT",
         );
       } finally {
         log.mockRestore();

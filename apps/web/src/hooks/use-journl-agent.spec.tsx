@@ -89,3 +89,21 @@ test("navigation readiness waits for the route and binds only its confirmed dest
   expect(current.prepareEdits("page:second")).toBe(false);
   expect(current.getEditTarget()).toBeUndefined();
 });
+
+test("one writing run per user request survives navigation/repreparation and cancellation", async () => {
+  current.registerEditor("page:first", editor());
+  current.registerEditor("page:second", editor());
+  expect(current.claimWriteRun()).toBe(false);
+  current.beginEditRequest();
+  current.prepareEdits();
+  expect(current.claimWriteRun()).toBe(true);
+  expect(current.claimWriteRun()).toBe(false);
+  await render("/pages/second");
+  current.prepareEdits("page:second");
+  expect(current.claimWriteRun()).toBe(false);
+  current.beginEditRequest();
+  expect(current.claimWriteRun()).toBe(true);
+  current.beginEditRequest();
+  current.cancelEdits();
+  expect(current.claimWriteRun()).toBe(false);
+});

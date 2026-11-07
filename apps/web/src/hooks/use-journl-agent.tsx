@@ -30,6 +30,8 @@ type Awareness = {
   getSelections: () => { text: string }[];
   prepareEdits: (expected?: EditorId) => boolean;
   cancelEdits: () => void;
+  beginEditRequest: () => void;
+  claimWriteRun: () => boolean;
   getReasoning: () => AgentState["reasoning"];
   getView: () => AgentState["view"];
   setReasoning: (reasoning: AgentState["reasoning"]) => void;
@@ -52,6 +54,7 @@ export function JournlAgentProvider({
     reasoning: "instant" as AgentState["reasoning"],
     revision: 0,
     view: { name: "other" } as AgentState["view"],
+    writeClaimed: true,
   });
   const getView = useCallback((): AgentState["view"] => {
     const { pathname, view } = state.current;
@@ -96,10 +99,19 @@ export function JournlAgentProvider({
   }, [pathname, notify]);
   const value = useMemo<Awareness>(
     () => ({
+      beginEditRequest: () => {
+        state.current.writeClaimed = false;
+      },
       cancelEdits: () => {
+        state.current.writeClaimed = true;
         for (const { session } of state.current.editors.values())
           if (["prepared", "generating"].includes(session.getSnapshot().status))
             session.cancel();
+      },
+      claimWriteRun: () => {
+        if (state.current.writeClaimed) return false;
+        state.current.writeClaimed = true;
+        return true;
       },
       getEditors,
       getEditTarget: () => state.current.editTarget,

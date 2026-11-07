@@ -6,9 +6,22 @@ import { createClientTool } from "../../utils/create-client-tool";
 import { zWriteInput } from "./schema";
 
 export function useWriteTool() {
-  const { getEditors, getEditTarget, getReasoning } = useJournlAgent();
+  const { getEditors, getEditTarget, getReasoning, claimWriteRun } =
+    useJournlAgent();
   return createClientTool({
     execute: async (toolCall, chat) => {
+      if (!claimWriteRun()) {
+        void chat.addToolOutput({
+          output: {
+            message:
+              "This user request already used its writing run (up to three generation attempts). Do not call write again. Wait for a new user request.",
+            status: "error",
+          },
+          tool: toolCall.toolName,
+          toolCallId: toolCall.toolCallId,
+        });
+        return;
+      }
       const target = getEditTarget();
       const entry =
         target && getEditors().get(target.id) === target ? target : undefined;

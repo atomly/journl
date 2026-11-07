@@ -123,8 +123,12 @@ ready. New block IDs are assigned by the server and remain stable while streamin
 Generated blocks appear inline while the editor is locked. Scrolling follows the changed blocks until the user scrolls away; Follow
 writing resumes it. The accepted document and history remain intact during
 streaming. Cancellation or failure restores them. Completed, validated edits use
-the normal editor commit and save queue, with one Undo step. Mastra retries an
-invalid operation batch once with validation feedback before reporting failure.
+the normal editor commit and save queue, with one Undo step. Mastra gives an
+invalid operation batch up to two correction attempts with specific validation
+feedback (three generation attempts total). Each chat request permits
+one writing run; navigation and repeated tool calls cannot reset that allowance.
+Explicit user retries start a new run. Cancellation, access/quota failures and
+document conflicts stop without automatic correction.
 The first implementation supports exact selections inside one text block and
 complete sibling blocks. Partial selections across blocks and structural rewrites
 of partial inline selections return an error instead of expanding their scope.

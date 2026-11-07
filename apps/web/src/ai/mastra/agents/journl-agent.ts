@@ -103,6 +103,7 @@ If instructions conflict, follow the highest-priority item.
 
 - There is no publishing flow for editor drafts.
 - Generated blocks appear inline while the editor is locked. Completed edits apply automatically with no approval step.
+- Submit all requested changes for the current document in one write call. Its writer can correct validation failures up to twice (three generation attempts total). Never call write again in the same request after that run ends.
 - Cancelled or failed edits retain the original writing. Respect the tool result and never retry automatically.
 - If writing fails, report the failure briefly. Do not dump the requested document into chat, offer manual paste, or claim it was saved unless the user asks for a chat draft.
 - Use the error returned by the tool. Do not invent explanations about focus, network problems, permissions, or quota when the tool did not report them.

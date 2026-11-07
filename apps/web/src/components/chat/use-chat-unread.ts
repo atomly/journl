@@ -5,14 +5,24 @@ import { useEffect, useRef, useState } from "react";
 import { useJournlChat } from "~/hooks/use-journl-chat";
 
 export function useChatUnread(isChatOpen: boolean) {
-  const { chat } = useJournlChat();
+  const { chat, conversations } = useJournlChat();
   const { messages } = useChat({ chat });
   const [hasUnreadMessages, setHasUnreadMessages] = useState(false);
+  const initialized = useRef(false);
   const previousIsChatOpen = useRef(isChatOpen);
   const closedMessageCountSnapshot = useRef(messages.length);
   const messageCount = messages.length;
 
   useEffect(() => {
+    // Restored history is already read. Only messages received after hydration
+    // can mark a closed chat unread.
+    if (!conversations.ready || !initialized.current) {
+      initialized.current = conversations.ready;
+      closedMessageCountSnapshot.current = messageCount;
+      previousIsChatOpen.current = isChatOpen;
+      setHasUnreadMessages(false);
+      return;
+    }
     if (isChatOpen) {
       closedMessageCountSnapshot.current = messageCount;
       setHasUnreadMessages(false);
@@ -38,7 +48,7 @@ export function useChatUnread(isChatOpen: boolean) {
     }
 
     previousIsChatOpen.current = isChatOpen;
-  }, [isChatOpen, messageCount]);
+  }, [isChatOpen, messageCount, conversations.ready]);
 
   return { hasUnreadMessages };
 }

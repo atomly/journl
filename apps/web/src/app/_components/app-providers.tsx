@@ -34,6 +34,7 @@ export function AppProviders({
               <DrawerProvider>
                 <JournlAgentProvider>
                   <JournlChatProvider
+                    owner={owner}
                     transport={{
                       api: "/api/ai/journl-agent",
                     }}

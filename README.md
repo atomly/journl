@@ -107,6 +107,12 @@ Database schema changes live in [`packages/db/src`](./packages/db/src) and are
 applied through `pnpm db:push`, which runs Drizzle Kit's schema comparison and
 update flow.
 
+Editing a chat prompt or retrying a response creates a separate Mastra thread.
+The conversation selector restores the original or another branch. The selected
+branch survives reloads in the current tab. Branching preserves chat history;
+it does not reverse editor changes already saved by a tool. User-level working
+memory, including preferences, remains shared across branches.
+
 AI writing starts from chat. The application binds it to the current page or
 journal entry, using highlighted text when present. The model does not choose an
 editor ID. Explicit AI navigation rebinds writing only after the destination is

@@ -41,11 +41,11 @@ export function ChatQuotaNotice() {
 }
 export function ChatComposer() {
   const { draft, setDraft } = useComposerDraft();
-  const { status, sendMessage, stop, exceeded } = useChatActions();
+  const { status, sendMessage, stop, exceeded, unavailable } = useChatActions();
   const id = useId();
   const busy = status === "submitted" || status === "streaming";
   const submit = () => {
-    if (busy || exceeded || !draft.trim()) return;
+    if (unavailable || busy || exceeded || !draft.trim()) return;
     const text = draft;
     setDraft("");
     void sendMessage({ text }).catch(() => {});
@@ -78,7 +78,7 @@ export function ChatComposer() {
               }
               aria-label="Message"
               value={draft}
-              disabled={Boolean(exceeded)}
+              disabled={unavailable || Boolean(exceeded)}
               onChange={(event) => setDraft(event.target.value)}
               onKeyDown={(event) => {
                 if (
@@ -112,7 +112,7 @@ export function ChatComposer() {
                   className="ml-auto"
                   type="submit"
                   aria-label="Send message"
-                  disabled={Boolean(exceeded) || !draft.trim()}
+                  disabled={unavailable || Boolean(exceeded) || !draft.trim()}
                 >
                   <ArrowUpIcon />
                 </InputGroupButton>

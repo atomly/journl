@@ -3,6 +3,7 @@ import "server-only";
 import { Agent } from "@mastra/core/agent";
 import { RequestContext } from "@mastra/core/request-context";
 import type { User } from "better-auth";
+import { getChatRootThreadId } from "~/ai/chat-thread";
 import {
   type JournlAgentContext,
   zJournlAgentContext,
@@ -20,7 +21,6 @@ import { write } from "../../tools/write/tool";
 import { journlMemory } from "../memory/memory";
 
 const JOURNL_AGENT_NAME = "Journl";
-const JOURNL_AGENT_THREAD_PREFIX = "journl";
 const JOURNL_REQUEST_CONTEXT_KEY = "journl_agent";
 
 function instructions({ requestContext }: { requestContext?: RequestContext }) {
@@ -176,5 +176,5 @@ export function getJournlRequestContext(context?: RequestContext) {
 }
 
 export function getJournlUserThread(user: User) {
-  return `${JOURNL_AGENT_THREAD_PREFIX}:${user.id}`;
+  return getChatRootThreadId(user.id);
 }

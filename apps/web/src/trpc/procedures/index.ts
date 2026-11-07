@@ -1,5 +1,6 @@
 import { createTRPCRouter } from "../trpc";
 import { authRouter } from "./auth";
+import { chatRouter } from "./chat";
 import { documentRouter } from "./document";
 import { exploreRouter } from "./explore";
 import { foldersRouter } from "./folders";
@@ -15,6 +16,7 @@ import { usageRouter } from "./usage";
 
 export const apiRouter = createTRPCRouter({
   auth: authRouter,
+  chat: chatRouter,
   document: documentRouter,
   explore: exploreRouter,
   folders: foldersRouter,

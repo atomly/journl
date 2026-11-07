@@ -6,7 +6,8 @@ import {
   lastAssistantMessageIsCompleteWithToolCalls,
   type UIMessage,
 } from "ai";
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useRef, useState } from "react";
+import { getChatRootThreadId } from "~/ai/chat-thread";
 import type { JournlAgentContext } from "~/ai/mastra/agents/journl-agent-context";
 import { useCreatePageTool } from "~/ai/tools/create-page/client";
 import { useNavigateJournalEntryTool } from "~/ai/tools/navigate-journal-entry/client";
@@ -17,20 +18,24 @@ import {
   InvalidClientToolCall,
 } from "~/ai/utils/create-client-tool";
 import { env } from "~/env";
+import { useChatBranches } from "./use-chat-branches";
 import { useJournlAgent } from "./use-journl-agent";
 
 const JournlChatContext = createContext<{
   chat: Chat<UIMessage>;
+  conversations: ReturnType<typeof useChatBranches>;
 } | null>(null);
 
 type JournlChatProviderProps<Message extends UIMessage = UIMessage> = {
   children: React.ReactNode;
+  owner: string;
 } & Pick<ChatInit<Message>, "messages"> & {
     transport: Pick<HttpChatTransportInitOptions<Message>, "api">;
   };
 
 export function JournlChatProvider({
   children,
+  owner,
   transport,
   messages,
 }: JournlChatProviderProps) {
@@ -48,6 +53,7 @@ export function JournlChatProvider({
   const navigatePage = useNavigatePageTool();
   const write = useWriteTool();
 
+  const thread = useRef(getChatRootThreadId(owner));
   const [chat] = useState(() => {
     const tools = new Map<string, ClientTool<string, Chat<UIMessage>>>([
       [createPage.name, createPage],
@@ -105,6 +111,7 @@ export function JournlChatProvider({
               } satisfies Omit<JournlAgentContext, "user">,
               messageId,
               messages,
+              threadId: thread.current,
               trigger,
             },
             headers: {
@@ -122,10 +129,13 @@ export function JournlChatProvider({
     return instance;
   });
 
+  const conversations = useChatBranches(chat, owner, thread);
+
   return (
     <JournlChatContext.Provider
       value={{
         chat,
+        conversations,
       }}
     >
       {children}

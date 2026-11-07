@@ -78,34 +78,35 @@ test("AI Elements render messages, reasoning, tools, markdown and sources in des
   await panel
     .getByRole("button", { exact: true, name: "Send message" })
     .click();
-  await expect(panel.locator('[data-chat-role="user"]')).toContainText(
+  await expect(panel.locator('[data-chat-role="user"]').last()).toContainText(
     "Find a useful answer",
   );
+  const response = panel.locator('[data-chat-role="assistant"]').last();
   await expect(
-    panel.getByRole("heading", { exact: true, name: "Useful answer" }),
+    response.getByRole("heading", { exact: true, name: "Useful answer" }),
   ).toBeVisible();
-  await expect(panel.getByRole("listitem")).toHaveCount(2);
+  await expect(response.getByRole("listitem")).toHaveCount(2);
   await expect(
-    panel.getByRole("button", { exact: true, name: "Thought" }),
+    response.getByRole("button", { exact: true, name: "Thought" }),
   ).toBeVisible();
-  await panel.getByRole("button", { exact: true, name: "Thought" }).click();
-  await expect(panel).toContainText("I checked the requested note.");
-  await panel
+  await response.getByRole("button", { exact: true, name: "Thought" }).click();
+  await expect(response).toContainText("I checked the requested note.");
+  await response
     .getByRole("button", { exact: true, name: "Search web Complete" })
     .click();
-  await expect(panel).toContainText("Found one source");
+  await expect(response).toContainText("Found one source");
   await expect(
-    panel.getByRole("link", { name: /Source reference/ }),
+    response.getByRole("link", { name: /Source reference/ }),
   ).toHaveAttribute("href", "https://example.invalid/reference");
-  await expect(panel.locator('[data-slot="code-block"]')).toContainText(
+  await expect(response.locator('[data-slot="code-block"]')).toContainText(
     "const answer = 42;",
   );
   if (!mobile) {
-    await panel.locator('[data-slot="code-block-copy-button"]').click();
+    await response.locator('[data-slot="code-block-copy-button"]').click();
     expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(
       "const answer = 42;",
     );
-    await panel
+    await response
       .getByRole("button", { exact: true, name: "Copy response" })
       .click();
     expect(await page.evaluate(() => navigator.clipboard.readText())).toContain(
@@ -119,7 +120,9 @@ test("AI Elements render messages, reasoning, tools, markdown and sources in des
   await expect(
     panel.getByRole("combobox", { exact: true, name: "Reasoning mode" }),
   ).toContainText("Thinking");
-  await panel.getByRole("link", { exact: true, name: "Open journal" }).click();
+  await response
+    .getByRole("link", { exact: true, name: "Open journal" })
+    .click();
   await expect(page).toHaveURL(/\/journal$/);
   if (mobile) await expect(page.getByRole("dialog")).toHaveCount(0);
   expect(errors).toEqual([]);

@@ -42,7 +42,15 @@ export async function streamJournlChat({
   signal: AbortSignal;
 }) {
   const { messages, context, trigger } = request;
-  const memoryThreadId = getJournlUserThread(user);
+  const rootThreadId = getJournlUserThread(user);
+  const memoryThreadId = request.threadId ?? rootThreadId;
+  if (memoryThreadId !== rootThreadId) {
+    const [{ journlMemory }, { requireChatThread }] = await Promise.all([
+      import("~/ai/mastra/memory/memory"),
+      import("./chat-threads"),
+    ]);
+    await requireChatThread(journlMemory, user.id, memoryThreadId);
+  }
   const reasoning = parseJournlAgentReasoning(context.reasoning);
   const intent = inferUserIntent(getLastUserMessage(messages));
   const journlAgent = intent === "search" ? journlNano : journlMini;

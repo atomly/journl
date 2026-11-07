@@ -40,8 +40,8 @@ export const ChatMessage = memo(function ChatMessage({
   message: UIMessage;
   active?: boolean;
 }) {
-  const { status, sendMessage, regenerate } = useChatActions();
-  const busy = status === "submitted" || status === "streaming";
+  const { status, editMessage, regenerate, unavailable } = useChatActions();
+  const busy = unavailable || status === "submitted" || status === "streaming";
   const text = message.parts
     .filter((part) => part.type === "text")
     .map((part) => part.text)
@@ -64,10 +64,9 @@ export const ChatMessage = memo(function ChatMessage({
             onSubmit={(event) => {
               event.preventDefault();
               if (busy || !draft.trim()) return;
-              setEditing(false);
-              void sendMessage({ messageId: message.id, text: draft }).catch(
-                () => {},
-              );
+              void editMessage(message.id, draft)
+                .then(() => setEditing(false))
+                .catch(() => {});
             }}
           >
             <InputGroup>
@@ -80,6 +79,7 @@ export const ChatMessage = memo(function ChatMessage({
                 <Button
                   variant="ghost"
                   type="button"
+                  disabled={busy}
                   onClick={() => setEditing(false)}
                 >
                   Cancel

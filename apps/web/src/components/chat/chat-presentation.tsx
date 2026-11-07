@@ -15,7 +15,11 @@ type State = Pick<
 type Actions = Pick<
   UseChatHelpers<UIMessage>,
   "sendMessage" | "regenerate" | "stop" | "status"
-> & { exceeded: UsageQuotaExceededPayload | null };
+> & {
+  editMessage: (id: string, text: string) => Promise<void>;
+  unavailable: boolean;
+  exceeded: UsageQuotaExceededPayload | null;
+};
 type Draft = { draft: string; setDraft: (value: string) => void };
 const StateContext = createContext<State | null>(null);
 const ActionsContext = createContext<Actions | null>(null);
@@ -27,9 +31,13 @@ export function ChatPresentationProvider({
 }: {
   children: React.ReactNode;
 }) {
-  const { chat } = useJournlChat();
-  const { messages, status, error, clearError, sendMessage, regenerate, stop } =
-    useChat({ chat });
+  const { chat, conversations } = useJournlChat();
+  const { messages, status, error, clearError, sendMessage, stop } = useChat({
+    chat,
+  });
+  const regenerate = conversations.retryResponse;
+  const editMessage = conversations.editMessage;
+  const unavailable = conversations.loading || !conversations.ready;
   const [draft, setDraft] = useState("");
   const state = useMemo(
     () => ({ clearError, error, messages, regenerate, status }),
@@ -40,8 +48,16 @@ export function ChatPresentationProvider({
     [error],
   );
   const actions = useMemo(
-    () => ({ exceeded, regenerate, sendMessage, status, stop }),
-    [sendMessage, regenerate, stop, status, exceeded],
+    () => ({
+      editMessage,
+      exceeded,
+      regenerate,
+      sendMessage,
+      status,
+      stop,
+      unavailable,
+    }),
+    [editMessage, sendMessage, regenerate, stop, status, exceeded, unavailable],
   );
   const input = useMemo(() => ({ draft, setDraft }), [draft]);
   return (

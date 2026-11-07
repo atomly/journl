@@ -4,6 +4,7 @@ const mocks = vi.hoisted(() => ({
   miniModel: vi.fn(async () => ({ modelId: "mini", provider: "openai" })),
   nanoModel: vi.fn(async () => ({ modelId: "nano", provider: "openai" })),
   stream: vi.fn(),
+  thread: vi.fn(),
   usage: vi.fn(),
 }));
 vi.mock("server-only", () => ({}));
@@ -15,6 +16,9 @@ vi.mock("~/ai/mastra/agents/journl-agent", () => ({
   setJournlRequestContext: (context: unknown) => context,
 }));
 vi.mock("~/ai/mastra/mastra", () => ({ mastra: {} }));
+vi.mock("~/ai/mastra/memory/memory", () => ({
+  journlMemory: { getThreadById: mocks.thread },
+}));
 vi.mock("~/env", () => ({ env: { NODE_ENV: "test" } }));
 vi.mock("~/workflows/model-usage", () => ({ startModelUsage: mocks.usage }));
 
@@ -198,4 +202,41 @@ describe("authenticated chat run", () => {
     ]);
     expect(mocks.miniModel).not.toHaveBeenCalled();
   });
+});
+
+it("authorizes the selected branch before sending it to the native stream", async () => {
+  const request = await parseJournlChatRequest({
+    context,
+    messages: [
+      { id: "1", parts: [{ text: "Hello", type: "text" }], role: "user" },
+    ],
+    threadId: "owned-branch",
+  });
+  mocks.thread.mockResolvedValue({
+    id: "owned-branch",
+    metadata: { chatRoot: "journl:owner" },
+    resourceId: user.id,
+  });
+  await streamJournlChat({
+    request,
+    signal: new AbortController().signal,
+    user,
+  });
+  expect(mocks.stream).toHaveBeenCalledWith(
+    expect.objectContaining({
+      params: expect.objectContaining({
+        memory: { resource: user.id, thread: "owned-branch" },
+      }),
+    }),
+  );
+  mocks.stream.mockClear();
+  mocks.thread.mockResolvedValue({
+    id: "owned-branch",
+    metadata: { chatRoot: "journl:owner" },
+    resourceId: "other",
+  });
+  await expect(
+    streamJournlChat({ request, signal: new AbortController().signal, user }),
+  ).rejects.toMatchObject({ code: "NOT_FOUND" });
+  expect(mocks.stream).not.toHaveBeenCalled();
 });

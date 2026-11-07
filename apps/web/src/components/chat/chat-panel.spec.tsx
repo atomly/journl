@@ -11,6 +11,7 @@ const fixture = vi.hoisted(() => ({
 vi.mock("./chat-presentation", () => ({
   useChatPresentation: () => fixture,
 }));
+vi.mock("./conversations", () => ({ ChatConversations: () => null }));
 vi.mock("./composer", () => ({ ChatComposer: () => null }));
 vi.mock("./message", () => ({ ChatMessage: () => null }));
 vi.mock("@acme/ui/message-scroller", () => {

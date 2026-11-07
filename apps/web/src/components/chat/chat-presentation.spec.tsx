@@ -15,10 +15,20 @@ const fixture = vi.hoisted(() => ({
   actions: 0,
   chat: null as Chat<UIMessage> | null,
   drafts: 0,
+  editMessage: vi.fn(),
+  retryResponse: vi.fn(),
   states: 0,
 }));
 vi.mock("~/hooks/use-journl-chat", () => ({
-  useJournlChat: () => ({ chat: fixture.chat }),
+  useJournlChat: () => ({
+    chat: fixture.chat,
+    conversations: {
+      editMessage: fixture.editMessage,
+      loading: false,
+      ready: true,
+      retryResponse: fixture.retryResponse,
+    },
+  }),
 }));
 function Transcript() {
   const { messages } = useChatPresentation();

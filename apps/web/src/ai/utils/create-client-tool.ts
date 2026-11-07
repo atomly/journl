@@ -32,26 +32,25 @@ export type ClientTool<
   ) => void | PromiseLike<void>;
 };
 
+export class InvalidClientToolCall extends Error {
+  constructor(name: string) {
+    super(
+      `The assistant sent invalid arguments for ${name}. Send your request again.`,
+    );
+    this.name = "InvalidClientToolCall";
+  }
+}
+
 function validateToolCall<Name extends string, Input>(
   toolCall: ToolCall<string, unknown>,
   name: Name,
   inputSchema: z.ZodSchema<Input>,
 ): asserts toolCall is ToolCall<Name, Input> {
-  const errors: string[] = [];
-
-  const valid = inputSchema.safeParse(toolCall.input);
-
-  if (!valid.success) {
-    errors.push(valid.error.message);
-  }
-
-  if (toolCall.toolName !== name) {
-    errors.push(`Invalid tool name: ${toolCall.toolName}`);
-  }
-
-  if (errors.length > 0) {
-    throw new Error(`Invalid tool call: ${errors.join(", ")}`);
-  }
+  if (
+    toolCall.toolName !== name ||
+    !inputSchema.safeParse(toolCall.input).success
+  )
+    throw new InvalidClientToolCall(name);
 }
 
 export function createClientTool<

@@ -1,17 +1,33 @@
 "use client";
 import { cn } from "cn";
-import { type ComponentProps, useMemo } from "react";
+import { type ComponentProps, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import type { DocumentEditorServices } from "./document-editor-services";
 import { DocumentEditor } from "./document-editor-view";
 import "./document-editor.css";
 import { useIsMobile } from "@acme/ui/use-mobile";
+import type { Editor } from "@tiptap/core";
+import type { DocumentEditSession } from "~/ai/client/document-edit-session";
+import type { JournlAgentContext } from "~/ai/mastra/agents/journl-agent-context";
 import { useReferenceClient } from "~/components/references/use-reference-client";
+import { useJournlAgent } from "~/hooks/use-journl-agent";
+import { DocumentWritingStatus } from "./document-writing-status";
 
 export function ConnectedDocumentEditor(
-  props: Omit<ComponentProps<typeof DocumentEditor>, "references">,
+  props: Omit<ComponentProps<typeof DocumentEditor>, "references"> & {
+    agentEditorId?: JournlAgentContext["activeEditors"][number];
+  },
 ) {
   const references = useReferenceClient();
+  const { registerEditor } = useJournlAgent();
+  const [instance, setInstance] = useState<Editor>();
+  const [session, setSession] = useState<DocumentEditSession>();
+  useEffect(() => {
+    if (!instance || !props.agentEditorId) return;
+    const binding = registerEditor(props.agentEditorId, instance);
+    setSession(binding.session);
+    return binding.dispose;
+  }, [instance, props.agentEditorId, registerEditor]);
   const mobile = useIsMobile();
   const services = useMemo<DocumentEditorServices>(
     () => ({
@@ -35,12 +51,16 @@ export function ConnectedDocumentEditor(
       {...props}
       className={cn("journl-document-editor", props.className)}
       references={references ?? undefined}
+      afterContent={
+        session ? <DocumentWritingStatus session={session} /> : undefined
+      }
       services={services}
       toolbarMode={props.toolbarMode ?? (mobile ? "sticky" : "floating")}
       toolbarVisibility={
         props.toolbarVisibility ?? (mobile ? "always" : "selection")
       }
       onReady={(editor) => {
+        setInstance(editor);
         const targetId = new URLSearchParams(window.location.hash.slice(1)).get(
           "block",
         );

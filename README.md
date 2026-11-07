@@ -32,7 +32,7 @@ This is a monorepo powered by [Turborepo](https://turborepo.dev/) and
 - **Shared packages:** [`packages`](./packages) for auth, database access,
   usage domain logic, the framework-independent [`document contract`](packages/document/README.md),
   the [`BetterEditor engine and React UI`](packages/better-editor/README.md),
-  reference previews, shared UI primitives, and compatibility code for the legacy AI integration.
+  reference previews, shared UI primitives.
 - **Local dev utilities:** [`apps/drizzle-studio`](./apps/drizzle-studio) and
   [`apps/stripe`](./apps/stripe).
 - **Agents & Contributor guidance:** [`AGENTS.md`](./AGENTS.md).
@@ -46,6 +46,7 @@ Use these paths as the fastest way to understand the product and core systems.
 - **App surfaces:** [`apps/web/src/app`](./apps/web/src/app)
 - **Journal experience:** `apps/web/src/app/(app)/journal`
 - **API routes:** [`apps/web/src/app/api`](./apps/web/src/app/api)
+- **Chat UI:** `apps/web/src/components/chat` composes shadcn AI Elements from `@acme/ui` around the existing AI SDK chat.
 - **Editor UI:** [`packages/better-editor`](./packages/better-editor), with app sessions and data integration in [`apps/web/src/components/editor`](./apps/web/src/components/editor)
 - **AI/workflow logic:** [`apps/web/src/ai`](./apps/web/src/ai) and [`apps/web/src/workflows`](./apps/web/src/workflows)
 - **Auth and usage guards:** [`apps/web/src/auth`](./apps/web/src/auth) and [`apps/web/src/usage`](./apps/web/src/usage)
@@ -60,8 +61,8 @@ installed editor contract, synthetic recovery fixtures, remaining production
 uncertainty, and preservation checks for the Tiptap frontend migration on Journl-owned
 block documents. Performance benchmarks are outside this migration scope.
 Content checks run with `pnpm --filter @acme/document test:unit` and
-`pnpm --filter @acme/better-editor test:unit`. The remaining BlockNote compatibility
-suite is separate from the current editor's acceptance checks.
+`pnpm --filter @acme/better-editor test:unit`. Historical content fixtures run
+through the document contract and current editor without a legacy editor dependency.
 
 ## Development Workflow
 
@@ -105,6 +106,24 @@ the dedicated utility app in [`apps/drizzle-studio`](./apps/drizzle-studio).
 Database schema changes live in [`packages/db/src`](./packages/db/src) and are
 applied through `pnpm db:push`, which runs Drizzle Kit's schema comparison and
 update flow.
+
+Editing a chat prompt or retrying a response creates a separate Mastra thread.
+The conversation selector restores the original or another branch. The selected
+branch survives reloads in the current tab. Branching preserves chat history;
+it does not reverse editor changes already saved by a tool. User-level working
+memory, including preferences, remains shared across branches.
+
+AI writing starts from chat. The application binds it to the current page or
+journal entry, using highlighted text when present. The model does not choose an
+editor ID. Explicit AI navigation rebinds writing only after the destination is
+ready. New block IDs are assigned by the server and remain stable while streaming.
+Generated blocks appear inline while the editor is locked. Scrolling follows the changed blocks until the user scrolls away; Follow
+writing resumes it. The accepted document and history remain intact during
+streaming. Cancellation or failure restores them. Completed, validated edits use
+the normal editor commit and save queue, with one Undo step.
+The first implementation supports exact selections inside one text block and
+complete sibling blocks. Partial selections across blocks and structural rewrites
+of partial inline selections return an error instead of expanding their scope.
 
 Page and journal content saves require the version loaded by the editor. The
 version check and write run in one transaction, including the first journal
@@ -156,6 +175,13 @@ PostgreSQL database from Drizzle definitions, seeds fixture accounts, and signs 
 through Better Auth's normal API. It never reads the root `.env` or uses an
 application database URL. The runner owns the local server on port 3100 and
 refuses to reuse an existing server. Reports and failure traces are ignored artifacts.
+
+For real-provider writing acceptance, set `BROWSER_TEST_OPENAI_API_KEY` and run
+`pnpm --filter @acme/web test:browser ai-writing.live.browser.spec.ts --project=desktop-chromium`.
+This opts into paid OpenAI calls through the real chat and writer routes, using
+the same disposable database and fixture accounts. It checks page creation,
+unfocused edits, selected text, navigation, structured content, and reload
+persistence. The ordinary browser suite skips this test and uses a fake key.
 
 `pnpm test` includes browser acceptance as well as unit and database tests; install
 its browser dependencies before running it. Unit tests remain Docker-free.

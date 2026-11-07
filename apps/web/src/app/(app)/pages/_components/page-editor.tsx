@@ -11,8 +11,6 @@ import {
   usePageDraft,
 } from "~/components/editor/page-drafts-provider";
 import { ReferenceBacklinks } from "~/components/references/reference-backlinks";
-import { PageCreatedEvent } from "~/events/page-created-event";
-import { useAppEventHandler } from "~/hooks/use-app-event-handler";
 import { useJournlAgent } from "~/hooks/use-journl-agent";
 
 const DEFAULT_DEBOUNCE_TIME = 1000;
@@ -37,19 +35,8 @@ export function PageEditor(props: PageEditorProps) {
   const { setView } = useJournlAgent();
   useEffect(() => {
     setView({ id: props.page.id, name: "page", title: props.page.title });
-    return () => setView({ name: "other" });
   }, [props.page.id, props.page.title, setView]);
-  useAppEventHandler(
-    ({ payload }) => {
-      if (payload.tool)
-        void payload.tool.chat.addToolOutput({
-          output: `Opened new page: ${payload.title}`,
-          tool: payload.tool.toolName,
-          toolCallId: payload.tool.toolCallId,
-        });
-    },
-    [PageCreatedEvent, props.page.id],
-  );
+  useEffect(() => () => setView({ name: "other" }), [setView]);
   const snapshot = useSyncExternalStore(
     draft.subscribe,
     draft.getSnapshot,
@@ -87,6 +74,7 @@ export function PageEditor(props: PageEditorProps) {
       >
         <ConnectedDocumentEditor
           key={snapshot.resetKey}
+          agentEditorId={`page:${props.page.id}`}
           initialBlocks={snapshot.blocks}
           onCommit={(blocks, operations) => {
             const change = acceptedDocumentChange(

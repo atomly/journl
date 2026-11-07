@@ -1,6 +1,5 @@
 import { createTool } from "@mastra/core/tools";
 import z from "zod";
-import { env } from "~/env";
 import { api } from "~/trpc/server";
 
 export const semanticPageSearch = createTool({
@@ -22,7 +21,7 @@ Returns multiple relevant results from different pages that should be analyzed a
     return result.map((result) => ({
       content: result.chunk_markdown_text,
       document_id: result.document_id,
-      link: `${env.PUBLIC_WEB_URL}/pages/${result.page_id}`,
+      link: `/pages/${result.page_id}`,
       page_id: result.page_id,
       page_title: result.page_title,
       similarity: result.similarity,

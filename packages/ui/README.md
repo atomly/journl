@@ -28,4 +28,8 @@ Intentional exceptions:
   explicit portal containers, positioning options and intentional theme tokens.
 
 Do not reinstall the app's custom sidebar or form helpers from the registry.
-Assistant UI primitives retain their third-party `asChild` API; owned wrappers do not.
+Chat uses the [Base UI AI Elements patterns](https://ui.shadcn.com/docs/ai-elements)
+through `message-scroller`, `message`, `bubble`, `trace`, `code-block`, and
+`input-group` leaf exports. The app owns its AI SDK connection and chat composition.
+Message Scroller owns streaming follow and turn anchoring. Code grammars load on
+demand. Registry copies retain native Base UI composition and existing app themes.

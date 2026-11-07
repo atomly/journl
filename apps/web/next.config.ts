@@ -20,7 +20,6 @@ const config: NextConfig = {
     "@acme/document",
     "@acme/references",
     "@acme/auth",
-    "@acme/blocknote",
     "@acme/db",
     "@acme/graph",
     "@acme/ui",

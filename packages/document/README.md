@@ -24,17 +24,13 @@ or second writable representation is introduced.
   no import/export screen or new parser API is introduced here.
 
 The BetterEditor Tiptap adapter is implemented in `packages/better-editor/src/serialization`.
-Legacy BlockNote compatibility tests retain `@acme/blocknote/adapter` at their
-frontend boundary. AI extension replacement remains tracked in #374/#376;
-server content reconstruction, embeddings, and AI search serialization use this
-package now.
+AI generation and search use this package's document operations and serialization.
 
-Run `pnpm --filter @acme/document test:unit` for pure codec/operation/serialization
-checks. The BlockNote package tests additionally round-trip the full inventory
-through the actual installed editor and serialized storage. App database/browser
-suites check the unchanged guarded save path and real routes.
+Run `pnpm --filter @acme/document test:unit` for codec, historical-content,
+operation, serialization, and raw-recovery checks. BetterEditor tests round-trip
+the same inventory through Tiptap and serialized storage. App database/browser
+suites check the guarded save path and real routes.
 
 The `/fixtures` export contains synthetic compatibility examples shared by adapter,
 API, database and browser tests. It is separate from the runtime entry and has
-no editor-framework or database dependencies. Legacy editor comparisons consume
-these fixtures; the fixtures do not depend on that editor.
+no editor-framework or database dependencies. The fixtures do not depend on an editor.

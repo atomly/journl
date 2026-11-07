@@ -42,7 +42,15 @@ export async function streamJournlChat({
   signal: AbortSignal;
 }) {
   const { messages, context, trigger } = request;
-  const memoryThreadId = getJournlUserThread(user);
+  const rootThreadId = getJournlUserThread(user);
+  const memoryThreadId = request.threadId ?? rootThreadId;
+  if (memoryThreadId !== rootThreadId) {
+    const [{ journlMemory }, { requireChatThread }] = await Promise.all([
+      import("~/ai/mastra/memory/memory"),
+      import("./chat-threads"),
+    ]);
+    await requireChatThread(journlMemory, user.id, memoryThreadId);
+  }
   const reasoning = parseJournlAgentReasoning(context.reasoning);
   const intent = inferUserIntent(getLastUserMessage(messages));
   const journlAgent = intent === "search" ? journlNano : journlMini;
@@ -60,26 +68,30 @@ export async function streamJournlChat({
         thread: memoryThreadId,
       },
       messages,
-      onFinish: async ({ steps, totalUsage }) => {
+      // Account for reported steps even when a later step fails or is cancelled.
+      onStepFinish: async (step) => {
         try {
-          const { provider, modelId } = await journlAgent.getModel();
+          const { modelId, provider } =
+            step.model?.provider && step.model.modelId
+              ? { modelId: step.model.modelId, provider: step.model.provider }
+              : await journlAgent.getModel();
 
           const metrics: Array<{ quantity: number; unit: UsageUnit }> = [
             {
-              quantity: totalUsage.inputTokens || 0,
+              quantity: step.usage.inputTokens || 0,
               unit: USAGE_UNITS.INPUT_TOKENS,
             },
             {
-              quantity: totalUsage.outputTokens || 0,
+              quantity: step.usage.outputTokens || 0,
               unit: USAGE_UNITS.OUTPUT_TOKENS,
             },
             {
-              quantity: totalUsage.reasoningTokens || 0,
+              quantity: step.usage.reasoningTokens || 0,
               unit: USAGE_UNITS.REASONING_TOKENS,
             },
           ];
 
-          const webSearchCalls = countBillableWebSearchCalls(steps);
+          const webSearchCalls = countBillableWebSearchCalls([step]);
           if (webSearchCalls > 0) {
             metrics.push({
               quantity: webSearchCalls,

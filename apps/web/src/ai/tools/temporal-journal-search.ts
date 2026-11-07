@@ -1,7 +1,6 @@
 import { documentMarkdown } from "@acme/document";
 import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
-import { env } from "~/env";
 import { api } from "~/trpc/server";
 
 export const temporalJournalSearch = createTool({
@@ -28,7 +27,7 @@ Compose with semantic search when topical filtering is also needed.`,
           content: markdown,
           date: result.date,
           id: result.id,
-          link: `${env.PUBLIC_WEB_URL}/journal/${result.date}`,
+          link: `/journal/${result.date}`,
         };
       }),
     );

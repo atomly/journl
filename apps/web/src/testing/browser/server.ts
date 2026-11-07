@@ -486,7 +486,8 @@ try {
         CRON_SECRET: "disposable-browser-cron-secret",
         NEXT_TELEMETRY_DISABLED: "1",
         NODE_ENV: "development",
-        OPENAI_API_KEY: "fixture",
+        // biome-ignore lint/style/noProcessEnv: Paid provider calls require an explicit browser-test opt-in.
+        OPENAI_API_KEY: process.env.BROWSER_TEST_OPENAI_API_KEY ?? "fixture",
         OPENAI_API_URL: "https://api.openai.com/v1/",
         POSTGRES_SSL_MODE: "disable",
         POSTGRES_URL: container.getConnectionUri(),

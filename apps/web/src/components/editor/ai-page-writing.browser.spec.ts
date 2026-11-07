@@ -77,7 +77,6 @@ test("chat creates and writes a page, edits it unfocused, then opens it and writ
             writer.write({
               input: {
                 agentPrompt: "Write or update the structured recipe",
-                reasoningEffort: "low",
               },
               toolCallId: `write-${writes}`,
               toolName: "write",

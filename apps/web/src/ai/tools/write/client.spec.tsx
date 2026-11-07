@@ -4,6 +4,7 @@ import type { UIMessage } from "ai";
 import { act } from "react";
 import { createRoot } from "react-dom/client";
 import { expect, test, vi } from "vitest";
+import { InvalidClientToolCall } from "~/ai/utils/create-client-tool";
 import { useWriteTool } from "./client";
 
 const fixture = vi.hoisted(() => {
@@ -15,6 +16,7 @@ vi.mock("~/hooks/use-journl-agent", () => ({
     getEditors: () =>
       fixture.active ? new Map([["page:one", fixture.entry]]) : new Map(),
     getEditTarget: () => fixture.entry,
+    getReasoning: () => "instant",
   }),
 }));
 
@@ -43,7 +45,6 @@ test("a writing tool completes through the real SDK message queue without deadlo
             controller.enqueue({
               input: {
                 agentPrompt: "Rewrite the paragraph",
-                reasoningEffort: "low",
               },
               toolCallId: "write-one",
               toolName: "write",
@@ -108,6 +109,38 @@ test("a stale captured target is rejected instead of writing in the newly active
     );
   } finally {
     fixture.active = true;
+    await act(async () => root.unmount());
+    vi.unstubAllGlobals();
+  }
+});
+
+test("obsolete model-controlled targeting is rejected before starting an edit", async () => {
+  vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
+  fixture.run.mockClear();
+  let tool: ReturnType<typeof useWriteTool> | undefined;
+  function Mount() {
+    tool = useWriteTool();
+    return null;
+  }
+  const root = createRoot(document.createElement("div"));
+  await act(async () => root.render(<Mount />));
+  try {
+    expect(() =>
+      tool?.execute(
+        {
+          input: {
+            agentPrompt: "Add lorem ipsum",
+            reasoningEffort: "minimal",
+            targetEditor: "page:old-target",
+          },
+          toolCallId: "reported-failure",
+          toolName: "write",
+        },
+        new Chat<UIMessage>({}),
+      ),
+    ).toThrow(InvalidClientToolCall);
+    expect(fixture.run).not.toHaveBeenCalled();
+  } finally {
     await act(async () => root.unmount());
     vi.unstubAllGlobals();
   }

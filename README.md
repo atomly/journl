@@ -170,6 +170,13 @@ through Better Auth's normal API. It never reads the root `.env` or uses an
 application database URL. The runner owns the local server on port 3100 and
 refuses to reuse an existing server. Reports and failure traces are ignored artifacts.
 
+For real-provider writing acceptance, set `BROWSER_TEST_OPENAI_API_KEY` and run
+`pnpm --filter @acme/web test:browser ai-writing.live.browser.spec.ts --project=desktop-chromium`.
+This opts into paid OpenAI calls through the real chat and writer routes, using
+the same disposable database and fixture accounts. It checks page creation,
+unfocused edits, selected text, navigation, structured content, and reload
+persistence. The ordinary browser suite skips this test and uses a fake key.
+
 `pnpm test` includes browser acceptance as well as unit and database tests; install
 its browser dependencies before running it. Unit tests remain Docker-free.
 

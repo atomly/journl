@@ -1,11 +1,12 @@
 "use client";
+import { getOpenAIReasoningEffort } from "~/ai/mastra/agents/journl-agent-reasoning";
 import { stripOpenAICitationTokens } from "~/ai/utils/openai-utils";
 import { useJournlAgent } from "~/hooks/use-journl-agent";
 import { createClientTool } from "../../utils/create-client-tool";
 import { zWriteInput } from "./schema";
 
 export function useWriteTool() {
-  const { getEditors, getEditTarget } = useJournlAgent();
+  const { getEditors, getEditTarget, getReasoning } = useJournlAgent();
   return createClientTool({
     execute: async (toolCall, chat) => {
       const target = getEditTarget();
@@ -14,7 +15,7 @@ export function useWriteTool() {
       const output = entry
         ? await entry.session.run({
             instruction: stripOpenAICitationTokens(toolCall.input.agentPrompt),
-            reasoningEffort: toolCall.input.reasoningEffort,
+            reasoningEffort: getOpenAIReasoningEffort(getReasoning()),
           })
         : {
             message:

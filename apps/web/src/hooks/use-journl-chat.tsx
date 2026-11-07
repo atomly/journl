@@ -12,7 +12,10 @@ import { useCreatePageTool } from "~/ai/tools/create-page/client";
 import { useNavigateJournalEntryTool } from "~/ai/tools/navigate-journal-entry/client";
 import { useNavigatePageTool } from "~/ai/tools/navigate-page/client";
 import { useWriteTool } from "~/ai/tools/write/client";
-import type { ClientTool } from "~/ai/utils/create-client-tool";
+import {
+  type ClientTool,
+  InvalidClientToolCall,
+} from "~/ai/utils/create-client-tool";
 import { env } from "~/env";
 import { useJournlAgent } from "./use-journl-agent";
 
@@ -69,11 +72,14 @@ export function JournlChatProvider({
         }
         try {
           await tool.execute(toolCall, instance);
-        } catch {
+        } catch (error) {
           // Keep invalid arguments and failed client actions in the native tool
           // lifecycle. Do not await a queued update inside onToolCall.
           void instance.addToolOutput({
-            errorText: "This action could not complete. Please retry.",
+            errorText:
+              error instanceof InvalidClientToolCall
+                ? error.message
+                : "This action could not complete. Please retry.",
             state: "output-error",
             tool: toolCall.toolName,
             toolCallId: toolCall.toolCallId,

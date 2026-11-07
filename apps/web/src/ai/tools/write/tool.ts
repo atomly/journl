@@ -25,10 +25,10 @@ Constraints:
 - Do not use for recall/analysis tasks; use search tools.
 - Do not add page titles in body content unless explicitly requested.
 - Do not fabricate facts, pages, or links.
-- reasoningEffort is optional (minimal|low|medium|high); default low for normal edits.
 
 After a successful call, avoid telling the user that changes were made. At most, briefly summarize the result.`,
   id: "write",
   inputSchema: zWriteInput,
   outputSchema: zWriteOutput,
+  strict: true,
 });

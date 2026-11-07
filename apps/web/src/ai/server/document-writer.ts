@@ -94,6 +94,8 @@ An insert block has an id, a supported type, its content and props, and optional
 Use the block types and data shapes described by update.data for inserted blocks.
 Write structured editor content, not Markdown source inside a paragraph.
 Create a separate block for each paragraph, heading, list item, quote, code block, and table.
+Separate paragraph blocks already provide spacing. Do not insert empty paragraphs merely to simulate blank lines between them.
+If the supplied document contains only one empty paragraph, reuse that block for the first paragraph instead of retaining a blank starter before the new writing.
 Use heading blocks with props.level for section titles, bulletListItem for each bullet, and numberedListItem for each numbered step.
 List items at the same level are siblings. Put children under an item only for an actual nested list, never to represent the next item.
 Use inline text styles and link objects for bold, italic, code, and links. Do not put Markdown markers in text to simulate formatting.
@@ -120,6 +122,7 @@ export async function streamDocumentWriter({
   user: User;
   signal: AbortSignal;
 }) {
+  let stage = "starting";
   const stream = createUIMessageStream<WriterMessage>({
     execute: async ({ writer }) => {
       writer.write({ type: "start" });
@@ -134,6 +137,7 @@ export async function streamDocumentWriter({
       }
 
       try {
+        stage = "generating";
         const result = await documentWriter.stream(
           JSON.stringify({
             blocks: request.blocks,
@@ -212,6 +216,7 @@ export async function streamDocumentWriter({
             throw new Error("Document generation did not finish successfully");
           }
 
+          stage = "validating";
           const generated = outputSchema.parse(await result.object);
           const operations = z
             .array(zDocumentWriterOperation)
@@ -264,7 +269,20 @@ export async function streamDocumentWriter({
         throw error;
       }
     },
-    onError: () => "The document edit could not be generated. Please retry.",
+    onError: (error) => {
+      // Error payloads can contain prompts and document text. Record only the
+      // failure stage and schema paths, never provider payloads or field values.
+      console.error("[ai.document-writer] generation failed", {
+        errorName: error instanceof Error ? error.name : "UnknownError",
+        stage,
+        ...(error instanceof z.ZodError
+          ? {
+              issues: error.issues.map(({ code, path }) => ({ code, path })),
+            }
+          : {}),
+      });
+      return "The document edit could not be generated. Please retry.";
+    },
   });
 
   return createUIMessageStreamResponse({ stream });

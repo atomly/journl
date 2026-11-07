@@ -1,13 +1,14 @@
 // @vitest-environment jsdom
 import { Chat } from "@ai-sdk/react";
 import type { UIMessage } from "ai";
-import { act, useRef } from "react";
+import { act, StrictMode, useRef } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import { useChatBranches } from "./use-chat-branches";
 
 const api = vi.hoisted(() => ({
   branch: vi.fn(),
+  create: vi.fn(),
   history: vi.fn(),
   list: vi.fn(),
 }));
@@ -15,6 +16,7 @@ vi.mock("~/trpc/react", () => {
   const client = {
     chat: {
       branch: { mutate: api.branch },
+      create: { mutate: api.create },
       history: { query: api.history },
       list: { query: api.list },
     },
@@ -38,6 +40,12 @@ beforeEach(() => {
   sessionStorage.clear();
   vi.clearAllMocks();
   chat = new Chat<UIMessage>({ messages: [] });
+  api.create.mockResolvedValue({
+    hasMore: false,
+    messages: [],
+    threadId: "journl:owner",
+    title: "New chat",
+  });
   api.list.mockResolvedValue([
     { id: "journl:owner", title: "Original conversation" },
   ]);
@@ -57,31 +65,25 @@ afterEach(async () => {
   vi.unstubAllGlobals();
 });
 
-test("loads the saved branch before allowing a send and restores it from owner-scoped tab storage", async () => {
-  sessionStorage.setItem("journl:chat-thread:owner", "saved-branch");
-  const saved = [
-    {
-      id: "saved",
-      parts: [{ text: "Saved prompt", type: "text" as const }],
-      role: "user" as const,
-    },
-  ];
-  api.history.mockResolvedValue({ messages: saved, threadId: "saved-branch" });
+test("always starts fresh even when the tab has a previously selected chat", async () => {
+  sessionStorage.setItem("journl:active-chat:owner", "saved-branch");
   await mount();
-  expect(api.history).toHaveBeenCalledWith({ threadId: "saved-branch" });
+  expect(api.history).not.toHaveBeenCalled();
+  expect(api.list).not.toHaveBeenCalled();
+  expect(api.create).toHaveBeenCalledTimes(1);
   expect(current.ready).toBe(true);
-  expect(current.loading).toBe(false);
-  expect(chat.messages).toEqual(saved);
+  expect(chat.messages).toEqual([]);
 });
 
-test("failed history loading keeps sending disabled and supports an explicit retry", async () => {
-  api.history.mockRejectedValueOnce(new Error("offline"));
+test("failed creation keeps sending disabled and supports an explicit retry", async () => {
+  api.create.mockRejectedValueOnce(new Error("offline"));
   await mount();
   expect(current.ready).toBe(false);
-  expect(current.error).toContain("Could not load");
-  await act(async () => current.select("journl:owner"));
+  expect(current.error).toContain("Could not start");
+  await act(async () => current.newChat());
   expect(current.ready).toBe(true);
   expect(current.error).toBeNull();
+  expect(api.history).not.toHaveBeenCalled();
 });
 
 test("a failed branch request preserves active messages and shows its error", async () => {
@@ -121,9 +123,6 @@ test("activates remapped history before generating and does not pass obsolete me
   ];
   const generate = vi.spyOn(chat, "regenerate").mockImplementation(async () => {
     expect(chat.messages.at(-1)?.id).toBe("cloned-user");
-    expect(sessionStorage.getItem("journl:chat-thread:owner")).toBe(
-      "retry-branch",
-    );
   });
   api.branch.mockResolvedValue({
     messages: [
@@ -178,4 +177,52 @@ test("does not switch branches during a native generation or an outstanding hist
     await switching;
   });
   expect(current.threadId).toBe("other");
+});
+
+test("first load creates a fresh chat and does not open account-wide history", async () => {
+  sessionStorage.setItem("journl:chat-thread:owner", "journl:owner");
+  api.create.mockResolvedValue({
+    hasMore: false,
+    messages: [],
+    threadId: "fresh-chat",
+    title: "New chat",
+  });
+  await mount();
+  expect(api.history).not.toHaveBeenCalled();
+  expect(api.create).toHaveBeenCalledTimes(1);
+  expect(current.threadId).toBe("fresh-chat");
+  expect(chat.messages).toEqual([]);
+});
+
+test("New chat clears only the active view and preserves the previous conversation", async () => {
+  await mount();
+  chat.messages = [
+    {
+      id: "old",
+      parts: [{ text: "An old prompt", type: "text" }],
+      role: "user",
+    },
+  ];
+  api.create.mockResolvedValue({
+    hasMore: false,
+    messages: [],
+    threadId: "next-chat",
+    title: "New chat",
+  });
+  await act(async () => current.newChat());
+  expect(current.threadId).toBe("next-chat");
+  expect(chat.messages).toEqual([]);
+  expect(current.branches.map((item) => item.id)).toContain("journl:owner");
+});
+
+test("StrictMode creates only one initial native chat", async () => {
+  await act(async () =>
+    root.render(
+      <StrictMode>
+        <Harness />
+      </StrictMode>,
+    ),
+  );
+  expect(api.create).toHaveBeenCalledTimes(1);
+  expect(current.ready).toBe(true);
 });

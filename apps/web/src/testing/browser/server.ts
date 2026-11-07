@@ -4,10 +4,13 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { parseArgs } from "node:util";
 import * as schema from "@acme/db/schema";
 import { documentRows } from "@acme/document";
 import { parityBlocks } from "@acme/document/fixtures";
 import { ALGORITHM_VERSION } from "@acme/graph/config";
+import { Memory } from "@mastra/memory";
+import { PostgresStore } from "@mastra/pg";
 import { PostgreSqlContainer } from "@testcontainers/postgresql";
 import { hashPassword } from "better-auth/crypto";
 import { drizzle } from "drizzle-orm/postgres-js";
@@ -16,6 +19,13 @@ import { insertEdgeAtPosition } from "../../trpc/procedures/tree-helpers";
 import { prepareLocalWorkflowStorage } from "../../workflows/local-storage";
 import { createTestTables } from "../postgres-schema";
 import { browserFixture as data, fixtureId } from "./data";
+
+const { values: server } = parseArgs({
+  options: {
+    hostname: { default: "127.0.0.1", type: "string" },
+    port: { default: "3100", type: "string" },
+  },
+});
 
 // Preserve developer history before the child selects disposable test storage.
 prepareLocalWorkflowStorage(process.cwd(), ".workflow-data");
@@ -460,6 +470,55 @@ try {
         userId: data.owner,
       }),
     );
+  // Historical provider errors reproduce restored-history validation failures.
+  // Seed only this disposable database, never an application database.
+  const chatStore = new PostgresStore({
+    connectionString: container.getConnectionUri(),
+    id: "browser-chat-history",
+  });
+  try {
+    const memory = new Memory({
+      options: {
+        generateTitle: false,
+        semanticRecall: false,
+        workingMemory: { enabled: false },
+      },
+      storage: chatStore,
+    });
+    const threadId = `journl:${data.owner}`;
+    await memory.createThread({ resourceId: data.owner, threadId });
+    await memory.saveMessages({
+      messages: Array.from({ length: 81 }, (_, index) => ({
+        content: {
+          format: 2 as const,
+          parts:
+            index === 80
+              ? [
+                  {
+                    error: {
+                      message: "Synthetic historical provider failure",
+                      name: "Error",
+                    },
+                    type: "error" as const,
+                  },
+                ]
+              : [{ text: `Legacy message ${index}`, type: "text" as const }],
+        },
+        createdAt: new Date(1700000000000 + index),
+        id: `legacy-history-${index}`,
+        resourceId: data.owner,
+        role:
+          index % 2 || index === 80
+            ? ("assistant" as const)
+            : ("user" as const),
+        threadId,
+        type: "text" as const,
+      })),
+    });
+  } finally {
+    await chatStore.close();
+  }
+
   const require = createRequire(import.meta.url);
   child = spawn(
     process.execPath,
@@ -467,9 +526,9 @@ try {
       require.resolve("next/dist/bin/next"),
       "dev",
       "--hostname",
-      "127.0.0.1",
+      server.hostname,
       "--port",
-      "3100",
+      server.port,
     ],
     {
       env: {
@@ -491,7 +550,7 @@ try {
         OPENAI_API_URL: "https://api.openai.com/v1/",
         POSTGRES_SSL_MODE: "disable",
         POSTGRES_URL: container.getConnectionUri(),
-        PUBLIC_WEB_URL: "http://127.0.0.1:3100",
+        PUBLIC_WEB_URL: `http://${server.hostname}:${server.port}`,
         STRIPE_SECRET_KEY: "sk_test_placeholder_for_build",
         STRIPE_WEBHOOK_SECRET: "whsec_build_placeholder",
         VERCEL_BRANCH_URL: "",
@@ -499,6 +558,7 @@ try {
         VERCEL_ENV: "development",
         VERCEL_PROJECT_PRODUCTION_URL: "",
         VERCEL_URL: "",
+        WORKFLOW_LOCAL_BASE_URL: `http://${server.hostname}:${server.port}`,
         WORKFLOW_LOCAL_DATA_DIR: workflowDataDir,
         WORKFLOW_TARGET_WORLD: "local",
       },

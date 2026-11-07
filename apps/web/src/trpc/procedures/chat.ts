@@ -4,7 +4,7 @@ import { z } from "zod";
 import {
   branchChatThread,
   ChatThreadError,
-  listChatThreads,
+  createChatThread,
   readChatThread,
 } from "~/ai/server/chat-threads";
 import { protectedProcedure } from "../trpc";
@@ -49,14 +49,14 @@ export const chatRouter = {
         branchChatThread(memory, ctx.session.user.id, input),
       ),
     ),
+  create: protectedProcedure.mutation(({ ctx }) =>
+    withMemory((memory) => createChatThread(memory, ctx.session.user.id)),
+  ),
   history: protectedProcedure
-    .input(threadInput)
+    .input(threadInput.extend({ page: z.number().int().min(0).optional() }))
     .query(({ ctx, input }) =>
       withMemory((memory) =>
-        readChatThread(memory, ctx.session.user.id, input.threadId),
+        readChatThread(memory, ctx.session.user.id, input.threadId, input.page),
       ),
     ),
-  list: protectedProcedure.query(({ ctx }) =>
-    withMemory((memory) => listChatThreads(memory, ctx.session.user.id)),
-  ),
 } satisfies TRPCRouterRecord;

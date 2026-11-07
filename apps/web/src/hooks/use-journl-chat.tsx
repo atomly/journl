@@ -110,7 +110,9 @@ export function JournlChatProvider({
                 view,
               } satisfies Omit<JournlAgentContext, "user">,
               messageId,
-              messages,
+              // Mastra owns canonical history. Send only new input or the
+              // current assistant tool continuation, never restored history.
+              messages: messages.slice(-1),
               threadId: thread.current,
               trigger,
             },

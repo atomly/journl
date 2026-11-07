@@ -248,14 +248,21 @@ describe("usage accounting through the installed Mastra Agent", () => {
               controller.abort();
           },
         );
-        expect(model.doStreamCalls).toHaveLength(1);
+        const attempts = outcome === "malformed" ? 2 : 1;
+        expect(model.doStreamCalls).toHaveLength(attempts);
         expect(mocks.usage).toHaveBeenCalledTimes(1);
         expect(mocks.usage).toHaveBeenCalledWith({
           metrics: [
-            { quantity: outcome === "aborted" ? 0 : 10, unit: "input_tokens" },
-            { quantity: outcome === "aborted" ? 0 : 20, unit: "output_tokens" },
             {
-              quantity: outcome === "aborted" ? 0 : 3,
+              quantity: outcome === "aborted" ? 0 : 10 * attempts,
+              unit: "input_tokens",
+            },
+            {
+              quantity: outcome === "aborted" ? 0 : 20 * attempts,
+              unit: "output_tokens",
+            },
+            {
+              quantity: outcome === "aborted" ? 0 : 3 * attempts,
               unit: "reasoning_tokens",
             },
           ],
@@ -275,6 +282,94 @@ describe("usage accounting through the installed Mastra Agent", () => {
           expect(await nativeResult?.finishReason).toBe("aborted");
           expect(chunks).toContainEqual({ type: "abort" });
         }
+      } finally {
+        log.mockRestore();
+      }
+    },
+  );
+});
+
+describe("native validation retries", () => {
+  it.each([true, false])(
+    "bounds correction of invalid block references (corrected: %s)",
+    async (corrected) => {
+      const { Agent: RealAgent } =
+        await vi.importActual<typeof import("@mastra/core/agent")>(
+          "@mastra/core/agent",
+        );
+      let calls = 0;
+      const model = new MockLanguageModelV4({
+        doStream: async () => ({
+          stream: new ReadableStream({
+            start(stream) {
+              calls += 1;
+              const operations =
+                corrected && calls === 2
+                  ? [operation]
+                  : [{ id: "missing", type: "remove" }];
+              stream.enqueue({ type: "stream-start", warnings: [] });
+              stream.enqueue({ id: "proposal", type: "text-start" });
+              stream.enqueue({
+                delta: JSON.stringify({ operations }),
+                id: "proposal",
+                type: "text-delta",
+              });
+              stream.enqueue({ id: "proposal", type: "text-end" });
+              stream.enqueue({
+                finishReason: { raw: undefined, unified: "stop" },
+                type: "finish",
+                usage: {
+                  inputTokens: {
+                    cacheRead: 0,
+                    cacheWrite: 0,
+                    noCache: 10,
+                    total: 10,
+                  },
+                  outputTokens: { reasoning: 3, text: 17, total: 20 },
+                },
+              });
+              stream.close();
+            },
+          }),
+        }),
+        modelId: "gpt-5-mini",
+        provider: "openai.responses",
+      });
+      const agent = new RealAgent({
+        id: "writer-retry-test",
+        instructions: String(mocks.agentOptions.instructions),
+        model,
+        name: "Writer retry test",
+      });
+      mocks.stream.mockImplementation((prompt, options) =>
+        agent.stream(prompt, options),
+      );
+      const log = vi.spyOn(console, "error").mockImplementation(() => {});
+      try {
+        const before = structuredClone(request.blocks);
+        const { chunks, errors } = await consume(
+          await streamDocumentWriter({
+            request,
+            signal: new AbortController().signal,
+            user,
+          }),
+        );
+        expect(calls).toBe(2);
+        expect(request.blocks).toEqual(before);
+        expect(generated(chunks)).toHaveLength(corrected ? 1 : 0);
+        expect(errors).toHaveLength(corrected ? 0 : 1);
+        expect(mocks.usage).toHaveBeenCalledExactlyOnceWith(
+          expect.objectContaining({
+            metrics: [
+              { quantity: 20, unit: "input_tokens" },
+              { quantity: 40, unit: "output_tokens" },
+              { quantity: 6, unit: "reasoning_tokens" },
+            ],
+          }),
+        );
+        expect(JSON.stringify(model.doStreamCalls[1]?.prompt)).toContain(
+          "The operation batch is invalid",
+        );
       } finally {
         log.mockRestore();
       }

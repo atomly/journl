@@ -20,57 +20,51 @@ export function useChatBranches(
 ) {
   const client = useTRPCClient();
   const root = getChatRootThreadId(owner);
-  const storageKey = `journl:chat-thread:${owner}`;
-  const [branches, setBranches] = useState<Branch[]>([
-    { id: root, title: "Original conversation" },
-  ]);
+  const [branches, setBranches] = useState<Branch[]>([]);
   const [threadId, setThreadId] = useState(root);
   const [loading, setLoading] = useState(true);
   const [ready, setReady] = useState(false);
+  const [hasEarlier, setHasEarlier] = useState(false);
+  const nextPage = useRef(1);
   const [error, setError] = useState<string | null>(null);
   const pending = useRef(true);
   const mounted = useRef(false);
+  const initialCreation = useRef<ReturnType<
+    typeof client.chat.create.mutate
+  > | null>(null);
 
   const activate = useCallback(
-    (id: string, messages: UIMessage[]) => {
+    (id: string, messages: UIMessage[], hasMore = false) => {
       thread.current = id;
       chat.messages = messages;
       chat.clearError();
       setThreadId(id);
+      setHasEarlier(hasMore);
+      nextPage.current = 1;
       setReady(true);
-      try {
-        sessionStorage.setItem(storageKey, id);
-      } catch {
-        /* Storage can be disabled. */
-      }
     },
-    [chat, storageKey, thread],
+    [chat, thread],
   );
 
   useEffect(() => {
     mounted.current = true;
     let current = true;
-    let selected = root;
-    try {
-      selected = sessionStorage.getItem(storageKey) || root;
-    } catch {
-      /* Storage can be disabled. */
-    }
     pending.current = true;
-    void Promise.all([
-      client.chat.list.query(),
-      client.chat.history.query({ threadId: selected }),
-    ])
-      .then(([items, history]) => {
+    const createInitialChat = () => {
+      if (!initialCreation.current)
+        initialCreation.current = client.chat.create.mutate();
+      return initialCreation.current;
+    };
+    // Each application load gets a new thread. Saved transcripts are not
+    // resumed automatically; resource-scoped working memory remains shared.
+    void createInitialChat()
+      .then((history) => {
         if (!current) return;
-        setBranches(items);
-        activate(history.threadId, history.messages);
+        setBranches([{ id: history.threadId, title: history.title }]);
+        activate(history.threadId, history.messages, history.hasMore);
       })
       .catch(() => {
-        if (current)
-          setError(
-            "Could not load the conversation. Select a conversation to retry.",
-          );
+        if (current) setError("Could not start a new chat. Please retry.");
       })
       .finally(() => {
         if (current) {
@@ -82,7 +76,7 @@ export function useChatBranches(
       current = false;
       mounted.current = false;
     };
-  }, [activate, client, root, storageKey]);
+  }, [activate, client]);
 
   const run = useCallback(
     async (action: () => Promise<void>) => {
@@ -116,15 +110,45 @@ export function useChatBranches(
   const select = useCallback(
     (id: string) =>
       run(async () => {
-        const [history, items] = await Promise.all([
-          client.chat.history.query({ threadId: id }),
-          client.chat.list.query(),
-        ]);
+        const history = await client.chat.history.query({ threadId: id });
         if (!mounted.current) return;
-        activate(history.threadId, history.messages);
-        setBranches(items);
+        activate(history.threadId, history.messages, history.hasMore);
       }),
     [activate, client, run],
+  );
+
+  const newChat = useCallback(
+    () =>
+      run(async () => {
+        const history = await client.chat.create.mutate();
+        if (!mounted.current) return;
+        activate(history.threadId, history.messages);
+        setBranches((items) => [
+          ...items,
+          { id: history.threadId, title: history.title },
+        ]);
+      }),
+    [activate, client, run],
+  );
+
+  const loadEarlier = useCallback(
+    () =>
+      run(async () => {
+        if (!hasEarlier) return;
+        const history = await client.chat.history.query({
+          page: nextPage.current,
+          threadId: thread.current,
+        });
+        if (!mounted.current) return;
+        const ids = new Set(chat.messages.map((message) => message.id));
+        chat.messages = [
+          ...history.messages.filter((message) => !ids.has(message.id)),
+          ...chat.messages,
+        ];
+        nextPage.current += 1;
+        setHasEarlier(history.hasMore);
+      }),
+    [chat, client, hasEarlier, run, thread],
   );
 
   const fork = useCallback(
@@ -151,7 +175,7 @@ export function useChatBranches(
           threadId: thread.current,
         });
         if (!mounted.current) return;
-        activate(branch.threadId, branch.messages);
+        activate(branch.threadId, branch.messages, branch.hasMore);
         setBranches((items) => [
           ...items,
           { id: branch.threadId, title: branch.title },
@@ -184,7 +208,10 @@ export function useChatBranches(
     branches,
     editMessage,
     error,
+    hasEarlier,
+    loadEarlier,
     loading,
+    newChat,
     ready,
     retryResponse,
     select,

@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { getChatRootThreadId } from "../chat-thread";
 import {
   branchChatThread,
-  listChatThreads,
+  createChatThread,
   readChatThread,
   requireChatThread,
 } from "./chat-threads";
@@ -57,6 +57,10 @@ beforeEach(async () => {
   });
 });
 afterEach(async () => store.close());
+async function ownedThreads(resourceId = owner) {
+  return (await memory.listThreads({ filter: { resourceId }, perPage: false }))
+    .threads;
+}
 
 describe("native Mastra conversation branches", () => {
   it("edits an earlier prompt with only preceding history and leaves the source intact", async () => {
@@ -73,6 +77,7 @@ describe("native Mastra conversation branches", () => {
     ]);
     expect(await readChatThread(memory, owner, root)).toEqual(before);
     expect(await readChatThread(memory, owner, branch.threadId)).toEqual({
+      hasMore: false,
       messages: branch.messages,
       threadId: branch.threadId,
     });
@@ -111,13 +116,13 @@ describe("native Mastra conversation branches", () => {
         threadId: branch.threadId,
       });
       expect(text(next.messages)).toEqual(["First prompt", "First answer"]);
-      expect(
-        (await listChatThreads(memory, owner)).map((thread) => thread.id),
-      ).toEqual(expect.arrayContaining([root, branch.threadId, next.threadId]));
+      expect((await ownedThreads()).map((thread) => thread.id)).toEqual(
+        expect.arrayContaining([root, branch.threadId, next.threadId]),
+      );
     },
   );
   it("does not read, clone or continue another owner's thread", async () => {
-    const before = await listChatThreads(memory, owner);
+    const before = await ownedThreads();
     await expect(
       readChatThread(memory, "intruder", root),
     ).rejects.toMatchObject({ code: "NOT_FOUND" });
@@ -131,10 +136,8 @@ describe("native Mastra conversation branches", () => {
     await expect(
       requireChatThread(memory, "intruder", root),
     ).rejects.toMatchObject({ code: "NOT_FOUND" });
-    expect(await listChatThreads(memory, owner)).toEqual(before);
-    expect(await listChatThreads(memory, "intruder")).toEqual([
-      { id: getChatRootThreadId("intruder"), title: "Original conversation" },
-    ]);
+    expect(await ownedThreads()).toEqual(before);
+    expect(await ownedThreads("intruder")).toEqual([]);
   });
   it("rejects unrelated owned threads and unknown pivots before creating a branch", async () => {
     await memory.createThread({ resourceId: owner, threadId: "unrelated" });
@@ -149,7 +152,7 @@ describe("native Mastra conversation branches", () => {
         branchChatThread(memory, owner, { ...input, threadId: root }),
       ).rejects.toMatchObject({ code: "BAD_REQUEST" });
     }
-    expect(await listChatThreads(memory, owner)).toHaveLength(1);
+    expect(await ownedThreads()).toHaveLength(2);
   });
   it("returns empty history only for the authenticated owner's new original conversation", async () => {
     expect(
@@ -266,4 +269,72 @@ it("retains completed tool output and reasoning in the copied prefix", async () 
     }),
   );
   expect(await readChatThread(memory, owner, root)).toEqual(before);
+});
+
+it("starts an independent empty chat without touching legacy account history", async () => {
+  const before = await readChatThread(memory, owner, root);
+  const chat = await createChatThread(memory, owner);
+  expect(chat.threadId).not.toBe(root);
+  expect(chat.messages).toEqual([]);
+  expect(chat.hasMore).toBe(false);
+  await requireChatThread(memory, owner, chat.threadId);
+  expect(await readChatThread(memory, owner, root)).toEqual(before);
+});
+
+it("reads history in bounded pages while keeping earlier messages accessible", async () => {
+  await memory.saveMessages({
+    messages: Array.from({ length: 80 }, (_, index) => ({
+      content: {
+        format: 2 as const,
+        parts: [{ text: `Paged ${index}`, type: "text" as const }],
+      },
+      createdAt: new Date(1800000000000 + index),
+      id: `paged-${index}`,
+      resourceId: owner,
+      role: index % 2 ? ("assistant" as const) : ("user" as const),
+      threadId: root,
+      type: "text" as const,
+    })),
+  });
+  const latest = await readChatThread(memory, owner, root);
+  expect(latest.messages).toHaveLength(40);
+  expect(text(latest.messages)[0]).toBe("Paged 40");
+  expect(text(latest.messages).at(-1)).toBe("Paged 79");
+  expect(latest.hasMore).toBe(true);
+  const older = await readChatThread(memory, owner, root, 1);
+  expect(text(older.messages)[0]).toBe("Paged 0");
+  expect(older.hasMore).toBe(true);
+  const oldest = await readChatThread(memory, owner, root, 2);
+  expect(oldest.messages).toHaveLength(6);
+  expect(oldest.hasMore).toBe(false);
+});
+
+it("shares high-level user memory with a fresh chat without importing its transcript", async () => {
+  const shared = new Memory({
+    options: {
+      generateTitle: false,
+      semanticRecall: false,
+      workingMemory: { enabled: true, scope: "resource" },
+    },
+    storage: store,
+  });
+  await shared.updateWorkingMemory({
+    resourceId: owner,
+    threadId: root,
+    workingMemory: "Prefers concise answers and vegetarian recipes.",
+  });
+  const fresh = await createChatThread(shared, owner);
+  expect(fresh.messages).toEqual([]);
+  expect(
+    await shared.getWorkingMemory({
+      resourceId: owner,
+      threadId: fresh.threadId,
+    }),
+  ).toBe("Prefers concise answers and vegetarian recipes.");
+  expect(
+    await shared.getWorkingMemory({
+      resourceId: "other-owner",
+      threadId: fresh.threadId,
+    }),
+  ).not.toBe("Prefers concise answers and vegetarian recipes.");
 });

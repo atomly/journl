@@ -10,7 +10,7 @@ test.skip(
   "Set BROWSER_TEST_OPENAI_API_KEY for real conversation branching acceptance",
 );
 
-test("Edit and Retry preserve the original history and restore the selected branch after reload", async ({
+test("Edit and Retry preserve the original history during the session and start fresh after reload", async ({
   page,
 }, info) => {
   test.skip(
@@ -33,6 +33,10 @@ test("Edit and Retry preserve the original history and restore the selected bran
   await expect(
     panel.getByRole("textbox", { exact: true, name: "Message" }),
   ).toBeEnabled({ timeout: 60_000 });
+  const sourceTitle = await panel
+    .getByRole("combobox", { name: "Conversation branch" })
+    .locator('[data-slot="select-value"]')
+    .innerText();
   const baseUsers = await panel.locator('[data-chat-role="user"]').count();
   const baseAnswers = await panel
     .locator('[data-chat-role="assistant"]')
@@ -63,7 +67,7 @@ test("Edit and Retry preserve the original history and restore the selected bran
     .locator('[data-slot="select-value"]')
     .innerText();
 
-  await switchBranch(panel, "Original conversation");
+  await switchBranch(panel, sourceTitle);
   expect(await transcript(panel)).toEqual(original);
   await switchBranch(panel, edited.trim());
   await expect(
@@ -86,13 +90,12 @@ test("Edit and Retry preserve the original history and restore the selected bran
   );
   await page.reload();
   await expect(
-    panel.getByRole("combobox", { name: "Conversation branch" }),
-  ).toContainText("Retry:");
+    panel.getByRole("textbox", { exact: true, name: "Message" }),
+  ).toBeEnabled();
+  await expect(panel.locator("[data-chat-role]")).toHaveCount(0);
   await expect(
-    panel.locator('[data-chat-role="assistant"]').last(),
-  ).toContainText("BRANCH_REVISED_MAPLE");
-  await switchBranch(panel, "Original conversation");
-  expect(await transcript(panel)).toEqual(original);
+    panel.getByRole("combobox", { name: "Conversation branch" }),
+  ).not.toContainText("Retry:");
 });
 
 async function ask(panel: Locator, prompt: string, answer: string) {
@@ -180,8 +183,9 @@ test("Retry recovers a prompt after an HTTP failure before native memory saved i
   ).toContainText("Retry:");
   await page.reload();
   await expect(
-    panel.locator('[data-chat-role="assistant"]').last(),
-  ).toContainText("RETRY_RECOVERED_ORCHID");
+    panel.getByRole("textbox", { exact: true, name: "Message" }),
+  ).toBeEnabled();
+  await expect(panel.locator("[data-chat-role]")).toHaveCount(0);
 });
 
 // Mastra intentionally strips its internal working-memory tool from saved

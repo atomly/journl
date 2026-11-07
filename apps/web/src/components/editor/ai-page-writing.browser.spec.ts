@@ -12,6 +12,14 @@ test("chat creates and writes a page, edits it unfocused, then opens it and writ
   );
   let pageId: string | undefined;
   let writes = 0;
+  type ToolPart = {
+    type: string;
+    state?: string;
+    toolCallId?: string;
+    output?: { page?: { id: string }; status?: string };
+  };
+  // Model the server-owned turn across latest-message tool continuations.
+  const turns = new Map<string, { text: string; parts: ToolPart[] }>();
   const bulletId = randomUUID();
   const contexts: {
     activeEditors: string[];
@@ -20,21 +28,29 @@ test("chat creates and writes a page, edits it unfocused, then opens it and writ
   await page.route("**/api/ai/journl-agent", async (route) => {
     const body = route.request().postDataJSON();
     contexts.push(body.context);
-    const userIndex = body.messages.findLastIndex(
-      (message: { role: string }) => message.role === "user",
-    );
-    const text = body.messages[userIndex].parts.find(
-      (part: { type: string }) => part.type === "text",
-    )?.text;
-    const parts = body.messages.slice(userIndex + 1).flatMap(
-      (message: {
-        parts: {
-          type: string;
-          state?: string;
-          output?: { page?: { id: string }; status?: string };
-        }[];
-      }) => message.parts,
-    );
+    expect(body.messages).toHaveLength(1);
+    const input = body.messages[0];
+    if (input.role === "user")
+      turns.set(body.threadId, {
+        parts: [],
+        text:
+          input.parts.find((part: { type: string }) => part.type === "text")
+            ?.text ?? "",
+      });
+    const turn = turns.get(body.threadId);
+    if (!turn) throw new Error("Missing server-side mock turn");
+    if (input.role === "assistant") {
+      for (const part of input.parts as ToolPart[]) {
+        if (!part.toolCallId) continue;
+        turn.parts = [
+          ...turn.parts.filter(
+            (previous) => previous.toolCallId !== part.toolCallId,
+          ),
+          part,
+        ];
+      }
+    }
+    const { text, parts } = turn;
     const created = parts.find(
       (part: { type: string; state?: string }) =>
         part.type === "tool-createPage" && part.state === "output-available",

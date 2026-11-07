@@ -16,6 +16,7 @@ import { clipboardPasteExtension } from "./clipboard-paste";
 import { editingExtension } from "./commands";
 import { createEditorId } from "./id";
 import { identityExtension } from "./identity";
+import { listNumberingExtension } from "./list-numbering";
 import { nativeBlockDragExtension } from "./native-block-drag";
 import {
   insertTiptapReference,
@@ -225,6 +226,7 @@ export function createDocumentEditor({
       suggestionExtension(() => createEditorId()),
       identityExtension(() => createEditorId()),
       nativeBlockDragExtension,
+      listNumberingExtension,
     ],
     onUpdate: ({ editor: updated, transaction, appendedTransactions }) => {
       // Tiptap also emits update for option-only changes such as setEditable.

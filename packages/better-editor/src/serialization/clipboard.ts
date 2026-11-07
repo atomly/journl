@@ -5,6 +5,15 @@ import { fromTiptapDocument } from "./tiptap";
 /** Only the copied slice is serialized. Rich HTML stays untouched; plain text
  * keeps familiar list markers, nesting and link labels for ordinary inputs. */
 export function clipboardText(content: Fragment): string {
+  if (
+    content.firstChild &&
+    content.content.every((node) => node.type.name === "betterEditorBlock")
+  )
+    return documentMarkdown(
+      fromTiptapDocument(
+        content.firstChild.type.schema.topNodeType.create(null, content),
+      ),
+    );
   const parts: string[] = [];
   content.forEach((node: Node) => {
     if (node.type.name === "betterEditorBlock") {

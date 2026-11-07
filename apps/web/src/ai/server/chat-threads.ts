@@ -33,22 +33,6 @@ export async function requireChatThread(
   return thread;
 }
 
-export async function listChatThreads(memory: Memory, owner: string) {
-  const root = getChatRootThreadId(owner);
-  const { threads } = await memory.listThreads({
-    filter: { metadata: { chatRoot: root }, resourceId: owner },
-    orderBy: { direction: "DESC", field: "createdAt" },
-    perPage: false,
-  });
-  return [
-    { id: root, title: "Original conversation" },
-    ...threads.map(({ id, title }) => ({
-      id,
-      title: title || "Conversation branch",
-    })),
-  ];
-}
-
 async function recallChat(memory: Memory, owner: string, threadId: string) {
   return memory.recall({
     hideSignals: true,
@@ -59,21 +43,48 @@ async function recallChat(memory: Memory, owner: string, threadId: string) {
   });
 }
 
+export async function createChatThread(memory: Memory, owner: string) {
+  const thread = await memory.createThread({
+    metadata: { chatRoot: getChatRootThreadId(owner), kind: "conversation" },
+    resourceId: owner,
+    title: `Chat · ${new Date().toISOString().replace("T", " ").slice(0, 19)} UTC`,
+  });
+  return {
+    hasMore: false,
+    messages: [],
+    threadId: thread.id,
+    title: thread.title || "New chat",
+  };
+}
+
 export async function readChatThread(
   memory: Memory,
   owner: string,
   threadId: string,
+  page = 0,
 ) {
   // The original conversation does not exist until its first message is sent.
   if (
     threadId === getChatRootThreadId(owner) &&
     !(await memory.getThreadById({ threadId }))
   ) {
-    return { messages: [], threadId };
+    return { hasMore: false, messages: [], threadId };
   }
   await requireChatThread(memory, owner, threadId);
-  const { messages } = await recallChat(memory, owner, threadId);
-  return { messages: toAISdkMessages(messages, { version: "v7" }), threadId };
+  const { messages, hasMore } = await memory.recall({
+    hideSignals: true,
+    orderBy: { direction: "DESC", field: "createdAt" },
+    page,
+    perPage: 40,
+    resourceId: owner,
+    threadId,
+  });
+  messages.sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
+  return {
+    hasMore,
+    messages: toAISdkMessages(messages, { version: "v7" }),
+    threadId,
+  };
 }
 
 export async function branchChatThread(

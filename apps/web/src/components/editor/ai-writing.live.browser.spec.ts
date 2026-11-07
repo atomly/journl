@@ -148,6 +148,12 @@ test("live chat creates, edits, selects, reopens and persists structured writing
         .locator('[data-better-editor-body="numberedListItem"]')
         .count(),
     ).toBeGreaterThanOrEqual(4);
+    const ordinals = await content
+      .locator('[data-better-editor-body="numberedListItem"]')
+      .evaluateAll((rows) =>
+        rows.map((row) => Number(row.getAttribute("data-start"))),
+      );
+    expect(ordinals).toEqual(ordinals.map((_, index) => index + 1));
     const written = await content.innerText();
     await page.reload();
     await expect(content).toHaveText(written, { useInnerText: true });

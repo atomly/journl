@@ -97,6 +97,7 @@ Create a separate block for each paragraph, heading, list item, quote, code bloc
 Separate paragraph blocks already provide spacing. Do not insert empty paragraphs merely to simulate blank lines between them.
 If the supplied document contains only one empty paragraph, reuse that block for the first paragraph instead of retaining a blank starter before the new writing.
 Use heading blocks with props.level for section titles, bulletListItem for each bullet, and numberedListItem for each numbered step.
+Omit numberedListItem props.start for normal sequential lists. The editor numbers siblings automatically. Supply start only for an explicitly requested ordinal or restart.
 List items at the same level are siblings. Put children under an item only for an actual nested list, never to represent the next item.
 Use inline text styles and link objects for bold, italic, code, and links. Do not put Markdown markers in text to simulate formatting.
 Do not combine an entire recipe, article, or several paragraphs into one block with newline characters. Preserve intentional line breaks within one paragraph and code block contents.
@@ -145,7 +146,32 @@ export async function streamDocumentWriter({
           }),
           {
             abortSignal: signal,
+            maxProcessorRetries: 1,
             maxSteps: 1,
+            outputProcessors: [
+              {
+                id: "document-operation-validation",
+                processOutputStep: ({ text, messages, abort }) => {
+                  try {
+                    const generated = outputSchema.parse(
+                      JSON.parse(text ?? ""),
+                    );
+                    const operations = z
+                      .array(zDocumentWriterOperation)
+                      .parse(assignIdentities(generated.operations));
+                    applyDocumentOperations(request.blocks, operations);
+                  } catch {
+                    // Mastra retries this step once with this feedback. Keep
+                    // document values and provider error payloads out of it.
+                    abort(
+                      "The operation batch is invalid. Regenerate the complete batch. Use unique insert labels. Each parentId and afterId must refer to an existing block or an earlier insert that has not been removed. afterId must be a sibling in the destination parent. Preserve all unrelated content.",
+                      { retry: true },
+                    );
+                  }
+                  return messages;
+                },
+              },
+            ],
             providerOptions: {
               openai: {
                 reasoningEffort: request.reasoningEffort ?? "low",
@@ -171,8 +197,16 @@ export async function streamDocumentWriter({
           // Consume through the terminal event before checking or accounting for
           // the result. A closed stream alone does not complete a proposal.
           for await (const chunk of result.fullStream) {
-            if (chunk.type === "error" || chunk.type === "tripwire")
-              failed = true;
+            if (chunk.type === "error") failed = true;
+            if (chunk.type === "tripwire") {
+              if (chunk.payload.retry) {
+                writer.write({
+                  data: { operations: [], status: "generating" },
+                  transient: true,
+                  type: "data-document-edit",
+                });
+              } else failed = true;
+            }
             if (chunk.type === "abort") aborted = true;
             if (chunk.type === "finish") finished = true;
             if (
@@ -218,9 +252,13 @@ export async function streamDocumentWriter({
 
           stage = "validating";
           const generated = outputSchema.parse(await result.object);
+          stage = "assigning-identities";
+          const identified = assignIdentities(generated.operations);
+          stage = "validating-identities";
           const operations = z
             .array(zDocumentWriterOperation)
-            .parse(assignIdentities(generated.operations));
+            .parse(identified);
+          stage = "applying-operations";
           applyDocumentOperations(request.blocks, operations);
           if (signal.aborted) {
             abort();

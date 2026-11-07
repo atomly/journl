@@ -52,7 +52,26 @@ export async function streamJournlChat({
     await requireChatThread(journlMemory, user.id, memoryThreadId);
   }
   const reasoning = parseJournlAgentReasoning(context.reasoning);
-  const intent = inferUserIntent(getLastUserMessage(messages));
+  let prompt = getLastUserMessage(messages);
+  if (!prompt && messages.at(-1)?.role === "assistant") {
+    const { journlMemory } = await import("~/ai/mastra/memory/memory");
+    const { messages: history } = await journlMemory.recall({
+      hideSignals: true,
+      orderBy: { direction: "DESC", field: "createdAt" },
+      perPage: 30,
+      resourceId: user.id,
+      threadId: memoryThreadId,
+    });
+    const userMessage = [...history]
+      .reverse()
+      .find((message) => message.role === "user");
+    prompt =
+      userMessage?.content.parts
+        .filter((part) => part.type === "text")
+        .map((part) => part.text)
+        .join("\n") ?? "";
+  }
+  const intent = inferUserIntent(prompt);
   const journlAgent = intent === "search" ? journlNano : journlMini;
 
   const stream = await handleChatStream({

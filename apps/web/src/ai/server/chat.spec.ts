@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({
   miniModel: vi.fn(async () => ({ modelId: "mini", provider: "openai" })),
   nanoModel: vi.fn(async () => ({ modelId: "nano", provider: "openai" })),
+  recall: vi.fn(),
   stream: vi.fn(),
   thread: vi.fn(),
   usage: vi.fn(),
@@ -17,7 +18,7 @@ vi.mock("~/ai/mastra/agents/journl-agent", () => ({
 }));
 vi.mock("~/ai/mastra/mastra", () => ({ mastra: {} }));
 vi.mock("~/ai/mastra/memory/memory", () => ({
-  journlMemory: { getThreadById: mocks.thread },
+  journlMemory: { getThreadById: mocks.thread, recall: mocks.recall },
 }));
 vi.mock("~/env", () => ({ env: { NODE_ENV: "test" } }));
 vi.mock("~/workflows/model-usage", () => ({ startModelUsage: mocks.usage }));
@@ -239,4 +240,45 @@ it("authorizes the selected branch before sending it to the native stream", asyn
     streamJournlChat({ request, signal: new AbortController().signal, user }),
   ).rejects.toMatchObject({ code: "NOT_FOUND" });
   expect(mocks.stream).not.toHaveBeenCalled();
+});
+
+it("keeps search routing on a latest-only client-tool continuation using canonical memory", async () => {
+  mocks.recall.mockResolvedValue({
+    messages: [
+      {
+        content: { parts: [{ text: "Rewrite this paragraph", type: "text" }] },
+        role: "user",
+      },
+      {
+        content: { parts: [{ text: "Find my notes", type: "text" }] },
+        role: "user",
+      },
+    ],
+  });
+  const request = await parseJournlChatRequest({
+    context,
+    messages: [
+      {
+        id: "assistant-tool",
+        parts: [
+          {
+            input: { id: "a-page" },
+            output: { message: "Opened page" },
+            state: "output-available",
+            toolCallId: "navigate",
+            type: "tool-navigatePage",
+          },
+        ],
+        role: "assistant",
+      },
+    ],
+  });
+  await streamJournlChat({
+    request,
+    signal: new AbortController().signal,
+    user,
+  });
+  expect(mocks.stream).toHaveBeenCalledWith(
+    expect.objectContaining({ agentId: "journl-nano" }),
+  );
 });

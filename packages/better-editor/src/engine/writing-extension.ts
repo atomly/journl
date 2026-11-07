@@ -2,6 +2,7 @@ import { Extension, InputRule, markInputRule } from "@tiptap/core";
 import { TextSelection } from "@tiptap/pm/state";
 import { indentBlock, selectedBlock, toggleTextMark } from "./commands";
 import { blockAt, type IdFactory, splitBlock } from "./identity";
+import { numberedListOrdinal } from "./list-numbering";
 import { changeBlockType, moveSelectedBlock, turnInto } from "./writing";
 
 const lists = new Set([
@@ -197,7 +198,8 @@ export function writingExtension(createId: IdFactory) {
             const props = { ...right.node.firstChild.attrs.props };
             if (body.type.name === "checkListItem") props.checked = false;
             if (body.type.name === "numberedListItem")
-              props.start = Number(body.attrs.props?.start ?? 1) + 1;
+              props.start =
+                numberedListOrdinal(target.siblings, target.index) + 1;
             const current = blockAt(tr.doc, right.id);
             tr.setNodeMarkup(current.pos + 1, undefined, { props });
           }

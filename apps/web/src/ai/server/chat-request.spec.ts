@@ -67,3 +67,38 @@ describe("chat request boundary", () => {
     );
   });
 });
+
+it("accepts new input without replaying a stored Mastra error part", async () => {
+  const { toAISdkMessages } = await import("@mastra/ai-sdk/ui");
+  const history = toAISdkMessages(
+    [
+      {
+        content: {
+          format: 2,
+          parts: [
+            {
+              error: {
+                message: "A historical provider failure",
+                name: "Error",
+              },
+              type: "error",
+            },
+          ],
+        },
+        createdAt: new Date(),
+        id: "old-error",
+        role: "assistant",
+      },
+    ],
+    { version: "v7" },
+  );
+  await expect(
+    parseJournlChatRequest({
+      ...request,
+      messages: [...history, ...request.messages],
+    }),
+  ).rejects.toBeInstanceOf(InvalidChatRequest);
+  expect((await parseJournlChatRequest(request)).messages).toEqual(
+    request.messages,
+  );
+});

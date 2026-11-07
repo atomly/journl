@@ -108,10 +108,14 @@ applied through `pnpm db:push`, which runs Drizzle Kit's schema comparison and
 update flow.
 
 Editing a chat prompt or retrying a response creates a separate Mastra thread.
-The conversation selector restores the original or another branch. The selected
-branch survives reloads in the current tab. Branching preserves chat history;
-it does not reverse editor changes already saved by a tool. User-level working
-memory, including preferences, remains shared across branches.
+Each application load starts a fresh conversation, including after a reload.
+Navigation keeps that conversation active. New chat clears the chat view without
+deleting saved conversations or changing the document. The branch selector opens
+only conversations created during the current app session. A saved-chat browser
+can be added later. Mastra owns saved history; requests send only new input or the
+current tool continuation. Branching preserves chat history; it does not reverse
+editor changes already saved by a tool. User-level working memory, including
+preferences, remains shared across conversations and branches.
 
 AI writing starts from chat. The application binds it to the current page or
 journal entry, using highlighted text when present. The model does not choose an
@@ -120,7 +124,8 @@ ready. New block IDs are assigned by the server and remain stable while streamin
 Generated blocks appear inline while the editor is locked. Scrolling follows the changed blocks until the user scrolls away; Follow
 writing resumes it. The accepted document and history remain intact during
 streaming. Cancellation or failure restores them. Completed, validated edits use
-the normal editor commit and save queue, with one Undo step.
+the normal editor commit and save queue, with one Undo step. Mastra retries an
+invalid operation batch once with validation feedback before reporting failure.
 The first implementation supports exact selections inside one text block and
 complete sibling blocks. Partial selections across blocks and structural rewrites
 of partial inline selections return an error instead of expanding their scope.

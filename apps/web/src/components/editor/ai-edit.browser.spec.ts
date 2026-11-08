@@ -100,9 +100,7 @@ for (const mode of ["complete", "cancel", "blocks"] as const)
             });
             if (!hasResult)
               writer.write({
-                input: {
-                  agentPrompt: "Rewrite the target",
-                },
+                input: {},
                 toolCallId: "write-one",
                 toolName: "write",
                 type: "tool-input-available",

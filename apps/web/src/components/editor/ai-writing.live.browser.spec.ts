@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import type { Page } from "@playwright/test";
+import type { Editor, JSONContent } from "@tiptap/core";
 import { parseJsonEventStream, uiMessageChunkSchema } from "ai";
 import { fixtureId } from "~/testing/browser/data";
 import { expect, test } from "~/testing/browser/fixtures";
@@ -257,7 +258,7 @@ test("live tools keep the current write contract despite obsolete calls in histo
     expect(chunk.value.type).not.toBe("error");
   }
   expect(calls).toHaveLength(1);
-  expect(Object.keys(calls[0] as object)).toEqual(["agentPrompt"]);
+  expect(Object.keys(calls[0] as object)).toEqual([]);
 });
 
 test("live writer appends mixed structured content including tables", async ({
@@ -283,7 +284,9 @@ test("live writer appends mixed structured content including tables", async ({
       page,
       "Append complex structured content to this page: a Complex Examples heading; a four-column table with a header and three data rows; a three-item ordered list with a nested bullet list under item two; a checklist with checked and unchecked tasks; a JavaScript code block; a quote; an image using https://example.com/image.png; a divider; and a second two-column table with Sidebar and Main Content headers. Keep existing writing. Put the content in the editor, not in chat.",
     );
-    const editor = page.locator(".better-editor-tiptap");
+    const editor = page
+      .locator(".better-editor-tiptap")
+      .filter({ visible: true });
     await expect(editor.locator("table")).toHaveCount(2, { timeout: 180_000 });
     await expect(
       page.getByRole("button", { exact: true, name: "Cancel" }),
@@ -314,6 +317,194 @@ test("live writer appends mixed structured content including tables", async ({
     });
   }
 });
+
+test("live structural edits preserve identities, rich content, Undo and cancellation", async ({
+  page,
+}, info) => {
+  test.skip(
+    info.project.name !== "desktop-chromium",
+    "Desktop structural stress test",
+  );
+  test.setTimeout(600_000);
+  const responses: Promise<string>[] = [];
+  page.on("response", (response) => {
+    if (response.url().endsWith("/api/ai/document-writer"))
+      responses.push(response.text().catch(() => "Writer reader closed"));
+  });
+  // Streaming temporarily hides the accepted editor behind the visible draft.
+  const editor = page
+    .locator(".better-editor-tiptap")
+    .filter({ visible: true });
+  const document = () =>
+    editor.evaluate((element) =>
+      (element as HTMLElement & { editor: Editor }).editor.getJSON(),
+    );
+  const idle = async () => {
+    await expect(
+      page.getByRole("button", { exact: true, name: "Send message" }),
+    ).toBeVisible({ timeout: 180_000 });
+    await expect(editor).toHaveAttribute("contenteditable", "true");
+    await expect(page.locator('[data-ai-edit-status="error"]')).toHaveCount(0);
+    await expect(page.locator("[data-save-status]")).toContainText("Saved", {
+      timeout: 60_000,
+    });
+  };
+  try {
+    await page.goto("/journal/1987-02-10");
+    await openChat(page);
+    await expect(
+      page.getByPlaceholder("Ask anything...").filter({ visible: true }),
+    ).toBeEnabled({ timeout: 60_000 });
+    await ask(
+      page,
+      `Create and open a new page titled "Structural stress ${info.repeatEachIndex}". Its body must have exactly one heading, "Runbook", and no repeated page title. Add a paragraph exactly "Sentinel stays unchanged."; a table with Task/Owner/Status/Estimate header and API/Ada/Ready/2h, UI/Lin/Blocked/3h, QA/Sam/Planned/4h rows; three numbered steps named Plan, Verify, Deploy; under Verify two bullets named Check and Observe, and under Check one nested bullet named Subcheck. Add one checked and one unchecked task; a TypeScript code block with a multiline async function using actual source line breaks; a quote exactly "Proceed carefully."; a divider; and a closing paragraph with bold "Release approved" and a real link to https://example.com/spec. Use native editor blocks and write it now.`,
+    );
+    await expect(editor.locator("table")).toHaveCount(1, { timeout: 180_000 });
+    await idle();
+    await expect(
+      editor.locator('[data-better-editor-body="heading"]'),
+    ).toHaveText(["Runbook"]);
+    await expect(editor.locator("table tr")).toHaveCount(4);
+    await expect(editor.locator("strong")).toContainText("Release approved");
+    await expect(
+      editor.locator('a[href="https://example.com/spec"]'),
+    ).toHaveCount(1);
+    await expect(
+      editor.locator(
+        '[data-better-editor-body="checkListItem"][data-checked="true"]',
+      ),
+    ).toHaveCount(1);
+    await expect(
+      editor.locator(
+        '[data-better-editor-body="checkListItem"][data-checked="false"]',
+      ),
+    ).toHaveCount(1);
+    const code = await editor.locator("pre").textContent();
+    expect(code).toContain("\n");
+    expect(code).not.toContain("\\n");
+    const before = await document();
+    const beforeBlocks = editorBlocks(before);
+    const named = (text: string) => {
+      const block = beforeBlocks.find(
+        (block) => nodeText(block.content?.[0]) === text,
+      );
+      expect(block, `Missing block: ${text}`).toBeDefined();
+      if (!block) throw new Error(`Missing block: ${text}`);
+      return block;
+    };
+    const check = named("Check");
+    const verify = named("Verify");
+    const deploy = named("Deploy");
+    const quote = named("Proceed carefully.");
+    const table = beforeBlocks.find(
+      (block) => block.content?.[0]?.type === "table",
+    );
+    expect(table).toBeDefined();
+
+    await ask(
+      page,
+      'Update this page in place. In the table change UI status to Ready and estimate to 5h, remove the QA row, and append Docs/Ari/Planned/1h. Move Check with its complete Subcheck subtree to the root immediately after Deploy, rename Check to "Validation checks", and leave Observe under Verify. Move the quote immediately above the table. Preserve every retained block ID, all other blocks, the Sentinel paragraph, code, checklist, bold text and clickable link. Do not duplicate blocks. Apply now and briefly acknowledge the result.',
+    );
+    await expect(editor).toContainText("Validation checks", {
+      timeout: 180_000,
+    });
+    await idle();
+    await expect(
+      editor
+        .locator('[data-better-editor-body="bulletListItem"]')
+        .filter({ hasText: /^Validation checks$/ }),
+    ).toHaveCount(1);
+    const after = await document();
+    const afterBlocks = editorBlocks(after);
+    expect(afterBlocks.map((block) => block.attrs?.id).sort()).toEqual(
+      beforeBlocks.map((block) => block.attrs?.id).sort(),
+    );
+    const changedIds = [check.attrs?.id, verify.attrs?.id, table?.attrs?.id];
+    for (const block of beforeBlocks.filter(
+      (block) => !changedIds.includes(block.attrs?.id),
+    )) {
+      expect(
+        afterBlocks.find((current) => current.attrs?.id === block.attrs?.id),
+      ).toEqual(block);
+    }
+    const roots = after.content ?? [];
+    const rootIds = roots.map((block) => block.attrs?.id);
+    expect(rootIds.indexOf(check.attrs?.id)).toBe(
+      rootIds.indexOf(deploy.attrs?.id) + 1,
+    );
+    expect(rootIds.indexOf(quote.attrs?.id)).toBe(
+      rootIds.indexOf(table?.attrs?.id) - 1,
+    );
+    expect(
+      editorBlocks(
+        roots.find((block) => block.attrs?.id === check.attrs?.id) ?? {},
+      ).map((block) => nodeText(block.content?.[0])),
+    ).toEqual(["Validation checks", "Subcheck"]);
+    await expect(editor.locator("table tr")).toHaveText([
+      /Task.*Owner.*Status.*Estimate/s,
+      /API.*Ada.*Ready.*2h/s,
+      /UI.*Lin.*Ready.*5h/s,
+      /Docs.*Ari.*Planned.*1h/s,
+    ]);
+    const summary = page.locator('[data-chat-role="assistant"]').last();
+    await expect(summary).not.toContainText(
+      /session restriction|cannot perform|can’t perform|copy.paste|next turn/i,
+    );
+    await expect(summary).not.toContainText(
+      /\{\s*"memory"\s*:|updateWorkingMemory|WORKING_MEMORY_SYSTEM_INSTRUCTION/,
+    );
+
+    await editor
+      .locator('[data-better-editor-body="paragraph"]')
+      .first()
+      .click();
+    await page.keyboard.press("ControlOrMeta+z");
+    await expect.poll(document).toEqual(before);
+    await page.keyboard.press("ControlOrMeta+Shift+z");
+    await expect.poll(document).toEqual(after);
+    await expect(page.locator("[data-save-status]")).toContainText("Saved", {
+      timeout: 60_000,
+    });
+
+    await ask(
+      page,
+      'Append 60 detailed numbered steps to the end of this page. Each must begin "Cancellation probe" and contain two sentences. Keep all existing blocks unchanged. Write directly into the editor.',
+    );
+    await expect(editor).toContainText("Cancellation probe", {
+      timeout: 180_000,
+    });
+    await expect(editor).toHaveAttribute("contenteditable", "false");
+    await page
+      .getByRole("button", { exact: true, name: "Stop AI writing" })
+      .click();
+    await idle();
+    expect(await document()).toEqual(after);
+    await expect(
+      page.locator('[data-chat-role="assistant"]').last(),
+    ).toContainText(/cancel|stopp/i);
+    await expect(
+      page.locator('[data-chat-role="assistant"]').last(),
+    ).not.toContainText(/restriction|permission|quota|paste/i);
+    await page.reload();
+    await expect.poll(document).toEqual(after);
+  } finally {
+    await info.attach("structural-writer-responses", {
+      body: JSON.stringify(await Promise.all(responses)),
+      contentType: "application/json",
+    });
+  }
+});
+
+function editorBlocks(node: JSONContent): JSONContent[] {
+  return [
+    ...(node.type === "betterEditorBlock" ? [node] : []),
+    ...(node.content ?? []).flatMap(editorBlocks),
+  ];
+}
+
+function nodeText(node: JSONContent | undefined): string {
+  return node?.text ?? (node?.content ?? []).map(nodeText).join("");
+}
 
 async function openChat(page: Page) {
   const toggle = page.getByRole("button", {

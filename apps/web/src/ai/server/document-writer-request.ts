@@ -2,9 +2,27 @@ import { documentRows, zDocumentBlock } from "@acme/document";
 import { z } from "zod";
 import { zJournlEditorId } from "../mastra/agents/journl-agent-context";
 import { zOpenAIReasoningEffort } from "../mastra/agents/journl-agent-reasoning";
+import {
+  WRITING_CONTEXT_CHARACTERS,
+  WRITING_CONTEXT_MESSAGES,
+} from "../writing-context";
 
 const requestSchema = z.strictObject({
   blocks: z.array(zDocumentBlock),
+  conversation: z
+    .array(
+      z.strictObject({
+        content: z.string().min(1).max(WRITING_CONTEXT_CHARACTERS),
+        role: z.enum(["user", "assistant"]),
+      }),
+    )
+    .max(WRITING_CONTEXT_MESSAGES)
+    .refine(
+      (messages) =>
+        messages.reduce((sum, message) => sum + message.content.length, 0) <=
+        WRITING_CONTEXT_CHARACTERS,
+    )
+    .optional(),
   instruction: z.string().trim().min(1).max(20_000),
   reasoningEffort: zOpenAIReasoningEffort.optional(),
   targetEditor: zJournlEditorId.refine((target) =>

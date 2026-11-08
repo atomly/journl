@@ -16,7 +16,7 @@ import { InlineDocumentDraft } from "./inline-document-draft";
 
 type Instruction = Pick<
   DocumentWriterRequest,
-  "instruction" | "reasoningEffort"
+  "instruction" | "reasoningEffort" | "conversation"
 >;
 type Status =
   | "idle"

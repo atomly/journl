@@ -1,6 +1,7 @@
 "use client";
+import { getLastUserMessage } from "~/ai/mastra/agents/journl-agent-intent";
 import { getOpenAIReasoningEffort } from "~/ai/mastra/agents/journl-agent-reasoning";
-import { stripOpenAICitationTokens } from "~/ai/utils/openai-utils";
+import { getWritingContext } from "~/ai/writing-context";
 import { useJournlAgent } from "~/hooks/use-journl-agent";
 import { createClientTool } from "../../utils/create-client-tool";
 import { zWriteInput } from "./schema";
@@ -14,7 +15,7 @@ export function useWriteTool() {
         void chat.addToolOutput({
           output: {
             message:
-              "This user request already used its writing run (up to three generation attempts). Do not call write again. Wait for a new user request.",
+              "This user request already used its writing run. Do not call write again. Report the original write result. This applies only to this request; a new user request permits another run.",
             status: "error",
           },
           tool: toolCall.toolName,
@@ -27,7 +28,8 @@ export function useWriteTool() {
         target && getEditors().get(target.id) === target ? target : undefined;
       const output = entry
         ? await entry.session.run({
-            instruction: stripOpenAICitationTokens(toolCall.input.agentPrompt),
+            conversation: getWritingContext(chat.messages),
+            instruction: getLastUserMessage(chat.messages),
             reasoningEffort: getOpenAIReasoningEffort(getReasoning()),
           })
         : {

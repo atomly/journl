@@ -59,9 +59,7 @@ test("the real SDK queue completes one writing run and rejects repeated calls", 
             controller.enqueue({ type: "start-step" });
             for (const toolCallId of ["write-one", "write-two"])
               controller.enqueue({
-                input: {
-                  agentPrompt: "Rewrite the paragraph",
-                },
+                input: {},
                 toolCallId,
                 toolName: "write",
                 type: "tool-input-available",
@@ -85,7 +83,8 @@ test("the real SDK queue completes one writing run and rejects repeated calls", 
       }),
     );
     expect(fixture.run).toHaveBeenCalledExactlyOnceWith({
-      instruction: "Rewrite the paragraph",
+      conversation: [],
+      instruction: "Rewrite this paragraph",
       reasoningEffort: "low",
     });
     expect(chat.lastMessage?.parts).toContainEqual(
@@ -122,7 +121,7 @@ test("a stale captured target is rejected instead of writing in the newly active
   try {
     await tool?.execute(
       {
-        input: { agentPrompt: "Rewrite this" },
+        input: {},
         toolCallId: "stale",
         toolName: "write",
       },

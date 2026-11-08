@@ -18,8 +18,22 @@ export function documentWriterFeedback(error: unknown): string | undefined {
             .join("") || "operations";
         if (issue.code === "invalid_type")
           return `${path}: ${issue.expected === "undefined" ? "this field must be absent; omit it" : `expected ${issue.expected}`}.`;
-        if (issue.code === "unrecognized_keys")
-          return `${path}: remove properties not declared in the schema.`;
+        if (issue.code === "unrecognized_keys") {
+          // These are fixed contract field names, never arbitrary model keys.
+          const fields = issue.keys.filter((key) =>
+            ["id", "children", "parentId", "afterId", "block", "data"].includes(
+              key,
+            ),
+          );
+          const detail = fields.length
+            ? `remove these undeclared fields: ${fields.join(", ")}.`
+            : "remove properties not declared in the schema.";
+          const update =
+            issue.path.at(-1) === "data"
+              ? " Updates accept only type, props, and content. Change hierarchy with move, insert, or remove operations."
+              : "";
+          return `${path}: ${detail}${update}`;
+        }
         return `${path}: ${issue.code}; follow this field's schema constraints.`;
       })
       .join("\n")

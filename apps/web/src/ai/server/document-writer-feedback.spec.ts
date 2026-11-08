@@ -48,3 +48,34 @@ test("only known proposal errors produce correction instructions", () => {
     expect(documentWriterFeedback(new Error(message))).toBeUndefined();
   }
 });
+
+test("undeclared update fields identify structural mistakes without echoing arbitrary keys", () => {
+  const result = z
+    .object({
+      operations: z.array(
+        z.object({ data: z.strictObject({ type: z.literal("paragraph") }) }),
+      ),
+    })
+    .safeParse({
+      operations: [
+        {
+          data: {
+            children: [],
+            id: "private-id",
+            PRIVATE_TEXT: true,
+            type: "paragraph",
+          },
+        },
+      ],
+    });
+  if (result.success) throw new Error("Expected invalid update fields");
+  const feedback = documentWriterFeedback(result.error);
+  expect(feedback).toContain(
+    "operations[0].data: remove these undeclared fields: children, id.",
+  );
+  expect(feedback).toContain(
+    "Change hierarchy with move, insert, or remove operations",
+  );
+  expect(feedback).not.toContain("PRIVATE_TEXT");
+  expect(feedback).not.toContain("private-id");
+});

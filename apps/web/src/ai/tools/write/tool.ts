@@ -8,10 +8,7 @@ Use when the user wants AI edits (draft/rewrite/expand/restructure) in an active
 
 Contract:
 - The application binds this action to the current document or selection when the user sends the request. Do not supply an editor ID.
-- agentPrompt must be a direct, imperative command (not a question) that tells the writing agent exactly what to produce.
-- agentPrompt must be self-contained and include all required constraints (sections/structure, tone, depth/length, and required facts).
-- agentPrompt must instruct writing in the user's voice and must not include assistant/app attribution or sign-offs unless the user explicitly asks.
-- Do not put JSON, tool payload prose, or internal IDs in agentPrompt.
+- This tool takes no arguments. The application supplies the user's original request and recent conversation text to the writer. Do not rewrite, expand, or reinterpret the task in tool arguments.
 - Scope is the highlighted text when present, otherwise the current document.
 - Preview is transient. Completed validated edits apply automatically with normal Undo.
 - The editor is locked while blocks stream inline. Cancellation or failure preserves the original writing.

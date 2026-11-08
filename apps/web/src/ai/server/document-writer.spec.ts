@@ -8,6 +8,8 @@ import {
   standardSchemaToJSONSchema,
   toStandardSchema,
 } from "@mastra/core/schema";
+import { LibSQLStore } from "@mastra/libsql";
+import { Memory } from "@mastra/memory";
 import {
   APICallError,
   parseJsonEventStream,
@@ -40,6 +42,7 @@ vi.mock("@mastra/core/agent", () => ({
 }));
 vi.mock("~/workflows/model-usage", () => ({ startModelUsage: mocks.usage }));
 
+import { webSearch } from "~/ai/tools/web-search";
 import { streamDocumentWriter } from "./document-writer";
 import type { DocumentWriterRequest } from "./document-writer-request";
 
@@ -317,6 +320,7 @@ describe("native validation retries", () => {
     { correctOn: 0, kind: "atom" },
     { correctOn: 2, kind: "reference" },
     { correctOn: 3, kind: "move" },
+    { correctOn: 2, kind: "children" },
   ])(
     "bounds correction of $kind errors (success attempt: $correctOn)",
     async ({ correctOn, kind }) => {
@@ -333,29 +337,41 @@ describe("native validation retries", () => {
               const operations =
                 correctOn && calls === correctOn
                   ? [operation]
-                  : kind === "reference"
-                    ? [{ id: "missing", type: "remove" }]
-                    : kind === "move"
-                      ? [
-                          {
-                            afterId: null,
-                            id: "a",
-                            parentId: "a",
-                            type: "move",
+                  : kind === "children"
+                    ? [
+                        {
+                          ...operation,
+                          data: {
+                            ...(operation.type === "update"
+                              ? operation.data
+                              : {}),
+                            children: [],
                           },
-                        ]
-                      : [
-                          {
-                            afterId: "a",
-                            block: {
-                              content: "PRIVATE_DOC_TEXT",
-                              id: "image",
-                              type: "image",
+                        },
+                      ]
+                    : kind === "reference"
+                      ? [{ id: "missing", type: "remove" }]
+                      : kind === "move"
+                        ? [
+                            {
+                              afterId: null,
+                              id: "a",
+                              parentId: "a",
+                              type: "move",
                             },
-                            parentId: null,
-                            type: "insert",
-                          },
-                        ];
+                          ]
+                        : [
+                            {
+                              afterId: "a",
+                              block: {
+                                content: "PRIVATE_DOC_TEXT",
+                                id: "image",
+                                type: "image",
+                              },
+                              parentId: null,
+                              type: "insert",
+                            },
+                          ];
               stream.enqueue({ type: "stream-start", warnings: [] });
               stream.enqueue({ id: "proposal", type: "text-start" });
               stream.enqueue({
@@ -418,11 +434,13 @@ describe("native validation retries", () => {
           }),
         );
         expect(JSON.stringify(model.doStreamCalls[1]?.prompt)).toContain(
-          kind === "atom"
-            ? "operations[0].block.content: this field must be absent; omit it"
-            : kind === "reference"
-              ? "An operation references a block outside the current editable scope"
-              : "A move must not place a block inside itself or any of its descendants",
+          kind === "children"
+            ? "remove these undeclared fields: children"
+            : kind === "atom"
+              ? "operations[0].block.content: this field must be absent; omit it"
+              : kind === "reference"
+                ? "An operation references a block outside the current editable scope"
+                : "A move must not place a block inside itself or any of its descendants",
         );
         const systemFeedback = model.doStreamCalls[1]?.prompt.filter(
           (message) => message.role === "system",
@@ -437,7 +455,276 @@ describe("native validation retries", () => {
   );
 });
 
+it("a native generation timeout stops a stalled stream without applying or retrying", async () => {
+  const { Agent: RealAgent } =
+    await vi.importActual<typeof import("@mastra/core/agent")>(
+      "@mastra/core/agent",
+    );
+  const model = new MockLanguageModelV4({
+    doStream: async ({ abortSignal }) => ({
+      stream: new ReadableStream({
+        start(controller) {
+          controller.enqueue({ type: "stream-start", warnings: [] });
+          controller.enqueue({ id: "pending", type: "text-start" });
+          controller.enqueue({
+            delta: JSON.stringify({ operations: [operation] }),
+            id: "pending",
+            type: "text-delta",
+          });
+          abortSignal?.addEventListener(
+            "abort",
+            () => controller.error(abortSignal.reason),
+            { once: true },
+          );
+        },
+      }),
+    }),
+    modelId: "gpt-5-mini",
+    provider: "openai.responses",
+  });
+  const agent = new RealAgent({
+    id: "writer-timeout-test",
+    instructions: "Edit the supplied document",
+    model,
+    name: "Writer timeout test",
+  });
+  mocks.stream.mockImplementation((prompt, options) =>
+    agent.stream(prompt, {
+      ...options,
+      modelSettings: {
+        ...options.modelSettings,
+        timeout: { stepMs: 50, totalMs: 10_000 },
+      },
+    }),
+  );
+  const log = vi.spyOn(console, "error").mockImplementation(() => {});
+  try {
+    const before = structuredClone(request.blocks);
+    const { chunks, errors } = await consume(
+      await streamDocumentWriter({
+        request,
+        signal: new AbortController().signal,
+        user,
+      }),
+    );
+    expect(model.doStreamCalls).toHaveLength(1);
+    expect(generated(chunks)).toHaveLength(0);
+    expect(errors).toHaveLength(1);
+    expect(request.blocks).toEqual(before);
+  } finally {
+    log.mockRestore();
+  }
+});
+
 describe("document writer proposal stream", () => {
+  it.each([false, true])(
+    "native preferences stay read-only and completed research is charged (abort: %s)",
+    async (cancelled) => {
+      const { Agent: RealAgent } =
+        await vi.importActual<typeof import("@mastra/core/agent")>(
+          "@mastra/core/agent",
+        );
+      const store = new LibSQLStore({
+        id: crypto.randomUUID(),
+        url: ":memory:",
+      });
+      const memory = new Memory({
+        options: {
+          generateTitle: false,
+          semanticRecall: false,
+          workingMemory: { enabled: true, scope: "resource" },
+        },
+        storage: store,
+      });
+      const threadId = "journl:owner";
+      await memory.createThread({ resourceId: user.id, threadId });
+      await memory.updateWorkingMemory({
+        resourceId: user.id,
+        threadId,
+        workingMemory: "Use Cedar Ledger in fictional examples.",
+      });
+      await memory.saveMessages({
+        messages: [
+          {
+            content: {
+              format: 2,
+              parts: [
+                {
+                  text: "PRIVATE_OLD_CHAT_MUST_NOT_ENTER_WRITER",
+                  type: "text",
+                },
+              ],
+            },
+            createdAt: new Date(1700000000000),
+            id: "historic",
+            resourceId: user.id,
+            role: "user",
+            threadId,
+            type: "text",
+          },
+        ],
+      });
+      const before = await memory.recall({ resourceId: user.id, threadId });
+      const cancellation = new AbortController();
+      const model = new MockLanguageModelV4({
+        doStream: async ({ prompt, tools, abortSignal }) => {
+          expect(JSON.stringify(prompt)).toContain(
+            "Use Cedar Ledger in fictional examples.",
+          );
+          expect(JSON.stringify(prompt)).not.toContain(
+            "PRIVATE_OLD_CHAT_MUST_NOT_ENTER_WRITER",
+          );
+          expect(tools?.map((tool) => tool.name)).toEqual(["webSearch"]);
+          return {
+            stream: new ReadableStream({
+              start(controller) {
+                controller.enqueue({ type: "stream-start", warnings: [] });
+                controller.enqueue({
+                  input: "{}",
+                  providerExecuted: true,
+                  toolCallId: "research",
+                  toolName: "webSearch",
+                  type: "tool-call",
+                });
+                const result = {
+                  action: { queries: ["MDN HTTP"], type: "search" },
+                  sources: [
+                    {
+                      type: "url",
+                      url: "https://developer.mozilla.org/en-US/docs/Web/HTTP",
+                    },
+                  ],
+                };
+                controller.enqueue({
+                  preliminary: true,
+                  result,
+                  toolCallId: "research",
+                  toolName: "webSearch",
+                  type: "tool-result",
+                });
+                controller.enqueue({
+                  result,
+                  toolCallId: "research",
+                  toolName: "webSearch",
+                  type: "tool-result",
+                });
+                if (cancelled) {
+                  abortSignal?.addEventListener(
+                    "abort",
+                    () => controller.error(abortSignal.reason),
+                    { once: true },
+                  );
+                  return;
+                }
+                controller.enqueue({ id: "proposal", type: "text-start" });
+                controller.enqueue({
+                  delta: JSON.stringify({ operations: [operation] }),
+                  id: "proposal",
+                  type: "text-delta",
+                });
+                controller.enqueue({ id: "proposal", type: "text-end" });
+                controller.enqueue({
+                  finishReason: { raw: undefined, unified: "stop" },
+                  type: "finish",
+                  usage: {
+                    inputTokens: {
+                      cacheRead: 0,
+                      cacheWrite: 0,
+                      noCache: 1,
+                      total: 1,
+                    },
+                    outputTokens: { reasoning: 0, text: 1, total: 1 },
+                  },
+                });
+                controller.close();
+              },
+            }),
+          };
+        },
+      });
+      const agent = new RealAgent({
+        id: "research-writer-test",
+        instructions: String(mocks.agentOptions.instructions),
+        memory,
+        model,
+        name: "Research writer test",
+        tools: { webSearch },
+      });
+      mocks.stream.mockImplementation(async (prompt, options) => {
+        const result = await agent.stream(prompt, options);
+        return {
+          get finishReason() {
+            return result.finishReason;
+          },
+          fullStream: (async function* () {
+            for await (const chunk of result.fullStream) {
+              yield chunk;
+              if (
+                cancelled &&
+                chunk.type === "tool-result" &&
+                !chunk.payload.preliminary
+              )
+                cancellation.abort();
+            }
+          })(),
+          get totalUsage() {
+            return result.totalUsage;
+          },
+        };
+      });
+      try {
+        const output = await consume(
+          await streamDocumentWriter({
+            request,
+            signal: cancellation.signal,
+            user,
+          }),
+        );
+        expect(generated(output.chunks)).toHaveLength(cancelled ? 0 : 1);
+        expect(mocks.usage).toHaveBeenCalledOnce();
+        expect(mocks.usage.mock.calls[0]?.[0].metrics).toContainEqual({
+          quantity: 1,
+          unit: "web_search_calls",
+        });
+        expect(
+          (await memory.recall({ resourceId: user.id, threadId })).messages,
+        ).toEqual(before.messages);
+        expect(
+          await memory.getWorkingMemory({ resourceId: user.id, threadId }),
+        ).toBe("Use Cedar Ledger in fictional examples.");
+      } finally {
+        await store.close();
+      }
+    },
+  );
+
+  it("keeps actual conversation context before the current authoritative request", async () => {
+    await consume(
+      await streamDocumentWriter({
+        request: {
+          ...request,
+          conversation: [
+            { content: "A recipe for two people.", role: "assistant" },
+          ],
+          instruction: "Write that recipe into this page.",
+        },
+        signal: new AbortController().signal,
+        user,
+      }),
+    );
+    expect(mocks.stream.mock.calls[0]?.[0]).toEqual([
+      {
+        content: "A recipe for two people.",
+        role: "assistant",
+      },
+      { content: JSON.stringify({ blocks: request.blocks }), role: "user" },
+      {
+        content: "Write that recipe into this page.",
+        role: "user",
+      },
+    ]);
+  });
+
   it("streams a recipe as distinct headings, paragraphs, and sibling list blocks", async () => {
     const recipe: DocumentOperation[] = [
       {
@@ -891,15 +1178,22 @@ describe("document writer proposal stream", () => {
       id: "document-writer",
       model: { modelId: "gpt-5-mini" },
     });
-    expect(mocks.agentOptions).not.toHaveProperty("tools");
-    expect(mocks.agentOptions).not.toHaveProperty("memory");
+    expect(Object.keys(mocks.agentOptions.tools as object)).toEqual([
+      "webSearch",
+    ]);
+    expect(mocks.agentOptions.memory).toEqual(expect.any(Function));
     const [prompt, options] = mocks.stream.mock.calls[0] ?? [];
-    expect(JSON.parse(prompt)).toEqual({
-      blocks: request.blocks,
-      instruction: request.instruction,
-    });
+    expect(prompt).toEqual([
+      { content: JSON.stringify({ blocks: request.blocks }), role: "user" },
+      { content: request.instruction, role: "user" },
+    ]);
     expect(options).toMatchObject({
       maxSteps: 1,
+      memory: {
+        options: { lastMessages: false, readOnly: true, semanticRecall: false },
+        resource: user.id,
+        thread: "journl:owner",
+      },
       providerOptions: {
         openai: {
           reasoningEffort: "high",
@@ -913,7 +1207,6 @@ describe("document writer proposal stream", () => {
       },
     });
     expect(options).not.toHaveProperty("tools");
-    expect(options).not.toHaveProperty("memory");
     expect(options).not.toHaveProperty("onFinish");
     const schema = options.structuredOutput.schema;
     const nativeSchema = toStandardSchema(schema);

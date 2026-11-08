@@ -3,7 +3,7 @@ import { MockLanguageModelV4 } from "ai/test";
 import { expect, test } from "vitest";
 import { write } from "./tool";
 
-test("the native provider receives a strict instruction-only writing contract", async () => {
+test("the native provider receives a strict argument-free writing contract", async () => {
   let checked = false;
   const model = new MockLanguageModelV4({
     doStream: async ({ tools }) => {
@@ -11,21 +11,19 @@ test("the native provider receives a strict instruction-only writing contract", 
         (tool) => tool.type === "function" && tool.name === "write",
       );
       expect(tool).toMatchObject({
-        inputSchema: { additionalProperties: false, required: ["agentPrompt"] },
+        inputSchema: { additionalProperties: false },
         strict: true,
         type: "function",
       });
       if (tool?.type !== "function") throw new Error("Missing write tool");
-      expect(Object.keys(tool.inputSchema.properties ?? {})).toEqual([
-        "agentPrompt",
-      ]);
+      expect(Object.keys(tool.inputSchema.properties ?? {})).toEqual([]);
       checked = true;
       return {
         stream: new ReadableStream({
           start(controller) {
             controller.enqueue({ type: "stream-start", warnings: [] });
             controller.enqueue({
-              input: JSON.stringify({ agentPrompt: "Add lorem ipsum" }),
+              input: "{}",
               toolCallId: "write-one",
               toolName: "write",
               type: "tool-call",

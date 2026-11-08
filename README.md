@@ -129,6 +129,18 @@ feedback (three generation attempts total). Each chat request permits
 one writing run; navigation and repeated tool calls cannot reset that allowance.
 Explicit user retries start a new run. Cancellation, access/quota failures and
 document conflicts stop without automatic correction.
+The write tool takes no arguments. The writer receives the original user request
+as its final user message, with actual recent conversation text for references
+such as "write that recipe". Context is limited to 12 messages and 32,000 characters;
+model-authored tool arguments are excluded.
+Editing requests use the writing-capable model even when they also contain search
+or navigation instructions. A completed writing action ends tool execution for
+that request. The application stores and reports its actual outcome through native
+Mastra history and AI SDK messages, without another model call. The writer reads
+user preferences from native working memory without loading or changing chat history.
+Explicit public research can use provider web search, limited to three calls per attempt.
+Native generation limits
+allow 120 seconds per attempt, 240 seconds per run, and 16,000 output tokens per attempt.
 The first implementation supports exact selections inside one text block and
 complete sibling blocks. Partial selections across blocks and structural rewrites
 of partial inline selections return an error instead of expanding their scope.

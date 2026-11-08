@@ -77,6 +77,7 @@ export async function streamJournlChat({
         : undefined;
     return finishWritingResult({
       message: latest,
+      outcomeMessage: outcome?.success ? outcome.data.message : undefined,
       signal,
       status: outcome?.success ? outcome.data.status : "error",
       threadId: memoryThreadId,
@@ -191,6 +192,7 @@ export async function streamJournlChat({
 /** Tool outcomes are application state. Persist and report them without asking a model to reinterpret them. */
 async function finishWritingResult({
   message,
+  outcomeMessage,
   toolCallId,
   status,
   threadId,
@@ -198,6 +200,7 @@ async function finishWritingResult({
   signal,
 }: {
   message: UIMessage;
+  outcomeMessage?: string;
   toolCallId: string;
   status: string;
   threadId: string;
@@ -236,7 +239,7 @@ async function finishWritingResult({
         ? "Writing stopped. Your original writing is unchanged."
         : status === "conflict"
           ? "The edit did not apply because the writing changed. Your writing was kept."
-          : "The edit did not apply. Your writing was kept.";
+          : `The edit did not apply. Your writing was kept.${outcomeMessage ? `\n\n${outcomeMessage}` : ""}`;
   const completed: UIMessage = {
     ...message,
     parts: [...message.parts, { type: "step-start" }, { text, type: "text" }],

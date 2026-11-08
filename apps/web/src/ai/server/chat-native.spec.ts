@@ -303,7 +303,11 @@ it.each([
           : status === "cancelled"
             ? "Writing stopped."
             : "The edit did not apply.";
-      expect(await response.text()).toContain(expected);
+      const responseText = await response.text();
+      expect(responseText).toContain(expected);
+      if (!newRequest && status === "error") {
+        expect(responseText).toContain("Original writing result");
+      }
       expect(model.doStreamCalls).toHaveLength(newRequest ? 1 : 0);
       if (newRequest) {
         expect(JSON.stringify(model.doStreamCalls[0]?.prompt)).toContain(

@@ -282,7 +282,7 @@ test("live writer appends mixed structured content including tables", async ({
     ).toBeEnabled({ timeout: 60_000 });
     await ask(
       page,
-      "Append complex structured content to this page: a Complex Examples heading; a four-column table with a header and three data rows; a three-item ordered list with a nested bullet list under item two; a checklist with checked and unchecked tasks; a JavaScript code block; a quote; an image using https://example.com/image.png; a divider; and a second two-column table with Sidebar and Main Content headers. Keep existing writing. Put the content in the editor, not in chat.",
+      `Create and open a new page titled "Mixed structures ${info.repeatEachIndex} ${Date.now()}". Write complex structured content there: a Complex Examples heading; a four-column table with a header and three data rows; a three-item ordered list with a nested bullet list under item two; a checklist with checked and unchecked tasks; a JavaScript code block; a quote; an image using https://example.com/image.png; a divider; and a second two-column table with Sidebar and Main Content headers. Use columnWidths: [] for the tables' automatic sizing. Put the content in the editor, not in chat.`,
     );
     const editor = page
       .locator(".better-editor-tiptap")
@@ -303,10 +303,94 @@ test("live writer appends mixed structured content including tables", async ({
       editor.locator('[data-better-editor-body="checkListItem"]'),
     ).not.toHaveCount(0);
     await expect(page.locator('[data-ai-edit-status="error"]')).toHaveCount(0);
+    const beforeExpansion = await editor.evaluate((element) =>
+      (element as HTMLElement & { editor: Editor }).editor.getJSON(),
+    );
+    const retained = editorBlocks(beforeExpansion);
+    const oldCode = retained.find(
+      (block) => block.content?.[0]?.type === "codeBlock",
+    );
+    const checkboxes = await editor
+      .locator('[data-better-editor-body="checkListItem"]')
+      .count();
+    const rows = await editor.locator("table tr").count();
+    expect(
+      retained
+        .filter((block) => block.content?.[0]?.type === "table")
+        .some((block) => block.content?.[0]?.attrs?.columnWidths?.length === 0),
+    ).toBe(true);
+    await ask(
+      page,
+      "Rewrite only the existing JavaScript code block to Rust. Keep the tables and all other blocks exactly unchanged.",
+    );
+    await expect(editor.locator('[aria-label="Code language"]')).toContainText(
+      "rust",
+      { timeout: 180_000 },
+    );
+    await expect(
+      page.locator('[data-chat-role="assistant"]').last(),
+    ).toContainText("Edit applied.", { timeout: 180_000 });
+    await expect(editor).toHaveAttribute("contenteditable", "true");
+    await expect(page.locator('[data-ai-edit-status="error"]')).toHaveCount(0);
+    const rustOnly = editorBlocks(
+      await editor.evaluate((element) =>
+        (element as HTMLElement & { editor: Editor }).editor.getJSON(),
+      ),
+    );
+    for (const block of retained.filter(
+      (block) => block.attrs?.id !== oldCode?.attrs?.id,
+    ))
+      expect(
+        rustOnly.find((current) => current.attrs?.id === block.attrs?.id),
+      ).toEqual(block);
+    expect(
+      rustOnly.find((block) => block.attrs?.id === oldCode?.attrs?.id)
+        ?.content?.[0],
+    ).toMatchObject({
+      attrs: { props: { language: "rust" } },
+      type: "codeBlock",
+    });
+    await ask(
+      page,
+      "Add more complexity. Use checkboxes, more tables and rows, and expand the Rust code block. Preserve retained block IDs and unrelated content.",
+    );
+    await expect
+      .poll(() => editor.locator("table").count(), { timeout: 180_000 })
+      .toBeGreaterThan(2);
+    await expect(editor).toHaveAttribute("contenteditable", "true", {
+      timeout: 180_000,
+    });
+    await expect(page.locator('[data-ai-edit-status="error"]')).toHaveCount(0);
+    await expect(page.locator("[data-save-status]")).toContainText("Saved", {
+      timeout: 60_000,
+    });
+    await expect(
+      page.locator('[data-chat-role="assistant"]').last(),
+    ).toContainText("Edit applied.", { timeout: 60_000 });
+    expect(
+      await editor.locator('[data-better-editor-body="checkListItem"]').count(),
+    ).toBeGreaterThan(checkboxes);
+    expect(await editor.locator("table tr").count()).toBeGreaterThan(rows);
+    const expanded = editorBlocks(
+      await editor.evaluate((element) =>
+        (element as HTMLElement & { editor: Editor }).editor.getJSON(),
+      ),
+    );
+    for (const block of retained)
+      expect(
+        expanded.some((current) => current.attrs?.id === block.attrs?.id),
+      ).toBe(true);
+    expect(
+      expanded.find((block) => block.attrs?.id === oldCode?.attrs?.id)
+        ?.content?.[0],
+    ).toMatchObject({
+      attrs: { props: { language: "rust" } },
+      type: "codeBlock",
+    });
     const written = await editor.innerText();
     await page.reload();
     await expect(editor).toHaveText(written, { useInnerText: true });
-    await expect(editor.locator("table")).toHaveCount(2);
+    expect(await editor.locator("table").count()).toBeGreaterThan(2);
     await expect(
       editor.locator('[data-better-editor-body="codeBlock"]'),
     ).toHaveCount(1);
@@ -316,6 +400,105 @@ test("live writer appends mixed structured content including tables", async ({
       contentType: "application/json",
     });
   }
+});
+
+test("live writing continues from atom-only pages and native gap input", async ({
+  page,
+  context,
+}, info) => {
+  test.skip(
+    info.project.name !== "desktop-chromium",
+    "Desktop native input acceptance",
+  );
+  test.setTimeout(360_000);
+  await page.goto("/journal/1987-02-16");
+  await openChat(page);
+  await expect(
+    page.getByPlaceholder("Ask anything...").filter({ visible: true }),
+  ).toBeEnabled({ timeout: 60_000 });
+  await ask(
+    page,
+    `Create and open a new page titled "Atom-only writing ${info.repeatEachIndex} ${Date.now()}". Completely replace its empty starter with exactly two divider blocks, with no paragraphs, headings, or other blocks. Apply now.`,
+  );
+  const editor = page
+    .locator(".better-editor-tiptap")
+    .filter({ visible: true });
+  await expect(
+    editor.locator('[data-better-editor-body="divider"]'),
+  ).toHaveCount(2, { timeout: 180_000 });
+  await expect(editor).toHaveAttribute("contenteditable", "true", {
+    timeout: 180_000,
+  });
+  await expect(page.locator("[data-save-status]")).toContainText("Saved", {
+    timeout: 60_000,
+  });
+  const json = () =>
+    editor.evaluate((element) =>
+      (element as HTMLElement & { editor: Editor }).editor.getJSON(),
+    );
+  const original = await json();
+  expect(original.content).toHaveLength(2);
+  await page.reload();
+  await expect(editor).toBeVisible();
+  await expect
+    .poll(() =>
+      editor.evaluate(
+        (element) =>
+          (
+            element as HTMLElement & { editor: Editor }
+          ).editor.state.selection.toJSON().type,
+      ),
+    )
+    .toBe("gapcursor");
+  expect(await json()).toEqual(original);
+  await editor.focus();
+  await page.keyboard.type("Typed at the gap");
+  await expect(editor).toContainText("Typed at the gap");
+  await editor.press("ControlOrMeta+z");
+  expect(await json()).toEqual(original);
+  await editor.press("Enter");
+  await expect(
+    editor.locator('[data-better-editor-body="paragraph"]'),
+  ).toHaveCount(1);
+  await editor.press("ControlOrMeta+z");
+  expect(await json()).toEqual(original);
+  await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+  await page.evaluate(() =>
+    navigator.clipboard.writeText("Pasted at the gap\n\n- First\n- Second"),
+  );
+  await editor.press("ControlOrMeta+v");
+  await expect(editor).toContainText("Pasted at the gap");
+  await expect(
+    editor.locator('[data-better-editor-body="bulletListItem"]'),
+  ).toHaveCount(2);
+  await editor.press("ControlOrMeta+z");
+  expect(await json()).toEqual(original);
+  await expect(page.locator("[data-save-status]")).toContainText("Saved", {
+    timeout: 60_000,
+  });
+  await ask(
+    page,
+    'Add a heading "Continued writing", a two-column Name/Status table with Alpha/Ready and Beta/Planned rows, and a Rust code block. Keep the original two dividers unchanged.',
+  );
+  await expect(editor.locator("table")).toHaveCount(1, { timeout: 180_000 });
+  await expect(editor).toHaveAttribute("contenteditable", "true", {
+    timeout: 180_000,
+  });
+  await expect(
+    page.locator('[data-chat-role="assistant"]').last(),
+  ).toContainText("Edit applied.", { timeout: 60_000 });
+  await expect(page.locator('[data-ai-edit-status="error"]')).toHaveCount(0);
+  await expect(page.locator("[data-save-status]")).toContainText("Saved", {
+    timeout: 60_000,
+  });
+  const after = await json();
+  for (const block of original.content ?? [])
+    expect(
+      after.content?.find((current) => current.attrs?.id === block.attrs?.id),
+    ).toEqual(block);
+  await page.reload();
+  await expect(editor.locator("table")).toHaveCount(1);
+  expect(await json()).toEqual(after);
 });
 
 test("live structural edits preserve identities, rich content, Undo and cancellation", async ({

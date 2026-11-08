@@ -161,6 +161,114 @@ test("whole-document targets cancel on any human content change", () => {
   expect(JSON.stringify(retry.blocks)).toContain("Human");
 });
 
+test("a second request retains document scope after a generated trailing divider", () => {
+  const f = fixture([p("starter", "")]);
+  const { target } = f.capture();
+  expect(
+    target.apply([
+      { id: "starter", type: "remove" },
+      {
+        afterId: null,
+        block: parseBlock({
+          content: 'console.log("ready");',
+          id: "code",
+          props: { language: "javascript" },
+          type: "codeBlock",
+        }),
+        parentId: null,
+        type: "insert",
+      },
+      {
+        afterId: "code",
+        block: parseBlock({ id: "divider", type: "divider" }),
+        parentId: null,
+        type: "insert",
+      },
+    ]),
+  ).toBe(true);
+  const second = captureDocumentEditTarget(f.editor);
+  expect(second.selection).toBe(false);
+  expect(second.blocks.map((block) => block.id)).toEqual(["code", "divider"]);
+  expect(
+    second.apply([
+      {
+        data: {
+          content: 'fn main() { println!("ready"); }',
+          props: { language: "rust" },
+          type: "codeBlock",
+        },
+        id: "code",
+        type: "update",
+      },
+    ]),
+  ).toBe(true);
+  expect(f.blocks()[0]).toMatchObject({
+    id: "code",
+    props: { language: "rust" },
+  });
+  expect(f.blocks()[1]?.id).toBe("divider");
+});
+
+test.each(["loaded", "generated"])(
+  "%s atom-only documents keep document scope for the next request",
+  (phase) => {
+    const atoms = [
+      parseBlock({ id: "divider", type: "divider" }),
+      parseBlock({
+        id: "image",
+        props: { url: "https://example.com/image.png" },
+        type: "image",
+      }),
+    ];
+    const f = fixture(phase === "loaded" ? atoms : [p("starter", "")]);
+    if (phase === "generated") {
+      const first = captureDocumentEditTarget(f.editor);
+      expect(
+        first.apply([
+          { id: "starter", type: "remove" },
+          ...atoms.map((block, index) => ({
+            afterId: index ? "divider" : null,
+            block,
+            parentId: null,
+            type: "insert" as const,
+          })),
+        ]),
+      ).toBe(true);
+    }
+    const target = captureDocumentEditTarget(f.editor);
+    expect(target.selection).toBe(false);
+    expect(target.blocks.map((block) => block.id)).toEqual([
+      "divider",
+      "image",
+    ]);
+    expect(
+      target.apply([
+        {
+          afterId: "image",
+          block: p("new", "New writing"),
+          parentId: null,
+          type: "insert",
+        },
+      ]),
+    ).toBe(true);
+    expect(f.blocks().slice(0, 2)).toEqual(atoms);
+    expect(f.blocks()[2]?.id).toBe("new");
+  },
+);
+
+test("an explicit atom wrapper selection stays scoped to that block", () => {
+  const f = fixture([
+    parseBlock({ id: "divider", type: "divider" }),
+    parseBlock({ id: "image", type: "image" }),
+  ]);
+  f.editor.view.dispatch(
+    f.editor.state.tr.setSelection(NodeSelection.create(f.editor.state.doc, 0)),
+  );
+  const target = captureDocumentEditTarget(f.editor);
+  expect(target.selection).toBe(true);
+  expect(target.blocks.map((block) => block.id)).toEqual(["divider"]);
+});
+
 test("complete sibling scopes permit structural changes without touching outside nodes", () => {
   const f = fixture([p("a"), p("b"), p("c")]);
   const a = blockAt(f.editor.state.doc, "a");

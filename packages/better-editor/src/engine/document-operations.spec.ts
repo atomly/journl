@@ -1,12 +1,13 @@
 // @vitest-environment jsdom
 import { type DocumentBlock, parseBlock } from "@acme/document";
 import { redo, undo } from "@tiptap/pm/history";
-import { NodeSelection, TextSelection } from "@tiptap/pm/state";
+import { NodeSelection, TextSelection, Transaction } from "@tiptap/pm/state";
 import { expect, test, vi } from "vitest";
 import { fromTiptapDocument } from "../serialization/tiptap";
 import { applyAcceptedOperations } from "./commands";
 import { createDocumentEditor } from "./editor";
 import { blockAt } from "./identity";
+import { tableExtensions } from "./table-schema";
 
 const p = (id: string, text = id) =>
   parseBlock({ content: text, id, type: "paragraph" });
@@ -17,11 +18,12 @@ const update = (id: string, content: string) => ({
 });
 function setup(
   initialBlocks: DocumentBlock[] = [p("a", "Alpha"), p("b", "Beta")],
+  extensions: ReturnType<typeof tableExtensions> = [],
 ) {
   const onCommit = vi.fn();
   const editor = createDocumentEditor({
     element: document.createElement("div"),
-    extensions: [],
+    extensions,
     initialBlocks,
     onCommit,
     resolveUrl: async () => ({ items: [] }),
@@ -57,6 +59,173 @@ test("accepted updates keep unrelated nodes, descendants and the current caret",
     );
     expect(onCommit).toHaveBeenCalledTimes(1);
   } finally {
+    editor.destroy();
+  }
+});
+
+const table = (id: string, columnWidths?: (number | undefined)[]) =>
+  parseBlock({
+    content: {
+      columnWidths,
+      headerRows: 1,
+      rows: [{ cells: ["Name", "Status"] }, { cells: ["Alpha", "Ready"] }],
+      type: "tableContent",
+    },
+    id,
+    type: "table",
+  });
+
+test.each([
+  { widths: [] },
+  { widths: [0, 0] },
+  { widths: [100] },
+  { widths: [100, 200, 300] },
+  { widths: [undefined, undefined] },
+  { widths: [100, 200] },
+])(
+  "Rust edits preserve untouched tables with width metadata $widths",
+  ({ widths }) => {
+    const { editor, blocks, onCommit } = setup(
+      [
+        table("table", widths),
+        parseBlock({
+          content: 'console.log("ready");',
+          id: "code",
+          props: { language: "javascript" },
+          type: "codeBlock",
+        }),
+      ],
+      tableExtensions(),
+    );
+    try {
+      const before = editor.state.doc;
+      const untouched = blockAt(before, "table").node;
+      expect(
+        applyAcceptedOperations(editor, [
+          {
+            data: {
+              content: 'fn main() {\n    println!("ready");\n}',
+              props: { language: "rust" },
+              type: "codeBlock",
+            },
+            id: "code",
+            type: "update",
+          },
+        ]),
+      ).toBe(true);
+      expect(blockAt(editor.state.doc, "table").node).toBe(untouched);
+      expect(blocks()[1]).toMatchObject({
+        content: 'fn main() {\n    println!("ready");\n}',
+        id: "code",
+        props: { language: "rust" },
+        type: "codeBlock",
+      });
+      expect(onCommit).toHaveBeenCalledTimes(1);
+      const after = editor.state.doc;
+      expect(undo(editor.state, editor.view.dispatch)).toBe(true);
+      expect(editor.state.doc.eq(before)).toBe(true);
+      expect(redo(editor.state, editor.view.dispatch)).toBe(true);
+      expect(editor.state.doc.eq(after)).toBe(true);
+    } finally {
+      editor.destroy();
+    }
+  },
+);
+
+test("a table edit preserves an unrelated table with native resized cell widths", () => {
+  const { editor, blocks, onCommit } = setup(
+    [table("resized", [100, 200]), table("edited", [100, 200])],
+    tableExtensions(),
+  );
+  try {
+    const resized = blockAt(editor.state.doc, "resized");
+    const tr = editor.state.tr;
+    resized.node.descendants((node, offset) => {
+      if (node.type.name === "tableCell" && node.attrs.colwidth?.[0] === 100)
+        tr.setNodeMarkup(resized.pos + 1 + offset, undefined, {
+          ...node.attrs,
+          colwidth: [180],
+        });
+    });
+    editor.view.dispatch(tr);
+    onCommit.mockClear();
+    const before = editor.state.doc;
+    const untouched = blockAt(before, "resized").node;
+    expect(untouched.firstChild?.attrs.columnWidths).toEqual([100, 200]);
+    expect(blocks()[0]).toMatchObject({
+      content: { columnWidths: [180, 200] },
+    });
+    expect(
+      applyAcceptedOperations(editor, [
+        {
+          data: {
+            content: {
+              rows: [
+                { cells: ["Name", "Status"] },
+                { cells: ["Alpha", "Done"] },
+                { cells: ["Beta", "Planned"] },
+              ],
+              type: "tableContent",
+            },
+            type: "table",
+          },
+          id: "edited",
+          type: "update",
+        },
+      ]),
+    ).toBe(true);
+    expect(blockAt(editor.state.doc, "resized").node).toBe(untouched);
+    expect(blocks()[0]).toMatchObject({
+      content: { columnWidths: [180, 200] },
+    });
+    expect(blocks()[1]).toMatchObject({
+      content: {
+        rows: [
+          { cells: expect.any(Array) },
+          { cells: expect.any(Array) },
+          { cells: expect.any(Array) },
+        ],
+      },
+    });
+    expect(onCommit).toHaveBeenCalledTimes(1);
+    expect(undo(editor.state, editor.view.dispatch)).toBe(true);
+    expect(editor.state.doc.eq(before)).toBe(true);
+  } finally {
+    editor.destroy();
+  }
+});
+
+test("canonical comparison still rejects a transaction with different writing before dispatch", () => {
+  const { editor, onCommit } = setup(
+    [p("a"), table("table", [])],
+    tableExtensions(),
+  );
+  const replace = Transaction.prototype.replaceWith;
+  // Inject a valid but incorrect step to exercise the final content check.
+  const corrupted = vi
+    .spyOn(Transaction.prototype, "replaceWith")
+    .mockImplementationOnce(function (this: Transaction, from, to) {
+      return replace.call(
+        this,
+        from,
+        to,
+        editor.schema.node(
+          "paragraph",
+          null,
+          editor.schema.text("Unexpected writing"),
+        ),
+      );
+    });
+  try {
+    const before = editor.state;
+    expect(() =>
+      applyAcceptedOperations(editor, [update("a", "Requested writing")]),
+    ).toThrow("The editor transaction did not match the validated edit");
+    expect(editor.state).toBe(before);
+    expect(onCommit).not.toHaveBeenCalled();
+    expect(undo(editor.state, editor.view.dispatch)).toBe(false);
+  } finally {
+    corrupted.mockRestore();
     editor.destroy();
   }
 });
@@ -250,6 +419,42 @@ test("removing all blocks retains an editable caret and undo restores original i
     expect(onCommit).toHaveBeenCalledTimes(1);
     expect(undo(editor.state, editor.view.dispatch)).toBe(true);
     expect(blocks().map((block) => block.id)).toEqual(["a", "b"]);
+  } finally {
+    editor.destroy();
+  }
+});
+
+test("replacing the caret block with code and a trailing divider retains a caret", () => {
+  const { editor } = setup([p("a", "Starter")]);
+  try {
+    const before = editor.state.doc;
+    expect(
+      applyAcceptedOperations(editor, [
+        { id: "a", type: "remove" },
+        {
+          afterId: null,
+          block: parseBlock({
+            content: 'console.log("ready");',
+            id: "code",
+            props: { language: "javascript" },
+            type: "codeBlock",
+          }),
+          parentId: null,
+          type: "insert",
+        },
+        {
+          afterId: "code",
+          block: parseBlock({ id: "divider", type: "divider" }),
+          parentId: null,
+          type: "insert",
+        },
+      ]),
+    ).toBe(true);
+    expect(editor.state.selection).toBeInstanceOf(TextSelection);
+    expect(editor.state.selection.empty).toBe(true);
+    expect(editor.state.selection.$from.parent.type.name).toBe("codeBlock");
+    expect(undo(editor.state, editor.view.dispatch)).toBe(true);
+    expect(editor.state.doc.eq(before)).toBe(true);
   } finally {
     editor.destroy();
   }

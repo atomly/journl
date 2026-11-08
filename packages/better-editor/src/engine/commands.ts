@@ -5,6 +5,7 @@ import {
 } from "@acme/document";
 import { Extension } from "@tiptap/core";
 import { NodeRangeSelection } from "@tiptap/extension-node-range";
+import { GapCursor, gapCursor } from "@tiptap/pm/gapcursor";
 import { closeHistory, history, redo, undo } from "@tiptap/pm/history";
 import {
   EditorState,
@@ -16,7 +17,7 @@ import {
 import { fromTiptapDocument, toTiptapDocument } from "../serialization/tiptap";
 import { blockAt, type IdFactory, joinBlocks, splitBlock } from "./identity";
 import { TOGGLE_BLOCK_META } from "./metadata";
-import { restoreBlockSelection } from "./selection";
+import { gapCursorAtEnd, restoreBlockSelection } from "./selection";
 
 export function selectedBlock(state: Pick<EditorState, "doc" | "selection">) {
   const { $from } = state.selection;
@@ -376,7 +377,19 @@ export function editingExtension(createId: IdFactory) {
     addKeyboardShortcuts() {
       const enter = () => {
         const { state, view } = this.editor;
-        if (view.composing) return false;
+        if (view.composing || !this.editor.isEditable) return false;
+        if (state.selection instanceof GapCursor) {
+          const wrapper = state.schema.nodes.betterEditorBlock;
+          const paragraph = state.schema.nodes.paragraph;
+          if (!wrapper || !paragraph) return false;
+          const pos = state.selection.from;
+          const tr = state.tr.insert(
+            pos,
+            wrapper.createChecked({ id: createId() }, paragraph.create()),
+          );
+          view.dispatch(tr.setSelection(TextSelection.create(tr.doc, pos + 2)));
+          return true;
+        }
         const target = selectedBlock(state);
         if (!target) return false;
         if (
@@ -524,7 +537,11 @@ export function editingExtension(createId: IdFactory) {
         Tab: () => indent(false),
       };
     },
-    addProseMirrorPlugins: () => [history()],
+    addProseMirrorPlugins: () => [history(), gapCursor()],
+    extendNodeSchema: (extension) =>
+      ["doc", "betterEditorChildren"].includes(extension.name)
+        ? { allowGapCursor: true }
+        : {},
     name: "better-editor-editing",
     priority: 1000,
   });
@@ -545,8 +562,17 @@ export function applyAcceptedOperations(
     before.schema,
   );
   const transaction = editBlocks(before.tr, [...operations]);
-  if (!transaction.doc.eq(expected))
-    throw new Error("Document operations did not produce the expected content");
+  // Native table edits can leave redundant columnWidths metadata different
+  // from the authoritative cell widths. Compare the stored contract on both
+  // sides when raw nodes differ; never rebuild or rewrite accepted nodes.
+  if (
+    !transaction.doc.eq(expected) &&
+    JSON.stringify(fromTiptapDocument(transaction.doc)) !==
+      JSON.stringify(fromTiptapDocument(expected))
+  )
+    throw new Error(
+      "The editor transaction did not match the validated edit. No changes were applied.",
+    );
   if (transaction.doc.eq(before.doc)) return false;
   preserveAcceptedSelection(before, transaction);
   editor.view.dispatch(transaction);
@@ -556,8 +582,8 @@ export function applyAcceptedOperations(
 }
 
 /** Moves retain the user's selection in its stable block, including backwards
- * ranges. Updated inline bodies retain valid offsets; deleted targets use PM's
- * normal mapped selection instead. */
+ * ranges. Updated inline bodies retain valid offsets. A deleted caret stays a
+ * caret in nearby text instead of becoming an unintended atom selection. */
 function preserveAcceptedSelection(
   before: EditorState,
   transaction: Transaction,
@@ -634,6 +660,16 @@ function preserveAcceptedSelection(
     transaction.setSelection(
       TextSelection.create(transaction.doc, anchor, head),
     );
+  else if (selection.empty && !transaction.selection.empty) {
+    const point = transaction.selection.$from;
+    const caret =
+      Selection.findFrom(point, 1, true) ?? Selection.findFrom(point, -1, true);
+    if (caret) transaction.setSelection(caret);
+    else {
+      const gap = gapCursorAtEnd(transaction.doc);
+      if (gap) transaction.setSelection(gap);
+    }
+  }
 }
 
 /** Drag the selected sibling range as complete wrappers, retaining descendants. */

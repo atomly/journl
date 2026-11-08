@@ -5,7 +5,7 @@ import {
 } from "@acme/document";
 import { getPlainUrlForAutomaticReference } from "@acme/references";
 import { type AnyExtension, Editor, getSchema } from "@tiptap/core";
-import { TextSelection } from "@tiptap/pm/state";
+import { NodeSelection, Selection, TextSelection } from "@tiptap/pm/state";
 import { clipboardText } from "../serialization/clipboard";
 import {
   createDocumentReader,
@@ -23,6 +23,7 @@ import {
   type ReferenceResolver,
 } from "./reference-insertion";
 import { documentExtensions, safeEditorUrl } from "./schema";
+import { gapCursorAtEnd } from "./selection";
 import { type SlashMenuItem, setSlashItems } from "./slash-items";
 import { suggestionExtension } from "./suggestions";
 import { writingExtension } from "./writing-extension";
@@ -246,6 +247,15 @@ export function createDocumentEditor({
       deliver(updated);
     },
   });
+  // Atom-only documents have no text caret. Initialize an empty native gap
+  // selection before user input rather than implicitly selecting an atom.
+  if (
+    editor.state.selection instanceof NodeSelection &&
+    !Selection.findFrom(editor.state.doc.resolve(0), 1, true)
+  ) {
+    const gap = gapCursorAtEnd(editor.state.doc);
+    if (gap) editor.view.dispatch(editor.state.tr.setSelection(gap));
+  }
   commitRetries.set(editor, () => deliver(editor));
   editor.on("destroy", () => commitRetries.delete(editor));
   if (slashItems)

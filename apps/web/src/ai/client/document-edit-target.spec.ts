@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { createDocumentEditor } from "@acme/better-editor/engine/editor";
 import { blockAt } from "@acme/better-editor/engine/identity";
+import { tableExtensions } from "@acme/better-editor/engine/table-schema";
 import { fromTiptapDocument } from "@acme/better-editor/serialization/tiptap";
 import {
   type DocumentBlock,
@@ -29,7 +30,7 @@ function fixture(
   const onCommit = vi.fn();
   const editor = createDocumentEditor({
     element: document.createElement("div"),
-    extensions: [],
+    extensions: tableExtensions(),
     initialBlocks: blocks,
     onCommit,
     resolveUrl: async () => ({ items: [] }),
@@ -396,3 +397,103 @@ test.each(["readonly", "destroyed"])(
     expect(f.onCommit).not.toHaveBeenCalled();
   },
 );
+
+test.each([false, true])(
+  "table cell text stays an exact inline scope (whole cell: %s)",
+  (wholeCell) => {
+    const f = fixture([
+      parseBlock({
+        content: {
+          rows: [
+            { cells: ["Before target after", "Untouched neighbor"] },
+            { cells: ["Second row", "Last cell"] },
+          ],
+          type: "tableContent",
+        },
+        id: "table",
+        type: "table",
+      }),
+      p("outside"),
+    ]);
+    let start = -1;
+    f.editor.state.doc.descendants((node, pos) => {
+      if (node.type.name === "tableParagraph" && start < 0) start = pos + 1;
+    });
+    const from = start + (wholeCell ? 0 : 7);
+    const to = start + (wholeCell ? 19 : 13);
+    f.editor.view.dispatch(
+      f.editor.state.tr.setSelection(
+        TextSelection.create(f.editor.state.doc, from, to),
+      ),
+    );
+    const before = f.editor.state.doc;
+    const { target } = f.capture();
+    expect(target.selection).toBe(true);
+    expect(target.blocks).toEqual([
+      parseBlock({
+        content: [
+          {
+            styles: {},
+            text: wholeCell ? "Before target after" : "target",
+            type: "text",
+          },
+        ],
+        id: "table",
+        type: "paragraph",
+      }),
+    ]);
+    const structural: DocumentOperation[] = [
+      {
+        data: {
+          content: "No broadening",
+          props: { level: 2 },
+          type: "heading",
+        },
+        id: "table",
+        type: "update",
+      },
+    ];
+    expect(() => target.preview(structural)).toThrow("Select complete blocks");
+    expect(() => target.apply(structural)).toThrow("outside the selected text");
+    expect(f.editor.state.doc).toBe(before);
+    expect(f.onCommit).not.toHaveBeenCalled();
+    const operations = [update("table", "replacement")];
+    expect(target.preview(operations).textContent).toContain(
+      "Untouched neighbor",
+    );
+    expect(f.editor.state.doc).toBe(before);
+    expect(target.apply(operations)).toBe(true);
+    const expected = before.type.schema.nodeFromJSON(before.toJSON());
+    expect(f.editor.state.doc.textContent).toBe(
+      wholeCell
+        ? "replacementUntouched neighborSecond rowLast celloutside"
+        : "Before replacement afterUntouched neighborSecond rowLast celloutside",
+    );
+    expect(undo(f.editor.state, f.editor.view.dispatch)).toBe(true);
+    expect(f.editor.state.doc.eq(expected)).toBe(true);
+  },
+);
+
+test("text spanning table cells does not expand to the whole table", () => {
+  const f = fixture([
+    parseBlock({
+      content: { rows: [{ cells: ["First", "Second"] }], type: "tableContent" },
+      id: "table",
+      type: "table",
+    }),
+  ]);
+  const ranges: { from: number; to: number }[] = [];
+  f.editor.state.doc.descendants((node, pos) => {
+    if (node.type.name === "tableParagraph")
+      ranges.push({ from: pos + 1, to: pos + 1 + node.content.size });
+  });
+  const [first, second] = ranges;
+  if (!first || !second) throw new Error("Missing table cells");
+  f.editor.view.dispatch(
+    f.editor.state.tr.setSelection(
+      TextSelection.create(f.editor.state.doc, first.from, second.to),
+    ),
+  );
+  expect(() => f.capture()).toThrow("Select text within one paragraph");
+  expect(f.onCommit).not.toHaveBeenCalled();
+});

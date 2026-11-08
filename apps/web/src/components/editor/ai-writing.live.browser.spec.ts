@@ -678,6 +678,129 @@ test("live structural edits preserve identities, rich content, Undo and cancella
   }
 });
 
+test("live reported complexity sequence, exact table selection and navigation", async ({
+  page,
+}, info) => {
+  test.skip(
+    info.project.name !== "desktop-chromium",
+    "Desktop writing lifecycle",
+  );
+  test.setTimeout(600_000);
+  const content = page
+    .locator(
+      '.journl-document-editor .better-editor-tiptap[contenteditable="true"]',
+    )
+    .first();
+  const read = () =>
+    content.evaluate((element) =>
+      (element as HTMLElement & { editor: Editor }).editor.getJSON(),
+    );
+  const complete = async (request: string) => {
+    const count = await page.locator('[data-chat-role="assistant"]').count();
+    await ask(page, request);
+    await expect
+      .poll(() => page.locator('[data-chat-role="assistant"]').count())
+      .toBeGreaterThan(count);
+    const response = page.locator('[data-chat-role="assistant"]').last();
+    await expect(response).toContainText(
+      "Edit applied. Use Undo to revert it.",
+      { timeout: 240_000 },
+    );
+    await expect(content).toBeVisible();
+    await expect(page.locator("[data-save-status]")).toContainText("Saved", {
+      timeout: 60_000,
+    });
+    await expect(page.locator('[data-ai-edit-status="error"]')).toHaveCount(0);
+  };
+  await page.goto("/journal/1987-02-08");
+  await openChat(page);
+  await complete(
+    "We are testing your AI tools. Create a page and write complex markdown structures into it. Use tables, lists, nested content, dividers, etc. Include a JavaScript code block.",
+  );
+  const originalUrl = page.url();
+  const before = await read();
+  expect(
+    editorBlocks(before).some((block) => block.content?.[0]?.type === "table"),
+  ).toBe(true);
+  await complete(
+    "Add more complexity. Use checkboxes, more tables and rows, and rewrite the existing code block to Rust.",
+  );
+  const expanded = await read();
+  const blocks = editorBlocks(expanded);
+  expect(
+    blocks.filter((block) => block.content?.[0]?.type === "table").length,
+  ).toBeGreaterThanOrEqual(2);
+  expect(
+    blocks.some((block) => block.content?.[0]?.type === "checkListItem"),
+  ).toBe(true);
+  expect(
+    blocks.some(
+      (block) =>
+        block.content?.[0]?.type === "codeBlock" &&
+        block.content[0].attrs?.props.language === "rust",
+    ),
+  ).toBe(true);
+  for (const block of editorBlocks(before))
+    expect(
+      blocks.some((candidate) => candidate.attrs?.id === block.attrs?.id),
+    ).toBe(true);
+
+  // Use real DOM selection, as a user highlighting a table cell does. Its whole
+  // text is still an inline scope; it must not become the whole table.
+  const cell = content.locator("td p").first();
+  const cellBefore = await cell.textContent();
+  await cell.evaluate((element) => {
+    const root = element.closest<HTMLElement>("[contenteditable]");
+    root?.focus();
+    const range = document.createRange();
+    range.selectNodeContents(element);
+    const selection = getSelection();
+    selection?.removeAllRanges();
+    selection?.addRange(range);
+    document.dispatchEvent(new Event("selectionchange"));
+  });
+  await complete(
+    'Replace only the highlighted text with exactly "Cell selection verified". Do not change anything else.',
+  );
+  await expect(cell).toHaveText("Cell selection verified");
+  const afterCell = await read();
+  const firstCellParagraph = (doc: JSONContent) => {
+    const table = editorBlocks(doc).find(
+      (block) => block.content?.[0]?.type === "table",
+    )?.content?.[0];
+    const paragraph = table?.content?.[0]?.content?.[0]?.content?.[0];
+    if (!paragraph) throw new Error("Missing first table cell");
+    return paragraph;
+  };
+  const restored = structuredClone(afterCell);
+  Object.assign(
+    firstCellParagraph(restored),
+    structuredClone(firstCellParagraph(expanded)),
+  );
+  expect(restored).toEqual(expanded);
+  await content.click();
+  await page.keyboard.press("Control+z");
+  await expect(cell).toHaveText(cellBefore ?? "");
+  await page.keyboard.press("Control+Shift+z");
+  await expect(cell).toHaveText("Cell selection verified");
+  await expect(page.locator("[data-save-status]")).toContainText("Saved");
+
+  const messages = await page.locator('[data-chat-role="user"]').count();
+  await page.getByRole("button", { exact: true, name: "New page" }).click();
+  await expect(page).not.toHaveURL(originalUrl);
+  await expect(page.locator('[data-chat-role="user"]')).toHaveCount(messages);
+  await complete(
+    "Write one paragraph exactly: Navigation uses the current editor.",
+  );
+  await expect(
+    content.locator('[data-better-editor-body="paragraph"]'),
+  ).toHaveText(["Navigation uses the current editor."]);
+  await page.goto(originalUrl);
+  await expect(cell).toHaveText("Cell selection verified");
+  expect(await read()).toEqual(afterCell);
+  await expect(page.locator('[data-chat-role="user"]')).toHaveCount(0);
+});
+
 function editorBlocks(node: JSONContent): JSONContent[] {
   return [
     ...(node.type === "betterEditorBlock" ? [node] : []),

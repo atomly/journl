@@ -57,9 +57,16 @@ function snapshotRange(doc: Node, range: Range, kind: Kind): DocumentBlock[] {
   if (!depth || !from.sameParent(to) || !from.parent.isTextblock)
     throw selectionError();
   const wrapper = from.node(depth);
-  const body = from.parent.copy(
-    from.parent.content.cut(from.parentOffset, to.parentOffset),
-  );
+  // A table paragraph is nested inside a cell, not a valid block body.
+  // Project only the selected inline content through the existing paragraph
+  // contract. Application still replaces the fixed range inside that cell.
+  const content = from.parent.content.cut(from.parentOffset, to.parentOffset);
+  const paragraph = doc.type.schema.nodes.paragraph;
+  if (!paragraph) throw selectionError();
+  const body =
+    from.parent.type.name === "tableParagraph"
+      ? paragraph.createChecked(null, content)
+      : from.parent.copy(content);
   return fromTiptapDocument(
     doc.type.createChecked(
       null,
@@ -225,13 +232,16 @@ export class DocumentEditTarget {
       return toTiptapDocument(combined, this.editor.state.schema);
     }
     const body = replacement.firstChild?.firstChild;
-    const currentBody = this.trackedDoc.resolve(this.current.from).parent;
+    const currentBody = toTiptapDocument(this.blocks, this.editor.state.schema)
+      .firstChild?.firstChild;
     if (
       after.length > 1 ||
       (after.length === 1 &&
         (after[0]?.id !== this.firstId ||
           replacement.firstChild?.childCount !== 1 ||
-          !body?.sameMarkup(currentBody)))
+          !body ||
+          !currentBody ||
+          !body.sameMarkup(currentBody)))
     )
       throw new Error("Select complete blocks to change their structure.");
     return this.editor.state.tr.replaceWith(
@@ -266,15 +276,18 @@ export class DocumentEditTarget {
     if (this.kind === "inline") {
       const replacement = toTiptapDocument(after, this.editor.state.schema);
       const body = replacement.firstChild?.firstChild;
-      const currentBody = this.editor.state.doc.resolve(
-        this.current.from,
-      ).parent;
+      const currentBody = toTiptapDocument(
+        this.blocks,
+        this.editor.state.schema,
+      ).firstChild?.firstChild;
       if (
         after.length > 1 ||
         (after.length === 1 &&
           (after[0]?.id !== this.firstId ||
             replacement.firstChild?.childCount !== 1 ||
-            !body?.sameMarkup(currentBody)))
+            !body ||
+            !currentBody ||
+            !body.sameMarkup(currentBody)))
       )
         throw new Error(
           "This edit changes the structure outside the selected text. Select complete blocks and try again.",
@@ -322,6 +335,7 @@ export function captureDocumentEditTarget(editor: Editor): DocumentEditTarget {
     if (!depth) throw selectionError();
     const wrapper = $from.node(depth);
     if (
+      $from.parent === wrapper.firstChild &&
       $from.parentOffset === 0 &&
       $to.parentOffset === $to.parent.content.size &&
       wrapper.childCount === 1
@@ -339,6 +353,8 @@ export function captureDocumentEditTarget(editor: Editor): DocumentEditTarget {
     firstDepth &&
     lastDepth &&
     firstDepth === lastDepth &&
+    $from.parent === $from.node(firstDepth).firstChild &&
+    $to.parent === $to.node(lastDepth).firstChild &&
     $from.parent.isTextblock &&
     $to.parent.isTextblock &&
     $from.parentOffset === 0 &&

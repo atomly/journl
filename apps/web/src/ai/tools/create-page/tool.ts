@@ -5,7 +5,9 @@ import { zCreatePageInput } from "./schema";
 export const createPage = createTool({
   description: `Create a new page with the given title.
 
-Use when the user asks to create/add/new a page. Infer a concise, accurate title from the request and ask for clarification only when the intended title is genuinely unclear.
+Use only when the latest user request asks to create a separate page. Writing on an already-open page, including a new or empty page, uses write without creating another page. For example, "write on this new page" means the current page, while "create another page and write there" requires creation.
+
+Infer a concise, accurate title from an actual creation request and ask for clarification only when the intended title is unclear.
 
 If the user asks to create and write in the same request, chain this tool immediately with write. The application binds writing to the new page automatically.
 

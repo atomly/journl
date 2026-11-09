@@ -40,7 +40,7 @@ export function useWriteTool() {
       // The SDK processes onToolCall inside its message queue. Awaiting this
       // queued update here would deadlock that same queue.
       void chat.addToolOutput({
-        output,
+        output: { ...output, ...(entry ? { targetEditor: entry.id } : {}) },
         tool: toolCall.toolName,
         toolCallId: toolCall.toolCallId,
       });

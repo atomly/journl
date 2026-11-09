@@ -76,7 +76,11 @@ test("the real SDK queue completes one writing run and rejects repeated calls", 
     expect(chat.status).toBe("ready");
     expect(chat.lastMessage?.parts).toContainEqual(
       expect.objectContaining({
-        output: { message: "Applied", status: "applied" },
+        output: {
+          message: "Applied",
+          status: "applied",
+          targetEditor: "page:one",
+        },
         state: "output-available",
         toolCallId: "write-one",
         type: "tool-write",

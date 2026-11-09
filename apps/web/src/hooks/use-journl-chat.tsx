@@ -42,6 +42,7 @@ export function JournlChatProvider({
   const {
     getSelections: getAllSelections,
     getEditors,
+    getEditTarget,
     getView,
     getReasoning,
     prepareEdits,
@@ -103,12 +104,26 @@ export function JournlChatProvider({
           }
           const selections = getAllSelections();
           const view = getView();
+          const current = getEditTarget();
+          const doc = current?.editor.state.doc;
+          const previewEnd = Math.min(doc?.content.size ?? 0, 4000);
 
           return {
             body: {
               context: {
                 activeEditors: Array.from(getEditors().keys()),
                 currentDate: new Date().toLocaleString(),
+                currentEditor:
+                  current && doc
+                    ? {
+                        empty: current.editor.isEmpty,
+                        id: current.id,
+                        textPreview: doc
+                          .textBetween(0, previewEnd, "\n")
+                          .slice(0, 4000),
+                        truncated: doc.content.size > previewEnd,
+                      }
+                    : undefined,
                 highlightedText: selections.map((selection) => selection.text),
                 reasoning: getReasoning(),
                 view,

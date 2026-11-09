@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { zJournlEditorId } from "~/ai/mastra/agents/journl-agent-context";
 
 export const zWriteInput = z.strictObject({});
 
@@ -15,4 +16,5 @@ export const zWriteOutput = z.object({
     "error",
   ]),
   message: z.string(),
+  targetEditor: zJournlEditorId.optional(),
 });

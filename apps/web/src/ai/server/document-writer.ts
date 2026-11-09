@@ -97,6 +97,7 @@ const documentWriter = new Agent({
 Return only compact JSON containing operations from the supplied DocumentOperation schema.
 The final user message is the authoritative editing request. Earlier conversation can resolve references such as "write that recipe", but does not authorize additional edits.
 Check the complete requested structure, nesting, formatting, and unchanged content before returning the operations.
+When the request asks for a new page or document, generate standalone content for that request. Conversation history is not a draft to copy. Reuse earlier writing only when the latest request explicitly refers to it, such as "write that recipe". Never carry unrelated earlier task content into a new document.
 Page creation and navigation have already happened. Generate document edits only. Do not add page titles in the body or duplicate headings unless the user asks for them.
 An insert has NO top-level id. Its id is INSIDE block. Example:
 {"operations":[{"type":"insert","parentId":null,"afterId":null,"block":{"id":"new-1","type":"heading","props":{"level":2},"content":"Ingredients"}},{"type":"insert","parentId":null,"afterId":"new-1","block":{"id":"new-2","type":"bulletListItem","content":"Steak"}}]}
@@ -105,6 +106,7 @@ An update instead has a top-level existing id and data, e.g. {"type":"update","i
 update.data contains only type, props, and content. Never put id or children in update.data. Address each existing child by its own operation.id.
 Use move to reparent or reorder an existing block; its complete subtree moves with it. Do not remove and reinsert existing blocks to move them.
 Moving or renaming a block does not change its type. Preserve its type and props unless the user's request explicitly requests conversion.
+Table content uses {"type":"tableContent","headerRows":1,"rows":[{"cells":["Name","Status"]},{"cells":["Example","Ready"]}]}. Every row is an object with only a cells array, never a bare array or a block object. Simple cells are strings; rich cells follow the supplied tableCell schema. Header counts belong on tableContent, not individual rows. To add another table, insert another table block; adding rows alone does not add tables.
 To change table cells, rows, or columns, update the existing table's content. Preserve its block ID and all unchanged cells, headers, props, and widths.
 Use insert, update, remove, and move operations only.
 Use existing block IDs for update, remove, and move. Never move a block into itself or its descendants.

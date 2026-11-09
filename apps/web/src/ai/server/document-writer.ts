@@ -210,6 +210,11 @@ Regenerate the complete operation batch against the original supplied document. 
           },
         );
 
+        writer.write({
+          data: { status: "generating" },
+          transient: true,
+          type: "data-document-edit",
+        });
         try {
           let failed = false;
           let aborted = false;
@@ -218,6 +223,7 @@ Regenerate the complete operation batch against the original supplied document. 
           let finalObject: unknown;
           let streamError: unknown;
           let correcting = false;
+          let publishedOperations = 0;
           const preserveDraft = () => {
             if (!correcting)
               writer.write({
@@ -273,8 +279,13 @@ Regenerate the complete operation batch against the original supplied document. 
               if (!chunk.object || typeof chunk.object !== "object") continue;
               const partial = chunk.object as { operations?: unknown };
               if (!Array.isArray(partial.operations)) continue;
+              if (partial.operations.length - 1 <= publishedOperations)
+                continue;
               const complete: DocumentOperation[] = [];
-              for (const operation of partial.operations) {
+              // Mastra emits deep partial objects. The last array element can
+              // validate while its optional content is still arriving. Hold it
+              // until the next element or the terminal validated proposal.
+              for (const operation of partial.operations.slice(0, -1)) {
                 try {
                   const decoded = await decodeWriterOutput({
                     operations: [operation],
@@ -285,6 +296,7 @@ Regenerate the complete operation batch against the original supplied document. 
                   break;
                 }
               }
+              if (complete.length <= publishedOperations) continue;
               try {
                 const operations = assignIdentities(complete);
                 applyDocumentOperations(request.blocks, operations);
@@ -293,6 +305,7 @@ Regenerate the complete operation batch against the original supplied document. 
                   transient: true,
                   type: "data-document-edit",
                 });
+                publishedOperations = complete.length;
               } catch {
                 // The next object chunk may complete this batch's references.
               }

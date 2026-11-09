@@ -11,7 +11,7 @@ import {
   captureDocumentEditTarget,
   type DocumentEditTarget,
 } from "./document-edit-target";
-import { InlineDocumentDraft } from "./inline-document-draft";
+import { fadeAIChanges, InlineDocumentDraft } from "./inline-document-draft";
 
 type Instruction = Pick<
   DocumentWriterRequest,
@@ -26,6 +26,7 @@ type Status =
   | "cancelled"
   | "error";
 type Snapshot = {
+  phase: "preparing" | "writing" | "correcting";
   requested: boolean;
   status: Status;
   message: string;
@@ -65,6 +66,7 @@ export class DocumentEditSession {
   private snapshot: Snapshot = {
     following: true,
     message: "",
+    phase: "preparing",
     requested: false,
     status: "idle",
   };
@@ -90,11 +92,13 @@ export class DocumentEditSession {
     status: Status,
     message: string,
     following = this.snapshot.following,
+    phase = this.snapshot.phase,
   ) {
     if (this.destroyed) return;
     this.snapshot = {
       following,
       message,
+      phase,
       requested: this.requested,
       status,
     };
@@ -218,7 +222,12 @@ export class DocumentEditSession {
         const document = target.preview(complete);
         this.draft?.update(document);
         lastCompleteBatch = batch;
-        this.publish("generating", this.snapshot.message);
+        this.publish(
+          "generating",
+          "AI is writing. The editor is locked until writing finishes.",
+          this.snapshot.following,
+          "writing",
+        );
       } catch {
         // Wait for a complete valid batch, keeping the last visible draft intact.
       }
@@ -231,6 +240,7 @@ export class DocumentEditSession {
         "generating",
         "AI is writing. The editor is locked until writing finishes.",
         true,
+        "preparing",
       );
       const stream = await this.stream(
         { ...instruction, blocks: target.blocks, targetEditor: this.id },
@@ -284,6 +294,8 @@ export class DocumentEditSession {
             this.publish(
               "generating",
               "AI is revising the edit. Your draft remains visible.",
+              this.snapshot.following,
+              "correcting",
             );
             continue;
           }
@@ -316,11 +328,13 @@ export class DocumentEditSession {
       if (!finished || !proposed)
         throw new Error("The AI edit did not complete. Please retry.");
       controller.signal.throwIfAborted();
+      const visibleDraft = this.draft?.surface.editor.state.doc;
       this.closeDraft();
       this.applying = true;
       try {
         if (!target.apply(proposed))
           throw new Error("The target changed. Retry using your latest text.");
+        if (visibleDraft) fadeAIChanges(this.editor, visibleDraft);
       } finally {
         this.applying = false;
       }

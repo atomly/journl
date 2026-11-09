@@ -34,36 +34,42 @@ export function DocumentWritingStatus({
           <EditorContent editor={surface.editor} />,
           surface.element,
         )}
-      <section
-        className="sticky bottom-3 mx-12 my-2 flex w-fit max-w-full items-center gap-2 text-muted-foreground text-xs"
-        aria-label="AI writing"
-        data-ai-edit-status={snapshot.status}
-      >
-        {snapshot.status === "generating" && (
-          <Spinner aria-hidden="true" className="size-3" />
-        )}
-        <span role="status" title={snapshot.message}>
-          {snapshot.status === "generating"
-            ? "Writing…"
-            : "Couldn’t finish writing. Check your page and selection, then retry in chat."}
-          <span className="sr-only"> {snapshot.message}</span>
-        </span>
-        {snapshot.status === "generating" && !snapshot.following && (
-          <Button variant="ghost" size="xs" onClick={session.followWriting}>
-            Follow writing
-          </Button>
-        )}
-        {snapshot.status === "generating" && (
-          <Button
-            aria-label="Stop AI writing"
-            variant="ghost"
-            size="xs"
-            onClick={session.cancel}
-          >
-            Stop
-          </Button>
-        )}
-      </section>
+      <div className="pointer-events-none sticky bottom-3 z-50 mx-6 h-0 max-w-[calc(100%-3rem)] self-start">
+        <section
+          className="pointer-events-auto flex w-fit max-w-full -translate-y-full items-center gap-2 rounded-lg border border-sidebar-border bg-popover px-3 py-1.5 text-popover-foreground text-xs shadow-md"
+          aria-label="AI writing"
+          data-ai-edit-status={snapshot.status}
+        >
+          {snapshot.status === "generating" && (
+            <Spinner aria-hidden="true" className="size-3" />
+          )}
+          <span role="status" title={snapshot.message}>
+            {snapshot.status === "generating"
+              ? snapshot.phase === "correcting"
+                ? "Revising…"
+                : snapshot.phase === "preparing"
+                  ? "Preparing edit…"
+                  : "Writing…"
+              : "Couldn’t finish writing. Check your page and selection, then retry in chat."}
+            <span className="sr-only"> {snapshot.message}</span>
+          </span>
+          {snapshot.status === "generating" && !snapshot.following && (
+            <Button variant="ghost" size="xs" onClick={session.followWriting}>
+              Follow writing
+            </Button>
+          )}
+          {snapshot.status === "generating" && (
+            <Button
+              aria-label="Stop AI writing"
+              variant="ghost"
+              size="xs"
+              onClick={session.cancel}
+            >
+              Stop
+            </Button>
+          )}
+        </section>
+      </div>
     </>
   );
 }

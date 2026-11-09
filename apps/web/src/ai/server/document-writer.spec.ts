@@ -210,7 +210,12 @@ describe("usage accounting through the installed Mastra Agent", () => {
                   delta: JSON.stringify(
                     outcome === "malformed"
                       ? { operations: [{ type: "delete-everything" }] }
-                      : { operations: [operation] },
+                      : {
+                          operations:
+                            outcome === "aborted"
+                              ? [operation, operation]
+                              : [operation],
+                        },
                   ),
                   id: "proposal",
                   type: "text-delta",
@@ -275,7 +280,11 @@ describe("usage accounting through the installed Mastra Agent", () => {
             user,
           }),
           (chunk) => {
-            if (outcome === "aborted" && chunk.type === "data-document-edit")
+            if (
+              outcome === "aborted" &&
+              chunk.type === "data-document-edit" &&
+              Array.isArray((chunk.data as { operations?: unknown }).operations)
+            )
               controller.abort();
           },
         );
@@ -823,7 +832,7 @@ describe("document writer proposal stream", () => {
           z.object({ status: z.literal("generating") }).safeParse(data).success,
       );
     expect(
-      z.object({ operations: z.array(zDocumentOperation) }).parse(progress[1])
+      z.object({ operations: z.array(zDocumentOperation) }).parse(progress[2])
         .operations[1],
     ).toEqual(operations[1]);
     expect(accepted[0]?.id).toBe("a");
@@ -880,7 +889,7 @@ describe("document writer proposal stream", () => {
     const { chunks, errors, messages } = await consume(response);
     expect(errors).toEqual([]);
     expect(chunks).toContainEqual({
-      data: { operations: [], status: "generating" },
+      data: { status: "generating" },
       transient: true,
       type: "data-document-edit",
     });
@@ -1109,7 +1118,7 @@ describe("document writer proposal stream", () => {
     expect(mocks.stream.mock.calls[0]?.[1].abortSignal).toBe(controller.signal);
     expect(generated(chunks)).toEqual([]);
     expect(chunks).toContainEqual({
-      data: { operations: [], status: "generating" },
+      data: { status: "generating" },
       transient: true,
       type: "data-document-edit",
     });
@@ -1147,7 +1156,9 @@ describe("document writer proposal stream", () => {
     mocks.stream.mockImplementation(async () =>
       output({
         finishReason: "length",
-        partials: [{ operations: [operation], status: "generated" }],
+        partials: [
+          { operations: [operation, { type: "update" }], status: "generated" },
+        ],
       }),
     );
     const { chunks } = await consume(
@@ -1297,4 +1308,75 @@ describe("document writer proposal stream", () => {
       log.mockRestore();
     }
   });
+});
+
+it("streams a completed table operation once, never its schema-valid unfinished cells", async () => {
+  const table: DocumentOperation = {
+    data: {
+      content: {
+        rows: [
+          {
+            cells: [
+              { content: "A", type: "tableCell" },
+              { content: "B", type: "tableCell" },
+            ],
+          },
+          {
+            cells: [
+              { content: "1", type: "tableCell" },
+              { content: "2", type: "tableCell" },
+            ],
+          },
+        ],
+        type: "tableContent",
+      },
+      type: "table",
+    },
+    id: "a",
+    type: "update",
+  };
+  mocks.stream.mockImplementation(async () =>
+    output({
+      object: { operations: [table] },
+      partials: [
+        { operations: [{ data: { type: "table" }, id: "a", type: "update" }] },
+        {
+          operations: [
+            {
+              ...table,
+              data: {
+                content: { rows: [{ cells: ["A"] }], type: "tableContent" },
+                type: "table",
+              },
+            },
+          ],
+        },
+        { operations: [table, { type: "insert" }] },
+        { operations: [table, { parentId: null, type: "insert" }] },
+      ],
+    }),
+  );
+  const { chunks, errors } = await consume(
+    await streamDocumentWriter({
+      request,
+      signal: new AbortController().signal,
+      user,
+    }),
+  );
+  const previews = chunks.filter(
+    (chunk) =>
+      chunk.type === "data-document-edit" &&
+      (chunk.data as { operations?: unknown; status?: string }).status ===
+        "generating" &&
+      Array.isArray((chunk.data as { operations?: unknown }).operations),
+  );
+  expect(errors).toEqual([]);
+  expect(previews).toEqual([
+    {
+      data: { operations: [table], status: "generating" },
+      transient: true,
+      type: "data-document-edit",
+    },
+  ]);
+  expect(generated(chunks)).toHaveLength(1);
 });

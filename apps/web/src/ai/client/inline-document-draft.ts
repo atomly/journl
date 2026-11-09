@@ -2,6 +2,47 @@ import { Editor } from "@tiptap/core";
 import type { Node } from "@tiptap/pm/model";
 import { Plugin, PluginKey } from "@tiptap/pm/state";
 
+/** Called only for AI transactions, never for ordinary editor input. */
+export function fadeAIChanges(editor: Editor, previous: Node) {
+  if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return;
+  const before =
+    previous.type.schema === editor.schema
+      ? previous
+      : editor.schema.nodeFromJSON(previous.toJSON());
+  const doc = editor.state.doc;
+  const start = before.content.findDiffStart(doc.content);
+  const end = before.content.findDiffEnd(doc.content);
+  if (start === null || !end) return;
+  const previousBlocks = new Map<string, Node>();
+  before.descendants((node) => {
+    if (node.type.name === "betterEditorBlock")
+      previousBlocks.set(node.attrs.id, node);
+  });
+  const ids = new Set<string>();
+  doc.nodesBetween(Math.min(start, end.b), end.b, (node) => {
+    if (node.type.name !== "betterEditorBlock") return;
+    // A bounding diff can include untouched writing between two AI edits.
+    // Compare each block body, and descend when only its children changed.
+    const oldBody = previousBlocks.get(node.attrs.id)?.firstChild;
+    if (oldBody && node.firstChild && oldBody.eq(node.firstChild)) return;
+    // Existing tables update atomically. Fading the whole table would also dim
+    // retained cells and recreate the flash this preview is meant to prevent.
+    if (oldBody && node.firstChild?.type.name === "table") return;
+    ids.add(node.attrs.id);
+  });
+  for (const block of editor.view.dom.querySelectorAll<HTMLElement>(
+    "[data-block-id]",
+  )) {
+    if (!ids.has(block.dataset.blockId ?? "")) continue;
+    const body =
+      block.querySelector<HTMLElement>("[data-better-editor-body]") ?? block;
+    body.animate?.([{ opacity: 0.55 }, { opacity: 1 }], {
+      duration: 220,
+      easing: "ease-out",
+    });
+  }
+}
+
 /** An inline, read-only view of generated blocks. The accepted editor retains
  * its exact document, selection and history until the final atomic edit. */
 export class InlineDocumentDraft {
@@ -102,6 +143,7 @@ export class InlineDocumentDraft {
       doc.slice(start, endB),
     );
     this.preview.view.dispatch(transaction.setMeta("addToHistory", false));
+    fadeAIChanges(this.preview, current);
     this.changedPosition = Math.max(0, endB - 1);
     this.scheduleFollow();
   }

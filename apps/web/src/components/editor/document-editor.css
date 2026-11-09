@@ -37,5 +37,16 @@
 /* AI writing uses the document surface. Mutation controls stay hidden while locked. */
 .journl-document-editor[data-ai-writing]
 :is([data-better-editor-toolbar-mode], [data-tiptap-controls]) {
-  display: none;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.journl-document-editor[data-ai-writing] .better-editor-tiptap {
+  cursor: progress;
+}
+
+/* The read-only AI preview keeps the editable surface's table gutters. */
+.journl-document-editor[data-ai-writing] .better-editor-table-wrapper {
+  margin-inline: 12px 56px;
+  max-width: calc(100% - 68px);
 }

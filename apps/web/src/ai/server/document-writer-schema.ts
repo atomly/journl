@@ -37,13 +37,20 @@ const generatedBlock = z.discriminatedUnion("type", [
   first.extend({ id: z.string().min(1) }),
   ...rest.map((variant) => variant.extend({ id: z.string().min(1) })),
 ]);
+const predecessor = z
+  .string()
+  .min(1)
+  .nullable()
+  .describe(
+    "An existing or earlier-inserted sibling under this operation's parentId. Never use a nested child as the predecessor of a root block. Track the last sibling separately for each parent. Null places the block first.",
+  );
 const described = z.strictObject({
   operations: z.array(
     z.discriminatedUnion("type", [
       z.strictObject({
         type: z.literal("insert"),
         parentId: z.string().min(1).nullable(),
-        afterId: z.string().min(1).nullable(),
+        afterId: predecessor,
         block: generatedBlock,
       }),
       z.strictObject({
@@ -56,7 +63,7 @@ const described = z.strictObject({
         type: z.literal("move"),
         id: z.string().min(1),
         parentId: z.string().min(1).nullable(),
-        afterId: z.string().min(1).nullable(),
+        afterId: predecessor,
       }),
     ]),
   ),

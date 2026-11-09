@@ -1,5 +1,8 @@
 // @vitest-environment jsdom
+
 import { createDocumentEditor } from "@acme/better-editor/engine/editor";
+import { tableExtensions } from "@acme/better-editor/engine/table-schema";
+import type { DocumentBlock } from "@acme/document";
 import { afterEach, expect, test, vi } from "vitest";
 import { InlineDocumentDraft } from "./inline-document-draft";
 
@@ -79,4 +82,94 @@ test("centers the changed line, coalesces frames, and respects manual scrolling"
   expect(following).toHaveBeenLastCalledWith(true);
   frames.shift()?.(0);
   expect(scroll).toHaveBeenCalledTimes(2);
+});
+
+test("AI fade skips unchanged human writing and nested parent bodies, and honors reduced motion", async () => {
+  const { fadeAIChanges } = await import("./inline-document-draft");
+  const { toTiptapDocument } = await import(
+    "@acme/better-editor/serialization/tiptap"
+  );
+  const animated: string[] = [];
+  vi.stubGlobal(
+    "matchMedia",
+    vi.fn(() => ({ matches: false })),
+  );
+  const previousAnimate = Object.getOwnPropertyDescriptor(
+    HTMLElement.prototype,
+    "animate",
+  );
+  Object.defineProperty(HTMLElement.prototype, "animate", {
+    configurable: true,
+    value: function (this: HTMLElement) {
+      animated.push(
+        this.closest<HTMLElement>("[data-block-id]")?.dataset.blockId ?? "",
+      );
+    },
+  });
+  const blocks: DocumentBlock[] = [
+    { content: "Original A", id: "a", type: "paragraph" as const },
+    { content: "Human writing", id: "b", type: "paragraph" as const },
+    { content: "Original C", id: "c", type: "paragraph" as const },
+    {
+      children: [
+        { content: "Original child", id: "child", type: "paragraph" as const },
+      ],
+      content: "Human parent",
+      id: "parent",
+      type: "bulletListItem" as const,
+    },
+    {
+      content: { rows: [{ cells: ["Retained cell"] }], type: "tableContent" },
+      id: "table",
+      type: "table",
+    },
+  ];
+  const editor = createDocumentEditor({
+    element: document.createElement("div"),
+    extensions: tableExtensions(),
+    initialBlocks: blocks,
+    onCommit: vi.fn(),
+    resolveUrl: async () => ({ items: [] }),
+  });
+  try {
+    const before = editor.state.doc;
+    const changed = structuredClone(blocks);
+    for (const block of changed) {
+      if (block.id === "a") block.content = "AI A";
+      if (block.id === "c") block.content = "AI C";
+      for (const child of block.children ?? []) child.content = "AI child";
+      if (block.type === "table")
+        block.content = {
+          rows: [{ cells: ["Updated cell"] }],
+          type: "tableContent",
+        };
+    }
+    changed.push({
+      content: { rows: [{ cells: ["New cell"] }], type: "tableContent" },
+      id: "new-table",
+      type: "table",
+    });
+    editor.view.dispatch(
+      editor.state.tr.replaceWith(
+        0,
+        editor.state.doc.content.size,
+        toTiptapDocument(changed, editor.schema).content,
+      ),
+    );
+    expect(animated).toEqual([]); // Ordinary transactions do not install animation behavior.
+    fadeAIChanges(editor, before);
+    expect(animated.sort()).toEqual(["a", "c", "child", "new-table"]);
+    animated.length = 0;
+    vi.stubGlobal(
+      "matchMedia",
+      vi.fn(() => ({ matches: true })),
+    );
+    fadeAIChanges(editor, before);
+    expect(animated).toEqual([]);
+  } finally {
+    editor.destroy();
+    if (previousAnimate)
+      Object.defineProperty(HTMLElement.prototype, "animate", previousAnimate);
+    else Reflect.deleteProperty(HTMLElement.prototype, "animate");
+  }
 });

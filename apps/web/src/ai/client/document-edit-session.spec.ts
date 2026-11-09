@@ -256,7 +256,11 @@ test("manual scrolling pauses following until explicitly resumed", async () => {
     new WheelEvent("wheel", { deltaY: -20 }),
   );
   expect(f.session.getSnapshot().following).toBe(false);
-  f.session.followWriting();
+  f.session.toggleFollowing();
+  expect(f.session.getSnapshot().following).toBe(true);
+  f.session.toggleFollowing();
+  expect(f.session.getSnapshot().following).toBe(false);
+  f.session.toggleFollowing();
   expect(f.session.getSnapshot().following).toBe(true);
   f.session.cancel();
   expect(await run).toMatchObject({ status: "cancelled" });

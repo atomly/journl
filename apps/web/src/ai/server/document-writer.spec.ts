@@ -1476,3 +1476,21 @@ it("compiles compact table additions only at complete operation boundaries", asy
   });
   expect(generated(chunks)).toHaveLength(1);
 });
+
+it("reports Mastra's native generation timeout without disguising it as a document error", async () => {
+  const error = new Error("Private provider details");
+  error.name = "MastraTimeoutError";
+  mocks.stream.mockImplementation(async () => output({ error }));
+  const { chunks } = await consume(
+    await streamDocumentWriter({
+      request,
+      signal: new AbortController().signal,
+      user,
+    }),
+  );
+  expect(chunks).toContainEqual({
+    errorText: "The AI edit timed out. Your writing was kept.",
+    type: "error",
+  });
+  expect(generated(chunks)).toHaveLength(0);
+});

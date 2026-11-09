@@ -409,6 +409,7 @@ Regenerate the complete operation batch against the original supplied document. 
               (generationFinishedAt ?? performance.now()) - startedAt,
             ),
             researchCalls: webSearchCalls.size,
+            validationFeedback,
           });
           try {
             const totalUsage = await result.totalUsage;
@@ -476,7 +477,9 @@ Regenerate the complete operation batch against the original supplied document. 
         return "The AI edit exceeded its output limit. Your writing was kept.";
       if (
         error instanceof Error &&
-        ["TimeoutError", "AI_TimeoutError"].includes(error.name)
+        ["TimeoutError", "AI_TimeoutError", "MastraTimeoutError"].includes(
+          error.name,
+        )
       )
         return "The AI edit timed out. Your writing was kept.";
       if (APICallError.isInstance(error))

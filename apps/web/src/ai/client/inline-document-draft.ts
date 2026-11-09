@@ -148,7 +148,7 @@ export class InlineDocumentDraft {
     this.scheduleFollow();
   }
 
-  private pauseFollowing = () => {
+  pauseFollowing = () => {
     if (!this.following) return;
     this.following = false;
     this.onFollowChange(false);

@@ -362,7 +362,10 @@ export class DocumentEditSession {
       return controller.signal.reason as { status: Status; message: string };
     return { message: this.snapshot.message, status: this.snapshot.status };
   }
-  followWriting = () => this.draft?.follow();
+  toggleFollowing = () => {
+    if (this.snapshot.following) this.draft?.pauseFollowing();
+    else this.draft?.follow();
+  };
   private closeDraft() {
     this.draft?.destroy();
     this.draft = undefined;

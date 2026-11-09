@@ -50,3 +50,35 @@
   margin-inline: 12px 56px;
   max-width: calc(100% - 68px);
 }
+
+/* The rotating primary-color highlight stays inside the badge border. */
+.journl-ai-writing-badge[data-ai-edit-status="generating"] {
+  isolation: isolate;
+  overflow: hidden;
+}
+.journl-ai-writing-badge[data-ai-edit-status="generating"]::before {
+  content: "";
+  position: absolute;
+  inset: -200%;
+  z-index: -2;
+  background: conic-gradient(transparent 65%, var(--primary) 85%, transparent);
+  animation: journl-ai-border 4s linear infinite;
+}
+.journl-ai-writing-badge[data-ai-edit-status="generating"]::after {
+  content: "";
+  position: absolute;
+  inset: 1px;
+  z-index: -1;
+  border-radius: inherit;
+  background: var(--popover);
+}
+@keyframes journl-ai-border {
+  to {
+    transform: rotate(1turn);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .journl-ai-writing-badge[data-ai-edit-status="generating"]::before {
+    animation: none;
+  }
+}

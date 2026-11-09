@@ -1,7 +1,14 @@
+import { DocumentOperationError } from "@acme/document";
 import { z } from "zod/v4";
 
 /** Return bounded schema/rule feedback, never document values or provider payloads. */
 export function documentWriterFeedback(error: unknown): string | undefined {
+  if (error instanceof DocumentOperationError) {
+    const feedback = documentWriterFeedback(error.cause);
+    return feedback
+      ? `operations[${error.index}] (${error.operation}): ${feedback}`
+      : undefined;
+  }
   if (error instanceof SyntaxError)
     return "Return valid JSON matching the supplied operation schema.";
   if (error instanceof z.ZodError) {

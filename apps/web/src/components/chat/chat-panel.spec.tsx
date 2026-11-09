@@ -16,14 +16,23 @@ vi.mock("./session-status", () => ({
   EarlierChatMessages: () => null,
 }));
 vi.mock("./composer", () => ({ ChatComposer: () => null }));
-vi.mock("./message", () => ({ ChatMessage: () => null }));
+vi.mock("./message", () => ({
+  ChatMessage: ({ thinking }: { thinking?: boolean }) =>
+    thinking ? <div role="status">Thinking</div> : null,
+}));
 vi.mock("@acme/ui/message-scroller", () => {
   const Container = ({ children }: { children?: ReactNode }) => children;
   return {
     MessageScroller: Container,
     MessageScrollerButton: () => null,
     MessageScrollerContent: Container,
-    MessageScrollerItem: Container,
+    MessageScrollerItem: ({
+      children,
+      messageId,
+    }: {
+      children?: ReactNode;
+      messageId: string;
+    }) => <div data-message-id={messageId}>{children}</div>,
     MessageScrollerProvider: Container,
     MessageScrollerViewport: Container,
   };
@@ -44,6 +53,7 @@ test("thinking survives an empty assistant message and completed intermediate st
     fixture.status = "submitted";
     await render();
     expect(host.querySelector('[role="status"]')?.textContent).toBe("Thinking");
+    expect(host.querySelectorAll("[data-message-id]")).toHaveLength(2);
     fixture.messages.push({
       id: "assistant",
       parts: [{ type: "step-start" }],
@@ -52,6 +62,7 @@ test("thinking survives an empty assistant message and completed intermediate st
     fixture.status = "streaming";
     await render();
     expect(host.querySelector('[role="status"]')?.textContent).toBe("Thinking");
+    expect(host.querySelectorAll("[data-message-id]")).toHaveLength(2);
     fixture.messages[1] = {
       id: "assistant",
       parts: [{ state: "done", text: "Read the note", type: "reasoning" }],

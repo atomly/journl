@@ -10,7 +10,13 @@ import {
   TraceLine,
   TraceTitle,
 } from "@acme/ui/trace";
-import { getToolName, isToolUIPart, type UIMessage } from "ai";
+import {
+  type DynamicToolUIPart,
+  getToolName,
+  isToolUIPart,
+  type ToolUIPart,
+  type UIMessage,
+} from "ai";
 import {
   ArrowUpRightIcon,
   BrainIcon,
@@ -28,9 +34,10 @@ export function messageSegments(parts: Part[]) {
     | { kind: "activity"; parts: Part[] }
   )[] = [];
   for (const part of parts) {
-    if (part.type === "text") segments.push({ kind: "text", text: part.text });
+    if (part.type === "text" && part.text.trim())
+      segments.push({ kind: "text", text: part.text });
     else if (
-      part.type === "reasoning" ||
+      (part.type === "reasoning" && Boolean(part.text.trim())) ||
       part.type === "source-url" ||
       part.type === "source-document" ||
       isToolUIPart(part)
@@ -61,6 +68,85 @@ export function isMessageActivelyStreaming(message?: UIMessage) {
       ? part.state === "streaming" && Boolean(part.text.trim())
       : isToolUIPart(part) &&
         (part.state === "input-streaming" || part.state === "input-available"),
+  );
+}
+function toolState(part: ToolUIPart | DynamicToolUIPart, active: boolean) {
+  const incomplete =
+    part.state === "input-streaming" || part.state === "input-available";
+  const running = active && incomplete;
+  const outputStatus =
+    part.state === "output-available" &&
+    typeof part.output === "object" &&
+    part.output !== null &&
+    "status" in part.output
+      ? part.output.status
+      : undefined;
+  const cancelled = outputStatus === "cancelled";
+  const conflicted = outputStatus === "conflict";
+  const failed =
+    part.state === "output-error" ||
+    part.state === "output-denied" ||
+    (!active && incomplete) ||
+    outputStatus === "error" ||
+    conflicted;
+  return { cancelled, conflicted, failed, running };
+}
+function ActivityGroup({ parts, active }: { parts: Part[]; active: boolean }) {
+  const tools = parts.filter(isToolUIPart);
+  const states = tools.map((part) => toolState(part, active));
+  const failed = states.some((state) => state.failed);
+  const running =
+    states.some((state) => state.running) ||
+    parts.some(
+      (part) =>
+        part.type === "reasoning" && active && part.state === "streaming",
+    );
+  const cancelled = states.some((state) => state.cancelled);
+  const conflicted = states.some((state) => state.conflicted);
+  const sources = parts.filter(
+    (part) =>
+      part.type === "source-document" ||
+      (part.type === "source-url" && safeChatLink(part.url)),
+  ).length;
+  const count = [
+    tools.length
+      ? `${tools.length} ${tools.length === 1 ? "action" : "actions"}`
+      : "",
+    sources ? `${sources} ${sources === 1 ? "source" : "sources"}` : "",
+  ]
+    .filter(Boolean)
+    .join(" · ");
+  return (
+    <TraceCollapsible>
+      <TraceCollapsibleTrigger>
+        <TraceLine status={failed ? "error" : running ? "running" : undefined}>
+          <TraceIcon>
+            <WrenchIcon />
+          </TraceIcon>
+          <TraceTitle>Activity{count ? ` · ${count}` : ""}</TraceTitle>
+          <TraceDescription>
+            {conflicted
+              ? "Conflict"
+              : failed
+                ? "Failed"
+                : running
+                  ? "Running"
+                  : cancelled
+                    ? "Cancelled"
+                    : "Complete"}
+          </TraceDescription>
+        </TraceLine>
+      </TraceCollapsibleTrigger>
+      <TraceCollapsibleContent>
+        <Trace>
+          {parts.map((part, index) => (
+            <Fragment key={index}>
+              <Activity part={part} active={active} />
+            </Fragment>
+          ))}
+        </Trace>
+      </TraceCollapsibleContent>
+    </TraceCollapsible>
   );
 }
 function Activity({ part, active }: { part: Part; active: boolean }) {
@@ -117,24 +203,7 @@ function Activity({ part, active }: { part: Part; active: boolean }) {
     );
   if (!isToolUIPart(part)) return null;
   const name = getToolName(part);
-  const incomplete =
-    part.state === "input-streaming" || part.state === "input-available";
-  const running = active && incomplete;
-  const outputStatus =
-    part.state === "output-available" &&
-    typeof part.output === "object" &&
-    part.output !== null &&
-    "status" in part.output
-      ? part.output.status
-      : undefined;
-  const cancelled = outputStatus === "cancelled";
-  const conflicted = outputStatus === "conflict";
-  const failed =
-    part.state === "output-error" ||
-    part.state === "output-denied" ||
-    (!active && incomplete) ||
-    outputStatus === "error" ||
-    conflicted;
+  const { cancelled, conflicted, failed, running } = toolState(part, active);
   const output = "output" in part ? part.output : undefined;
   const summary =
     output &&
@@ -188,13 +257,7 @@ export function ChatMessageParts({
     segment.kind === "text" ? (
       <ChatMarkdown key={index} text={segment.text} />
     ) : (
-      <Trace key={index}>
-        {segment.parts.map((part, partIndex) => (
-          <Fragment key={partIndex}>
-            <Activity part={part} active={active} />
-          </Fragment>
-        ))}
-      </Trace>
+      <ActivityGroup key={index} parts={segment.parts} active={active} />
     ),
   );
 }

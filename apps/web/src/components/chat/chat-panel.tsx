@@ -9,17 +9,22 @@ import {
   MessageScrollerProvider,
   MessageScrollerViewport,
 } from "@acme/ui/message-scroller";
-import { Trace, TraceIcon, TraceLine, TraceTitle } from "@acme/ui/trace";
-import { BrainIcon } from "lucide-react";
+import type { UIMessage } from "ai";
 import { type ReactNode, useState } from "react";
 import { getHumanReadableChatError } from "~/usage/quota-error";
 import { useChatPresentation } from "./chat-presentation";
 import { ChatSurfaceContext } from "./chat-surface";
 import { ChatComposer } from "./composer";
 import { ChatMessage } from "./message";
-import { isMessageActivelyStreaming } from "./message-parts";
+import { isMessageActivelyStreaming, messageSegments } from "./message-parts";
 import { ChatSessionStatus, EarlierChatMessages } from "./session-status";
 import "./chat.css";
+
+const pendingMessage: UIMessage = {
+  id: "pending",
+  parts: [],
+  role: "assistant",
+};
 
 export function ChatPanel({ welcome }: { welcome: ReactNode }) {
   const [surface, setSurface] = useState<HTMLElement | null>(null);
@@ -46,28 +51,30 @@ export function ChatPanel({ welcome }: { welcome: ReactNode }) {
                     {welcome}
                   </MessageScrollerItem>
                 )}
-                {messages.map((message, index) => (
-                  <MessageScrollerItem
-                    key={message.id}
-                    messageId={message.id}
-                    scrollAnchor={message.role === "user"}
-                  >
-                    <ChatMessage
-                      message={message}
-                      active={busy && index === messages.length - 1}
-                    />
-                  </MessageScrollerItem>
-                ))}
-                {waiting && (
+                {messages.map((message, index) =>
+                  message.role === "assistant" &&
+                  !messageSegments(message.parts).length &&
+                  !(busy && index === messages.length - 1) ? null : (
+                    <MessageScrollerItem
+                      key={message.id}
+                      messageId={message.id}
+                      scrollAnchor={message.role === "user"}
+                    >
+                      <ChatMessage
+                        message={message}
+                        active={busy && index === messages.length - 1}
+                        thinking={
+                          waiting &&
+                          message.role === "assistant" &&
+                          index === messages.length - 1
+                        }
+                      />
+                    </MessageScrollerItem>
+                  ),
+                )}
+                {waiting && lastMessage?.role !== "assistant" && (
                   <MessageScrollerItem messageId="pending">
-                    <Trace role="status" aria-label="Thinking">
-                      <TraceLine status="running">
-                        <TraceIcon>
-                          <BrainIcon />
-                        </TraceIcon>
-                        <TraceTitle>Thinking</TraceTitle>
-                      </TraceLine>
-                    </Trace>
+                    <ChatMessage message={pendingMessage} thinking active />
                   </MessageScrollerItem>
                 )}
                 {error && (

@@ -355,6 +355,41 @@ test.each(["cancelled", "conflict"])(
     await act(async () =>
       host.querySelector<HTMLButtonElement>("button")?.click(),
     );
+    await act(async () =>
+      host.querySelectorAll<HTMLButtonElement>("button")[1]?.click(),
+    );
     expect(host.textContent).toContain("Your original writing was kept.");
   },
 );
+
+test("tool actions and sources start collapsed and remain accessible in their activity accordion", async () => {
+  await act(async () =>
+    root.render(
+      <ChatMessageParts
+        parts={[
+          {
+            input: {},
+            output: {},
+            state: "output-available",
+            toolCallId: "search",
+            type: "tool-webSearch",
+          },
+          ...Array.from({ length: 25 }, (_, index) => ({
+            sourceId: String(index),
+            title: `Source ${index}`,
+            type: "source-url" as const,
+            url: `https://example.invalid/${index}`,
+          })),
+        ]}
+      />,
+    ),
+  );
+  const trigger = host.querySelector<HTMLButtonElement>(
+    'button[aria-expanded="false"]',
+  );
+  expect(trigger?.textContent).toContain("1 action · 25 sources");
+  expect(host.querySelectorAll("a")).toHaveLength(0);
+  await act(async () => trigger?.click());
+  expect(trigger?.getAttribute("aria-expanded")).toBe("true");
+  expect(host.querySelectorAll("a")).toHaveLength(25);
+});

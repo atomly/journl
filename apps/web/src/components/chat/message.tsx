@@ -8,8 +8,15 @@ import {
 } from "@acme/ui/input-group";
 import { Message, MessageContent, MessageFooter } from "@acme/ui/message";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@acme/ui/tooltip";
+import { Trace, TraceIcon, TraceLine, TraceTitle } from "@acme/ui/trace";
 import type { UIMessage } from "ai";
-import { CheckIcon, CopyIcon, PencilIcon, RefreshCwIcon } from "lucide-react";
+import {
+  BrainIcon,
+  CheckIcon,
+  CopyIcon,
+  PencilIcon,
+  RefreshCwIcon,
+} from "lucide-react";
 import { type ComponentProps, memo, useEffect, useState } from "react";
 import { copyTextToClipboard } from "~/lib/clipboard";
 import { useChatActions } from "./chat-presentation";
@@ -36,9 +43,11 @@ function Action({
 export const ChatMessage = memo(function ChatMessage({
   message,
   active = false,
+  thinking = false,
 }: {
   message: UIMessage;
   active?: boolean;
+  thinking?: boolean;
 }) {
   const { status, editMessage, regenerate, unavailable } = useChatActions();
   const busy = unavailable || status === "submitted" || status === "streaming";
@@ -59,6 +68,16 @@ export const ChatMessage = memo(function ChatMessage({
   return (
     <Message align={user ? "end" : "start"} data-chat-role={message.role}>
       <MessageContent>
+        {thinking && (
+          <Trace role="status" aria-label="Thinking">
+            <TraceLine status="running">
+              <TraceIcon>
+                <BrainIcon />
+              </TraceIcon>
+              <TraceTitle>Thinking</TraceTitle>
+            </TraceLine>
+          </Trace>
+        )}
         {editing ? (
           <form
             onSubmit={(event) => {

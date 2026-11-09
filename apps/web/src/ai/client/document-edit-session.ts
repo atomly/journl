@@ -270,6 +270,23 @@ export class DocumentEditSession {
         if (value.type === "data-document-edit") {
           if (finished)
             throw new Error("The AI edit contained data after completion.");
+          if (
+            z.object({ status: z.literal("correcting") }).safeParse(value.data)
+              .success
+          ) {
+            if (proposed)
+              throw new Error("The AI edit resumed after completion.");
+            if (previewFrame !== undefined) {
+              cancelAnimationFrame(previewFrame);
+              renderPartial();
+            }
+            latestPartial = undefined;
+            this.publish(
+              "generating",
+              "AI is revising the edit. Your draft remains visible.",
+            );
+            continue;
+          }
           const final = finalSchema.safeParse(value.data);
           if (final.success) {
             if (proposed)

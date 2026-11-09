@@ -150,6 +150,43 @@ test("inline drafts use the document surface without changing accepted content o
   ).toBeNull();
 });
 
+test("native correction preserves the last valid inline draft until the corrected batch commits", async () => {
+  const f = fixture();
+  f.select();
+  const run = f.session.run(instruction);
+  const preview = f.session.draftSurface;
+  f.stream().write({
+    data: { operations: [update("visible proposal")], status: "generating" },
+    transient: true,
+    type: "data-document-edit",
+  });
+  await vi.waitFor(() =>
+    expect(preview?.editor.state.doc.textContent).toBe(
+      "Before visible proposal afterUnrelated",
+    ),
+  );
+  f.stream().write({
+    data: { status: "correcting" },
+    transient: true,
+    type: "data-document-edit",
+  });
+  await vi.waitFor(() =>
+    expect(f.session.getSnapshot().message).toContain("revising"),
+  );
+  expect(f.session.draftSurface?.editor).toBe(preview?.editor);
+  expect(preview?.editor.state.doc.textContent).toBe(
+    "Before visible proposal afterUnrelated",
+  );
+  expect(f.text()).toBe("Before target afterUnrelated");
+  expect(f.onCommit).not.toHaveBeenCalled();
+  f.stream().finish([update("corrected")]);
+  expect(await run).toMatchObject({ status: "applied" });
+  expect(f.text()).toBe("Before corrected afterUnrelated");
+  expect(f.onCommit).toHaveBeenCalledTimes(1);
+  expect(undo(f.editor.state, f.editor.view.dispatch)).toBe(true);
+  expect(f.text()).toBe("Before target afterUnrelated");
+});
+
 test("an unrelated edit shifts the target without overwriting the human edit", async () => {
   const f = fixture();
   f.select();

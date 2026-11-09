@@ -186,6 +186,14 @@ describe("usage accounting through the installed Mastra Agent", () => {
         doStream: async ({ abortSignal }) => {
           if (outcome === "unauthorized" || outcome === "quota") {
             throw new APICallError({
+              data: {
+                error: {
+                  code:
+                    outcome === "quota"
+                      ? "insufficient_quota"
+                      : "invalid_api_key",
+                },
+              },
               isRetryable: true,
               message: "Synthetic API failure",
               requestBodyValues: {},
@@ -419,6 +427,21 @@ describe("native validation retries", () => {
             user,
           }),
         );
+        const correction = chunks.findIndex(
+          (chunk) =>
+            chunk.type === "data-document-edit" &&
+            (chunk.data as { status?: string }).status === "correcting",
+        );
+        expect(correction).toBeGreaterThanOrEqual(0);
+        expect(
+          chunks
+            .slice(correction + 1)
+            .some(
+              (chunk) =>
+                chunk.type === "data-document-edit" &&
+                (chunk.data as { status?: string }).status === "generating",
+            ),
+        ).toBe(false);
         const corrected = correctOn > 0;
         expect(calls).toBe(correctOn || 3);
         expect(request.blocks).toEqual(before);
@@ -824,26 +847,9 @@ describe("document writer proposal stream", () => {
       toStandardSchema(options.structuredOutput.schema),
       { io: "input" },
     );
-    // Insert payloads used to be {}, because the document parser accepts unknown
-    // input before validating it. The model now receives the recursive variants.
-    const insert = (
-      schema as {
-        properties: {
-          operations: {
-            items: {
-              oneOf: {
-                properties: { type: { const: string }; block?: unknown };
-              }[];
-            };
-          };
-        };
-      }
-    ).properties.operations.items.oneOf.find(
-      (variant) => variant.properties.type.const === "insert",
-    );
-    expect(insert?.properties.block).not.toEqual({});
-    expect(JSON.stringify(insert?.properties.block)).toContain("$ref");
-    expect(JSON.stringify(schema)).toContain('"children"');
+    expect(JSON.stringify(schema)).toContain('"tableCell"');
+    expect(JSON.stringify(schema)).not.toContain('"$ref"');
+    expect(JSON.stringify(schema)).not.toContain('"children"');
     const atomSchemas: { properties: Record<string, unknown> }[] = [];
     const visitSchema = (value: unknown) => {
       if (!value || typeof value !== "object") return;
@@ -1198,7 +1204,7 @@ describe("document writer proposal stream", () => {
         openai: {
           reasoningEffort: "high",
           store: false,
-          strictJsonSchema: false,
+          strictJsonSchema: true,
         },
       },
       structuredOutput: {

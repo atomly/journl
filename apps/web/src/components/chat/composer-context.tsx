@@ -98,25 +98,3 @@ export function ComposerReasoningContent(props: ComposerReasoningContentProps) {
     </SelectContent>
   );
 }
-
-export function ComposerView() {
-  const { getView, subscribe } = useJournlAgent();
-  const view = useSyncExternalStore(subscribe, getView, getView);
-
-  const activeViewLabel =
-    view.name === "journal-entry"
-      ? `Entry: ${view.date}`
-      : view.name === "journal"
-        ? "Journal"
-        : view.name === "page"
-          ? `Page: ${view.title}`
-          : null;
-
-  if (!activeViewLabel) return null;
-
-  return (
-    <div className="min-w-0 max-w-36 rounded-md border border-primary/70 bg-background/80 px-3 py-1.5 text-foreground text-xs">
-      <p className="truncate">{activeViewLabel}</p>
-    </div>
-  );
-}

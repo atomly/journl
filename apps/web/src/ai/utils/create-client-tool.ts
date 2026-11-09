@@ -2,12 +2,6 @@ import type { ToolCall } from "@ai-sdk/provider-utils";
 import type { Chat as AISDKChat, UIMessage } from "@ai-sdk/react";
 import type { z } from "zod";
 
-export type ClientToolResult<Name extends string = string, Output = unknown> = {
-  tool: Name;
-  toolCallId: string;
-  output: Output;
-};
-
 type CreateClientToolParams<
   Name extends string,
   Input,

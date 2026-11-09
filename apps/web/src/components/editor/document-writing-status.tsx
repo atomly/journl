@@ -24,10 +24,7 @@ export function DocumentWritingStatus({
           : "Writing stopped. Your original writing was kept."}
       </span>
     );
-  if (
-    !snapshot.requested ||
-    ["idle", "prepared", "applied", "cancelled"].includes(snapshot.status)
-  )
+  if (!snapshot.requested || ["idle", "prepared"].includes(snapshot.status))
     return null;
   const surface = session.draftSurface;
   return (
@@ -48,7 +45,7 @@ export function DocumentWritingStatus({
         <span role="status" title={snapshot.message}>
           {snapshot.status === "generating"
             ? "Writing…"
-            : "Couldn’t finish writing."}
+            : "Couldn’t finish writing. Check your page and selection, then retry in chat."}
           <span className="sr-only"> {snapshot.message}</span>
         </span>
         {snapshot.status === "generating" && !snapshot.following && (
@@ -66,16 +63,6 @@ export function DocumentWritingStatus({
             Stop
           </Button>
         )}
-        {snapshot.canRetry &&
-          ["conflict", "error"].includes(snapshot.status) && (
-            <Button
-              variant="ghost"
-              size="xs"
-              onClick={() => void session.retry()}
-            >
-              Retry
-            </Button>
-          )}
       </section>
     </>
   );

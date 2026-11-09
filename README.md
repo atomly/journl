@@ -127,7 +127,7 @@ the normal editor commit and save queue, with one Undo step. Mastra gives an
 invalid operation batch up to two correction attempts with specific validation
 feedback (three generation attempts total). Each chat request permits
 one writing run; navigation and repeated tool calls cannot reset that allowance.
-Explicit user retries start a new run. Cancellation, access/quota failures and
+Retries go through chat and start a new run using the current page and selection. Cancellation, access/quota failures and
 document conflicts stop without automatic correction.
 The write tool takes no arguments. The writer receives the original user request
 as its final user message, with actual recent conversation text for references

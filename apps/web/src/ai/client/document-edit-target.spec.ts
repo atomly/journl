@@ -105,7 +105,6 @@ test("outside typing maps the fixed selection and survives final application and
   const { target, mapped } = f.capture();
   f.editor.view.dispatch(f.editor.state.tr.insertText("New ", 2));
   expect(mapped.mock.results.at(-1)?.value).toBe(true);
-  expect(target.range).toEqual({ from: 13, to: 19 });
   f.textSelection("b", 0, 0);
   expect(mapped.mock.results.at(-1)?.value).toBe(true);
   expect(target.apply([update("a", "AI")])).toBe(true);
@@ -114,19 +113,14 @@ test("outside typing maps the fixed selection and survives final application and
   expect(f.editor.state.doc.textContent).toBe("New Before target afterOutside");
 });
 
-test("overlapping typing cancels and retry uses the same range instead of the collapsed cursor", () => {
+test("overlapping typing invalidates the retained target without changing human writing", () => {
   const f = fixture();
   f.textSelection("a", 7, 13);
   const { target, mapped } = f.capture();
   f.editor.view.dispatch(f.editor.state.tr.insertText("human", 9, 15));
   expect(mapped.mock.results.at(-1)?.value).toBe(false);
   expect(target.apply([update("a", "stale")])).toBe(false);
-  const retry = target.recapture();
-  expect(retry.selection).toBe(true);
-  expect(JSON.stringify(retry.blocks)).toContain("human");
-  expect(JSON.stringify(retry.blocks)).not.toContain("Before");
-  expect(retry.apply([update("a", "fresh")])).toBe(true);
-  expect(f.editor.state.doc.textContent).toBe("Before fresh afterOutside");
+  expect(f.editor.state.doc.textContent).toBe("Before human afterOutside");
 });
 
 test("overlapping formatting cancels but outside formatting does not", () => {
@@ -142,24 +136,22 @@ test("overlapping formatting cancels but outside formatting does not", () => {
   expect(target.apply([update("a", "stale")])).toBe(false);
 });
 
-test("deleting the target prevents retry from broadening to the document", () => {
+test("deleting selected text prevents a retained action from broadening to the document", () => {
   const f = fixture();
   f.textSelection("a", 7, 13);
   const { target } = f.capture();
   f.editor.view.dispatch(f.editor.state.tr.delete(9, 15));
-  expect(() => target.recapture()).toThrow("original target");
+  expect(target.apply([update("a", "stale")])).toBe(false);
 });
 
 test("whole-document targets cancel on any human content change", () => {
   const f = fixture();
   const { target, mapped } = f.capture();
-  expect(target.selection).toBe(false);
   f.editor.view.dispatch(f.editor.state.tr.insertText("Human ", 2));
   expect(mapped.mock.results.at(-1)?.value).toBe(false);
   expect(target.apply([update("a", "stale")])).toBe(false);
-  const retry = target.recapture();
-  expect(retry.selection).toBe(false);
-  expect(JSON.stringify(retry.blocks)).toContain("Human");
+  const next = captureDocumentEditTarget(f.editor);
+  expect(JSON.stringify(next.blocks)).toContain("Human");
 });
 
 test("a second request retains document scope after a generated trailing divider", () => {
@@ -188,7 +180,6 @@ test("a second request retains document scope after a generated trailing divider
     ]),
   ).toBe(true);
   const second = captureDocumentEditTarget(f.editor);
-  expect(second.selection).toBe(false);
   expect(second.blocks.map((block) => block.id)).toEqual(["code", "divider"]);
   expect(
     second.apply([
@@ -237,7 +228,6 @@ test.each(["loaded", "generated"])(
       ).toBe(true);
     }
     const target = captureDocumentEditTarget(f.editor);
-    expect(target.selection).toBe(false);
     expect(target.blocks.map((block) => block.id)).toEqual([
       "divider",
       "image",
@@ -266,7 +256,6 @@ test("an explicit atom wrapper selection stays scoped to that block", () => {
     f.editor.state.tr.setSelection(NodeSelection.create(f.editor.state.doc, 0)),
   );
   const target = captureDocumentEditTarget(f.editor);
-  expect(target.selection).toBe(true);
   expect(target.blocks.map((block) => block.id)).toEqual(["divider"]);
 });
 
@@ -393,7 +382,6 @@ test.each(["readonly", "destroyed"])(
     if (state === "readonly") f.editor.setEditable(false, false);
     else f.editor.destroy();
     expect(target.apply([update("a", "No")])).toBe(false);
-    expect(() => target.recapture()).toThrow("original target");
     expect(f.onCommit).not.toHaveBeenCalled();
   },
 );
@@ -428,7 +416,6 @@ test.each([false, true])(
     );
     const before = f.editor.state.doc;
     const { target } = f.capture();
-    expect(target.selection).toBe(true);
     expect(target.blocks).toEqual([
       parseBlock({
         content: [

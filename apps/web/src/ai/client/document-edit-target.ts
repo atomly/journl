@@ -22,7 +22,7 @@ const selectionError = () =>
   new Error(
     "Select text within one paragraph, or select complete sibling blocks, then try again.",
   );
-const retryError = () =>
+const targetError = () =>
   new Error(
     "The original target is no longer available. Select text and send your request again.",
   );
@@ -101,18 +101,16 @@ function replaceScope(
     );
   };
   const next = walk(blocks);
-  if (!replaced) throw retryError();
+  if (!replaced) throw targetError();
   return next;
 }
 
 /** One request owns a fixed range. Selection changes cannot retarget that request. */
 export class DocumentEditTarget {
   readonly blocks: DocumentBlock[];
-  readonly selection: boolean;
   private current: Range;
   private trackedDoc: Node;
   private valid = true;
-  private retryable = true;
   private consumed = false;
   private readonly originalSlice: Fragment;
   private readonly originalAncestry: string;
@@ -127,17 +125,12 @@ export class DocumentEditTarget {
     this.current = { ...range };
     this.trackedDoc = editor.state.doc;
     this.blocks = snapshotRange(this.trackedDoc, range, kind);
-    this.selection = kind !== "document";
     this.originalSlice = this.trackedDoc.slice(range.from, range.to).content;
     this.originalAncestry = JSON.stringify(
       ancestry(this.trackedDoc.resolve(range.from)),
     );
     this.firstId = this.blocks[0]?.id;
     this.lastId = this.blocks.at(-1)?.id;
-  }
-
-  get range(): Range {
-    return { ...this.current };
   }
 
   private sameTarget(doc: Node): boolean {
@@ -151,13 +144,11 @@ export class DocumentEditTarget {
     );
   }
 
-  /** Returns false after overlap, including formatting and structural changes.
-   * Continue mapping invalidated targets so Retry still uses the original scope. */
+  /** Returns false after overlap, including formatting and structural changes. */
   map(transaction: Transaction): boolean {
     if (this.consumed) return false;
     if (transaction.before !== this.trackedDoc) {
       this.valid = false;
-      this.retryable = false;
       return false;
     }
     if (!transaction.docChanged) return this.valid;
@@ -194,34 +185,13 @@ export class DocumentEditTarget {
     return this.valid;
   }
 
-  /** Retry refreshes the same mapped scope, even if typing collapsed the cursor. */
-  recapture(): DocumentEditTarget {
-    if (
-      this.editor.isDestroyed ||
-      !this.editor.isEditable ||
-      !this.retryable ||
-      this.consumed
-    )
-      throw retryError();
-    if (this.kind === "document")
-      return new DocumentEditTarget(this.editor, this.kind, {
-        from: 0,
-        to: this.editor.state.doc.content.size,
-      });
-    if (this.current.from >= this.current.to) throw retryError();
-    const next = new DocumentEditTarget(this.editor, this.kind, this.current);
-    if (next.firstId !== this.firstId || next.lastId !== this.lastId)
-      throw retryError();
-    return next;
-  }
-
   /** Build a visible draft without changing the accepted editor or consuming its target. */
   preview(operations: readonly DocumentOperation[]): Node {
     const after = applyDocumentOperations(this.blocks, operations);
     const replacement = toTiptapDocument(after, this.editor.state.schema);
     if (this.kind === "document") return replacement;
     if (this.kind === "blocks") {
-      if (!this.firstId || !this.lastId) throw retryError();
+      if (!this.firstId || !this.lastId) throw targetError();
       const combined = replaceScope(
         fromTiptapDocument(this.trackedDoc),
         this.firstId,

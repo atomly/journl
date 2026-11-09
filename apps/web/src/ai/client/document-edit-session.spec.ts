@@ -128,9 +128,10 @@ test("inline drafts use the document surface without changing accepted content o
     type: "data-document-edit",
   });
   await vi.waitFor(() =>
-    expect(f.session.getSnapshot().blocks).toHaveLength(1),
+    expect(f.session.draftSurface?.editor.state.doc.textContent).toBe(
+      "Before preview afterUnrelated",
+    ),
   );
-  expect(f.session.getSnapshot().blocks[0]?.content).toBe("preview");
   expect(f.editor.isEditable).toBe(false);
   expect(f.editor.view.dom.hidden).toBe(true);
   expect(
@@ -171,7 +172,7 @@ test("an unrelated edit shifts the target without overwriting the human edit", a
   expect(f.text()).toBe("Human Before target afterUnrelated");
 });
 
-test("writing locks all content commands, cancellation restores the target, and Retry stays scoped", async () => {
+test("writing locks content, cancellation restores the target, and a new request captures its selection", async () => {
   const f = fixture();
   f.select();
   f.session.prepare();
@@ -189,10 +190,12 @@ test("writing locks all content commands, cancellation restores the target, and 
   expect(f.editor.state.doc).toBe(before);
   expect(f.editor.state.selection.eq(selection)).toBe(true);
   expect(f.onCommit).not.toHaveBeenCalled();
-  const retry = f.session.retry();
+  f.select();
+  f.session.prepare();
+  const next = f.session.run(instruction);
   expect(f.transport.mock.calls[1]?.[0].blocks).toHaveLength(1);
   f.stream(1).finish([update("Recovered")]);
-  expect(await retry).toMatchObject({ status: "applied" });
+  expect(await next).toMatchObject({ status: "applied" });
   expect(f.text()).toBe("Before Recovered afterUnrelated");
 });
 
@@ -335,7 +338,6 @@ test("read-only chat capture stays silent until a write is requested", async () 
   f.session.prepare();
   f.editor.view.dispatch(f.editor.state.tr.insertText("human", 11));
   expect(f.session.getSnapshot()).toMatchObject({
-    canRetry: false,
     requested: false,
     status: "conflict",
   });
@@ -343,12 +345,11 @@ test("read-only chat capture stays silent until a write is requested", async () 
     status: "conflict",
   });
   expect(f.session.getSnapshot()).toMatchObject({
-    canRetry: true,
     requested: true,
   });
 });
 
-test("unsupported prepared selection cannot become a whole-document Retry", async () => {
+test("unsupported prepared selection cannot become a whole-document write", async () => {
   const f = fixture();
   f.editor.commands.setTextSelection({
     from: 4,
@@ -357,8 +358,7 @@ test("unsupported prepared selection cannot become a whole-document Retry", asyn
   expect(() => f.session.prepare()).toThrow();
   f.editor.commands.setTextSelection(2);
   expect(await f.session.run(instruction)).toMatchObject({ status: "error" });
-  expect(f.session.getSnapshot()).toMatchObject({ canRetry: false });
-  await f.session.retry();
+  expect(f.transport).not.toHaveBeenCalled();
   expect(f.onCommit).not.toHaveBeenCalled();
 });
 

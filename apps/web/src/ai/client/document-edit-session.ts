@@ -1,6 +1,5 @@
 import {
   applyDocumentOperations,
-  type DocumentBlock,
   type DocumentOperation,
 } from "@acme/document";
 import type { Editor } from "@tiptap/core";
@@ -28,11 +27,8 @@ type Status =
   | "error";
 type Snapshot = {
   requested: boolean;
-  canRetry: boolean;
   status: Status;
   message: string;
-  blocks: readonly DocumentBlock[];
-  revision: number;
   following: boolean;
 };
 export type EditTransport = (
@@ -60,19 +56,16 @@ const transport: EditTransport = (request, signal) =>
 /** Owns transient generation only. Accepted edits use the editor's ordinary commit/save path. */
 export class DocumentEditSession {
   private target: DocumentEditTarget | undefined;
-  private instruction: Instruction | undefined;
+  private requested = false;
   private controller: AbortController | undefined;
   private applying = false;
   private draft: InlineDocumentDraft | undefined;
   private destroyed = false;
   private listeners = new Set<() => void>();
   private snapshot: Snapshot = {
-    blocks: [],
-    canRetry: false,
     following: true,
     message: "",
     requested: false,
-    revision: 0,
     status: "idle",
   };
   constructor(
@@ -96,17 +89,13 @@ export class DocumentEditSession {
   private publish(
     status: Status,
     message: string,
-    blocks: readonly DocumentBlock[] = [],
     following = this.snapshot.following,
   ) {
     if (this.destroyed) return;
     this.snapshot = {
-      blocks,
-      canRetry: Boolean(this.instruction && this.target),
       following,
       message,
-      requested: Boolean(this.instruction),
-      revision: this.snapshot.revision + 1,
+      requested: this.requested,
       status,
     };
     for (const listener of this.listeners) listener();
@@ -140,7 +129,7 @@ export class DocumentEditSession {
     });
     this.closeDraft();
     this.target = undefined;
-    this.instruction = undefined;
+    this.requested = false;
     try {
       this.target = captureDocumentEditTarget(this.editor);
     } catch (error) {
@@ -150,7 +139,6 @@ export class DocumentEditSession {
       );
       throw error;
     }
-    this.instruction = undefined;
     this.publish("prepared", "");
   }
   highlightedText() {
@@ -170,28 +158,6 @@ export class DocumentEditSession {
     this.closeDraft();
     this.publish("cancelled", "AI edit cancelled. Your writing was kept.");
   };
-  retry = async () => {
-    if (
-      !this.instruction ||
-      !this.target ||
-      this.destroyed ||
-      this.snapshot.status === "generating"
-    )
-      return;
-    try {
-      this.target = this.target.recapture();
-      this.publish("prepared", "");
-    } catch (error) {
-      this.publish(
-        "error",
-        error instanceof Error
-          ? error.message
-          : "Select text and send your request again.",
-      );
-      return;
-    }
-    return this.run(this.instruction);
-  };
   async run(
     instruction: Instruction,
   ): Promise<{ status: Status; message: string }> {
@@ -208,7 +174,7 @@ export class DocumentEditSession {
           "This request already edited its target. Send a new message to make another edit.",
         status: "error",
       };
-    this.instruction = instruction;
+    this.requested = true;
     if (["conflict", "cancelled", "error"].includes(this.snapshot.status)) {
       this.publish(this.snapshot.status, this.snapshot.message);
       return this.snapshot;
@@ -252,28 +218,18 @@ export class DocumentEditSession {
         const document = target.preview(complete);
         this.draft?.update(document);
         lastCompleteBatch = batch;
-        this.publish(
-          "generating",
-          this.snapshot.message,
-          applyDocumentOperations(target.blocks, complete),
-        );
+        this.publish("generating", this.snapshot.message);
       } catch {
         // Wait for a complete valid batch, keeping the last visible draft intact.
       }
     };
     try {
       this.draft = new InlineDocumentDraft(this.editor, (following) => {
-        this.publish(
-          this.snapshot.status,
-          this.snapshot.message,
-          this.snapshot.blocks,
-          following,
-        );
+        this.publish(this.snapshot.status, this.snapshot.message, following);
       });
       this.publish(
         "generating",
         "AI is writing. The editor is locked until writing finishes.",
-        [],
         true,
       );
       const stream = await this.stream(

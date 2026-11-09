@@ -72,5 +72,20 @@ export function documentWriterFeedback(error: unknown): string | undefined {
       "Reduce nesting; the document nesting limit is 128.",
     ],
   ]);
+  // These fixed rules contain no model-generated values.
+  for (const rule of [
+    "Table additions require an existing table with content.",
+    "Table row spans exceed the existing rows.",
+    "Table cells overlap.",
+    "Table additions require a rectangular table.",
+    "Table additions require a nonempty table.",
+    "Table widths exceed the existing columns. Use a table update to repair the layout.",
+    "New table cells must not be merged. Use a table update for merged additions.",
+    "Table additions require new rows or columns.",
+    "New rows must contain one cell per existing table column.",
+    "New columns must contain one cell per existing table row, including headers.",
+  ]) {
+    if (error.message === rule) return rule;
+  }
   return rules.get(error.message);
 }

@@ -1,9 +1,4 @@
-import {
-  zBlockData,
-  zDocumentOperation,
-  zTableCell,
-  zTableContent,
-} from "@acme/document";
+import { zBlockData, zTableCell, zTableContent } from "@acme/document";
 import {
   OpenAISchemaCompatLayer,
   prepareJsonSchemaForOpenAIStrictMode,
@@ -12,9 +7,14 @@ import {
 } from "@mastra/schema-compat";
 import { type JSONSchema7, jsonSchema } from "ai";
 import { z } from "zod/v4";
+import {
+  zAppendTableColumns,
+  zAppendTableRows,
+  zWriterOperation,
+} from "./document-writer-operations";
 
 export const writerOutputSchema = z.strictObject({
-  operations: z.array(zDocumentOperation),
+  operations: z.array(zWriterOperation),
 });
 
 // Generate one canonical representation per structure. Nested blocks use the
@@ -65,6 +65,8 @@ const described = z.strictObject({
         parentId: z.string().min(1).nullable(),
         afterId: predecessor,
       }),
+      zAppendTableRows,
+      zAppendTableColumns,
     ]),
   ),
 });

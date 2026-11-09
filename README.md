@@ -139,6 +139,12 @@ that request. The application stores and reports its actual outcome through nati
 Mastra history and AI SDK messages, without another model call. The writer reads
 user preferences from native working memory without loading or changing chat history.
 Explicit public research can use provider web search, limited to three calls per attempt.
+Table row and column appends generate only new cells. The server resolves each
+addition against earlier operations, preserves existing cells and layout metadata,
+and compiles it into the existing document update contract. Other table changes
+still use full table updates. Timing logs separate first model output, first complete
+operation preview, and total generation time. The preview wait overlaps generation.
+Research counts are recorded separately for chat and writing to expose repeated searches.
 Native generation limits
 allow 120 seconds per attempt, 240 seconds per run, and 16,000 output tokens per attempt.
 The first implementation supports exact selections inside one text block and

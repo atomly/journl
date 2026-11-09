@@ -146,6 +146,7 @@ export async function streamJournlChat({
 
           const webSearchCalls = countBillableWebSearchCalls([step]);
           if (webSearchCalls > 0) {
+            console.info("[ai.chat] research", { calls: webSearchCalls });
             metrics.push({
               quantity: webSearchCalls,
               unit: USAGE_UNITS.WEB_SEARCH_CALLS,

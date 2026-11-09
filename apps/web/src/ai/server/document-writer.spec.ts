@@ -1380,3 +1380,99 @@ it("streams a completed table operation once, never its schema-valid unfinished 
   ]);
   expect(generated(chunks)).toHaveLength(1);
 });
+
+it("compiles compact table additions only at complete operation boundaries", async () => {
+  const existing = parseBlock({
+    content: {
+      headerRows: 1,
+      rows: [
+        {
+          cells: [
+            { content: "Name", type: "tableCell" },
+            { content: "Status", type: "tableCell" },
+          ],
+        },
+        {
+          cells: [
+            { content: "Alice", type: "tableCell" },
+            { content: "Ready", type: "tableCell" },
+          ],
+        },
+      ],
+      type: "tableContent",
+    },
+    id: "table",
+    type: "table",
+  });
+  const addition = {
+    id: "table",
+    rows: [
+      {
+        cells: [
+          { content: "Bob", type: "tableCell" },
+          { content: "New", type: "tableCell" },
+        ],
+      },
+    ],
+    type: "appendTableRows",
+  };
+  const conclusion = {
+    afterId: "table",
+    block: { content: "Finished", id: "conclusion", type: "paragraph" },
+    parentId: null,
+    type: "insert",
+  };
+  mocks.stream.mockImplementation(async () =>
+    output({
+      object: { operations: [addition, conclusion] },
+      partials: [
+        {
+          operations: [
+            {
+              ...addition,
+              rows: [{ cells: [{ content: "B", type: "tableCell" }] }],
+            },
+          ],
+        },
+        { operations: [addition, { type: "insert" }] },
+        { operations: [addition, { parentId: null, type: "insert" }] },
+      ],
+    }),
+  );
+  const { chunks, errors } = await consume(
+    await streamDocumentWriter({
+      request: { ...request, blocks: [existing] },
+      signal: new AbortController().signal,
+      user,
+    }),
+  );
+  expect(errors).toEqual([]);
+  const previews = chunks.filter(
+    (chunk) =>
+      chunk.type === "data-document-edit" &&
+      (chunk.data as { status?: string }).status === "generating" &&
+      Array.isArray((chunk.data as { operations?: unknown }).operations),
+  );
+  expect(previews).toHaveLength(1);
+  const preview = previews[0] as { data: { operations: DocumentOperation[] } };
+  expect(preview.data.operations.map((operation) => operation.type)).toEqual([
+    "update",
+  ]);
+  const displayed = applyDocumentOperations(
+    [existing],
+    preview.data.operations,
+  );
+  expect(displayed[0]).toMatchObject({
+    content: {
+      rows: expect.arrayContaining([
+        {
+          cells: [
+            { content: "Bob", type: "tableCell" },
+            { content: "New", type: "tableCell" },
+          ],
+        },
+      ]),
+    },
+  });
+  expect(generated(chunks)).toHaveLength(1);
+});

@@ -1,5 +1,6 @@
 import { applyDocumentOperations } from "@acme/document";
 import { expect, test } from "vitest";
+import { compileWriterOperations } from "./document-writer-operations";
 import { decodeWriterOutput } from "./document-writer-schema";
 
 test("strict streamed operations decode nullable options without losing table or inline metadata", async () => {
@@ -103,7 +104,10 @@ test("strict streamed operations decode nullable options without losing table or
       },
     ],
   });
-  const doc = applyDocumentOperations([], proposal.operations);
+  const doc = applyDocumentOperations(
+    [],
+    compileWriterOperations([], proposal.operations),
+  );
   expect(doc[0]?.children?.[0]?.content).toBe("Child");
   expect(doc[1]).toMatchObject({
     content: {
@@ -172,7 +176,14 @@ test("the provider grammar selects operation type first and cannot generate null
     const type = node.properties?.type as { const?: string } | undefined;
     if (
       type?.const &&
-      ["insert", "update", "remove", "move"].includes(type.const)
+      [
+        "insert",
+        "update",
+        "remove",
+        "move",
+        "appendTableRows",
+        "appendTableColumns",
+      ].includes(type.const)
     ) {
       expect(Object.keys(node.properties ?? {})[0]).toBe("type");
       found.push(type.const);
@@ -180,7 +191,14 @@ test("the provider grammar selects operation type first and cannot generate null
     Object.values(node).forEach(visit);
   };
   visit(schema);
-  expect(found.sort()).toEqual(["insert", "move", "remove", "update"]);
+  expect(found.sort()).toEqual([
+    "appendTableColumns",
+    "appendTableRows",
+    "insert",
+    "move",
+    "remove",
+    "update",
+  ]);
   const items = (
     schema as {
       properties: { operations: { items: { anyOf: { type?: string }[] } } };

@@ -86,6 +86,15 @@ test("AI Elements render messages, reasoning, tools, markdown and sources in des
     response.getByRole("heading", { exact: true, name: "Useful answer" }),
   ).toBeVisible();
   await expect(response.getByRole("listitem")).toHaveCount(2);
+  const activity = response.getByRole("button", {
+    exact: true,
+    name: "Activity · 1 action Complete",
+  });
+  await expect(activity).toHaveAttribute("aria-expanded", "false");
+  await expect(
+    response.getByRole("button", { exact: true, name: "Thought" }),
+  ).toBeHidden();
+  await activity.click();
   await expect(
     response.getByRole("button", { exact: true, name: "Thought" }),
   ).toBeVisible();
@@ -95,6 +104,12 @@ test("AI Elements render messages, reasoning, tools, markdown and sources in des
     .getByRole("button", { exact: true, name: "Search web Complete" })
     .click();
   await expect(response).toContainText("Found one source");
+  const sources = response.getByRole("button", {
+    exact: true,
+    name: "Activity · 1 source Complete",
+  });
+  await expect(sources).toHaveAttribute("aria-expanded", "false");
+  await sources.click();
   await expect(
     response.getByRole("link", { name: /Source reference/ }),
   ).toHaveAttribute("href", "https://example.invalid/reference");

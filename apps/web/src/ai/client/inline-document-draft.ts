@@ -14,7 +14,7 @@ export class InlineDocumentDraft {
   private readonly viewport: HTMLElement;
   private following = true;
   private frame: number | undefined;
-  private changedPosition = 0;
+  private changedPosition: number | undefined;
 
   constructor(
     private readonly editor: Editor,
@@ -43,6 +43,7 @@ export class InlineDocumentDraft {
           "aria-readonly": "true",
           class: this.source.className,
           role: "textbox",
+          tabindex: "0",
         },
       },
       element: mount,
@@ -134,20 +135,38 @@ export class InlineDocumentDraft {
     this.scheduleFollow();
   }
   private scheduleFollow() {
-    if (!this.following || this.frame !== undefined) return;
+    if (
+      !this.following ||
+      this.frame !== undefined ||
+      this.changedPosition === undefined
+    )
+      return;
     this.frame = requestAnimationFrame(() => {
       this.frame = undefined;
-      if (!this.following || this.preview.isDestroyed) return;
-      const position = this.preview.state.doc.resolve(
-        Math.min(this.changedPosition, this.preview.state.doc.content.size),
+      if (!this.following || this.preview.isDestroyed || !this.host.isConnected)
+        return;
+      const changedPosition = this.changedPosition;
+      if (changedPosition === undefined) return;
+      const root = this.viewport === document.documentElement;
+      const height = root ? window.innerHeight : this.viewport.clientHeight;
+      if (height <= 0) return;
+      // Temporary trailing space lets the last generated line reach the center.
+      // It disappears with the draft; accepted document content is untouched.
+      this.host.style.paddingBottom = `${height / 2}px`;
+      const point = this.preview.view.coordsAtPos(
+        Math.min(changedPosition, this.preview.state.doc.content.size),
       );
-      for (let depth = position.depth; depth > 0; depth--) {
-        if (position.node(depth).type.name !== "betterEditorBlock") continue;
-        const node = this.preview.view.nodeDOM(position.before(depth));
-        if (node instanceof HTMLElement)
-          node.scrollIntoView?.({ behavior: "instant", block: "nearest" });
-        break;
-      }
+      const top = root
+        ? 0
+        : this.viewport.getBoundingClientRect().top + this.viewport.clientTop;
+      const delta = (point.top + point.bottom) / 2 - (top + height / 2);
+      // Follow the changed line, including inside a tall table or code block,
+      // rather than centering the entire enclosing block.
+      if (Math.abs(delta) > 1)
+        (root ? window : this.viewport).scrollBy({
+          behavior: "instant",
+          top: delta,
+        });
     });
   }
 

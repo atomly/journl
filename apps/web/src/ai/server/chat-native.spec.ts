@@ -1,4 +1,5 @@
 import { Agent, convertMessages } from "@mastra/core/agent";
+import { RequestContext } from "@mastra/core/request-context";
 import { createTool } from "@mastra/core/tools";
 import { LibSQLStore } from "@mastra/libsql";
 import { Memory } from "@mastra/memory";
@@ -20,7 +21,7 @@ vi.mock("~/ai/mastra/agents/journl-agent", () => ({
   getJournlUserThread: () => "journl:owner",
   journlMini: { getModel: mocks.getModel, id: "native-chat-test" },
   journlNano: { getModel: mocks.getModel, id: "native-chat-test" },
-  setJournlRequestContext: () => undefined,
+  setJournlRequestContext: () => new RequestContext(),
 }));
 vi.mock("~/workflows/model-usage", () => ({ startModelUsage: mocks.usage }));
 

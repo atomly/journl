@@ -24,6 +24,7 @@ import {
   WrenchIcon,
 } from "lucide-react";
 import { Fragment } from "react";
+import { zResearchFindings } from "~/ai/tools/research-schema";
 import { safeChatLink } from "./links";
 import { ChatMarkdown } from "./markdown";
 
@@ -33,7 +34,28 @@ export function messageSegments(parts: Part[]) {
     | { kind: "text"; text: string }
     | { kind: "activity"; parts: Part[] }
   )[] = [];
-  for (const part of parts) {
+  const expanded = parts.flatMap((part): Part[] => {
+    if (
+      !isToolUIPart(part) ||
+      getToolName(part) !== "webSearch" ||
+      part.state !== "output-available"
+    )
+      return [part];
+    const evidence = zResearchFindings.safeParse(part.output);
+    if (!evidence.success) return [part];
+    return [
+      part,
+      ...evidence.data.sources
+        .filter((source) => safeChatLink(source.url))
+        .map((source) => ({
+          sourceId: `${part.toolCallId}:${source.url}`,
+          title: source.title,
+          type: "source-url" as const,
+          url: source.url,
+        })),
+    ];
+  });
+  for (const part of expanded) {
     if (part.type === "text" && part.text.trim())
       segments.push({ kind: "text", text: part.text });
     else if (

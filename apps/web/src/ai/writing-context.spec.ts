@@ -118,3 +118,43 @@ test("current-turn search evidence and source links reach the writer without act
     /Unrequested conversion|Internal memory|agentPrompt/,
   );
 });
+
+test("research JSON stays intact near the context limit", () => {
+  const evidence = {
+    findings: "verified ".repeat(800),
+    sources: [{ title: "Source", url: "https://example.com/source" }],
+  };
+  const result = getWritingContext([
+    {
+      id: "user",
+      parts: [{ text: "Research and write", type: "text" }],
+      role: "user",
+    },
+    {
+      id: "research",
+      parts: [
+        {
+          sourceId: "large",
+          type: "source-url",
+          url: "x".repeat(WRITING_CONTEXT_CHARACTERS - 1000),
+        },
+        {
+          input: { query: "research" },
+          output: evidence,
+          state: "output-available",
+          toolCallId: "r",
+          type: "tool-webSearch",
+        },
+      ],
+      role: "assistant",
+    },
+  ]);
+  const line = result
+    .flatMap((message) => message.content.split("\n"))
+    .find((line) => line.startsWith('{"result"'));
+  expect(line).toBeDefined();
+  expect(JSON.parse(line ?? "{}").result).toEqual(evidence);
+  expect(
+    result.reduce((sum, message) => sum + message.content.length, 0),
+  ).toBeLessThanOrEqual(WRITING_CONTEXT_CHARACTERS);
+});

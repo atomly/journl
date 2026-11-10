@@ -42,7 +42,6 @@ vi.mock("@mastra/core/agent", () => ({
 }));
 vi.mock("~/workflows/model-usage", () => ({ startModelUsage: mocks.usage }));
 
-import { webSearch } from "~/ai/tools/web-search";
 import { streamDocumentWriter } from "./document-writer";
 import type { DocumentWriterRequest } from "./document-writer-request";
 
@@ -76,6 +75,50 @@ const request: DocumentWriterRequest = {
 };
 const reportedUsage = { inputTokens: 10, outputTokens: 20, reasoningTokens: 3 };
 
+// Native structured object snapshots use the model wire shape; terminal
+// object-result contains the validated, normalized document operations.
+function modelPartial(value: unknown): unknown {
+  if (
+    !value ||
+    typeof value !== "object" ||
+    !("operations" in value) ||
+    !Array.isArray(value.operations)
+  )
+    return value;
+  return {
+    ...value,
+    operations: value.operations.map((operation) => {
+      if (!operation || typeof operation !== "object") return operation;
+      if (
+        operation.type === "appendTableRows" &&
+        operation.rows?.length === 1
+      ) {
+        const { rows, ...rest } = operation;
+        return { ...rest, row: rows[0] };
+      }
+      if (
+        operation.type === "appendTableColumns" &&
+        operation.columns?.length === 1
+      ) {
+        const { columns, ...rest } = operation;
+        return { ...rest, column: columns[0] };
+      }
+      if (
+        operation.type === "insert" &&
+        operation.block?.type === "table" &&
+        operation.block.content?.rows?.length === 1
+      ) {
+        const { rows, ...content } = operation.block.content;
+        return {
+          ...operation,
+          block: { ...operation.block, content: { ...content, row: rows[0] } },
+        };
+      }
+      return operation;
+    }),
+  };
+}
+
 function output({
   object = { operations: [operation] } as unknown,
   partials = [{ operations: [{ id: "a", type: "update" }] }] as unknown[],
@@ -91,7 +134,7 @@ function output({
     fullStream: new ReadableStream({
       async start(controller) {
         for (const partial of partials)
-          controller.enqueue({ object: partial, type: "object" });
+          controller.enqueue({ object: modelPartial(partial), type: "object" });
         await beforeFinish();
         if (terminal)
           controller.enqueue({
@@ -550,7 +593,7 @@ it("a native generation timeout stops a stalled stream without applying or retry
 
 describe("document writer proposal stream", () => {
   it.each([false, true])(
-    "native preferences stay read-only and completed research is charged (abort: %s)",
+    "native preferences stay read-only without research tools (abort: %s)",
     async (cancelled) => {
       const { Agent: RealAgent } =
         await vi.importActual<typeof import("@mastra/core/agent")>(
@@ -606,39 +649,16 @@ describe("document writer proposal stream", () => {
           expect(JSON.stringify(prompt)).not.toContain(
             "PRIVATE_OLD_CHAT_MUST_NOT_ENTER_WRITER",
           );
-          expect(tools?.map((tool) => tool.name)).toEqual(["webSearch"]);
+          expect((tools ?? []).map((tool) => tool.name)).toEqual([]);
           return {
             stream: new ReadableStream({
               start(controller) {
                 controller.enqueue({ type: "stream-start", warnings: [] });
+                controller.enqueue({ id: "proposal", type: "text-start" });
                 controller.enqueue({
-                  input: "{}",
-                  providerExecuted: true,
-                  toolCallId: "research",
-                  toolName: "webSearch",
-                  type: "tool-call",
-                });
-                const result = {
-                  action: { queries: ["MDN HTTP"], type: "search" },
-                  sources: [
-                    {
-                      type: "url",
-                      url: "https://developer.mozilla.org/en-US/docs/Web/HTTP",
-                    },
-                  ],
-                };
-                controller.enqueue({
-                  preliminary: true,
-                  result,
-                  toolCallId: "research",
-                  toolName: "webSearch",
-                  type: "tool-result",
-                });
-                controller.enqueue({
-                  result,
-                  toolCallId: "research",
-                  toolName: "webSearch",
-                  type: "tool-result",
+                  delta: JSON.stringify({ operations: [operation] }),
+                  id: "proposal",
+                  type: "text-delta",
                 });
                 if (cancelled) {
                   abortSignal?.addEventListener(
@@ -648,12 +668,7 @@ describe("document writer proposal stream", () => {
                   );
                   return;
                 }
-                controller.enqueue({ id: "proposal", type: "text-start" });
-                controller.enqueue({
-                  delta: JSON.stringify({ operations: [operation] }),
-                  id: "proposal",
-                  type: "text-delta",
-                });
+
                 controller.enqueue({ id: "proposal", type: "text-end" });
                 controller.enqueue({
                   finishReason: { raw: undefined, unified: "stop" },
@@ -680,7 +695,7 @@ describe("document writer proposal stream", () => {
         memory,
         model,
         name: "Research writer test",
-        tools: { webSearch },
+        tools: {},
       });
       mocks.stream.mockImplementation(async (prompt, options) => {
         const result = await agent.stream(prompt, options);
@@ -691,11 +706,7 @@ describe("document writer proposal stream", () => {
           fullStream: (async function* () {
             for await (const chunk of result.fullStream) {
               yield chunk;
-              if (
-                cancelled &&
-                chunk.type === "tool-result" &&
-                !chunk.payload.preliminary
-              )
+              if (cancelled && chunk.type === "text-delta")
                 cancellation.abort();
             }
           })(),
@@ -714,10 +725,9 @@ describe("document writer proposal stream", () => {
         );
         expect(generated(output.chunks)).toHaveLength(cancelled ? 0 : 1);
         expect(mocks.usage).toHaveBeenCalledOnce();
-        expect(mocks.usage.mock.calls[0]?.[0].metrics).toContainEqual({
-          quantity: 1,
-          unit: "web_search_calls",
-        });
+        expect(mocks.usage.mock.calls[0]?.[0].metrics).not.toContainEqual(
+          expect.objectContaining({ unit: "web_search_calls" }),
+        );
         expect(
           (await memory.recall({ resourceId: user.id, threadId })).messages,
         ).toEqual(before.messages);
@@ -1195,9 +1205,7 @@ describe("document writer proposal stream", () => {
       id: "document-writer",
       model: { modelId: "gpt-5-mini" },
     });
-    expect(Object.keys(mocks.agentOptions.tools as object)).toEqual([
-      "webSearch",
-    ]);
+    expect(Object.keys(mocks.agentOptions.tools as object)).toEqual([]);
     expect(mocks.agentOptions.memory).toEqual(expect.any(Function));
     const [prompt, options] = mocks.stream.mock.calls[0] ?? [];
     expect(prompt).toEqual([
@@ -1358,7 +1366,19 @@ it("streams a completed table operation once, never its schema-valid unfinished 
   );
   const { chunks, errors } = await consume(
     await streamDocumentWriter({
-      request,
+      request: {
+        ...request,
+        blocks: [
+          parseBlock({
+            content: {
+              rows: [{ cells: [{ content: "Original", type: "tableCell" }] }],
+              type: "tableContent",
+            },
+            id: "a",
+            type: "table",
+          }),
+        ],
+      },
       signal: new AbortController().signal,
       user,
     }),
@@ -1493,4 +1513,80 @@ it("reports Mastra's native generation timeout without disguising it as a docume
     type: "error",
   });
   expect(generated(chunks)).toHaveLength(0);
+});
+
+it("publishes new table rows incrementally without exposing unfinished cells", async () => {
+  const cell = (content: string) => ({ content, type: "tableCell" });
+  const insert = {
+    afterId: null,
+    block: {
+      content: {
+        headerRows: 1,
+        rows: [{ cells: [cell("Name"), cell("Status")] }],
+        type: "tableContent",
+      },
+      id: "new-table",
+      type: "table",
+    },
+    parentId: null,
+    type: "insert",
+  };
+  const row = (name: string) => ({
+    id: "new-table",
+    rows: [{ cells: [cell(name), cell("Ready")] }],
+    type: "appendTableRows",
+  });
+  const all = [insert, row("Alice"), row("Bob")];
+  mocks.stream.mockImplementation(async () =>
+    output({
+      object: { operations: all },
+      partials: [
+        { operations: [insert, { type: "appendTableRows" }] },
+        {
+          operations: [
+            insert,
+            row("Alice"),
+            {
+              id: "new-table",
+              rows: [{ cells: [cell("B")] }],
+              type: "appendTableRows",
+            },
+          ],
+        },
+      ],
+    }),
+  );
+  const { chunks, errors } = await consume(
+    await streamDocumentWriter({
+      request: { ...request, blocks: [] },
+      signal: new AbortController().signal,
+      user,
+    }),
+  );
+  expect(errors).toEqual([]);
+  const previews = chunks.filter(
+    (c) =>
+      c.type === "data-document-edit" &&
+      (c.data as { status?: string }).status === "generating" &&
+      Array.isArray((c.data as { operations?: unknown }).operations),
+  ) as { data: { operations: DocumentOperation[] } }[];
+  const docs = previews.map((p) =>
+    applyDocumentOperations([], p.data.operations),
+  );
+  expect(docs).toHaveLength(2);
+  expect(
+    docs.map((d) => (d[0]?.type === "table" ? d[0].content?.rows.length : 0)),
+  ).toEqual([1, 2]);
+  const final = generated(chunks)[0] as {
+    data: { operations: DocumentOperation[] };
+  };
+  expect(applyDocumentOperations([], final.data.operations)[0]).toMatchObject({
+    content: {
+      rows: [
+        { cells: [cell("Name"), cell("Status")] },
+        { cells: [cell("Alice"), cell("Ready")] },
+        { cells: [cell("Bob"), cell("Ready")] },
+      ],
+    },
+  });
 });

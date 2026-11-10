@@ -2,10 +2,10 @@ import { createTool } from "@mastra/core/tools";
 import { zWriteInput, zWriteOutput } from "./schema";
 
 export const write = createTool({
-  description: `Research and write in the target editor.
+  description: `Write in the target editor.
 
 Use when the user wants AI edits (draft/rewrite/expand/restructure) in an active editor, including writing based on current public-web research.
-The writer can search the web and add source links while generating editor blocks. Call this tool directly for research-and-edit requests; do not call webSearch first. Use webSearch separately for read-only web questions.
+The writer can cite supplied findings but cannot search. For requested current public research, call webSearch first and then write. Reuse completed findings instead of repeating research.
 
 Contract:
 - The application binds this action to the current document or selection when the user sends the request. Do not supply an editor ID.

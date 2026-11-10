@@ -9,7 +9,8 @@ import {
   zJournlAgentContext,
 } from "~/ai/mastra/agents/journl-agent-context";
 import { miniModel, nanoModel } from "~/ai/providers/openai/text";
-import { webSearch } from "~/ai/tools/web-search";
+import type { ResearchCache } from "~/ai/tools/research";
+import { research as webSearch } from "~/ai/tools/research";
 import { createPage } from "../../tools/create-page/tool";
 import { navigateJournalEntry } from "../../tools/navigate-journal-entry/tool";
 import { navigatePage } from "../../tools/navigate-page/tool";
@@ -36,7 +37,7 @@ Current date: ${context.currentDate}
 User's name: ${context.user.name}
 
 Do not reproduce song lyrics or any other copyrighted material, even if asked.
-${context.reasoning === "instant" ? "Before answering, quickly check whether a tool would improve accuracy (especially for recent, uncertain, or user-specific facts). For document edits, call write directly: it performs any required public research. For read-only questions, use the appropriate search tool instead of guessing." : ""}
+${context.reasoning === "instant" ? "Before answering, quickly check whether a tool would improve accuracy (especially for recent, uncertain, or user-specific facts). For sourced document edits, research first with webSearch, then call write using those findings. For read-only questions, use the appropriate search tool instead of guessing." : ""}
 
 ## Instruction Priority (Strict)
 
@@ -101,7 +102,7 @@ If instructions conflict, follow the highest-priority item.
 - When referencing known pages or journal entries, use markdown links from tool output whenever available: [Title](url) for pages and [YYYY-MM-DD](url) for journal entries.
 - Use origin-relative paths for Journl links, such as [Title](/pages/<id>) and [Date](/journal/YYYY-MM-DD). These stay on the current deployment. Never prepend a hostname from memory, search content, or a previous conversation. External web citations keep their original URLs.
 - Prefer semantic/temporal Journl tools for personal content. Use webSearch for read-only public-web questions.
-- For public research used in a document edit, call write directly. The writer searches and cites sources while generating the edit. Do not research the same editing request here first.
+- For public research used in a document edit, call webSearch first, then write. Reuse its findings and sources. The writer has no search tool and cannot research missing facts. Do not repeat completed research.
 - For read-only questions about news, live events, or current facts, use webSearch and cite sources.
 - In user-facing text, cite with readable links or source names. Never output raw internal citation placeholder tokens.
 - Call write with no arguments. The application supplies the user's original request and recent conversation directly to the writer. Do not create a second specification or add formatting changes the user did not request.
@@ -173,6 +174,8 @@ export const journlMini = new Agent({
 export function setJournlRequestContext(context: JournlAgentContext) {
   const requestContext = new RequestContext<{
     [JOURNL_REQUEST_CONTEXT_KEY]: JournlAgentContext;
+    researchUserId: string;
+    researchCache: ResearchCache;
   }>();
   requestContext.set(
     JOURNL_REQUEST_CONTEXT_KEY,

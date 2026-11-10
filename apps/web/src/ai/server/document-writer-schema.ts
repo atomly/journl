@@ -1,4 +1,9 @@
-import { zBlockData, zTableCell, zTableContent } from "@acme/document";
+import {
+  zBlockData,
+  zInlineContent,
+  zTableCell,
+  zTableContent,
+} from "@acme/document";
 import {
   OpenAISchemaCompatLayer,
   prepareJsonSchemaForOpenAIStrictMode,
@@ -33,9 +38,28 @@ const variants = zBlockData.options.map((variant) => {
 const [first, ...rest] = variants;
 if (!first) throw new Error("The document schema requires block variants.");
 const generatedData = z.discriminatedUnion("type", [first, ...rest]);
+// Keep array branches flat so the native null decoder can select their items.
+const newCell = z.union([zTableCell, ...zInlineContent.options]);
+const newRow = z.strictObject({ cells: z.array(newCell).min(1) });
+const newColumn = z.strictObject({
+  cells: z.array(newCell).min(1),
+  width: z.number().nonnegative().optional(),
+});
+const richCell = (value: z.infer<typeof newCell>) =>
+  typeof value === "object" && !Array.isArray(value)
+    ? value
+    : { type: "tableCell" as const, content: value };
+const initialTable = table.omit({ rows: true }).extend({ row: newRow });
 const generatedBlock = z.discriminatedUnion("type", [
   first.extend({ id: z.string().min(1) }),
-  ...rest.map((variant) => variant.extend({ id: z.string().min(1) })),
+  ...rest.map((variant) => {
+    const block = variant.extend({ id: z.string().min(1) });
+    return variant.shape.type.value === "table"
+      ? block.extend({
+          content: initialTable,
+        })
+      : block;
+  }),
 ]);
 const predecessor = z
   .string()
@@ -65,8 +89,8 @@ const described = z.strictObject({
         parentId: z.string().min(1).nullable(),
         afterId: predecessor,
       }),
-      zAppendTableRows,
-      zAppendTableColumns,
+      zAppendTableRows.omit({ rows: true }).extend({ row: newRow }),
+      zAppendTableColumns.omit({ columns: true }).extend({ column: newColumn }),
     ]),
   ),
 });
@@ -104,7 +128,33 @@ export async function decodeWriterOutput(value: unknown) {
   const result = await decoder["~standard"].validate(value);
   if (result.issues)
     throw new Error("The writer schema could not decode its output.");
-  return writerOutputSchema.parse(described.parse(result.value));
+  const decoded = described.parse(result.value);
+  return writerOutputSchema.parse({
+    operations: decoded.operations.map((operation) => {
+      if (operation.type === "appendTableRows") {
+        const { row, ...rest } = operation;
+        return { ...rest, rows: [{ cells: row.cells.map(richCell) }] };
+      }
+      if (operation.type === "appendTableColumns") {
+        const { column, ...rest } = operation;
+        return {
+          ...rest,
+          columns: [{ ...column, cells: column.cells.map(richCell) }],
+        };
+      }
+      if (operation.type === "insert" && operation.block.type === "table") {
+        const { row, ...content } = initialTable.parse(operation.block.content);
+        return {
+          ...operation,
+          block: {
+            ...operation.block,
+            content: { ...content, rows: [{ cells: row.cells.map(richCell) }] },
+          },
+        };
+      }
+      return operation;
+    }),
+  });
 }
 const providerSchema = new OpenAISchemaCompatLayer({
   modelId: "gpt-5-mini",

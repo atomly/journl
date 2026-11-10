@@ -2,6 +2,7 @@ import { applyDocumentOperations, parseBlock } from "@acme/document";
 import { expect, test } from "vitest";
 import {
   compileWriterOperations,
+  createWriterOperationCompiler,
   type WriterOperation,
 } from "./document-writer-operations";
 import { decodeWriterOutput } from "./document-writer-schema";
@@ -60,10 +61,7 @@ test("sequential additions resolve the current table while retaining identities 
     id: table.id,
     props: table.props,
   });
-  expect(operations.map((operation) => operation.type)).toEqual([
-    "update",
-    "update",
-  ]);
+  expect(operations.map((operation) => operation.type)).toEqual(["update"]);
 });
 
 test("additions can target a table inserted earlier in the batch with a temporary ID", () => {
@@ -121,15 +119,13 @@ test("strict nullable model output decodes compact cells and optional widths", a
   const output = await decodeWriterOutput({
     operations: [
       {
-        columns: [
-          {
-            cells: [
-              { ...cell("Owner"), props: null },
-              { ...cell("Bob"), props: null },
-            ],
-            width: null,
-          },
-        ],
+        column: {
+          cells: [
+            { ...cell("Owner"), props: null },
+            { ...cell("Bob"), props: null },
+          ],
+          width: null,
+        },
         id: "table",
         type: "appendTableColumns",
       },
@@ -174,5 +170,76 @@ test("a new row in a large table generates only its new cells", () => {
   );
   expect(applyDocumentOperations([large], compiled)[0]).toMatchObject({
     content: { rows: expect.any(Array) },
+  });
+});
+
+test("converting a paragraph into a table also requires incremental rows", () => {
+  const source = [parseBlock({ content: "", id: "p", type: "paragraph" })];
+  expect(() =>
+    compileWriterOperations(source, [
+      {
+        data: {
+          content: {
+            rows: [{ cells: [cell("A")] }, { cells: [cell("B")] }],
+            type: "tableContent",
+          },
+          type: "table",
+        },
+        id: "p",
+        type: "update",
+      },
+    ]),
+  ).toThrow("start with one row");
+  const operations = compileWriterOperations(source, [
+    {
+      data: {
+        content: { rows: [{ cells: [cell("A")] }], type: "tableContent" },
+        type: "table",
+      },
+      id: "p",
+      type: "update",
+    },
+    { id: "p", rows: [{ cells: [cell("B")] }], type: "appendTableRows" },
+  ]);
+  expect(operations).toHaveLength(1);
+  expect(applyDocumentOperations(source, operations)[0]).toMatchObject({
+    content: { rows: [{ cells: [cell("A")] }, { cells: [cell("B")] }] },
+  });
+});
+
+test("stream compiler retains a snapshot and rolls back a failed append", () => {
+  const compiler = createWriterOperationCompiler([table]);
+  compiler.append([
+    {
+      id: "table",
+      rows: [{ cells: [cell("A"), cell("B")] }],
+      type: "appendTableRows",
+    },
+  ]);
+  expect(() =>
+    compiler.append([
+      {
+        id: "table",
+        rows: [{ cells: [cell("Wrong")] }],
+        type: "appendTableRows",
+      },
+    ]),
+  ).toThrow();
+  const result = compiler.append([
+    {
+      id: "table",
+      rows: [{ cells: [cell("C"), cell("D")] }],
+      type: "appendTableRows",
+    },
+  ]);
+  expect(result).toHaveLength(1);
+  expect(applyDocumentOperations([table], result)[0]).toMatchObject({
+    content: {
+      rows: [
+        ...(table.type === "table" ? (table.content?.rows ?? []) : []),
+        { cells: [cell("A"), cell("B")] },
+        { cells: [cell("C"), cell("D")] },
+      ],
+    },
   });
 });

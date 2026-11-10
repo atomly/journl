@@ -75,6 +75,7 @@ export function documentWriterFeedback(error: unknown): string | undefined {
   // These fixed rules contain no model-generated values.
   for (const rule of [
     "Table additions require an existing table with content.",
+    "New tables must start with one row. Append each later row with its own operation.",
     "Table row spans exceed the existing rows.",
     "Table cells overlap.",
     "Table additions require a rectangular table.",

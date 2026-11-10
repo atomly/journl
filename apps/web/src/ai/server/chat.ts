@@ -2,7 +2,7 @@ import "server-only";
 
 import { USAGE_UNITS, type UsageUnit } from "@acme/db/usage";
 import { handleChatStream } from "@mastra/ai-sdk";
-import { convertMessages, type LLMStepResult } from "@mastra/core/agent";
+import { convertMessages } from "@mastra/core/agent";
 import {
   createUIMessageStream,
   createUIMessageStreamResponse,
@@ -28,7 +28,6 @@ import {
 } from "~/ai/mastra/agents/journl-agent-reasoning";
 import { mastra } from "~/ai/mastra/mastra";
 import { zWriteOutput } from "~/ai/tools/write/schema";
-import { isOpenAIWebSearchCall } from "~/ai/utils/openai-utils";
 import { startModelUsage } from "~/workflows/model-usage";
 import type { JournlChatRequest } from "./chat-request";
 
@@ -108,6 +107,12 @@ export async function streamJournlChat({
   const intent = inferUserIntent(prompt);
   const journlAgent = intent === "search" ? journlNano : journlMini;
 
+  const agentContext = setJournlRequestContext({
+    ...context,
+    user: { name: user.name },
+  } satisfies JournlAgentContext);
+  agentContext.set("researchUserId", user.id);
+  agentContext.set("researchCache", new Map());
   const stream = await handleChatStream({
     agentId: journlAgent.id,
     mastra,
@@ -144,15 +149,6 @@ export async function streamJournlChat({
             },
           ];
 
-          const webSearchCalls = countBillableWebSearchCalls([step]);
-          if (webSearchCalls > 0) {
-            console.info("[ai.chat] research", { calls: webSearchCalls });
-            metrics.push({
-              quantity: webSearchCalls,
-              unit: USAGE_UNITS.WEB_SEARCH_CALLS,
-            });
-          }
-
           await startModelUsage({
             metrics,
             modelId,
@@ -172,12 +168,7 @@ export async function streamJournlChat({
           store: false,
         },
       },
-      requestContext: setJournlRequestContext({
-        ...context,
-        user: {
-          name: user.name,
-        },
-      } satisfies JournlAgentContext),
+      requestContext: agentContext,
       toolCallConcurrency: JOURNL_AGENT_TOOL_CALL_CONCURRENCY,
       trigger,
     },
@@ -264,18 +255,4 @@ async function finishWritingResult({
       },
     }),
   });
-}
-
-function countBillableWebSearchCalls(steps: LLMStepResult<undefined>[]) {
-  let count = 0;
-
-  for (const { toolResults } of steps) {
-    for (const result of toolResults) {
-      if (isOpenAIWebSearchCall(result)) {
-        count += 1;
-      }
-    }
-  }
-
-  return count;
 }

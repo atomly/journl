@@ -138,13 +138,20 @@ or navigation instructions. A completed writing action ends tool execution for
 that request. The application stores and reports its actual outcome through native
 Mastra history and AI SDK messages, without another model call. The writer reads
 user preferences from native working memory without loading or changing chat history.
-Explicit public research can use provider web search, limited to three calls per attempt.
-Table row and column appends generate only new cells. The server resolves each
-addition against earlier operations, preserves existing cells and layout metadata,
-and compiles it into the existing document update contract. Other table changes
-still use full table updates. Timing logs separate first model output, first complete
-operation preview, and total generation time. The preview wait overlaps generation.
-Research counts are recorded separately for chat and writing to expose repeated searches.
+Public research runs through one server tool that returns bounded findings and source
+links. The writer has no search tool and reuses that evidence, including during
+validation corrections. Identical queries (ignoring case and whitespace) share one
+in-flight result within an HTTP chat request. Different queries and later requests
+can research again. Research token and hosted-search usage is accounted separately.
+New tables start with one completed row. Each appended row or column is a separate
+model operation, so completed structures appear while later ones are generated.
+The model uses singular row/column fields; the server compiles these into the
+existing document update contract. The stored document format is unchanged.
+The stream compiler retains its current snapshot and folds adjacent table additions,
+which avoids replaying earlier rows as separate full-table updates. Existing-cell
+rewrites remain atomic. Timing logs separate first output, first complete operation,
+and total generation time. Received output length and the last output gap help
+identify slow output versus a stalled stream without logging writing.
 Native generation limits
 allow 120 seconds per attempt, 240 seconds per run, and 16,000 output tokens per attempt.
 The first implementation supports exact selections inside one text block and

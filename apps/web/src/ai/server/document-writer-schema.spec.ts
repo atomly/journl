@@ -40,48 +40,46 @@ test("strict streamed operations decode nullable options without losing table or
             columnWidths: [200, null],
             headerCols: 0,
             headerRows: 1,
-            rows: [
-              {
-                cells: [
-                  {
-                    content: [
-                      {
-                        styles: {
-                          backgroundColor: null,
-                          bold: true,
-                          code: null,
-                          italic: null,
-                          strike: null,
-                          textColor: null,
-                          underline: null,
-                        },
-                        text: "Bold",
-                        type: "text",
+            row: {
+              cells: [
+                {
+                  content: [
+                    {
+                      styles: {
+                        backgroundColor: null,
+                        bold: true,
+                        code: null,
+                        italic: null,
+                        strike: null,
+                        textColor: null,
+                        underline: null,
                       },
-                    ],
-                    props: {
-                      backgroundColor: null,
-                      colspan: 1,
-                      rowspan: 1,
-                      textAlignment: "center",
-                      textColor: null,
+                      text: "Bold",
+                      type: "text",
                     },
-                    type: "tableCell",
+                  ],
+                  props: {
+                    backgroundColor: null,
+                    colspan: 1,
+                    rowspan: 1,
+                    textAlignment: "center",
+                    textColor: null,
                   },
-                  {
-                    content: [
-                      {
-                        content: "Source",
-                        href: "https://example.invalid/source",
-                        type: "link",
-                      },
-                    ],
-                    props: null,
-                    type: "tableCell",
-                  },
-                ],
-              },
-            ],
+                  type: "tableCell",
+                },
+                {
+                  content: [
+                    {
+                      content: "Source",
+                      href: "https://example.invalid/source",
+                      type: "link",
+                    },
+                  ],
+                  props: null,
+                  type: "tableCell",
+                },
+              ],
+            },
             type: "tableContent",
           },
           id: "table",
@@ -205,4 +203,139 @@ test("the provider grammar selects operation type first and cannot generate null
     }
   ).properties.operations.items;
   expect(items.anyOf.some((branch) => branch.type === "null")).toBe(false);
+});
+
+test("new tables and appends use one complete row or column per generated operation", async () => {
+  await expect(
+    decodeWriterOutput({
+      operations: [
+        {
+          afterId: null,
+          block: {
+            content: {
+              rows: [
+                { cells: [{ content: "A", type: "tableCell" }] },
+                { cells: [{ content: "B", type: "tableCell" }] },
+              ],
+              type: "tableContent",
+            },
+            id: "t",
+            type: "table",
+          },
+          parentId: null,
+          type: "insert",
+        },
+      ],
+    }),
+  ).rejects.toThrow();
+  await expect(
+    decodeWriterOutput({
+      operations: [
+        {
+          id: "t",
+          rows: [
+            { cells: [{ content: "A", type: "tableCell" }] },
+            { cells: [{ content: "B", type: "tableCell" }] },
+          ],
+          type: "appendTableRows",
+        },
+      ],
+    }),
+  ).rejects.toThrow();
+  const proposal = await decodeWriterOutput({
+    operations: [
+      {
+        afterId: null,
+        block: {
+          content: {
+            headerRows: 1,
+            row: { cells: [{ content: "Header", type: "tableCell" }] },
+            type: "tableContent",
+          },
+          id: "t",
+          type: "table",
+        },
+        parentId: null,
+        type: "insert",
+      },
+      {
+        id: "t",
+        row: { cells: [{ content: "Body", type: "tableCell" }] },
+        type: "appendTableRows",
+      },
+    ],
+  });
+  expect(
+    applyDocumentOperations(
+      [],
+      compileWriterOperations([], proposal.operations),
+    )[0],
+  ).toMatchObject({
+    content: {
+      rows: [
+        { cells: [{ content: "Header", type: "tableCell" }] },
+        { cells: [{ content: "Body", type: "tableCell" }] },
+      ],
+    },
+  });
+});
+
+test("compact new cells and rich nullable cells normalize without losing inline formatting", async () => {
+  const result = await decodeWriterOutput({
+    operations: [
+      {
+        afterId: null,
+        block: {
+          content: {
+            row: {
+              cells: [
+                "Plain",
+                [
+                  {
+                    styles: { bold: true, italic: null },
+                    text: "Bold",
+                    type: "text",
+                  },
+                ],
+                {
+                  content: "Styled",
+                  props: { backgroundColor: null, textAlignment: "center" },
+                  type: "tableCell",
+                },
+              ],
+            },
+            type: "tableContent",
+          },
+          id: "t",
+          type: "table",
+        },
+        parentId: null,
+        type: "insert",
+      },
+    ],
+  });
+  expect(result.operations[0]).toMatchObject({
+    block: {
+      content: {
+        rows: [
+          {
+            cells: [
+              { content: "Plain", type: "tableCell" },
+              {
+                content: [
+                  { styles: { bold: true }, text: "Bold", type: "text" },
+                ],
+                type: "tableCell",
+              },
+              {
+                content: "Styled",
+                props: { textAlignment: "center" },
+                type: "tableCell",
+              },
+            ],
+          },
+        ],
+      },
+    },
+  });
 });

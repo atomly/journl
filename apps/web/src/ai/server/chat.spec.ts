@@ -1,3 +1,4 @@
+import { RequestContext } from "@mastra/core/request-context";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
@@ -14,7 +15,11 @@ vi.mock("~/ai/mastra/agents/journl-agent", () => ({
   getJournlUserThread: (user: { id: string }) => `journl:${user.id}`,
   journlMini: { getModel: mocks.miniModel, id: "journl-mini" },
   journlNano: { getModel: mocks.nanoModel, id: "journl-nano" },
-  setJournlRequestContext: (context: unknown) => context,
+  setJournlRequestContext: (context: unknown) => {
+    const result = new RequestContext();
+    result.set("journl_agent", context);
+    return result;
+  },
 }));
 vi.mock("~/ai/mastra/mastra", () => ({ mastra: {} }));
 vi.mock("~/ai/mastra/memory/memory", () => ({
@@ -76,13 +81,21 @@ describe("authenticated chat run", () => {
           abortSignal: signal,
           maxSteps: 5,
           memory: { resource: "owner", thread: "journl:owner" },
-          requestContext: { ...context, user: { name: "Real user" } },
+          requestContext: expect.any(RequestContext),
           toolCallConcurrency: 4,
         }),
         sendSources: true,
         version: "v7",
       }),
     );
+    const requestContext =
+      mocks.stream.mock.calls[0]?.[0].params.requestContext;
+    expect(requestContext.get("researchUserId")).toBe(user.id);
+    expect(requestContext.get("researchCache")).toBeInstanceOf(Map);
+    expect(requestContext.get("journl_agent")).toEqual({
+      ...context,
+      user: { name: user.name },
+    });
     const onError = mocks.stream.mock.calls[0]?.[0].onError;
     expect(onError(new Error("secret-provider-payload"))).not.toContain(
       "secret",
@@ -151,7 +164,7 @@ describe("authenticated chat run", () => {
       toolResults: [
         {
           payload: {
-            result: { action: { type: "search" } },
+            result: { findings: "Verified finding", sources: [] },
             toolName: "web_search",
           },
         },
@@ -181,7 +194,6 @@ describe("authenticated chat run", () => {
             { quantity: 10, unit: "input_tokens" },
             { quantity: 20, unit: "output_tokens" },
             { quantity: 3, unit: "reasoning_tokens" },
-            { quantity: 1, unit: "web_search_calls" },
           ],
           modelId: "actual-model",
           modelProvider: "actual-provider",

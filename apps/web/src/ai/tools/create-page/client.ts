@@ -46,23 +46,18 @@ export function useCreatePageTool() {
       try {
         await whenEditorReady(`page:${newPage.page.id}`);
       } catch {
-        void chat.addToolOutput({
-          output: {
-            message:
-              "Page created, but its editor is not ready. Open the page before asking for edits.",
-            status: "error",
-          },
-          tool: toolCall.toolName,
-          toolCallId: toolCall.toolCallId,
-        });
-        return;
+        /* Creation succeeded even if its editor is still loading. */
       }
-      if (!prepareEdits(`page:${newPage.page.id}`))
-        throw new Error("The destination changed before writing became ready.");
+      // Always replace the previous target, including on a loading timeout or
+      // a route change between the readiness notification and this continuation.
+      const editorReady = prepareEdits(`page:${newPage.page.id}`);
       void chat.addToolOutput({
         output: {
+          editorReady,
           link,
-          message: `Opened new page: ${toolCall.input.title}`,
+          message: editorReady
+            ? `Opened new page: ${toolCall.input.title}`
+            : "Page created successfully; its editor is not ready. Do not create another page. Use navigatePage with this page ID to wait for the editor, then write.",
           page: newPage.page,
         },
         tool: toolCall.toolName,

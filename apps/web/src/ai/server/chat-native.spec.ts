@@ -164,6 +164,7 @@ it("pauses mixed server and browser tool calls before generating an ungrounded r
 
 it.each([
   { newRequest: false, status: "applied" },
+  { newRequest: false, status: "unchanged" },
   { newRequest: false, status: "cancelled" },
   { newRequest: false, status: "error" },
   { newRequest: true, status: "applied" },
@@ -301,9 +302,11 @@ it.each([
         ? "Writing result acknowledged."
         : status === "applied"
           ? "Edit applied."
-          : status === "cancelled"
-            ? "Writing stopped."
-            : "The edit did not apply.";
+          : status === "unchanged"
+            ? "No changes were made."
+            : status === "cancelled"
+              ? "Writing stopped."
+              : "The edit did not apply.";
       const responseText = await response.text();
       expect(responseText).toContain(expected);
       if (!newRequest && status === "error") {

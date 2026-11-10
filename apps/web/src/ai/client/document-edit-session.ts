@@ -22,11 +22,12 @@ type Status =
   | "prepared"
   | "generating"
   | "applied"
+  | "unchanged"
   | "conflict"
   | "cancelled"
   | "error";
 type Snapshot = {
-  phase: "preparing" | "writing" | "correcting";
+  phase: "preparing" | "writing" | "correcting" | "checking";
   requested: boolean;
   status: Status;
   message: string;
@@ -172,7 +173,7 @@ export class DocumentEditSession {
         message: "An AI edit is already running in this editor.",
         status: "error",
       };
-    if (this.snapshot.status === "applied")
+    if (["applied", "unchanged"].includes(this.snapshot.status))
       return {
         message:
           "This request already edited its target. Send a new message to make another edit.",
@@ -222,11 +223,14 @@ export class DocumentEditSession {
         const document = target.preview(complete);
         this.draft?.update(document);
         lastCompleteBatch = batch;
+        const checking = this.snapshot.phase === "checking";
         this.publish(
           "generating",
-          "AI is writing. The editor is locked until writing finishes.",
+          checking
+            ? this.snapshot.message
+            : "AI is writing. The editor is locked until writing finishes.",
           this.snapshot.following,
-          "writing",
+          checking ? "checking" : "writing",
         );
       } catch {
         // Wait for a complete valid batch, keeping the last visible draft intact.
@@ -243,7 +247,12 @@ export class DocumentEditSession {
         "preparing",
       );
       const stream = await this.stream(
-        { ...instruction, blocks: target.blocks, targetEditor: this.id },
+        {
+          ...instruction,
+          blocks: target.blocks,
+          scope: target.kind,
+          targetEditor: this.id,
+        },
         controller.signal,
       );
       reader = stream.getReader();
@@ -280,6 +289,24 @@ export class DocumentEditSession {
         if (value.type === "data-document-edit") {
           if (finished)
             throw new Error("The AI edit contained data after completion.");
+          if (
+            z.object({ status: z.literal("checking") }).safeParse(value.data)
+              .success
+          ) {
+            if (proposed)
+              throw new Error("The AI edit resumed after completion.");
+            if (previewFrame !== undefined) {
+              cancelAnimationFrame(previewFrame);
+              renderPartial();
+            }
+            this.publish(
+              "generating",
+              "Checking the edit against your request. The editor remains locked.",
+              this.snapshot.following,
+              "checking",
+            );
+            continue;
+          }
           if (
             z.object({ status: z.literal("correcting") }).safeParse(value.data)
               .success
@@ -329,6 +356,7 @@ export class DocumentEditSession {
         throw new Error("The AI edit did not complete. Please retry.");
       controller.signal.throwIfAborted();
       const visibleDraft = this.draft?.surface.editor.state.doc;
+      const unchanged = target.preview(proposed).eq(this.editor.state.doc);
       this.closeDraft();
       this.applying = true;
       try {
@@ -339,7 +367,12 @@ export class DocumentEditSession {
         this.applying = false;
       }
       this.target = undefined;
-      this.publish("applied", "AI edit applied. Use Undo to revert it.");
+      this.publish(
+        unchanged ? "unchanged" : "applied",
+        unchanged
+          ? "No changes were made. Your writing is unchanged."
+          : "AI edit applied. Use Undo to revert it.",
+      );
     } catch (error) {
       if (!controller.signal.aborted && !this.destroyed)
         this.publish(

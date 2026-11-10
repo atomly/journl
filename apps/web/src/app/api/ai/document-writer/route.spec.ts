@@ -27,6 +27,7 @@ const owner = { id: "owner", name: "Owner" };
 const input = {
   blocks: [{ content: "Unsaved draft", id: "a", type: "paragraph" }],
   instruction: "Improve the phrasing",
+  scope: "document",
   targetEditor: "page:00000000-0000-4000-8000-000000000001",
 };
 const request = (body: unknown = input, signal?: AbortSignal) =>

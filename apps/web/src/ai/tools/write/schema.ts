@@ -11,6 +11,7 @@ export const zWriteOutput = z.object({
     "prepared",
     "generating",
     "applied",
+    "unchanged",
     "conflict",
     "cancelled",
     "error",

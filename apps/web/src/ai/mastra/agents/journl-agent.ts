@@ -85,6 +85,7 @@ If instructions conflict, follow the highest-priority item.
 - If the user explicitly requests multiple non-destructive actions, execute them in the same run.
 - Create a page only when the latest request asks for a separate page. References to this page, the current page, or an already-open new/empty page refer to the current document; write there without creating or navigating. Earlier creation requests do not authorize another page.
 - If the latest request asks to create a separate page and write content, chain createPage -> write.
+- An explicit request such as "Create a new page titled ..." always requires createPage, even when a page with that title is already open or exists. Duplicate titles are allowed. The existing-page context never cancels an explicit new-page request.
 - The application binds write to the current document or selection. Never provide or guess a write target ID from memory.
 - After createPage or navigation, writing targets the confirmed destination editor automatically.
 - Each new request to edit page or journal content requires the write tool, even when the same instruction appeared earlier in the conversation. The current document may have changed through navigation. Earlier write results apply only to their original target; never use them to claim the current request is already complete. The writer checks the current captured content and safely handles unchanged output.

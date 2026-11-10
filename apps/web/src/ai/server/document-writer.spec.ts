@@ -23,6 +23,7 @@ import { z } from "zod";
 
 const mocks = vi.hoisted(() => ({
   agentOptions: {} as Record<string, unknown>,
+  check: vi.fn(async () => [] as string[]),
   model: vi.fn(async () => ({
     modelId: "gpt-5-mini",
     provider: "openai.responses",
@@ -41,6 +42,10 @@ vi.mock("@mastra/core/agent", () => ({
   },
 }));
 vi.mock("~/workflows/model-usage", () => ({ startModelUsage: mocks.usage }));
+vi.mock("./document-writer-check", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("./document-writer-check")>()),
+  checkDocumentEdit: mocks.check,
+}));
 
 import { streamDocumentWriter } from "./document-writer";
 import type { DocumentWriterRequest } from "./document-writer-request";
@@ -71,6 +76,7 @@ const operation: DocumentOperation = {
 const request: DocumentWriterRequest = {
   blocks: [block],
   instruction: "Rewrite this",
+  scope: "document",
   targetEditor: "page:test",
 };
 const reportedUsage = { inputTokens: 10, outputTokens: 20, reasoningTokens: 3 };
@@ -200,6 +206,7 @@ const generated = (chunks: UIMessageChunk[]) =>
 
 beforeEach(() => {
   vi.clearAllMocks();
+  mocks.check.mockResolvedValue([]);
   mocks.usage.mockResolvedValue(undefined);
   mocks.model.mockResolvedValue({
     modelId: "gpt-5-mini",
@@ -381,6 +388,10 @@ describe("native validation retries", () => {
     { correctOn: 2, kind: "reference" },
     { correctOn: 3, kind: "move" },
     { correctOn: 2, kind: "children" },
+    { correctOn: 2, kind: "completion" },
+    { correctOn: 0, kind: "completion" },
+    { correctOn: 2, kind: "partial" },
+    { correctOn: 2, kind: "scope" },
   ])(
     "bounds correction of $kind errors (success attempt: $correctOn)",
     async ({ correctOn, kind }) => {
@@ -389,6 +400,14 @@ describe("native validation retries", () => {
           "@mastra/core/agent",
         );
       let calls = 0;
+      if (kind === "completion" || kind === "partial")
+        mocks.check.mockImplementation(async () =>
+          calls === correctOn
+            ? []
+            : [
+                "Expected fifty-five data rows; PRIVATE_CHECKER_FEEDBACK requirements are missing.",
+              ],
+        );
       const model = new MockLanguageModelV4({
         doStream: async () => ({
           stream: new ReadableStream({
@@ -397,41 +416,57 @@ describe("native validation retries", () => {
               const operations =
                 correctOn && calls === correctOn
                   ? [operation]
-                  : kind === "children"
-                    ? [
-                        {
-                          ...operation,
-                          data: {
-                            ...(operation.type === "update"
-                              ? operation.data
-                              : {}),
-                            children: [],
-                          },
-                        },
-                      ]
-                    : kind === "reference"
-                      ? [{ id: "missing", type: "remove" }]
-                      : kind === "move"
+                  : kind === "completion"
+                    ? []
+                    : kind === "partial"
+                      ? [operation]
+                      : kind === "children"
                         ? [
                             {
-                              afterId: null,
-                              id: "a",
-                              parentId: "a",
-                              type: "move",
+                              ...operation,
+                              data: {
+                                ...(operation.type === "update"
+                                  ? operation.data
+                                  : {}),
+                                children: [],
+                              },
                             },
                           ]
-                        : [
-                            {
-                              afterId: "a",
-                              block: {
-                                content: "PRIVATE_DOC_TEXT",
-                                id: "image",
-                                type: "image",
+                        : kind === "scope"
+                          ? [
+                              {
+                                data: {
+                                  content: "Rewritten",
+                                  props: { textAlignment: "left" },
+                                  type: "paragraph",
+                                },
+                                id: "a",
+                                type: "update",
                               },
-                              parentId: null,
-                              type: "insert",
-                            },
-                          ];
+                            ]
+                          : kind === "reference"
+                            ? [{ id: "missing", type: "remove" }]
+                            : kind === "move"
+                              ? [
+                                  {
+                                    afterId: null,
+                                    id: "a",
+                                    parentId: "a",
+                                    type: "move",
+                                  },
+                                ]
+                              : [
+                                  {
+                                    afterId: "a",
+                                    block: {
+                                      content: "PRIVATE_DOC_TEXT",
+                                      id: "image",
+                                      type: "image",
+                                    },
+                                    parentId: null,
+                                    type: "insert",
+                                  },
+                                ];
               stream.enqueue({ type: "stream-start", warnings: [] });
               stream.enqueue({ id: "proposal", type: "text-start" });
               stream.enqueue({
@@ -470,11 +505,13 @@ describe("native validation retries", () => {
         agent.stream(prompt, options),
       );
       const log = vi.spyOn(console, "error").mockImplementation(() => {});
+      const warnings = vi.spyOn(console, "warn").mockImplementation(() => {});
       try {
         const before = structuredClone(request.blocks);
         const { chunks, errors } = await consume(
           await streamDocumentWriter({
-            request,
+            request:
+              kind === "scope" ? { ...request, scope: "inline" } : request,
             signal: new AbortController().signal,
             user,
           }),
@@ -511,11 +548,15 @@ describe("native validation retries", () => {
         expect(JSON.stringify(model.doStreamCalls[1]?.prompt)).toContain(
           kind === "children"
             ? "remove these undeclared fields: children"
-            : kind === "atom"
-              ? "operations[0].block.content: this field must be absent; omit it"
-              : kind === "reference"
-                ? "An operation references a block outside the current editable scope"
-                : "A move must not place a block inside itself or any of its descendants",
+            : kind === "completion" || kind === "partial"
+              ? "Expected fifty-five data rows"
+              : kind === "scope"
+                ? "Inline edits must preserve block identity, type, and props"
+                : kind === "atom"
+                  ? "operations[0].block.content: this field must be absent; omit it"
+                  : kind === "reference"
+                    ? "An operation references a block outside the current editable scope"
+                    : "A move must not place a block inside itself or any of its descendants",
         );
         const systemFeedback = model.doStreamCalls[1]?.prompt.filter(
           (message) => message.role === "system",
@@ -523,8 +564,17 @@ describe("native validation retries", () => {
         expect(JSON.stringify(systemFeedback)).not.toContain(
           "PRIVATE_DOC_TEXT",
         );
+        if (kind === "completion" || kind === "partial") {
+          expect(JSON.stringify(systemFeedback)).toContain(
+            "PRIVATE_CHECKER_FEEDBACK",
+          );
+          expect(
+            JSON.stringify([...log.mock.calls, ...warnings.mock.calls]),
+          ).not.toContain("PRIVATE_CHECKER_FEEDBACK");
+        }
       } finally {
         log.mockRestore();
+        warnings.mockRestore();
       }
     },
   );
@@ -592,6 +642,50 @@ it("a native generation timeout stops a stalled stream without applying or retry
 });
 
 describe("document writer proposal stream", () => {
+  it.each(["replace", "delete"])(
+    "inline %s retains empty props while nullable optional fields decode",
+    async (kind) => {
+      const source = parseBlock({
+        content: "Authored",
+        id: "selected",
+        props: {},
+        type: "paragraph",
+      });
+      mocks.stream.mockImplementation(async () =>
+        output({
+          object: {
+            operations:
+              kind === "delete"
+                ? [{ id: "selected", type: "remove" }]
+                : [
+                    {
+                      data: {
+                        content: "Revised",
+                        props: {
+                          backgroundColor: undefined,
+                          textAlignment: undefined,
+                          textColor: undefined,
+                        },
+                        type: "paragraph",
+                      },
+                      id: "selected",
+                      type: "update",
+                    },
+                  ],
+          },
+        }),
+      );
+      const { chunks, errors } = await consume(
+        await streamDocumentWriter({
+          request: { ...request, blocks: [source], scope: "inline" },
+          signal: new AbortController().signal,
+          user,
+        }),
+      );
+      expect(errors).toEqual([]);
+      expect(generated(chunks)).toHaveLength(1);
+    },
+  );
   it.each([false, true])(
     "native preferences stay read-only without research tools (abort: %s)",
     async (cancelled) => {
@@ -759,12 +853,20 @@ describe("document writer proposal stream", () => {
         content: "A recipe for two people.",
         role: "assistant",
       },
-      { content: JSON.stringify({ blocks: request.blocks }), role: "user" },
+      {
+        content: expect.any(String),
+        role: "user",
+      },
       {
         content: "Write that recipe into this page.",
         role: "user",
       },
     ]);
+    expect(JSON.parse(mocks.stream.mock.calls[0]?.[0][1].content)).toEqual({
+      blocks: request.blocks,
+      scope: request.scope,
+      tables: [],
+    });
   });
 
   it("streams a recipe as distinct headings, paragraphs, and sibling list blocks", async () => {
@@ -824,7 +926,11 @@ describe("document writer proposal stream", () => {
     );
     expect(errors).toEqual([]);
     expect(
-      chunks.filter((chunk) => chunk.type === "data-document-edit"),
+      chunks.filter(
+        (chunk) =>
+          chunk.type === "data-document-edit" &&
+          (chunk.data as { status: string }).status !== "checking",
+      ),
     ).toHaveLength(recipe.length + 1);
     const final = generated(chunks)[0];
     if (final?.type !== "data-document-edit")
@@ -1209,9 +1315,17 @@ describe("document writer proposal stream", () => {
     expect(mocks.agentOptions.memory).toEqual(expect.any(Function));
     const [prompt, options] = mocks.stream.mock.calls[0] ?? [];
     expect(prompt).toEqual([
-      { content: JSON.stringify({ blocks: request.blocks }), role: "user" },
+      {
+        content: expect.any(String),
+        role: "user",
+      },
       { content: request.instruction, role: "user" },
     ]);
+    expect(JSON.parse(prompt[0].content)).toEqual({
+      blocks: request.blocks,
+      scope: request.scope,
+      tables: [],
+    });
     expect(options).toMatchObject({
       maxSteps: 1,
       memory: {

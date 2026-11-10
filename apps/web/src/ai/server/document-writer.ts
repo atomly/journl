@@ -1,5 +1,7 @@
 import "server-only";
 
+import { isDeepStrictEqual } from "node:util";
+
 import { USAGE_UNITS } from "@acme/db/usage";
 import {
   applyDocumentOperations,
@@ -19,6 +21,10 @@ import { getChatRootThreadId } from "~/ai/chat-thread";
 import { zDocumentWriterOperation } from "~/ai/document-writer-operation";
 import { miniModel } from "~/ai/providers/openai/text";
 import { startModelUsage } from "~/workflows/model-usage";
+import {
+  checkDocumentEdit,
+  describeWriterDocument,
+} from "./document-writer-check";
 import { documentWriterFeedback } from "./document-writer-feedback";
 import { createWriterIdentityMap } from "./document-writer-ids";
 import {
@@ -40,9 +46,20 @@ type WriterMessage = UIMessage<
     "document-edit":
       | { status: "generating"; operations?: unknown }
       | { status: "correcting" }
+      | { status: "checking" }
       | { status: "generated"; operations: DocumentOperation[] };
   }
 >;
+
+// Native nullable decoding leaves optional keys with undefined values. Those
+// keys are absent in the JSON sent to the editor and do not change its props.
+const definedProps = (
+  props: DocumentWriterRequest["blocks"][number]["props"],
+) =>
+  props &&
+  Object.fromEntries(
+    Object.entries(props).filter(([, value]) => value !== undefined),
+  );
 
 const documentWriter = new Agent({
   id: "document-writer",
@@ -50,6 +67,8 @@ const documentWriter = new Agent({
 Return only compact JSON containing operations from the supplied DocumentOperation schema.
 The final user message is the authoritative editing request. Earlier conversation can resolve references such as "write that recipe", but does not authorize additional edits.
 Check the complete requested structure, nesting, formatting, and unchanged content before returning the operations.
+The supplied table facts give each existing table's exact ID, physical row count, data row count, header row count, and logical column count. Use those counts to identify the requested table and size additions; data row counts exclude headers.
+When scope is inline, only selected text is supplied. Change inline content only. Preserve the containing block ID, type, and props exactly, including absent or empty props. Do not add block defaults such as left alignment. Remove the supplied block only to delete the selected text. Block conversion and nesting require a complete-block selection.
 When the request asks for a new page or document, generate standalone content for that request. Conversation history is not a draft to copy. Reuse earlier writing only when the latest request explicitly refers to it, such as "write that recipe". Never carry unrelated earlier task content into a new document.
 Page creation and navigation have already happened. Generate document edits only. Do not add page titles in the body or duplicate headings unless the user asks for them.
 An insert has NO top-level id. Its id is INSIDE block. Example:
@@ -122,16 +141,62 @@ export async function streamDocumentWriter({
   let generationFinishedAt: number | undefined;
   let generatedBytes: number | undefined;
   let compiledBytes: number | undefined;
+  let completionCheckMs = 0;
+  let operationCount: number | undefined;
   let receivedTextCharacters = 0;
   let whitespaceCharacters = 0;
   let lastTableShape:
     | { kind: string; rows?: number; cells?: number }
     | undefined;
   let lastOutputAt: number | undefined;
+  const checkUsage: Parameters<typeof startModelUsage>[0][] = [];
   const stream = createUIMessageStream<WriterMessage>({
     execute: async ({ writer }) => {
       writer.write({ type: "start" });
       const assignIdentities = createWriterIdentityMap(request.blocks);
+      let checkedProposal: string | undefined;
+      const checkCompletion = async (operations: DocumentOperation[]) => {
+        const after = applyDocumentOperations(request.blocks, operations);
+        const beforeBlock = request.blocks[0];
+        const afterBlock = after[0];
+        if (
+          request.scope === "inline" &&
+          after.length &&
+          (after.length !== 1 ||
+            afterBlock?.id !== beforeBlock?.id ||
+            afterBlock?.type !== beforeBlock?.type ||
+            !isDeepStrictEqual(
+              definedProps(afterBlock?.props),
+              definedProps(beforeBlock?.props),
+            ) ||
+            afterBlock?.children?.length)
+        )
+          throw new Error(
+            "Inline edits must preserve block identity, type, and props, and cannot add blocks or children. Change inline content only.",
+          );
+        const proposal = JSON.stringify(operations);
+        if (proposal === checkedProposal) return [];
+        writer.write({
+          data: { status: "checking" },
+          transient: true,
+          type: "data-document-edit",
+        });
+        const checkingStarted = performance.now();
+        let unmet: string[];
+        try {
+          unmet = await checkDocumentEdit({
+            after,
+            onUsage: (usage) => checkUsage.push(usage),
+            request,
+            signal,
+            userId: user.id,
+          });
+        } finally {
+          completionCheckMs += performance.now() - checkingStarted;
+        }
+        if (!unmet.length) checkedProposal = proposal;
+        return unmet;
+      };
       const abort = () => {
         writer.write({ type: "abort" });
         writer.setOutcome({ status: "aborted" });
@@ -151,7 +216,10 @@ export async function streamDocumentWriter({
                 : { content, role: "assistant" as const },
             ),
             {
-              content: JSON.stringify({ blocks: request.blocks }),
+              content: JSON.stringify({
+                ...describeWriterDocument(request.blocks),
+                scope: request.scope,
+              }),
               role: "user",
             },
             {
@@ -183,11 +251,13 @@ export async function streamDocumentWriter({
                 processOutputStep: async ({
                   text,
                   messages,
+                  messageList,
                   abort,
                   finishReason,
                 }) => {
                   if (signal.aborted || finishReason !== "stop")
                     return messages;
+                  let unmet: string[] = [];
                   try {
                     const generated = await decodeWriterOutput(
                       JSON.parse(text ?? ""),
@@ -203,6 +273,7 @@ export async function streamDocumentWriter({
                         ),
                       );
                     applyDocumentOperations(request.blocks, operations);
+                    unmet = await checkCompletion(operations);
                   } catch (error) {
                     const feedback = documentWriterFeedback(error);
                     if (!feedback) throw error;
@@ -213,6 +284,20 @@ ${feedback}
 Regenerate the complete operation batch against the original supplied document. Preserve unrelated writing.`,
                       { retry: true },
                     );
+                  }
+                  if (unmet.length) {
+                    validationFeedback =
+                      "The proposed edit did not satisfy all requested changes.";
+                    // Mastra logs tripwire reasons. Keep model-authored feedback
+                    // in run-local context instead of exposing writing in logs.
+                    messageList.clearSystemMessages(
+                      "document-completion-feedback",
+                    );
+                    messageList.addSystem(
+                      `The completion check found unmet requirements:\n${unmet.join("\n")}\nRegenerate the complete operation batch against the original supplied document. Preserve unrelated writing.`,
+                      "document-completion-feedback",
+                    );
+                    abort(validationFeedback, { retry: true });
                   }
                   return messages;
                 },
@@ -396,6 +481,7 @@ Regenerate the complete operation batch against the original supplied document. 
           // Read the terminal structured-output event for the final attempt.
           // The SDK object promise can retain a rejected earlier attempt.
           const generated = writerOutputSchema.parse(finalObject);
+          operationCount = generated.operations.length;
           stage = "assigning-identities";
           const identified = assignIdentities(
             compileWriterOperations(request.blocks, generated.operations),
@@ -406,6 +492,11 @@ Regenerate the complete operation batch against the original supplied document. 
             .parse(identified);
           stage = "applying-operations";
           applyDocumentOperations(request.blocks, operations);
+          stage = "checking";
+          if ((await checkCompletion(operations)).length)
+            throw new Error(
+              "The proposed edit did not satisfy all requested changes.",
+            );
           if (signal.aborted) {
             abort();
             return;
@@ -424,6 +515,13 @@ Regenerate the complete operation batch against the original supplied document. 
           writer.write({ finishReason: "stop", type: "finish" });
           writer.setOutcome({ status: "completed" });
         } finally {
+          for (const usage of checkUsage) {
+            try {
+              await startModelUsage(usage);
+            } catch (error) {
+              console.error("[usage tracking] error:", error);
+            }
+          }
           // Mastra skips the caller's onFinish for failed and aborted runs.
           // Account once from the drained result, even if validation rejects it.
           // Milestones share a start time. Completion wait overlaps generation;
@@ -435,6 +533,7 @@ Regenerate the complete operation batch against the original supplied document. 
               firstOutputAt === undefined || firstPreviewAt === undefined
                 ? undefined
                 : Math.round(firstPreviewAt - firstOutputAt),
+            completionCheckMs: Math.round(completionCheckMs),
             firstOutputMs:
               firstOutputAt === undefined
                 ? undefined
@@ -445,14 +544,20 @@ Regenerate the complete operation batch against the original supplied document. 
                 : Math.round(firstPreviewAt - startedAt),
             generatedBytes,
             generationMs: Math.round(
-              (generationFinishedAt ?? performance.now()) - startedAt,
+              (generationFinishedAt ?? performance.now()) -
+                startedAt -
+                completionCheckMs,
             ),
             lastOutputGapMs:
               lastOutputAt === undefined
                 ? undefined
                 : Math.round(performance.now() - lastOutputAt),
             lastTableShape,
+            operationCount,
             receivedTextCharacters,
+            totalMs: Math.round(
+              (generationFinishedAt ?? performance.now()) - startedAt,
+            ),
             validationFeedback,
             whitespaceCharacters,
           });
@@ -512,6 +617,8 @@ Regenerate the complete operation batch against the original supplied document. 
         return `The edit failed document validation after ${attempts} attempts. ${validationFeedback}`;
       if (finishReason === "length")
         return "The AI edit exceeded its output limit. Your writing was kept.";
+      if (stage === "checking")
+        return "The edit could not be confirmed as complete. Your writing was kept.";
       if (
         error instanceof Error &&
         ["TimeoutError", "AI_TimeoutError", "MastraTimeoutError"].includes(

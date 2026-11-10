@@ -101,6 +101,67 @@ function controlledStream() {
 }
 const instruction = { instruction: "Rewrite the target" };
 
+test.each([
+  { operations: [] },
+  { operations: [update("Before target after")] },
+])(
+  "unchanged output is reported without claiming an applied edit or creating history: $operations",
+  async ({ operations }) => {
+    const f = fixture();
+    f.session.prepare();
+    const before = f.editor.state.doc;
+    const run = f.session.run(instruction);
+    f.stream().finish(operations as DocumentOperation[]);
+    expect(await run).toMatchObject({
+      message: expect.stringContaining("unchanged"),
+      status: "unchanged",
+    });
+    expect(f.editor.state.doc.eq(before)).toBe(true);
+    expect(f.onCommit).not.toHaveBeenCalled();
+    expect(undo(f.editor.state, f.editor.view.dispatch)).toBe(false);
+  },
+);
+
+test("completion checking keeps the streamed draft visible, read-only, and cancellable", async () => {
+  const f = fixture();
+  const run = f.session.run(instruction);
+  f.stream().write({
+    data: { operations: [update("Preview")], status: "generating" },
+    transient: true,
+    type: "data-document-edit",
+  });
+  await vi.waitFor(() =>
+    expect(f.session.draftSurface?.editor.state.doc.textContent).toContain(
+      "Preview",
+    ),
+  );
+  f.stream().write({
+    data: { status: "checking" },
+    transient: true,
+    type: "data-document-edit",
+  });
+  await vi.waitFor(() =>
+    expect(f.session.getSnapshot().phase).toBe("checking"),
+  );
+  f.stream().write({
+    data: { operations: [update("Late preview")], status: "generating" },
+    transient: true,
+    type: "data-document-edit",
+  });
+  await vi.waitFor(() =>
+    expect(f.session.draftSurface?.editor.state.doc.textContent).toContain(
+      "Late preview",
+    ),
+  );
+  expect(f.session.getSnapshot().phase).toBe("checking");
+  expect(f.editor.isEditable).toBe(false);
+  f.session.cancel();
+  expect(await run).toMatchObject({ status: "cancelled" });
+  expect(f.text()).toBe("Before target afterUnrelated");
+  expect(f.onCommit).not.toHaveBeenCalled();
+  f.stream().close();
+});
+
 test("valid completion commits once and one Undo preserves the original rich document", async () => {
   const f = fixture();
   f.select();

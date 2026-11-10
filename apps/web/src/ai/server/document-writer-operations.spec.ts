@@ -173,6 +173,58 @@ test("a new row in a large table generates only its new cells", () => {
   });
 });
 
+test("forty streamed additions retain all fifteen existing data rows and unrelated blocks", () => {
+  const original = parseBlock({
+    content: {
+      headerRows: 1,
+      rows: Array.from({ length: 16 }, (_, row) => ({
+        cells: Array.from({ length: 5 }, (_, column) =>
+          cell(`Original ${row}/${column}`),
+        ),
+      })),
+      type: "tableContent",
+    },
+    id: "original",
+    type: "table",
+  });
+  const introduction = parseBlock({
+    content: "Keep exactly.",
+    id: "intro",
+    type: "paragraph",
+  });
+  const source = [introduction, original, table];
+  const before = structuredClone(source);
+  const compiler = createWriterOperationCompiler(source);
+  for (let row = 0; row < 40; row++) {
+    const operations = compiler.append([
+      {
+        id: "original",
+        rows: [
+          {
+            cells: Array.from({ length: 5 }, (_, column) =>
+              cell(`Added ${row}/${column}`),
+            ),
+          },
+        ],
+        type: "appendTableRows",
+      },
+    ]);
+    expect(operations).toHaveLength(1);
+    const after = applyDocumentOperations(source, operations);
+    const content = after[1]?.type === "table" ? after[1].content : undefined;
+    expect(content?.rows).toHaveLength(17 + row);
+    expect(content?.rows.slice(0, 16)).toEqual(
+      original.type === "table" ? original.content?.rows : undefined,
+    );
+    expect(content?.rows.at(-1)?.cells).toEqual(
+      Array.from({ length: 5 }, (_, column) => cell(`Added ${row}/${column}`)),
+    );
+    expect(after[0]).toEqual(introduction);
+    expect(after[2]).toEqual(table);
+  }
+  expect(source).toEqual(before);
+});
+
 test("converting a paragraph into a table also requires incremental rows", () => {
   const source = [parseBlock({ content: "", id: "p", type: "paragraph" })];
   expect(() =>

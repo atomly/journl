@@ -85,6 +85,7 @@ export function documentWriterFeedback(error: unknown): string | undefined {
     "Table additions require new rows or columns.",
     "New rows must contain one cell per existing table column.",
     "New columns must contain one cell per existing table row, including headers.",
+    "Inline edits must preserve block identity, type, and props, and cannot add blocks or children. Change inline content only.",
   ]) {
     if (error.message === rule) return rule;
   }

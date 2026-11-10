@@ -227,11 +227,13 @@ async function finishWritingResult({
   const text =
     status === "applied"
       ? "Edit applied. Use Undo to revert it."
-      : status === "cancelled"
-        ? "Writing stopped. Your original writing is unchanged."
-        : status === "conflict"
-          ? "The edit did not apply because the writing changed. Your writing was kept."
-          : `The edit did not apply. Your writing was kept.${outcomeMessage ? `\n\n${outcomeMessage}` : ""}`;
+      : status === "unchanged"
+        ? "No changes were made. Your writing is unchanged."
+        : status === "cancelled"
+          ? "Writing stopped. Your original writing is unchanged."
+          : status === "conflict"
+            ? "The edit did not apply because the writing changed. Your writing was kept."
+            : `The edit did not apply. Your writing was kept.${outcomeMessage ? `\n\n${outcomeMessage}` : ""}`;
   const completed: UIMessage = {
     ...message,
     parts: [...message.parts, { type: "step-start" }, { text, type: "text" }],

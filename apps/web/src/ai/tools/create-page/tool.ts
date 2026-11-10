@@ -11,7 +11,7 @@ Infer a concise, accurate title from an actual creation request and ask for clar
 
 If the user asks to create and write in the same request, chain this tool immediately with write. The application binds writing to the new page automatically.
 
-Do not call navigation tools after this tool; page navigation is handled automatically after creation.`,
+Page navigation is handled automatically after creation. If editorReady is true, do not call navigation tools. If editorReady is false, the page was still created successfully: call navigatePage with the returned page ID to wait for that same editor, then write. Never create a replacement page to recover from a loading delay.`,
   id: "create-page",
   inputSchema: zCreatePageInput,
   outputSchema: z.void(),

@@ -119,7 +119,7 @@ export class DocumentEditTarget {
 
   constructor(
     private readonly editor: Editor,
-    private readonly kind: Kind,
+    readonly kind: Kind,
     range: Range,
   ) {
     this.current = { ...range };

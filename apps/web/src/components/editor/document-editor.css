@@ -18,12 +18,12 @@
   margin-bottom: 24px;
 }
 
-.journl-document-editor .better-editor-tiptap-host {
+.journl-document-editor > .better-editor-tiptap-host {
   margin-top: 24px;
 }
 
 @media (min-width: 768px) {
-  .journl-document-editor .better-editor-tiptap-host {
+  .journl-document-editor > .better-editor-tiptap-host {
     margin-top: 32px;
   }
 }
@@ -32,4 +32,49 @@
 .better-editor-formatting-toolbar.journl-editor-toolbar {
   border-color: var(--sidebar-border);
   border-radius: var(--radius);
+}
+
+/* AI writing uses the document surface. Mutation controls stay hidden while locked. */
+.journl-document-editor[data-ai-writing]
+:is([data-better-editor-toolbar-mode], [data-tiptap-controls]) {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+/* The read-only AI preview keeps the editable surface's table gutters. */
+.journl-document-editor[data-ai-writing] .better-editor-table-wrapper {
+  margin-inline: 12px 56px;
+  max-width: calc(100% - 68px);
+}
+
+/* The rotating primary-color highlight stays inside the badge border. */
+.journl-ai-writing-badge[data-ai-edit-status="generating"] {
+  isolation: isolate;
+  overflow: hidden;
+}
+.journl-ai-writing-badge[data-ai-edit-status="generating"]::before {
+  content: "";
+  position: absolute;
+  inset: -200%;
+  z-index: -2;
+  background: conic-gradient(transparent 65%, var(--primary) 85%, transparent);
+  animation: journl-ai-border 4s linear infinite;
+}
+.journl-ai-writing-badge[data-ai-edit-status="generating"]::after {
+  content: "";
+  position: absolute;
+  inset: 1px;
+  z-index: -1;
+  border-radius: inherit;
+  background: var(--popover);
+}
+@keyframes journl-ai-border {
+  to {
+    transform: rotate(1turn);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .journl-ai-writing-badge[data-ai-edit-status="generating"]::before {
+    animation: none;
+  }
 }

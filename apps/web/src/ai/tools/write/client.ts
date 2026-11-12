@@ -1,151 +1,51 @@
 "use client";
-
-import { useDrawer } from "@acme/ui/drawer";
-import { stripOpenAICitationTokens } from "~/ai/utils/openai-utils";
-import type { BlockNoteRequest } from "~/app/api/ai/blocknote/route";
-import { env } from "~/env";
-import { useJournlAgent } from "../../../hooks/use-journl-agent";
+import { getLastUserMessage } from "~/ai/mastra/agents/journl-agent-intent";
+import { getOpenAIReasoningEffort } from "~/ai/mastra/agents/journl-agent-reasoning";
+import { getWritingContext } from "~/ai/writing-context";
+import { useJournlAgent } from "~/hooks/use-journl-agent";
 import { createClientTool } from "../../utils/create-client-tool";
-import {
-  followJournlAgent,
-  getAIExtension,
-  getEditor,
-  openAIMenu,
-} from "../common/blocknote-utils";
 import { zWriteInput } from "./schema";
 
 export function useWriteTool() {
-  const { getEditors, getEditorSelections } = useJournlAgent();
-  const { closeDrawer } = useDrawer();
-  const tool = createClientTool({
+  const { getEditors, getEditTarget, getReasoning, claimWriteRun } =
+    useJournlAgent();
+  return createClientTool({
     execute: async (toolCall, chat) => {
-      let cleanUpBeforeChange: CallableFunction | undefined;
-
-      if (env.NODE_ENV === "development") {
-        console.debug("[useWriteTool]", {
-          input: toolCall.input,
-        });
-      }
-
-      try {
-        const editor = getEditor(toolCall.input.targetEditor)(getEditors);
-        const aiExtension = getAIExtension(editor);
-
-        closeDrawer();
-
-        cleanUpBeforeChange = followJournlAgent(editor, {
-          onEditorChange: () => {
-            closeDrawer();
-          },
-        });
-
-        openAIMenu(editor, aiExtension);
-
-        const selectionCount = getEditorSelections(editor).length;
-
-        await aiExtension.invokeAI({
-          chatRequestOptions: {
-            body: {
-              reasoningEffort: toolCall.input.reasoningEffort ?? "minimal",
-            } satisfies Pick<BlockNoteRequest, "reasoningEffort">,
-          },
-          deleteEmptyCursorBlock: false,
-          userPrompt: stripOpenAICitationTokens(toolCall.input.agentPrompt),
-          useSelection: selectionCount > 0,
-        });
-
-        const { aiMenuState } = aiExtension.store.state;
-
-        if (env.NODE_ENV === "development") {
-          console.debug("[aiMenuState]", {
-            aiMenuState,
-          });
-        }
-
-        if (aiMenuState === "closed") {
-          void chat.addToolOutput({
-            output: {
-              message:
-                "Finished without a reviewable draft. Suggest retry with a clearer editing instruction.",
-              status: "no-draft",
-            },
-            tool: toolCall.toolName,
-            toolCallId: toolCall.toolCallId,
-          });
-          return;
-        }
-
-        if (aiMenuState.status === "error") {
-          void chat.addToolOutput({
-            output: {
-              message: `Failed before producing a complete draft: ${toErrorMessage(aiMenuState.error)}`,
-              status: "error",
-            },
-            tool: toolCall.toolName,
-            toolCallId: toolCall.toolCallId,
-          });
-          return;
-        }
-
-        if (aiMenuState.status !== "user-reviewing") {
-          void chat.addToolOutput({
-            output: {
-              message: `Finished with unexpected state \`${aiMenuState.status}\` and did not produce a reviewable draft.`,
-              status: "unexpected-state",
-            },
-            tool: toolCall.toolName,
-            toolCallId: toolCall.toolCallId,
-          });
-          return;
-        }
-
+      if (!claimWriteRun()) {
         void chat.addToolOutput({
           output: {
-            message: "Draft ready. Please accept changes or reject changes.",
-            status: "draft-ready",
-          },
-          tool: toolCall.toolName,
-          toolCallId: toolCall.toolCallId,
-        });
-      } catch (error) {
-        if (env.NODE_ENV === "development") {
-          console.debug("[error]", {
-            error,
-          });
-        }
-
-        void chat.addToolOutput({
-          output: {
-            error,
-            message: `Error when calling the tool: ${toErrorMessage(error)}`,
+            message:
+              "This user request already used its writing run. Do not call write again. Report the original write result. This applies only to this request; a new user request permits another run.",
             status: "error",
           },
           tool: toolCall.toolName,
           toolCallId: toolCall.toolCallId,
         });
-      } finally {
-        cleanUpBeforeChange?.();
+        return;
       }
+      const target = getEditTarget();
+      const entry =
+        target && getEditors().get(target.id) === target ? target : undefined;
+      const output = entry
+        ? await entry.session.run({
+            conversation: getWritingContext(chat.messages),
+            instruction: getLastUserMessage(chat.messages),
+            reasoningEffort: getOpenAIReasoningEffort(getReasoning()),
+          })
+        : {
+            message:
+              "The active document changed or is not ready. Send your request again from the page you want to edit.",
+            status: "error",
+          };
+      // The SDK processes onToolCall inside its message queue. Awaiting this
+      // queued update here would deadlock that same queue.
+      void chat.addToolOutput({
+        output: { ...output, ...(entry ? { targetEditor: entry.id } : {}) },
+        tool: toolCall.toolName,
+        toolCallId: toolCall.toolCallId,
+      });
     },
     inputSchema: zWriteInput,
     name: "write",
   });
-
-  return tool;
-}
-
-function toErrorMessage(error: unknown) {
-  if (error instanceof Error) {
-    return error.message;
-  }
-
-  if (typeof error === "string") {
-    return error;
-  }
-
-  try {
-    return JSON.stringify(error);
-  } catch {
-    return String(error);
-  }
 }

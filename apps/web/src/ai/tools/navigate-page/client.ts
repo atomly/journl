@@ -1,17 +1,35 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useJournlAgent } from "~/hooks/use-journl-agent";
 import { createClientTool } from "../../utils/create-client-tool";
 import { zNavigatePageInput } from "./schema";
 
 export function useNavigatePageTool() {
   const router = useRouter();
+  const { whenEditorReady, prepareEdits } = useJournlAgent();
   const tool = createClientTool({
-    execute: (toolCall, chat) => {
+    execute: async (toolCall, chat) => {
       const page = `/pages/${toolCall.input.id}`;
       router.push(page);
+      try {
+        await whenEditorReady(`page:${toolCall.input.id}`);
+      } catch {
+        void chat.addToolOutput({
+          output: {
+            message: "The target page editor is not ready. Open it and retry.",
+            status: "error",
+          },
+          tool: toolCall.toolName,
+          toolCallId: toolCall.toolCallId,
+        });
+        return;
+      }
+      if (!prepareEdits(`page:${toolCall.input.id}`))
+        throw new Error("The destination changed before writing became ready.");
       void chat.addToolOutput({
         output: {
+          link: page,
           message: "Navigating to the requested page.",
         },
         tool: toolCall.toolName,

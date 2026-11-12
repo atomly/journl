@@ -149,8 +149,13 @@ function blockText(block: DocumentBlock, html: boolean): string {
   }
 }
 export function documentMarkdown(blocks: readonly DocumentBlock[]): string {
+  let ordinal = 0;
   return blocks
     .map((block) => {
+      ordinal =
+        block.type === "numberedListItem"
+          ? (block.props?.start ?? ordinal + 1)
+          : 0;
       let text = blockText(block, false);
       if (block.type === "heading")
         text = `${"#".repeat(block.props?.level ?? 1)} ${text}`;
@@ -161,7 +166,7 @@ export function documentMarkdown(blocks: readonly DocumentBlock[]): string {
           .join("\n");
       const marker =
         block.type === "numberedListItem"
-          ? `${block.props?.start ?? 1}. `
+          ? `${ordinal}. `
           : block.type === "checkListItem"
             ? `- [${block.props?.checked ? "x" : " "}] `
             : block.type === "bulletListItem" || block.type === "toggleListItem"

@@ -104,7 +104,12 @@ export const zBlockData = z.discriminatedUnion("type", [
   inlineBlock("quote", colors),
   inlineBlock("numberedListItem", {
     ...textProps,
-    start: z.number().optional(),
+    start: z
+      .number()
+      .optional()
+      .describe(
+        "Explicit list ordinal. Omit to continue the preceding numbered sibling, or start at 1 after a non-numbered block.",
+      ),
   }),
   inlineBlock("checkListItem", {
     ...textProps,

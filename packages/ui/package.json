@@ -45,7 +45,14 @@
     "./progress": "./src/progress.tsx",
     "./toast": "./src/toast.tsx",
     "./navigation-menu": "./src/navigation-menu.tsx",
-    "./utils": "./src/utils.ts"
+    "./utils": "./src/utils.ts",
+    "./message": "./src/message.tsx",
+    "./bubble": "./src/bubble.tsx",
+    "./trace": "./src/trace.tsx",
+    "./code-block": "./src/code-block.tsx",
+    "./message-scroller": "./src/message-scroller.tsx",
+    "./highlighter": "./src/highlighter.tsx",
+    "./use-highlighted-code": "./src/use-highlighted-code.ts"
   },
   "scripts": {
     "check": "biome check",
@@ -53,6 +60,7 @@
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",
+    "@shadcn/react": "^0.3.1",
     "class-variance-authority": "~0.7.1",
     "clsx": "~2.1.1",
     "cmdk": "~1.1.1",
@@ -61,6 +69,7 @@
     "lucide-react": "~1.55.0",
     "next-themes": "~0.4.6",
     "react-day-picker": "~10.0.2",
+    "shiki": "^4.6.0",
     "sonner": "~2.0.8",
     "tailwind-merge": "~3.7.0",
     "vaul": "~1.1.2"

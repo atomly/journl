@@ -13,6 +13,7 @@
     "./engine/drop-cursor": "./src/engine/drop-cursor.ts",
     "./engine/editor": "./src/engine/editor.ts",
     "./engine/identity": "./src/engine/identity.ts",
+    "./engine/list-numbering": "./src/engine/list-numbering.ts",
     "./engine/metadata": "./src/engine/metadata.ts",
     "./engine/native-block-drag": "./src/engine/native-block-drag.ts",
     "./engine/reference-insertion": "./src/engine/reference-insertion.ts",

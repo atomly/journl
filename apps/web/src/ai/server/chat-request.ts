@@ -7,6 +7,7 @@ import { zJournlAgentContext } from "../mastra/agents/journl-agent-context";
 const requestSchema = z.object({
   context: zJournlAgentContext.omit({ user: true }),
   messages: z.array(z.unknown()).min(1),
+  threadId: z.string().min(1).max(200).optional(),
   trigger: z.enum(["submit-message", "regenerate-message"]).optional(),
 });
 

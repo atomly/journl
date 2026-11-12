@@ -1,173 +1,208 @@
-import type { BlockPrimitive, EditorPrimitive } from "@acme/blocknote/schema";
+import type { Editor } from "@tiptap/core";
+import { usePathname } from "next/navigation";
 import {
   createContext,
   useCallback,
   useContext,
+  useLayoutEffect,
+  useMemo,
   useRef,
-  useState,
 } from "react";
-import type { JournlAgentContext as JournlAgentState } from "~/ai/mastra/agents/journl-agent-context";
+import { DocumentEditSession } from "~/ai/client/document-edit-session";
+import type { JournlAgentContext as AgentState } from "~/ai/mastra/agents/journl-agent-context";
 
-export type BlockSelection = {
-  editor: EditorPrimitive;
-  blockIds: Set<BlockPrimitive["id"]>;
-  blocks: BlockPrimitive[];
-  markdown: string;
-  text: string;
+type EditorId = AgentState["activeEditors"][number];
+type RegisteredEditor = {
+  id: EditorId;
+  editor: Editor;
+  session: DocumentEditSession;
 };
-
-type JournlEditor = {
-  id: JournlAgentState["activeEditors"][number];
-  editor: EditorPrimitive;
+type Awareness = {
+  subscribe: (listener: () => void) => () => void;
+  getRevision: () => number;
+  whenEditorReady: (id: EditorId) => Promise<void>;
+  registerEditor: (
+    id: EditorId,
+    editor: Editor,
+  ) => { session: DocumentEditSession; dispose: () => void };
+  getEditors: () => Map<EditorId, RegisteredEditor>;
+  getEditTarget: () => RegisteredEditor | undefined;
+  getSelections: () => { text: string }[];
+  prepareEdits: (expected?: EditorId) => boolean;
+  cancelEdits: () => void;
+  beginEditRequest: () => void;
+  claimWriteRun: () => boolean;
+  getReasoning: () => AgentState["reasoning"];
+  getView: () => AgentState["view"];
+  setReasoning: (reasoning: AgentState["reasoning"]) => void;
+  setView: (view: AgentState["view"]) => void;
 };
+const JournlAgentContext = createContext<Awareness | null>(null);
 
-const JournlAgentContext = createContext<{
-  unsetEditor: (id: JournlEditor["id"]) => void;
-  unsetEditorSelections: (editor: EditorPrimitive) => void;
-  unsetSelection: (selection: BlockSelection) => void;
-  getEditors: () => Map<JournlEditor["id"], JournlEditor>;
-  getSelection: (
-    selection: Pick<BlockSelection, "editor" | "blockIds">,
-  ) => BlockSelection | undefined;
-  getSelections: () => BlockSelection[];
-  getEditorSelections: (editor: EditorPrimitive) => BlockSelection[];
-  getReasoning: () => JournlAgentState["reasoning"];
-  getView: () => JournlAgentState["view"];
-  setEditor: (activeEditor: JournlEditor) => void;
-  setReasoning: (reasoning: JournlAgentState["reasoning"]) => void;
-  setSelection: (selection: BlockSelection) => void;
-  setView: (view: JournlAgentState["view"]) => void;
-} | null>(null);
-
-type JournlAgentAwarenessProviderProps = {
-  children: React.ReactNode;
-};
-
-/**
- * JournlAgentProvider is a provider that allows the Journl agent to be aware of the current page that the user is interacting with.
- * For example, it allows the agent to be aware of the current state of the editor.
- *
- * @privateRemarks
- * The AI SDK `useChat` parameters are similar to an initial state, so we need to use a reference to access the data.
- * But we also need a state so that the UI can react to changes, so we have a rare hybrid of a reference and a state.
- */
 export function JournlAgentProvider({
   children,
-}: JournlAgentAwarenessProviderProps) {
-  const [, _setReasoning] = useState<JournlAgentState["reasoning"]>("instant");
-  const [, _setSelectedBlocks] = useState<BlockSelection[]>([]);
-  const [, _setView] = useState<JournlAgentState["view"]>({
-    name: "other",
+}: {
+  children: React.ReactNode;
+}) {
+  const pathname = usePathname();
+  const state = useRef({
+    editors: new Map<EditorId, RegisteredEditor>(),
+    editTarget: undefined as RegisteredEditor | undefined,
+    focused: undefined as EditorId | undefined,
+    listeners: new Set<() => void>(),
+    pathname,
+    reasoning: "instant" as AgentState["reasoning"],
+    revision: 0,
+    view: { name: "other" } as AgentState["view"],
+    writeClaimed: true,
   });
-
-  const ref = useRef<{
-    editors: Map<JournlEditor["id"], JournlEditor>;
-    reasoning: JournlAgentState["reasoning"];
-    selectedBlocks: BlockSelection[];
-    view: JournlAgentState["view"];
-  }>({
-    editors: new Map(),
-    reasoning: "instant",
-    selectedBlocks: [],
-    view: {
-      name: "other",
-    },
-  });
-
-  const unsetEditor = useCallback((id: JournlEditor["id"]) => {
-    ref.current.editors.delete(id);
+  const getView = useCallback((): AgentState["view"] => {
+    const { pathname, view } = state.current;
+    const page = pathname?.match(/^\/pages\/([^/]+)\/?$/);
+    if (page)
+      return {
+        id: page[1] ?? "",
+        name: "page",
+        title: view.name === "page" && view.id === page[1] ? view.title : "",
+      };
+    const entry = pathname?.match(/^\/journal\/(\d{4}-\d{2}-\d{2})\/?$/);
+    if (entry) return { date: entry[1] ?? "", name: "journal-entry" };
+    return pathname === "/journal" ? { name: "journal" } : { name: "other" };
   }, []);
-
-  const unsetEditorSelections = useCallback((editor: EditorPrimitive) => {
-    _setSelectedBlocks((prev) => {
-      const newSelectedBlocks = prev.filter((s) => s.editor !== editor);
-      ref.current.selectedBlocks = newSelectedBlocks;
-      return newSelectedBlocks;
-    });
-  }, []);
-
-  const unsetSelection = useCallback((selection: BlockSelection) => {
-    _setSelectedBlocks((prev) => {
-      const newSelectedBlocks = prev.filter((s) => s !== selection);
-      ref.current.selectedBlocks = newSelectedBlocks;
-      return newSelectedBlocks;
-    });
-  }, []);
-
   const getEditors = useCallback(() => {
-    return ref.current.editors;
+    const { editors, focused } = state.current;
+    const view = getView();
+    const id: EditorId | undefined =
+      view.name === "page"
+        ? `page:${view.id}`
+        : view.name === "journal-entry"
+          ? `journal-entry:${view.date}`
+          : view.name === "journal"
+            ? focused
+            : undefined;
+    const entry = id && editors.get(id);
+    return new Map(
+      entry && !entry.editor.isDestroyed ? [[entry.id, entry]] : [],
+    );
+  }, [getView]);
+  const notify = useCallback(() => {
+    state.current.revision++;
+    for (const listener of state.current.listeners) listener();
   }, []);
-
-  const getReasoning = useCallback(() => {
-    return ref.current.reasoning;
-  }, []);
-
-  const getSelection = useCallback(
-    (selection: Pick<BlockSelection, "editor" | "blockIds">) => {
-      return ref.current.selectedBlocks.find(
-        (s) =>
-          s.editor === selection.editor &&
-          Array.from(s.blockIds).every((b) => selection.blockIds.has(b)),
-      );
-    },
-    [],
+  useLayoutEffect(() => {
+    if (state.current.pathname === pathname) return;
+    state.current.pathname = pathname;
+    for (const { session } of state.current.editors.values())
+      if (["prepared", "generating"].includes(session.getSnapshot().status))
+        session.cancel();
+    notify();
+  }, [pathname, notify]);
+  const value = useMemo<Awareness>(
+    () => ({
+      beginEditRequest: () => {
+        state.current.writeClaimed = false;
+      },
+      cancelEdits: () => {
+        state.current.writeClaimed = true;
+        for (const { session } of state.current.editors.values())
+          if (["prepared", "generating"].includes(session.getSnapshot().status))
+            session.cancel();
+      },
+      claimWriteRun: () => {
+        if (state.current.writeClaimed) return false;
+        state.current.writeClaimed = true;
+        return true;
+      },
+      getEditors,
+      getEditTarget: () => state.current.editTarget,
+      getReasoning: () => state.current.reasoning,
+      getRevision: () => state.current.revision,
+      getSelections: () =>
+        Array.from(getEditors().values(), ({ session }) => ({
+          text: session.highlightedText(),
+        })).filter(({ text }) => text),
+      getView,
+      prepareEdits: (expected) => {
+        const editors = getEditors();
+        state.current.editTarget = expected
+          ? editors.get(expected)
+          : editors.values().next().value;
+        if (!state.current.editTarget) return false;
+        for (const { session } of [state.current.editTarget]) {
+          try {
+            session.prepare();
+          } catch {
+            /* The write tool reports unsupported selections without blocking read-only chat. */
+          }
+        }
+        return true;
+      },
+      registerEditor: (id, editor) => {
+        const session = new DocumentEditSession(editor, id);
+        const entry = { editor, id, session };
+        state.current.editors.set(id, entry);
+        const focus = () => {
+          state.current.focused = id;
+          notify();
+        };
+        editor.on("focus", focus);
+        editor.on("selectionUpdate", notify);
+        notify();
+        return {
+          dispose: () => {
+            editor.off("focus", focus);
+            editor.off("selectionUpdate", notify);
+            session.destroy();
+            if (state.current.editors.get(id) === entry)
+              state.current.editors.delete(id);
+            notify();
+          },
+          session,
+        };
+      },
+      setReasoning: (reasoning) => {
+        state.current.reasoning = reasoning;
+        notify();
+      },
+      setView: (view) => {
+        state.current.view = view;
+        notify();
+      },
+      subscribe: (listener) => {
+        state.current.listeners.add(listener);
+        return () => {
+          state.current.listeners.delete(listener);
+        };
+      },
+      whenEditorReady: (id) =>
+        new Promise<void>((resolve, reject) => {
+          let timer: ReturnType<typeof setTimeout>;
+          const cleanup = () => {
+            clearTimeout(timer);
+            state.current.listeners.delete(check);
+          };
+          const check = () => {
+            if (getEditors().has(id)) {
+              cleanup();
+              resolve();
+            }
+          };
+          timer = setTimeout(() => {
+            cleanup();
+            reject(
+              new Error(
+                "The new page editor did not become ready. Open the page and retry.",
+              ),
+            );
+          }, 15000);
+          state.current.listeners.add(check);
+          check();
+        }),
+    }),
+    [getEditors, getView, notify],
   );
-
-  const getAllSelections = useCallback(() => {
-    return ref.current.selectedBlocks;
-  }, []);
-
-  const getEditorSelections = useCallback((editor: EditorPrimitive) => {
-    return ref.current.selectedBlocks.filter((s) => s.editor === editor);
-  }, []);
-
-  const getView = useCallback(() => {
-    return ref.current.view;
-  }, []);
-
-  const setEditor = useCallback((activeEditor: JournlEditor) => {
-    ref.current.editors.set(activeEditor.id, activeEditor);
-  }, []);
-
-  const setSelection = useCallback((selection: BlockSelection) => {
-    _setSelectedBlocks((prev) => {
-      const newSelectedBlocks = [...prev, selection];
-      ref.current.selectedBlocks = newSelectedBlocks;
-      return newSelectedBlocks;
-    });
-  }, []);
-
-  const setReasoning = useCallback(
-    (reasoning: JournlAgentState["reasoning"]) => {
-      ref.current.reasoning = reasoning;
-      _setReasoning(reasoning);
-    },
-    [],
-  );
-
-  const setView = useCallback((view: JournlAgentState["view"]) => {
-    ref.current.view = view;
-    _setView(view);
-  }, []);
-
   return (
-    <JournlAgentContext.Provider
-      value={{
-        getEditorSelections,
-        getEditors,
-        getReasoning,
-        getSelection,
-        getSelections: getAllSelections,
-        getView,
-        setEditor,
-        setReasoning,
-        setSelection,
-        setView: setView,
-        unsetEditor,
-        unsetEditorSelections,
-        unsetSelection,
-      }}
-    >
+    <JournlAgentContext.Provider value={value}>
       {children}
     </JournlAgentContext.Provider>
   );
@@ -175,8 +210,6 @@ export function JournlAgentProvider({
 
 export function useJournlAgent() {
   const context = useContext(JournlAgentContext);
-  if (!context) {
-    throw new Error("JournlAgentContext not found");
-  }
+  if (!context) throw new Error("JournlAgentContext not found");
   return context;
 }

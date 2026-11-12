@@ -1,18 +1,5 @@
-import { ComposerPrimitive, ThreadPrimitive } from "@assistant-ui/react";
-import {
-  ComposerAction,
-  ComposerInput,
-  ComposerQuotaNotice,
-  ThreadScrollToBottom,
-} from "~/components/assistant-ui/thread-components";
-import {
-  ComposerReasoning,
-  ComposerReasoningContent,
-  ComposerReasoningTrigger,
-} from "~/components/assistant-ui/thread-context";
-import { ThreadMessages } from "~/components/assistant-ui/thread-messages";
-import { ComposerSources } from "~/components/assistant-ui/thread-sources";
-import { ThreadWelcome } from "~/components/assistant-ui/thread-welcome";
+import { ChatPanel } from "~/components/chat/chat-panel";
+import { ChatWelcome } from "~/components/chat/welcome";
 import { Sidebar, SidebarContent } from "~/components/ui/sidebar";
 import {
   CHAT_SIDEBAR_WIDTH_REM_DEFAULT,
@@ -23,11 +10,6 @@ import {
 const CHAT_SIDEBAR_DEFAULT_WIDTH = `${CHAT_SIDEBAR_WIDTH_REM_DEFAULT}rem`;
 const CHAT_SIDEBAR_MIN_WIDTH = `${CHAT_SIDEBAR_WIDTH_REM_MIN}rem`;
 const CHAT_SIDEBAR_WIDTH_MAX = `${CHAT_SIDEBAR_WIDTH_REM_MAX}rem`;
-const CHAT_THREAD_MIN_WIDTH = "18rem"; // Leave 2rem for the padding.
-const CHAT_THREAD_MAX_WIDTH = "50rem";
-const CHAT_SIDEBAR_REASONING_CONTENT_ID =
-  "chat-sidebar-reasoning-select-content";
-
 export default function ChatSidebar() {
   return (
     <Sidebar
@@ -39,52 +21,8 @@ export default function ChatSidebar() {
       minWidth={CHAT_SIDEBAR_MIN_WIDTH}
       maxWidth={CHAT_SIDEBAR_WIDTH_MAX}
     >
-      <SidebarContent className="overflow-x-hidden">
-        <ThreadPrimitive.Root
-          className="relative box-border flex h-full flex-col overflow-hidden pt-2"
-          style={{
-            minWidth: CHAT_THREAD_MIN_WIDTH,
-            ["--thread-max-width" as string]: CHAT_THREAD_MAX_WIDTH,
-            ["--thread-min-width" as string]: CHAT_THREAD_MIN_WIDTH,
-          }}
-        >
-          <ThreadPrimitive.Viewport className="flex h-full flex-col items-center overflow-y-scroll scroll-smooth bg-inherit px-4">
-            <ThreadWelcome />
-
-            <ThreadMessages />
-
-            <ThreadPrimitive.If empty={false}>
-              <div className="min-h-8 grow" />
-            </ThreadPrimitive.If>
-
-            <div className="sticky bottom-0 mt-3 flex w-full max-w-(--thread-max-width) flex-col items-center justify-end rounded-t-lg bg-sidebar pb-4">
-              <ThreadScrollToBottom />
-              <ComposerPrimitive.Root className="relative flex w-full flex-col rounded-lg border border-sidebar-border/80 bg-muted/45 focus-within:border-ring/20">
-                <div className="relative space-y-2 rounded-tl-lg rounded-tr-lg bg-background pt-2">
-                  <ComposerSources className="px-2" />
-                  <ComposerQuotaNotice />
-                  <ComposerInput className="min-h-24 w-full px-3 py-2" />
-                </div>
-
-                <div className="flex min-w-0 flex-row justify-between border-sidebar-border/70 border-t p-2">
-                  <ComposerReasoning>
-                    <ComposerReasoningTrigger
-                      aria-controls={CHAT_SIDEBAR_REASONING_CONTENT_ID}
-                    />
-                    <ComposerReasoningContent
-                      id={CHAT_SIDEBAR_REASONING_CONTENT_ID}
-                    />
-                  </ComposerReasoning>
-                  <ComposerAction
-                    tooltip="Send message"
-                    variant="outline"
-                    className="size-9 rounded-lg border-primary/70! bg-background!"
-                  />
-                </div>
-              </ComposerPrimitive.Root>
-            </div>
-          </ThreadPrimitive.Viewport>
-        </ThreadPrimitive.Root>
+      <SidebarContent className="overflow-hidden">
+        <ChatPanel welcome={<ChatWelcome />} />
       </SidebarContent>
     </Sidebar>
   );

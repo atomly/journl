@@ -1,10 +1,20 @@
 import { NodeRangeSelection } from "@tiptap/extension-node-range";
+import { GapCursor } from "@tiptap/pm/gapcursor";
+import type { Node } from "@tiptap/pm/model";
 import {
   type EditorState,
   TextSelection,
   type Transaction,
 } from "@tiptap/pm/state";
 import { blockAt } from "./identity";
+
+/** Native bookmark resolution validates the gap and rejects unsupported positions. */
+export function gapCursorAtEnd(doc: Node): GapCursor | undefined {
+  const selection = new GapCursor(doc.resolve(doc.content.size))
+    .getBookmark()
+    .resolve(doc);
+  return selection instanceof GapCursor ? selection : undefined;
+}
 
 /** Replacing a body or the document cannot map text offsets through deleted
  * positions. Anchor each endpoint to the stable block that owns its text. */

@@ -1,6 +1,5 @@
 import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
-import { env } from "~/env";
 import { api } from "~/trpc/server";
 
 export const semanticJournalSearch = createTool({
@@ -21,7 +20,7 @@ Use when the user asks to:
       content: result.chunk_markdown_text,
       date: result.date,
       document_id: result.document_id,
-      link: `${env.PUBLIC_WEB_URL}/journal/${result.date}`,
+      link: `/journal/${result.date}`,
       similarity: result.similarity,
     }));
   },

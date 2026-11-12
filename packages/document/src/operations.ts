@@ -29,6 +29,20 @@ export const zDocumentOperation = z.discriminatedUnion("type", [
 ]);
 export type DocumentOperation = z.infer<typeof zDocumentOperation>;
 
+export class DocumentOperationError extends Error {
+  constructor(
+    readonly index: number,
+    readonly operation: DocumentOperation["type"],
+    cause: unknown,
+  ) {
+    super(
+      `Operation ${index} (${operation}): ${cause instanceof Error ? cause.message : "Invalid operation"}`,
+      { cause },
+    );
+    this.name = "DocumentOperationError";
+  }
+}
+
 /** Immutable headless edits; all operations succeed together or leave input intact. */
 export function applyDocumentOperations(
   input: readonly DocumentBlock[],
@@ -61,49 +75,53 @@ export function applyDocumentOperations(
     }
     return undefined;
   }
-  for (const operation of validated) {
-    if (operation.type === "remove") {
-      const target = locate(operation.id);
-      target.siblings.splice(target.index, 1);
-      continue;
+  for (const [indexInBatch, operation] of validated.entries()) {
+    try {
+      if (operation.type === "remove") {
+        const target = locate(operation.id);
+        target.siblings.splice(target.index, 1);
+        continue;
+      }
+      if (operation.type === "update") {
+        const target = locate(operation.id);
+        target.siblings[target.index] = parseBlock({
+          ...operation.data,
+          children: target.block.children,
+          id: operation.id,
+        });
+        continue;
+      }
+      let block: DocumentBlock;
+      if (operation.type === "move") {
+        const target = locate(operation.id);
+        // Reject self/descendant moves before changing the tree.
+        if (
+          operation.parentId === target.block.id ||
+          (operation.parentId &&
+            find(operation.parentId, target.block.children ?? []))
+        )
+          throw new Error("Cannot move a block into itself");
+        if (operation.afterId === operation.id)
+          throw new Error("Cannot position a block after itself");
+        block = target.block;
+        target.siblings.splice(target.index, 1);
+      } else block = parseBlock(operation.block);
+      let siblings = blocks;
+      if (operation.parentId !== null) {
+        const parent = locate(operation.parentId).block;
+        parent.children ??= [];
+        siblings = parent.children;
+      }
+      const index =
+        operation.afterId === null
+          ? 0
+          : siblings.findIndex((item) => item.id === operation.afterId) + 1;
+      if (operation.afterId !== null && index === 0)
+        throw new Error("Predecessor is not in the destination sibling group");
+      siblings.splice(index, 0, block);
+    } catch (error) {
+      throw new DocumentOperationError(indexInBatch, operation.type, error);
     }
-    if (operation.type === "update") {
-      const target = locate(operation.id);
-      target.siblings[target.index] = parseBlock({
-        ...operation.data,
-        children: target.block.children,
-        id: operation.id,
-      });
-      continue;
-    }
-    let block: DocumentBlock;
-    if (operation.type === "move") {
-      const target = locate(operation.id);
-      // Reject self/descendant moves before changing the tree.
-      if (
-        operation.parentId === target.block.id ||
-        (operation.parentId &&
-          find(operation.parentId, target.block.children ?? []))
-      )
-        throw new Error("Cannot move a block into itself");
-      if (operation.afterId === operation.id)
-        throw new Error("Cannot position a block after itself");
-      block = target.block;
-      target.siblings.splice(target.index, 1);
-    } else block = parseBlock(operation.block);
-    let siblings = blocks;
-    if (operation.parentId !== null) {
-      const parent = locate(operation.parentId).block;
-      parent.children ??= [];
-      siblings = parent.children;
-    }
-    const index =
-      operation.afterId === null
-        ? 0
-        : siblings.findIndex((item) => item.id === operation.afterId) + 1;
-    if (operation.afterId !== null && index === 0)
-      throw new Error("Predecessor is not in the destination sibling group");
-    siblings.splice(index, 0, block);
   }
   documentRows(blocks); // Reject duplicate identities, including nested insertions.
   return blocks;

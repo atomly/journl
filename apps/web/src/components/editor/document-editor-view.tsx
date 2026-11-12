@@ -51,6 +51,7 @@ type DocumentEditorProps = {
   onCommit?: EditorCommit;
   className?: string;
   children?: React.ReactNode;
+  afterContent?: React.ReactNode;
   references?: ReferenceClient;
   services?: DocumentEditorServices;
   editable?: boolean;
@@ -75,6 +76,7 @@ function EditorView({
   onCommit,
   className,
   children,
+  afterContent,
   editable = Boolean(onCommit),
   resetKey,
   onReady,
@@ -135,6 +137,7 @@ function EditorView({
         editor={editor}
         className="better-editor-tiptap-host"
       />
+      {afterContent}
       {editable &&
         editor &&
         !error &&

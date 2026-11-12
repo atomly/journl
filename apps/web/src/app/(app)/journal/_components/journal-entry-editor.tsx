@@ -177,6 +177,7 @@ export function JournalEntryEditor(props: JournalEntryEditorProps) {
     >
       <ConnectedDocumentEditor
         key={snapshot.resetKey}
+        agentEditorId={`journal-entry:${date}`}
         initialBlocks={snapshot.blocks}
         className={props.className}
         onCommit={(blocks, operations) => {

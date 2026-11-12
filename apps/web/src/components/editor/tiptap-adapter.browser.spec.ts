@@ -33,15 +33,8 @@ test("the actual page route loads every inventory block without an editor opt-in
   await expect(
     editor.locator('[data-better-editor-body="contentEmbed"]'),
   ).toHaveCount(1);
-  await page.context().addCookies([
-    {
-      name: "journl-editor",
-      url: "http://127.0.0.1:3100",
-      value: "blocknote",
-    },
-  ]);
   await page.goto(`/pages/${fixtureId(980)}`);
-  await expect(page.locator(".bn-editor")).toHaveCount(0);
+  await expect(editor).toHaveCount(1);
   await expect(editor).toContainText("Styled writing 世界");
 });
 

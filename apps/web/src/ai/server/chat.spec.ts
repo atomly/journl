@@ -1,9 +1,12 @@
+import { RequestContext } from "@mastra/core/request-context";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   miniModel: vi.fn(async () => ({ modelId: "mini", provider: "openai" })),
   nanoModel: vi.fn(async () => ({ modelId: "nano", provider: "openai" })),
+  recall: vi.fn(),
   stream: vi.fn(),
+  thread: vi.fn(),
   usage: vi.fn(),
 }));
 vi.mock("server-only", () => ({}));
@@ -12,9 +15,16 @@ vi.mock("~/ai/mastra/agents/journl-agent", () => ({
   getJournlUserThread: (user: { id: string }) => `journl:${user.id}`,
   journlMini: { getModel: mocks.miniModel, id: "journl-mini" },
   journlNano: { getModel: mocks.nanoModel, id: "journl-nano" },
-  setJournlRequestContext: (context: unknown) => context,
+  setJournlRequestContext: (context: unknown) => {
+    const result = new RequestContext();
+    result.set("journl_agent", context);
+    return result;
+  },
 }));
 vi.mock("~/ai/mastra/mastra", () => ({ mastra: {} }));
+vi.mock("~/ai/mastra/memory/memory", () => ({
+  journlMemory: { getThreadById: mocks.thread, recall: mocks.recall },
+}));
 vi.mock("~/env", () => ({ env: { NODE_ENV: "test" } }));
 vi.mock("~/workflows/model-usage", () => ({ startModelUsage: mocks.usage }));
 
@@ -71,13 +81,21 @@ describe("authenticated chat run", () => {
           abortSignal: signal,
           maxSteps: 5,
           memory: { resource: "owner", thread: "journl:owner" },
-          requestContext: { ...context, user: { name: "Real user" } },
+          requestContext: expect.any(RequestContext),
           toolCallConcurrency: 4,
         }),
         sendSources: true,
         version: "v7",
       }),
     );
+    const requestContext =
+      mocks.stream.mock.calls[0]?.[0].params.requestContext;
+    expect(requestContext.get("researchUserId")).toBe(user.id);
+    expect(requestContext.get("researchCache")).toBeInstanceOf(Map);
+    expect(requestContext.get("journl_agent")).toEqual({
+      ...context,
+      user: { name: user.name },
+    });
     const onError = mocks.stream.mock.calls[0]?.[0].onError;
     expect(onError(new Error("secret-provider-payload"))).not.toContain(
       "secret",
@@ -105,9 +123,9 @@ describe("authenticated chat run", () => {
     expect(options.params.providerOptions.openai.reasoningEffort).toBe(
       "medium",
     );
-    await options.params.onFinish({
-      steps: [],
-      totalUsage: { inputTokens: 10, outputTokens: 20, reasoningTokens: 3 },
+    await options.params.onStepFinish({
+      toolResults: [],
+      usage: { inputTokens: 10, outputTokens: 20, reasoningTokens: 3 },
     });
     expect(mocks.usage).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -122,4 +140,157 @@ describe("authenticated chat run", () => {
       }),
     );
   });
+
+  it("accounts for each step and its searches once using the reported model", async () => {
+    const request = await parseJournlChatRequest({
+      context,
+      messages: [
+        {
+          id: "1",
+          parts: [{ text: "Rewrite this", type: "text" }],
+          role: "user",
+        },
+      ],
+    });
+    await streamJournlChat({
+      request,
+      signal: new AbortController().signal,
+      user,
+    });
+    const params = mocks.stream.mock.calls[0]?.[0].params;
+    const model = { modelId: "actual-model", provider: "actual-provider" };
+    await params.onStepFinish({
+      model,
+      toolResults: [
+        {
+          payload: {
+            result: { findings: "Verified finding", sources: [] },
+            toolName: "web_search",
+          },
+        },
+        {
+          payload: {
+            result: { action: { type: "open_page" } },
+            toolName: "web_search",
+          },
+        },
+      ],
+      usage: { inputTokens: 10, outputTokens: 20, reasoningTokens: 3 },
+    });
+    await params.onStepFinish({
+      model,
+      toolResults: [],
+      usage: { inputTokens: 4, outputTokens: 5 },
+    });
+    await params.onFinish?.({
+      steps: [],
+      totalUsage: { inputTokens: 14, outputTokens: 25, reasoningTokens: 3 },
+    });
+    expect(params.onFinish).toBeUndefined();
+    expect(mocks.usage.mock.calls).toEqual([
+      [
+        {
+          metrics: [
+            { quantity: 10, unit: "input_tokens" },
+            { quantity: 20, unit: "output_tokens" },
+            { quantity: 3, unit: "reasoning_tokens" },
+          ],
+          modelId: "actual-model",
+          modelProvider: "actual-provider",
+          userId: "owner",
+        },
+      ],
+      [
+        {
+          metrics: [
+            { quantity: 4, unit: "input_tokens" },
+            { quantity: 5, unit: "output_tokens" },
+            { quantity: 0, unit: "reasoning_tokens" },
+          ],
+          modelId: "actual-model",
+          modelProvider: "actual-provider",
+          userId: "owner",
+        },
+      ],
+    ]);
+    expect(mocks.miniModel).not.toHaveBeenCalled();
+  });
+});
+
+it("authorizes the selected branch before sending it to the native stream", async () => {
+  const request = await parseJournlChatRequest({
+    context,
+    messages: [
+      { id: "1", parts: [{ text: "Hello", type: "text" }], role: "user" },
+    ],
+    threadId: "owned-branch",
+  });
+  mocks.thread.mockResolvedValue({
+    id: "owned-branch",
+    metadata: { chatRoot: "journl:owner" },
+    resourceId: user.id,
+  });
+  await streamJournlChat({
+    request,
+    signal: new AbortController().signal,
+    user,
+  });
+  expect(mocks.stream).toHaveBeenCalledWith(
+    expect.objectContaining({
+      params: expect.objectContaining({
+        memory: { resource: user.id, thread: "owned-branch" },
+      }),
+    }),
+  );
+  mocks.stream.mockClear();
+  mocks.thread.mockResolvedValue({
+    id: "owned-branch",
+    metadata: { chatRoot: "journl:owner" },
+    resourceId: "other",
+  });
+  await expect(
+    streamJournlChat({ request, signal: new AbortController().signal, user }),
+  ).rejects.toMatchObject({ code: "NOT_FOUND" });
+  expect(mocks.stream).not.toHaveBeenCalled();
+});
+
+it("keeps search routing on a latest-only client-tool continuation using canonical memory", async () => {
+  mocks.recall.mockResolvedValue({
+    messages: [
+      {
+        content: { parts: [{ text: "Rewrite this paragraph", type: "text" }] },
+        role: "user",
+      },
+      {
+        content: { parts: [{ text: "Find my notes", type: "text" }] },
+        role: "user",
+      },
+    ],
+  });
+  const request = await parseJournlChatRequest({
+    context,
+    messages: [
+      {
+        id: "assistant-tool",
+        parts: [
+          {
+            input: { id: "a-page" },
+            output: { message: "Opened page" },
+            state: "output-available",
+            toolCallId: "navigate",
+            type: "tool-navigatePage",
+          },
+        ],
+        role: "assistant",
+      },
+    ],
+  });
+  await streamJournlChat({
+    request,
+    signal: new AbortController().signal,
+    user,
+  });
+  expect(mocks.stream).toHaveBeenCalledWith(
+    expect.objectContaining({ agentId: "journl-nano" }),
+  );
 });

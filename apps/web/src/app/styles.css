@@ -1,6 +1,5 @@
 @import "tailwindcss";
 @import "tw-animate-css";
-@import "@assistant-ui/react-markdown/styles/dot.css";
 
 @source "../../**/*.{js,ts,jsx,tsx}";
 @source "../../../../packages/ui/src";

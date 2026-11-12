@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import type { AnyExtension } from "@tiptap/core";
-import { expect, test } from "vitest";
+import { expect, test, vi } from "vitest";
 import {
   AdapterReadError,
   fromTiptapDocument,
@@ -123,6 +123,26 @@ test("consumer presentation replaces an optional feature schema exactly once", (
     expect(fromTiptapDocument(editor.state.doc)).toEqual(
       fromTiptapDocument(toTiptapDocument([table])),
     );
+  } finally {
+    editor.destroy();
+  }
+});
+
+test("editability notifications do not normalize unchanged content into a save", () => {
+  const onCommit = vi.fn();
+  const editor = createDocumentEditor({
+    element: document.createElement("div"),
+    extensions: [],
+    initialBlocks: [{ content: "Existing", id: "a", type: "paragraph" }],
+    onCommit,
+    resolveUrl: async () => ({ items: [] }),
+  });
+  try {
+    editor.setEditable(false);
+    editor.setEditable(true);
+    expect(onCommit).not.toHaveBeenCalled();
+    editor.commands.insertContent("New ");
+    expect(onCommit).toHaveBeenCalledTimes(1);
   } finally {
     editor.destroy();
   }

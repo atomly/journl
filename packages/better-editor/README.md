@@ -248,3 +248,7 @@ Base UI Toolbar supplies keyboard/ARIA composition. Floating UI supplies geometr
 for text selections, virtual anchors, and drag handles. Shared styled primitives
 belong in `@acme/ui`; editor selection behavior belongs here. A triggered popover
 is not interchangeable with a selection-anchored toolbar.
+
+Numbered-list items without `props.start` continue the preceding numbered sibling.
+A different block type starts a new run at 1. An explicit `start`, including 0,
+overrides that item’s ordinal. Display numbering does not rewrite stored props.

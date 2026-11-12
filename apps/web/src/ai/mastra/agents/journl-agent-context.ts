@@ -21,6 +21,14 @@ export const zJournlEditorId = z
 export const zJournlAgentContext = z.object({
   activeEditors: z.array(zJournlEditorId),
   currentDate: z.string(),
+  currentEditor: z
+    .object({
+      empty: z.boolean(),
+      id: zJournlEditorId,
+      textPreview: z.string().max(4000),
+      truncated: z.boolean(),
+    })
+    .optional(),
   highlightedText: z.array(z.string()),
   reasoning: zJournlAgentReasoning,
   user: z.object({

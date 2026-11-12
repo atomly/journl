@@ -1,6 +1,5 @@
 AUTHTOKEN
 biomejs
-blocknote
 cmdk
 envinfo
 hnsw

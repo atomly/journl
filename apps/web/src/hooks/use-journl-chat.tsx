@@ -6,58 +6,65 @@ import {
   lastAssistantMessageIsCompleteWithToolCalls,
   type UIMessage,
 } from "ai";
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useRef, useState } from "react";
+import { getChatRootThreadId } from "~/ai/chat-thread";
 import type { JournlAgentContext } from "~/ai/mastra/agents/journl-agent-context";
-import { useApplyChangesTool } from "~/ai/tools/apply-changes/client";
 import { useCreatePageTool } from "~/ai/tools/create-page/client";
 import { useNavigateJournalEntryTool } from "~/ai/tools/navigate-journal-entry/client";
 import { useNavigatePageTool } from "~/ai/tools/navigate-page/client";
-import { useRejectChangesTool } from "~/ai/tools/reject-changes/client";
 import { useWriteTool } from "~/ai/tools/write/client";
-import type { ClientTool } from "~/ai/utils/create-client-tool";
+import {
+  type ClientTool,
+  InvalidClientToolCall,
+} from "~/ai/utils/create-client-tool";
 import { env } from "~/env";
+import { useChatBranches } from "./use-chat-branches";
 import { useJournlAgent } from "./use-journl-agent";
 
 const JournlChatContext = createContext<{
   chat: Chat<UIMessage>;
+  conversations: ReturnType<typeof useChatBranches>;
 } | null>(null);
 
 type JournlChatProviderProps<Message extends UIMessage = UIMessage> = {
   children: React.ReactNode;
+  owner: string;
 } & Pick<ChatInit<Message>, "messages"> & {
     transport: Pick<HttpChatTransportInitOptions<Message>, "api">;
   };
 
 export function JournlChatProvider({
   children,
+  owner,
   transport,
   messages,
 }: JournlChatProviderProps) {
   const {
     getSelections: getAllSelections,
     getEditors,
+    getEditTarget,
     getView,
     getReasoning,
+    prepareEdits,
+    beginEditRequest,
+    cancelEdits,
   } = useJournlAgent();
 
   const createPage = useCreatePageTool();
-  const applyChanges = useApplyChangesTool();
   const navigateJournalEntry = useNavigateJournalEntryTool();
   const navigatePage = useNavigatePageTool();
   const write = useWriteTool();
-  const rejectChanges = useRejectChangesTool();
 
+  const thread = useRef(getChatRootThreadId(owner));
   const [chat] = useState(() => {
     const tools = new Map<string, ClientTool<string, Chat<UIMessage>>>([
       [createPage.name, createPage],
-      [applyChanges.name, applyChanges],
       [navigateJournalEntry.name, navigateJournalEntry],
       [navigatePage.name, navigatePage],
       [write.name, write],
-      [rejectChanges.name, rejectChanges],
     ]);
 
-    return new Chat({
+    const instance = new Chat({
       messages,
       onToolCall: async ({ toolCall }) => {
         if (env.NODE_ENV === "development") {
@@ -71,26 +78,61 @@ export function JournlChatProvider({
         if (!tool) {
           return;
         }
-        await tool.execute(toolCall, chat);
+        try {
+          await tool.execute(toolCall, instance);
+        } catch (error) {
+          // Keep invalid arguments and failed client actions in the native tool
+          // lifecycle. Do not await a queued update inside onToolCall.
+          void instance.addToolOutput({
+            errorText:
+              error instanceof InvalidClientToolCall
+                ? error.message
+                : "This action could not complete. Please retry.",
+            state: "output-error",
+            tool: toolCall.toolName,
+            toolCallId: toolCall.toolCallId,
+          });
+        }
       },
       sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithToolCalls,
       transport: new DefaultChatTransport({
         ...transport,
         prepareSendMessagesRequest: ({ id, messages, trigger, messageId }) => {
+          if (messages.at(-1)?.role === "user") {
+            beginEditRequest();
+            prepareEdits();
+          }
           const selections = getAllSelections();
           const view = getView();
+          const current = getEditTarget();
+          const doc = current?.editor.state.doc;
+          const previewEnd = Math.min(doc?.content.size ?? 0, 4000);
 
           return {
             body: {
               context: {
                 activeEditors: Array.from(getEditors().keys()),
                 currentDate: new Date().toLocaleString(),
+                currentEditor:
+                  current && doc
+                    ? {
+                        empty: current.editor.isEmpty,
+                        id: current.id,
+                        textPreview: doc
+                          .textBetween(0, previewEnd, "\n")
+                          .slice(0, 4000),
+                        truncated: doc.content.size > previewEnd,
+                      }
+                    : undefined,
                 highlightedText: selections.map((selection) => selection.text),
                 reasoning: getReasoning(),
                 view,
               } satisfies Omit<JournlAgentContext, "user">,
               messageId,
-              messages,
+              // Mastra owns canonical history. Send only new input or the
+              // current assistant tool continuation, never restored history.
+              messages: messages.slice(-1),
+              threadId: thread.current,
               trigger,
             },
             headers: {
@@ -100,12 +142,21 @@ export function JournlChatProvider({
         },
       }),
     });
+    const stop = instance.stop;
+    instance.stop = async () => {
+      cancelEdits();
+      await stop();
+    };
+    return instance;
   });
+
+  const conversations = useChatBranches(chat, owner, thread);
 
   return (
     <JournlChatContext.Provider
       value={{
         chat,
+        conversations,
       }}
     >
       {children}

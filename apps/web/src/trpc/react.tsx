@@ -32,7 +32,8 @@ const getQueryClient = (owner?: string) => {
   return clientQueryClientSingleton.client;
 };
 
-export const { useTRPC, TRPCProvider } = createTRPCContext<ApiRouter>();
+export const { useTRPC, useTRPCClient, TRPCProvider } =
+  createTRPCContext<ApiRouter>();
 
 export function TRPCReactProvider(props: {
   children: React.ReactNode;

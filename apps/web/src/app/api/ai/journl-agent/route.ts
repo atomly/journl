@@ -3,6 +3,7 @@ import {
   InvalidChatRequest,
   parseJournlChatRequest,
 } from "~/ai/server/chat-request";
+import { ChatThreadError } from "~/ai/server/chat-threads";
 import { handler as corsHandler } from "~/app/api/_cors/cors";
 import { withAuthGuard } from "~/auth/guards";
 import { withUsageGuard } from "~/usage/guards";
@@ -23,6 +24,12 @@ const handler = withAuthGuard(
         const request = await parseJournlChatRequest(body);
         return await streamJournlChat({ request, signal: req.signal, user });
       } catch (error) {
+        if (error instanceof ChatThreadError) {
+          return Response.json(
+            { error: error.message },
+            { status: error.code === "NOT_FOUND" ? 404 : 400 },
+          );
+        }
         if (error instanceof InvalidChatRequest) {
           return Response.json(
             { error: "Invalid chat request" },

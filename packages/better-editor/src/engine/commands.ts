@@ -1,6 +1,11 @@
-import { type DocumentOperation, duplicateBlock } from "@acme/document";
+import {
+  applyDocumentOperations,
+  type DocumentOperation,
+  duplicateBlock,
+} from "@acme/document";
 import { Extension } from "@tiptap/core";
 import { NodeRangeSelection } from "@tiptap/extension-node-range";
+import { GapCursor, gapCursor } from "@tiptap/pm/gapcursor";
 import { closeHistory, history, redo, undo } from "@tiptap/pm/history";
 import {
   EditorState,
@@ -12,7 +17,7 @@ import {
 import { fromTiptapDocument, toTiptapDocument } from "../serialization/tiptap";
 import { blockAt, type IdFactory, joinBlocks, splitBlock } from "./identity";
 import { TOGGLE_BLOCK_META } from "./metadata";
-import { restoreBlockSelection } from "./selection";
+import { gapCursorAtEnd, restoreBlockSelection } from "./selection";
 
 export function selectedBlock(state: Pick<EditorState, "doc" | "selection">) {
   const { $from } = state.selection;
@@ -372,7 +377,19 @@ export function editingExtension(createId: IdFactory) {
     addKeyboardShortcuts() {
       const enter = () => {
         const { state, view } = this.editor;
-        if (view.composing) return false;
+        if (view.composing || !this.editor.isEditable) return false;
+        if (state.selection instanceof GapCursor) {
+          const wrapper = state.schema.nodes.betterEditorBlock;
+          const paragraph = state.schema.nodes.paragraph;
+          if (!wrapper || !paragraph) return false;
+          const pos = state.selection.from;
+          const tr = state.tr.insert(
+            pos,
+            wrapper.createChecked({ id: createId() }, paragraph.create()),
+          );
+          view.dispatch(tr.setSelection(TextSelection.create(tr.doc, pos + 2)));
+          return true;
+        }
         const target = selectedBlock(state);
         if (!target) return false;
         if (
@@ -520,7 +537,11 @@ export function editingExtension(createId: IdFactory) {
         Tab: () => indent(false),
       };
     },
-    addProseMirrorPlugins: () => [history()],
+    addProseMirrorPlugins: () => [history(), gapCursor()],
+    extendNodeSchema: (extension) =>
+      ["doc", "betterEditorChildren"].includes(extension.name)
+        ? { allowGapCursor: true }
+        : {},
     name: "better-editor-editing",
     priority: 1000,
   });
@@ -529,10 +550,126 @@ export function editingExtension(createId: IdFactory) {
 /** Accepted proposals use normal document transactions and one isolated undo event. */
 export function applyAcceptedOperations(
   editor: import("@tiptap/core").Editor,
-  operations: DocumentOperation[],
+  operations: readonly DocumentOperation[],
 ) {
-  editor.view.dispatch(editBlocks(editor.state.tr, operations));
+  if (editor.isDestroyed || !editor.isEditable || !operations.length)
+    return false;
+  const before = editor.state;
+  // Validate the entire domain batch and the installed feature schema before
+  // dispatching any steps. A late invalid edit must not commit an earlier one.
+  const expected = toTiptapDocument(
+    applyDocumentOperations(fromTiptapDocument(before.doc), operations),
+    before.schema,
+  );
+  const transaction = editBlocks(before.tr, [...operations]);
+  // Native table edits can leave redundant columnWidths metadata different
+  // from the authoritative cell widths. Compare the stored contract on both
+  // sides when raw nodes differ; never rebuild or rewrite accepted nodes.
+  if (
+    !transaction.doc.eq(expected) &&
+    JSON.stringify(fromTiptapDocument(transaction.doc)) !==
+      JSON.stringify(fromTiptapDocument(expected))
+  )
+    throw new Error(
+      "The editor transaction did not match the validated edit. No changes were applied.",
+    );
+  if (transaction.doc.eq(before.doc)) return false;
+  preserveAcceptedSelection(before, transaction);
+  editor.view.dispatch(transaction);
+  if (editor.isDestroyed) return true;
   editor.view.dispatch(closeHistory(editor.state.tr));
+  return true;
+}
+
+/** Moves retain the user's selection in its stable block, including backwards
+ * ranges. Updated inline bodies retain valid offsets. A deleted caret stays a
+ * caret in nearby text instead of becoming an unintended atom selection. */
+function preserveAcceptedSelection(
+  before: EditorState,
+  transaction: Transaction,
+) {
+  const { selection } = before;
+  if (selection instanceof NodeRangeSelection) {
+    const first = before.doc.nodeAt(selection.from);
+    const last = before.doc.resolve(selection.to).nodeBefore;
+    if (
+      first?.type.name !== "betterEditorBlock" ||
+      last?.type.name !== "betterEditorBlock"
+    )
+      return;
+    try {
+      const start = blockAt(transaction.doc, first.attrs.id);
+      const end = blockAt(transaction.doc, last.attrs.id);
+      if (
+        start.pos > end.pos ||
+        transaction.doc.resolve(start.pos).parent !==
+          transaction.doc.resolve(end.pos).parent
+      )
+        return;
+      const from = start.pos;
+      const to = end.pos + end.node.nodeSize;
+      const backward = selection.anchor > selection.head;
+      transaction.setSelection(
+        NodeRangeSelection.create(
+          transaction.doc,
+          backward ? to : from,
+          backward ? from : to,
+          transaction.doc.resolve(from).depth,
+        ),
+      );
+    } catch {
+      // A removed endpoint has no stable selection to restore.
+    }
+    return;
+  }
+  if (selection instanceof NodeSelection) {
+    if (selection.node.type.name !== "betterEditorBlock") return;
+    try {
+      const block = blockAt(transaction.doc, selection.node.attrs.id);
+      transaction.setSelection(
+        NodeSelection.create(transaction.doc, block.pos),
+      );
+    } catch {
+      // The mapped selection already handles a removed block.
+    }
+    return;
+  }
+  if (!(selection instanceof TextSelection)) return;
+  const restorePoint = (pos: number) => {
+    const point = before.doc.resolve(pos);
+    for (let depth = point.depth; depth > 0; depth--) {
+      const old = point.node(depth);
+      if (old.type.name !== "betterEditorBlock") continue;
+      try {
+        const next = blockAt(transaction.doc, old.attrs.id);
+        if (old.firstChild?.eq(next.node.firstChild ?? next.node))
+          return next.pos + pos - point.before(depth);
+        const body = next.node.firstChild;
+        if (point.depth === depth + 1 && body?.isTextblock)
+          return next.pos + 2 + Math.min(point.parentOffset, body.content.size);
+      } catch {
+        return null;
+      }
+      return null;
+    }
+    return null;
+  };
+  const anchor = restorePoint(selection.anchor);
+  const head = restorePoint(selection.head);
+  if (anchor !== null && head !== null)
+    transaction.setSelection(
+      TextSelection.create(transaction.doc, anchor, head),
+    );
+  else if (selection.empty && !transaction.selection.empty) {
+    const point = transaction.selection.$from;
+    const caret =
+      Selection.findFrom(point, 1, true) ?? Selection.findFrom(point, -1, true);
+    if (caret) transaction.setSelection(caret);
+    else {
+      const gap = gapCursorAtEnd(transaction.doc);
+      if (gap) transaction.setSelection(gap);
+    }
+  }
 }
 
 /** Drag the selected sibling range as complete wrappers, retaining descendants. */

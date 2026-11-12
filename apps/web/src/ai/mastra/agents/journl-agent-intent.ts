@@ -10,17 +10,27 @@ const SEARCH_HINTS = [
   "when did",
   "what did i write",
   "what does",
-  "entries",
-  "entry",
-  "pages",
-  "page",
-  "last week",
-  "last month",
-  "between",
   "summarize my notes",
 ];
 
 const WRITE_HINTS = [
+  "edit",
+  "format",
+  "convert",
+  "fix",
+  "bold",
+  "italic",
+  "update",
+  "append",
+  "replace",
+  "change",
+  "restructure",
+  "reorder",
+  "move",
+  "delete",
+  "remove",
+  "insert",
+  "add",
   "write",
   "draft",
   "rewrite",
@@ -104,28 +114,10 @@ export function inferUserIntent(text: string): JournlIntent {
     return "mixed";
   }
 
-  let searchScore = 0;
-  let writeScore = 0;
-
-  for (const hint of SEARCH_HINTS) {
-    if (normalized.includes(hint)) {
-      searchScore += 2;
-    }
-  }
-
-  for (const hint of WRITE_HINTS) {
-    if (normalized.includes(hint)) {
-      writeScore += 2;
-    }
-  }
-
-  if (writeScore - searchScore >= 2) {
-    return "write";
-  }
-
-  if (searchScore - writeScore >= 2) {
-    return "search";
-  }
-
-  return "mixed";
+  // Model routing is conservative: navigation/search words must not outweigh
+  // an edit request and send mutations to the search-oriented model.
+  const writes = WRITE_HINTS.some((hint) => normalized.includes(hint));
+  const searches = SEARCH_HINTS.some((hint) => normalized.includes(hint));
+  if (writes) return searches ? "mixed" : "write";
+  return searches ? "search" : "mixed";
 }

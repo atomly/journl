@@ -132,7 +132,6 @@ The rest of the components are set by the Tailwind CSS classes, or by our editor
 - Drawer & DrawerTrigger (with its overlay and drag handles) (`z-index`: 4500)
 - Mobile Sidebar Overlay (`z-index`: 4500)
 - Mobile Sidebar (`z-index`: 4501)
-- Mobile BlockNoteFormattingBar (`z-index`: 4000)
 - Editor Options/Drag Handle (`z-index`: 4000)
 - Editor Options/Drag Handle Menu (`z-index`: 4000)
 - Editor Toolbar (`z-index`: 3000)

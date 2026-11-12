@@ -13,6 +13,7 @@ import {
   setTextMark,
 } from "./commands";
 import type { IdFactory } from "./identity";
+import { numberedListOrdinal } from "./list-numbering";
 import { restoreBlockSelection } from "./selection";
 
 const inlineTypes = new Set([
@@ -158,14 +159,13 @@ export function changeBlockType(
   const bookmark = state.selection.getBookmark();
   const tr = state.tr;
   const first = targets[0];
+  if (!first) return null;
   const preceding =
-    first && first.index > 0
-      ? first.siblings.child(first.index - 1).firstChild
-      : null;
+    first.index > 0 ? first.siblings.child(first.index - 1).firstChild : null;
   const start = Number(
     properties?.start ??
       (preceding?.type.name === "numberedListItem"
-        ? Number(preceding.attrs.props?.start ?? 1) + 1
+        ? numberedListOrdinal(first.siblings, first.index - 1) + 1
         : 1),
   );
   // Work backwards so each body is replaced at its original position. Do not

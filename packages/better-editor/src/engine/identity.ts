@@ -235,7 +235,7 @@ export function identityPlugin(createId: IdFactory): Plugin {
   });
 }
 
-/** Split keeps the original ID/children on the left and creates a right sibling. */
+/** Split keeps the original ID on the left; children follow the right sibling. */
 export function splitBlock(
   transaction: Transaction,
   id: string,
@@ -257,12 +257,11 @@ export function splitBlock(
   });
   const left = node.type.createChecked(node.attrs, [
     body.copy(body.content.cut(0, offset)),
+  ]);
+  const right = node.type.createChecked({ id: freshId }, [
+    body.copy(body.content.cut(offset)),
     ...(node.childCount === 2 ? [node.child(1)] : []),
   ]);
-  const right = node.type.createChecked(
-    { id: freshId },
-    body.copy(body.content.cut(offset)),
-  );
   transaction.replaceWith(pos, pos + node.nodeSize, [left, right]);
   return transaction.setSelection(
     TextSelection.create(transaction.doc, pos + left.nodeSize + 2),

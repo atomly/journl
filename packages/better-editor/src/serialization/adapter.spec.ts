@@ -156,8 +156,8 @@ test("split/join preserve surviving identities and children; undo/redo restore e
   const original = editor.state.doc;
   editor.dispatch(splitBlock(editor.state.tr, "a", 3, factory()));
   expect(editor.blocks.map((block) => block.id)).toEqual(["a", "new-1", "b"]);
-  expect(required(editor.blocks[0]).children?.[0]?.id).toBe("child");
-  expect(required(editor.blocks[1]).children).toBeUndefined();
+  expect(required(editor.blocks[0]).children).toBeUndefined();
+  expect(required(editor.blocks[1]).children?.[0]?.id).toBe("child");
   const split = editor.state.doc;
   expect(undo(editor.state, editor.dispatch)).toBe(true);
   expect(editor.state.doc.eq(original)).toBe(true);

@@ -528,3 +528,48 @@ test("block type capabilities inspect selected content without transactions or f
     editor.destroy();
   }
 });
+
+test.each([
+  "paragraph",
+  "bulletListItem",
+  "numberedListItem",
+  "checkListItem",
+  "heading",
+  "quote",
+])("Enter splits %s with descendants following the right sibling", (type) => {
+  for (const offset of [0, 3, 6]) {
+    const child = parseBlock({
+      children: [
+        parseBlock({ content: "deep", id: "grandchild", type: "paragraph" }),
+      ],
+      content: "nested",
+      id: "child",
+      type: "paragraph",
+    });
+    const { editor, key } = setup([
+      parseBlock({ children: [child], content: "abcdef", id: "parent", type }),
+    ]);
+    const originalChildren = fromTiptapDocument(editor.state.doc)[0]?.children;
+    try {
+      editor.view.dispatch(
+        editor.state.tr.setSelection(
+          TextSelection.create(editor.state.doc, 2 + offset),
+        ),
+      );
+      key("Enter");
+      const blocks = fromTiptapDocument(editor.state.doc);
+      expect(blocks.map((block) => block.id)).toEqual(["parent", "fresh-1"]);
+      expect(blocks[0]?.children).toBeUndefined();
+      expect(blocks[1]?.children).toEqual(originalChildren);
+      expect(editor.state.doc.child(0).firstChild?.textContent).toBe(
+        "abcdef".slice(0, offset),
+      );
+      expect(editor.state.doc.child(1).firstChild?.textContent).toBe(
+        "abcdef".slice(offset),
+      );
+      expect(selectedBlock(editor.state)?.id).toBe("fresh-1");
+    } finally {
+      editor.destroy();
+    }
+  }
+});

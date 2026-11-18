@@ -52,7 +52,9 @@
     "./code-block": "./src/code-block.tsx",
     "./message-scroller": "./src/message-scroller.tsx",
     "./highlighter": "./src/highlighter.tsx",
-    "./use-highlighted-code": "./src/use-highlighted-code.ts"
+    "./use-highlighted-code": "./src/use-highlighted-code.ts",
+    "./surface": "./src/surface.tsx",
+    "./materials.css": "./src/materials.css"
   },
   "scripts": {
     "check": "biome check",

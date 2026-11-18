@@ -1,0 +1,74 @@
+/* Opt-in material and accessibility rules. Theme values belong to the consumer. */
+[data-slot="surface"][data-material="paper"] {
+  background: var(--card);
+}
+[data-slot="surface"][data-material="solid"] {
+  background: var(--sidebar);
+}
+[data-slot="surface"][data-material="glass"] {
+  background:
+    linear-gradient(135deg, var(--glass-glint), transparent 52%), var(--glass);
+  border-color: var(--glass-edge);
+  border-bottom-color: var(--glass-lower);
+  box-shadow: var(--depth);
+  backdrop-filter: blur(24px) saturate(1.15);
+}
+.opaque-mode [data-slot="surface"][data-material="glass"] {
+  background: var(--sidebar);
+  backdrop-filter: none;
+}
+@media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
+  [data-slot="surface"][data-material="glass"] {
+    background: var(--sidebar);
+    backdrop-filter: none;
+  }
+}
+@media (pointer: coarse) {
+  [data-slot="button"] {
+    min-width: 44px;
+    min-height: 44px;
+  }
+  [data-slot="input"],
+  [data-slot="textarea"] {
+    min-height: 44px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  :where([data-slot]) {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}
+@media (forced-colors: active) {
+  [data-slot="surface"][data-material] {
+    background: Canvas;
+    color: CanvasText;
+    border-color: CanvasText;
+    box-shadow: none;
+    backdrop-filter: none;
+  }
+  [data-slot="button"],
+  [data-slot="input"],
+  [data-slot="textarea"] {
+    background: ButtonFace;
+    color: ButtonText;
+    border-color: ButtonText;
+  }
+  :where([data-slot]):focus-visible {
+    outline: 3px solid Highlight;
+    outline-offset: 3px;
+  }
+  [data-slot="button"][disabled] {
+    color: GrayText;
+    border-color: GrayText;
+  }
+}
+@media (forced-colors: active) {
+  [data-slot="button"][aria-current],
+  [data-slot="button"][aria-pressed="true"] {
+    background: Highlight;
+    color: HighlightText;
+    forced-color-adjust: none;
+  }
+}

@@ -39,8 +39,10 @@ export function HeaderJournalButton() {
     };
   }, []);
 
-  const formattedDate = today
-    ? today.toLocaleDateString("en-US", {
+  const routeDate = /^\/journal\/(\d{4}-\d{2}-\d{2})$/.exec(pathname)?.[1];
+  const displayDate = routeDate ? new Date(`${routeDate}T12:00:00`) : today;
+  const formattedDate = displayDate
+    ? displayDate.toLocaleDateString("en-US", {
         day: isMobile ? "2-digit" : "numeric",
         month: "long",
         weekday: isMobile ? undefined : "long",
@@ -52,11 +54,7 @@ export function HeaderJournalButton() {
     const label =
       pathname.startsWith("/explore") || pathname.startsWith("/graph")
         ? "Explore"
-        : pathname.startsWith("/pages/")
-          ? "Library"
-          : pathname.startsWith("/folders/")
-            ? "Library"
-            : "Library";
+        : "Library";
     return (
       <span className="min-w-0 truncate font-semibold text-sm">{label}</span>
     );

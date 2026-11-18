@@ -18,16 +18,14 @@ import { useRender } from "@base-ui/react/use-render";
 import { cva, type VariantProps } from "class-variance-authority";
 import { PanelLeftIcon } from "lucide-react";
 import * as React from "react";
-import { createPortal } from "react-dom";
 
 const SIDEBAR_KEYBOARD_SHORTCUT_OPTION_S = "KeyS";
 const SIDEBAR_KEYBOARD_SHORTCUT_CTRL_SHIFT_B = "KeyB";
-const SIDEBAR_MIN_WIDTH = "14rem";
-const SIDEBAR_WIDTH = "14rem";
-const SIDEBAR_WIDTH_ICON = "3rem";
-const SIDEBAR_WIDTH_MAX = "50rem";
+const SIDEBAR_MIN_WIDTH = "12rem";
+const SIDEBAR_WIDTH = "13.5rem";
+const SIDEBAR_WIDTH_ICON = "4rem";
+const SIDEBAR_WIDTH_MAX = "17.5rem";
 const SIDEBAR_WIDTH_MOBILE = "18rem";
-const SIDEBAR_DRAG_HANDLE_SPACING = 16;
 
 function parseRem(value: `${string}rem`) {
   const parsed = Number.parseFloat(value);
@@ -53,6 +51,8 @@ type SidebarContextProps = {
   isDraggingRail: boolean;
   setIsDraggingRail: (isDraggingRail: boolean) => void;
   initialWidthRem?: number;
+  panelWidthRem?: number;
+  setPanelWidthRem: React.Dispatch<React.SetStateAction<number | undefined>>;
   handleResizeEnd: (widthRem: number) => void;
 };
 
@@ -67,6 +67,7 @@ function useSidebar() {
 }
 
 type SidebarProviderProps = React.ComponentProps<"div"> & {
+  keyboardShortcut?: boolean;
   defaultOpen?: boolean;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
@@ -75,6 +76,7 @@ type SidebarProviderProps = React.ComponentProps<"div"> & {
 };
 
 function SidebarProvider({
+  keyboardShortcut = true,
   defaultOpen = true,
   open: openProp,
   onOpenChange: setOpenProp,
@@ -87,6 +89,7 @@ function SidebarProvider({
   ...props
 }: SidebarProviderProps) {
   const isMobile = useIsMobile();
+  const [panelWidthRem, setPanelWidthRem] = React.useState(initialWidthRem);
   const [openMobile, setOpenMobile] = React.useState(false);
   const [isDraggingRail, setIsDraggingRail] = React.useState(false);
 
@@ -121,6 +124,7 @@ function SidebarProvider({
 
   // Adds a keyboard shortcut to toggle the sidebar.
   React.useEffect(() => {
+    if (!keyboardShortcut) return;
     const handleKeyDown = (event: KeyboardEvent) => {
       const target = event.target;
       const isEditableTarget =
@@ -156,7 +160,7 @@ function SidebarProvider({
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [toggleSidebar]);
+  }, [toggleSidebar, keyboardShortcut]);
 
   // We add a state so that we can do data-state="expanded" or "collapsed".
   // This makes it easier to style the sidebar with Tailwind classes.
@@ -170,9 +174,11 @@ function SidebarProvider({
       isMobile,
       open,
       openMobile,
+      panelWidthRem,
       setIsDraggingRail,
       setOpen,
       setOpenMobile,
+      setPanelWidthRem,
       state,
       toggleSidebar,
     }),
@@ -180,6 +186,7 @@ function SidebarProvider({
       isMobile,
       initialWidthRem,
       handleResizeEnd,
+      panelWidthRem,
       open,
       openMobile,
       isDraggingRail,
@@ -243,20 +250,16 @@ function Sidebar({
     setIsDraggingRail,
     open,
     setOpen,
-    initialWidthRem,
+    panelWidthRem,
+    setPanelWidthRem: setWidthRem,
     handleResizeEnd,
   } = useSidebar();
 
-  // Local state for this sidebar instance
-  const [widthRem, setWidthRem] = React.useState(() => {
-    const defaultWidthRem = defaultWidth
-      ? parseRem(defaultWidth)
-      : parseRem(SIDEBAR_WIDTH);
-
-    return typeof initialWidthRem === "number"
-      ? initialWidthRem
-      : defaultWidthRem;
-  });
+  const widthRem = clampNumber(
+    panelWidthRem ?? parseRem(defaultWidth),
+    parseRem(minWidth),
+    parseRem(maxWidth),
+  );
 
   const toggleSidebar = React.useCallback(() => {
     return isMobile ? setOpenMobile((open) => !open) : setOpen((open) => !open);
@@ -264,77 +267,87 @@ function Sidebar({
 
   const state = open ? "expanded" : "collapsed";
 
-  // Drag resize handler
-  const handleBorderMouseDown = React.useCallback(
-    (e: React.MouseEvent) => {
-      e.preventDefault();
-      e.stopPropagation();
+  const cancelResize = React.useRef<(() => void) | null>(null);
+  React.useEffect(() => () => cancelResize.current?.(), []);
 
-      const minWidthRem = parseRem(minWidth);
-      const maxWidthRem = parseRem(maxWidth);
-      const startX = e.clientX;
-      const startWidthRem = widthRem;
-      let latestWidthRem = widthRem;
-      let isDragging = false;
+  const resizeByKeyboard = (event: React.KeyboardEvent) => {
+    const direction = side === "left" ? 1 : -1;
+    let next = widthRem;
+    if (event.key === "ArrowRight") next += direction;
+    else if (event.key === "ArrowLeft") next -= direction;
+    else if (event.key === "Home") next = parseRem(minWidth);
+    else if (event.key === "End") next = parseRem(maxWidth);
+    else if (event.key === "Enter" && collapsible !== "none") {
+      event.preventDefault();
+      toggleSidebar();
+      return;
+    } else return;
+    event.preventDefault();
+    next = clampNumber(next, parseRem(minWidth), parseRem(maxWidth));
+    setWidthRem(next);
+    setOpen(true);
+    handleResizeEnd(next);
+  };
 
-      const handleMouseMove = (moveEvent: globalThis.MouseEvent) => {
-        if (!isDragging) {
-          isDragging = true;
-          setIsDraggingRail(true);
-        }
-
-        const deltaX = moveEvent.clientX - startX;
-        const factor = side === "left" ? 1 : -1;
-        const newWidthRem = startWidthRem + (deltaX * factor) / 16;
-
-        // Apply normal min/max constraints
-        const clampedWidthRem = clampNumber(
-          newWidthRem,
-          minWidthRem,
-          maxWidthRem,
-        );
-
-        // Auto-collapse if dragged below minimum threshold
-        if (newWidthRem < minWidthRem * 0.8 && collapsible !== "none") {
-          setOpen(false);
-        } else {
-          setOpen(true);
-          latestWidthRem = clampedWidthRem;
-          setWidthRem(clampedWidthRem);
-        }
-      };
-
-      const handleMouseUp = () => {
-        if (!isDragging) {
-          // This was a click, not a drag - toggle sidebar
-          if (collapsible !== "none") {
-            toggleSidebar();
-          }
-        } else {
-          handleResizeEnd(roundNumber(latestWidthRem));
-        }
-
-        // Clean up
-        setIsDraggingRail(false);
-        document.removeEventListener("mousemove", handleMouseMove);
-        document.removeEventListener("mouseup", handleMouseUp);
-      };
-
-      document.addEventListener("mousemove", handleMouseMove);
-      document.addEventListener("mouseup", handleMouseUp);
-    },
-    [
-      widthRem,
-      side,
-      collapsible,
-      toggleSidebar,
-      setOpen,
-      setIsDraggingRail,
-      handleResizeEnd,
-      maxWidth,
-      minWidth,
-    ],
-  );
+  const handleBorderPointerDown = (
+    event: React.PointerEvent<HTMLButtonElement>,
+  ) => {
+    if (!event.isPrimary || event.button !== 0) return;
+    event.preventDefault();
+    cancelResize.current?.();
+    const pointerId = event.pointerId;
+    const startX = event.clientX;
+    const startWidth = widthRem;
+    const startOpen = open;
+    let latestWidth = startWidth;
+    let moved = false;
+    const move = (next: PointerEvent) => {
+      if (next.pointerId !== pointerId) return;
+      const delta = next.clientX - startX;
+      if (!moved && Math.abs(delta) < 3) return;
+      moved = true;
+      setIsDraggingRail(true);
+      latestWidth = clampNumber(
+        startWidth + (delta * (side === "left" ? 1 : -1)) / 16,
+        parseRem(minWidth),
+        parseRem(maxWidth),
+      );
+      setOpen(true);
+      setWidthRem(latestWidth);
+    };
+    const cleanup = () => {
+      window.removeEventListener("pointermove", move);
+      window.removeEventListener("pointerup", finish);
+      window.removeEventListener("pointercancel", cancel);
+      window.removeEventListener("keydown", handleEscape);
+      window.removeEventListener("blur", cancel);
+      setIsDraggingRail(false);
+      cancelResize.current = null;
+    };
+    const cancel = () => {
+      cleanup();
+      setWidthRem(startWidth);
+      setOpen(startOpen);
+    };
+    const handleEscape = (key: KeyboardEvent) => {
+      if (key.key === "Escape") {
+        key.preventDefault();
+        cancel();
+      }
+    };
+    const finish = (next: PointerEvent) => {
+      if (next.pointerId !== pointerId) return;
+      cleanup();
+      if (moved) handleResizeEnd(roundNumber(latestWidth));
+      else if (collapsible !== "none") toggleSidebar();
+    };
+    cancelResize.current = cancel;
+    window.addEventListener("pointermove", move);
+    window.addEventListener("pointerup", finish);
+    window.addEventListener("pointercancel", cancel);
+    window.addEventListener("keydown", handleEscape);
+    window.addEventListener("blur", cancel);
+  };
 
   if (collapsible === "none") {
     return (
@@ -370,7 +383,11 @@ function Sidebar({
           >
             <SidebarDragHandle
               side={side}
-              onMouseDown={handleBorderMouseDown}
+              onPointerDown={handleBorderPointerDown}
+              onKeyDown={resizeByKeyboard}
+              width={widthRem * 16}
+              min={parseRem(minWidth) * 16}
+              max={parseRem(maxWidth) * 16}
               collapsible={collapsible}
             />
           </div>
@@ -386,18 +403,20 @@ function Sidebar({
           data-sidebar="sidebar"
           data-slot="sidebar"
           data-mobile="true"
-          className="w-(--sidebar-width) bg-sidebar p-0 text-sidebar-foreground [&>button]:hidden"
+          className="mx-3 mb-3 max-h-[65dvh] w-[calc(100%-1.5rem)] gap-0 overflow-hidden rounded-3xl border border-border bg-card p-0 text-foreground"
           style={
             {
               "--sidebar-width": SIDEBAR_WIDTH_MOBILE,
             } as React.CSSProperties
           }
-          side={side}
+          side="bottom"
         >
-          <SheetHeader className="sr-only">
-            <SheetTitle>Sidebar</SheetTitle>
+          <SheetHeader className="journl-glass h-17 shrink-0 justify-center border-b pr-16">
+            <SheetTitle>Notebook navigation</SheetTitle>
           </SheetHeader>
-          <div className="flex h-full w-full flex-col">{children}</div>
+          <div className="flex min-h-0 w-full flex-col overflow-y-auto p-4">
+            {children}
+          </div>
         </SheetContent>
       </Sheet>
     );
@@ -423,11 +442,11 @@ function Sidebar({
       <div
         data-slot="sidebar-gap"
         className={cn(
-          "relative w-(--sidebar-width) max-w-[70vw] bg-transparent transition-[width] duration-200 ease-linear",
+          "relative w-[calc(var(--sidebar-width)+2rem)] max-w-[70vw] bg-transparent transition-[width] duration-200 ease-linear",
           "group-data-[collapsible=offcanvas]:w-0",
           "group-data-[side=right]:rotate-180",
           variant === "floating" || variant === "inset"
-            ? "group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)+(--spacing(4)))]"
+            ? "group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)+2rem)]"
             : "group-data-[collapsible=icon]:w-(--sidebar-width-icon)",
           "group-data-[dragging=true]_*:!duration-0 group-data-[dragging=true]:duration-0!",
         )}
@@ -435,14 +454,14 @@ function Sidebar({
       <div
         data-slot="sidebar-container"
         className={cn(
-          "fixed inset-y-0 z-1500 hidden h-svh w-(--sidebar-width) max-w-[70vw] transition-[left,right,width] duration-200 ease-linear md:flex",
+          "fixed inset-y-0 z-1500 hidden h-svh w-[calc(var(--sidebar-width)+2rem)] max-w-[70vw] transition-[left,right,width] duration-200 ease-linear md:flex",
           side === "left"
-            ? "left-0 group-data-[collapsible=offcanvas]:left-[calc(var(--sidebar-width)*-1)]"
-            : "right-0 group-data-[collapsible=offcanvas]:right-[calc(var(--sidebar-width)*-1)]",
+            ? "left-0 group-data-[collapsible=offcanvas]:left-[calc((var(--sidebar-width)+2rem)*-1)]"
+            : "right-0 group-data-[collapsible=offcanvas]:right-[calc((var(--sidebar-width)+2rem)*-1)]",
           // Adjust the padding for floating and inset variants.
           variant === "floating" || variant === "inset"
             ? [
-                "p-2 group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)+(--spacing(4))+2px)]",
+                "p-4 group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)+2rem)]",
                 state === "collapsed" && collapsible !== "icon" && "px-0",
               ]
             : "group-data-[collapsible=icon]:w-(--sidebar-width-icon) group-data-[side=left]:border-r group-data-[side=right]:border-l",
@@ -468,7 +487,11 @@ function Sidebar({
             {!(collapsible === "offcanvas" && state === "collapsed") && (
               <SidebarDragHandle
                 side={side}
-                onMouseDown={handleBorderMouseDown}
+                onPointerDown={handleBorderPointerDown}
+                onKeyDown={resizeByKeyboard}
+                width={widthRem * 16}
+                min={parseRem(minWidth) * 16}
+                max={parseRem(maxWidth) * 16}
                 collapsible={collapsible}
               />
             )}
@@ -480,130 +503,41 @@ function Sidebar({
 }
 
 type SidebarDraggerProps = {
-  className?: string;
   side: "left" | "right";
-  onMouseDown: (e: React.MouseEvent<HTMLButtonElement>) => void;
+  onPointerDown: React.PointerEventHandler<HTMLButtonElement>;
+  onKeyDown: React.KeyboardEventHandler<HTMLButtonElement>;
+  width: number;
+  min: number;
+  max: number;
   collapsible?: "offcanvas" | "icon" | "none";
 };
 
 function SidebarDragHandle({
-  className,
   side,
-  onMouseDown,
-  collapsible,
+  onPointerDown,
+  onKeyDown,
+  width,
+  min,
+  max,
 }: SidebarDraggerProps) {
-  const dragHandleRef = React.useRef<HTMLButtonElement>(null);
-  const [isHovering, setIsHovering] = React.useState(false);
-  const [isDragging, setIsDragging] = React.useState(false);
-  const [position, setPosition] = React.useState({
-    x: 0,
-    y: 0,
-  });
-
-  function handleMouseDown() {
-    setIsDragging(true);
-  }
-
-  function handleButtonMouseDown(e: React.MouseEvent<HTMLButtonElement>) {
-    handleMouseDown();
-    onMouseDown(e);
-  }
-
-  function handleMouseEnter() {
-    setIsHovering(true);
-  }
-
-  function handleMouseLeave() {
-    setIsHovering(false);
-  }
-
-  function handleMouseMove(e: React.MouseEvent) {
-    const mouseRect = e.currentTarget.getBoundingClientRect();
-    const dragRect = dragHandleRef.current?.getBoundingClientRect();
-    setPosition({
-      x:
-        side === "left"
-          ? (dragRect?.[side] || 0) + SIDEBAR_DRAG_HANDLE_SPACING
-          : window.innerWidth -
-            (dragRect?.[side] || 0) +
-            SIDEBAR_DRAG_HANDLE_SPACING,
-      y: e.clientY - mouseRect.top,
-    });
-  }
-
-  React.useEffect(() => {
-    function handleMouseUp() {
-      setIsDragging(false);
-    }
-
-    window.addEventListener("mouseup", handleMouseUp);
-    return () => {
-      window.removeEventListener("mouseup", handleMouseUp);
-    };
-  }, []);
-
   return (
-    // biome-ignore lint/a11y/noStaticElementInteractions: <This is element tracks the mouse cursor, it's not technically interactive.>
-    <div
-      className="group/resize-border relative h-full w-1"
-      onMouseDown={handleMouseDown}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
-      onMouseMove={handleMouseMove}
-    >
-      {/* Visual resize indicator - thin border highlight */}
-      <div
-        className={cn(
-          "my-1.5 h-[calc(100%-1rem)] cursor-col-resize bg-transparent transition-colors",
-          "group-hover/resize-border:bg-sidebar-border/70",
-          side === "left" ? "ml-auto w-0.5" : "mr-auto w-0.5",
-          className,
-        )}
-      />
-
-      {/* Main drag area - wider for better UX but invisible */}
-      <button
-        type="button"
-        aria-hidden="true"
-        tabIndex={-1}
-        onMouseDown={handleButtonMouseDown}
-        className={cn(
-          "absolute inset-y-0 cursor-col-resize bg-transparent",
-          side === "left" ? "-left-1 w-3" : "-right-1 w-3",
-          "group/resize-border transition-colors",
-        )}
-        ref={dragHandleRef}
-      />
-
-      {/* Custom tooltip that follows mouse cursor */}
-      {isHovering &&
-        !isDragging &&
-        createPortal(
-          <div
-            className={cn(
-              "pointer-events-none absolute z-6000 rounded-md border px-3 py-2 text-xs shadow-lg",
-              "whitespace-nowrap bg-popover text-popover-foreground",
-            )}
-            style={{
-              top: `${position.y}px`,
-              [side]: `${position.x}px`,
-              transform: "translateY(-50%)",
-            }}
-          >
-            <div className="space-y-0.5 text-left font-normal">
-              <div>
-                <span className="font-semibold">Drag</span> to resize sidebar
-              </div>
-              {collapsible !== "none" && (
-                <div>
-                  <span className="font-semibold">Click</span> to toggle sidebar
-                </div>
-              )}
-            </div>
-          </div>,
-          document.body,
-        )}
-    </div>
+    // biome-ignore lint/a11y/useSemanticElements: An interactive splitter needs keyboard input and a focus target.
+    <button
+      type="button"
+      role="separator"
+      aria-label={side === "left" ? "Resize navigation" : "Resize assistant"}
+      aria-orientation="vertical"
+      aria-valuemin={min}
+      aria-valuemax={max}
+      aria-valuenow={width}
+      aria-valuetext={`${Math.round(width)} pixels`}
+      onPointerDown={onPointerDown}
+      onKeyDown={onKeyDown}
+      className={cn(
+        "absolute inset-y-4 w-3 cursor-col-resize touch-none rounded-full bg-transparent hover:bg-sidebar-border/30 focus-visible:bg-sidebar-border/30",
+        side === "left" ? "-right-2" : "-left-2",
+      )}
+    />
   );
 }
 

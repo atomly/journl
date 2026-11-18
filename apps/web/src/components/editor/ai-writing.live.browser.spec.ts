@@ -815,7 +815,7 @@ function nodeText(node: JSONContent | undefined): string {
 async function openChat(page: Page) {
   const toggle = page.getByRole("button", {
     exact: true,
-    name: "Toggle Chat Sidebar",
+    name: "Ask Journl",
   });
   if (await toggle.isVisible()) await toggle.click();
 }

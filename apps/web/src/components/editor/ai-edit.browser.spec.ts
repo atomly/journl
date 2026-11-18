@@ -73,7 +73,7 @@ for (const mode of ["complete", "cancel", "blocks"] as const)
     });
     const toggle = page.getByRole("button", {
       exact: true,
-      name: "Toggle Chat Sidebar",
+      name: "Ask Journl",
     });
     if (await toggle.isVisible()) await toggle.click();
     if (mode !== "blocks")

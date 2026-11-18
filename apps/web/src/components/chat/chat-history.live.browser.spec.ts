@@ -32,7 +32,7 @@ test("fresh chats do not restore historical messages and requests send only new 
   await page.goto("/journal/1987-03-11");
   const toggle = page.getByRole("button", {
     exact: true,
-    name: "Toggle Chat Sidebar",
+    name: "Ask Journl",
   });
   if (await toggle.isVisible()) await toggle.click();
   const panel = page

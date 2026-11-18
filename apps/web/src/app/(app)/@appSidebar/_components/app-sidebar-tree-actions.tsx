@@ -332,9 +332,9 @@ export function AppSidebarTreeActions({
     return (
       <Button
         type="button"
-        variant="ghost"
+        variant="default"
         className={cn(
-          "h-8 w-full justify-start gap-2 rounded-md border border-sidebar-border/80 border-dashed px-3 text-sidebar-foreground/80 shadow-none hover:bg-transparent hover:text-sidebar-foreground active:bg-transparent active:text-sidebar-foreground",
+          "h-11 w-full justify-center gap-2 rounded-xl px-3",
           className,
         )}
         onClick={handleCreatePage}
@@ -361,7 +361,7 @@ export function AppSidebarTreeActions({
                   ? `Actions for ${folder.name || "New folder"}`
                   : "Add item"
               }
-              variant="ghost"
+              variant="default"
               size={triggerVariant === "empty-state" ? "default" : "sm"}
               className={cn(
                 triggerVariant === "sidebar"

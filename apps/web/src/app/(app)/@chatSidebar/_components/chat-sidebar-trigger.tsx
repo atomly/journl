@@ -30,6 +30,11 @@ export default function ChatSidebarTrigger({
       <TooltipTrigger
         render={
           <Button
+            aria-label="Ask Journl"
+            aria-description={
+              hasUnreadMessages ? "New assistant message" : undefined
+            }
+            data-assistant-trigger
             data-sidebar="trigger"
             data-slot="sidebar-trigger"
             onClick={toggleSidebar}
@@ -47,7 +52,6 @@ export default function ChatSidebarTrigger({
               hasUnreadMessages={hasUnreadMessages}
               className="bg-destructive"
             />
-            <span className="sr-only">Toggle Chat Sidebar</span>
             <ChatUnreadA11yHint hasUnreadMessages={hasUnreadMessages} />
           </Button>
         }

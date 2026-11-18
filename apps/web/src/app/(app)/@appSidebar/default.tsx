@@ -19,6 +19,7 @@ import { DynamicAppSidebarDevtools } from "./_components/app-sidebar-devtools.dy
 import { AppSidebarNavigation } from "./_components/app-sidebar-main";
 import { AppSidebarPages } from "./_components/app-sidebar-pages";
 import { AppSidebarPagesSkeleton } from "./_components/app-sidebar-pages-skeleton";
+import { AppSidebarTreeActions } from "./_components/app-sidebar-tree-actions";
 import { AppSidebarUser } from "./_components/app-sidebar-user";
 import { AppSidebarUserSkeleton } from "./_components/app-sidebar-user-skeleton";
 
@@ -52,20 +53,28 @@ export default async function AppSidebar() {
         <div className="px-3 py-4 group-data-[collapsible=icon]:hidden">
           <Brand />
         </div>
-        <Suspense fallback={<AppSidebarUserSkeleton />}>
-          <AppSidebarUser />
-        </Suspense>
+        <div className="px-1 pb-4 group-data-[collapsible=icon]:hidden">
+          <AppSidebarTreeActions
+            kind="root"
+            parentNodeId={null}
+            triggerMode="direct-page"
+          />
+        </div>
       </SidebarHeader>
       <Separator />
       <SidebarContent className="flex flex-1 flex-col overflow-x-clip">
         <SidebarGroup className="flex min-h-0 flex-1 flex-col gap-y-1">
-          <SidebarGroupLabel>Navigation</SidebarGroupLabel>
           <AppSidebarNavigation items={navigationItems} />
           <Suspense fallback={<AppSidebarPagesSkeleton />}>
             <AppSidebarPages key={owner.id} owner={owner.id} />
           </Suspense>
         </SidebarGroup>
       </SidebarContent>
+      <SidebarFooter>
+        <Suspense fallback={<AppSidebarUserSkeleton />}>
+          <AppSidebarUser />
+        </Suspense>
+      </SidebarFooter>
       {env.NODE_ENV === "development" && (
         <>
           <Separator />

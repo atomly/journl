@@ -47,6 +47,7 @@ export function ChatSidebarProvider({
   return (
     <SidebarProvider
       {...props}
+      keyboardShortcut={false}
       open={open}
       onOpenChange={handleOpenChange}
       initialWidthRem={preferences.chatSidebarWidthRem}

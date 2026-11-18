@@ -219,7 +219,7 @@ The rest of the components are set by the Tailwind CSS classes, or by our editor
 }
 
 /* On mobile... */
-@media (max-width: 768px) {
+@media (max-width: 700px) {
   [data-slot="sidebar"] {
     z-index: 4500;
   }
@@ -296,8 +296,56 @@ The rest of the components are set by the Tailwind CSS classes, or by our editor
     color: HighlightText;
   }
 }
-@media (max-width: 767px) {
+@media (max-width: 700px) {
   .journl-content {
-    margin: 0 12px 12px;
+    margin: 90px 12px 12px;
   }
+}
+
+@media (min-width: 701px) {
+  .journl-content {
+    margin-left: 0;
+  }
+  .journl-shell:has([data-side="right"][data-state="expanded"]) .journl-content,
+  .journl-shell:has([data-side="right"][data-state="expanded"])
+    .peer\/app-header {
+    margin-right: 0;
+  }
+}
+.journl-shell [data-side="right"] [data-slot="sidebar-inner"] {
+  background: var(--card);
+}
+.journl-shell [data-slot="sidebar-menu-button"] {
+  min-height: 44px;
+  border-radius: 12px;
+}
+
+@media (min-width: 701px) and (max-width: 1100px) {
+  .journl-shell:has([data-side="right"][data-state="expanded"])
+    [data-slot="sidebar-inset"] {
+    display: none;
+  }
+  .journl-shell
+    [data-side="right"][data-state="expanded"]
+    [data-slot="sidebar-container"] {
+    width: calc(100vw - 80px);
+    max-width: none;
+  }
+  .journl-shell
+    [data-side="right"][data-state="expanded"]
+    [data-slot="sidebar-gap"] {
+    width: calc(100vw - 96px);
+    max-width: none;
+  }
+}
+
+/* The bounded navigation sheet scrolls without compressing its tree to zero. */
+[data-slot="sidebar"][data-mobile="true"] [data-slot="sidebar-content"] {
+  flex: none;
+  min-height: 320px;
+  overflow: visible;
+}
+[data-slot="sidebar"][data-mobile="true"]
+  :is([data-slot="sidebar-header"], [data-slot="sidebar-footer"]) {
+  flex-shrink: 0;
 }

@@ -194,6 +194,7 @@ test.describe("wide touchscreens", () => {
   test.use({ hasTouch: true, viewport: { height: 900, width: 1024 } });
   test("page actions remain available without hover", async ({ page }) => {
     await page.goto("/explore");
+    await page.getByRole("button", { name: "Toggle Sidebar" }).first().click();
     await page
       .getByRole("button", { exact: true, name: "Expand Browser folder" })
       .tap();

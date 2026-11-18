@@ -25,17 +25,21 @@ export function ChatDrawerTrigger({
   return (
     <DrawerTrigger asChild>
       <Button
-        size="icon"
+        aria-label="Ask Journl"
+        aria-description={
+          hasUnreadMessages ? "New assistant message" : undefined
+        }
+        size="lg"
         className={cn(
-          "relative size-10 cursor-pointer rounded-full border",
+          "relative h-12 min-w-39 cursor-pointer rounded-full border bg-(--assistant) text-(--pastel-foreground) shadow-lg hover:bg-(--assistant)",
           hasUnreadMessages ? "animate-chat-trigger-wiggle" : undefined,
           className,
         )}
         {...props}
       >
-        <RiSparkling2Fill className="size-6" />
+        <RiSparkling2Fill className="size-5" />
+        <span>Ask Journl</span>
         <ChatUnreadBadge hasUnreadMessages={hasUnreadMessages} />
-        <span className="sr-only">Toggle Chat Drawer</span>
         <ChatUnreadA11yHint hasUnreadMessages={hasUnreadMessages} />
       </Button>
     </DrawerTrigger>

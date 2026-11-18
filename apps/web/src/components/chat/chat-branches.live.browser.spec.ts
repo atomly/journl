@@ -21,7 +21,7 @@ test("Edit and Retry work without conversation switching and start fresh after r
   await page.goto("/journal/1987-03-08");
   const toggle = page.getByRole("button", {
     exact: true,
-    name: "Toggle Chat Sidebar",
+    name: "Ask Journl",
   });
   if (await toggle.isVisible()) await toggle.click();
   const panel = page
@@ -114,7 +114,7 @@ test("Retry recovers a prompt after an HTTP failure before native memory saved i
   await page.goto("/journal/1987-03-09");
   const toggle = page.getByRole("button", {
     exact: true,
-    name: "Toggle Chat Sidebar",
+    name: "Ask Journl",
   });
   if (await toggle.isVisible()) await toggle.click();
   const panel = page

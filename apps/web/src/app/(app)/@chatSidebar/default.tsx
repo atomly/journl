@@ -6,6 +6,7 @@ import {
   CHAT_SIDEBAR_WIDTH_REM_MAX,
   CHAT_SIDEBAR_WIDTH_REM_MIN,
 } from "~/preferences/app-preferences";
+import { ChatPanelHeader } from "./_components/chat-panel-header";
 
 const CHAT_SIDEBAR_DEFAULT_WIDTH = `${CHAT_SIDEBAR_WIDTH_REM_DEFAULT}rem`;
 const CHAT_SIDEBAR_MIN_WIDTH = `${CHAT_SIDEBAR_WIDTH_REM_MIN}rem`;
@@ -21,6 +22,7 @@ export default function ChatSidebar() {
       minWidth={CHAT_SIDEBAR_MIN_WIDTH}
       maxWidth={CHAT_SIDEBAR_WIDTH_MAX}
     >
+      <ChatPanelHeader />
       <SidebarContent className="overflow-hidden">
         <ChatPanel welcome={<ChatWelcome />} />
       </SidebarContent>

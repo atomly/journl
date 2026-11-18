@@ -67,7 +67,7 @@ test("AI Elements render messages, reasoning, tools, markdown and sources in des
   const mobile = info.project.name === "mobile-webkit";
   const toggle = page.getByRole("button", {
     exact: true,
-    name: mobile ? "Toggle Chat Drawer" : "Toggle Chat Sidebar",
+    name: "Ask Journl",
   });
   if (await toggle.isVisible()) await toggle.click();
   const panel = page
@@ -145,7 +145,7 @@ test("AI Elements render messages, reasoning, tools, markdown and sources in des
 
 test("chat cancellation stops the native request and leaves the composer usable", async ({
   page,
-}, info) => {
+}) => {
   let release!: () => void;
   const gate = new Promise<void>((resolve) => {
     release = resolve;
@@ -162,10 +162,9 @@ test("chat cancellation stops the native request and leaves the composer usable"
   });
   try {
     await page.goto("/journal/1987-03-07");
-    const mobile = info.project.name === "mobile-webkit";
     const toggle = page.getByRole("button", {
       exact: true,
-      name: mobile ? "Toggle Chat Drawer" : "Toggle Chat Sidebar",
+      name: "Ask Journl",
     });
     if (await toggle.isVisible()) await toggle.click();
     const panel = page

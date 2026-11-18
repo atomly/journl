@@ -16,8 +16,9 @@ for (const theme of ["light", "dark"]) {
     await expect(editor).toContainText("Heading 6");
     await page.evaluate(() => document.fonts.ready);
     const font = await editor.evaluate((root) => {
+      // CSS font-family matching ignores case; Next registers local Inter as inter.
       const clean = (family: string) =>
-        family.trim().replaceAll('"', "").replaceAll("'", "");
+        family.trim().replaceAll('"', "").replaceAll("'", "").toLowerCase();
       const family = clean(
         getComputedStyle(root).fontFamily.split(",")[0] ?? "",
       );

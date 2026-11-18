@@ -3,6 +3,7 @@ import { Skeleton } from "@acme/ui/skeleton";
 import { Calendar, Compass } from "lucide-react";
 import { type ComponentProps, Suspense } from "react";
 import { getUser } from "~/auth/server";
+import { Brand } from "~/components/brand";
 import {
   Sidebar,
   SidebarContent,
@@ -48,7 +49,9 @@ export default async function AppSidebar() {
   return (
     <Sidebar collapsible="icon" variant="floating">
       <SidebarHeader>
-        <SidebarGroupLabel>Journl</SidebarGroupLabel>
+        <div className="px-3 py-4 group-data-[collapsible=icon]:hidden">
+          <Brand />
+        </div>
         <Suspense fallback={<AppSidebarUserSkeleton />}>
           <AppSidebarUser />
         </Suspense>

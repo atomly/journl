@@ -33,15 +33,16 @@ export default function ChatSidebarTrigger({
             data-sidebar="trigger"
             data-slot="sidebar-trigger"
             onClick={toggleSidebar}
-            size="icon"
+            size="lg"
             className={cn(
-              "relative size-10 cursor-pointer rounded-full border",
+              "relative h-12 min-w-39 cursor-pointer rounded-full border bg-(--assistant) px-5 text-(--pastel-foreground) shadow-lg hover:bg-(--assistant)",
               hasUnreadMessages ? "animate-chat-trigger-wiggle" : undefined,
               className,
             )}
             {...props}
           >
-            <RiSparkling2Fill className="size-6" />
+            <RiSparkling2Fill className="size-5" />
+            <span>Ask Journl</span>
             <ChatUnreadBadge
               hasUnreadMessages={hasUnreadMessages}
               className="bg-destructive"

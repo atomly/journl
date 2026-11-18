@@ -1,6 +1,5 @@
 "use client";
 
-import { cn } from "@acme/ui/utils";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
@@ -50,10 +49,6 @@ export function AppSidebarNavigation({ items }: AppSidebarNavigationProps) {
           <SidebarMenuButton
             tooltip={item.title}
             isActive={isActive(item.url)}
-            className={cn(
-              "border border-transparent text-foreground!",
-              isActive(item.url) && "border-sidebar-primary/50",
-            )}
             render={
               <Link href={item.url} onClick={handleNavigationClick}>
                 {item.icon && item.icon}

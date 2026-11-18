@@ -1,6 +1,6 @@
 import { cn } from "@acme/ui/utils";
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono, Inter } from "next/font/google";
+import localFont from "next/font/local";
 import { DraftSessionsProvider } from "~/components/editor/draft-sessions-provider";
 import { env } from "~/env";
 import { getPublicWebUrl } from "~/lib/public-web-url";
@@ -19,11 +19,11 @@ export const metadata: Metadata = {
   },
   applicationName: "Journl",
   description:
-    "Journl helps you capture thoughts, reflect with AI guidance, and turn daily notes into momentum.",
+    "Organize useful knowledge, projects, recipes and references with Journl.",
   metadataBase: new URL(publicWebUrl),
   openGraph: {
     description:
-      "Journl helps you capture thoughts, reflect with AI guidance, and turn daily notes into momentum.",
+      "Organize useful knowledge, projects, recipes and references with Journl.",
     siteName: "Journl",
     title: "Journl: Your mind, organized",
     url: publicWebUrl,
@@ -39,24 +39,16 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   interactiveWidget: "resizes-content",
   themeColor: [
-    { color: "white", media: "(prefers-color-scheme: light)" },
-    { color: "black", media: "(prefers-color-scheme: dark)" },
+    { color: "#E9EFFB", media: "(prefers-color-scheme: light)" },
+    { color: "#101B30", media: "(prefers-color-scheme: dark)" },
   ],
 };
 
-const editorFont = Inter({
-  style: ["normal", "italic"],
-  subsets: ["latin"],
-  variable: "--font-editor",
-});
-
-const geistSans = Geist({
-  subsets: ["latin"],
-  variable: "--font-geist-sans",
-});
-const geistMono = Geist_Mono({
-  subsets: ["latin"],
-  variable: "--font-geist-mono",
+const inter = localFont({
+  display: "swap",
+  src: "./fonts/inter-variable.ttf",
+  variable: "--font-inter",
+  weight: "100 900",
 });
 
 export default function RootLayout({
@@ -71,9 +63,7 @@ export default function RootLayout({
       <body
         className={cn(
           "min-h-svh bg-background font-sans text-foreground antialiased",
-          geistSans.variable,
-          geistMono.variable,
-          editorFont.variable,
+          inter.variable,
         )}
       >
         <BetterAuthProvider

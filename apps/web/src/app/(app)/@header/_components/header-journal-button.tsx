@@ -3,7 +3,6 @@
 import { Button } from "@acme/ui/button";
 import { useIsMobile } from "@acme/ui/use-mobile";
 import { CalendarDays, List } from "lucide-react";
-import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useAppPreferences } from "~/components/preferences/app-preferences-provider";
@@ -50,12 +49,14 @@ export function HeaderJournalButton() {
 
   if (pathname === "/journal") return <HeaderJournalViewToggle />;
 
+  const routeLabel = pathname.startsWith("/explore")
+    ? "Explore"
+    : pathname.startsWith("/folders") || pathname.startsWith("/pages")
+      ? "Library"
+      : formattedDate;
+
   return (
-    <div className="min-w-0">
-      <Link href="/journal">
-        <div className="truncate text-sm">{formattedDate}</div>
-      </Link>
-    </div>
+    <div className="min-w-0 truncate font-medium text-sm">{routeLabel}</div>
   );
 }
 

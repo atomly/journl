@@ -18,7 +18,7 @@ export default function ChatDrawer() {
       />
       <DrawerContent
         id={CHAT_DRAWER_CONTENT_ID}
-        className="z-4500 h-full! max-h-[90dvh]! transition-[bottom] duration-200 ease-out motion-reduce:transition-none"
+        className="inset-x-3! bottom-3! z-4500 h-full! max-h-[calc(100dvh-24px)]! rounded-3xl transition-[bottom] duration-200 ease-out motion-reduce:transition-none"
       >
         <DrawerTitle className="sr-only">Journl chat</DrawerTitle>
         <DrawerDivider />

@@ -245,3 +245,51 @@ The rest of the components are set by the Tailwind CSS classes, or by our editor
 .tsqd-queries-container {
   border-radius: 1rem !important;
 }
+
+/* Shell geometry is independent of the route's scroll owner and editor session. */
+[data-slot="sidebar-inset"] {
+  background: transparent;
+}
+@media (min-width: 768px) {
+  [data-slot="sidebar-inset"] {
+    padding: 16px 16px 16px 0;
+  }
+}
+[data-slot="sidebar-inset"] > [data-app-container] {
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  background: var(--card);
+  padding-bottom: 112px;
+}
+
+[data-slot="sidebar-inner"],
+[data-slot="sidebar-inset"] > header > div {
+  background:
+    linear-gradient(135deg, var(--glass-glint), transparent 52%), var(--glass);
+  border-color: var(--glass-edge);
+  border-bottom-color: var(--glass-lower);
+  box-shadow: var(--depth);
+  backdrop-filter: blur(24px) saturate(1.15);
+}
+@media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
+  [data-slot="sidebar-inner"],
+  [data-slot="sidebar-inset"] > header > div {
+    background: var(--sidebar);
+    backdrop-filter: none;
+  }
+}
+.opaque-mode [data-slot="sidebar-inner"],
+.opaque-mode [data-slot="sidebar-inset"] > header > div {
+  background: var(--sidebar);
+  backdrop-filter: none;
+}
+@media (forced-colors: active) {
+  [data-slot="sidebar-inner"],
+  [data-slot="sidebar-inset"] > header > div {
+    background: Canvas;
+    color: CanvasText;
+    border-color: CanvasText;
+    box-shadow: none;
+    backdrop-filter: none;
+  }
+}

@@ -48,6 +48,20 @@ export function HeaderJournalButton() {
       })
     : "Journal";
 
+  if (!pathname.startsWith("/journal")) {
+    const label =
+      pathname.startsWith("/explore") || pathname.startsWith("/graph")
+        ? "Explore"
+        : pathname.startsWith("/pages/")
+          ? "Library"
+          : pathname.startsWith("/folders/")
+            ? "Library"
+            : "Library";
+    return (
+      <span className="min-w-0 truncate font-semibold text-sm">{label}</span>
+    );
+  }
+
   if (pathname === "/journal") return <HeaderJournalViewToggle />;
 
   return (

@@ -1,13 +1,13 @@
 export const APP_PREFERENCES_COOKIE_NAME = "journl:preferences";
 export const APP_PREFERENCES_COOKIE_MAX_AGE = 60 * 60 * 24 * 365;
 
-export const APP_SIDEBAR_WIDTH_REM_DEFAULT = 14;
-export const APP_SIDEBAR_WIDTH_REM_MIN = 14;
-export const APP_SIDEBAR_WIDTH_REM_MAX = 50;
+export const APP_SIDEBAR_WIDTH_REM_DEFAULT = 13.5;
+export const APP_SIDEBAR_WIDTH_REM_MIN = 12;
+export const APP_SIDEBAR_WIDTH_REM_MAX = 17.5;
 
-export const CHAT_SIDEBAR_WIDTH_REM_DEFAULT = 20;
-export const CHAT_SIDEBAR_WIDTH_REM_MIN = 20;
-export const CHAT_SIDEBAR_WIDTH_REM_MAX = 50;
+export const CHAT_SIDEBAR_WIDTH_REM_DEFAULT = 30;
+export const CHAT_SIDEBAR_WIDTH_REM_MIN = 25;
+export const CHAT_SIDEBAR_WIDTH_REM_MAX = 44;
 
 export type JournalTimelineView = "timeline" | "entries";
 

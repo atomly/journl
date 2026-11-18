@@ -3,6 +3,7 @@ import { Skeleton } from "@acme/ui/skeleton";
 import { Calendar, Compass } from "lucide-react";
 import { type ComponentProps, Suspense } from "react";
 import { getUser } from "~/auth/server";
+import { Brand } from "~/components/brand";
 import {
   Sidebar,
   SidebarContent,
@@ -12,6 +13,10 @@ import {
   SidebarHeader,
 } from "~/components/ui/sidebar";
 import { env } from "~/env";
+import {
+  APP_SIDEBAR_WIDTH_REM_MAX,
+  APP_SIDEBAR_WIDTH_REM_MIN,
+} from "~/preferences/app-preferences";
 import { infiniteSidebarTreeQueryOptions } from "~/trpc/options/sidebar-tree-query-options";
 import { prefetch, trpc } from "~/trpc/server";
 import { DynamicAppSidebarDevtools } from "./_components/app-sidebar-devtools.dynamic";
@@ -46,9 +51,16 @@ export default async function AppSidebar() {
     ),
   );
   return (
-    <Sidebar collapsible="icon" variant="floating">
+    <Sidebar
+      collapsible="icon"
+      variant="floating"
+      minWidth={`${APP_SIDEBAR_WIDTH_REM_MIN}rem`}
+      maxWidth={`${APP_SIDEBAR_WIDTH_REM_MAX}rem`}
+    >
       <SidebarHeader>
-        <SidebarGroupLabel>Journl</SidebarGroupLabel>
+        <div className="px-3 py-4 group-data-[collapsible=icon]:hidden">
+          <Brand className="h-10" />
+        </div>
         <Suspense fallback={<AppSidebarUserSkeleton />}>
           <AppSidebarUser />
         </Suspense>

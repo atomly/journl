@@ -16,7 +16,6 @@ export default function ChatSidebar() {
       side="right"
       collapsible="offcanvas"
       variant="floating"
-      className="sticky top-0 h-svh"
       defaultWidth={CHAT_SIDEBAR_DEFAULT_WIDTH}
       minWidth={CHAT_SIDEBAR_MIN_WIDTH}
       maxWidth={CHAT_SIDEBAR_WIDTH_MAX}

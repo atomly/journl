@@ -24,7 +24,7 @@ const SIDEBAR_KEYBOARD_SHORTCUT_OPTION_S = "KeyS";
 const SIDEBAR_KEYBOARD_SHORTCUT_CTRL_SHIFT_B = "KeyB";
 const SIDEBAR_MIN_WIDTH = "14rem";
 const SIDEBAR_WIDTH = "14rem";
-const SIDEBAR_WIDTH_ICON = "3rem";
+const SIDEBAR_WIDTH_ICON = "4rem";
 const SIDEBAR_WIDTH_MAX = "50rem";
 const SIDEBAR_WIDTH_MOBILE = "18rem";
 const SIDEBAR_DRAG_HANDLE_SPACING = 16;
@@ -371,6 +371,13 @@ function Sidebar({
             <SidebarDragHandle
               side={side}
               onMouseDown={handleBorderMouseDown}
+              width={widthRem}
+              min={parseRem(minWidth)}
+              max={parseRem(maxWidth)}
+              onResize={(next) => {
+                setWidthRem(next);
+                handleResizeEnd(next);
+              }}
               collapsible={collapsible}
             />
           </div>
@@ -386,18 +393,20 @@ function Sidebar({
           data-sidebar="sidebar"
           data-slot="sidebar"
           data-mobile="true"
-          className="w-(--sidebar-width) bg-sidebar p-0 text-sidebar-foreground [&>button]:hidden"
+          className="max-h-[65dvh] w-auto rounded-3xl bg-sidebar p-0 text-sidebar-foreground data-[side=bottom]:inset-x-3 data-[side=bottom]:bottom-3 data-[side=bottom]:h-[65dvh]"
           style={
             {
               "--sidebar-width": SIDEBAR_WIDTH_MOBILE,
             } as React.CSSProperties
           }
-          side={side}
+          side="bottom"
         >
-          <SheetHeader className="sr-only">
-            <SheetTitle>Sidebar</SheetTitle>
+          <SheetHeader>
+            <SheetTitle>Notebook navigation</SheetTitle>
           </SheetHeader>
-          <div className="flex h-full w-full flex-col">{children}</div>
+          <div className="flex min-h-0 w-full flex-1 flex-col overflow-hidden">
+            {children}
+          </div>
         </SheetContent>
       </Sheet>
     );
@@ -423,11 +432,11 @@ function Sidebar({
       <div
         data-slot="sidebar-gap"
         className={cn(
-          "relative w-(--sidebar-width) max-w-[70vw] bg-transparent transition-[width] duration-200 ease-linear",
+          "relative w-(--sidebar-width) max-w-[70vw] bg-transparent transition-[width] duration-200 ease-linear group-data-[collapsible=offcanvas]:mr-0 group-data-[side=left]:mr-8 group-data-[side=right]:mr-4",
           "group-data-[collapsible=offcanvas]:w-0",
           "group-data-[side=right]:rotate-180",
           variant === "floating" || variant === "inset"
-            ? "group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)+(--spacing(4)))]"
+            ? "group-data-[collapsible=icon]:w-(--sidebar-width-icon)"
             : "group-data-[collapsible=icon]:w-(--sidebar-width-icon)",
           "group-data-[dragging=true]_*:!duration-0 group-data-[dragging=true]:duration-0!",
         )}
@@ -435,14 +444,14 @@ function Sidebar({
       <div
         data-slot="sidebar-container"
         className={cn(
-          "fixed inset-y-0 z-1500 hidden h-svh w-(--sidebar-width) max-w-[70vw] transition-[left,right,width] duration-200 ease-linear md:flex",
+          "fixed inset-y-4 z-1500 hidden h-[calc(100dvh-32px)] w-(--sidebar-width) max-w-[70vw] transition-[left,right,width] duration-200 ease-linear md:flex",
           side === "left"
-            ? "left-0 group-data-[collapsible=offcanvas]:left-[calc(var(--sidebar-width)*-1)]"
-            : "right-0 group-data-[collapsible=offcanvas]:right-[calc(var(--sidebar-width)*-1)]",
+            ? "left-4 group-data-[collapsible=offcanvas]:left-[calc(var(--sidebar-width)*-1)]"
+            : "right-4 group-data-[collapsible=offcanvas]:right-[calc(var(--sidebar-width)*-1)]",
           // Adjust the padding for floating and inset variants.
           variant === "floating" || variant === "inset"
             ? [
-                "p-2 group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)+(--spacing(4))+2px)]",
+                "p-0 group-data-[collapsible=icon]:w-(--sidebar-width-icon)",
                 state === "collapsed" && collapsible !== "icon" && "px-0",
               ]
             : "group-data-[collapsible=icon]:w-(--sidebar-width-icon) group-data-[side=left]:border-r group-data-[side=right]:border-l",
@@ -454,7 +463,7 @@ function Sidebar({
         <div
           data-sidebar="sidebar"
           data-slot="sidebar-inner"
-          className="relative flex h-full w-full flex-col bg-sidebar group-data-[variant=floating]:rounded-lg group-data-[variant=floating]:border group-data-[variant=floating]:border-sidebar-border group-data-[variant=floating]:shadow-sm"
+          className="relative flex h-full w-full flex-col bg-sidebar group-data-[variant=floating]:rounded-3xl group-data-[variant=floating]:border group-data-[variant=floating]:border-sidebar-border group-data-[variant=floating]:shadow-sm"
         >
           {children}
 
@@ -469,6 +478,13 @@ function Sidebar({
               <SidebarDragHandle
                 side={side}
                 onMouseDown={handleBorderMouseDown}
+                width={widthRem}
+                min={parseRem(minWidth)}
+                max={parseRem(maxWidth)}
+                onResize={(next) => {
+                  setWidthRem(next);
+                  handleResizeEnd(next);
+                }}
                 collapsible={collapsible}
               />
             )}
@@ -482,11 +498,19 @@ function Sidebar({
 type SidebarDraggerProps = {
   className?: string;
   side: "left" | "right";
+  width: number;
+  min: number;
+  max: number;
+  onResize: (width: number) => void;
   onMouseDown: (e: React.MouseEvent<HTMLButtonElement>) => void;
   collapsible?: "offcanvas" | "icon" | "none";
 };
 
 function SidebarDragHandle({
+  width,
+  min,
+  max,
+  onResize,
   className,
   side,
   onMouseDown,
@@ -560,12 +584,32 @@ function SidebarDragHandle({
           className,
         )}
       />
-
       {/* Main drag area - wider for better UX but invisible */}
+      {/* biome-ignore lint/a11y/useSemanticElements: Focusable separator implements keyboard resizing. */}
       <button
         type="button"
-        aria-hidden="true"
-        tabIndex={-1}
+        role="separator"
+        aria-label={side === "left" ? "Resize navigation" : "Resize assistant"}
+        aria-orientation="vertical"
+        aria-valuemin={min * 16}
+        aria-valuemax={max * 16}
+        aria-valuenow={width * 16}
+        onKeyDown={(event) => {
+          const direction = side === "left" ? 1 : -1;
+          const next =
+            event.key === "Home"
+              ? min
+              : event.key === "End"
+                ? max
+                : event.key === "ArrowRight"
+                  ? width + direction
+                  : event.key === "ArrowLeft"
+                    ? width - direction
+                    : null;
+          if (next === null) return;
+          event.preventDefault();
+          onResize(clampNumber(next, min, max));
+        }}
         onMouseDown={handleButtonMouseDown}
         className={cn(
           "absolute inset-y-0 cursor-col-resize bg-transparent",
@@ -574,7 +618,6 @@ function SidebarDragHandle({
         )}
         ref={dragHandleRef}
       />
-
       {/* Custom tooltip that follows mouse cursor */}
       {isHovering &&
         !isDragging &&

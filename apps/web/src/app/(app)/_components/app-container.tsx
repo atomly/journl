@@ -115,7 +115,7 @@ export function AppContainer({ children, ...props }: AppContainerProps) {
   }, [isMobile]);
 
   return (
-    <div ref={handleRef} {...props}>
+    <div data-app-container ref={handleRef} {...props}>
       {children}
     </div>
   );

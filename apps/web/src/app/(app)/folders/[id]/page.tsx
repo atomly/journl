@@ -17,10 +17,10 @@ export default async function FolderDetailsPage({
   }
 
   return (
-    <div className="mx-auto flex min-h-full max-w-5xl flex-col gap-8 px-8 pt-8 pb-20">
+    <div className="journl-library flex min-h-full flex-col gap-8">
       <section className="space-y-2">
         <div className="flex items-center justify-between gap-4">
-          <h1 className="font-medium text-muted-foreground text-sm">Title</h1>
+          <h1 className="font-medium text-muted-foreground text-sm">Folder</h1>
           <FolderDeleteAction folder={folder} />
         </div>
         <FolderTitleInput

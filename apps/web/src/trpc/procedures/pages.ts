@@ -1,7 +1,21 @@
-import { and, cosineDistance, desc, eq, gt, gte, lte, sql } from "@acme/db";
+import {
+  alias,
+  and,
+  asc,
+  cosineDistance,
+  desc,
+  eq,
+  gt,
+  gte,
+  ilike,
+  lte,
+  or,
+  sql,
+} from "@acme/db";
 import {
   Document,
   DocumentEmbedding,
+  Folder,
   Page,
   TreeEdge,
   TreeNode,
@@ -224,6 +238,74 @@ export const pagesRouter = {
           message: "Failed to fetch similar pages",
         });
       }
+    }),
+  list: protectedProcedure
+    .input(
+      z.object({
+        cursor: z.object({ id: z.uuid(), title: z.string() }).optional(),
+        limit: z.number().int().min(1).max(50).default(20),
+        search: z.string().max(500).default(""),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const parent = alias(TreeNode, "library_parent");
+      const owner = ctx.session.user.id;
+      const rows = await ctx.db
+        .select({
+          folder_id: Folder.id,
+          folder_name: Folder.name,
+          node_id: TreeNode.id,
+          page: Page,
+          parent_node_id: TreeEdge.parent_node_id,
+        })
+        .from(Page)
+        .innerJoin(
+          TreeNode,
+          and(eq(TreeNode.page_id, Page.id), eq(TreeNode.user_id, owner)),
+        )
+        .innerJoin(
+          TreeEdge,
+          and(eq(TreeEdge.node_id, TreeNode.id), eq(TreeEdge.user_id, owner)),
+        )
+        .leftJoin(
+          parent,
+          and(
+            eq(parent.id, TreeEdge.parent_node_id),
+            eq(parent.user_id, owner),
+          ),
+        )
+        .leftJoin(
+          Folder,
+          and(eq(Folder.id, parent.folder_id), eq(Folder.user_id, owner)),
+        )
+        .where(
+          and(
+            eq(Page.user_id, owner),
+            ilike(Page.title, `%${input.search.replace(/[\\%_]/g, "\\$&")}%`),
+            input.cursor
+              ? or(
+                  gt(Page.title, input.cursor.title),
+                  and(
+                    eq(Page.title, input.cursor.title),
+                    gt(Page.id, input.cursor.id),
+                  ),
+                )
+              : undefined,
+          ),
+        )
+        .orderBy(asc(Page.title), asc(Page.id))
+        .limit(input.limit + 1);
+      const items = rows
+        .slice(0, input.limit)
+        .map(({ page, ...rest }) => ({ ...page, ...rest }));
+      const last = items.at(-1);
+      return {
+        items,
+        nextCursor:
+          rows.length > input.limit && last
+            ? { id: last.id, title: last.title }
+            : undefined,
+      };
     }),
   saveTransactions: protectedProcedure
     .input(zBlockTransactions.extend({ title: z.string().max(255).optional() }))

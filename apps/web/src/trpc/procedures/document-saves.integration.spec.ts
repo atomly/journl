@@ -602,3 +602,65 @@ test("stale and foreign journal conversions cannot create a page or overwrite th
     document_id: saved.document_id,
   });
 });
+
+async function seedLibraryPage(title: string, userId = owner) {
+  const id = randomUUID();
+  await db.insert(schema.Document).values({ id, user_id: userId });
+  await db
+    .insert(schema.Page)
+    .values({ document_id: id, id, title, user_id: userId });
+  await db
+    .insert(schema.TreeNode)
+    .values({ id, node_type: "page", page_id: id, user_id: userId });
+  await db
+    .insert(schema.TreeEdge)
+    .values({ id, node_id: id, parent_node_id: null, user_id: userId });
+  return id;
+}
+
+test("Library respects owner isolation and synchronous detachment before background cleanup", async () => {
+  const id = await seedLibraryPage("Visible until detached");
+  const other = "other-library-owner";
+  await db
+    .insert(schema.user)
+    .values({
+      email: "other-library@example.invalid",
+      id: other,
+      name: "Other fixture",
+    });
+  await seedLibraryPage("Visible until detached", other);
+  expect(
+    (await caller.pages.list({ search: "Visible until detached" })).items.map(
+      (page) => page.id,
+    ),
+  ).toEqual([id]);
+  await db.delete(schema.TreeEdge).where(eq(schema.TreeEdge.node_id, id));
+  expect(
+    (await caller.pages.list({ search: "Visible until detached" })).items,
+  ).toEqual([]);
+  expect(
+    await db.query.Page.findFirst({ where: eq(schema.Page.id, id) }),
+  ).toBeDefined();
+});
+
+test("Library name search treats wildcards literally and paginates equal titles without duplicates", async () => {
+  const literal = await seedLibraryPage("100%_pure");
+  await seedLibraryPage("100xxpure");
+  expect(
+    (await caller.pages.list({ search: "100%_pure" })).items.map(
+      (page) => page.id,
+    ),
+  ).toEqual([literal]);
+  const first = await seedLibraryPage("Same title");
+  const second = await seedLibraryPage("Same title");
+  const one = await caller.pages.list({ limit: 1, search: "Same title" });
+  const two = await caller.pages.list({
+    cursor: one.nextCursor,
+    limit: 1,
+    search: "Same title",
+  });
+  expect(new Set([...one.items, ...two.items].map((page) => page.id))).toEqual(
+    new Set([first, second]),
+  );
+  expect(two.nextCursor).toBeUndefined();
+});

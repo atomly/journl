@@ -358,6 +358,152 @@ The rest of the components are set by the Tailwind CSS classes, or by our editor
   padding-inline: 0;
 }
 
+.route-eyebrow {
+  margin-bottom: 16px;
+  color: var(--muted-foreground);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 1.5px;
+}
+.route-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 32px;
+}
+.route-heading h1 {
+  font-size: 40px;
+  line-height: 1.2;
+  font-weight: 600;
+  letter-spacing: -1.5px;
+}
+.journl-library {
+  padding: 40px 56px 0;
+}
+.library-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 32px;
+}
+.journl-library [data-slot="tabs-trigger"] {
+  min-height: 48px;
+  padding: 12px 16px;
+}
+.journl-library [data-slot="tabs-trigger"][data-active] {
+  background: var(--selection);
+  color: var(--pastel-foreground);
+  border-radius: 12px 12px 0 0;
+}
+.library-columns,
+.library-page-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 180px 64px;
+  align-items: center;
+  gap: 24px;
+}
+.library-columns {
+  min-height: 50px;
+  border-bottom: 1px solid var(--input);
+  color: var(--muted-foreground);
+  font-size: 11px;
+  letter-spacing: 1px;
+}
+.library-page-row {
+  min-height: 92px;
+  border-bottom: 1px solid var(--border);
+}
+.library-page-name {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-width: 0;
+  font-size: 17px;
+}
+.library-page-name > svg {
+  box-sizing: content-box;
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  padding: 8px;
+  border-radius: 10px;
+  background: var(--reference);
+  color: var(--pastel-foreground);
+}
+.library-page-name > span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.library-page-name small {
+  display: none;
+  font-size: 13px;
+  color: var(--muted-foreground);
+}
+.library-folder {
+  color: var(--muted-foreground);
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+@media (hover: hover) and (pointer: fine) {
+  .library-row-action {
+    opacity: 0;
+  }
+  .library-page-row:hover .library-row-action,
+  .library-page-row:focus-within .library-row-action,
+  .library-row-action[aria-expanded="true"] {
+    opacity: 1;
+  }
+}
+@media (max-width: 1100px) {
+  .journl-library {
+    padding: 32px;
+  }
+  .library-columns,
+  .library-page-row {
+    grid-template-columns: minmax(0, 1fr) 120px 44px;
+    gap: 12px;
+  }
+}
+@media (max-width: 700px) {
+  .journl-library {
+    padding: 24px 20px 0;
+  }
+  .route-heading {
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+  .route-heading h1 {
+    font-size: 30px;
+  }
+  .library-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .library-toolbar input {
+    max-width: none;
+  }
+  .library-columns {
+    display: none;
+  }
+  .library-page-row {
+    grid-template-columns: minmax(0, 1fr) 44px;
+  }
+  .library-folder {
+    display: none;
+  }
+  .library-page-name {
+    gap: 8px;
+    font-size: 16px;
+  }
+  .library-page-name small {
+    display: block;
+    margin-top: 4px;
+  }
+}
+
 /* The bounded navigation sheet scrolls without compressing its tree to zero. */
 [data-slot="sidebar"][data-mobile="true"] [data-slot="sidebar-content"] {
   flex: none;

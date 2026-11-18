@@ -143,7 +143,7 @@ function RootFolderEmptyState({
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-start gap-3">
           <div className="flex size-10 shrink-0 items-center justify-center rounded-2xl bg-background">
-            <FolderClosed className="size-4 text-primary" />
+            <FolderClosed className="size-4 text-(--link)" />
           </div>
           <div className="max-w-lg space-y-1">
             <p className="font-medium text-sm">This folder is empty</p>
@@ -718,7 +718,7 @@ function DraggableFolderRow({
             >
               {isEditing ? (
                 <span className="flex min-w-0 flex-1 items-center gap-2">
-                  <span className="relative flex size-3 shrink-0 items-center justify-center text-primary">
+                  <span className="relative flex size-3 shrink-0 items-center justify-center text-(--link)">
                     {isOpen ? (
                       <FolderOpen className="size-3 shrink-0" />
                     ) : (
@@ -773,7 +773,7 @@ function DraggableFolderRow({
                   onClick={handleFolderToggle}
                   className="flex w-full min-w-0 items-center gap-1.5 text-left"
                 >
-                  <span className="relative flex size-3 shrink-0 items-center justify-center text-primary">
+                  <span className="relative flex size-3 shrink-0 items-center justify-center text-(--link)">
                     {isOpen ? (
                       <FolderOpen className="size-3 shrink-0 transition-opacity duration-150 group-focus-within/folder-navigation:opacity-0 group-hover/folder-navigation:opacity-0" />
                     ) : (

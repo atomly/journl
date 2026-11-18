@@ -82,7 +82,7 @@ export async function SubscriptionView({
               {planName}
             </h2>
             <div className="flex items-baseline gap-2">
-              <span className="font-bold text-4xl text-primary">
+              <span className="font-bold text-4xl text-(--link)">
                 {planPrice}
               </span>
               <span className="text-lg text-muted-foreground">
@@ -97,7 +97,7 @@ export async function SubscriptionView({
         {/* Billing Period */}
         <div className="flex items-center gap-3 rounded-lg border bg-muted/50 p-4">
           <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
-            <Calendar className="h-5 w-5 text-primary" />
+            <Calendar className="h-5 w-5 text-(--link)" />
           </div>
           <div className="flex-1">
             <p className="font-medium text-foreground">
@@ -133,20 +133,20 @@ export async function SubscriptionView({
         <div className="grid gap-4 md:grid-cols-2">
           <div className="space-y-3">
             <h3 className="flex items-center gap-2 font-semibold text-foreground">
-              <Shield className="h-4 w-4 text-primary" />
+              <Shield className="h-4 w-4 text-(--link)" />
               Premium Features
             </h3>
             <ul className="space-y-2 text-sm">
               <li className="flex items-center gap-2">
-                <CheckCircle className="h-4 w-4 text-primary" />
+                <CheckCircle className="h-4 w-4 text-(--link)" />
                 <span>Personalized assistant</span>
               </li>
               <li className="flex items-center gap-2">
-                <CheckCircle className="h-4 w-4 text-primary" />
+                <CheckCircle className="h-4 w-4 text-(--link)" />
                 <span>Unlimited journal and pages</span>
               </li>
               <li className="flex items-center gap-2">
-                <CheckCircle className="h-4 w-4 text-primary" />
+                <CheckCircle className="h-4 w-4 text-(--link)" />
                 <span>Based solely on your information</span>
               </li>
             </ul>
@@ -154,16 +154,16 @@ export async function SubscriptionView({
 
           <div className="space-y-3">
             <h3 className="flex items-center gap-2 font-semibold text-foreground">
-              <CreditCard className="h-4 w-4 text-primary" />
+              <CreditCard className="h-4 w-4 text-(--link)" />
               Billing & Security
             </h3>
             <ul className="space-y-2 text-sm">
               <li className="flex items-center gap-2">
-                <CheckCircle className="h-4 w-4 text-primary" />
+                <CheckCircle className="h-4 w-4 text-(--link)" />
                 <span>Secure payments</span>
               </li>
               <li className="flex items-center gap-2">
-                <CheckCircle className="h-4 w-4 text-primary" />
+                <CheckCircle className="h-4 w-4 text-(--link)" />
                 <span>Cancel anytime</span>
               </li>
             </ul>

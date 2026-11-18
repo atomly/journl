@@ -83,7 +83,7 @@ function AuthResultView({ className, fallbackIntent }: AuthResultProps) {
           className={cn(
             "mb-1 size-10",
             result.intent === "success"
-              ? "text-primary"
+              ? "text-(--link)"
               : result.intent === "warning"
                 ? "text-amber-600 dark:text-amber-400"
                 : "text-destructive",

@@ -1,7 +1,7 @@
 import { withAuth } from "~/app/_guards/page-guards";
 import { AuthView } from "./_components/account-view";
 
-const ACCOUNT_VIEW_PATHS = ["settings", "security"];
+const ACCOUNT_VIEW_PATHS = ["settings", "security", "appearance"];
 
 export function generateStaticParams() {
   return ACCOUNT_VIEW_PATHS.map((pathname) => ({ pathname }));

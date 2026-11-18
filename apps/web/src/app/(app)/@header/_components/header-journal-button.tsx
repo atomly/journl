@@ -47,13 +47,25 @@ export function HeaderJournalButton() {
       })
     : "Journal";
 
-  if (pathname === "/journal") return <HeaderJournalViewToggle />;
+  if (pathname === "/journal")
+    return (
+      <div className="flex min-w-0 items-center gap-4">
+        <span className="font-medium text-sm">Journal</span>
+        <HeaderJournalViewToggle />
+      </div>
+    );
 
-  const routeLabel = pathname.startsWith("/explore")
-    ? "Explore"
-    : pathname.startsWith("/folders") || pathname.startsWith("/pages")
-      ? "Library"
-      : formattedDate;
+  const routeLabel = pathname.startsWith("/account")
+    ? "Account"
+    : pathname.startsWith("/subscription")
+      ? "Plan & billing"
+      : pathname.startsWith("/explore") || pathname.startsWith("/graph")
+        ? "Explore"
+        : pathname.startsWith("/folders") || pathname.startsWith("/pages")
+          ? "Library"
+          : pathname.startsWith("/journal/")
+            ? "Journal"
+            : formattedDate;
 
   return (
     <div className="min-w-0 truncate font-medium text-sm">{routeLabel}</div>

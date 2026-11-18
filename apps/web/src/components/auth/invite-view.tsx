@@ -25,7 +25,7 @@ export function InviteView({
     <Card className="w-full max-w-sm gap-6 border-0 bg-transparent py-6 text-foreground shadow-none ring-0">
       <CardHeader>
         <CardTitle className="flex items-center gap-2 font-semibold text-xl">
-          <BookOpen className="size-5 text-primary" aria-hidden="true" />
+          <BookOpen className="size-5 text-(--link)" aria-hidden="true" />
           Join Journl
         </CardTitle>
         <CardDescription>

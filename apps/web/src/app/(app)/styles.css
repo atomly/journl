@@ -339,6 +339,25 @@ The rest of the components are set by the Tailwind CSS classes, or by our editor
   }
 }
 
+.journl-account [data-slot="card"] {
+  border-radius: 0;
+  box-shadow: none;
+  --tw-ring-shadow: 0 0 #0000;
+  background: transparent;
+}
+.journl-account [data-slot="tabs-trigger"][data-active] {
+  background: var(--selection);
+  color: var(--pastel-foreground);
+  border-radius: 12px 12px 0 0;
+}
+.journl-account [data-slot="tabs-trigger"] {
+  min-height: 44px;
+}
+.journl-account [data-slot="card-header"],
+.journl-account [data-slot="card-content"] {
+  padding-inline: 0;
+}
+
 /* The bounded navigation sheet scrolls without compressing its tree to zero. */
 [data-slot="sidebar"][data-mobile="true"] [data-slot="sidebar-content"] {
   flex: none;

@@ -126,8 +126,12 @@ export function SignIn({
       <AuthPrompts view="signIn" />
       <ReauthenticationNotice />
       <CardHeader>
-        <CardTitle className="font-semibold text-xl">
-          {localization.auth.signIn}
+        <CardTitle
+          className="font-semibold text-xl"
+          role="heading"
+          aria-level={2}
+        >
+          Welcome back
         </CardTitle>
       </CardHeader>
 
@@ -349,7 +353,7 @@ export function SignIn({
           )}
         </div>
 
-        <div className="mt-4 flex w-full flex-col items-center gap-3">
+        <div className="mt-8 flex w-full flex-col items-start gap-3">
           {emailAndPassword?.enabled && emailAndPassword?.forgotPassword && (
             <Link
               href={`${basePaths.auth}/${viewPaths.auth.forgotPassword}`}
@@ -359,10 +363,9 @@ export function SignIn({
             </Link>
           )}
 
-          <FieldDescription className="text-center">
-            {localization.auth.needToCreateAnAccount}{" "}
+          <FieldDescription className="text-left">
             <Link href="/invite" className="underline underline-offset-4">
-              {localization.auth.signUp}
+              Have an invitation?
             </Link>
           </FieldDescription>
         </div>

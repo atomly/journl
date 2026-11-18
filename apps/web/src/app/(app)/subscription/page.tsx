@@ -79,7 +79,7 @@ async function SubscriptionPage() {
                 </div>
                 <h3 className="font-semibold">Account Status</h3>
               </div>
-              <p className="mb-1 font-bold text-2xl text-primary">
+              <p className="mb-1 font-bold text-2xl text-(--link)">
                 {cancelDate ? "Ending" : "Active"}
               </p>
               <p className="text-muted-foreground text-sm">

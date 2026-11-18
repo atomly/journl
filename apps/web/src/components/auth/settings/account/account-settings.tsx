@@ -48,12 +48,14 @@ export function AccountSettings({
     >
       <UserProfile />
       {showChangeEmail && <ChangeEmailCard />}
-      {plugins.flatMap(
-        (plugin) =>
-          plugin.accountCards?.map((Card, index) => (
-            <Card key={`${plugin.id}-${index.toString()}`} />
-          )) ?? [],
-      )}
+      {plugins
+        .filter((plugin) => plugin.id !== "theme")
+        .flatMap(
+          (plugin) =>
+            plugin.accountCards?.map((Card, index) => (
+              <Card key={`${plugin.id}-${index.toString()}`} />
+            )) ?? [],
+        )}
     </div>
   );
 }

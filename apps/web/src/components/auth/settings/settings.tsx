@@ -6,6 +6,7 @@ import type { SettingsView } from "@better-auth-ui/core";
 import { useAuth, useAuthenticate } from "@better-auth-ui/react";
 import { Shield, User2 } from "lucide-react";
 import { useMemo } from "react";
+import { Appearance } from "../theme/appearance";
 import { AccountSettings } from "./account/account-settings";
 import { SecuritySettings } from "./security/security-settings";
 
@@ -39,6 +40,7 @@ export function Settings({ className, view, path, hideNav }: SettingsProps) {
 
   const currentView = useMemo(() => {
     if (view) return view;
+    if (path === "appearance") return "appearance";
     if (!path) return undefined;
 
     const match = [
@@ -84,8 +86,7 @@ export function Settings({ className, view, path, hideNav }: SettingsProps) {
             }
           >
             <User2 className="text-muted-foreground" />
-
-            {localization.settings.account}
+            Profile
           </TabsTrigger>
 
           <TabsTrigger
@@ -102,6 +103,12 @@ export function Settings({ className, view, path, hideNav }: SettingsProps) {
             {localization.settings.security}
           </TabsTrigger>
 
+          <TabsTrigger
+            value="appearance"
+            onClick={() => navigate({ to: `${basePaths.settings}/appearance` })}
+          >
+            Appearance
+          </TabsTrigger>
           {plugins.flatMap(
             (plugin) =>
               plugin.settingsTabs?.map((settingsTab) => (
@@ -126,6 +133,9 @@ export function Settings({ className, view, path, hideNav }: SettingsProps) {
         <AccountSettings />
       </TabsContent>
 
+      <TabsContent value="appearance" tabIndex={-1}>
+        <Appearance />
+      </TabsContent>
       <TabsContent value="security" tabIndex={-1}>
         <SecuritySettings />
       </TabsContent>

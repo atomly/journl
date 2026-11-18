@@ -15,7 +15,7 @@ test("shipped account dropdown hosts the shipped theme control and signs out", a
         .first()
         .click();
     await page
-      .locator('[data-sidebar="header"] button[aria-haspopup="menu"]')
+      .locator('[data-sidebar="footer"] button[aria-haspopup="menu"]')
       .click();
     await expect(
       page.getByRole("menuitem", { exact: true, name: "Settings" }),
@@ -31,7 +31,7 @@ test("shipped account dropdown hosts the shipped theme control and signs out", a
     const divider = element.querySelector(
       '[data-slot="dropdown-menu-separator"]',
     );
-    const header = document.querySelector("header .border-sidebar-border");
+    const header = document.querySelector("header .journl-glass");
     const sidebarDivider = document.querySelector(
       '[data-slot="sidebar"] [data-slot="separator"]',
     );
@@ -100,6 +100,7 @@ test("shipped Appearance card and account dropdown share the persisted theme", a
 }, info) => {
   await page.goto("/auth/sign-in");
   await expect(page).toHaveURL("/account/settings");
+  await page.getByRole("tab", { exact: true, name: "Appearance" }).click();
   await expect(
     page.getByRole("heading", { exact: true, name: "Appearance" }),
   ).toBeVisible();
@@ -109,13 +110,14 @@ test("shipped Appearance card and account dropdown share the persisted theme", a
   if (info.project.name === "mobile-webkit")
     await page.getByRole("button", { name: "Toggle Sidebar" }).first().click();
   await page
-    .locator('[data-sidebar="header"] button[aria-haspopup="menu"]')
+    .locator('[data-sidebar="footer"] button[aria-haspopup="menu"]')
     .click();
   await expect(
     page.getByRole("tab", { exact: true, name: "Light" }),
   ).toHaveAttribute("aria-selected", "true");
   await page.getByRole("tab", { exact: true, name: "Dark" }).click();
   await page.getByRole("menuitem", { exact: true, name: "Settings" }).click();
+  await page.getByRole("tab", { exact: true, name: "Appearance" }).click();
   await expect(page.getByRole("radio", { name: /^Dark\b/ })).toBeChecked();
   await expect(page.locator("html")).toHaveClass(/\bdark\b/);
 });

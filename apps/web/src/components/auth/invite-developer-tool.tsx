@@ -59,7 +59,7 @@ export function InviteDeveloperTool({ className }: InviteDeveloperToolProps) {
 
   return (
     <div className={cn("space-y-6 rounded-xl p-6", className)}>
-      <p className="semibold inline-flex items-center gap-2 text-primary">
+      <p className="semibold inline-flex items-center gap-2 text-(--link)">
         Invite Codes
       </p>
 

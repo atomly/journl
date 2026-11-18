@@ -1,0 +1,105 @@
+.auth-page-shell {
+  min-height: 100dvh;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px;
+  padding: 32px;
+}
+.auth-story {
+  display: flex;
+  flex-direction: column;
+  padding: 32px;
+}
+.auth-story-copy {
+  margin: auto 0;
+  padding: 64px 0;
+}
+.auth-eyebrow {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 1.5px;
+  color: var(--muted-foreground);
+  margin-bottom: 24px;
+}
+.auth-story h1 {
+  font-size: 64px;
+  line-height: 1.1;
+  font-weight: 600;
+  letter-spacing: -2px;
+  margin-bottom: 32px;
+}
+.auth-story-copy > p:last-child {
+  font-size: 20px;
+  line-height: 1.5;
+  color: var(--muted-foreground);
+}
+.auth-story > small {
+  font-size: 13px;
+  color: var(--muted-foreground);
+}
+.auth-reading-surface {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48px;
+  min-width: 0;
+}
+.auth-form-content {
+  width: 100%;
+  max-width: 400px;
+}
+.auth-form-content > [data-slot="card"] {
+  max-width: none;
+  padding: 0;
+  gap: 48px;
+}
+.auth-form-content [data-slot="card-header"],
+.auth-form-content [data-slot="card-content"] {
+  padding-inline: 0;
+}
+.auth-form-content [data-slot="card-title"] {
+  font-size: 36px;
+  line-height: 1.2;
+  font-weight: 600;
+  letter-spacing: -1.5px;
+}
+.auth-form-content [data-slot="card-footer"] {
+  border: 0;
+  background: transparent;
+  padding-inline: 0;
+}
+.auth-form-content a {
+  color: var(--link);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.auth-form-content [data-slot="button"] {
+  min-height: 44px;
+}
+@media (max-width: 700px) {
+  .auth-page-shell {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    padding: 12px;
+  }
+  .auth-story {
+    padding: 16px 12px 0;
+  }
+  .auth-story-copy,
+  .auth-story > small {
+    display: none;
+  }
+  .auth-reading-surface {
+    flex: 1;
+    min-height: calc(100dvh - 110px);
+    padding: 28px 24px;
+    align-items: flex-start;
+  }
+  .auth-form-content [data-slot="card-title"] {
+    font-size: 30px;
+  }
+}

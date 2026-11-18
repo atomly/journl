@@ -1,22 +1,33 @@
-import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { Brand } from "~/components/brand";
+import "./auth-shell.css";
 
 export function AuthPageShell({ children }: { children: ReactNode }) {
   return (
-    <main className="flex min-h-svh w-full items-center justify-center p-4">
-      <div className="w-full max-w-sm">
-        <Link
-          href="/"
-          className="mb-4 inline-flex items-center gap-2 rounded-md text-muted-foreground text-sm hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-4"
-        >
-          <ArrowLeft className="size-4" aria-hidden="true" />
-          Back to home
+    <main className="auth-page-shell">
+      <aside className="auth-story">
+        <Link href="/" aria-label="Back to home">
+          <Brand />
         </Link>
-        <section className="rounded-xl bg-background p-4 text-foreground ring-1 ring-foreground/10">
-          {children}
-        </section>
-      </div>
+        <div className="auth-story-copy">
+          <p className="auth-eyebrow">YOUR KNOWLEDGE, TOGETHER</p>
+          <h1>
+            A home for
+            <br />
+            what matters.
+          </h1>
+          <p>
+            Projects, notes, recipes, references.
+            <br />
+            Keep the pieces close.
+          </p>
+        </div>
+        <small>Access is currently by invitation.</small>
+      </aside>
+      <section className="auth-reading-surface">
+        <div className="auth-form-content">{children}</div>
+      </section>
     </main>
   );
 }

@@ -16,7 +16,7 @@ async function AuthErrorPage({
 
   return (
     <div className="mx-auto w-full max-w-lg rounded-2xl border bg-card/80 p-6 text-card-foreground shadow-xl">
-      <p className="text-primary text-xs uppercase">Error</p>
+      <p className="text-(--link) text-xs uppercase">Error</p>
       <h1 className="mt-2 text-3xl">{title}</h1>
       <p className="mt-3 text-muted-foreground">{description}</p>
       <div className="mt-6 flex flex-wrap gap-3">

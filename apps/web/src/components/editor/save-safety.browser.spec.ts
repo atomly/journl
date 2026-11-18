@@ -40,7 +40,7 @@ test.describe("document editor", () => {
     );
     if (
       await page
-        .getByRole("dialog", { exact: true, name: "Sidebar" })
+        .getByRole("dialog", { exact: true, name: "Notebook navigation" })
         .isVisible()
     )
       await page.keyboard.press("Escape");
@@ -74,7 +74,7 @@ test.describe("document editor", () => {
         .first()
         .click();
     await page
-      .locator('[data-sidebar="header"] button[aria-haspopup="menu"]')
+      .locator('[data-sidebar="footer"] button[aria-haspopup="menu"]')
       .click();
     await page.getByRole("menuitem", { exact: true, name: "Settings" }).click();
     await expect(page).toHaveURL(/\/account\/settings$/);
@@ -90,7 +90,7 @@ test.describe("document editor", () => {
         .first()
         .click();
     await page
-      .locator('[data-sidebar="header"] button[aria-haspopup="menu"]')
+      .locator('[data-sidebar="footer"] button[aria-haspopup="menu"]')
       .click();
     await page
       .getByRole("menuitem", { exact: true, name: "Subscription" })
@@ -103,7 +103,7 @@ test.describe("document editor", () => {
     await expect(editor).toContainText(writing);
     if (
       await page
-        .getByRole("dialog", { exact: true, name: "Sidebar" })
+        .getByRole("dialog", { exact: true, name: "Notebook navigation" })
         .isVisible()
     )
       await page.keyboard.press("Escape");

@@ -46,6 +46,7 @@
     },
     "@acme/component-review#test:browser": {
       "cache": false,
+      "dependsOn": ["test:stories"],
       "passThroughEnv": ["COMPONENT_REVIEW_URL", "PLAYWRIGHT_*"]
     },
     "build": {

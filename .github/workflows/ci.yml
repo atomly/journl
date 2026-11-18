@@ -205,6 +205,7 @@ jobs:
           path: |
             apps/web/playwright-report/
             apps/web/test-results/
+            apps/component-review/test-results/
           retention-days: 7
 
   browser:

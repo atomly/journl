@@ -27,11 +27,13 @@ mise exec -- pnpm exec storybook tools test run
 This tests every story in Chromium and WebKit. `test:stories` exposes that command.
 Install browsers with `mise exec -- pnpm exec playwright install --with-deps
 chromium webkit` when needed; OS dependencies can need administrator access.
-With Storybook running, run additional browser checks:
+Run additional browser checks directly; Playwright starts and stops its own isolated Storybook server on an available port:
 
 ```sh
-COMPONENT_REVIEW_URL=http://127.0.0.1:<port> mise exec -- pnpm test:browser
+mise exec -- pnpm test:browser
 ```
+
+Set COMPONENT_REVIEW_URL to reuse an already running review server without taking ownership of it. The root Turbo browser task runs official story tests first, then these self-hosted viewport checks. Playwright versions match the web application so CI installs one compatible browser set. Failure traces are included in the CI artifact.
 
 These cover 1440×1000, 834×1112 and 390×844 in light/dark, plus Chromium
 forced-colors and reduced-motion emulation. They verify system selection colors,
@@ -45,11 +47,12 @@ Docs and Controls use real props. Navigation examples use genuine styled links;
 non-native button examples explicitly declare their semantics.
 
 Canonical anchors: `buttons`, `fields`, `focus-ring`, `transparency-reduced`,
-`forced-colors`. Read-only references are in
-`/tmp/journl-approved-implementation/docs/design-handoff/views/shared/`, named
-`<state>--<theme>--<device>.png`. Ownership: `/tmp/journl-uiux-review-gates.json`.
-Story docs repeat relevant IDs. Those PNGs include the shell; isolated stories
-do not establish shell acceptance.
+`forced-colors`. The final approved design is in handoff PR #459, commit
+`8093f79c`, under `docs/design-handoff/views/shared/` with filenames
+`<state>--<theme>--<device>.png`. Use a read-only checkout/export of that handoff;
+it remains separate from the implementation stack. Story docs repeat relevant
+IDs. Those PNGs include the shell; isolated stories do not establish shell
+acceptance.
 
 ## Version constraints
 

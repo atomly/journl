@@ -76,7 +76,7 @@ export function SourceContexts({
                 </p>
                 <Link
                   href={item.href}
-                  className="inline-flex min-h-11 items-center text-primary text-sm"
+                  className="inline-flex min-h-11 items-center text-(--link) text-sm"
                 >
                   Open passage →
                 </Link>

@@ -147,7 +147,7 @@ export function ClusterExplorer({ clusterId }: { clusterId: string }) {
   ) : null;
   const thread = summary.data?.summary;
   return (
-    <main className="mx-auto flex min-h-full w-full max-w-7xl flex-col gap-5 px-4 py-6 md:px-8">
+    <main className="mx-auto flex min-h-full w-full max-w-none flex-col gap-6 px-5 py-6 md:px-14 md:py-10">
       <nav
         aria-label="Exploration trail"
         className="flex items-center gap-2 text-sm"
@@ -194,7 +194,7 @@ export function ClusterExplorer({ clusterId }: { clusterId: string }) {
                 {s.name} →
               </Link>
             ))}
-            <Link href="/explore" className="min-h-11 py-3 text-primary">
+            <Link href="/explore" className="min-h-11 py-3 text-(--link)">
               Browse your threads →
             </Link>
           </div>

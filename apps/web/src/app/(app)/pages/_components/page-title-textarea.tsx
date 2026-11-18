@@ -82,7 +82,7 @@ export function PageTitleTextarea({
       onKeyDown={handleKeyDown}
       placeholder={placeholder}
       className={cn(
-        "border-none! bg-transparent! font-bold! text-3xl! shadow-none outline-none! ring-0! placeholder:text-muted-foreground/60 md:text-4xl! lg:text-5xl!",
+        "border-none! bg-transparent! font-semibold! text-3xl! shadow-none outline-none! ring-0! placeholder:text-muted-foreground/60 md:text-[40px]!",
         className,
       )}
       {...rest}

@@ -22,7 +22,7 @@
   margin-top: 24px;
 }
 
-@media (min-width: 768px) {
+@media (min-width: 701px) {
   .journl-document-editor > .better-editor-tiptap-host {
     margin-top: 32px;
   }
@@ -76,5 +76,72 @@
 @media (prefers-reduced-motion: reduce) {
   .journl-ai-writing-badge[data-ai-edit-status="generating"]::before {
     animation: none;
+  }
+}
+
+/* Journl's reading presentation is composed outside the editor package. */
+.journl-document-editor .better-editor-tiptap {
+  color: var(--foreground);
+  font-size: 17px;
+  line-height: 1.7;
+}
+.journl-document-editor .content-reference {
+  background: var(--reference);
+  color: var(--pastel-foreground);
+  border-color: transparent;
+}
+.journl-document-editor .content-reference-icon {
+  color: currentColor;
+}
+.journl-document-editor .content-reference:hover {
+  background: var(--reference);
+  text-decoration: underline;
+}
+.journl-editor-toolbar {
+  background: var(--glass);
+  border: 1px solid var(--glass-edge);
+  border-radius: 16px;
+  box-shadow: var(--depth);
+  backdrop-filter: blur(24px) saturate(1.15);
+}
+@media (max-width: 700px) {
+  .journl-document-editor .better-editor-tiptap {
+    font-size: 16px;
+  }
+}
+@media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
+  .journl-editor-toolbar {
+    background: var(--sidebar);
+    backdrop-filter: none;
+  }
+}
+@media (forced-colors: active) {
+  .journl-editor-toolbar {
+    background: Canvas;
+    color: CanvasText;
+    border-color: CanvasText;
+    backdrop-filter: none;
+  }
+  .journl-document-editor .content-reference {
+    background: Canvas;
+    color: LinkText;
+    border-color: LinkText;
+  }
+}
+
+.journl-document-editor [data-better-editor-body="heading"] {
+  font-weight: 600;
+  line-height: 1.2;
+}
+.journl-document-editor [data-heading-level="1"] {
+  font-size: 40px;
+  letter-spacing: -1px;
+}
+.journl-document-editor [data-heading-level="2"] {
+  font-size: 28px;
+}
+@media (max-width: 700px) {
+  .journl-document-editor [data-heading-level="1"] {
+    font-size: 30px;
   }
 }

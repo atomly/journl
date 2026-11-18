@@ -337,7 +337,7 @@ export function ExploreView({
                         <button
                           type="button"
                           aria-label={`Preview ${node.title}`}
-                          className="min-h-11 min-w-0 flex-1 rounded-md py-1 text-left hover:text-primary focus-visible:outline-2 focus-visible:outline-ring"
+                          className="min-h-11 min-w-0 flex-1 rounded-md py-1 text-left hover:text-(--link) focus-visible:outline-2 focus-visible:outline-ring"
                           onClick={() => select(node)}
                         >
                           <span className="line-clamp-2 font-medium text-sm">

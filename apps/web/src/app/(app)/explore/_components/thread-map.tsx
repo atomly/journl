@@ -26,12 +26,12 @@ export function ThreadCard({
   onSelect?: (id: string) => void;
 }) {
   return (
-    <div className="group flex h-full min-w-0 flex-col gap-3 rounded-2xl border border-border/70 bg-card/80 p-4 transition-colors hover:border-primary/60 hover:bg-accent/20 focus-visible:outline-2 focus-visible:outline-ring">
+    <div className="group flex h-full min-w-0 flex-col gap-4 border-border border-b bg-card p-6 transition-colors hover:bg-muted/30 focus-visible:outline-2 focus-visible:outline-ring">
       <div>
-        <h2 className="line-clamp-2 font-medium text-base">
+        <h2 className="line-clamp-2 font-semibold text-2xl">
           <button
             type="button"
-            className="text-left hover:text-primary focus-visible:outline-2 focus-visible:outline-ring"
+            className="text-left hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring"
             onClick={() => onSelect?.(thread.id)}
             aria-label={`Show connections for ${thread.name}`}
           >
@@ -46,7 +46,7 @@ export function ThreadCard({
       <ul className="space-y-1.5 text-muted-foreground text-sm">
         {thread.representatives.slice(0, 3).map((n) => (
           <li key={n.id} className="truncate">
-            <span className="mr-2 text-primary/60" aria-hidden="true">
+            <span className="mr-2 text-(--link)/60" aria-hidden="true">
               ·
             </span>
             {getExploreTitle(n)}
@@ -57,7 +57,7 @@ export function ThreadCard({
         <span>{exploreUpdatedLabel(thread.lastActivity)}</span>
         <Link
           href={`/explore/clusters/${thread.id}`}
-          className="inline-flex min-h-11 items-center text-primary"
+          className="inline-flex min-h-11 items-center text-(--link)"
         >
           Explore thread →
         </Link>
@@ -79,7 +79,7 @@ function MapThreadCard({
       className={`h-[230px] rounded-[2.5rem] border p-4 ${selected ? "border-primary bg-primary/10 ring-2 ring-primary/50" : data.linked ? "border-primary/50 bg-card" : "border-border/70 bg-card/60"}`}
     >
       <Handle type="target" position={targetPosition ?? Position.Left} />
-      <h2 className="line-clamp-2 font-medium text-base">
+      <h2 className="line-clamp-2 font-semibold text-2xl">
         <button
           type="button"
           aria-pressed={selected}
@@ -96,7 +96,7 @@ function MapThreadCard({
       <ul className="mt-3 space-y-1 text-muted-foreground text-sm">
         {data.thread.representatives.slice(0, 3).map((note) => (
           <li key={note.id} className="truncate">
-            <span aria-hidden="true" className="mr-2 text-primary">
+            <span aria-hidden="true" className="mr-2 text-(--link)">
               ·
             </span>
             {getExploreTitle(note)}
@@ -108,7 +108,7 @@ function MapThreadCard({
           {exploreUpdatedLabel(data.thread.lastActivity)}
         </span>
         <Link
-          className="inline-flex min-h-11 items-center text-primary"
+          className="inline-flex min-h-11 items-center text-(--link)"
           href={`/explore/clusters/${data.thread.id}`}
         >
           Explore thread →

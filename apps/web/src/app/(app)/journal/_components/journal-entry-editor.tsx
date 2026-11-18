@@ -122,7 +122,7 @@ export function JournalEntryHeader({
 
   return (
     <div className={cn("flex items-start gap-3", className)} {...rest}>
-      <h2 className="min-w-0 flex-1 font-semibold text-3xl text-muted-foreground md:text-4xl lg:text-5xl">
+      <h2 className="min-w-0 flex-1 font-semibold text-[11px] text-muted-foreground uppercase tracking-[1.5px]">
         {linkDate ? <Link href={`/journal/${date}`}>{label}</Link> : label}
       </h2>
       <div className="flex shrink-0 items-center gap-0">

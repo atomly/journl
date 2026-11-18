@@ -8,7 +8,7 @@ test("Explore supports keyboard selection, search, thread navigation, and respon
   page.on("pageerror", (error) => errors.push(error.message));
   await page.goto("/explore");
   await expect(
-    page.getByRole("heading", { name: "Pick up a thread" }),
+    page.getByRole("heading", { name: "Find the thread. See the evidence." }),
   ).toBeVisible();
   await page.getByRole("button", { exact: true, name: "List view" }).click();
   const thread = page.getByRole("button", { name: /Browser thread/ }).first();

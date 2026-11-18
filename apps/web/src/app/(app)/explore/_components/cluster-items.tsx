@@ -119,7 +119,7 @@ export function ThreadItems({
                     </div>
                     <Link
                       href={`/explore/clusters/${clusterId}/sources?key=${encodeURIComponent(s.key)}`}
-                      className="inline-flex min-h-11 shrink-0 items-center text-primary text-xs"
+                      className="inline-flex min-h-11 shrink-0 items-center text-(--link) text-xs"
                     >
                       Read context →
                     </Link>
@@ -150,7 +150,7 @@ export function ThreadItems({
                       )}
                       <Link
                         href={n.href}
-                        className="inline-flex min-h-11 items-center text-primary text-xs"
+                        className="inline-flex min-h-11 items-center text-(--link) text-xs"
                       >
                         Open note →
                       </Link>
@@ -178,7 +178,7 @@ export function ThreadItems({
                             </p>
                             <Link
                               href={evidence.href}
-                              className="inline-flex min-h-11 items-center text-primary text-xs"
+                              className="inline-flex min-h-11 items-center text-(--link) text-xs"
                             >
                               Read passage →
                             </Link>

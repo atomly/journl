@@ -35,7 +35,7 @@ export function ExploreOverview() {
     camera: undefined,
     cursor: undefined,
     history: [],
-    mode: "map",
+    mode: "list",
     scroll: 0,
     search: "",
     selected: undefined,
@@ -109,9 +109,12 @@ export function ExploreOverview() {
   }
 
   return (
-    <main className="mx-auto flex min-h-full w-full max-w-6xl flex-col gap-6 px-4 py-6 md:px-8">
+    <main className="mx-auto flex min-h-full w-full max-w-none flex-col gap-6 px-5 py-6 md:px-14 md:py-10">
       <header>
-        <h1 className="font-semibold text-2xl">Pick up a thread</h1>
+        <p className="route-eyebrow">EXPLORE YOUR KNOWLEDGE</p>
+        <h1 className="font-semibold text-3xl tracking-tight md:text-[40px]">
+          Find the thread. See the evidence.
+        </h1>
         <p className="mt-2 max-w-xl text-muted-foreground text-sm leading-relaxed">
           Find the notes and sources behind an idea, and follow where it leads.
         </p>
@@ -188,7 +191,7 @@ export function ExploreOverview() {
                 onCamera={(camera) => setView((v) => ({ ...v, camera }))}
               />
             ) : (
-              <div className="grid gap-4 p-4 sm:grid-cols-2">
+              <div className="flex flex-col gap-0">
                 {threads.map((thread) => (
                   <ThreadCard
                     key={thread.id}

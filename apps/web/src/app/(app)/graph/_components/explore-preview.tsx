@@ -108,7 +108,7 @@ export function ExplorePreview({
             >
               <button
                 type="button"
-                className="flex min-h-11 w-full items-center justify-between gap-2 rounded-md text-left font-medium text-sm hover:text-primary focus-visible:outline-2 focus-visible:outline-ring"
+                className="flex min-h-11 w-full items-center justify-between gap-2 rounded-md text-left font-medium text-sm hover:text-(--link) focus-visible:outline-2 focus-visible:outline-ring"
                 onClick={() => onSelect(other, edge)}
               >
                 <span>{other.title}</span>

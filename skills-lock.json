@@ -9,6 +9,7 @@
     },
     "gh-stack": {
       "source": "github/gh-stack",
+      "ref": "80b6d6e910cc1b7eaa26b961d7721ade21084fed",
       "sourceType": "github",
       "skillPath": "skills/gh-stack/SKILL.md",
       "computedHash": "e54bf50370987f13ca2803b3be829f36350b68a79dc36ffd3b27350bc6d2fde1"

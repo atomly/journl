@@ -1,0 +1,195 @@
+{
+  "archiveSha256": "a35e59aaf7dc1e4391e9a35f637e4031ac59abcb211e84b0c949214c5fd793e3",
+  "files": [
+    {
+      "file": "approved-brand.md",
+      "sha256": "58e7920a86606609042f373f19f70f645962d32edd20744160c0cdd93aa60e6e",
+      "source": "application/specs/approved-brand.md"
+    },
+    {
+      "file": "behavior-and-menus.md",
+      "sha256": "573ba214b4ad2b13ec308b8d76305a25fefff24c2c6b33ec7649f60c3ad38a78",
+      "source": "application/specs/behavior-and-menus.md"
+    },
+    {
+      "file": "brand/Inter-OFL.txt",
+      "sha256": "5b9321a4298cfeb6b34354164a1c3afc3db114569984c502b9b35d988fd58c57",
+      "source": "application/assets/fonts/Inter-OFL.txt"
+    },
+    {
+      "file": "brand/icon-dark-16.png",
+      "sha256": "e1568fae63b5c3cd84989d9f49b90bf4f59329ee3d5f4ef9710a46630f3ed408",
+      "source": "application/assets/brand/icon-dark-16.png"
+    },
+    {
+      "file": "brand/icon-dark-24.png",
+      "sha256": "0c67b45e0c2dbf7f0ee2bcbbe87518de4f3d4a30f4a22e87710784ac84e9df19",
+      "source": "application/assets/brand/icon-dark-24.png"
+    },
+    {
+      "file": "brand/icon-dark-32.png",
+      "sha256": "ff071dc2ebc80f9dec4d99f3fdfe78bb3bc52c8633274d64bb5a02884b8be463",
+      "source": "application/assets/brand/icon-dark-32.png"
+    },
+    {
+      "file": "brand/icon-dark-48.png",
+      "sha256": "2914f734a54eeef52d20691587469164766c9b2740a80e4bdf92f54605156107",
+      "source": "application/assets/brand/icon-dark-48.png"
+    },
+    {
+      "file": "brand/icon-light-16.png",
+      "sha256": "5de0af4888b9647de32053b523aae79202d49c4396bd97cf23047283ff32251a",
+      "source": "application/assets/brand/icon-light-16.png"
+    },
+    {
+      "file": "brand/icon-light-24.png",
+      "sha256": "8d12f337194312142c95676139c1c161835e173be3b2e5189bbe109aa55bdfa2",
+      "source": "application/assets/brand/icon-light-24.png"
+    },
+    {
+      "file": "brand/icon-light-32.png",
+      "sha256": "2a0b6d1c43bbd8f21a729dc1df35dc84d25f98e750a877ada291707d208f64d6",
+      "source": "application/assets/brand/icon-light-32.png"
+    },
+    {
+      "file": "brand/icon-light-48.png",
+      "sha256": "b8fc2d33fe5f9872ce0cd1ad189e547c2b747d6d648bd9f72390a5f386e3abca",
+      "source": "application/assets/brand/icon-light-48.png"
+    },
+    {
+      "file": "brand/icon-mono-ink-16.png",
+      "sha256": "d0d4ccd665f8ed13dfeb05223ca690119443401dd01b88933777ae5760e62f4a",
+      "source": "application/assets/brand/icon-mono-ink-16.png"
+    },
+    {
+      "file": "brand/icon-mono-ink-24.png",
+      "sha256": "7aa350a7c109594fc6959a013e79f562c6f29fe76373449af1d4a359f85da0f6",
+      "source": "application/assets/brand/icon-mono-ink-24.png"
+    },
+    {
+      "file": "brand/icon-mono-ink-32.png",
+      "sha256": "ac102e0a3f86bb5c159ffdbac3d32cb949fceba4ece70c4e4dcde9808f333bab",
+      "source": "application/assets/brand/icon-mono-ink-32.png"
+    },
+    {
+      "file": "brand/icon-mono-ink-48.png",
+      "sha256": "d013ca4d2471b40a5143fc0454652cb76ce981564a0f20e6f2a40a5a74228049",
+      "source": "application/assets/brand/icon-mono-ink-48.png"
+    },
+    {
+      "file": "brand/icon-mono-white-16.png",
+      "sha256": "6da1f1f76cbbe96d98b59f63be69ec296b4bd5c30c6d4f498ff7c7aa6374c104",
+      "source": "application/assets/brand/icon-mono-white-16.png"
+    },
+    {
+      "file": "brand/icon-mono-white-24.png",
+      "sha256": "e1e336d43836ff39b975293558a763150cf193b5fc9838e73b2917fc87035ae3",
+      "source": "application/assets/brand/icon-mono-white-24.png"
+    },
+    {
+      "file": "brand/icon-mono-white-32.png",
+      "sha256": "6db27f737d9f3840488d333b37c5381e20ab5f3a4eb926253c888d005987bbf2",
+      "source": "application/assets/brand/icon-mono-white-32.png"
+    },
+    {
+      "file": "brand/icon-mono-white-48.png",
+      "sha256": "eb96c523b3684b1cef569433a6e0dd37269b69e044c588f69f4b9ccb85b05f2a",
+      "source": "application/assets/brand/icon-mono-white-48.png"
+    },
+    {
+      "file": "brand/lockup-dark.svg",
+      "sha256": "9b523cfeebb661129509065e5e4b86fc6c2a39ae33c0287eab12ba8728a80e5d",
+      "source": "application/assets/brand/lockup-dark.svg"
+    },
+    {
+      "file": "brand/lockup-light.svg",
+      "sha256": "78a09e16f320d4ae619afae968e84550d695d31fe8f7110b06d2b6a27d6bea71",
+      "source": "application/assets/brand/lockup-light.svg"
+    },
+    {
+      "file": "brand/lockup-mono-ink.svg",
+      "sha256": "107753ff6a14c478051a3f9176a9831737c28a3fa2bf098012db9f794014d6ef",
+      "source": "application/assets/brand/lockup-mono-ink.svg"
+    },
+    {
+      "file": "brand/lockup-mono-white.svg",
+      "sha256": "e070d9327cd0cdf3a74a277ce1a4d41ffa9109d9617db5b10df00648fabe9230",
+      "source": "application/assets/brand/lockup-mono-white.svg"
+    },
+    {
+      "file": "brand/mark-dark.svg",
+      "sha256": "022f4b3308964126ce17e5ada5fd7e0607759182bf3083e8de6f0d3cec09957c",
+      "source": "application/assets/brand/mark-dark.svg"
+    },
+    {
+      "file": "brand/mark-light.svg",
+      "sha256": "52e32dc729354057716a89b71ace0f433222e4608e77342fe6e344dcfd950860",
+      "source": "application/assets/brand/mark-light.svg"
+    },
+    {
+      "file": "brand/mark-mono-ink.svg",
+      "sha256": "77d57499db11ebc3ad59e196b5834367292d23ea0e91da81f15a32381d7601a3",
+      "source": "application/assets/brand/mark-mono-ink.svg"
+    },
+    {
+      "file": "brand/mark-mono-white.svg",
+      "sha256": "846dd666a50ee7158d6fc8b35891b1ce5aa1badfc22a43daaf26f7cbef30e50d",
+      "source": "application/assets/brand/mark-mono-white.svg"
+    },
+    {
+      "file": "brand/wordmark-dark.svg",
+      "sha256": "7d6b74d3bc8a665a3922096fbd356f20b33d75f52adfea7fdba4b110454112be",
+      "source": "application/assets/brand/wordmark-dark.svg"
+    },
+    {
+      "file": "brand/wordmark-light.svg",
+      "sha256": "b4f63b407d229fdf6d369e732ee4d3a0dc09b0bfa5d69464e04f6836c230e7b7",
+      "source": "application/assets/brand/wordmark-light.svg"
+    },
+    {
+      "file": "brand/wordmark-mono-ink.svg",
+      "sha256": "b4f63b407d229fdf6d369e732ee4d3a0dc09b0bfa5d69464e04f6836c230e7b7",
+      "source": "application/assets/brand/wordmark-light.svg"
+    },
+    {
+      "file": "brand/wordmark-mono-white.svg",
+      "sha256": "7d6b74d3bc8a665a3922096fbd356f20b33d75f52adfea7fdba4b110454112be",
+      "source": "application/assets/brand/wordmark-dark.svg"
+    },
+    {
+      "file": "current-access-gaps.md",
+      "sha256": "0e5e977db8544e0d81dfd59f342948abe2e25b40b3bc300d9fcd54015368b02b",
+      "source": "application/specs/current-access-gaps.md"
+    },
+    {
+      "file": "foundations.md",
+      "sha256": "2369ed2ac92857d901933ff725a095141e17d2d9e097f65b2af2684fce700b68",
+      "source": "application/specs/foundations.md"
+    },
+    {
+      "file": "responsive-and-implementation.md",
+      "sha256": "75bbe1066e4dda0d74987d1217853b839cc16cdea947cd2def6adf4eabe54964",
+      "source": "application/specs/responsive-and-implementation.md"
+    },
+    {
+      "file": "screenshots/library-dark.png",
+      "sha256": "d2325214908e3b10a36b8dd1368b0c953a087824c871d9774358e368db23dd91",
+      "source": "application/screenshots/library/all-pages--dark--desktop.png"
+    },
+    {
+      "file": "screenshots/library-light.png",
+      "sha256": "ed05a44f89ded4fbbc385f009e52bb33214cf795c6909ef2ca8a0ddb1ae8bdb2",
+      "source": "application/screenshots/library/all-pages--light--desktop.png"
+    },
+    {
+      "file": "screenshots/marketing-light.png",
+      "sha256": "61262c18c27ac4768e48c118ba80c621ab1296f80333bf49adcee6471ab333d2",
+      "source": "application/screenshots/marketing/marketing-full--light--desktop.png"
+    },
+    {
+      "file": "screenshots/marketing-mobile.png",
+      "sha256": "1fa19759d9fc48d0aba1222604e7010fc44d24b6df091ce6db42405d6d06b61c",
+      "source": "application/screenshots/marketing/marketing-full--light--mobile.png"
+    }
+  ]
+}

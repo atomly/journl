@@ -1,327 +1,222 @@
-import { Separator } from "@acme/ui/separator";
+import { buttonVariants } from "@acme/ui/button";
+import { Surface } from "@acme/ui/surface";
 import {
   ArrowRight,
-  BookOpen,
-  Brain,
-  LineChart,
-  PenLine,
-  ShieldCheck,
+  Compass,
+  FileText,
+  Folder,
+  MessageSquare,
 } from "lucide-react";
-import type { Metadata, Viewport } from "next";
+import type { Metadata } from "next";
 import Link from "next/link";
-import { RiSparkling2Fill } from "react-icons/ri";
 import { withoutAuth } from "~/app/_guards/page-guards";
-import { getPublicWebUrl } from "~/lib/public-web-url";
-import { HydrateClient } from "~/trpc/server";
-import { HeroCtaButton } from "./_components/hero-cta-button";
-import { HeroJournlParticles } from "./_components/hero-journl-particles";
+import { Brand } from "~/components/brand";
+import { ProductPreview } from "./_components/product-preview";
 
-const publicWebUrl = getPublicWebUrl();
-
+const description =
+  "Projects, passing thoughts, recipes, references. Bring them together in Journl, so a good idea is there when you need it.";
 export const metadata: Metadata = {
-  alternates: {
-    canonical: "/",
-  },
-  description:
-    "Journl helps you capture thoughts, reflect with AI guidance, and turn daily notes into momentum.",
-  keywords: [
-    "journaling app",
-    "ai journal",
-    "guided reflection",
-    "personal growth",
-    "daily writing",
-  ],
-  metadataBase: new URL(publicWebUrl),
+  alternates: { canonical: "/" },
+  description,
   openGraph: {
-    description:
-      "Capture thoughts, get guided reflections, and spot patterns over time with Journl.",
+    description,
     images: [
       {
-        alt: "Journl",
-        height: 630,
-        url: "/acme-icon.svg",
-        width: 1200,
+        alt: "Your knowledge, together in Journl",
+        height: 1000,
+        url: "/design/library-light-desktop.png",
+        width: 1440,
       },
     ],
-    siteName: "Journl",
     title: "Journl: Your mind, organized",
-    type: "website",
-    url: publicWebUrl,
-  },
-  robots: {
-    follow: true,
-    index: true,
   },
   title: "Journl: Your mind, organized",
   twitter: {
     card: "summary_large_image",
-    description:
-      "Capture thoughts, get guided reflections, and spot patterns over time with Journl.",
-    images: ["/acme-icon.svg"],
+    description,
+    images: ["/design/library-light-desktop.png"],
     title: "Journl: Your mind, organized",
   },
 };
 
-export const viewport: Viewport = {
-  themeColor: [{ color: "black" }],
-};
+function PublicActions() {
+  return (
+    <div className="public-actions">
+      <Link
+        className={buttonVariants({ size: "lg", variant: "ghost" })}
+        href="/auth/sign-in"
+      >
+        Sign in
+      </Link>
+      <Link className={buttonVariants({ size: "lg" })} href="/invite">
+        Get started <ArrowRight />
+      </Link>
+    </div>
+  );
+}
+
+const useCases = [
+  {
+    body: "The plan, the useful reference, the idea you had on the way home. Keep the pieces where you can find them.",
+    example: "Projects / A small balcony garden",
+    icon: Folder,
+    title: "Make room for a project.",
+  },
+  {
+    body: "A recipe worth making again. A small adjustment that made it yours. Save more than the link.",
+    example: "Recipes / Lemon & herb lentils",
+    icon: FileText,
+    title: "Keep the everyday good stuff.",
+  },
+  {
+    body: "Collect references alongside your own thoughts. Explore the threads between notes, with the original context close.",
+    example: "References / Make room for focus",
+    icon: Compass,
+    title: "Return to a useful idea.",
+  },
+];
 
 export default withoutAuth(function RootPage() {
-  const year = new Date().getFullYear();
   return (
-    <HydrateClient>
-      <div className="relative min-h-screen select-none overflow-hidden bg-background text-foreground">
-        <div className="pointer-events-none absolute inset-0 -z-10">
-          <div className="absolute inset-0 bg-[radial-gradient(1200px_600px_at_20%_-10%,rgba(255,255,255,0.08),transparent_60%),radial-gradient(900px_500px_at_80%_5%,rgba(255,255,255,0.06),transparent_55%)]" />
-          <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(255,255,255,0.08)_1px,transparent_1px),linear-gradient(180deg,rgba(255,255,255,0.08)_1px,transparent_1px)] bg-[size:48px_48px] opacity-20 [mask-image:radial-gradient(70%_55%_at_50%_0%,black,transparent)]" />
+    <div className="landing">
+      <header className="marketing-nav journl-glass">
+        <Link href="/" aria-label="Journl home">
+          <Brand compact />
+        </Link>
+        <span className="nav-description">A home for useful knowledge</span>
+        <PublicActions />
+      </header>
+      <main>
+        <section className="hero-new">
+          <div>
+            <p className="eyebrow">FOR EVERYTHING YOU WANT TO KEEP</p>
+            <h1>
+              Give your
+              <br />
+              knowledge
+              <br />a home.
+            </h1>
+          </div>
+          <div className="hero-description">
+            <p>{description}</p>
+            <Link className={buttonVariants({ size: "lg" })} href="/invite">
+              Get started with an invitation <ArrowRight />
+            </Link>
+            <small>
+              Access is currently by invitation.
+              <br />
+              Already have a notebook? <Link href="/auth/sign-in">Sign in</Link>
+            </small>
+          </div>
+        </section>
+        <section
+          id="capture"
+          className="product-frame journl-glass"
+          aria-label="Example Journl Library"
+        >
+          <ProductPreview />
+        </section>
+        <div className="composition-caption">
+          <span>A project. A recipe. A reference. One place to return to.</span>
+          <span>
+            Actual redesigned Library capture · synthetic example notes
+          </span>
         </div>
-
-        <header className="mx-auto flex w-full max-w-6xl items-center justify-between px-6 pt-8">
-          <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-border bg-card/60 backdrop-blur">
-              <BookOpen className="h-5 w-5 text-primary" />
-            </div>
-            <span className="font-semibold text-lg tracking-wide">Journl</span>
-          </div>
-          <nav className="hidden items-center gap-8 text-muted-foreground text-sm md:flex">
-            <a className="transition hover:text-foreground" href="#features">
-              Features
-            </a>
-            <a className="transition hover:text-foreground" href="#workflow">
-              Workflow
-            </a>
-          </nav>
-          <div className="flex items-center gap-4 text-sm">
-            <Link
-              className="text-muted-foreground transition hover:text-foreground"
-              href="/auth/sign-in"
-            >
-              Sign in
-            </Link>
-            <Link
-              className="rounded-full border border-border bg-card/60 px-4 py-2 text-foreground transition hover:border-primary/60"
-              href="/invite"
-            >
-              Get started
-            </Link>
-          </div>
-        </header>
-
-        <main className="mx-auto flex w-full max-w-6xl flex-col gap-20 px-6 pt-16 pb-24 md:pb-32">
-          <section className="grid gap-12 md:items-center lg:grid-cols-[1.1fr_0.9fr]">
-            <div className="fade-in slide-in-from-bottom-4 animate-in space-y-8 duration-700">
-              <div className="inline-flex items-center gap-2 rounded-full border border-border bg-card/60 px-4 py-2 text-muted-foreground text-xs uppercase tracking-[0.3em]">
-                <RiSparkling2Fill className="h-4 w-4 text-primary" />
-                Journaling, reimagined
-              </div>
-              <div className="space-y-6">
-                <h1 className="text-5xl leading-tight md:text-7xl">
-                  Your mind, made personal.
-                </h1>
-                <p className="max-w-xl text-foreground/85 text-lg">
-                  Journl turns daily notes into structured reflections, smart
-                  prompts, and trend-aware insights, so you see patterns instead
-                  of scattered pages.
-                </p>
-              </div>
-              <div className="grid gap-4 md:grid-cols-2">
-                <HeroCtaButton
-                  className="group h-12 w-full bg-primary text-primary-foreground hover:bg-primary/90"
-                  href="/invite"
-                >
-                  <span className="font-semibold">Start writing</span>
-                  <ArrowRight className="ml-2 h-5 w-5 transition-transform duration-200 group-hover:translate-x-1" />
-                </HeroCtaButton>
-                <HeroCtaButton
-                  className="h-12 w-full border border-border bg-card/60 text-foreground hover:bg-card/80"
-                  href="/auth/sign-in"
-                >
-                  <span className="font-semibold">Sign in</span>
-                </HeroCtaButton>
-              </div>
-              <div className="grid gap-4 text-foreground/85 text-sm sm:grid-cols-3">
-                <div className="flex items-center gap-2">
-                  <PenLine className="h-4 w-4 text-primary" />
-                  Structured prompts
-                </div>
-                <div className="flex items-center gap-2">
-                  <LineChart className="h-4 w-4 text-primary" />
-                  Trend highlights
-                </div>
-                <div className="flex items-center gap-2">
-                  <ShieldCheck className="h-4 w-4 text-primary" />
-                  Private by default
-                </div>
-              </div>
-            </div>
-
-            <div className="fade-in slide-in-from-bottom-6 relative animate-in delay-150 duration-700">
-              <div className="absolute -inset-6 animate-[glow_8s_ease-in-out_infinite] rounded-[32px] bg-gradient-to-br from-primary/30 via-primary/10 to-transparent blur-2xl" />
-              <div className="relative overflow-hidden rounded-[28px] border border-border bg-card/60 p-6 shadow-2xl backdrop-blur">
-                <HeroJournlParticles className="h-40 md:h-56" />
-                <div className="mt-6 space-y-4 text-foreground text-sm">
-                  <div className="rounded-2xl border border-border bg-background/40 p-4">
-                    <p className="text-primary text-xs uppercase">Today</p>
-                    <p className="mt-2 text-base text-foreground">
-                      "I felt scattered this morning, but the walk reset my
-                      focus."
-                    </p>
-                  </div>
-                  <div className="rounded-2xl border border-border bg-card/50 p-4">
-                    <p className="text-primary text-xs uppercase">Insight</p>
-                    <p className="mt-2 text-muted-foreground">
-                      Small check-ins surface focus shifts. Capture one next
-                      step to keep momentum later today.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </section>
-
-          <section id="features" className="space-y-10">
-            <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
-              <div className="space-y-3">
-                <p className="text-primary text-xs uppercase">Why Journl</p>
-                <h2 className="text-3xl md:text-4xl">
-                  A notebook that actually talks back.
-                </h2>
-              </div>
-              <p className="max-w-md text-foreground/85">
-                Capture quick thoughts, then let Journl surface what matters
-                with AI-guided structure, summaries, and timely nudges.
-              </p>
-            </div>
-            <div className="grid gap-6 md:grid-cols-3">
-              {[
-                {
-                  copy: "Turn fragments into clean reflections with adaptive prompts.",
-                  icon: Brain,
-                  title: "Smart structure",
-                },
-                {
-                  copy: "Watch momentum build with weekly themes and mood shifts.",
-                  icon: LineChart,
-                  title: "Signal detection",
-                },
-                {
-                  copy: "Keep sensitive entries secure with privacy-first defaults.",
-                  icon: ShieldCheck,
-                  title: "Trust & control",
-                },
-              ].map(({ title, copy, icon: Icon }) => (
-                <div
-                  key={title}
-                  className="rounded-3xl border border-border bg-card/60 p-6 backdrop-blur"
-                >
-                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-border bg-card/80">
-                    <Icon className="h-5 w-5 text-primary" />
-                  </div>
-                  <h3 className="mt-6 font-semibold text-lg">{title}</h3>
-                  <p className="mt-3 text-foreground/80 text-sm">{copy}</p>
-                </div>
-              ))}
-            </div>
-          </section>
-
-          <section
-            id="workflow"
-            className="grid gap-10 rounded-[32px] border border-border bg-gradient-to-br from-card/80 via-background to-card/60 p-8 md:grid-cols-[1.1fr_0.9fr] md:p-12"
-          >
-            <div className="space-y-6">
-              <p className="text-primary text-xs uppercase">Workflow</p>
-              <h2 className="text-3xl md:text-4xl">
-                The daily ritual, supercharged.
-              </h2>
-              <p className="text-foreground/85">
-                Journl keeps the cadence simple: jot, reflect, and connect the
-                dots.
-              </p>
-            </div>
-            <div className="space-y-6 text-foreground/85 text-sm">
-              {[
-                {
-                  description:
-                    "Short entries, long entries, quick reflections. It all fits.",
-                  title: "Write in your own voice",
-                },
-                {
-                  description:
-                    "Prompts highlight what was different today and why it mattered.",
-                  title: "Get guided reflections",
-                },
-                {
-                  description:
-                    "Weekly digests surface the habits and moments worth repeating.",
-                  title: "See patterns over time",
-                },
-              ].map((step, index) => (
-                <div
-                  key={step.title}
-                  className="flex items-start gap-4 rounded-2xl border border-border bg-background/40 p-4"
-                >
-                  <div className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-card/80 font-semibold text-primary text-xs">
-                    0{index + 1}
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-foreground">
-                      {step.title}
-                    </h3>
-                    <p className="mt-1 text-foreground/75">
-                      {step.description}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </section>
-
-          <section className="flex flex-col items-center gap-6 rounded-4xl border border-border bg-card/60 px-6 py-12 text-center">
-            <h2 className="text-3xl md:text-4xl">
-              Ready to turn thoughts into momentum?
+        <section id="connect" className="organization">
+          <div>
+            <p className="eyebrow">LESS SCATTERED. MORE USEFUL.</p>
+            <h2>
+              Your life doesn’t
+              <br />
+              fit in one kind
+              <br />
+              of note.
             </h2>
-            <p className="max-w-2xl text-foreground/85">
-              Start with a single entry and watch Journl organize your
-              narrative, surface what matters, and keep you moving forward.
+            <p className="body-copy">
+              Keep a quick thought beside the things you’re working on. Give
+              pages a home in folders. Find what matters by name, or follow a
+              connection back to its source.
             </p>
-            <HeroCtaButton
-              className="marketing-cta-animated-border group bg-primary text-primary-foreground hover:bg-primary/90 sm:w-52"
-              href="/invite"
-            >
-              <span className="font-semibold">Start writing</span>
-              <ArrowRight className="ml-2 h-5 w-5 transition-transform duration-200 group-hover:translate-x-1" />
-            </HeroCtaButton>
-          </section>
-        </main>
-
-        <footer className="flex flex-col gap-y-6 px-6 pb-10 text-muted-foreground">
-          <div className="flex flex-col items-center justify-center gap-6 md:flex-row">
-            <div className="flex items-center gap-x-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-2xl border border-border bg-card/60">
-                <BookOpen className="h-5 w-5 text-primary" />
-              </div>
-              <span className="font-semibold text-foreground text-xl">
-                Journl
-              </span>
-            </div>
-            <div className="flex flex-wrap items-center justify-center gap-4 text-sm">
-              <Link
-                className="transition hover:text-foreground"
-                href="/auth/sign-in"
-              >
-                Sign in
-              </Link>
-              <Link className="transition hover:text-foreground" href="/invite">
-                Start writing
-              </Link>
-            </div>
           </div>
-          <Separator className="mx-auto max-w-screen-lg bg-border" />
-          <div className="text-center text-sm">
-            <p>&copy; {year} Journl. All rights reserved.</p>
+          <div className="use-cases">
+            {useCases.map(({ title, body, example, icon: Icon }, index) => (
+              <article className="use-case" key={title}>
+                <span className="case-no">0{index + 1}</span>
+                <div>
+                  <h3>{title}</h3>
+                  <p>{body}</p>
+                  <span className="example">
+                    <Icon size={18} strokeWidth={1.7} />
+                    {example}
+                  </span>
+                </div>
+              </article>
+            ))}
           </div>
-        </footer>
-      </div>
-    </HydrateClient>
+        </section>
+        <section id="rediscover" className="context-section">
+          <div className="context-copy">
+            <p className="eyebrow">THEN, FIND THE THREAD.</p>
+            <h2>
+              A little help.
+              <br />
+              Your own context.
+            </h2>
+            <p>
+              Ask Journl about a note and keep the source in view. Explore a
+              thought, find a connection, or turn a loose idea into a useful
+              next question.
+            </p>
+          </div>
+          <Surface material="glass" className="context-card">
+            <header>
+              <MessageSquare size={20} strokeWidth={1.7} />
+              Ask Journl
+            </header>
+            <Surface shape="overlay" className="context-answer">
+              <p className="context-question">
+                What would help me make room for focus?
+              </p>
+              <p>
+                Your note comes back to one idea: make space before making a
+                plan. A useful question to keep close might be:
+              </p>
+              <p className="context-suggestion">
+                What could I leave a little more room for today?
+              </p>
+              <span className="source-example">1 · Make room for focus</span>
+            </Surface>
+            <small>
+              Illustrative response, grounded in the synthetic example note.
+            </small>
+          </Surface>
+        </section>
+        <section className="marketing-end">
+          <p className="eyebrow">KEEP WHAT MATTERS. FIND IT AGAIN.</p>
+          <h2>
+            Keep it close.
+            <br />
+            Find it again.
+          </h2>
+          <p>Have an invitation? Your notebook is waiting.</p>
+          <PublicActions />
+        </section>
+      </main>
+      <footer className="marketing-footer">
+        <Link href="/" aria-label="Journl home">
+          <Brand compact />
+        </Link>
+        <nav aria-label="Footer">
+          <a href="#capture">Capture</a>
+          <a href="#connect">Connect</a>
+          <a href="#rediscover">Rediscover</a>
+          <Link href="/auth/sign-in">Sign in</Link>
+          <Link href="/invite">Get started</Link>
+        </nav>
+        <span className="copyright">
+          © {new Date().getFullYear()} Journl. All rights reserved.
+        </span>
+      </footer>
+    </div>
   );
 });

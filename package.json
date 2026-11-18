@@ -12,6 +12,7 @@
     "clean": "turbo run clean && git clean -xdf .turbo node_modules",
     "db:push": "turbo -F @acme/db push",
     "db:studio": "turbo -F @acme/db studio",
+    "design:verify": "node scripts/verify-design-handoff.mjs",
     "dev": "turbo run dev --continue --parallel",
     "typecheck": "turbo run typecheck",
     "supabase:start": "supabase start",

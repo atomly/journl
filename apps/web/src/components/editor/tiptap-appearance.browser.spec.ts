@@ -71,7 +71,13 @@ for (const theme of ["light", "dark"]) {
         "sticky",
       );
       await expect(toolbar).toHaveCSS("flex-wrap", "nowrap");
-      expect((await toolbar.boundingBox())?.height).toBeLessThan(50);
+      // One row of 44px touch controls plus the toolbar's padding and borders.
+      expect((await toolbar.boundingBox())?.height).toBeLessThanOrEqual(56);
+      const boldTarget = await toolbar
+        .getByRole("button", { exact: true, name: "Bold" })
+        .boundingBox();
+      expect(boldTarget?.width).toBeGreaterThanOrEqual(44);
+      expect(boldTarget?.height).toBeGreaterThanOrEqual(44);
     }
     await page.keyboard.press("Escape");
     await editor.focus();

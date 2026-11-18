@@ -4,7 +4,12 @@ import Image from "next/image";
 /** Exact approved artwork. Consumers own link semantics and placement. */
 export function Brand({ className }: { className?: string }) {
   return (
-    <span className={cn("journl-brand inline-flex h-10", className)}>
+    <span
+      className={cn(
+        "journl-brand inline-flex aspect-[234.668/64] h-10",
+        className,
+      )}
+    >
       {/* SVG wordmarks are outlined paths, not live text. */}
       <Image
         unoptimized
@@ -22,14 +27,7 @@ export function Brand({ className }: { className?: string }) {
         src="/brand/lockup-dark.svg"
         alt="Journl"
       />
-      <Image
-        unoptimized
-        width={235}
-        height={64}
-        className="brand-mono hidden h-full w-auto"
-        src="/brand/lockup-mono-ink.svg"
-        alt="Journl"
-      />
+      <span className="brand-system hidden" role="img" aria-label="Journl" />
     </span>
   );
 }

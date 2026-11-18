@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "kind": "html",
+  "title": "review-v4-3/sources/landing--light--desktop.html",
+  "entry": "review-v4-3/sources/landing--light--desktop.html",
+  "renderer": "html",
+  "status": "complete",
+  "exports": [
+    "html",
+    "pdf",
+    "zip"
+  ],
+  "createdAt": "2026-11-17T04:24:36.776Z",
+  "updatedAt": "2026-11-17T04:24:36.776Z",
+  "metadata": {
+    "inferred": true,
+    "reconciled": true
+  }
+}

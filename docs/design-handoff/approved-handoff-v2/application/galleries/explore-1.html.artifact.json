@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "kind": "html",
+  "title": "full-review-v6/galleries/explore-1.html",
+  "entry": "full-review-v6/galleries/explore-1.html",
+  "renderer": "html",
+  "status": "complete",
+  "exports": [
+    "html",
+    "pdf",
+    "zip"
+  ],
+  "createdAt": "2026-11-17T08:20:54.136Z",
+  "updatedAt": "2026-11-17T21:17:36.848559+00:00",
+  "metadata": {
+    "inferred": true,
+    "reconciled": true,
+    "branding": "Exact approved Shifted right logo integrated"
+  }
+}

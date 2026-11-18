@@ -1,0 +1,1738 @@
+{
+  "records": [
+    {
+      "id": "journal-date-populated-desktop",
+      "state": "populated dated journal, normal header and chat",
+      "route": "/journal/2000-01-01",
+      "source": "/home/rmolinamir/.t3/userdata/browser-artifacts/browser-screenshot-127-0-0-1-mwiu4juv-0034a2d2.png",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "theme": "dark",
+      "status": "captured",
+      "data": "disposable browser test fixture",
+      "image": "captures/journal-date-populated-desktop.png",
+      "sha256": "48d8d1f1441d484dfc32b8faa01f91e32eed9eb5befa0278894d8dbcf1811454",
+      "appearanceEvidence": "PNG top-edge sampled pixel median; preference setting may be System",
+      "imageDimensions": {
+        "width": 1280,
+        "height": 889
+      },
+      "currentScreenshot": true,
+      "rasterNote": "Screenshot tool scaled the PNG; viewport records CSS pixels. Original raster retained unchanged.",
+      "indexSource": "audit/runtime-2026-11-16/capture-index.json",
+      "projectImage": "audit/runtime-2026-11-16/captures/journal-date-populated-desktop.png",
+      "actualDimensions": {
+        "width": 1280,
+        "height": 889
+      },
+      "syntheticProposal": false,
+      "evidenceType": "parent-owned disposable runtime fixture capture",
+      "matchedToProposal": false,
+      "portableImage": "evidence/current-captures/journal-date-populated-desktop.png",
+      "verifiedSha256": "48d8d1f1441d484dfc32b8faa01f91e32eed9eb5befa0278894d8dbcf1811454"
+    },
+    {
+      "id": "journal-convert-dialog-desktop",
+      "state": "conversion dialog initial",
+      "route": "/journal/2000-01-01",
+      "source": "/home/rmolinamir/.t3/userdata/browser-artifacts/browser-screenshot-127-0-0-1-mwiu4xhn-3823ea2c.png",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "theme": "dark",
+      "status": "captured",
+      "data": "disposable browser test fixture",
+      "image": "captures/journal-convert-dialog-desktop.png",
+      "sha256": "7ee82d3d8a00a7850ab7e5895cb327d0b9e25704ad1611f2bd6a3b83287b37d3",
+      "appearanceEvidence": "PNG top-edge sampled pixel median; preference setting may be System",
+      "imageDimensions": {
+        "width": 1280,
+        "height": 889
+      },
+      "currentScreenshot": true,
+      "rasterNote": "Screenshot tool scaled the PNG; viewport records CSS pixels. Original raster retained unchanged.",
+      "indexSource": "audit/runtime-2026-11-16/capture-index.json",
+      "projectImage": "audit/runtime-2026-11-16/captures/journal-convert-dialog-desktop.png",
+      "actualDimensions": {
+        "width": 1280,
+        "height": 889
+      },
+      "syntheticProposal": false,
+      "evidenceType": "parent-owned disposable runtime fixture capture",
+      "matchedToProposal": false,
+      "portableImage": "evidence/current-captures/journal-convert-dialog-desktop.png",
+      "verifiedSha256": "7ee82d3d8a00a7850ab7e5895cb327d0b9e25704ad1611f2bd6a3b83287b37d3"
+    },
+    {
+      "id": "journal-convert-empty-title",
+      "state": "empty required title, submit disabled",
+      "route": "/journal/2000-01-01",
+      "source": "/home/rmolinamir/.t3/userdata/browser-artifacts/browser-screenshot-127-0-0-1-mwiu59xv-065035b9.png",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "theme": "dark",
+      "status": "captured",
+      "image": "captures/journal-convert-empty-title.png",
+      "sha256": "cde7e1c09094cdd36d07886934ba8c857be5059f9224666c0be4a9ad0dae766f",
+      "appearanceEvidence": "PNG top-edge sampled pixel median; preference setting may be System",
+      "imageDimensions": {
+        "width": 1280,
+        "height": 889
+      },
+      "currentScreenshot": true,
+      "data": "disposable browser test fixture",
+      "rasterNote": "Screenshot tool scaled the PNG; viewport records CSS pixels. Original raster retained unchanged.",
+      "indexSource": "audit/runtime-2026-11-16/capture-index.json",
+      "projectImage": "audit/runtime-2026-11-16/captures/journal-convert-empty-title.png",
+      "actualDimensions": {
+        "width": 1280,
+        "height": 889
+      },
+      "syntheticProposal": false,
+      "evidenceType": "parent-owned disposable runtime fixture capture",
+      "matchedToProposal": false,
+      "portableImage": "evidence/current-captures/journal-convert-empty-title.png",
+      "verifiedSha256": "cde7e1c09094cdd36d07886934ba8c857be5059f9224666c0be4a9ad0dae766f"
+    },
+    {
+      "id": "save-recovery-all-saved",
+      "state": "Draft recovery all changes saved",
+      "route": "/journal/2000-01-01",
+      "source": "/home/rmolinamir/.t3/userdata/browser-artifacts/browser-screenshot-127-0-0-1-mwiu5azc-128d29fa.png",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "theme": "dark",
+      "status": "captured",
+      "image": "captures/save-recovery-all-saved.png",
+      "sha256": "aa6598365047ad6966079f4993578db8c1bc77c6de7f216f64c55b146a20de62",
+      "appearanceEvidence": "PNG top-edge sampled pixel median; preference setting may be System",
+      "imageDimensions": {
+        "width": 1280,
+        "height": 889
+      },
+      "currentScreenshot": true,
+      "data": "disposable browser test fixture",
+      "rasterNote": "Screenshot tool scaled the PNG; viewport records CSS pixels. Original raster retained unchanged.",
+      "indexSource": "audit/runtime-2026-11-16/capture-index.json",
+      "projectImage": "audit/runtime-2026-11-16/captures/save-recovery-all-saved.png",
+      "actualDimensions": {
+        "width": 1280,
+        "height": 889
+      },
+      "syntheticProposal": false,
+      "evidenceType": "parent-owned disposable runtime fixture capture",
+      "matchedToProposal": false,
+      "portableImage": "evidence/current-captures/save-recovery-all-saved.png",
+      "verifiedSha256": "aa6598365047ad6966079f4993578db8c1bc77c6de7f216f64c55b146a20de62"
+    },
+    {
+      "id": "search-initial",
+      "state": "initial search prompt",
+      "route": "/journal/2000-01-01",
+      "source": "/home/rmolinamir/.t3/userdata/browser-artifacts/browser-screenshot-127-0-0-1-mwiu5bzc-0662c0a8.png",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "theme": "dark",
+      "status": "captured",
+      "image": "captures/search-initial.png",
+      "sha256": "6a832871f3b3186676f05e1400b60612613ce2d64936da20409e9a6e7a38d104",
+      "appearanceEvidence": "PNG top-edge sampled pixel median; preference setting may be System",
+      "imageDimensions": {
+        "width": 1280,
+        "height": 889
+      },
+      "currentScreenshot": true,
+      "data": "disposable browser test fixture",
+      "rasterNote": "Screenshot tool scaled the PNG; viewport records CSS pixels. Original raster retained unchanged.",
+      "indexSource": "audit/runtime-2026-11-16/capture-index.json",
+      "projectImage": "audit/runtime-2026-11-16/captures/search-initial.png",
+      "actualDimensions": {
+        "width": 1280,
+        "height": 889
+      },
+      "syntheticProposal": false,
+      "evidenceType": "parent-owned disposable runtime fixture capture",
+      "matchedToProposal": false,
+      "portableImage": "evidence/current-captures/search-initial.png",
+      "verifiedSha256": "6a832871f3b3186676f05e1400b60612613ce2d64936da20409e9a6e7a38d104"
+    },
+    {
+      "id": "search-authored-query",
+      "state": "search query provider error",
+      "route": "/journal/2000-01-01",
+      "source": "/home/rmolinamir/.t3/userdata/browser-artifacts/browser-screenshot-127-0-0-1-mwiu5xli-50756cda.png",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "theme": "dark",
+      "status": "captured",
+      "note": "Search calls external embedding provider; fixture key is invalid. Results/no-results not captured; waits timed out. No personal credentials used.",
+      "image": "captures/search-authored-query.png",
+      "sha256": "8d58c071a5fe2dfe909679c9fedcd6803a2ca4a4cfd540f2b028fa9d923e27d2",
+      "appearanceEvidence": "PNG top-edge sampled pixel median; preference setting may be System",
+      "imageDimensions": {
+        "width": 1280,
+        "height": 889
+      },
+      "currentScreenshot": true,
+      "data": "disposable browser test fixture",
+      "rasterNote": "Screenshot tool scaled the PNG; viewport records CSS pixels. Original raster retained unchanged.",
+      "indexSource": "audit/runtime-2026-11-16/capture-index.json",
+      "projectImage": "audit/runtime-2026-11-16/captures/search-authored-query.png",
+      "actualDimensions": {
+        "width": 1280,
+        "height": 889
+      },
+      "syntheticProposal": false,
+      "evidenceType": "parent-owned disposable runtime fixture capture",
+      "matchedToProposal": false,
+      "portableImage": "evidence/current-captures/search-authored-query.png",
+      "verifiedSha256": "8d58c071a5fe2dfe909679c9fedcd6803a2ca4a4cfd540f2b028fa9d923e27d2"
+    },
+    {
+      "id": "search-empty-query",
+      "state": "search query provider error",
+      "route": "/journal/2000-01-01",
+      "source": "/home/rmolinamir/.t3/userdata/browser-artifacts/browser-screenshot-127-0-0-1-mwiu663g-f7dbf134.png",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "theme": "dark",
+      "status": "captured",
+      "note": "Search calls external embedding provider; fixture key is invalid. Results/no-results not captured; waits timed out. No personal credentials used.",
+      "image": "captures/search-empty-query.png",
+      "sha256": "a1f1e0c1db8031ce9362e7f6c33ba09a022406da55e4385f670068bd8ab6f3ba",
+      "appearanceEvidence": "PNG top-edge sampled pixel median; preference setting may be System",
+      "imageDimensions": {
+        "width": 1280,
+        "height": 889
+      },
+      "currentScreenshot": true,
+      "data": "disposable browser test fixture",
+      "rasterNote": "Screenshot tool scaled the PNG; viewport records CSS pixels. Original raster retained unchanged.",
+      "indexSource": "audit/runtime-2026-11-16/capture-index.json",
+      "projectImage": "audit/runtime-2026-11-16/captures/search-empty-query.png",
+      "actualDimensions": {
+        "width": 1280,
+        "height": 889
+      },
+      "syntheticProposal": false,
+      "evidenceType": "parent-owned disposable runtime fixture capture",
+      "matchedToProposal": false,
+      "portableImage": "evidence/current-captures/search-empty-query.png",
+      "verifiedSha256": "a1f1e0c1db8031ce9362e7f6c33ba09a022406da55e4385f670068bd8ab6f3ba"
+    },
+    {
+      "id": "page-populated",
+      "state": "Browser note 01 page and expanded ancestor",
+      "route": "/pages/00000000-0000-4000-8000-000000000001",
+      "source": "/home/rmolinamir/.t3/userdata/browser-artifacts/browser-screenshot-127-0-0-1-mwiu6une-75c6999c.png",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "theme": "dark",
+      "status": "captured",
+      "image": "captures/page-populated.png",
+      "sha256": "8e9bc8b892ef04d2952bd8846e1eaf2570050e4ddf3555c9a662cd7fc550a0ab",
+      "appearanceEvidence": "PNG top-edge sampled pixel median; preference setting may be System",
+      "imageDimensions": {
+        "width": 1280,
+        "height": 889
+      },
+      "currentScreenshot": true,
+      "data": "disposable browser test fixture",
+      "rasterNote": "Screenshot tool scaled the PNG; viewport records CSS pixels. Original raster retained unchanged.",
+      "indexSource": "audit/runtime-2026-11-16/capture-index.json",
+      "projectImage": "audit/runtime-2026-11-16/captures/page-populated.png",
+      "actualDimensions": {
+        "width": 1280,
+        "height": 889
+      },
+      "syntheticProposal": false,
+      "evidenceType": "parent-owned disposable runtime fixture capture",
+      "matchedToProposal": false,
+      "portableImage": "evidence/current-captures/page-populated.png",
+      "verifiedSha256": "8e9bc8b892ef04d2952bd8846e1eaf2570050e4ddf3555c9a662cd7fc550a0ab"
+    },
+    {
+      "id": "folder-populated",
+      "state": "folder nested pages populated",
+      "route": "/folders/00000000-0000-4000-8000-000000000401",
+      "source": "/home/rmolinamir/.t3/userdata/browser-artifacts/browser-screenshot-127-0-0-1-mwiu7xfu-22331d68.png",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "theme": "dark",
+      "status": "captured",
+      "waitError": false,
+      "image": "captures/folder-populated.png",
+      "sha256": "b0f6cdfc4ab9c03808ef2ccb7c73787f2630dafa5ede4e65df22306c40e768d4",
+      "appearanceEvidence": "PNG top-edge sampled pixel median; preference setting may be System",
+      "imageDimensions": {
+        "width": 1280,
+        "height": 889
+      },
+      "currentScreenshot": true,
+      "data": "disposable browser test fixture",
+      "rasterNote": "Screenshot tool scaled the PNG; viewport records CSS pixels. Original raster retained unchanged.",
+      "indexSource": "audit/runtime-2026-11-16/capture-index.json",
+      "projectImage": "audit/runtime-2026-11-16/captures/folder-populated.png",
+      "actualDimensions": {
+        "width": 1280,
+        "height": 889
+      },
+      "syntheticProposal": false,
+      "evidenceType": "parent-owned disposable runtime fixture capture",
+      "matchedToProposal": false,
+      "portableImage": "evidence/current-captures/folder-populated.png",
+      "verifiedSha256": "b0f6cdfc4ab9c03808ef2ccb7c73787f2630dafa5ede4e65df22306c40e768d4"
+    },
+    {
+      "id": "explore-overview",
+      "state": "Explore overview threads populated",
+      "route": "/explore",
+      "source": "/home/rmolinamir/.t3/userdata/browser-artifacts/browser-screenshot-127-0-0-1-mwiu82e3-a56e345d.png",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "theme": "dark",
+      "status": "captured",
+      "waitError": false,
+      "image": "captures/explore-overview.png",
+      "sha256": "7e57b718d7a2e9de43b7a85ac8ee25fdefecb9c4b2f21a33927c7d99f34ed39a",
+      "appearanceEvidence": "PNG top-edge sampled pixel median; preference setting may be System",
+      "imageDimensions": {
+        "width": 1280,
+        "height": 889
+      },
+      "currentScreenshot": true,
+      "data": "disposable browser test fixture",
+      "rasterNote": "Screenshot tool scaled the PNG; viewport records CSS pixels. Original raster retained unchanged.",
+      "indexSource": "audit/runtime-2026-11-16/capture-index.json",
+      "projectImage": "audit/runtime-2026-11-16/captures/explore-overview.png",
+      "actualDimensions": {
+        "width": 1280,
+        "height": 889
+      },
+      "syntheticProposal": false,
+      "evidenceType": "parent-owned disposable runtime fixture capture",
+      "matchedToProposal": false,
+      "portableImage": "evidence/current-captures/explore-overview.png",
+      "verifiedSha256": "7e57b718d7a2e9de43b7a85ac8ee25fdefecb9c4b2f21a33927c7d99f34ed39a"
+    },
+    {
+      "id": "explore-list",
+      "state": "thread list view",
+      "route": "/explore",
+      "source": "/home/rmolinamir/.t3/userdata/browser-artifacts/browser-screenshot-127-0-0-1-mwiu8j6s-d1710bdf.png",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "theme": "dark",
+      "status": "captured",
+      "image": "captures/explore-list.png",
+      "sha256": "96d2207c03d5c5db66b48c27ea046be362c4ce08b1e94b1504f05fa38162d392",
+      "appearanceEvidence": "PNG top-edge sampled pixel median; preference setting may be System",
+      "imageDimensions": {
+        "width": 1280,
+        "height": 889
+      },
+      "currentScreenshot": true,
+      "data": "disposable browser test fixture",
+      "rasterNote": "Screenshot tool scaled the PNG; viewport records CSS pixels. Original raster retained unchanged.",
+      "indexSource": "audit/runtime-2026-11-16/capture-index.json",
+      "projectImage": "audit/runtime-2026-11-16/captures/explore-list.png",
+      "actualDimensions": {
+        "width": 1280,
+        "height": 889
+      },
+      "syntheticProposal": false,
+      "evidenceType": "parent-owned disposable runtime fixture capture",
+      "matchedToProposal": false,
+      "portableImage": "evidence/current-captures/explore-list.png",
+      "verifiedSha256": "96d2207c03d5c5db66b48c27ea046be362c4ce08b1e94b1504f05fa38162d392"
+    },
+    {
+      "id": "explore-filter-empty",
+      "state": "thread name search no match",
+      "route": "/explore",
+      "source": "/home/rmolinamir/.t3/userdata/browser-artifacts/browser-screenshot-127-0-0-1-mwiu8k3x-6882a00a.png",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "theme": "dark",
+      "status": "captured",
+      "image": "captures/explore-filter-empty.png",
+      "sha256": "9e6298df986ba57cf7bafb17a088d147242723f28fd0b7e20ff25ec0d52022bb",
+      "appearanceEvidence": "PNG top-edge sampled pixel median; preference setting may be System",
+      "imageDimensions": {
+        "width": 1280,
+        "height": 889
+      },
+      "currentScreenshot": true,
+      "data": "disposable browser test fixture",
+      "rasterNote": "Screenshot tool scaled the PNG; viewport records CSS pixels. Original raster retained unchanged.",
+      "indexSource": "audit/runtime-2026-11-16/capture-index.json",
+      "projectImage": "audit/runtime-2026-11-16/captures/explore-filter-empty.png",
+      "actualDimensions": {
+        "width": 1280,
+        "height": 889
+      },
+      "syntheticProposal": false,
+      "evidenceType": "parent-owned disposable runtime fixture capture",
+      "matchedToProposal": false,
+      "portableImage": "evidence/current-captures/explore-filter-empty.png",
+      "verifiedSha256": "9e6298df986ba57cf7bafb17a088d147242723f28fd0b7e20ff25ec0d52022bb"
+    },
+    {
+      "id": "explore-cluster",
+      "state": "thread detail graph and context empty",
+      "route": "/explore/clusters/00000000-0000-4000-8000-000000000354",
+      "source": "/home/rmolinamir/.t3/userdata/browser-artifacts/browser-screenshot-127-0-0-1-mwiu93gv-80ef1837.png",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "theme": "dark",
+      "status": "captured",
+      "image": "captures/explore-cluster.png",
+      "sha256": "f136caa557f6cc5d9fc7ac60d4b86b55c5824e2fba0ee14d90050303479078ef",
+      "appearanceEvidence": "PNG top-edge sampled pixel median; preference setting may be System",
+      "imageDimensions": {
+        "width": 1280,
+        "height": 889
+      },
+      "currentScreenshot": true,
+      "data": "disposable browser test fixture",
+      "rasterNote": "Screenshot tool scaled the PNG; viewport records CSS pixels. Original raster retained unchanged.",
+      "indexSource": "audit/runtime-2026-11-16/capture-index.json",
+      "projectImage": "audit/runtime-2026-11-16/captures/explore-cluster.png",
+      "actualDimensions": {
+        "width": 1280,
+        "height": 889
+      },
+      "syntheticProposal": false,
+      "evidenceType": "parent-owned disposable runtime fixture capture",
+      "matchedToProposal": false,
+      "portableImage": "evidence/current-captures/explore-cluster.png",
+      "verifiedSha256": "f136caa557f6cc5d9fc7ac60d4b86b55c5824e2fba0ee14d90050303479078ef"
+    },
+    {
+      "id": "explore-thread-rename-dialog",
+      "state": "rename thread form initial",
+      "route": "/explore/clusters/00000000-0000-4000-8000-000000000354",
+      "source": "/home/rmolinamir/.t3/userdata/browser-artifacts/browser-screenshot-127-0-0-1-mwiu9fx6-05acb93a.png",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "theme": "dark",
+      "status": "captured",
+      "image": "captures/explore-thread-rename-dialog.png",
+      "sha256": "8c5023b447ec936878d573aa687f60231edc19946cf22c7833c6cf3f61ddc52d",
+      "appearanceEvidence": "PNG top-edge sampled pixel median; preference setting may be System",
+      "imageDimensions": {
+        "width": 1280,
+        "height": 889
+      },
+      "currentScreenshot": true,
+      "data": "disposable browser test fixture",
+      "rasterNote": "Screenshot tool scaled the PNG; viewport records CSS pixels. Original raster retained unchanged.",
+      "indexSource": "audit/runtime-2026-11-16/capture-index.json",
+      "projectImage": "audit/runtime-2026-11-16/captures/explore-thread-rename-dialog.png",
+      "actualDimensions": {
+        "width": 1280,
+        "height": 889
+      },
+      "syntheticProposal": false,
+      "evidenceType": "parent-owned disposable runtime fixture capture",
+      "matchedToProposal": false,
+      "portableImage": "evidence/current-captures/explore-thread-rename-dialog.png",
+      "verifiedSha256": "8c5023b447ec936878d573aa687f60231edc19946cf22c7833c6cf3f61ddc52d"
+    },
+    {
+      "id": "explore-thread-selected-note",
+      "state": "thread detail after dismissed rename",
+      "route": "/explore/clusters/00000000-0000-4000-8000-000000000354",
+      "source": "/home/rmolinamir/.t3/userdata/browser-artifacts/browser-screenshot-127-0-0-1-mwiu9zo4-d9a7205e.png",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "theme": "dark",
+      "status": "captured",
+      "note": "Selecting note preview via guessed aria-label failed; selected state not confirmed.",
+      "image": "captures/explore-thread-selected-note.png",
+      "sha256": "c80da9bc0a856f98696a51aef58761a7b73806cdc38ce305d55e7dc3282a5272",
+      "appearanceEvidence": "PNG top-edge sampled pixel median; preference setting may be System",
+      "imageDimensions": {
+        "width": 1280,
+        "height": 889
+      },
+      "currentScreenshot": true,
+      "data": "disposable browser test fixture",
+      "intendedStateUnconfirmed": true,
+      "rasterNote": "Screenshot tool scaled the PNG; viewport records CSS pixels. Original raster retained unchanged.",
+      "indexSource": "audit/runtime-2026-11-16/capture-index.json",
+      "projectImage": "audit/runtime-2026-11-16/captures/explore-thread-selected-note.png",
+      "actualDimensions": {
+        "width": 1280,
+        "height": 889
+      },
+      "syntheticProposal": false,
+      "evidenceType": "parent-owned disposable runtime fixture capture",
+      "matchedToProposal": false,
+      "portableImage": "evidence/current-captures/explore-thread-selected-note.png",
+      "verifiedSha256": "c80da9bc0a856f98696a51aef58761a7b73806cdc38ce305d55e7dc3282a5272"
+    },
+    {
+      "id": "explore-note",
+      "state": "note exploration",
+      "route": "/explore/notes/00000000-0000-4000-8000-000000000001",
+      "source": "/home/rmolinamir/.t3/userdata/browser-artifacts/browser-screenshot-127-0-0-1-mwiua5c8-921aed3f.png",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "theme": "dark",
+      "status": "captured",
+      "waitError": false,
+      "image": "captures/explore-note.png",
+      "sha256": "f757d0dc390e6d9cf5b574a000235a9a2dea0c030712ef5cd798010c00af5836",
+      "appearanceEvidence": "PNG top-edge sampled pixel median; preference setting may be System",
+      "imageDimensions": {
+        "width": 1280,
+        "height": 889
+      },
+      "currentScreenshot": true,
+      "data": "disposable browser test fixture",
+      "rasterNote": "Screenshot tool scaled the PNG; viewport records CSS pixels. Original raster retained unchanged.",
+      "indexSource": "audit/runtime-2026-11-16/capture-index.json",
+      "projectImage": "audit/runtime-2026-11-16/captures/explore-note.png",
+      "actualDimensions": {
+        "width": 1280,
+        "height": 889
+      },
+      "syntheticProposal": false,
+      "evidenceType": "parent-owned disposable runtime fixture capture",
+      "matchedToProposal": false,
+      "portableImage": "evidence/current-captures/explore-note.png",
+      "verifiedSha256": "f757d0dc390e6d9cf5b574a000235a9a2dea0c030712ef5cd798010c00af5836"
+    },
+    {
+      "id": "account-settings",
+      "state": "account settings profile and appearance",
+      "route": "/account/settings",
+      "source": "/home/rmolinamir/.t3/userdata/browser-artifacts/browser-screenshot-127-0-0-1-mwiuahk8-91f18f7e.png",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "theme": "light",
+      "status": "captured",
+      "waitError": true,
+      "note": "Name is a populated input value, not visibleText. Route and sections verified.",
+      "image": "captures/account-settings.png",
+      "sha256": "d3b1050ecf6ef059f074d303fcefb6422a118e1bdd954521533dc9d4c160581f",
+      "appearanceEvidence": "PNG top-edge sampled pixel median; preference setting may be System",
+      "imageDimensions": {
+        "width": 1280,
+        "height": 889
+      },
+      "currentScreenshot": true,
+      "data": "disposable browser test fixture",
+      "rasterNote": "Screenshot tool scaled the PNG; viewport records CSS pixels. Original raster retained unchanged.",
+      "indexSource": "audit/runtime-2026-11-16/capture-index.json",
+      "projectImage": "audit/runtime-2026-11-16/captures/account-settings.png",
+      "actualDimensions": {
+        "width": 1280,
+        "height": 889
+      },
+      "syntheticProposal": false,
+      "evidenceType": "parent-owned disposable runtime fixture capture",
+      "matchedToProposal": false,
+      "portableImage": "evidence/current-captures/account-settings.png",
+      "verifiedSha256": "d3b1050ecf6ef059f074d303fcefb6422a118e1bdd954521533dc9d4c160581f"
+    },
+    {
+      "id": "account-security",
+      "state": "security password linked accounts active sessions",
+      "route": "/account/security",
+      "source": "/home/rmolinamir/.t3/userdata/browser-artifacts/browser-screenshot-127-0-0-1-mwiub5er-58270a75.png",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "theme": "light",
+      "status": "captured",
+      "image": "captures/account-security.png",
+      "sha256": "d151417ddb7dc8cf8dab01e35ce3da602d864249cb5575b609d330d5a91e5229",
+      "appearanceEvidence": "PNG top-edge sampled pixel median; preference setting may be System",
+      "imageDimensions": {
+        "width": 1280,
+        "height": 889
+      },
+      "currentScreenshot": true,
+      "data": "disposable browser test fixture",
+      "rasterNote": "Screenshot tool scaled the PNG; viewport records CSS pixels. Original raster retained unchanged.",
+      "indexSource": "audit/runtime-2026-11-16/capture-index.json",
+      "projectImage": "audit/runtime-2026-11-16/captures/account-security.png",
+      "actualDimensions": {
+        "width": 1280,
+        "height": 889
+      },
+      "syntheticProposal": false,
+      "evidenceType": "parent-owned disposable runtime fixture capture",
+      "matchedToProposal": false,
+      "portableImage": "evidence/current-captures/account-security.png",
+      "verifiedSha256": "d151417ddb7dc8cf8dab01e35ce3da602d864249cb5575b609d330d5a91e5229"
+    },
+    {
+      "id": "subscription-fixture",
+      "state": "subscription fixture summary; provider actions not invoked",
+      "route": "/subscription",
+      "source": "/home/rmolinamir/.t3/userdata/browser-artifacts/browser-screenshot-127-0-0-1-mwiub801-faebaae1.png",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "theme": "light",
+      "status": "captured",
+      "image": "captures/subscription-fixture.png",
+      "sha256": "adb7d803393e58b239daae3b14b442ccef5e88824540efdf7cf65765daf083ca",
+      "appearanceEvidence": "PNG top-edge sampled pixel median; preference setting may be System",
+      "imageDimensions": {
+        "width": 1280,
+        "height": 889
+      },
+      "currentScreenshot": true,
+      "data": "disposable browser test fixture",
+      "rasterNote": "Screenshot tool scaled the PNG; viewport records CSS pixels. Original raster retained unchanged.",
+      "indexSource": "audit/runtime-2026-11-16/capture-index.json",
+      "projectImage": "audit/runtime-2026-11-16/captures/subscription-fixture.png",
+      "actualDimensions": {
+        "width": 1280,
+        "height": 889
+      },
+      "syntheticProposal": false,
+      "evidenceType": "parent-owned disposable runtime fixture capture",
+      "matchedToProposal": false,
+      "portableImage": "evidence/current-captures/subscription-fixture.png",
+      "verifiedSha256": "adb7d803393e58b239daae3b14b442ccef5e88824540efdf7cf65765daf083ca"
+    },
+    {
+      "id": "journal-index-light",
+      "state": "journal index Entries view, today empty plus stored entry",
+      "route": "/journal",
+      "source": "/home/rmolinamir/.t3/userdata/browser-artifacts/browser-screenshot-127-0-0-1-mwiuc20e-0bb7971b.png",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "theme": "light",
+      "status": "captured",
+      "image": "captures/journal-index-light.png",
+      "sha256": "4dc5f4800e5aea5e64bcd2e061bc07e1da43e9dd676f80267998b45a1a245f96",
+      "appearanceEvidence": "PNG top-edge sampled pixel median; preference setting may be System",
+      "imageDimensions": {
+        "width": 1280,
+        "height": 889
+      },
+      "currentScreenshot": true,
+      "data": "disposable browser test fixture",
+      "rasterNote": "Screenshot tool scaled the PNG; viewport records CSS pixels. Original raster retained unchanged.",
+      "indexSource": "audit/runtime-2026-11-16/capture-index.json",
+      "projectImage": "audit/runtime-2026-11-16/captures/journal-index-light.png",
+      "actualDimensions": {
+        "width": 1280,
+        "height": 889
+      },
+      "syntheticProposal": false,
+      "evidenceType": "parent-owned disposable runtime fixture capture",
+      "matchedToProposal": false,
+      "portableImage": "evidence/current-captures/journal-index-light.png",
+      "verifiedSha256": "4dc5f4800e5aea5e64bcd2e061bc07e1da43e9dd676f80267998b45a1a245f96"
+    },
+    {
+      "id": "journal-timeline-light",
+      "state": "journal index Timeline view",
+      "route": "/journal",
+      "source": "/home/rmolinamir/.t3/userdata/browser-artifacts/browser-screenshot-127-0-0-1-mwiucchq-faa49864.png",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "theme": "light",
+      "status": "captured",
+      "image": "captures/journal-timeline-light.png",
+      "sha256": "095a09100d1712d7e0ecdd72ee1de70a04d68d47608153a8e8c82b30ecb7496a",
+      "appearanceEvidence": "PNG top-edge sampled pixel median; preference setting may be System",
+      "imageDimensions": {
+        "width": 1280,
+        "height": 889
+      },
+      "currentScreenshot": true,
+      "data": "disposable browser test fixture",
+      "rasterNote": "Screenshot tool scaled the PNG; viewport records CSS pixels. Original raster retained unchanged.",
+      "indexSource": "audit/runtime-2026-11-16/capture-index.json",
+      "projectImage": "audit/runtime-2026-11-16/captures/journal-timeline-light.png",
+      "actualDimensions": {
+        "width": 1280,
+        "height": 889
+      },
+      "syntheticProposal": false,
+      "evidenceType": "parent-owned disposable runtime fixture capture",
+      "matchedToProposal": false,
+      "portableImage": "evidence/current-captures/journal-timeline-light.png",
+      "verifiedSha256": "095a09100d1712d7e0ecdd72ee1de70a04d68d47608153a8e8c82b30ecb7496a"
+    },
+    {
+      "id": "journal-mobile-timeline",
+      "state": "mobile timeline, floating chat launch",
+      "route": "/journal",
+      "source": "/home/rmolinamir/.t3/userdata/browser-artifacts/browser-screenshot-127-0-0-1-mwiuccnt-dcad9f57.png",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "theme": "light",
+      "status": "captured",
+      "image": "captures/journal-mobile-timeline.png",
+      "sha256": "fb61e4c729009f6824e248be84fd0a2357f31cf6a8e23183b86f2694760dd73f",
+      "appearanceEvidence": "PNG top-edge sampled pixel median; preference setting may be System",
+      "imageDimensions": {
+        "width": 780,
+        "height": 1688
+      },
+      "currentScreenshot": true,
+      "data": "disposable browser test fixture",
+      "rasterNote": "Screenshot tool scaled the PNG; viewport records CSS pixels. Original raster retained unchanged.",
+      "indexSource": "audit/runtime-2026-11-16/capture-index.json",
+      "projectImage": "audit/runtime-2026-11-16/captures/journal-mobile-timeline.png",
+      "actualDimensions": {
+        "width": 780,
+        "height": 1688
+      },
+      "syntheticProposal": false,
+      "evidenceType": "parent-owned disposable runtime fixture capture",
+      "matchedToProposal": false,
+      "portableImage": "evidence/current-captures/journal-mobile-timeline.png",
+      "verifiedSha256": "fb61e4c729009f6824e248be84fd0a2357f31cf6a8e23183b86f2694760dd73f"
+    },
+    {
+      "id": "mobile-chat-drawer",
+      "state": "mobile chat drawer opened",
+      "route": "/journal",
+      "source": "/home/rmolinamir/.t3/userdata/browser-artifacts/browser-screenshot-127-0-0-1-mwiudhx1-bf7dd005.png",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "theme": "light",
+      "status": "captured",
+      "image": "captures/mobile-chat-drawer.png",
+      "sha256": "f69f41f985512736d9a17b9f1c43aee09d4018cb662b9d25a5dd451fbfc1057b",
+      "appearanceEvidence": "PNG top-edge sampled pixel median; preference setting may be System",
+      "imageDimensions": {
+        "width": 780,
+        "height": 1688
+      },
+      "currentScreenshot": true,
+      "data": "disposable browser test fixture",
+      "rasterNote": "Screenshot tool scaled the PNG; viewport records CSS pixels. Original raster retained unchanged.",
+      "indexSource": "audit/runtime-2026-11-16/capture-index.json",
+      "projectImage": "audit/runtime-2026-11-16/captures/mobile-chat-drawer.png",
+      "actualDimensions": {
+        "width": 780,
+        "height": 1688
+      },
+      "syntheticProposal": false,
+      "evidenceType": "parent-owned disposable runtime fixture capture",
+      "matchedToProposal": false,
+      "portableImage": "evidence/current-captures/mobile-chat-drawer.png",
+      "verifiedSha256": "f69f41f985512736d9a17b9f1c43aee09d4018cb662b9d25a5dd451fbfc1057b"
+    },
+    {
+      "id": "mobile-chat-reasoning",
+      "state": "mobile reasoning selector open",
+      "route": "/journal",
+      "source": "/home/rmolinamir/.t3/userdata/browser-artifacts/browser-screenshot-127-0-0-1-mwiue7cv-8ce5c6b2.png",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "theme": "light",
+      "status": "captured",
+      "image": "captures/mobile-chat-reasoning.png",
+      "sha256": "f92add0a4b07de12daf2c6f72c183ff89d49f57385a37e2298060765118176a2",
+      "appearanceEvidence": "Light root preference; modal overlay darkens background",
+      "imageDimensions": {
+        "width": 780,
+        "height": 1688
+      },
+      "currentScreenshot": true,
+      "data": "disposable browser test fixture",
+      "rasterNote": "Screenshot tool scaled the PNG; viewport records CSS pixels. Original raster retained unchanged.",
+      "indexSource": "audit/runtime-2026-11-16/capture-index.json",
+      "projectImage": "audit/runtime-2026-11-16/captures/mobile-chat-reasoning.png",
+      "actualDimensions": {
+        "width": 780,
+        "height": 1688
+      },
+      "syntheticProposal": false,
+      "evidenceType": "parent-owned disposable runtime fixture capture",
+      "matchedToProposal": false,
+      "portableImage": "evidence/current-captures/mobile-chat-reasoning.png",
+      "verifiedSha256": "f92add0a4b07de12daf2c6f72c183ff89d49f57385a37e2298060765118176a2"
+    },
+    {
+      "id": "page-mobile-populated",
+      "state": "mobile page populated, toolbar",
+      "route": "/pages/00000000-0000-4000-8000-000000000001",
+      "source": "/home/rmolinamir/.t3/userdata/browser-artifacts/browser-screenshot-127-0-0-1-mwiue8qj-63904fd2.png",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "theme": "light",
+      "status": "captured",
+      "image": "captures/page-mobile-populated.png",
+      "sha256": "000d909cd1e7b4c2c792ac86963db1b52365316ea585ac1f2dc0bb5c50013d9b",
+      "appearanceEvidence": "PNG top-edge sampled pixel median; preference setting may be System",
+      "imageDimensions": {
+        "width": 780,
+        "height": 1688
+      },
+      "currentScreenshot": true,
+      "data": "disposable browser test fixture",
+      "rasterNote": "Screenshot tool scaled the PNG; viewport records CSS pixels. Original raster retained unchanged.",
+      "indexSource": "audit/runtime-2026-11-16/capture-index.json",
+      "projectImage": "audit/runtime-2026-11-16/captures/page-mobile-populated.png",
+      "actualDimensions": {
+        "width": 780,
+        "height": 1688
+      },
+      "syntheticProposal": false,
+      "evidenceType": "parent-owned disposable runtime fixture capture",
+      "matchedToProposal": false,
+      "portableImage": "evidence/current-captures/page-mobile-populated.png",
+      "verifiedSha256": "000d909cd1e7b4c2c792ac86963db1b52365316ea585ac1f2dc0bb5c50013d9b"
+    },
+    {
+      "id": "mobile-library-navigation",
+      "state": "mobile navigation sheet with expanded Library ancestor",
+      "route": "/pages/00000000-0000-4000-8000-000000000001",
+      "source": "/home/rmolinamir/.t3/userdata/browser-artifacts/browser-screenshot-127-0-0-1-mwiue901-eda0a223.png",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "theme": "light",
+      "status": "captured",
+      "image": "captures/mobile-library-navigation.png",
+      "sha256": "b009c392fa27c3e29deb932b238d955d583fcbe2765e1bc41bcb56cca56cdf56",
+      "appearanceEvidence": "PNG top-edge sampled pixel median; preference setting may be System",
+      "imageDimensions": {
+        "width": 780,
+        "height": 1688
+      },
+      "currentScreenshot": true,
+      "data": "disposable browser test fixture",
+      "rasterNote": "Screenshot tool scaled the PNG; viewport records CSS pixels. Original raster retained unchanged.",
+      "indexSource": "audit/runtime-2026-11-16/capture-index.json",
+      "projectImage": "audit/runtime-2026-11-16/captures/mobile-library-navigation.png",
+      "actualDimensions": {
+        "width": 780,
+        "height": 1688
+      },
+      "syntheticProposal": false,
+      "evidenceType": "parent-owned disposable runtime fixture capture",
+      "matchedToProposal": false,
+      "portableImage": "evidence/current-captures/mobile-library-navigation.png",
+      "verifiedSha256": "b009c392fa27c3e29deb932b238d955d583fcbe2765e1bc41bcb56cca56cdf56"
+    },
+    {
+      "id": "editor-rich-inventory",
+      "state": "preservation inventory rich blocks",
+      "route": "/pages/00000000-0000-4000-8000-000000000980",
+      "source": "/home/rmolinamir/.t3/userdata/browser-artifacts/browser-screenshot-127-0-0-1-mwiuetnk-f73e4a5a.png",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "theme": "light",
+      "status": "captured",
+      "data": "disposable browser test fixture",
+      "image": "captures/editor-rich-inventory.png",
+      "sha256": "e71d186491cab7213cf51127e08224415fbd2a4508f5588c93a25a1a3085b8ba",
+      "appearanceEvidence": "PNG top-edge sampled pixel median; preference setting may be System",
+      "imageDimensions": {
+        "width": 1280,
+        "height": 889
+      },
+      "currentScreenshot": true,
+      "rasterNote": "Screenshot tool scaled the PNG; viewport records CSS pixels. Original raster retained unchanged.",
+      "indexSource": "audit/runtime-2026-11-16/capture-index.json",
+      "projectImage": "audit/runtime-2026-11-16/captures/editor-rich-inventory.png",
+      "actualDimensions": {
+        "width": 1280,
+        "height": 889
+      },
+      "syntheticProposal": false,
+      "evidenceType": "parent-owned disposable runtime fixture capture",
+      "matchedToProposal": false,
+      "portableImage": "evidence/current-captures/editor-rich-inventory.png",
+      "verifiedSha256": "e71d186491cab7213cf51127e08224415fbd2a4508f5588c93a25a1a3085b8ba"
+    },
+    {
+      "id": "editor-selection-toolbar",
+      "state": "rich editor after attempted keyboard/menu interaction",
+      "route": "/pages/00000000-0000-4000-8000-000000000980",
+      "source": "/home/rmolinamir/.t3/userdata/browser-artifacts/browser-screenshot-127-0-0-1-mwiufcix-69c87fc7.png",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "theme": "light",
+      "status": "captured",
+      "note": "Preview automation actions timed out or control not verified. This is not evidence of open menu coverage.",
+      "intendedStateUnconfirmed": true,
+      "image": "captures/editor-selection-toolbar.png",
+      "sha256": "d5ab6d127bcee67159b8f2cfcb1b29e8bc8a1d3ca4a073faa9a1e2af713d2ad8",
+      "appearanceEvidence": "PNG top-edge sampled pixel median; preference setting may be System",
+      "imageDimensions": {
+        "width": 1280,
+        "height": 889
+      },
+      "currentScreenshot": true,
+      "data": "disposable browser test fixture",
+      "supersededBy": "editor-toolbar-keyboard-verified",
+      "rasterNote": "Screenshot tool scaled the PNG; viewport records CSS pixels. Original raster retained unchanged.",
+      "indexSource": "audit/runtime-2026-11-16/capture-index.json",
+      "projectImage": "audit/runtime-2026-11-16/captures/editor-selection-toolbar.png",
+      "actualDimensions": {
+        "width": 1280,
+        "height": 889
+      },
+      "syntheticProposal": false,
+      "evidenceType": "parent-owned disposable runtime fixture capture",
+      "matchedToProposal": false,
+      "portableImage": "evidence/current-captures/editor-selection-toolbar.png",
+      "verifiedSha256": "d5ab6d127bcee67159b8f2cfcb1b29e8bc8a1d3ca4a073faa9a1e2af713d2ad8"
+    },
+    {
+      "id": "editor-block-types",
+      "state": "rich editor after attempted keyboard/menu interaction",
+      "route": "/pages/00000000-0000-4000-8000-000000000980",
+      "source": "/home/rmolinamir/.t3/userdata/browser-artifacts/browser-screenshot-127-0-0-1-mwiufojx-f74136a4.png",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "theme": "light",
+      "status": "captured",
+      "note": "Preview automation actions timed out or control not verified. This is not evidence of open menu coverage.",
+      "intendedStateUnconfirmed": true,
+      "image": "captures/editor-block-types.png",
+      "sha256": "d5ab6d127bcee67159b8f2cfcb1b29e8bc8a1d3ca4a073faa9a1e2af713d2ad8",
+      "appearanceEvidence": "PNG top-edge sampled pixel median; preference setting may be System",
+      "imageDimensions": {
+        "width": 1280,
+        "height": 889
+      },
+      "currentScreenshot": true,
+      "data": "disposable browser test fixture",
+      "supersededBy": "editor-types-verified",
+      "rasterNote": "Screenshot tool scaled the PNG; viewport records CSS pixels. Original raster retained unchanged.",
+      "indexSource": "audit/runtime-2026-11-16/capture-index.json",
+      "projectImage": "audit/runtime-2026-11-16/captures/editor-block-types.png",
+      "actualDimensions": {
+        "width": 1280,
+        "height": 889
+      },
+      "syntheticProposal": false,
+      "evidenceType": "parent-owned disposable runtime fixture capture",
+      "matchedToProposal": false,
+      "portableImage": "evidence/current-captures/editor-block-types.png",
+      "verifiedSha256": "d5ab6d127bcee67159b8f2cfcb1b29e8bc8a1d3ca4a073faa9a1e2af713d2ad8"
+    },
+    {
+      "id": "editor-color-menu",
+      "state": "rich editor after attempted keyboard/menu interaction",
+      "route": "/pages/00000000-0000-4000-8000-000000000980",
+      "source": "/home/rmolinamir/.t3/userdata/browser-artifacts/browser-screenshot-127-0-0-1-mwiug0lh-839340ed.png",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "theme": "light",
+      "status": "captured",
+      "note": "Preview automation actions timed out or control not verified. This is not evidence of open menu coverage.",
+      "intendedStateUnconfirmed": true,
+      "image": "captures/editor-color-menu.png",
+      "sha256": "d5ab6d127bcee67159b8f2cfcb1b29e8bc8a1d3ca4a073faa9a1e2af713d2ad8",
+      "appearanceEvidence": "PNG top-edge sampled pixel median; preference setting may be System",
+      "imageDimensions": {
+        "width": 1280,
+        "height": 889
+      },
+      "currentScreenshot": true,
+      "data": "disposable browser test fixture",
+      "supersededBy": "editor-colors-verified",
+      "rasterNote": "Screenshot tool scaled the PNG; viewport records CSS pixels. Original raster retained unchanged.",
+      "indexSource": "audit/runtime-2026-11-16/capture-index.json",
+      "projectImage": "audit/runtime-2026-11-16/captures/editor-color-menu.png",
+      "actualDimensions": {
+        "width": 1280,
+        "height": 889
+      },
+      "syntheticProposal": false,
+      "evidenceType": "parent-owned disposable runtime fixture capture",
+      "matchedToProposal": false,
+      "portableImage": "evidence/current-captures/editor-color-menu.png",
+      "verifiedSha256": "d5ab6d127bcee67159b8f2cfcb1b29e8bc8a1d3ca4a073faa9a1e2af713d2ad8"
+    },
+    {
+      "id": "auth-sign-in-desktop",
+      "state": "public sign in email/password and providers",
+      "route": "/auth/sign-in",
+      "source": "/home/rmolinamir/.t3/userdata/browser-artifacts/browser-screenshot-127-0-0-1-mwiui1hy-a6429d37.png",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "theme": "dark",
+      "status": "captured",
+      "image": "captures/auth-sign-in-desktop.png",
+      "sha256": "53f14e8251248fb01b05524cc07fdfe1f6cceaf28b0e15c5ca91b6bb0b5a2ca0",
+      "appearanceEvidence": "PNG top-edge sampled pixel median; preference setting may be System",
+      "imageDimensions": {
+        "width": 1280,
+        "height": 889
+      },
+      "currentScreenshot": true,
+      "data": "disposable browser test fixture",
+      "rasterNote": "Screenshot tool scaled the PNG; viewport records CSS pixels. Original raster retained unchanged.",
+      "indexSource": "audit/runtime-2026-11-16/capture-index.json",
+      "projectImage": "audit/runtime-2026-11-16/captures/auth-sign-in-desktop.png",
+      "actualDimensions": {
+        "width": 1280,
+        "height": 889
+      },
+      "syntheticProposal": false,
+      "evidenceType": "parent-owned disposable runtime fixture capture",
+      "matchedToProposal": false,
+      "portableImage": "evidence/current-captures/auth-sign-in-desktop.png",
+      "verifiedSha256": "53f14e8251248fb01b05524cc07fdfe1f6cceaf28b0e15c5ca91b6bb0b5a2ca0"
+    },
+    {
+      "id": "auth-sign-in-error",
+      "state": "Sign-in rejected with visible UNAUTHORIZED error",
+      "route": "/auth/sign-in",
+      "source": "/home/rmolinamir/.t3/userdata/browser-artifacts/browser-screenshot-127-0-0-1-mwiuit62-5ef1f2ba.png",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "theme": "dark",
+      "status": "captured",
+      "note": "Error-text wait timed out; exact validation state requires image inspection.",
+      "image": "captures/auth-sign-in-error.png",
+      "sha256": "2846df88bb0e34e9d7da26836b3308fe5a27b96d9b3a90d640cd18586ba922fd",
+      "appearanceEvidence": "PNG top-edge sampled pixel median; preference setting may be System",
+      "notes": "Verified visible error text; fixture-only incorrect credentials",
+      "imageDimensions": {
+        "width": 1280,
+        "height": 889
+      },
+      "currentScreenshot": true,
+      "data": "disposable browser test fixture",
+      "rasterNote": "Screenshot tool scaled the PNG; viewport records CSS pixels. Original raster retained unchanged.",
+      "indexSource": "audit/runtime-2026-11-16/capture-index.json",
+      "projectImage": "audit/runtime-2026-11-16/captures/auth-sign-in-error.png",
+      "actualDimensions": {
+        "width": 1280,
+        "height": 889
+      },
+      "syntheticProposal": false,
+      "evidenceType": "parent-owned disposable runtime fixture capture",
+      "matchedToProposal": false,
+      "portableImage": "evidence/current-captures/auth-sign-in-error.png",
+      "verifiedSha256": "2846df88bb0e34e9d7da26836b3308fe5a27b96d9b3a90d640cd18586ba922fd"
+    },
+    {
+      "id": "invite-initial",
+      "state": "invite code entry",
+      "route": "/invite",
+      "source": "/home/rmolinamir/.t3/userdata/browser-artifacts/browser-screenshot-127-0-0-1-mwiuivyq-cd610001.png",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "theme": "dark",
+      "status": "captured",
+      "image": "captures/invite-initial.png",
+      "sha256": "f5ee63dcda8bee67c4f067f6fc799c97efbfcc141662ec4757322a7196854e42",
+      "appearanceEvidence": "PNG top-edge sampled pixel median; preference setting may be System",
+      "imageDimensions": {
+        "width": 1280,
+        "height": 889
+      },
+      "currentScreenshot": true,
+      "data": "disposable browser test fixture",
+      "rasterNote": "Screenshot tool scaled the PNG; viewport records CSS pixels. Original raster retained unchanged.",
+      "indexSource": "audit/runtime-2026-11-16/capture-index.json",
+      "projectImage": "audit/runtime-2026-11-16/captures/invite-initial.png",
+      "actualDimensions": {
+        "width": 1280,
+        "height": 889
+      },
+      "syntheticProposal": false,
+      "evidenceType": "parent-owned disposable runtime fixture capture",
+      "matchedToProposal": false,
+      "portableImage": "evidence/current-captures/invite-initial.png",
+      "verifiedSha256": "f5ee63dcda8bee67c4f067f6fc799c97efbfcc141662ec4757322a7196854e42"
+    },
+    {
+      "id": "auth-forgot-redirect",
+      "state": "forgot-password path redirects to home in fixture configuration",
+      "route": "/",
+      "source": "/home/rmolinamir/.t3/userdata/browser-artifacts/browser-screenshot-127-0-0-1-mwiuiy6m-6ce5ab00.png",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "theme": "dark",
+      "status": "captured",
+      "note": "This route is conditional/unavailable in fixture configuration; no reset form captured.",
+      "image": "captures/auth-forgot-redirect.png",
+      "sha256": "858168fa08ed1c2d6bdfda407d3c4fa806dbd8c3951b0e2c18050c26bcbd2fe2",
+      "appearanceEvidence": "PNG top-edge sampled pixel median; preference setting may be System",
+      "imageDimensions": {
+        "width": 1280,
+        "height": 889
+      },
+      "currentScreenshot": true,
+      "data": "disposable browser test fixture",
+      "rasterNote": "Screenshot tool scaled the PNG; viewport records CSS pixels. Original raster retained unchanged.",
+      "indexSource": "audit/runtime-2026-11-16/capture-index.json",
+      "projectImage": "audit/runtime-2026-11-16/captures/auth-forgot-redirect.png",
+      "actualDimensions": {
+        "width": 1280,
+        "height": 889
+      },
+      "syntheticProposal": false,
+      "evidenceType": "parent-owned disposable runtime fixture capture",
+      "matchedToProposal": false,
+      "portableImage": "evidence/current-captures/auth-forgot-redirect.png",
+      "verifiedSha256": "858168fa08ed1c2d6bdfda407d3c4fa806dbd8c3951b0e2c18050c26bcbd2fe2"
+    },
+    {
+      "id": "marketing-mobile",
+      "state": "current marketing mobile first fold",
+      "route": "/",
+      "source": "/home/rmolinamir/.t3/userdata/browser-artifacts/browser-screenshot-127-0-0-1-mwiuk6e7-cc769929.png",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "theme": "dark",
+      "status": "captured",
+      "image": "captures/marketing-mobile.png",
+      "sha256": "d0e0df1a78524c52363e628b190fd6d383346bfd52a9d74dfe81d73faef0b234",
+      "appearanceEvidence": "PNG top-edge sampled pixel median; preference setting may be System",
+      "imageDimensions": {
+        "width": 780,
+        "height": 1688
+      },
+      "currentScreenshot": true,
+      "data": "disposable browser test fixture",
+      "rasterNote": "Screenshot tool scaled the PNG; viewport records CSS pixels. Original raster retained unchanged.",
+      "indexSource": "audit/runtime-2026-11-16/capture-index.json",
+      "projectImage": "audit/runtime-2026-11-16/captures/marketing-mobile.png",
+      "actualDimensions": {
+        "width": 780,
+        "height": 1688
+      },
+      "syntheticProposal": false,
+      "evidenceType": "parent-owned disposable runtime fixture capture",
+      "matchedToProposal": false,
+      "portableImage": "evidence/current-captures/marketing-mobile.png",
+      "verifiedSha256": "d0e0df1a78524c52363e628b190fd6d383346bfd52a9d74dfe81d73faef0b234"
+    },
+    {
+      "id": "auth-sign-in-mobile",
+      "state": "current sign-in mobile",
+      "route": "/auth/sign-in",
+      "source": "/home/rmolinamir/.t3/userdata/browser-artifacts/browser-screenshot-127-0-0-1-mwiuk6yu-99b96820.png",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "theme": "dark",
+      "status": "captured",
+      "image": "captures/auth-sign-in-mobile.png",
+      "sha256": "10039ab3851ce6ad07fcd804552db6a4c7bc426e5caf9cb9a1c966a4e3c7137b",
+      "appearanceEvidence": "PNG top-edge sampled pixel median; preference setting may be System",
+      "imageDimensions": {
+        "width": 780,
+        "height": 1688
+      },
+      "currentScreenshot": true,
+      "data": "disposable browser test fixture",
+      "rasterNote": "Screenshot tool scaled the PNG; viewport records CSS pixels. Original raster retained unchanged.",
+      "indexSource": "audit/runtime-2026-11-16/capture-index.json",
+      "projectImage": "audit/runtime-2026-11-16/captures/auth-sign-in-mobile.png",
+      "actualDimensions": {
+        "width": 780,
+        "height": 1688
+      },
+      "syntheticProposal": false,
+      "evidenceType": "parent-owned disposable runtime fixture capture",
+      "matchedToProposal": false,
+      "portableImage": "evidence/current-captures/auth-sign-in-mobile.png",
+      "verifiedSha256": "10039ab3851ce6ad07fcd804552db6a4c7bc426e5caf9cb9a1c966a4e3c7137b"
+    },
+    {
+      "id": "invite-mobile",
+      "state": "current invite mobile",
+      "route": "/invite",
+      "source": "/home/rmolinamir/.t3/userdata/browser-artifacts/browser-screenshot-127-0-0-1-mwiuk7de-4546df48.png",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "theme": "dark",
+      "status": "captured",
+      "image": "captures/invite-mobile.png",
+      "sha256": "9d8cc6642ce45bf31865881584a7d488b268a29cfc35208b8eb581bc58524515",
+      "appearanceEvidence": "PNG top-edge sampled pixel median; preference setting may be System",
+      "imageDimensions": {
+        "width": 780,
+        "height": 1688
+      },
+      "currentScreenshot": true,
+      "data": "disposable browser test fixture",
+      "rasterNote": "Screenshot tool scaled the PNG; viewport records CSS pixels. Original raster retained unchanged.",
+      "indexSource": "audit/runtime-2026-11-16/capture-index.json",
+      "projectImage": "audit/runtime-2026-11-16/captures/invite-mobile.png",
+      "actualDimensions": {
+        "width": 780,
+        "height": 1688
+      },
+      "syntheticProposal": false,
+      "evidenceType": "parent-owned disposable runtime fixture capture",
+      "matchedToProposal": false,
+      "portableImage": "evidence/current-captures/invite-mobile.png",
+      "verifiedSha256": "9d8cc6642ce45bf31865881584a7d488b268a29cfc35208b8eb581bc58524515"
+    },
+    {
+      "id": "invite-invalid-mobile",
+      "state": "invalid invite code submission",
+      "route": "/invite",
+      "source": "/home/rmolinamir/.t3/userdata/browser-artifacts/browser-screenshot-127-0-0-1-mwiuklw8-7f59225c.png",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "theme": "dark",
+      "status": "captured",
+      "image": "captures/invite-invalid-mobile.png",
+      "sha256": "44926be1a27a65c3c6649047fc86fbd4836118cac9a5c23ccb15c006d731a256",
+      "appearanceEvidence": "PNG top-edge sampled pixel median; preference setting may be System",
+      "imageDimensions": {
+        "width": 780,
+        "height": 1688
+      },
+      "currentScreenshot": true,
+      "data": "disposable browser test fixture",
+      "rasterNote": "Screenshot tool scaled the PNG; viewport records CSS pixels. Original raster retained unchanged.",
+      "indexSource": "audit/runtime-2026-11-16/capture-index.json",
+      "projectImage": "audit/runtime-2026-11-16/captures/invite-invalid-mobile.png",
+      "actualDimensions": {
+        "width": 780,
+        "height": 1688
+      },
+      "syntheticProposal": false,
+      "evidenceType": "parent-owned disposable runtime fixture capture",
+      "matchedToProposal": false,
+      "portableImage": "evidence/current-captures/invite-invalid-mobile.png",
+      "verifiedSha256": "44926be1a27a65c3c6649047fc86fbd4836118cac9a5c23ccb15c006d731a256"
+    },
+    {
+      "id": "editor-toolbar-keyboard-verified",
+      "state": "editor controls reached with Alt+F10",
+      "route": "/pages/00000000-0000-4000-8000-000000000980",
+      "image": "captures/editor-toolbar-keyboard-verified.png",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "theme": "light",
+      "status": "captured",
+      "data": "disposable browser test fixture",
+      "method": "installed Playwright after preview editor-control timeouts",
+      "sha256": "a2230fead951159c82bad007b56a4d4896047de318b420f32e05679e371db8c3",
+      "imageDimensions": {
+        "width": 1440,
+        "height": 1000
+      },
+      "currentScreenshot": true,
+      "indexSource": "audit/runtime-2026-11-16/capture-index.json",
+      "projectImage": "audit/runtime-2026-11-16/captures/editor-toolbar-keyboard-verified.png",
+      "actualDimensions": {
+        "width": 1440,
+        "height": 1000
+      },
+      "syntheticProposal": false,
+      "evidenceType": "parent-owned disposable runtime fixture capture",
+      "matchedToProposal": false,
+      "duplicateIndexSources": [
+        "audit/runtime-2026-11-16/recovery-capture-index.json"
+      ],
+      "portableImage": "evidence/current-captures/editor-toolbar-keyboard-verified.png",
+      "verifiedSha256": "a2230fead951159c82bad007b56a4d4896047de318b420f32e05679e371db8c3"
+    },
+    {
+      "id": "editor-types-verified",
+      "state": "block type selection menu",
+      "route": "/pages/00000000-0000-4000-8000-000000000980",
+      "image": "captures/editor-types-verified.png",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "theme": "light",
+      "status": "captured",
+      "data": "disposable browser test fixture",
+      "method": "installed Playwright after preview editor-control timeouts",
+      "sha256": "7c5a495d8a664caa7c191695c90eaef828f47ab87a01609e6b21a06872b44769",
+      "imageDimensions": {
+        "width": 1440,
+        "height": 1000
+      },
+      "currentScreenshot": true,
+      "indexSource": "audit/runtime-2026-11-16/capture-index.json",
+      "projectImage": "audit/runtime-2026-11-16/captures/editor-types-verified.png",
+      "actualDimensions": {
+        "width": 1440,
+        "height": 1000
+      },
+      "syntheticProposal": false,
+      "evidenceType": "parent-owned disposable runtime fixture capture",
+      "matchedToProposal": false,
+      "duplicateIndexSources": [
+        "audit/runtime-2026-11-16/recovery-capture-index.json"
+      ],
+      "portableImage": "evidence/current-captures/editor-types-verified.png",
+      "verifiedSha256": "7c5a495d8a664caa7c191695c90eaef828f47ab87a01609e6b21a06872b44769"
+    },
+    {
+      "id": "editor-colors-verified",
+      "state": "text and highlight palette",
+      "route": "/pages/00000000-0000-4000-8000-000000000980",
+      "image": "captures/editor-colors-verified.png",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "theme": "light",
+      "status": "captured",
+      "data": "disposable browser test fixture",
+      "method": "installed Playwright after preview editor-control timeouts",
+      "sha256": "c4563d193485e965c8f1679b1c241c22291488a1ddc7f5d394b9e3a98de8d877",
+      "imageDimensions": {
+        "width": 1440,
+        "height": 1000
+      },
+      "currentScreenshot": true,
+      "indexSource": "audit/runtime-2026-11-16/capture-index.json",
+      "projectImage": "audit/runtime-2026-11-16/captures/editor-colors-verified.png",
+      "actualDimensions": {
+        "width": 1440,
+        "height": 1000
+      },
+      "syntheticProposal": false,
+      "evidenceType": "parent-owned disposable runtime fixture capture",
+      "matchedToProposal": false,
+      "duplicateIndexSources": [
+        "audit/runtime-2026-11-16/recovery-capture-index.json"
+      ],
+      "portableImage": "evidence/current-captures/editor-colors-verified.png",
+      "verifiedSha256": "c4563d193485e965c8f1679b1c241c22291488a1ddc7f5d394b9e3a98de8d877"
+    },
+    {
+      "id": "editor-alignment-verified",
+      "state": "alignment options",
+      "route": "/pages/00000000-0000-4000-8000-000000000980",
+      "image": "captures/editor-alignment-verified.png",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "theme": "light",
+      "status": "captured",
+      "data": "disposable browser test fixture",
+      "method": "installed Playwright after preview editor-control timeouts",
+      "sha256": "b8166e88e3048f259f2c0bb825485d65a0f57c2bbd4606b8cf526e5675736650",
+      "imageDimensions": {
+        "width": 1440,
+        "height": 1000
+      },
+      "currentScreenshot": true,
+      "indexSource": "audit/runtime-2026-11-16/capture-index.json",
+      "projectImage": "audit/runtime-2026-11-16/captures/editor-alignment-verified.png",
+      "actualDimensions": {
+        "width": 1440,
+        "height": 1000
+      },
+      "syntheticProposal": false,
+      "evidenceType": "parent-owned disposable runtime fixture capture",
+      "matchedToProposal": false,
+      "duplicateIndexSources": [
+        "audit/runtime-2026-11-16/recovery-capture-index.json"
+      ],
+      "portableImage": "evidence/current-captures/editor-alignment-verified.png",
+      "verifiedSha256": "b8166e88e3048f259f2c0bb825485d65a0f57c2bbd4606b8cf526e5675736650"
+    },
+    {
+      "id": "editor-link-verified",
+      "state": "link entry and reference options",
+      "route": "/pages/00000000-0000-4000-8000-000000000980",
+      "image": "captures/editor-link-verified.png",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "theme": "light",
+      "status": "captured",
+      "data": "disposable browser test fixture",
+      "method": "installed Playwright after preview editor-control timeouts",
+      "sha256": "7525374a2b83c89960c98bbd4c01c59668cba5302a861ad8cc3ac97608e3cade",
+      "imageDimensions": {
+        "width": 1440,
+        "height": 1000
+      },
+      "currentScreenshot": true,
+      "indexSource": "audit/runtime-2026-11-16/capture-index.json",
+      "projectImage": "audit/runtime-2026-11-16/captures/editor-link-verified.png",
+      "actualDimensions": {
+        "width": 1440,
+        "height": 1000
+      },
+      "syntheticProposal": false,
+      "evidenceType": "parent-owned disposable runtime fixture capture",
+      "matchedToProposal": false,
+      "duplicateIndexSources": [
+        "audit/runtime-2026-11-16/recovery-capture-index.json"
+      ],
+      "portableImage": "evidence/current-captures/editor-link-verified.png",
+      "verifiedSha256": "7525374a2b83c89960c98bbd4c01c59668cba5302a861ad8cc3ac97608e3cade"
+    },
+    {
+      "id": "editor-more-verified",
+      "state": "block action overflow",
+      "route": "/pages/00000000-0000-4000-8000-000000000980",
+      "image": "captures/editor-more-verified.png",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "theme": "light",
+      "status": "captured",
+      "data": "disposable browser test fixture",
+      "method": "installed Playwright after preview editor-control timeouts",
+      "sha256": "280b23fa405f73b5683a58a6f9f10f54eaa583397b7cd70844bbde2d65d33186",
+      "imageDimensions": {
+        "width": 1440,
+        "height": 1000
+      },
+      "currentScreenshot": true,
+      "indexSource": "audit/runtime-2026-11-16/capture-index.json",
+      "projectImage": "audit/runtime-2026-11-16/captures/editor-more-verified.png",
+      "actualDimensions": {
+        "width": 1440,
+        "height": 1000
+      },
+      "syntheticProposal": false,
+      "evidenceType": "parent-owned disposable runtime fixture capture",
+      "matchedToProposal": false,
+      "duplicateIndexSources": [
+        "audit/runtime-2026-11-16/recovery-capture-index.json"
+      ],
+      "portableImage": "evidence/current-captures/editor-more-verified.png",
+      "verifiedSha256": "280b23fa405f73b5683a58a6f9f10f54eaa583397b7cd70844bbde2d65d33186"
+    },
+    {
+      "id": "save-network-notice",
+      "state": "persistent unsaved notice after aborted save",
+      "route": "/pages/00000000-0000-4000-8000-000000000025",
+      "image": "captures/save-network-notice.png",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "theme": "light",
+      "status": "captured",
+      "data": "disposable browser test fixture",
+      "method": "installed Playwright after preview editor-control timeouts",
+      "sha256": "02854fcc0eee1a38fa06f9761889fe7c4de6334e51a3652a29ddab8bfff6ae0d",
+      "imageDimensions": {
+        "width": 1440,
+        "height": 1000
+      },
+      "currentScreenshot": true,
+      "indexSource": "audit/runtime-2026-11-16/capture-index.json",
+      "projectImage": "audit/runtime-2026-11-16/captures/save-network-notice.png",
+      "actualDimensions": {
+        "width": 1440,
+        "height": 1000
+      },
+      "syntheticProposal": false,
+      "evidenceType": "parent-owned disposable runtime fixture capture",
+      "matchedToProposal": false,
+      "duplicateIndexSources": [
+        "audit/runtime-2026-11-16/recovery-capture-index.json"
+      ],
+      "portableImage": "evidence/current-captures/save-network-notice.png",
+      "verifiedSha256": "02854fcc0eee1a38fa06f9761889fe7c4de6334e51a3652a29ddab8bfff6ae0d"
+    },
+    {
+      "id": "save-network-recovery",
+      "state": "recovery dialog with retry and draft download",
+      "route": "/pages/00000000-0000-4000-8000-000000000025",
+      "image": "captures/save-network-recovery.png",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "theme": "light",
+      "status": "captured",
+      "data": "disposable browser test fixture",
+      "method": "installed Playwright after preview editor-control timeouts",
+      "sha256": "adfbad4426f28c7b1cc078df74f3f4d3cea44fee6f509ae1259ac3db27d2f0d1",
+      "imageDimensions": {
+        "width": 1440,
+        "height": 1000
+      },
+      "currentScreenshot": true,
+      "indexSource": "audit/runtime-2026-11-16/capture-index.json",
+      "projectImage": "audit/runtime-2026-11-16/captures/save-network-recovery.png",
+      "actualDimensions": {
+        "width": 1440,
+        "height": 1000
+      },
+      "syntheticProposal": false,
+      "evidenceType": "parent-owned disposable runtime fixture capture",
+      "matchedToProposal": false,
+      "duplicateIndexSources": [
+        "audit/runtime-2026-11-16/recovery-capture-index.json"
+      ],
+      "portableImage": "evidence/current-captures/save-network-recovery.png",
+      "verifiedSha256": "adfbad4426f28c7b1cc078df74f3f4d3cea44fee6f509ae1259ac3db27d2f0d1"
+    },
+    {
+      "id": "offline-persistent-notice",
+      "state": "offline edits retained notice",
+      "route": "/pages/00000000-0000-4000-8000-000000000027",
+      "image": "captures/offline-persistent-notice.png",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "theme": "light",
+      "status": "captured",
+      "data": "disposable browser test fixture",
+      "method": "installed Playwright after preview editor-control timeouts",
+      "sha256": "818782a17de14c983c8b7344d7ee8d893c85bb1fc308ce364499f1f5979761c9",
+      "imageDimensions": {
+        "width": 1440,
+        "height": 1000
+      },
+      "currentScreenshot": true,
+      "indexSource": "audit/runtime-2026-11-16/capture-index.json",
+      "projectImage": "audit/runtime-2026-11-16/captures/offline-persistent-notice.png",
+      "actualDimensions": {
+        "width": 1440,
+        "height": 1000
+      },
+      "syntheticProposal": false,
+      "evidenceType": "parent-owned disposable runtime fixture capture",
+      "matchedToProposal": false,
+      "duplicateIndexSources": [
+        "audit/runtime-2026-11-16/recovery-capture-index.json"
+      ],
+      "portableImage": "evidence/current-captures/offline-persistent-notice.png",
+      "verifiedSha256": "818782a17de14c983c8b7344d7ee8d893c85bb1fc308ce364499f1f5979761c9"
+    },
+    {
+      "id": "offline-draft-details",
+      "state": "offline recovery dialog, retry absent",
+      "route": "/pages/00000000-0000-4000-8000-000000000027",
+      "image": "captures/offline-draft-details.png",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "theme": "light",
+      "status": "captured",
+      "data": "disposable browser test fixture",
+      "method": "installed Playwright after preview editor-control timeouts",
+      "sha256": "f2e203770170fa26b4ae80f893787172380e93ab48ded5e406f0ff3a6eec5e6c",
+      "imageDimensions": {
+        "width": 1440,
+        "height": 1000
+      },
+      "currentScreenshot": true,
+      "indexSource": "audit/runtime-2026-11-16/capture-index.json",
+      "projectImage": "audit/runtime-2026-11-16/captures/offline-draft-details.png",
+      "actualDimensions": {
+        "width": 1440,
+        "height": 1000
+      },
+      "syntheticProposal": false,
+      "evidenceType": "parent-owned disposable runtime fixture capture",
+      "matchedToProposal": false,
+      "duplicateIndexSources": [
+        "audit/runtime-2026-11-16/recovery-capture-index.json"
+      ],
+      "portableImage": "evidence/current-captures/offline-draft-details.png",
+      "verifiedSha256": "f2e203770170fa26b4ae80f893787172380e93ab48ded5e406f0ff3a6eec5e6c"
+    },
+    {
+      "id": "conflict-keep-both",
+      "state": "version conflict with Keep both and load saved",
+      "route": "/pages/00000000-0000-4000-8000-000000000026",
+      "image": "captures/conflict-keep-both.png",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "theme": "light",
+      "status": "captured",
+      "data": "disposable browser test fixture",
+      "method": "installed Playwright after preview editor-control timeouts",
+      "sha256": "5b91dcec505d49656ca0c33b15dc903f1978a9186cd4e4a6bf4682bb30b372b0",
+      "imageDimensions": {
+        "width": 1440,
+        "height": 1000
+      },
+      "currentScreenshot": true,
+      "indexSource": "audit/runtime-2026-11-16/capture-index.json",
+      "projectImage": "audit/runtime-2026-11-16/captures/conflict-keep-both.png",
+      "actualDimensions": {
+        "width": 1440,
+        "height": 1000
+      },
+      "syntheticProposal": false,
+      "evidenceType": "parent-owned disposable runtime fixture capture",
+      "matchedToProposal": false,
+      "duplicateIndexSources": [
+        "audit/runtime-2026-11-16/recovery-capture-index.json"
+      ],
+      "portableImage": "evidence/current-captures/conflict-keep-both.png",
+      "verifiedSha256": "5b91dcec505d49656ca0c33b15dc903f1978a9186cd4e4a6bf4682bb30b372b0"
+    },
+    {
+      "id": "retained-copy-details",
+      "state": "saved winner with retained original draft copy",
+      "route": "/pages/00000000-0000-4000-8000-000000000026",
+      "image": "captures/retained-copy-details.png",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "theme": "light",
+      "status": "captured",
+      "data": "disposable browser test fixture",
+      "method": "installed Playwright after preview editor-control timeouts",
+      "sha256": "4788ef18ff321d297d4a205a5bad36b719358570271b7a7636c63bb954d3fc39",
+      "imageDimensions": {
+        "width": 1440,
+        "height": 1000
+      },
+      "currentScreenshot": true,
+      "indexSource": "audit/runtime-2026-11-16/capture-index.json",
+      "projectImage": "audit/runtime-2026-11-16/captures/retained-copy-details.png",
+      "actualDimensions": {
+        "width": 1440,
+        "height": 1000
+      },
+      "syntheticProposal": false,
+      "evidenceType": "parent-owned disposable runtime fixture capture",
+      "matchedToProposal": false,
+      "duplicateIndexSources": [
+        "audit/runtime-2026-11-16/recovery-capture-index.json"
+      ],
+      "portableImage": "evidence/current-captures/retained-copy-details.png",
+      "verifiedSha256": "4788ef18ff321d297d4a205a5bad36b719358570271b7a7636c63bb954d3fc39"
+    },
+    {
+      "id": "retained-copy-preview",
+      "state": "read-only rich retained draft preview",
+      "route": "/pages/00000000-0000-4000-8000-000000000026",
+      "image": "captures/retained-copy-preview.png",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "theme": "light",
+      "status": "captured",
+      "data": "disposable browser test fixture",
+      "method": "installed Playwright after preview editor-control timeouts",
+      "sha256": "6fdd44e29487f486c1cd53d4958a389228e9a196c7d2994207f6beb3ad7ad92b",
+      "imageDimensions": {
+        "width": 1440,
+        "height": 1000
+      },
+      "currentScreenshot": true,
+      "indexSource": "audit/runtime-2026-11-16/capture-index.json",
+      "projectImage": "audit/runtime-2026-11-16/captures/retained-copy-preview.png",
+      "actualDimensions": {
+        "width": 1440,
+        "height": 1000
+      },
+      "syntheticProposal": false,
+      "evidenceType": "parent-owned disposable runtime fixture capture",
+      "matchedToProposal": false,
+      "duplicateIndexSources": [
+        "audit/runtime-2026-11-16/recovery-capture-index.json"
+      ],
+      "portableImage": "evidence/current-captures/retained-copy-preview.png",
+      "verifiedSha256": "6fdd44e29487f486c1cd53d4958a389228e9a196c7d2994207f6beb3ad7ad92b"
+    }
+  ],
+  "counts": {
+    "initialOnly": 38,
+    "verifiedExtra": 13,
+    "rawIndexRecords": 64,
+    "duplicateIndexRecords": 13
+  },
+  "selectedExistingTestStats": {
+    "startTime": "2026-11-16T05:51:00.246Z",
+    "duration": 57386.651000000005,
+    "expected": 8,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  },
+  "fullSuiteRun": false,
+  "notes": "Parent-operated disposable fixture; original dimensions may differ from requested viewport due preview export scaling. No exact proposed/current content pairing claimed.",
+  "newCurrentBrowserCaptures": 0
+}

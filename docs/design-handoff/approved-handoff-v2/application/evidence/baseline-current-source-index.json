@@ -1,0 +1,2885 @@
+[
+  {
+    "path": "apps/web/src/app/(app)/@appSidebar/_components/app-sidebar-devtools.dynamic.tsx",
+    "sha256": "ef18924c1051ddd34348e238901cb8dc05d4db386d939dbdd4a8ad9b3f8c7c7e",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/app/(app)/@appSidebar/_components/app-sidebar-devtools.tsx",
+    "sha256": "ac25022bb33ffc4f88bf6f95b93f82cb9876230d7612ea968384578ab945c755",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": [
+      {
+        "line": 35,
+        "text": "<DialogTitle className=\"sr-only\">React Query</DialogTitle>"
+      },
+      {
+        "line": 61,
+        "text": "<DialogTitle className=\"sr-only\">Invite Codes</DialogTitle>"
+      }
+    ]
+  },
+  {
+    "path": "apps/web/src/app/(app)/@appSidebar/_components/app-sidebar-main.tsx",
+    "sha256": "3e24aef729a20da19eea83bcf938dd6a85aaea6a85461c5a2dc81c96fc48ff0d",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": [
+      {
+        "line": 15,
+        "text": "title: string;"
+      },
+      {
+        "line": 23,
+        "text": "title: string;"
+      }
+    ]
+  },
+  {
+    "path": "apps/web/src/app/(app)/@appSidebar/_components/app-sidebar-page-item-skeleton.tsx",
+    "sha256": "b3dae9a8e8883d0c72633422a1efe1c1ecf6c8d85d17fb51169e6db9a75cbae8",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/app/(app)/@appSidebar/_components/app-sidebar-page-item.tsx",
+    "sha256": "a7a53d95503c920625382de4bdb5a78da0e6ea9d24eb63bf763e5b696a069ece",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": [
+      {
+        "line": 71,
+        "text": "label: page.title || \"New page\","
+      },
+      {
+        "line": 84,
+        "text": "aria-label={`Actions for ${page.title || \"New page\"}`}"
+      },
+      {
+        "line": 102,
+        "text": "<DropdownMenuItem"
+      },
+      {
+        "line": 210,
+        "text": "aria-label={`Drag reference to ${page.title || \"New page\"}`}"
+      }
+    ]
+  },
+  {
+    "path": "apps/web/src/app/(app)/@appSidebar/_components/app-sidebar-pages-skeleton.tsx",
+    "sha256": "1bdbc764556fc5363a732eed45060752f1177fcdd095decbb7f7124822bc5262",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/app/(app)/@appSidebar/_components/app-sidebar-pages.tsx",
+    "sha256": "37df037142aeba8fa6e9c296c82ba76f62b637109d1cd2889cdc1d9ae230d0ca",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": [
+      {
+        "line": 156,
+        "text": "label: page.title || \"New page\","
+      },
+      {
+        "line": 241,
+        "text": "label: folder.name,"
+      },
+      {
+        "line": 334,
+        "text": "aria-label={`${isOpen ? \"Collapse\" : \"Expand\"} ${folder.name || \"New folder\"}`}"
+      },
+      {
+        "line": 361,
+        "text": "aria-label={`Open ${folder.name || \"New folder\"}`}"
+      }
+    ]
+  },
+  {
+    "path": "apps/web/src/app/(app)/@appSidebar/_components/app-sidebar-provider.tsx",
+    "sha256": "03b71a167b4223b051da56f0520640cb9ab3a92ff0c932b8f70b0ce20d466c0d",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/app/(app)/@appSidebar/_components/app-sidebar-tree-actions.tsx",
+    "sha256": "cdfd6baf1f22738f1adffeb227aff231507909acd0ddf5cc32000f330dfb301d",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": [
+      {
+        "line": 75,
+        "text": "label: folder.name || \"New folder\","
+      },
+      {
+        "line": 217,
+        "text": "title: variables.title,"
+      },
+      {
+        "line": 270,
+        "text": "title: newPage.page.title,"
+      },
+      {
+        "line": 310,
+        "text": "title: \"\","
+      },
+      {
+        "line": 359,
+        "text": "aria-label={"
+      },
+      {
+        "line": 396,
+        "text": "<DropdownMenuItem"
+      },
+      {
+        "line": 405,
+        "text": "<DropdownMenuItem"
+      },
+      {
+        "line": 416,
+        "text": "<DropdownMenuItem"
+      }
+    ]
+  },
+  {
+    "path": "apps/web/src/app/(app)/@appSidebar/_components/app-sidebar-user-dropdown.tsx",
+    "sha256": "04e1bddd14c8dfd1a9887db1f4d967929fcffe0f4e059afd0f68c6039d6ed2fe",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": [
+      {
+        "line": 31,
+        "text": "label: \"Subscription\","
+      }
+    ]
+  },
+  {
+    "path": "apps/web/src/app/(app)/@appSidebar/_components/app-sidebar-user-skeleton.tsx",
+    "sha256": "1aebb8764538268cc005dcc2f7b2f6020972a7a080a5aba615d6bff8d01e1129",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/app/(app)/@appSidebar/_components/app-sidebar-user.tsx",
+    "sha256": "d8c727ebcf512fd5b8ed24f71627b433108ac0c9bda4fcd74b8abc1ed1440026",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/app/(app)/@appSidebar/_components/delete-folder-button.tsx",
+    "sha256": "76bdbc1e434f4c2b46c710c2bad3345243f39233d81f455909825a4919acb7c4",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": [
+      {
+        "line": 49,
+        "text": "aria-label=\"Delete folder\""
+      },
+      {
+        "line": 251,
+        "text": "<DialogTitle>Delete Folder</DialogTitle>"
+      }
+    ]
+  },
+  {
+    "path": "apps/web/src/app/(app)/@appSidebar/_components/delete-page-button.tsx",
+    "sha256": "0fae2f81096c0efdd09468f0aed6d7497529b1f9d994cedd1f0471066bec0951",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": [
+      {
+        "line": 44,
+        "text": "aria-label=\"Delete page\""
+      },
+      {
+        "line": 169,
+        "text": "<DialogTitle>Delete Page</DialogTitle>"
+      }
+    ]
+  },
+  {
+    "path": "apps/web/src/app/(app)/@appSidebar/default.tsx",
+    "sha256": "883e9d21f3f36529b778fe3f8214a983dc5b20aaf07aa9f901f1fc6fd67194be",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": [
+      {
+        "line": 28,
+        "text": "title: \"Journal\","
+      },
+      {
+        "line": 33,
+        "text": "title: \"Explore\","
+      }
+    ]
+  },
+  {
+    "path": "apps/web/src/app/(app)/@chatDrawer/_components/chat-drawer-trigger.tsx",
+    "sha256": "e97e2a45694a027c4fa79011627b2fae33c05f72f93ef44a1f6c7715eb95502e",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/app/(app)/@chatDrawer/default.tsx",
+    "sha256": "5df97e30645d21121f8e571187db8f91e2998aedeb7bb2a8ad152e4d04695bfa",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/app/(app)/@chatSidebar/_components/chat-sidebar-provider.tsx",
+    "sha256": "e70d30934c76bded0634be6001d5b10c0c0537153903cf237b6cf5fc5409d36f",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/app/(app)/@chatSidebar/_components/chat-sidebar-trigger.tsx",
+    "sha256": "84b7edad96aec1fc7a465a874911c86ea0adccd6809a5419d24cea7c09df4144",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/app/(app)/@chatSidebar/default.tsx",
+    "sha256": "510e07f6e61d7275ad1db3e161159f754dcdb8bc26852cb668d702ff8ee53e37",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/app/(app)/@header/_components/app-header.tsx",
+    "sha256": "62fbe4d92e0359a5856c2e6969454072dfb0bb2f835f23cd5c563b85d5990d2a",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/app/(app)/@header/_components/header-journal-button.tsx",
+    "sha256": "e9263b44cd66e8d1853bbd97eba6c8ed11eaba451ac5ed75bb66914c07e59174",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/app/(app)/@header/_components/header-search-modal.tsx",
+    "sha256": "c902be7632e72880f27dfefa56edc6496ed98e4dc6ff25af18181d76775b9c3e",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": [
+      {
+        "line": 104,
+        "text": "<DialogTitle className=\"sr-only\">"
+      },
+      {
+        "line": 109,
+        "text": "placeholder=\"Search notes...\""
+      }
+    ]
+  },
+  {
+    "path": "apps/web/src/app/(app)/@header/_components/header-search-trigger.tsx",
+    "sha256": "4a91eb564178fe1d64d47b6edc648a9f5b952f9ba1e536bfb7b8d597881ea29d",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": [
+      {
+        "line": 17,
+        "text": "aria-label=\"Search notes\""
+      }
+    ]
+  },
+  {
+    "path": "apps/web/src/app/(app)/@header/_components/header-subscription-button.client.tsx",
+    "sha256": "e557e93fae901a12068de59c31e18191d8b442add3d095ea5f6259c5461929c5",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": [
+      {
+        "line": 31,
+        "text": "toast.error(\"Failed to upgrade subscription\");"
+      },
+      {
+        "line": 39,
+        "text": "toast.error(error.message || \"Failed to open billing portal\");"
+      },
+      {
+        "line": 64,
+        "text": "toast.error(\"Failed to create checkout session\");"
+      }
+    ]
+  },
+  {
+    "path": "apps/web/src/app/(app)/@header/_components/header-subscription-button.tsx",
+    "sha256": "df5c8336105c8799e16f2769e7d1124cb653f8c4e304aefb92f42aafaef3f598",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/app/(app)/@header/default.tsx",
+    "sha256": "62b6b5f6e20f614cf5459a39b27d409204399282faa61d9a1b14e1b5bb1c5051",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/app/(app)/@subscriptionModal/(.)subscription/page.tsx",
+    "sha256": "e9804e5038fa94da4ba699538be016d3360735840cd3206c658f97fd3dd1c45a",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": [
+      {
+        "line": 17,
+        "text": "<DialogTitle className=\"capitalize\">Plan Summary</DialogTitle>"
+      }
+    ]
+  },
+  {
+    "path": "apps/web/src/app/(app)/@subscriptionModal/_components/subscription-modal.tsx",
+    "sha256": "278fa17b92ce527a751f276f8b848a9ab762c74988a7ea6972fb1ebb76ca759e",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/app/(app)/@subscriptionModal/default.tsx",
+    "sha256": "a58ffec71891e456afc41e86feaffc83fa8fac67d43ec736d0cb2e17449dadb7",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/app/(app)/@subscriptionModal/error.tsx",
+    "sha256": "bb5438f0f3773706165cb050e57e5bc7afe87a88ba89d3d6f638a7f809493ecc",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": [
+      {
+        "line": 28,
+        "text": "<DialogTitle>Subscription Error</DialogTitle>"
+      }
+    ]
+  },
+  {
+    "path": "apps/web/src/app/(app)/_components/app-container.tsx",
+    "sha256": "782fde1ce9eda0300cb3f26de2dc54d8e59d5bf35932883bad5e72e63c1f930b",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/app/(app)/_components/app-progress-bar.tsx",
+    "sha256": "7d8f702bce02d1b2dc88b4379c068f4026e3d63391c636803a4ce18a66790324",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/app/(app)/explore/_components/cluster-explorer.tsx",
+    "sha256": "b5d445a5a2b80a401c9a0ff67ef36f2aa06f601d723ea174930a26be321e37b9",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": [
+      {
+        "line": 152,
+        "text": "aria-label=\"Exploration trail\""
+      },
+      {
+        "line": 238,
+        "text": "aria-label=\"Representative notes\""
+      },
+      {
+        "line": 255,
+        "text": "aria-label=\"Rename thread\""
+      },
+      {
+        "line": 268,
+        "text": "aria-label=\"Thread map\""
+      },
+      {
+        "line": 363,
+        "text": "aria-label=\"Close preview\""
+      },
+      {
+        "line": 374,
+        "text": "<DialogTitle>Rename thread</DialogTitle>"
+      },
+      {
+        "line": 386,
+        "text": "aria-label=\"Thread name\""
+      },
+      {
+        "line": 393,
+        "text": "<p role=\"alert\" className=\"text-destructive text-sm\">"
+      }
+    ]
+  },
+  {
+    "path": "apps/web/src/app/(app)/explore/_components/cluster-items.tsx",
+    "sha256": "c766ca20aefda201f7eb9f36a78a9ba5d6539e5dbf17dadb281be63d16788ad4",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": [
+      {
+        "line": 63,
+        "text": "<section aria-label=\"All notes and sources\" className=\"space-y-3\">"
+      },
+      {
+        "line": 275,
+        "text": "<section aria-label=\"Connected threads\" className=\"space-y-2\">"
+      }
+    ]
+  },
+  {
+    "path": "apps/web/src/app/(app)/explore/_components/explore-overview.tsx",
+    "sha256": "97a86b8e8b21a8f6c1cf4c3fcd961bbb7625850a3709cb8bb8fe834bd04fefd6",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": [
+      {
+        "line": 120,
+        "text": "aria-label=\"Your threads\""
+      },
+      {
+        "line": 125,
+        "text": "aria-label=\"Find a thread\""
+      },
+      {
+        "line": 126,
+        "text": "placeholder=\"Find a thread\""
+      },
+      {
+        "line": 136,
+        "text": "aria-label=\"Map view\""
+      },
+      {
+        "line": 146,
+        "text": "aria-label=\"List view\""
+      },
+      {
+        "line": 221,
+        "text": "aria-label=\"Thread connections\""
+      },
+      {
+        "line": 324,
+        "text": "role=\"alert\""
+      },
+      {
+        "line": 385,
+        "text": "<section aria-label=\"Recent notes\" className=\"space-y-3\">"
+      },
+      {
+        "line": 412,
+        "text": "aria-label=\"Sort recent notes\""
+      }
+    ]
+  },
+  {
+    "path": "apps/web/src/app/(app)/explore/_components/explore-page-scroll.tsx",
+    "sha256": "3f73661ae809313f4f51076d9b38423ce80f9a68434637a13bbf12ed54ade8fb",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/app/(app)/explore/_components/explore-state-provider.tsx",
+    "sha256": "36bed11ad0ffda985ec3c8f544453749f5a96cd70ef83280e55db85f7d9e9448",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/app/(app)/explore/_components/explore-state.ts",
+    "sha256": "65b5b30cd17ef1658474fb70e12547175dd69858372df5e3de700efbe177fe6a",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/app/(app)/explore/_components/source-contexts.tsx",
+    "sha256": "48a09276bf4970741d8fa19352bfaa8be68d461a81656b3408db6d805e611152",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/app/(app)/explore/_components/thread-map.tsx",
+    "sha256": "01f64bd25f2299ebcafadcd445a4f6e5a1443bf9434d73d6c72ca1892a94ae0c",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": [
+      {
+        "line": 36,
+        "text": "aria-label={`Show connections for ${thread.name}`}"
+      },
+      {
+        "line": 86,
+        "text": "aria-label={`Show connections for ${data.thread.name}`}"
+      }
+    ]
+  },
+  {
+    "path": "apps/web/src/app/(app)/explore/clusters/[clusterId]/page.tsx",
+    "sha256": "715980bcf75087e94fdc581b40899e8e38f5cdce018f1bb9edeb939628184e6d",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/app/(app)/explore/clusters/[clusterId]/sources/page.tsx",
+    "sha256": "d32fc709208b7d2a6d59b89ac5c7e3c184538b9d99b99b60b04d7600c1a5a0a1",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/app/(app)/explore/layout.tsx",
+    "sha256": "bce3bb5564f463e4aff9e16a3182d36f31ceef24e87e717bd707d37463c418f4",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/app/(app)/explore/notes/[documentId]/page.tsx",
+    "sha256": "a1024dd3bc81a70ea59914fe9d07dae7e1c1c8a3d654a728cca7cf10108b5994",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/app/(app)/explore/page.tsx",
+    "sha256": "eed6421a494cadd4528909a32679ff0f686dca22c922e0b4d450b4b831422bda",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/app/(app)/folders/[id]/error.tsx",
+    "sha256": "297b795a9085fa288d52a50effa1065e7cb68af6f89a5a7eaec7ef4e2dfafaf7",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/app/(app)/folders/[id]/loading.tsx",
+    "sha256": "b4ca98a0b04e9d7685fca8a9f37b7a9dadc464702c54ba31113d8aeaa2f6d855",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/app/(app)/folders/[id]/page.tsx",
+    "sha256": "1dde1ec7db60e6b33d3142333f5283c381550909015da96020c589166adf1e6a",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/app/(app)/folders/_components/folder-delete-action.tsx",
+    "sha256": "3a6354ffa390479e09522a6c57d89084c0277d52cd3635bb60a0398d3f31b584",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": [
+      {
+        "line": 36,
+        "text": "<DropdownMenuItem"
+      }
+    ]
+  },
+  {
+    "path": "apps/web/src/app/(app)/folders/_components/folder-details-skeleton.tsx",
+    "sha256": "06dc93fcb06439bbc19ef0a1a6eeea73ead7296124498226409fb7b04ccc65be",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/app/(app)/folders/_components/folder-nested-pages-list.tsx",
+    "sha256": "d3e4ff4eca271239e78ce3a26ff91ee80a73726183a1fbee2b4aa73196011452",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": [
+      {
+        "line": 199,
+        "text": "label: page.title || \"New page\","
+      },
+      {
+        "line": 215,
+        "text": "label: page.title || \"New page\","
+      },
+      {
+        "line": 243,
+        "text": "title: nextTitle,"
+      },
+      {
+        "line": 259,
+        "text": "title: nextTitle,"
+      },
+      {
+        "line": 270,
+        "text": "title: nextTitle,"
+      },
+      {
+        "line": 277,
+        "text": "title: nextTitle,"
+      },
+      {
+        "line": 366,
+        "text": "<span role=\"alert\" className=\"text-destructive text-xs\">"
+      },
+      {
+        "line": 406,
+        "text": "placeholder=\"New page\""
+      },
+      {
+        "line": 440,
+        "text": "aria-label=\"Page settings\""
+      },
+      {
+        "line": 458,
+        "text": "<DropdownMenuItem"
+      },
+      {
+        "line": 469,
+        "text": "<DropdownMenuItem"
+      },
+      {
+        "line": 527,
+        "text": "label: folder.name || \"New folder\","
+      },
+      {
+        "line": 538,
+        "text": "label: folder.name,"
+      },
+      {
+        "line": 763,
+        "text": "placeholder=\"New folder\""
+      },
+      {
+        "line": 772,
+        "text": "aria-label={`${isOpen ? \"Collapse\" : \"Expand\"} ${folder.name || \"New folder\"}`}"
+      },
+      {
+        "line": 802,
+        "text": "aria-label={`Open ${folder.name || \"New folder\"}`}"
+      },
+      {
+        "line": 824,
+        "text": "aria-label=\"Folder settings\""
+      },
+      {
+        "line": 843,
+        "text": "<DropdownMenuItem"
+      },
+      {
+        "line": 852,
+        "text": "<DropdownMenuItem"
+      }
+    ]
+  },
+  {
+    "path": "apps/web/src/app/(app)/folders/_components/folder-title-input.tsx",
+    "sha256": "0265d2b5cd4f651691edd9fdf4ff339b7acc02b70a8d12e03a3cbd13a927ab3f",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": [
+      {
+        "line": 114,
+        "text": "placeholder={placeholder}"
+      }
+    ]
+  },
+  {
+    "path": "apps/web/src/app/(app)/graph/_components/explore-canvas.tsx",
+    "sha256": "a007b1fd9927622d7f7c78099eaff25ca687d5bf50f67f44bb806a6882c6ded6",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": [
+      {
+        "line": 212,
+        "text": "aria-label=\"All connections\""
+      },
+      {
+        "line": 220,
+        "text": "aria-label={`Read ${node.title}`}"
+      }
+    ]
+  },
+  {
+    "path": "apps/web/src/app/(app)/graph/_components/explore-flow.css",
+    "sha256": "ada38af510e72518e81ba109598af6f60681fa30a3ab5489604b95d9a329e9a5",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/app/(app)/graph/_components/explore-flow.tsx",
+    "sha256": "976120928fbf9d87fa7220a91615bc4730dab7d4cc9f3e211ad94215388f6cd3",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": [
+      {
+        "line": 41,
+        "text": "label: string;"
+      },
+      {
+        "line": 58,
+        "text": "aria-label={label}"
+      }
+    ]
+  },
+  {
+    "path": "apps/web/src/app/(app)/graph/_components/explore-preview.tsx",
+    "sha256": "9efc2691c2926abcfa2e1b90c1f25d7d7c7a3ed63f87fa6cab843354eeaffb03",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": [
+      {
+        "line": 93,
+        "text": "title: string,"
+      },
+      {
+        "line": 99,
+        "text": "<section className=\"space-y-2\" aria-label={title}>"
+      },
+      {
+        "line": 150,
+        "text": "<section className=\"space-y-5 p-5\" aria-label=\"Note preview\">"
+      },
+      {
+        "line": 163,
+        "text": "? getExploreTitle({ ...node, title: preview.title || node.title })"
+      },
+      {
+        "line": 224,
+        "text": "<section className=\"space-y-2\" aria-label=\"Linked sources\">"
+      }
+    ]
+  },
+  {
+    "path": "apps/web/src/app/(app)/graph/_components/explore-view.tsx",
+    "sha256": "90c64d796ef0834ca4a047e62221ae1168377ea1ee1b78575066ddf675c4718b",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": [
+      {
+        "line": 61,
+        "text": "onTitle(title: string): void;"
+      },
+      {
+        "line": 208,
+        "text": "<section role=\"alert\" className=\"rounded-xl border p-8 text-center\">"
+      },
+      {
+        "line": 234,
+        "text": "aria-label=\"Explore connected notes\""
+      },
+      {
+        "line": 294,
+        "text": "aria-label=\"Unlinked notes\""
+      },
+      {
+        "line": 316,
+        "text": "aria-label=\"Sort unlinked notes\""
+      },
+      {
+        "line": 339,
+        "text": "aria-label={`Preview ${node.title}`}"
+      },
+      {
+        "line": 363,
+        "text": "aria-label={`Explore connections for ${node.title}`}"
+      },
+      {
+        "line": 384,
+        "text": "aria-label=\"Unlinked notes pages\""
+      },
+      {
+        "line": 426,
+        "text": "aria-label=\"Connection context\""
+      },
+      {
+        "line": 476,
+        "text": "aria-label=\"Close note preview\""
+      }
+    ]
+  },
+  {
+    "path": "apps/web/src/app/(app)/graph/_components/graph-explorer.tsx",
+    "sha256": "cfd341c61e3f905d54aa05c2fa0f0d1dd39f8755bdfdb3c186bc8737d0e54b40",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": [
+      {
+        "line": 15,
+        "text": "type Step = { scope: string; href: string; title: string };"
+      },
+      {
+        "line": 19,
+        "text": "title: \"Explore\","
+      },
+      {
+        "line": 51,
+        "text": "title: titles.current.get(scope) ?? (documentId ? \"Note\" : \"Explore\"),"
+      },
+      {
+        "line": 57,
+        "text": "(title: string) => {"
+      },
+      {
+        "line": 77,
+        "text": "{ href, scope: nextScope, title: getExploreTitle(node) },"
+      },
+      {
+        "line": 89,
+        "text": "aria-label=\"Back to previous exploration\""
+      },
+      {
+        "line": 99,
+        "text": "aria-label=\"Exploration trail\""
+      }
+    ]
+  },
+  {
+    "path": "apps/web/src/app/(app)/graph/page.tsx",
+    "sha256": "850e87935ef1d1ea0557b4073a322f2ed7e6dc7ed54805a30532a5105b3fdd04",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/app/(app)/journal/[date]/error.tsx",
+    "sha256": "93eb93d8d2de897c4b8da177398a3e167383ecd873c303a01f1ac49193c23099",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/app/(app)/journal/[date]/layout.tsx",
+    "sha256": "13428b64a93be54c9e1a4f5d532d8ec147f9d6935c992b46030ab1542158651d",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/app/(app)/journal/[date]/page.tsx",
+    "sha256": "cd63c2a89a44715e64a898f19b072277fe6704164ead5e60844cf71a017156d4",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/app/(app)/journal/_components/journal-drafts-provider.tsx",
+    "sha256": "08808902297956f505b3c864917834584e0c9a66fdf520057e80e7e81c3ce570",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": [
+      {
+        "line": 140,
+        "text": "label: `Journal \u00b7 ${date}`,"
+      }
+    ]
+  },
+  {
+    "path": "apps/web/src/app/(app)/journal/_components/journal-entry-convert-to-page.tsx",
+    "sha256": "e628fdbbc2e4fb61a10d617bfd71ce9f37012c2f87478b2bc6c79dfbb812fe92",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": [
+      {
+        "line": 27,
+        "text": "title: string;"
+      },
+      {
+        "line": 55,
+        "text": "aria-label=\"Convert entry to page\""
+      },
+      {
+        "line": 57,
+        "text": "setError(\"\");"
+      },
+      {
+        "line": 75,
+        "text": "<DialogTitle>Convert entry to a page</DialogTitle>"
+      },
+      {
+        "line": 86,
+        "text": "setError(\"\");"
+      },
+      {
+        "line": 100,
+        "text": "title: name,"
+      },
+      {
+        "line": 125,
+        "text": "setError("
+      },
+      {
+        "line": 149,
+        "text": "aria-label=\"Destination\""
+      },
+      {
+        "line": 168,
+        "text": "<p role=\"alert\" className=\"text-destructive text-sm\">"
+      }
+    ]
+  },
+  {
+    "path": "apps/web/src/app/(app)/journal/_components/journal-entry-draft.ts",
+    "sha256": "ec7f225e87ca7c4c8c1b4dbcb390bbec534b4f81c876771e1e7134624d3212f7",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/app/(app)/journal/_components/journal-entry-editor.dynamic.tsx",
+    "sha256": "58879bc07ad2f79be3f5e1663598109803820d09d321ef0cddc401dbc2bc4307",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/app/(app)/journal/_components/journal-entry-editor.tsx",
+    "sha256": "5cde731b6d661652e42c07e684c83716b51f64f9311914b27ad3908566bced51",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/app/(app)/journal/_components/journal-entry-skeleton.tsx",
+    "sha256": "7cf26b103465ee7c2df04b55ec0676cc19a5945298b981ae04f3d30e0ba191ea",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/app/(app)/journal/_components/journal-list-skeleton.tsx",
+    "sha256": "672fceb1a4c92253f9428a9b28a00bb08b7d12dd89d294e6a58cc6ee1f751eca",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/app/(app)/journal/_components/journal-list.tsx",
+    "sha256": "f978b2ad2c9324e5a4405f937aa17ebdde50b260ea0a242196a98ceba0f951a9",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/app/(app)/journal/layout.tsx",
+    "sha256": "eabae76ed1444620608eee37d125853d1955ffdf3cc3ef6bb39674488ede4e0b",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/app/(app)/journal/page.tsx",
+    "sha256": "5447d5177492465d8ad3e4da2904c86a1320eeb87092364c243d3b2526fdfddc",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/app/(app)/layout.tsx",
+    "sha256": "1a8430b287d4c21c205540dc9527fd390609a05e6efc945074f126aa6574061b",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/app/(app)/pages/[id]/error.tsx",
+    "sha256": "93eb93d8d2de897c4b8da177398a3e167383ecd873c303a01f1ac49193c23099",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/app/(app)/pages/[id]/loading.tsx",
+    "sha256": "3197baa14d50fe6b75176d2db83d657f1e7ff1208cb7474cf9f0b9b0852ec767",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/app/(app)/pages/[id]/page.tsx",
+    "sha256": "a06ac29fc06e75e353347cc60272539157f50af6257da3119877ca584b4f5519",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": [
+      {
+        "line": 46,
+        "text": "title: page.title,"
+      }
+    ]
+  },
+  {
+    "path": "apps/web/src/app/(app)/pages/_components/page-editor.dynamic.tsx",
+    "sha256": "053bb84c902489b923e660f205c6705c89c97b7aca36020c35c1e99431aba3e3",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/app/(app)/pages/_components/page-editor.tsx",
+    "sha256": "ee7484dfedd622e9143c8b1aab2f0dab5d9a44fe7012e02370dfe8ff7fbc0d26",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": [
+      {
+        "line": 34,
+        "text": "title: props.page.title,"
+      },
+      {
+        "line": 39,
+        "text": "setView({ id: props.page.id, name: \"page\", title: props.page.title });"
+      }
+    ]
+  },
+  {
+    "path": "apps/web/src/app/(app)/pages/_components/page-shell.tsx",
+    "sha256": "6faee1ff10bead564ce6cc2fc1a69abc6302610f89522d70fd7ce1b6db3f46e6",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/app/(app)/pages/_components/page-skeleton.tsx",
+    "sha256": "8a724de51fac576ee1be283c02e36806642a445c6a9611de52406987697198b8",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/app/(app)/pages/_components/page-title-textarea.tsx",
+    "sha256": "d2bed0e10d5ad2f0b343f902f8cbb1261047fdb4c8c9985b6d2100ddef6e0d91",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": [
+      {
+        "line": 20,
+        "text": "onTitleChange?: (title: string) => void;"
+      },
+      {
+        "line": 83,
+        "text": "placeholder={placeholder}"
+      }
+    ]
+  },
+  {
+    "path": "apps/web/src/app/(app)/styles.css",
+    "sha256": "71b65834c690fa8a42af70febac5197ef2290654fa6c8c9d41894a9d9c6ec210",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/app/(dashboard)/_components/dashboard-header.tsx",
+    "sha256": "e04fa68ff50af73095daa542add568fd428f19a9adad32792a95536c87fc0bbb",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/app/(dashboard)/_components/dashboard-providers.tsx",
+    "sha256": "3ccc89719da197ec5737b6cb1717a9149326fa1e577f436f804d8fdec95d3e62",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/app/(dashboard)/account/[pathname]/_components/account-view.tsx",
+    "sha256": "d9ec03380a908bc33bab9f3d7ea364079208b26bcb98e51f4f886c6b4c2df77c",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/app/(dashboard)/account/[pathname]/page.tsx",
+    "sha256": "443c055b0cb9f128de01dcb6465f13f33c2907964c1876481ba98921b32c40b4",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/app/(dashboard)/auth/error/page.tsx",
+    "sha256": "cbf6f2f7d358c3b3fdc99d30b066c2fac27b80d815726ab6071e52a634787444",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": [
+      {
+        "line": 48,
+        "text": "title: \"We couldn't create your account\","
+      },
+      {
+        "line": 54,
+        "text": "title: \"Invite code required\","
+      },
+      {
+        "line": 60,
+        "text": "title: \"Invite code not valid\","
+      },
+      {
+        "line": 66,
+        "text": "title: \"Authentication error\","
+      }
+    ]
+  },
+  {
+    "path": "apps/web/src/app/(dashboard)/layout.tsx",
+    "sha256": "c6bc3e590382487a55b27c719ae330e59428cdeb7150b603dd2dca84cbbcbbc7",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/app/(dashboard)/subscription/_components/subscription-manage-button.tsx",
+    "sha256": "92d08610d9f961e19f3d63fc26f9355ca32cc014ae45a6fa2c7384c21093485d",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": [
+      {
+        "line": 27,
+        "text": "toast.error(error.message || \"Failed to open billing portal\");"
+      }
+    ]
+  },
+  {
+    "path": "apps/web/src/app/(dashboard)/subscription/_components/subscription-view.tsx",
+    "sha256": "2a3528ddc765ff823f61b26172a402d0da11128bc504181b79a3bbc90f4d300f",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/app/(dashboard)/subscription/page.tsx",
+    "sha256": "d8f7d68d20c34e192f2be8eb020a1d7a217839f403e68d54aacd98c15281de11",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/app/(marketing)/_components/hero-cta-button.tsx",
+    "sha256": "fef892507de47d1d20400f78b702694748e9297563f3c143334e9861ec4ea3f9",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/app/(marketing)/_components/hero-floating-shapes.tsx",
+    "sha256": "6733d126422e7f0459188e9177c00f6038f18b44829c249cc9a0b1c0a9e23106",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/app/(marketing)/_components/hero-journl-particles.tsx",
+    "sha256": "c4fce7b85b1641dacf15ba1b728177f50b6ef3ca1411562462cbda8ec60a3271",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": [
+      {
+        "line": 299,
+        "text": "aria-label=\"Interactive Journl logo made of particles\""
+      }
+    ]
+  },
+  {
+    "path": "apps/web/src/app/(marketing)/_components/sticky-journl-header.tsx",
+    "sha256": "2743dfd7ac7e913b589327bb0403274ff0d82b51a5d9448c0a433d75eca72f57",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/app/(marketing)/auth/[pathname]/page.tsx",
+    "sha256": "cc49220991a2306a3f9c91eda569e16d878d0436c03fb79e549ae1cfd8d18105",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/app/(marketing)/invite/page.tsx",
+    "sha256": "baefe1c680e68507c1e574a10d13542ef0ce4b3081b995b72be80cf7ace1af22",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/app/(marketing)/layout.tsx",
+    "sha256": "1c5163427f251bdbedc079df30029ee14c2554610633b99756b4d33e207b8b36",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/app/(marketing)/page.tsx",
+    "sha256": "91fa3ed635d42069d18bd25fe31dde326955b04db83b266360d08cae53627737",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": [
+      {
+        "line": 47,
+        "text": "title: \"Journl: Your mind, organized\","
+      },
+      {
+        "line": 55,
+        "text": "title: \"Journl: Your mind, organized\","
+      },
+      {
+        "line": 61,
+        "text": "title: \"Journl: Your mind, organized\","
+      },
+      {
+        "line": 200,
+        "text": "title: \"Smart structure\","
+      },
+      {
+        "line": 205,
+        "text": "title: \"Signal detection\","
+      },
+      {
+        "line": 210,
+        "text": "title: \"Trust & control\","
+      },
+      {
+        "line": 246,
+        "text": "title: \"Write in your own voice\","
+      },
+      {
+        "line": 251,
+        "text": "title: \"Get guided reflections\","
+      },
+      {
+        "line": 256,
+        "text": "title: \"See patterns over time\","
+      }
+    ]
+  },
+  {
+    "path": "apps/web/src/app/(marketing)/styles.css",
+    "sha256": "6a6a369d8e13fd5714dd9f0b26fb74bcce0301279f1566149a47ce3ea25bce74",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/app/@authModal/(.)auth/[pathname]/_components/auth-view.tsx",
+    "sha256": "2675d53bb749404eab348398171d6f64ebf14111fdd85fa9ce8c0ce1140031c3",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/app/@authModal/(.)auth/[pathname]/page.tsx",
+    "sha256": "06985ed72c38d933800ad24784b7c9028a4e22275ca071d47fcd7974089ef5de",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/app/@authModal/(.)auth/layout.tsx",
+    "sha256": "61887eb0ae1eff3e69894fbacb87ffc56f08bcdd91f40ec818f4ab2e063b57df",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/app/@authModal/(.)invite/layout.tsx",
+    "sha256": "b5339e0c914434962af117444bf7a6ed856267caa7f0942b77ed014c3c2cae3e",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/app/@authModal/(.)invite/page.tsx",
+    "sha256": "3f3cae4980087e65e4fe82af0dcbd7cdb32d23faa787d658f1a9cfa09141c3a2",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/app/@authModal/default.tsx",
+    "sha256": "8118f19a1c712b2ae436e6001803f137a5e7073a5ce8d9c36bd054509780b1a9",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/app/_actions/sign-out.action.tsx",
+    "sha256": "907ff85564a2e1f959ff7b426f8678778c79579644c400b81a7f184d6fc69a0f",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/app/_components/app-layout-provider.tsx",
+    "sha256": "c9002e14b150b0ff0d662746fa97cfb8268d75c32e23559ad78fb7c95afbfc30",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/app/_components/app-providers.tsx",
+    "sha256": "9dc251e674be375ef8a241813283436b67feb5b33d3232569b747a2f46329c4c",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/app/_guards/page-guards.tsx",
+    "sha256": "95bc3f0be4abf0fe3908e078c56a4f8105c7962a54e8be816cec9138918ade87",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/app/api/_cors/cors.ts",
+    "sha256": "7d130cabc4544085f5cceb530f2abed22f7ad6cf729b25264185169650de595b",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/app/api/ai/blocknote/route.ts",
+    "sha256": "6d4437ad1c0545dcc8e587c98d7005a461557e61eb2a3f607cdac5a3a12bedb1",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/app/api/ai/journl-agent/route.ts",
+    "sha256": "ad0ba86629ba8c078f769860ccbcde2d81aa9c66c375de30811a51759ea6abce",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/app/api/auth/[...all]/route.ts",
+    "sha256": "ba1fd87809bf956b685b71c1d5f2e13e29b659e9231b0d0256143d7a95c7935f",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/app/api/auth/error/route.ts",
+    "sha256": "6c524665b27a62006e1b2a71ad67b567c045b270b0793e185c0bb890d3c17b11",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/app/api/cron/database-keepalive/route.ts",
+    "sha256": "26faf6fd6c65ebb046673b910600817ec2aec5273202cc62143e035bcf560432",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/app/api/cron/explore-refresh/route.ts",
+    "sha256": "586897a5a10f6a0f36b036e624463b783a344630fb0ef41f15aad9afe98c21ab",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/app/api/invite/validate/route.ts",
+    "sha256": "bd8f4dc2b5bf8ce3ee4d6ccddd2ec4c1a67ac9d3b96407fa6a7008cacfc1bf8f",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/app/api/trpc/[trpc]/route.ts",
+    "sha256": "ee5cf87899cc75a9f3abed4ec36884d85ae90d0df3554f94710b41f3cdea6d6f",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/app/layout.tsx",
+    "sha256": "ea5283c385280643161f86e7993c3758d74df55ce18e4e4b0d5198090c0e42f6",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": [
+      {
+        "line": 18,
+        "text": "title: \"Journl\","
+      },
+      {
+        "line": 28,
+        "text": "title: \"Journl: Your mind, organized\","
+      },
+      {
+        "line": 31,
+        "text": "title: \"Journl: Your mind, organized\","
+      }
+    ]
+  },
+  {
+    "path": "apps/web/src/app/manifest.ts",
+    "sha256": "1a8c8f5eda6ddb7df1ce4fb1a3c04adaf6243dd7704af71653a81e49f5cf3479",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/app/not-found.tsx",
+    "sha256": "78e371d68313c7ad1a55963184df57d4352fe6debdfcb2ffc00266425a5ac42b",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": [
+      {
+        "line": 9,
+        "text": "aria-label=\"Page not found\""
+      }
+    ]
+  },
+  {
+    "path": "apps/web/src/app/robots.ts",
+    "sha256": "6eda86f78fe109849c0793d02fecc049afdc29db2ea684b5a25df48a56f69ab8",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/app/sitemap.ts",
+    "sha256": "1e369755be21a34f386a89c8b4217f4c64a559b607fe9679a8707aa5b6129d59",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/app/styles.css",
+    "sha256": "d86ec48b0749728bd8482518064cefe3ff51674be2f860f9ec139c0016540695",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/app/styles/better-auth-ui.css",
+    "sha256": "9a2ac5f9fa0d913c2a2406a71cbe305866481e01ff340ca1302f9d6065964d6a",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/components/assistant-ui/chat-unread-badge.tsx",
+    "sha256": "6f7042c5154702dec689ea425f1be5b0d5909700589973d1d3f6743cbb07478b",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/components/assistant-ui/markdown-text.tsx",
+    "sha256": "31935a9854e6a9a5342ebc50cf32e1ed6ac3565aecb508229a7026f7da5651c3",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/components/assistant-ui/thread-components.tsx",
+    "sha256": "697641f06b2e978d68bbb7f2d82fd39378bb78dce4ee61f6abe267ab5bfcb086",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": [
+      {
+        "line": 110,
+        "text": "placeholder={"
+      },
+      {
+        "line": 370,
+        "text": "const actions: Array<{ id: string; label: string }> = [];"
+      },
+      {
+        "line": 385,
+        "text": "label: getToolAction(toolName),"
+      },
+      {
+        "line": 397,
+        "text": ": [{ id: \"latest\", label: summarizeThoughtPart(latestPart) }];"
+      },
+      {
+        "line": 706,
+        "text": "title: part.title,"
+      }
+    ]
+  },
+  {
+    "path": "apps/web/src/components/assistant-ui/thread-context.tsx",
+    "sha256": "a48d698721cd821b4cd21168f944d8824de25d014b96049a63c0476d6ed73c7f",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": [
+      {
+        "line": 63,
+        "text": "aria-label={ariaLabel}"
+      }
+    ]
+  },
+  {
+    "path": "apps/web/src/components/assistant-ui/thread-list.tsx",
+    "sha256": "94ad0b2fd3de804fc590d008cfb5203559987e270ca7db5523728a42a0b2a520",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/components/assistant-ui/thread-messages.tsx",
+    "sha256": "0be108c0cb0b954db930e817accea65e7e902258a3b4243b639594ac8db19f04",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/components/assistant-ui/thread-runtime.tsx",
+    "sha256": "773ee2b07942f4192588e8b631f29587b02f60865cefe5b4473775b320001a1c",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/components/assistant-ui/thread-sources.tsx",
+    "sha256": "cad2f2b05d62a675be093d9349869b7267e59b4a61efb463c30eed363c110821",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": [
+      {
+        "line": 65,
+        "text": "aria-label=\"Remove selection\""
+      },
+      {
+        "line": 91,
+        "text": "<DropdownMenuItem"
+      },
+      {
+        "line": 99,
+        "text": "aria-label=\"Remove selection\""
+      }
+    ]
+  },
+  {
+    "path": "apps/web/src/components/assistant-ui/thread-viewport.tsx",
+    "sha256": "978fd66636e513ac1de0ca8e6c3005809cf95495d456dcae35b7b317064533d9",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/components/assistant-ui/thread-welcome.tsx",
+    "sha256": "3b7895c836909ce4ce2cb751826bf9d0ad390de98a61759aec9c542aa7afa49c",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/components/assistant-ui/tooltip-icon-button.tsx",
+    "sha256": "b15d274994a4d778db6544f5796befa83ee17deae6d87a0db941b253e0362cd6",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/components/assistant-ui/tooltip.tsx",
+    "sha256": "01d74c69b55bf7155b939fb8a71379982a3b913c450458799100c0f8773e0f53",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/components/assistant-ui/use-chat-unread.ts",
+    "sha256": "b7beca2b7f24c794435c7e5416580ddf534c708c026e593db721849e9d85c355",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/components/auth/additional-field.tsx",
+    "sha256": "c9a44753b382a39474279edf1e4a1195e9f87b833f25e6aa29867f5680fdd2fb",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": [
+      {
+        "line": 97,
+        "text": "toast.error(localization.errors.copyFailed);"
+      },
+      {
+        "line": 110,
+        "text": "aria-label={"
+      },
+      {
+        "line": 144,
+        "text": "label: ("
+      },
+      {
+        "line": 189,
+        "text": "placeholder={field.placeholder}"
+      },
+      {
+        "line": 226,
+        "text": "placeholder={field.placeholder}"
+      },
+      {
+        "line": 315,
+        "text": "<SelectValue placeholder={field.placeholder} />"
+      },
+      {
+        "line": 352,
+        "text": "placeholder={field.placeholder}"
+      },
+      {
+        "line": 455,
+        "text": "placeholder={field.placeholder}"
+      },
+      {
+        "line": 496,
+        "text": "placeholder={field.placeholder}"
+      }
+    ]
+  },
+  {
+    "path": "apps/web/src/components/auth/auth-form.tsx",
+    "sha256": "0ecaba412609eb6004022945d71ce1087109cb3e4470527402ec5ffda5a43c55",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": [
+      {
+        "line": 221,
+        "text": "label: ReactNode;"
+      }
+    ]
+  },
+  {
+    "path": "apps/web/src/components/auth/auth-modal.tsx",
+    "sha256": "62f7c295f3f07902857e262e2ac3cc24bb3ec2bac9f921004974ee425e814030",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": [
+      {
+        "line": 39,
+        "text": "<DialogTitle className=\"sr-only\">"
+      }
+    ]
+  },
+  {
+    "path": "apps/web/src/components/auth/auth-page-providers.tsx",
+    "sha256": "9cfb7d7fa4b2f7ff7be11f6eebbea2cfc1a8deba0299877a4d60dc13e2e2beaf",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/components/auth/auth-page-shell.tsx",
+    "sha256": "f9573cfb50dcb246484d74fafb56947407fd108a5d18abcc6eb2556a4c831f26",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/components/auth/auth-provider.tsx",
+    "sha256": "87ffbcbfe33a64992bfee4c0b8a5cfcdaceea34b511e92ad0bc954d5e47458d0",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": [
+      {
+        "line": 32,
+        "text": "label: ReactNode;"
+      }
+    ]
+  },
+  {
+    "path": "apps/web/src/components/auth/auth-redirect.tsx",
+    "sha256": "eb9a3ddbc6207f17575ab455f4d5291de0fb867e52a5c057bcb6fadd72baf389",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/components/auth/auth-result.tsx",
+    "sha256": "500d7e835f23340a373c99177ab552eec9e72e9e53215559c0e162b0783e9d6b",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": [
+      {
+        "line": 41,
+        "text": "label: localization.auth.callbackViewAccountSettings,"
+      },
+      {
+        "line": 46,
+        "text": "label: localization.auth.callbackContinue,"
+      },
+      {
+        "line": 51,
+        "text": "label: localization.auth.forgotPassword,"
+      },
+      {
+        "line": 56,
+        "text": "label: localization.auth.signUp,"
+      },
+      {
+        "line": 61,
+        "text": "label: localization.auth.verifyEmail,"
+      },
+      {
+        "line": 66,
+        "text": "label: localization.auth.signIn,"
+      }
+    ]
+  },
+  {
+    "path": "apps/web/src/components/auth/auth-view.tsx",
+    "sha256": "58450a3673f24a6b097ef618e8a8c4be412dcf21ccc3ef4247691073f4c56856",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/components/auth/auth.tsx",
+    "sha256": "d35917f7d239d537bc0096ebeac6c7031d377d1888af4d7bf5ae5aaaeddd6dc5",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/components/auth/better-auth-provider.tsx",
+    "sha256": "619bdc9e1464e2998854837a37c1cc3384647c95f329e5d9bcfb536af81c2cc4",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/components/auth/error-toaster.tsx",
+    "sha256": "1ea41007ecbf08615ccae4d688231d8cedf139adb2ff5b916d6f92413a7e140d",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": [
+      {
+        "line": 37,
+        "text": "toast.error(message);"
+      },
+      {
+        "line": 80,
+        "text": "toast.error(message);"
+      }
+    ]
+  },
+  {
+    "path": "apps/web/src/components/auth/forgot-password.tsx",
+    "sha256": "57d6e69b67b0629d56dad6daa9a609e6e976104a33afe4fcc849d763ba96fb83",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": [
+      {
+        "line": 113,
+        "text": "placeholder={localization.auth.emailPlaceholder}"
+      }
+    ]
+  },
+  {
+    "path": "apps/web/src/components/auth/invite-code-form.tsx",
+    "sha256": "b969f61bb637bdefdfae134db72a2a64aab101b460fa326b3789482cc1836fe2",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": [
+      {
+        "line": 44,
+        "text": "setError(\"Enter a valid invite code.\");"
+      },
+      {
+        "line": 48,
+        "text": "setError(null);"
+      },
+      {
+        "line": 58,
+        "text": "setError(\"That invite code is not valid.\");"
+      },
+      {
+        "line": 62,
+        "text": "setError(\"Could not verify invite code. Please try again.\");"
+      },
+      {
+        "line": 68,
+        "text": "setError(null);"
+      },
+      {
+        "line": 83,
+        "text": "aria-label=\"Invite code\""
+      },
+      {
+        "line": 97,
+        "text": "setError(null);"
+      },
+      {
+        "line": 101,
+        "text": "placeholder={placeholder.toUpperCase()}"
+      }
+    ]
+  },
+  {
+    "path": "apps/web/src/components/auth/invite-code.ts",
+    "sha256": "ae14a454ebe68727cbf1edaa7c7e3f40063b7adf29277b6f996583166278e8f0",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/components/auth/invite-developer-tool.tsx",
+    "sha256": "99f3f89079d3bee46baef0ca25ed372d77c22b8d1abcbb5f11d3b43639cfb118",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": [
+      {
+        "line": 38,
+        "text": "setError(\"Unable to create invite code in this environment.\");"
+      },
+      {
+        "line": 41,
+        "text": "setError(null);"
+      }
+    ]
+  },
+  {
+    "path": "apps/web/src/components/auth/invite-sign-up.tsx",
+    "sha256": "758a05600963103787e04099c139cc6b95b1f21a2e3149cc1fc6a4313727f1b1",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/components/auth/invite-view.tsx",
+    "sha256": "064cde43a27c6f4076158eb751db0473561ba934f517e69fff420d953c07be82",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": [
+      {
+        "line": 38,
+        "text": "placeholder=\"ABCDE12345\""
+      }
+    ]
+  },
+  {
+    "path": "apps/web/src/components/auth/last-login-method/last-used-badge.tsx",
+    "sha256": "88cc9cdf2424497a7d93f795d659dcf120305639b6d1dde8619f8ac0495fa28b",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/components/auth/open-email-button.tsx",
+    "sha256": "9ad0b9f47ce68400fbfbb09e1dcd3753fa9bf8ec33ec6b07c4669d211ee20f61",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/components/auth/password-card.tsx",
+    "sha256": "cc81c5c019bf28a99c00897fe21dc8fbc4f1b6d82ad0f1b335fe86183c73923c",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": [
+      {
+        "line": 75,
+        "text": "<p role=\"alert\" className=\"text-destructive text-sm\">"
+      }
+    ]
+  },
+  {
+    "path": "apps/web/src/components/auth/password-strength-meter.tsx",
+    "sha256": "20faee4f464162ffd15a787986108d14548493e0c51f63080771d5402204452c",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/components/auth/password.actions.ts",
+    "sha256": "b1f228336c7f8bc251f111843543fd36963a64f5e150e8b3b075e4463c61b205",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/components/auth/provider-button.tsx",
+    "sha256": "283b05da9d54b0c31e13a502e4765f1dd0df897425cb3e58dfc3bcf2f1ffdcbb",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": [
+      {
+        "line": 84,
+        "text": "toast.error(\"An invite code is required to sign up.\");"
+      }
+    ]
+  },
+  {
+    "path": "apps/web/src/components/auth/provider-buttons.tsx",
+    "sha256": "92f7f412aa5a265e720729470a55d14568e58b18c23fb0e80da8c1161a93d496",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/components/auth/reauthentication.tsx",
+    "sha256": "f7fcecd8d055b5b88cc21022140180428ab1878f5928078b29a6e196e484e395",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/components/auth/reset-link-sent.tsx",
+    "sha256": "feeb55f40518b5e32d0e6e8e6cc39c45e86d06bfd224bd31275549891f24c581",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/components/auth/reset-password.tsx",
+    "sha256": "2ceb6febb173baa4f9ad3732420ffd27c9046d0023805f4e7154abecbc5e2714",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": [
+      {
+        "line": 85,
+        "text": "toast.error(localization.auth.invalidResetPasswordToken);"
+      },
+      {
+        "line": 97,
+        "text": "toast.error(localization.auth.invalidResetPasswordToken);"
+      },
+      {
+        "line": 156,
+        "text": "placeholder={localization.auth.newPasswordPlaceholder}"
+      },
+      {
+        "line": 174,
+        "text": "aria-label={"
+      },
+      {
+        "line": 250,
+        "text": "placeholder={"
+      },
+      {
+        "line": 268,
+        "text": "aria-label={"
+      }
+    ]
+  },
+  {
+    "path": "apps/web/src/components/auth/settings/account/account-settings.tsx",
+    "sha256": "c9b41e109fc17a0d27a51dd56040e381b149b00d497a2d1dc2a349972c1303c2",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/components/auth/settings/account/change-avatar.tsx",
+    "sha256": "1f7234b2f5296ee3c19456051343d99012baa9fd95bef471870f958418e774ef",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": [
+      {
+        "line": 67,
+        "text": "toast.error(localization.errors.imageUploadFailed);"
+      },
+      {
+        "line": 133,
+        "text": "<DropdownMenuItem onClick={() => fileInputRef.current?.click()}>"
+      },
+      {
+        "line": 139,
+        "text": "<DropdownMenuItem"
+      }
+    ]
+  },
+  {
+    "path": "apps/web/src/components/auth/settings/account/change-email.tsx",
+    "sha256": "01c2118d72b8e12bae05a1823070773ccbee366d88c974fedc37a2feefb3849d",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": [
+      {
+        "line": 90,
+        "text": "placeholder={localization.auth.emailPlaceholder}"
+      }
+    ]
+  },
+  {
+    "path": "apps/web/src/components/auth/settings/account/user-profile.tsx",
+    "sha256": "424888124f588b4e7aaecf53f7f1739d2fdeb0e3d3315f8beb37de3dd453a85c",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": [
+      {
+        "line": 118,
+        "text": "placeholder={localization.auth.name}"
+      }
+    ]
+  },
+  {
+    "path": "apps/web/src/components/auth/settings/security/active-session.tsx",
+    "sha256": "57f8d979ffaee8338caf3d4fd57da176a1fac1e87b3632d73362d5f90446fe06",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": [
+      {
+        "line": 110,
+        "text": "aria-label={"
+      }
+    ]
+  },
+  {
+    "path": "apps/web/src/components/auth/settings/security/active-sessions.tsx",
+    "sha256": "bc94901f2eb32ce4bc9c28cb5b927d18b6c3454ecb4e1429e4828496f590961f",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/components/auth/settings/security/change-password.tsx",
+    "sha256": "6fcd6dc902e083b99d1e1f2dce84c43ac4614aded14b9f841ad99fd3e6f1f4c5",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": [
+      {
+        "line": 249,
+        "text": "placeholder={"
+      },
+      {
+        "line": 265,
+        "text": "aria-label={"
+      },
+      {
+        "line": 332,
+        "text": "placeholder={"
+      },
+      {
+        "line": 351,
+        "text": "aria-label={"
+      },
+      {
+        "line": 427,
+        "text": "placeholder={"
+      },
+      {
+        "line": 445,
+        "text": "aria-label={"
+      }
+    ]
+  },
+  {
+    "path": "apps/web/src/components/auth/settings/security/linked-account.tsx",
+    "sha256": "47dd61e08089abb151cb253d9d43d48f0abac46d33c4c99e21155a163fc0c103",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": [
+      {
+        "line": 78,
+        "text": "toast.error(message);"
+      },
+      {
+        "line": 136,
+        "text": "aria-label={localization.settings.unlinkProvider.replace("
+      },
+      {
+        "line": 157,
+        "text": "aria-label={localization.settings.linkProvider.replace("
+      },
+      {
+        "line": 177,
+        "text": "<DialogTitle className=\"sr-only\">"
+      }
+    ]
+  },
+  {
+    "path": "apps/web/src/components/auth/settings/security/linked-accounts.tsx",
+    "sha256": "e3659331166218d8c5333b2c0c34f6b0b70c6414366887137660bc49bd91a494",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/components/auth/settings/security/security-settings.tsx",
+    "sha256": "e2fde2e2c10ddf6a7cfdfa74070c04cd5e5370af5647f7c6d5d9cff106c51048",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/components/auth/settings/security/session-actions.tsx",
+    "sha256": "7847de31d999ba7214210e149ab353175d4a55265e24480d9f5e5205921e3f71",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/components/auth/settings/settings.tsx",
+    "sha256": "290e6431483a9cdf90f5a91d459401aa7c4afa4d839c2dd1ec1fc3cabb38b012",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": [
+      {
+        "line": 73,
+        "text": "aria-label={localization.settings.settings}"
+      }
+    ]
+  },
+  {
+    "path": "apps/web/src/components/auth/sign-in.tsx",
+    "sha256": "1c0be677506db5926ed3897f5738ad130ae740daba4919968717428bb859cac0",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": [
+      {
+        "line": 182,
+        "text": "placeholder={localization.auth.emailPlaceholder}"
+      },
+      {
+        "line": 241,
+        "text": "placeholder={"
+      },
+      {
+        "line": 254,
+        "text": "aria-label={"
+      }
+    ]
+  },
+  {
+    "path": "apps/web/src/components/auth/sign-out.tsx",
+    "sha256": "5831c7f37411af55cc1194b1ee9499684ff3cc0759aa6bd6ec6152b327dd6bb8",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/components/auth/sign-up.tsx",
+    "sha256": "bf396d1e3409ad03fa525ef85c5dd6900da8baf8fe184892994dbe4e1f8a0fe7",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": [
+      {
+        "line": 234,
+        "text": "placeholder={localization.auth.namePlaceholder}"
+      },
+      {
+        "line": 278,
+        "text": "placeholder={localization.auth.emailPlaceholder}"
+      },
+      {
+        "line": 359,
+        "text": "placeholder={"
+      },
+      {
+        "line": 372,
+        "text": "aria-label={"
+      },
+      {
+        "line": 456,
+        "text": "placeholder={"
+      },
+      {
+        "line": 469,
+        "text": "aria-label={"
+      }
+    ]
+  },
+  {
+    "path": "apps/web/src/components/auth/theme/appearance.tsx",
+    "sha256": "ffa335c36424074032760b1de39dcd2118fad6c0b5e38c31e0374396b0e3f00d",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/components/auth/theme/theme-toggle-item.tsx",
+    "sha256": "33b0e7176fe8c0a917a79f76c0656296a8797a2e31055bec756c56b4da1f43c1",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": [
+      {
+        "line": 63,
+        "text": "<DropdownMenuItem"
+      },
+      {
+        "line": 86,
+        "text": "aria-label={localization.system}"
+      },
+      {
+        "line": 95,
+        "text": "aria-label={localization.light}"
+      },
+      {
+        "line": 104,
+        "text": "aria-label={localization.dark}"
+      }
+    ]
+  },
+  {
+    "path": "apps/web/src/components/auth/use-is-hydrated.ts",
+    "sha256": "629a2516b35eae0616b0cd4d9ee0d50931929e77581c7f454b92e2443cb4dac5",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/components/auth/user/user-avatar.tsx",
+    "sha256": "cb2ce40ae3b17c91a6c2d9c36c57bb25dbab972ef172c6a8130d6584f71c62dd",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/components/auth/user/user-button.tsx",
+    "sha256": "0f4ad037f71607cfd2898a1d7fe0a00e658d561f119d5a07bbd045f6ab0fba61",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": [
+      {
+        "line": 39,
+        "text": "label: ReactNode;"
+      },
+      {
+        "line": 81,
+        "text": "<DropdownMenuItem"
+      },
+      {
+        "line": 146,
+        "text": "aria-label={size === \"icon\" ? localization.auth.account : undefined}"
+      },
+      {
+        "line": 202,
+        "text": "<DropdownMenuItem"
+      },
+      {
+        "line": 223,
+        "text": "<DropdownMenuItem"
+      },
+      {
+        "line": 239,
+        "text": "<DropdownMenuItem"
+      },
+      {
+        "line": 251,
+        "text": "<DropdownMenuItem"
+      }
+    ]
+  },
+  {
+    "path": "apps/web/src/components/auth/user/user-view.tsx",
+    "sha256": "03bf2878e33f1f984c3828289a1f29473bfd514f52baa2145d21f177fefd4f1b",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/components/auth/verify-email.tsx",
+    "sha256": "7ecfb77352bfff00e837ca664c4b7270597fbc1a077d4d2baf6bae4e5685458f",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/components/editor/block-actions.tsx",
+    "sha256": "b124822aeeebda7ce3de98b39245858034c76c40b70b3847f143796c5d053658",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": [
+      {
+        "line": 91,
+        "text": "<EditorMenuItem"
+      },
+      {
+        "line": 98,
+        "text": "<EditorMenuItem"
+      },
+      {
+        "line": 108,
+        "text": "<EditorMenuItem"
+      },
+      {
+        "line": 118,
+        "text": "<EditorMenuItem hint=\"Move up (\u2318/Ctrl+Shift+\u2191)\" onClick={() => run(-1)}>"
+      },
+      {
+        "line": 121,
+        "text": "<EditorMenuItem hint=\"Move down (\u2318/Ctrl+Shift+\u2193)\" onClick={() => run(1)}>"
+      },
+      {
+        "line": 125,
+        "text": "<EditorMenuItem"
+      },
+      {
+        "line": 145,
+        "text": "<EditorMenuItem"
+      },
+      {
+        "line": 154,
+        "text": "<EditorMenuItem"
+      },
+      {
+        "line": 166,
+        "text": "<EditorMenuItem"
+      }
+    ]
+  },
+  {
+    "path": "apps/web/src/components/editor/document-draft.ts",
+    "sha256": "f472a3f585ed01a73d5477688d622632e9c18a1b8cfe9a44f76e6e24619b5628",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": [
+      {
+        "line": 146,
+        "text": "updateTitle(title: string, debounceTime: number) {"
+      },
+      {
+        "line": 180,
+        "text": "...(this.pendingTitle ? { title: this.snapshot.title } : {}),"
+      },
+      {
+        "line": 182,
+        "text": "title: this.snapshot.title,"
+      },
+      {
+        "line": 293,
+        "text": "...(backedUpTitle !== undefined ? { title: backedUpTitle } : {}),"
+      },
+      {
+        "line": 317,
+        "text": "title:"
+      }
+    ]
+  },
+  {
+    "path": "apps/web/src/components/editor/document-editor-services.ts",
+    "sha256": "7ceb223eaf8b1e94f000d7d6ab0ed6ad45624e6a4c6654f923e0eb3a0abd30bf",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/components/editor/document-editor-view.tsx",
+    "sha256": "b2fbda84144d90a48fced9c26043b3b8cf9ca8b0c9064beb444e76c549eec117",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/components/editor/document-editor.css",
+    "sha256": "e798ddf5d4b4452c158c1eb18ab51905e2bc7adfb91a8760c8ef1061601ae109",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/components/editor/document-editor.tsx",
+    "sha256": "ec3e3e2982cbe3bd25644f3e015b7bb48e92755244b882d1fce21da37195d4e7",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": [
+      {
+        "line": 25,
+        "text": "toast.error(\"Could not copy the block link. Please try again.\"),"
+      }
+    ]
+  },
+  {
+    "path": "apps/web/src/components/editor/document-save-adapter.ts",
+    "sha256": "dbec1eb11c4b874d3eb940d0076bae341e6cb5010cace4fd87937952e1921166",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/components/editor/document-toolbar.tsx",
+    "sha256": "cc4d4ac917376c50469cae4957eb1ef03910d33ea453e2d5590f63c0f8b0f7ea",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": [
+      {
+        "line": 10,
+        "text": "import { blockChoices } from \"@acme/better-editor/engine/suggestions\";"
+      },
+      {
+        "line": 86,
+        "text": "label: string;"
+      },
+      {
+        "line": 95,
+        "text": "aria-label={label}"
+      },
+      {
+        "line": 116,
+        "text": "options: blockChoices.filter((choice) =>"
+      },
+      {
+        "line": 124,
+        "text": ": (blockChoices.find((choice) => choice.type === body?.type.name)"
+      },
+      {
+        "line": 142,
+        "text": "const choice = blockChoices.find((choice) => choice.title === value);"
+      },
+      {
+        "line": 156,
+        "text": "aria-label=\"Block type\""
+      },
+      {
+        "line": 160,
+        "text": "<SelectValue placeholder=\"Block\" />"
+      },
+      {
+        "line": 308,
+        "text": "<Button variant=\"ghost\" size=\"icon\" aria-label=\"Insert link\">"
+      },
+      {
+        "line": 368,
+        "text": "aria-label={mark.charAt(0).toUpperCase() + mark.slice(1)}"
+      },
+      {
+        "line": 383,
+        "text": "aria-label=\"Text alignment\""
+      },
+      {
+        "line": 403,
+        "text": "<EditorMenuItem"
+      },
+      {
+        "line": 431,
+        "text": "aria-label=\"Colors\""
+      },
+      {
+        "line": 472,
+        "text": "aria-label={`${name === \"textColor\" ? \"Text\" : \"Highlight\"} ${value}`}"
+      },
+      {
+        "line": 516,
+        "text": "aria-label=\"More actions\""
+      }
+    ]
+  },
+  {
+    "path": "apps/web/src/components/editor/draft-activity-provider.tsx",
+    "sha256": "3528392158b4504f048f508e035a9e51f37740eb29651192a20992493ba7731e",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/components/editor/draft-activity.ts",
+    "sha256": "db2afbec6a42053f8ca69957f45a123d8d7747824bd3e679a05afbc7cfbf4685",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": [
+      {
+        "line": 5,
+        "text": "label: string;"
+      }
+    ]
+  },
+  {
+    "path": "apps/web/src/components/editor/draft-recovery-actions.tsx",
+    "sha256": "9cf39ed1295f2d997242198e8a41d96655dc14c179f2275da51cfbb5420fe14b",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": [
+      {
+        "line": 55,
+        "text": "{ blocks: snapshot.blocks, title: snapshot.title },"
+      },
+      {
+        "line": 119,
+        "text": "<p role=\"alert\" className=\"text-sm\">"
+      }
+    ]
+  },
+  {
+    "path": "apps/web/src/components/editor/draft-sessions-provider.tsx",
+    "sha256": "b25716820c61378c61aaa9ee62cb88ab8b14af1239c71b394ab19a653632be20",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/components/editor/draft-sessions.ts",
+    "sha256": "afdf7b347aa9d08edc21a1c83ab30dbb0c2efe6691a4d9fec80cbf0e57559dfc",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/components/editor/kept-draft-preview.tsx",
+    "sha256": "eb1eec221cd6c02b16380db2bea429ef36993e709795ef79d340c9adaf8275fc",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": [
+      {
+        "line": 15,
+        "text": "aria-label=\"Kept draft content\""
+      }
+    ]
+  },
+  {
+    "path": "apps/web/src/components/editor/page-drafts-provider.tsx",
+    "sha256": "992b26aa8791d2373c6da457717fb906983c4bdf78f91b11dd6c2b8e4a5b5310",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": [
+      {
+        "line": 53,
+        "text": "title: input.title,"
+      },
+      {
+        "line": 58,
+        "text": "title: result.title,"
+      },
+      {
+        "line": 81,
+        "text": "title: saved.title,"
+      },
+      {
+        "line": 98,
+        "text": "title: saved.title,"
+      },
+      {
+        "line": 109,
+        "text": "title: saved.title,"
+      },
+      {
+        "line": 147,
+        "text": "label: page.title || \"Untitled page\","
+      },
+      {
+        "line": 167,
+        "text": "label: draft.getSnapshot().title || \"Untitled page\","
+      }
+    ]
+  },
+  {
+    "path": "apps/web/src/components/editor/reference-actions.tsx",
+    "sha256": "eb8cb6a94531eb9d1db2980cd38ec7fcb7f439fe56fb18832a7def40d94a52ef",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": [
+      {
+        "line": 53,
+        "text": "aria-label=\"Reference actions\""
+      },
+      {
+        "line": 76,
+        "text": "<EditorMenuItem"
+      }
+    ]
+  },
+  {
+    "path": "apps/web/src/components/editor/save-status.tsx",
+    "sha256": "7578549a18b54dd0dd826179a739e4970ea779f61a6e8ab78a0c68d0a20eb291",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": [
+      {
+        "line": 105,
+        "text": "<p role=\"alert\">"
+      },
+      {
+        "line": 179,
+        "text": "aria-label=\"Save details\""
+      },
+      {
+        "line": 208,
+        "text": "<DialogTitle>Draft recovery</DialogTitle>"
+      },
+      {
+        "line": 226,
+        "text": "aria-label={snapshot.title || label}"
+      }
+    ]
+  },
+  {
+    "path": "apps/web/src/components/editor/table-menu.tsx",
+    "sha256": "9577f94897fd4c28c49d45b289954dbd21a40823637705f9e30e818d77736962",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": [
+      {
+        "line": 30,
+        "text": "<EditorMenuItem"
+      },
+      {
+        "line": 94,
+        "text": "label:"
+      },
+      {
+        "line": 123,
+        "text": "<EditorMenuItem"
+      }
+    ]
+  },
+  {
+    "path": "apps/web/src/components/editor/use-visible-viewport-inset.ts",
+    "sha256": "16290350ddb62ad4548f9ee5cb05995a667898bec64b19a7acce5b1e91dd0a69",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/components/references/explore-note-link.tsx",
+    "sha256": "767984ad6b2d71c94e8c3357a9425cdeef3de99477ce2b0bda09d10d8697d6c0",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": [
+      {
+        "line": 15,
+        "text": "aria-label=\"Explore this note\""
+      }
+    ]
+  },
+  {
+    "path": "apps/web/src/components/references/reference-backlinks.tsx",
+    "sha256": "28e77e62e1a77b9c37bc38fedbe8d8677310385fbde875926716933dd0269b1b",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "apps/web/src/components/references/use-reference-client.ts",
+    "sha256": "1ad91142b377fc4441ad3ec484dcc127a1daae0394d46b8b5f7146f5714d6a6d",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "packages/better-editor/src/engine/suggestions.ts",
+    "sha256": "0377c599affe44955835679a7cdde3a5e2bfbf9eb225b88a672d03d888ddb728",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": [
+      {
+        "line": 20,
+        "text": "title: string;"
+      },
+      {
+        "line": 25,
+        "text": "export const blockChoices: BlockChoice[] = ["
+      },
+      {
+        "line": 26,
+        "text": "{ aliases: \"paragraph plain\", title: \"Text\", type: \"paragraph\" },"
+      },
+      {
+        "line": 30,
+        "text": "title: `Heading ${level}`,"
+      },
+      {
+        "line": 33,
+        "text": "{ aliases: \"unordered\", title: \"Bullet list\", type: \"bulletListItem\" },"
+      },
+      {
+        "line": 34,
+        "text": "{ aliases: \"ordered\", title: \"Numbered list\", type: \"numberedListItem\" },"
+      },
+      {
+        "line": 38,
+        "text": "title: \"Checklist\","
+      },
+      {
+        "line": 41,
+        "text": "{ aliases: \"collapse\", title: \"Toggle list\", type: \"toggleListItem\" },"
+      },
+      {
+        "line": 45,
+        "text": "title: \"Toggle heading\","
+      },
+      {
+        "line": 48,
+        "text": "{ aliases: \"blockquote\", title: \"Quote\", type: \"quote\" },"
+      },
+      {
+        "line": 52,
+        "text": "title: \"Code\","
+      },
+      {
+        "line": 55,
+        "text": "{ aliases: \"horizontal rule\", title: \"Divider\", type: \"divider\" },"
+      },
+      {
+        "line": 56,
+        "text": "{ aliases: \"grid rows columns\", title: \"Table\", type: \"table\" },"
+      }
+    ]
+  },
+  {
+    "path": "packages/better-editor/src/ui/block-handle.tsx",
+    "sha256": "841c3d1e5f565a3ca3e8088dd60f966ae88ceb355b385057b64e73eb90f60f4c",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "packages/better-editor/src/ui/block-hit-test.ts",
+    "sha256": "f45aed61b3452273f5bbd2d8459d13f7ce61a4c78223223ce609368574b17e8e",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "packages/better-editor/src/ui/block-presentation.ts",
+    "sha256": "7ac46084452448a4be298464281b75d75b53553e8cf6c611446ab56d2a4822d1",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "packages/better-editor/src/ui/block-view.ts",
+    "sha256": "422da49747c501efb23e532ed353b88484a4c45cd8fb9d2a613e130fd7fb6dd4",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "packages/better-editor/src/ui/code-block.tsx",
+    "sha256": "0d85c1a83dbcab716b2e01a891eb6787aeee7d21264aaa35d931878e60b9f4a4",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": [
+      {
+        "line": 68,
+        "text": "aria-label=\"Code language\""
+      }
+    ]
+  },
+  {
+    "path": "packages/better-editor/src/ui/command-button.tsx",
+    "sha256": "70ef76b6d434a2f040432089564dcb9950da583e47c633e165706bebfe59be14",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "packages/better-editor/src/ui/context-menu.tsx",
+    "sha256": "331ff01b3cd3069a04a363ffced01dd53fde2b521c80afc3436e8f31af49fe90",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": [
+      {
+        "line": 98,
+        "text": "aria-label=\"Context block actions\""
+      }
+    ]
+  },
+  {
+    "path": "packages/better-editor/src/ui/controls.tsx",
+    "sha256": "8ed8e30438c4757bab30c5f3f02e0237b48d2572a9125318f4f15b0bb620f5f6",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": [
+      {
+        "line": 22,
+        "text": "label: string;"
+      },
+      {
+        "line": 62,
+        "text": "label: string;"
+      },
+      {
+        "line": 84,
+        "text": "<DropdownMenuItem"
+      }
+    ]
+  },
+  {
+    "path": "packages/better-editor/src/ui/editor-content.tsx",
+    "sha256": "567a53125de6cba49057cd7cebc2bfec507dfaa0e88147113c3bd230f5241706",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "packages/better-editor/src/ui/editor-editability.ts",
+    "sha256": "57e35f26dbb9b2016458ba470b0364e82cac490b4668d5c3b5ba5e0dcf75b5e8",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "packages/better-editor/src/ui/editor-error.tsx",
+    "sha256": "c3e50e3fe808407015478d56a4d6c016eff5864a6af46f918b9e774890b6b556",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": [
+      {
+        "line": 11,
+        "text": "<p role=\"alert\" {...props}>"
+      }
+    ]
+  },
+  {
+    "path": "packages/better-editor/src/ui/editor-root.tsx",
+    "sha256": "6f825ef60406ee481d8f5cbcf741bd5800ee6f741518d2dfc581294ad4b67e97",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "packages/better-editor/src/ui/editor-toolbar.tsx",
+    "sha256": "9582d44db8dcb95035b96ae55828a83820b5f0ea21670a1214e670562f089abe",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": [
+      {
+        "line": 306,
+        "text": "aria-label={props[\"aria-label\"] ?? \"Editor controls\"}"
+      }
+    ]
+  },
+  {
+    "path": "packages/better-editor/src/ui/editor.css",
+    "sha256": "ef223760b3d5252868c15112a161381cc8c7fef5d6bd78cc79eb6fa805779ece",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": [
+      {
+        "line": 446,
+        "text": ".better-editor-side-menu button[aria-label=\"Block actions\"] {"
+      }
+    ]
+  },
+  {
+    "path": "packages/better-editor/src/ui/handle-visibility.ts",
+    "sha256": "56f890358a6ea8bc1cb6089abba3b4f125f1964b697cf86c04353cb35dc6073d",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "packages/better-editor/src/ui/link-menu.tsx",
+    "sha256": "6659fd875a9cb3f0e1e8cef607423ed9858e72d59431248bb932bb3459c20546",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": [
+      {
+        "line": 102,
+        "text": "aria-label={label}"
+      },
+      {
+        "line": 155,
+        "text": "aria-label={inputLabel}"
+      }
+    ]
+  },
+  {
+    "path": "packages/better-editor/src/ui/mark-button.tsx",
+    "sha256": "a93700434f03ff856a307ea7c2e23e4ade0f65e9e1fa98f05373512cfcd5df00",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": [
+      {
+        "line": 49,
+        "text": "return <MarkButton aria-label=\"Bold\" {...props} mark=\"bold\" />;"
+      },
+      {
+        "line": 52,
+        "text": "return <MarkButton aria-label=\"Italic\" {...props} mark=\"italic\" />;"
+      }
+    ]
+  },
+  {
+    "path": "packages/better-editor/src/ui/node-views.tsx",
+    "sha256": "3b7bb749cb7e7bcd8bb6872a09c7511d78feb6977ba2334d078b7a9a60e55229",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": [
+      {
+        "line": 264,
+        "text": "aria-label={`${title} reference card`}"
+      }
+    ]
+  },
+  {
+    "path": "packages/better-editor/src/ui/pointer-corridor.ts",
+    "sha256": "53263808aafccf27e20f0abd1a20c037506e0416e22afdec4e5ee1e8a0b58a4f",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "packages/better-editor/src/ui/reference-client.ts",
+    "sha256": "7da03f8e66ca1f40fe636ea52cce608766a613874abcaed5512aaf98e6750d30",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "packages/better-editor/src/ui/reference-display.tsx",
+    "sha256": "d7f957f3605f9ca150d2eb8bd3865613cc9d1a9a7773396ea6001db48163e5e5",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": [
+      {
+        "line": 35,
+        "text": "{ hint: \"Plain linked text\", label: \"Link\", type: \"link\" },"
+      },
+      {
+        "line": 38,
+        "text": "label: \"Mention\","
+      },
+      {
+        "line": 43,
+        "text": "label: \"Card\","
+      },
+      {
+        "line": 48,
+        "text": "label: \"Embedded content\","
+      },
+      {
+        "line": 107,
+        "text": "<EditorMenuItem"
+      }
+    ]
+  },
+  {
+    "path": "packages/better-editor/src/ui/reference-view-store.ts",
+    "sha256": "a34cc929625f8d7753b1f2913fc05cfb1fb49c9607e3e3b3749563c332f96ff7",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "packages/better-editor/src/ui/reference-views.tsx",
+    "sha256": "0cef4225fb3de30d6a52aa8b4498fcda0d7ba6b10b030c9e34065f7f64596a61",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "packages/better-editor/src/ui/reference.css",
+    "sha256": "4a2f61af06ed0078d3eea7cdcea13137fc6a0798f511b533327dc555eb8171b9",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "packages/better-editor/src/ui/side-menu.tsx",
+    "sha256": "6b5aaf38b06f4f74ab7b22df858331bd3c00fb73045b4b3d398056c8c521122f",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": [
+      {
+        "line": 329,
+        "text": "aria-label=\"Add block\""
+      },
+      {
+        "line": 490,
+        "text": "aria-label=\"Block actions\""
+      }
+    ]
+  },
+  {
+    "path": "packages/better-editor/src/ui/slash-menu.tsx",
+    "sha256": "1aab52deddd7f089a46d6be3ec5920bd884eda13c134794ca16e40d1274d8b9f",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": [
+      {
+        "line": 52,
+        "text": "setError(undefined);"
+      },
+      {
+        "line": 87,
+        "text": "setError(failure);"
+      },
+      {
+        "line": 198,
+        "text": "aria-label={props[\"aria-label\"] ?? \"Block commands\"}"
+      },
+      {
+        "line": 230,
+        "text": "aria-label={"
+      }
+    ]
+  },
+  {
+    "path": "packages/better-editor/src/ui/styles.d.ts",
+    "sha256": "35d26ea66c86da9701e4f4b467913481ffeae910761cea34c775c5dacb7f8eaa",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "packages/better-editor/src/ui/table-actions.ts",
+    "sha256": "12b2786dbe0b406b54214a6aea2658ee0cbc95674b44f3c08ded461786ce2472",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": [
+      {
+        "line": 32,
+        "text": "label: string;"
+      },
+      {
+        "line": 71,
+        "text": "label: \"Add table cells\","
+      },
+      {
+        "line": 157,
+        "text": "label: `Select ${orientation}`,"
+      },
+      {
+        "line": 248,
+        "text": "label: `${table.attrs[key] ? \"Remove\" : \"Add\"} ${key === \"headerRows\" ? \"header row\" : \"header column\"}`,"
+      }
+    ]
+  },
+  {
+    "path": "packages/better-editor/src/ui/table-controls-root.tsx",
+    "sha256": "d970b2bf1fa1c418fb5d160a794e326fec5a6ebe9e1239c67e71b72ea3edc9ea",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "packages/better-editor/src/ui/table-controls.tsx",
+    "sha256": "9ddf787b01be93a35a85e12e817ac4d57241d944546b5eb031962fbc1d5f53fd",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": [
+      {
+        "line": 40,
+        "text": "<EditorMenuItem"
+      }
+    ]
+  },
+  {
+    "path": "packages/better-editor/src/ui/table-handles.tsx",
+    "sha256": "1fe9ae9e4408a46ab9f97109430a7f37dd5a74a9ba792621d597026e4d8548d3",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": [
+      {
+        "line": 554,
+        "text": "aria-label={`${axis === \"row\" ? \"Row\" : \"Column\"} actions`}"
+      },
+      {
+        "line": 702,
+        "text": "aria-label={axis === \"row\" ? \"Add row\" : \"Add column\"}"
+      }
+    ]
+  },
+  {
+    "path": "packages/better-editor/src/ui/table-presentation.ts",
+    "sha256": "c81b74b426e4981cd53e309b937b094bdf3b111b2c844e3a76ab5b67c4abe30b",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "packages/better-editor/src/ui/table-reveal.ts",
+    "sha256": "30307461200849f40523053ff87e281641890732c264d67a65d51ab5dd6b970b",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "packages/better-editor/src/ui/touch-block-drag.tsx",
+    "sha256": "af5f59a4da142611c13ae5fb26ba77c5c9a3abbf5fa6dba28cb15dd44cc84006",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "packages/better-editor/src/ui/use-better-editor.ts",
+    "sha256": "aee0a3845f98915b661f01efc093e8e717ee53a0f809c08070840d361b714783",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": [
+      {
+        "line": 58,
+        "text": "setError(false);"
+      },
+      {
+        "line": 88,
+        "text": "setError(true);"
+      },
+      {
+        "line": 98,
+        "text": "setError(true);"
+      }
+    ]
+  },
+  {
+    "path": "packages/better-editor/src/ui/use-editor-command.ts",
+    "sha256": "c00a97a2c9a30e346511c387c108ef8dd9df61dce0f7994909be44569f952422",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "packages/better-editor/src/ui/use-editor-editable.ts",
+    "sha256": "79322383da7a23d1579ffef393cc8d30e638f22bacc95b20adfd645316e44c65",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  },
+  {
+    "path": "packages/better-editor/src/ui/use-editor-snapshot.ts",
+    "sha256": "a7d882e6afa3fa5218509281c4c3b67b163ec58e6949f7951890628dd3450f4c",
+    "method": "targeted source extraction; not exhaustive manual or browser coverage",
+    "evidence": []
+  }
+]

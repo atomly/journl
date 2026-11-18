@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "kind": "html",
+  "title": "review-v4-3/sources/palette-material.html",
+  "entry": "review-v4-3/sources/palette-material.html",
+  "renderer": "html",
+  "status": "complete",
+  "exports": [
+    "html",
+    "pdf",
+    "zip"
+  ],
+  "createdAt": "2026-11-17T04:24:36.777Z",
+  "updatedAt": "2026-11-17T04:24:36.777Z",
+  "metadata": {
+    "inferred": true,
+    "reconciled": true
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "baselineStates": 422,
+  "totalLedgerStates": 438,
+  "baselineMapped": 422,
+  "currentBrowserStatusCounts": {
+    "captured": 43,
+    "inspected": 337,
+    "inaccessible": 38,
+    "not applicable": 4
+  },
+  "newCurrentBrowserCaptures": 0,
+  "proposedImageCount": 1830,
+  "unmappedBaselineIds": [],
+  "missingThemeViewportCombinations": []
+}

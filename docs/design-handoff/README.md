@@ -2,27 +2,26 @@
 
 The user accepted the full application design and the **Shifted right** Gather logo. The complete handoff integrates that exact logo into every existing brand placement. This PR records the design reference; it does not implement the redesign or authorize production changes.
 
-## Complete source of truth
+## Complete source of truth — checked into Git
 
-The exact package contains **438 states, 1,830 canonical PNGs**, both themes, mobile/desktop layouts, selected tablet layouts, secondary surfaces, feature-parity mappings, editable rendering sources, and verification records. Every original baseline state has a mapping.
+**Use [approved-handoff-v2/](approved-handoff-v2/), which is committed in full. No release download, external design service or LAN server is required.** The smaller specifications and screenshots beside this README are convenience copies; they do not replace the complete package.
 
-The archive is attached to the **unpublished draft release** tagged `journl-design-handoff-v2` in `atomly/journl` ([artifact storage](https://github.com/atomly/journl/releases/tag/untagged-0ba611aeba6e3d7fc3a9)). Maintainer authentication is required. Historical captures remain in the authenticated archive; they are not copied into this public PR. Do not publish the release as part of implementation.
+Start with [the complete handoff README](approved-handoff-v2/README.md) and [approval record](approved-handoff-v2/approval.json). The package contains **438 state IDs and 1,830 canonical PNGs**, both themes, mobile/desktop layouts, selected tablet layouts, secondary surfaces, feature-parity mappings, all rendering sources, verification records and historical evidence. Every original baseline state has a mapping.
 
-From the repository root, retrieve and verify it with:
+- [Complete review entry](approved-handoff-v2/index.html) and [all application views](approved-handoff-v2/application/index.html). Serve this folder over HTTP to use the searchable gallery; every image is stored in the repository.
+- [Canonical screenshots](approved-handoff-v2/application/screenshots/): the exact approved visual references, not thumbnails or newly recreated approximations.
+- [Screen/state JSON index](approved-handoff-v2/application/screen-state-index.json) and [CSV index](approved-handoff-v2/application/screen-state-index.csv): route, surface, state, viewport, variant, actions, image region and hash. Use these to find the correct image for each implementation state.
+- [Feature parity](approved-handoff-v2/application/feature-parity.md) and [CSV mappings](approved-handoff-v2/application/feature-parity.csv).
+- [Full specifications](approved-handoff-v2/application/specs/) and [editable rendering sources](approved-handoff-v2/application/sources/). Sources explain composition and states; implement within the current app architecture rather than copying the review renderer as production code.
+- [Exact approved brand assets](approved-handoff-v2/brand/assets/) and [package file manifest](approved-handoff-v2/manifest.json).
 
-```bash
-mkdir -p /tmp/journl-approved-design
-gh release download journl-design-handoff-v2 --repo atomly/journl --pattern journl-approved-handoff-v2.zip --dir /tmp/journl-approved-design
-handoff_checksum="$PWD/docs/design-handoff/archive.sha256"
-(cd /tmp/journl-approved-design && sha256sum --check "$handoff_checksum")
-unzip /tmp/journl-approved-design/journl-approved-handoff-v2.zip -d /tmp/journl-approved-design
-```
+The current proposed UI is under `application/screenshots/`. Files under `application/evidence/`, earlier direction captures, and Before columns in logo boards are historical evidence. Do not use those as competing current designs. A small representative screenshot subset is not a complete implementation brief.
 
-If the draft release is inaccessible, ask a maintainer to provide the same checksum-verified archive. Do not substitute a new interpretation or incomplete screenshot subset.
+Read the full state inventory before planning implementation. Inspect the actual PNG for every route, secondary surface and meaningful state being implemented, at its specified viewport and theme. Maintain explicit image-to-implementation mappings and record any uncovered states. Do not infer visual completion from matching colors, implementing a route, or passing unit tests. Preserve the detailed spacing, hierarchy, controls, panel behavior and responsive layouts shown in the canonical images and specified in the behavior documents.
 
-Start with `approved-handoff-v2/README.md` and `approval.json`. Open `application/index.html` through a static HTTP server to browse all views. `application/screen-state-index.json` and `.csv` map exact images to routes, surfaces, states, viewports, actions and hashes. `application/feature-parity.md` and `.csv` map existing capabilities. `manifest.json` lists packaged file hashes. The reviewed PNGs and approved logo files are the visual source of truth.
+The draft release and `archive.sha256` remain historical distribution references. They are optional now; the complete source of truth is available directly in this checkout.
 
-## In this PR
+## Convenience references
 
 - [Foundations](foundations.md): typography, spacing, colors, materials and component sizing.
 - [Behavior and menus](behavior-and-menus.md): interactions, available actions, validation, loading and errors.

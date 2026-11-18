@@ -1,0 +1,370 @@
+[
+  {
+    "name": "light nav rest hidden visually",
+    "pass": true,
+    "detail": {}
+  },
+  {
+    "name": "light nav hover revealed",
+    "pass": true,
+    "detail": {}
+  },
+  {
+    "name": "light nav sequential keyboard focus",
+    "pass": true,
+    "detail": {}
+  },
+  {
+    "name": "light nav menu open persists",
+    "pass": true,
+    "detail": {}
+  },
+  {
+    "name": "light nav Escape returns focus",
+    "pass": true,
+    "detail": {}
+  },
+  {
+    "name": "light row rest hidden visually",
+    "pass": true,
+    "detail": {}
+  },
+  {
+    "name": "light row hover revealed",
+    "pass": true,
+    "detail": {}
+  },
+  {
+    "name": "light row sequential keyboard focus",
+    "pass": true,
+    "detail": {}
+  },
+  {
+    "name": "light row menu open persists",
+    "pass": true,
+    "detail": {}
+  },
+  {
+    "name": "light row Escape returns focus",
+    "pass": true,
+    "detail": {}
+  },
+  {
+    "name": "light explore desktop end-scroll focus and hit tests",
+    "pass": true,
+    "detail": {
+      "focused": true,
+      "inside": true,
+      "unobscured": true,
+      "hit": true,
+      "pillHit": true
+    }
+  },
+  {
+    "name": "light library desktop end-scroll focus and hit tests",
+    "pass": true,
+    "detail": {
+      "focused": true,
+      "inside": true,
+      "unobscured": true,
+      "hit": true,
+      "pillHit": true
+    }
+  },
+  {
+    "name": "light nav collapses independently",
+    "pass": true,
+    "detail": {}
+  },
+  {
+    "name": "light nav keyboard resize",
+    "pass": true,
+    "detail": {}
+  },
+  {
+    "name": "light balanced agent 480",
+    "pass": true,
+    "detail": {}
+  },
+  {
+    "name": "light expanded agent 704",
+    "pass": true,
+    "detail": {}
+  },
+  {
+    "name": "light expanded no horizontal overflow",
+    "pass": true,
+    "detail": {}
+  },
+  {
+    "name": "light collapsed chat panel baseline and overlay",
+    "pass": true,
+    "detail": {}
+  },
+  {
+    "name": "dark nav rest hidden visually",
+    "pass": true,
+    "detail": {}
+  },
+  {
+    "name": "dark nav hover revealed",
+    "pass": true,
+    "detail": {}
+  },
+  {
+    "name": "dark nav sequential keyboard focus",
+    "pass": true,
+    "detail": {}
+  },
+  {
+    "name": "dark nav menu open persists",
+    "pass": true,
+    "detail": {}
+  },
+  {
+    "name": "dark nav Escape returns focus",
+    "pass": true,
+    "detail": {}
+  },
+  {
+    "name": "dark row rest hidden visually",
+    "pass": true,
+    "detail": {}
+  },
+  {
+    "name": "dark row hover revealed",
+    "pass": true,
+    "detail": {}
+  },
+  {
+    "name": "dark row sequential keyboard focus",
+    "pass": true,
+    "detail": {}
+  },
+  {
+    "name": "dark row menu open persists",
+    "pass": true,
+    "detail": {}
+  },
+  {
+    "name": "dark row Escape returns focus",
+    "pass": true,
+    "detail": {}
+  },
+  {
+    "name": "dark explore desktop end-scroll focus and hit tests",
+    "pass": true,
+    "detail": {
+      "focused": true,
+      "inside": true,
+      "unobscured": true,
+      "hit": true,
+      "pillHit": true
+    }
+  },
+  {
+    "name": "dark library desktop end-scroll focus and hit tests",
+    "pass": true,
+    "detail": {
+      "focused": true,
+      "inside": true,
+      "unobscured": true,
+      "hit": true,
+      "pillHit": true
+    }
+  },
+  {
+    "name": "dark nav collapses independently",
+    "pass": true,
+    "detail": {}
+  },
+  {
+    "name": "dark nav keyboard resize",
+    "pass": true,
+    "detail": {}
+  },
+  {
+    "name": "dark balanced agent 480",
+    "pass": true,
+    "detail": {}
+  },
+  {
+    "name": "dark expanded agent 704",
+    "pass": true,
+    "detail": {}
+  },
+  {
+    "name": "dark expanded no horizontal overflow",
+    "pass": true,
+    "detail": {}
+  },
+  {
+    "name": "dark collapsed chat panel baseline and overlay",
+    "pass": true,
+    "detail": {}
+  },
+  {
+    "name": "light explore touch media",
+    "pass": true,
+    "detail": {}
+  },
+  {
+    "name": "light explore touch nav rows visible and 44px",
+    "pass": true,
+    "detail": {}
+  },
+  {
+    "name": "light explore end-scroll last control reachable",
+    "pass": true,
+    "detail": {
+      "name": "Preview Leaving room",
+      "focusVisible": true,
+      "rect": {
+        "top": 641.4375,
+        "bottom": 685.4375,
+        "left": 313,
+        "right": 357
+      },
+      "pill": {
+        "top": 767,
+        "bottom": 815,
+        "left": 204,
+        "right": 361
+      },
+      "inside": true,
+      "unobscured": true,
+      "hit": true,
+      "scrollTop": 313,
+      "scrollHeight": 1055,
+      "clientHeight": 742
+    }
+  },
+  {
+    "name": "light library touch media",
+    "pass": true,
+    "detail": {}
+  },
+  {
+    "name": "light library touch row buttons",
+    "pass": true,
+    "detail": {}
+  },
+  {
+    "name": "light library touch nav rows visible and 44px",
+    "pass": true,
+    "detail": {}
+  },
+  {
+    "name": "light library end-scroll last control reachable",
+    "pass": true,
+    "detail": {
+      "name": "Actions for On paying attention",
+      "focusVisible": true,
+      "rect": {
+        "top": 555.96875,
+        "bottom": 599.96875,
+        "left": 313,
+        "right": 357
+      },
+      "pill": {
+        "top": 767,
+        "bottom": 815,
+        "left": 204,
+        "right": 361
+      },
+      "inside": true,
+      "unobscured": true,
+      "hit": true,
+      "scrollTop": 0,
+      "scrollHeight": 742,
+      "clientHeight": 742
+    }
+  },
+  {
+    "name": "dark explore touch media",
+    "pass": true,
+    "detail": {}
+  },
+  {
+    "name": "dark explore touch nav rows visible and 44px",
+    "pass": true,
+    "detail": {}
+  },
+  {
+    "name": "dark explore end-scroll last control reachable",
+    "pass": true,
+    "detail": {
+      "name": "Preview Leaving room",
+      "focusVisible": true,
+      "rect": {
+        "top": 641.4375,
+        "bottom": 685.4375,
+        "left": 313,
+        "right": 357
+      },
+      "pill": {
+        "top": 767,
+        "bottom": 815,
+        "left": 204,
+        "right": 361
+      },
+      "inside": true,
+      "unobscured": true,
+      "hit": true,
+      "scrollTop": 313,
+      "scrollHeight": 1055,
+      "clientHeight": 742
+    }
+  },
+  {
+    "name": "dark library touch media",
+    "pass": true,
+    "detail": {}
+  },
+  {
+    "name": "dark library touch row buttons",
+    "pass": true,
+    "detail": {}
+  },
+  {
+    "name": "dark library touch nav rows visible and 44px",
+    "pass": true,
+    "detail": {}
+  },
+  {
+    "name": "dark library end-scroll last control reachable",
+    "pass": true,
+    "detail": {
+      "name": "Actions for On paying attention",
+      "focusVisible": true,
+      "rect": {
+        "top": 555.96875,
+        "bottom": 599.96875,
+        "left": 313,
+        "right": 357
+      },
+      "pill": {
+        "top": 767,
+        "bottom": 815,
+        "left": 204,
+        "right": 361
+      },
+      "inside": true,
+      "unobscured": true,
+      "hit": true,
+      "scrollTop": 0,
+      "scrollHeight": 742,
+      "clientHeight": 742
+    }
+  },
+  {
+    "name": "forced colors solid surfaces",
+    "pass": true,
+    "detail": {}
+  },
+  {
+    "name": "opaque fallback no blur",
+    "pass": true,
+    "detail": {}
+  }
+]

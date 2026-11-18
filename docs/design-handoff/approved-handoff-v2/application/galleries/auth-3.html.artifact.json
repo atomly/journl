@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "kind": "html",
+  "title": "full-review-v6/galleries/auth-3.html",
+  "entry": "full-review-v6/galleries/auth-3.html",
+  "renderer": "html",
+  "status": "complete",
+  "exports": [
+    "html",
+    "pdf",
+    "zip"
+  ],
+  "createdAt": "2026-11-17T08:20:54.129Z",
+  "updatedAt": "2026-11-17T21:17:36.846013+00:00",
+  "metadata": {
+    "inferred": true,
+    "reconciled": true,
+    "branding": "Exact approved Shifted right logo integrated"
+  }
+}

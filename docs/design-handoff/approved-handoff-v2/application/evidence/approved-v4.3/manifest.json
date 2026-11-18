@@ -1,0 +1,742 @@
+{
+  "title": "Journl v4.3",
+  "status": "CANDIDATE / NOT APPROVED",
+  "entry": "index.html",
+  "canonical": "PNG bytes in screenshots/; embedded unchanged in index.html",
+  "viewportNote": "Landing uses full-page captures. Viewport and PNG dimensions are separate fields. Proofs use viewport crops recorded in clip.",
+  "renderEngine": "Existing Playwright Chromium; deviceScaleFactor 1; mobile app scenes emulate coarse touch input",
+  "images": [
+    {
+      "name": "explore--light--desktop",
+      "route": "explore",
+      "state": "baseline populated; assistant collapsed",
+      "palette": "Blue glass / semantic pastels",
+      "theme": "light",
+      "typeface": "Inter variable 400/500/600",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "font": "Inter variable 400/500/600",
+      "fullPage": false,
+      "surface": "explore",
+      "png": "screenshots/explore--light--desktop.png",
+      "source": "sources/explore--light--desktop.html",
+      "actualDimensions": [
+        1440,
+        1000
+      ],
+      "sha256": "38f2e45190fb6309a19464b37ae37b0c3249d43f26bde124f0ef2032db325648",
+      "bytes": 185225
+    },
+    {
+      "name": "explore--light--mobile",
+      "route": "explore",
+      "state": "baseline populated; assistant collapsed",
+      "palette": "Blue glass / semantic pastels",
+      "theme": "light",
+      "typeface": "Inter variable 400/500/600",
+      "viewport": [
+        390,
+        844
+      ],
+      "font": "Inter variable 400/500/600",
+      "fullPage": false,
+      "surface": "explore",
+      "png": "screenshots/explore--light--mobile.png",
+      "source": "sources/explore--light--mobile.html",
+      "actualDimensions": [
+        390,
+        844
+      ],
+      "sha256": "74598408f310f2e93df5534475ad440b6aea178dad7a94a08cbd84d979160b09",
+      "bytes": 73123
+    },
+    {
+      "name": "explore--dark--desktop",
+      "route": "explore",
+      "state": "baseline populated; assistant collapsed",
+      "palette": "Blue glass / semantic pastels",
+      "theme": "dark",
+      "typeface": "Inter variable 400/500/600",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "font": "Inter variable 400/500/600",
+      "fullPage": false,
+      "surface": "explore",
+      "png": "screenshots/explore--dark--desktop.png",
+      "source": "sources/explore--dark--desktop.html",
+      "actualDimensions": [
+        1440,
+        1000
+      ],
+      "sha256": "920e66a8b17323b7f8f5543e2ffe8aa5881f5a2c56bed2ef92440556705f29e9",
+      "bytes": 213053
+    },
+    {
+      "name": "explore--dark--mobile",
+      "route": "explore",
+      "state": "baseline populated; assistant collapsed",
+      "palette": "Blue glass / semantic pastels",
+      "theme": "dark",
+      "typeface": "Inter variable 400/500/600",
+      "viewport": [
+        390,
+        844
+      ],
+      "font": "Inter variable 400/500/600",
+      "fullPage": false,
+      "surface": "explore",
+      "png": "screenshots/explore--dark--mobile.png",
+      "source": "sources/explore--dark--mobile.html",
+      "actualDimensions": [
+        390,
+        844
+      ],
+      "sha256": "d6c12d7038caa45bf09c4aa768c2de003938d43443a4ab62e197734774eca624",
+      "bytes": 74368
+    },
+    {
+      "name": "library--light--desktop",
+      "route": "library",
+      "state": "baseline populated; assistant collapsed",
+      "palette": "Blue glass / semantic pastels",
+      "theme": "light",
+      "typeface": "Inter variable 400/500/600",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "font": "Inter variable 400/500/600",
+      "fullPage": false,
+      "surface": "library",
+      "png": "screenshots/library--light--desktop.png",
+      "source": "sources/library--light--desktop.html",
+      "actualDimensions": [
+        1440,
+        1000
+      ],
+      "sha256": "6182d7edb59492228479e2ed0121511e72a5841c46ca01f8d55513b05898e077",
+      "bytes": 156911
+    },
+    {
+      "name": "library--light--mobile",
+      "route": "library",
+      "state": "baseline populated; assistant collapsed",
+      "palette": "Blue glass / semantic pastels",
+      "theme": "light",
+      "typeface": "Inter variable 400/500/600",
+      "viewport": [
+        390,
+        844
+      ],
+      "font": "Inter variable 400/500/600",
+      "fullPage": false,
+      "surface": "library",
+      "png": "screenshots/library--light--mobile.png",
+      "source": "sources/library--light--mobile.html",
+      "actualDimensions": [
+        390,
+        844
+      ],
+      "sha256": "949f13d93d3b64420774f84cb1c784231d72a532022fd84e41da31a7031e8c12",
+      "bytes": 61512
+    },
+    {
+      "name": "library--dark--desktop",
+      "route": "library",
+      "state": "baseline populated; assistant collapsed",
+      "palette": "Blue glass / semantic pastels",
+      "theme": "dark",
+      "typeface": "Inter variable 400/500/600",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "font": "Inter variable 400/500/600",
+      "fullPage": false,
+      "surface": "library",
+      "png": "screenshots/library--dark--desktop.png",
+      "source": "sources/library--dark--desktop.html",
+      "actualDimensions": [
+        1440,
+        1000
+      ],
+      "sha256": "ad94eca3ad7721a2415f89bbcc8938871e92a3c159a6e1f6478caab3bc6c8c11",
+      "bytes": 184906
+    },
+    {
+      "name": "library--dark--mobile",
+      "route": "library",
+      "state": "baseline populated; assistant collapsed",
+      "palette": "Blue glass / semantic pastels",
+      "theme": "dark",
+      "typeface": "Inter variable 400/500/600",
+      "viewport": [
+        390,
+        844
+      ],
+      "font": "Inter variable 400/500/600",
+      "fullPage": false,
+      "surface": "library",
+      "png": "screenshots/library--dark--mobile.png",
+      "source": "sources/library--dark--mobile.html",
+      "actualDimensions": [
+        390,
+        844
+      ],
+      "sha256": "89c5575d045eb460ab2f516bd67306c97f26ce2481ea8079c5d1da008ef882f9",
+      "bytes": 63179
+    },
+    {
+      "name": "chat--light--desktop",
+      "route": "chat",
+      "state": "baseline populated; assistant balanced open",
+      "palette": "Blue glass / semantic pastels",
+      "theme": "light",
+      "typeface": "Inter variable 400/500/600",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "font": "Inter variable 400/500/600",
+      "fullPage": false,
+      "surface": "chat",
+      "png": "screenshots/chat--light--desktop.png",
+      "source": "sources/chat--light--desktop.html",
+      "actualDimensions": [
+        1440,
+        1000
+      ],
+      "sha256": "3192f0760646710111ebd32880f39c69fdcbae1518aa5e9c61667591f871132f",
+      "bytes": 238058
+    },
+    {
+      "name": "chat--dark--desktop",
+      "route": "chat",
+      "state": "baseline populated; assistant balanced open",
+      "palette": "Blue glass / semantic pastels",
+      "theme": "dark",
+      "typeface": "Inter variable 400/500/600",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "font": "Inter variable 400/500/600",
+      "fullPage": false,
+      "surface": "chat",
+      "png": "screenshots/chat--dark--desktop.png",
+      "source": "sources/chat--dark--desktop.html",
+      "actualDimensions": [
+        1440,
+        1000
+      ],
+      "sha256": "e96bac39d38fb996ef24fa9515613660f2482af250557e47b456c6a432fc8dd7",
+      "bytes": 267129
+    },
+    {
+      "name": "landing--light--desktop",
+      "route": "marketing",
+      "surface": "landing",
+      "state": "full organization-first landing",
+      "theme": "light",
+      "font": "Inter variable 400/500/600",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "fullPage": true,
+      "png": "screenshots/landing--light--desktop.png",
+      "source": "sources/landing--light--desktop.html",
+      "actualDimensions": [
+        1440,
+        3195
+      ],
+      "sha256": "7bbdc9b87c8078c9cbfd837b6bf42504bf0968268921c8ffc072d0b4d3305cb4",
+      "bytes": 657415
+    },
+    {
+      "name": "landing--light--mobile",
+      "route": "marketing",
+      "surface": "landing",
+      "state": "full organization-first landing",
+      "theme": "light",
+      "font": "Inter variable 400/500/600",
+      "viewport": [
+        390,
+        844
+      ],
+      "fullPage": true,
+      "png": "screenshots/landing--light--mobile.png",
+      "source": "sources/landing--light--mobile.html",
+      "actualDimensions": [
+        390,
+        3905
+      ],
+      "sha256": "c522c0c8ab1ea7d43cacbd27d747cb33fca4cc96f2b3012718e6d7cdd4c894c3",
+      "bytes": 330646
+    },
+    {
+      "name": "landing--dark--desktop",
+      "route": "marketing",
+      "surface": "landing",
+      "state": "full organization-first landing",
+      "theme": "dark",
+      "font": "Inter variable 400/500/600",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "fullPage": true,
+      "png": "screenshots/landing--dark--desktop.png",
+      "source": "sources/landing--dark--desktop.html",
+      "actualDimensions": [
+        1440,
+        3195
+      ],
+      "sha256": "44fbe34bf42287a12321fbd042c9cd94c65ef6ea51b727e988edce5c893f3405",
+      "bytes": 735092
+    },
+    {
+      "name": "landing--dark--mobile",
+      "route": "marketing",
+      "surface": "landing",
+      "state": "full organization-first landing",
+      "theme": "dark",
+      "font": "Inter variable 400/500/600",
+      "viewport": [
+        390,
+        844
+      ],
+      "fullPage": true,
+      "png": "screenshots/landing--dark--mobile.png",
+      "source": "sources/landing--dark--mobile.html",
+      "actualDimensions": [
+        390,
+        3905
+      ],
+      "sha256": "c6772d701d772019d54ef2eaf427ee3d548215561e8c1bfe705b78a0243fb679",
+      "bytes": 340049
+    },
+    {
+      "name": "palette-material",
+      "route": "specimen",
+      "surface": "materials",
+      "state": "both modes and semantic roles",
+      "theme": "both",
+      "font": "Inter variable 400/500/600",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "fullPage": false,
+      "png": "screenshots/palette-material.png",
+      "source": "sources/palette-material.html",
+      "actualDimensions": [
+        1440,
+        1000
+      ],
+      "sha256": "c093b3cc3349486b7b19000603c5981d7285b11a2ccc378bad8ee631a6fb5220",
+      "bytes": 491162
+    },
+    {
+      "name": "nav--rest--light",
+      "route": "state-proof",
+      "surface": "navigation",
+      "theme": "light",
+      "state": "nav--rest--light",
+      "font": "Inter variable 400/500/600",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "clip": {
+        "x": 16,
+        "y": 365,
+        "width": 320,
+        "height": 240
+      },
+      "fullPage": false,
+      "png": "screenshots/nav--rest--light.png",
+      "source": "sources/library--light--desktop.html",
+      "actualDimensions": [
+        320,
+        240
+      ],
+      "sha256": "8ec9e2515608cfcf6586caff37085f7445f644cd949cb29c13e70c4128243a6f",
+      "bytes": 20530
+    },
+    {
+      "name": "nav--hover--light",
+      "route": "state-proof",
+      "surface": "navigation",
+      "theme": "light",
+      "state": "nav--hover--light",
+      "font": "Inter variable 400/500/600",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "clip": {
+        "x": 16,
+        "y": 365,
+        "width": 320,
+        "height": 240
+      },
+      "fullPage": false,
+      "png": "screenshots/nav--hover--light.png",
+      "source": "sources/library--light--desktop.html",
+      "actualDimensions": [
+        320,
+        240
+      ],
+      "sha256": "f7e500634d5b6da95bc5ba985eba52632820af2da7ff4dc43b105d250f74cb85",
+      "bytes": 19940
+    },
+    {
+      "name": "nav--keyboard--light",
+      "route": "state-proof",
+      "surface": "navigation",
+      "theme": "light",
+      "state": "nav--keyboard--light",
+      "font": "Inter variable 400/500/600",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "clip": {
+        "x": 16,
+        "y": 365,
+        "width": 320,
+        "height": 240
+      },
+      "fullPage": false,
+      "png": "screenshots/nav--keyboard--light.png",
+      "source": "sources/library--light--desktop.html",
+      "actualDimensions": [
+        320,
+        240
+      ],
+      "sha256": "a9ef9884a118d2ab02561058bebb12a6bfee9195f6ed3c51bcc806a2a1169d6d",
+      "bytes": 21893
+    },
+    {
+      "name": "row--rest--light",
+      "route": "state-proof",
+      "surface": "library",
+      "theme": "light",
+      "state": "row--rest--light",
+      "font": "Inter variable 400/500/600",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "clip": {
+        "x": 290,
+        "y": 330,
+        "width": 1110,
+        "height": 220
+      },
+      "fullPage": false,
+      "png": "screenshots/row--rest--light.png",
+      "source": "sources/library--light--desktop.html",
+      "actualDimensions": [
+        1110,
+        220
+      ],
+      "sha256": "7cd777254eb014708418a9e250d603798f0e5dbb264f2ee700a80372c0945f8f",
+      "bytes": 11795
+    },
+    {
+      "name": "row--hover--light",
+      "route": "state-proof",
+      "surface": "library",
+      "theme": "light",
+      "state": "row--hover--light",
+      "font": "Inter variable 400/500/600",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "clip": {
+        "x": 290,
+        "y": 330,
+        "width": 1110,
+        "height": 220
+      },
+      "fullPage": false,
+      "png": "screenshots/row--hover--light.png",
+      "source": "sources/library--light--desktop.html",
+      "actualDimensions": [
+        1110,
+        220
+      ],
+      "sha256": "78a51bc67e9b7345bd73901101e5290029f332fd64b108ed5c0174c59ffed425",
+      "bytes": 11855
+    },
+    {
+      "name": "row--keyboard--light",
+      "route": "state-proof",
+      "surface": "library",
+      "theme": "light",
+      "state": "row--keyboard--light",
+      "font": "Inter variable 400/500/600",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "clip": {
+        "x": 290,
+        "y": 330,
+        "width": 1110,
+        "height": 220
+      },
+      "fullPage": false,
+      "png": "screenshots/row--keyboard--light.png",
+      "source": "sources/library--light--desktop.html",
+      "actualDimensions": [
+        1110,
+        220
+      ],
+      "sha256": "1ff786e03962373655cfa5c88757c3d072dc4f23fe487de8ba6e9f02b356c676",
+      "bytes": 14357
+    },
+    {
+      "name": "nav--menu-open--dark",
+      "route": "state-proof",
+      "surface": "navigation",
+      "theme": "dark",
+      "state": "nav--menu-open--dark",
+      "font": "Inter variable 400/500/600",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "clip": {
+        "x": 16,
+        "y": 365,
+        "width": 500,
+        "height": 280
+      },
+      "fullPage": false,
+      "png": "screenshots/nav--menu-open--dark.png",
+      "source": "sources/library--dark--desktop.html",
+      "actualDimensions": [
+        500,
+        280
+      ],
+      "sha256": "8b45d3a36fc8f6c08af02d333f284dffcd9c932f91922c95e39cd66bbfb85953",
+      "bytes": 34183
+    },
+    {
+      "name": "row--menu-open--dark",
+      "route": "state-proof",
+      "surface": "library",
+      "theme": "dark",
+      "state": "row--menu-open--dark",
+      "font": "Inter variable 400/500/600",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "clip": {
+        "x": 1090,
+        "y": 340,
+        "width": 330,
+        "height": 280
+      },
+      "fullPage": false,
+      "png": "screenshots/row--menu-open--dark.png",
+      "source": "sources/library--dark--desktop.html",
+      "actualDimensions": [
+        330,
+        280
+      ],
+      "sha256": "54f4b9d6c8bac1591de0595bef6af39e1f20545883926b091c4f00a5e7c9fee1",
+      "bytes": 13910
+    },
+    {
+      "name": "touch-navigation--light",
+      "route": "state-proof",
+      "surface": "navigation",
+      "theme": "light",
+      "state": "coarse pointer navigation sheet; row actions always visible",
+      "font": "Inter variable 400/500/600",
+      "viewport": [
+        390,
+        844
+      ],
+      "clip": {
+        "x": 12,
+        "y": 12,
+        "width": 366,
+        "height": 820
+      },
+      "fullPage": false,
+      "png": "screenshots/touch-navigation--light.png",
+      "source": "sources/library--light--mobile.html",
+      "actualDimensions": [
+        366,
+        820
+      ],
+      "sha256": "e21eb55b4bc85a431ee50b09a4e54d5849e654394009a8ad1c88e610263395e7",
+      "bytes": 84721
+    },
+    {
+      "name": "overlay--end-scroll--dark",
+      "route": "state-proof",
+      "surface": "overlay",
+      "theme": "dark",
+      "state": "last Explore action focused and revealed above floating pill",
+      "font": "Inter variable 400/500/600",
+      "viewport": [
+        390,
+        844
+      ],
+      "clip": {
+        "x": 12,
+        "y": 480,
+        "width": 366,
+        "height": 352
+      },
+      "fullPage": false,
+      "png": "screenshots/overlay--end-scroll--dark.png",
+      "source": "sources/explore--dark--mobile.html",
+      "actualDimensions": [
+        366,
+        352
+      ],
+      "sha256": "7abaafec5a74d27dff5b38b34062d117abf122555e1e2a333eab664f2267e550",
+      "bytes": 20237
+    },
+    {
+      "name": "accessibility--forced-colors",
+      "route": "state-proof",
+      "surface": "overlay",
+      "theme": "system",
+      "state": "forced colors uses opaque system surfaces",
+      "font": "Inter variable 400/500/600",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "clip": {
+        "x": 16,
+        "y": 16,
+        "width": 650,
+        "height": 420
+      },
+      "fullPage": false,
+      "png": "screenshots/accessibility--forced-colors.png",
+      "source": "sources/explore--dark--desktop.html",
+      "actualDimensions": [
+        650,
+        420
+      ],
+      "sha256": "9dabe52787f8a03d117fe40969c32544d6ff17f631be7c9ffa97e629f30cd640",
+      "bytes": 27231
+    },
+    {
+      "name": "baseline-v4-2--explore--light--desktop",
+      "route": "before-after",
+      "state": "unchanged v4.2 baseline",
+      "palette": "Blue glass / semantic pastels",
+      "theme": "light",
+      "typeface": "Inter variable 400/500/600",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "font": "Inter variable 400/500/600",
+      "fullPage": false,
+      "surface": "explore",
+      "source": null,
+      "originalPath": "/home/rmolinamir/projects/open-design/.od/projects/journl-v4-2-balanced-pastels/review-v4-2/screenshots/explore--light--desktop.png",
+      "originalSHA256": "056d294302cbdcf45a86621b8aea914e3418f0c455c745a77ebd4791efbdac70",
+      "png": "screenshots/baseline-v4-2--explore--light--desktop.png",
+      "actualDimensions": [
+        1440,
+        1000
+      ],
+      "sha256": "056d294302cbdcf45a86621b8aea914e3418f0c455c745a77ebd4791efbdac70",
+      "bytes": 123707
+    },
+    {
+      "name": "baseline-v4-2--explore--dark--mobile",
+      "route": "before-after",
+      "state": "unchanged v4.2 baseline",
+      "palette": "Blue glass / semantic pastels",
+      "theme": "dark",
+      "typeface": "Inter variable 400/500/600",
+      "viewport": [
+        390,
+        844
+      ],
+      "font": "Inter variable 400/500/600",
+      "fullPage": false,
+      "surface": "explore",
+      "source": null,
+      "originalPath": "/home/rmolinamir/projects/open-design/.od/projects/journl-v4-2-balanced-pastels/review-v4-2/screenshots/explore--dark--mobile.png",
+      "originalSHA256": "0ec84fd07a3a74af9a49089e815cdb2cda6fb99639938209f5969caf1e6216d9",
+      "png": "screenshots/baseline-v4-2--explore--dark--mobile.png",
+      "actualDimensions": [
+        390,
+        844
+      ],
+      "sha256": "0ec84fd07a3a74af9a49089e815cdb2cda6fb99639938209f5969caf1e6216d9",
+      "bytes": 47524
+    },
+    {
+      "name": "baseline-v4-2--library--dark--desktop",
+      "route": "before-after",
+      "state": "unchanged v4.2 baseline",
+      "palette": "Blue glass / semantic pastels",
+      "theme": "dark",
+      "typeface": "Inter variable 400/500/600",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "font": "Inter variable 400/500/600",
+      "fullPage": false,
+      "surface": "library",
+      "source": null,
+      "originalPath": "/home/rmolinamir/projects/open-design/.od/projects/journl-v4-2-balanced-pastels/review-v4-2/screenshots/library--dark--desktop.png",
+      "originalSHA256": "1904c2cda301e21d20ce1c75b9c2bf800c6a1f573d2d6d1bc336da2a0fd1d343",
+      "png": "screenshots/baseline-v4-2--library--dark--desktop.png",
+      "actualDimensions": [
+        1440,
+        1000
+      ],
+      "sha256": "1904c2cda301e21d20ce1c75b9c2bf800c6a1f573d2d6d1bc336da2a0fd1d343",
+      "bytes": 86872
+    },
+    {
+      "name": "baseline-v4-2--chat--dark--desktop",
+      "route": "before-after",
+      "state": "unchanged v4.2 baseline",
+      "palette": "Blue glass / semantic pastels",
+      "theme": "dark",
+      "typeface": "Inter variable 400/500/600",
+      "viewport": [
+        1440,
+        1000
+      ],
+      "font": "Inter variable 400/500/600",
+      "fullPage": false,
+      "surface": "chat",
+      "source": null,
+      "originalPath": "/home/rmolinamir/projects/open-design/.od/projects/journl-v4-2-balanced-pastels/review-v4-2/screenshots/chat--dark--desktop.png",
+      "originalSHA256": "7b2e5e6207bf9b385e82b6a97fa29cb94fbe5083a8b635addd8dd7b6a21bf67f",
+      "png": "screenshots/baseline-v4-2--chat--dark--desktop.png",
+      "actualDimensions": [
+        1440,
+        1000
+      ],
+      "sha256": "7b2e5e6207bf9b385e82b6a97fa29cb94fbe5083a8b635addd8dd7b6a21bf67f",
+      "bytes": 149108
+    }
+  ]
+}

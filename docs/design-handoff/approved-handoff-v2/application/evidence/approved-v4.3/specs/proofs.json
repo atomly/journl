@@ -1,0 +1,211 @@
+[
+  {
+    "name": "nav--rest--light",
+    "route": "state-proof",
+    "surface": "navigation",
+    "theme": "light",
+    "state": "nav--rest--light",
+    "font": "Inter variable 400/500/600",
+    "viewport": [
+      1440,
+      1000
+    ],
+    "clip": {
+      "x": 16,
+      "y": 365,
+      "width": 320,
+      "height": 240
+    },
+    "fullPage": false
+  },
+  {
+    "name": "nav--hover--light",
+    "route": "state-proof",
+    "surface": "navigation",
+    "theme": "light",
+    "state": "nav--hover--light",
+    "font": "Inter variable 400/500/600",
+    "viewport": [
+      1440,
+      1000
+    ],
+    "clip": {
+      "x": 16,
+      "y": 365,
+      "width": 320,
+      "height": 240
+    },
+    "fullPage": false
+  },
+  {
+    "name": "nav--keyboard--light",
+    "route": "state-proof",
+    "surface": "navigation",
+    "theme": "light",
+    "state": "nav--keyboard--light",
+    "font": "Inter variable 400/500/600",
+    "viewport": [
+      1440,
+      1000
+    ],
+    "clip": {
+      "x": 16,
+      "y": 365,
+      "width": 320,
+      "height": 240
+    },
+    "fullPage": false
+  },
+  {
+    "name": "row--rest--light",
+    "route": "state-proof",
+    "surface": "library",
+    "theme": "light",
+    "state": "row--rest--light",
+    "font": "Inter variable 400/500/600",
+    "viewport": [
+      1440,
+      1000
+    ],
+    "clip": {
+      "x": 290,
+      "y": 330,
+      "width": 1110,
+      "height": 220
+    },
+    "fullPage": false
+  },
+  {
+    "name": "row--hover--light",
+    "route": "state-proof",
+    "surface": "library",
+    "theme": "light",
+    "state": "row--hover--light",
+    "font": "Inter variable 400/500/600",
+    "viewport": [
+      1440,
+      1000
+    ],
+    "clip": {
+      "x": 290,
+      "y": 330,
+      "width": 1110,
+      "height": 220
+    },
+    "fullPage": false
+  },
+  {
+    "name": "row--keyboard--light",
+    "route": "state-proof",
+    "surface": "library",
+    "theme": "light",
+    "state": "row--keyboard--light",
+    "font": "Inter variable 400/500/600",
+    "viewport": [
+      1440,
+      1000
+    ],
+    "clip": {
+      "x": 290,
+      "y": 330,
+      "width": 1110,
+      "height": 220
+    },
+    "fullPage": false
+  },
+  {
+    "name": "nav--menu-open--dark",
+    "route": "state-proof",
+    "surface": "navigation",
+    "theme": "dark",
+    "state": "nav--menu-open--dark",
+    "font": "Inter variable 400/500/600",
+    "viewport": [
+      1440,
+      1000
+    ],
+    "clip": {
+      "x": 16,
+      "y": 365,
+      "width": 500,
+      "height": 280
+    },
+    "fullPage": false
+  },
+  {
+    "name": "row--menu-open--dark",
+    "route": "state-proof",
+    "surface": "library",
+    "theme": "dark",
+    "state": "row--menu-open--dark",
+    "font": "Inter variable 400/500/600",
+    "viewport": [
+      1440,
+      1000
+    ],
+    "clip": {
+      "x": 1090,
+      "y": 340,
+      "width": 330,
+      "height": 280
+    },
+    "fullPage": false
+  },
+  {
+    "name": "touch-navigation--light",
+    "route": "state-proof",
+    "surface": "overlay",
+    "theme": "light",
+    "state": "coarse pointer navigation sheet; row actions always visible",
+    "font": "Inter variable 400/500/600",
+    "viewport": [
+      390,
+      844
+    ],
+    "clip": {
+      "x": 12,
+      "y": 12,
+      "width": 366,
+      "height": 820
+    },
+    "fullPage": false
+  },
+  {
+    "name": "overlay--end-scroll--dark",
+    "route": "state-proof",
+    "surface": "overlay",
+    "theme": "dark",
+    "state": "last Explore action focused and revealed above floating pill",
+    "font": "Inter variable 400/500/600",
+    "viewport": [
+      390,
+      844
+    ],
+    "clip": {
+      "x": 12,
+      "y": 480,
+      "width": 366,
+      "height": 352
+    },
+    "fullPage": false
+  },
+  {
+    "name": "accessibility--forced-colors",
+    "route": "state-proof",
+    "surface": "overlay",
+    "theme": "system",
+    "state": "forced colors uses opaque system surfaces",
+    "font": "Inter variable 400/500/600",
+    "viewport": [
+      1440,
+      1000
+    ],
+    "clip": {
+      "x": 16,
+      "y": 16,
+      "width": 650,
+      "height": 420
+    },
+    "fullPage": false
+  }
+]

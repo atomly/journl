@@ -7,6 +7,13 @@
       "skillPath": "better-auth/best-practices/SKILL.md",
       "computedHash": "0c30be0e118c2b7a0c4c57bd9e63bf110c7e420a79ec6ce7997153f3b1e066ee"
     },
+    "gh-stack": {
+      "source": "github/gh-stack",
+      "ref": "80b6d6e910cc1b7eaa26b961d7721ade21084fed",
+      "sourceType": "github",
+      "skillPath": "skills/gh-stack/SKILL.md",
+      "computedHash": "e54bf50370987f13ca2803b3be829f36350b68a79dc36ffd3b27350bc6d2fde1"
+    },
     "mastra": {
       "source": "mastra-ai/skills",
       "sourceType": "github",

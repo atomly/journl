@@ -17,3 +17,5 @@ Read [README.md](README.md) for setup and commands.
 - Keep reusable UI primitives in `@acme/ui` and app compositions in Journl. Use native Base UI `render`, explicit non-native button semantics, and real styled links for navigation. Do not reintroduce owned `asChild` shims or Slot adapters. Verify shadcn install destinations with a dry run.
 
 - Compose chat with Base UI AI Elements and native AI SDK state. Keep application chat behavior out of shared UI primitives; do not restore assistant-ui runtime adapters.
+
+- Manage project skills with `mise exec -- pnpm dlx skills@1.7.6 add <source> --skill <name> --agent codex --yes`. Let the CLI generate `skills-lock.json`; do not edit it manually. Version 1.7.6 preserves the current version 1 lockfile format.

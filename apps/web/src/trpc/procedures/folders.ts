@@ -1,4 +1,4 @@
-import { and, eq, inArray } from "@acme/db";
+import { and, count, eq, inArray } from "@acme/db";
 import { Folder, TreeEdge, TreeNode, zInsertFolder } from "@acme/db/schema";
 import type { TRPCRouterRecord } from "@trpc/server";
 import { TRPCError } from "@trpc/server";
@@ -25,6 +25,53 @@ async function getFolderNode({
 }
 
 export const foldersRouter = {
+  contentsCounts: protectedProcedure
+    .input(z.object({ nodeIds: z.array(z.uuid()).max(50) }))
+    .query(async ({ ctx, input }) => {
+      if (!input.nodeIds.length) return [];
+      const owner = ctx.session.user.id;
+      const owned = await ctx.db
+        .select({ id: TreeNode.id })
+        .from(TreeNode)
+        .where(
+          and(
+            eq(TreeNode.user_id, owner),
+            eq(TreeNode.node_type, "folder"),
+            inArray(TreeNode.id, input.nodeIds),
+          ),
+        );
+      if (!owned.length) return [];
+      const rows = await ctx.db
+        .select({
+          kind: TreeNode.node_type,
+          parent: TreeEdge.parent_node_id,
+          total: count(),
+        })
+        .from(TreeEdge)
+        .innerJoin(
+          TreeNode,
+          and(eq(TreeNode.id, TreeEdge.node_id), eq(TreeNode.user_id, owner)),
+        )
+        .where(
+          and(
+            eq(TreeEdge.user_id, owner),
+            inArray(
+              TreeEdge.parent_node_id,
+              owned.map((node) => node.id),
+            ),
+          ),
+        )
+        .groupBy(TreeEdge.parent_node_id, TreeNode.node_type);
+      return owned.map(({ id }) => ({
+        folders:
+          rows.find((row) => row.parent === id && row.kind === "folder")
+            ?.total ?? 0,
+        node_id: id,
+        pages:
+          rows.find((row) => row.parent === id && row.kind === "page")?.total ??
+          0,
+      }));
+    }),
   create: protectedProcedure
     .input(zInsertFolder)
     .mutation(async ({ ctx, input }) => {

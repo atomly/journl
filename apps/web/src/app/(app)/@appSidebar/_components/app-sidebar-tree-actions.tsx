@@ -46,7 +46,7 @@ type AppSidebarTreeActionsProps = {
   onCreateStart?: () => void;
   onCreateSuccess?: () => void;
   parentNodeId: string | null;
-  triggerMode?: "direct-page" | "menu";
+  triggerMode?: "direct-page" | "direct-folder" | "menu";
   triggerVariant?: "empty-state" | "inline" | "sidebar";
 };
 
@@ -328,7 +328,7 @@ export function AppSidebarTreeActions({
     });
   };
 
-  if (triggerMode === "direct-page") {
+  if (triggerMode === "direct-page" || triggerMode === "direct-folder") {
     return (
       <Button
         type="button"
@@ -337,7 +337,11 @@ export function AppSidebarTreeActions({
           "h-11 w-full justify-center gap-2 rounded-xl px-3",
           className,
         )}
-        onClick={handleCreatePage}
+        onClick={
+          triggerMode === "direct-folder"
+            ? handleCreateFolder
+            : handleCreatePage
+        }
         disabled={showLoading}
       >
         {showLoading ? (
@@ -345,7 +349,9 @@ export function AppSidebarTreeActions({
         ) : (
           <Plus className="size-3.5 shrink-0" />
         )}
-        <span>New page</span>
+        <span>
+          {triggerMode === "direct-folder" ? "New folder" : "New page"}
+        </span>
       </Button>
     );
   }

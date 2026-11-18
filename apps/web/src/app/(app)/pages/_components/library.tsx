@@ -9,12 +9,14 @@ import { useEffect, useState } from "react";
 import { TreeMoveProvider } from "~/hooks/use-tree-item-moves";
 import { useTRPC } from "~/trpc/react";
 import { AppSidebarTreeActions } from "../../@appSidebar/_components/app-sidebar-tree-actions";
-import { FolderNestedPagesList } from "../../folders/_components/folder-nested-pages-list";
+import { LibraryFolders } from "./library-folders";
 import { LibraryPageActions } from "./library-page-actions";
 
 export function Library() {
   const trpc = useTRPC();
   const client = useQueryClient();
+  const [tab, setTab] = useState<"pages" | "folders">("pages");
+  const [folderSearch, setFolderSearch] = useState("");
   const [ready, setReady] = useState(false);
   useEffect(() => setReady(true), []);
   const [search, setSearch] = useState("");
@@ -45,15 +47,20 @@ export function Library() {
     <section className="journl-library">
       <p className="route-eyebrow">YOUR KNOWLEDGE, TOGETHER</p>
       <div className="route-heading">
-        <h1>All pages</h1>
+        <h1>{tab === "pages" ? "All pages" : "Folders"}</h1>
         <AppSidebarTreeActions
           kind="root"
           parentNodeId={null}
-          triggerMode="direct-page"
+          triggerMode={tab === "pages" ? "direct-page" : "direct-folder"}
           className="w-auto"
         />
       </div>
-      <Tabs defaultValue="pages">
+      <Tabs
+        value={tab}
+        onValueChange={(value) =>
+          setTab(value === "folders" ? "folders" : "pages")
+        }
+      >
         <div className="library-toolbar">
           <TabsList variant="line">
             <TabsTrigger value="pages">All pages</TabsTrigger>
@@ -62,10 +69,18 @@ export function Library() {
           <Input
             disabled={!ready}
             maxLength={500}
-            aria-label="Find a page by name"
-            placeholder="Find a page by name"
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
+            aria-label={
+              tab === "pages" ? "Find a page by name" : "Find a folder by name"
+            }
+            placeholder={
+              tab === "pages" ? "Find a page by name" : "Find a folder by name"
+            }
+            value={tab === "pages" ? search : folderSearch}
+            onChange={(event) =>
+              tab === "pages"
+                ? setSearch(event.target.value)
+                : setFolderSearch(event.target.value)
+            }
             className="max-w-80"
           />
         </div>
@@ -141,8 +156,8 @@ export function Library() {
             )}
           </TreeMoveProvider>
         </TabsContent>
-        <TabsContent value="folders">
-          <FolderNestedPagesList />
+        <TabsContent value="folders" keepMounted>
+          <LibraryFolders search={folderSearch} />
         </TabsContent>
       </Tabs>
     </section>

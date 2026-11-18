@@ -5,6 +5,7 @@ import { initTRPC } from "@trpc/server";
 import { beforeEach, expect, test, vi } from "vitest";
 import { createPostgresFixture } from "~/testing/postgres";
 import type { TRPCContext } from "../trpc";
+import { foldersRouter } from "./folders";
 import { journalRouter } from "./journal";
 import { pagesRouter } from "./pages";
 
@@ -48,6 +49,7 @@ const caller = initTRPC
   .context<TRPCContext>()
   .create()
   .router({
+    folders: initTRPC.context<TRPCContext>().create().router(foldersRouter),
     journal: initTRPC.context<TRPCContext>().create().router(journalRouter),
     pages: initTRPC.context<TRPCContext>().create().router(pagesRouter),
   })
@@ -621,13 +623,11 @@ async function seedLibraryPage(title: string, userId = owner) {
 test("Library respects owner isolation and synchronous detachment before background cleanup", async () => {
   const id = await seedLibraryPage("Visible until detached");
   const other = "other-library-owner";
-  await db
-    .insert(schema.user)
-    .values({
-      email: "other-library@example.invalid",
-      id: other,
-      name: "Other fixture",
-    });
+  await db.insert(schema.user).values({
+    email: "other-library@example.invalid",
+    id: other,
+    name: "Other fixture",
+  });
   await seedLibraryPage("Visible until detached", other);
   expect(
     (await caller.pages.list({ search: "Visible until detached" })).items.map(
@@ -663,4 +663,37 @@ test("Library name search treats wildcards literally and paginates equal titles 
     new Set([first, second]),
   );
   expect(two.nextCursor).toBeUndefined();
+});
+
+test("folder contents counts use real children and omit another owner's folder", async () => {
+  const mine = randomUUID();
+  const theirs = randomUUID();
+  const other = "folder-count-other-owner";
+  await db.insert(schema.user).values({
+    email: "folder-count-other@example.invalid",
+    id: other,
+    name: "Other fixture",
+  });
+  for (const [id, userId] of [
+    [mine, owner],
+    [theirs, other],
+  ] as const) {
+    await db
+      .insert(schema.Folder)
+      .values({ id, name: "Folder", user_id: userId });
+    await db
+      .insert(schema.TreeNode)
+      .values({ folder_id: id, id, node_type: "folder", user_id: userId });
+    await db
+      .insert(schema.TreeEdge)
+      .values({ id, node_id: id, user_id: userId });
+  }
+  const page = await seedLibraryPage("Counted page");
+  await db
+    .update(schema.TreeEdge)
+    .set({ parent_node_id: mine })
+    .where(eq(schema.TreeEdge.node_id, page));
+  expect(
+    await caller.folders.contentsCounts({ nodeIds: [mine, theirs] }),
+  ).toEqual([{ folders: 0, node_id: mine, pages: 1 }]);
 });

@@ -21,7 +21,8 @@
     "test:unit": "turbo run test:unit",
     "test": "turbo run test:unit test:integration test:browser",
     "test:browser": "turbo run test:browser",
-    "clean:cache": "node scripts/clean-cache.mjs"
+    "clean:cache": "node scripts/clean-cache.mjs",
+    "test:stories": "turbo run test:stories"
   },
   "devDependencies": {
     "@biomejs/biome": "~2.5.15",

@@ -19,3 +19,10 @@ Read [README.md](README.md) for setup and commands.
 - Compose chat with Base UI AI Elements and native AI SDK state. Keep application chat behavior out of shared UI primitives; do not restore assistant-ui runtime adapters.
 
 - Manage project skills with `mise exec -- pnpm dlx skills@1.7.6 add <source> --skill <name> --agent codex --yes`. Let the CLI generate `skills-lock.json`; do not edit it manually. Version 1.7.6 preserves the current version 1 lockfile format.
+
+## Isolated component review
+
+Use `apps/component-review` for component stories and review. Keep application
+routes, providers and service credentials out of that workspace. Read its README
+and the official project-level Storybook skills before editing stories. Report
+foundation defects to the owning stack layer; do not mask them in stories.

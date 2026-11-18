@@ -1,0 +1,21 @@
+{
+  "css": {
+    "parser": {
+      "tailwindDirectives": true
+    }
+  },
+  "extends": ["../../biome.json"],
+  "overrides": [
+    {
+      "includes": ["playwright.config.ts"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noProcessEnv": "off"
+          }
+        }
+      }
+    }
+  ],
+  "root": false
+}

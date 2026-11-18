@@ -1,60 +1,123 @@
 {
-  "version": 1,
+  "version": 2,
   "skills": {
     "better-auth-best-practices": {
       "source": "better-auth/skills",
       "sourceType": "github",
       "skillPath": "better-auth/best-practices/SKILL.md",
-      "computedHash": "0c30be0e118c2b7a0c4c57bd9e63bf110c7e420a79ec6ce7997153f3b1e066ee"
+      "computedHash": "2773c3687f2cf96d659049ebf2d8c86058a33541b09360712df0dc6b1404c403"
+    },
+    "component-docs": {
+      "source": "storybookjs/skills",
+      "ref": "v11.0.0-beta.3",
+      "commit": "50935c08d265ebbcfda54f0b87c5cb4df3541abe",
+      "sourceType": "github",
+      "skillPath": "skills/component-docs/SKILL.md",
+      "computedHash": "9a48761943ed65d101ca015475ae2e5471f903f7c74d426e541e676581f78707",
+      "installMode": "copy"
     },
     "gh-stack": {
       "source": "github/gh-stack",
       "ref": "80b6d6e910cc1b7eaa26b961d7721ade21084fed",
       "sourceType": "github",
       "skillPath": "skills/gh-stack/SKILL.md",
-      "computedHash": "e54bf50370987f13ca2803b3be829f36350b68a79dc36ffd3b27350bc6d2fde1"
+      "computedHash": "4ff26e30a0103af77552e5eebbabfbf80734fd23b1485f0c513a0b35a3126613"
     },
     "mastra": {
       "source": "mastra-ai/skills",
       "sourceType": "github",
       "skillPath": "skills/mastra/SKILL.md",
-      "computedHash": "a857fcd05f042b20ad3561df502073c43d2eb4b50b0795ee45ee7ce305104a97"
+      "computedHash": "ea35e03183677f47b27546d6906c1a0179729acc5f940f52e18f0d49a14741ed"
     },
     "next-best-practices": {
       "source": "vercel-labs/openreview",
       "sourceType": "github",
       "skillPath": ".agents/skills/next-best-practices/SKILL.md",
-      "computedHash": "db85045827ebeb83ac8dbc992b69188755eeb74dcf01cbf5e694d58aa494a106"
+      "computedHash": ""
     },
     "prompt-engineering": {
       "source": "davila7/claude-code-templates",
       "sourceType": "github",
       "skillPath": "cli-tool/components/skills/ai-research/prompt-engineering/SKILL.md",
-      "computedHash": "6487eaa8f5180351ecfe65c44aa8f2612df8929682490fba793be1dcf5af0f6a"
+      "computedHash": "7bdf08e30ab1f1509cf0401e1025a5166175afa69576f278e3174aecdc6ba24d"
     },
     "shadcn": {
       "source": "shadcn-ui/ui",
       "sourceType": "github",
       "skillPath": "skills/shadcn/SKILL.md",
-      "computedHash": "b864a958765563321f485a96f4d59c0bb6539f4286ab6d8b8b66895b7ebd302d"
+      "computedHash": "388962d16c7a4f13aaeee0d8f128e50a87df8553d42ef7988c39c0e1c74a40e8"
+    },
+    "storybook-init": {
+      "source": "storybookjs/skills",
+      "ref": "v11.0.0-beta.3",
+      "commit": "50935c08d265ebbcfda54f0b87c5cb4df3541abe",
+      "sourceType": "github",
+      "skillPath": "skills/storybook-init/SKILL.md",
+      "computedHash": "5f69de886d5f079f02d3f111b8fe91f2497110d127d190c47f19ad235feaa42a",
+      "installMode": "copy"
+    },
+    "storybook-setup": {
+      "source": "storybookjs/skills",
+      "ref": "v11.0.0-beta.3",
+      "commit": "50935c08d265ebbcfda54f0b87c5cb4df3541abe",
+      "sourceType": "github",
+      "skillPath": "skills/storybook-setup/SKILL.md",
+      "computedHash": "a99378f2ef116d55987b5a477fccbbd75ef477ae63976be00d7c84667b66e705",
+      "installMode": "copy"
+    },
+    "storybook-upgrade": {
+      "source": "storybookjs/skills",
+      "ref": "v11.0.0-beta.3",
+      "commit": "50935c08d265ebbcfda54f0b87c5cb4df3541abe",
+      "sourceType": "github",
+      "skillPath": "skills/storybook-upgrade/SKILL.md",
+      "computedHash": "3c298ea76deed14e010d2ba4b03d2ad7c8a1fad567629ef565c997ff37737a91",
+      "installMode": "copy"
+    },
+    "test-stories": {
+      "source": "storybookjs/skills",
+      "ref": "v11.0.0-beta.3",
+      "commit": "50935c08d265ebbcfda54f0b87c5cb4df3541abe",
+      "sourceType": "github",
+      "skillPath": "skills/test-stories/SKILL.md",
+      "computedHash": "1e2251c7236f521269231246faf5db37404f2599a7d0b7ee28e3432bec74da7e",
+      "installMode": "copy"
     },
     "turborepo": {
       "source": "vercel/turborepo",
       "sourceType": "github",
       "skillPath": "skills/turborepo/SKILL.md",
-      "computedHash": "9681d8dfeb5e6cdff767f1bcaba5d7ac55732a9d6c02ee120f44229f8ec25e7e"
+      "computedHash": ""
+    },
+    "ui-review": {
+      "source": "storybookjs/skills",
+      "ref": "v11.0.0-beta.3",
+      "commit": "50935c08d265ebbcfda54f0b87c5cb4df3541abe",
+      "sourceType": "github",
+      "skillPath": "skills/ui-review/SKILL.md",
+      "computedHash": "7c9d614841a239ae3c04eb1eb4cd98c145e6a86cd0719588836388103a826709",
+      "installMode": "copy"
     },
     "workflow": {
       "source": "vercel/workflow",
       "sourceType": "github",
       "skillPath": "skills/workflow/SKILL.md",
-      "computedHash": "f74fc7d0b9584f03fdfc138a977d5eb632ca4f1310a8e590ef80cf5e67ccee20"
+      "computedHash": ""
     },
     "workflow-init": {
       "source": "vercel/workflow",
       "sourceType": "github",
       "skillPath": "skills/workflow-init/SKILL.md",
-      "computedHash": "a3f845e2f32ff5aeb1536c8668d677189a99c39e3de9c26da88993ec9870da00"
+      "computedHash": ""
+    },
+    "write-stories": {
+      "source": "storybookjs/skills",
+      "ref": "v11.0.0-beta.3",
+      "commit": "50935c08d265ebbcfda54f0b87c5cb4df3541abe",
+      "sourceType": "github",
+      "skillPath": "skills/write-stories/SKILL.md",
+      "computedHash": "5fef3c6e4d91d77526561607c2a8aae755e1b1eadb1b03e58f3c7bd89c9af4ab",
+      "installMode": "copy"
     }
   }
 }

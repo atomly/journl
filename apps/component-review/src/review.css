@@ -1,0 +1,48 @@
+@import "../../web/src/app/styles.css";
+@source "../";
+@source "../../web/src/components/brand.tsx";
+@font-face {
+  font-family: "Review Inter";
+  src: url("/fonts/inter-variable.ttf") format("truetype");
+  font-weight: 100 900;
+  font-display: swap;
+}
+:root {
+  --font-inter: "Review Inter";
+}
+body {
+  font-family: var(--font-sans);
+}
+.review-stage {
+  min-height: 100vh;
+  padding: 24px;
+  color: var(--foreground);
+}
+.review-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  max-width: 680px;
+}
+.review-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+.review-label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 15px;
+}
+.review-chip {
+  padding: 12px;
+  border: 1px solid var(--input);
+  border-radius: 12px;
+}
+.review-reduced-motion [data-slot] {
+  animation: none !important;
+  transition: none !important;
+  scroll-behavior: auto !important;
+}

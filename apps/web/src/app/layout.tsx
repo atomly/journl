@@ -1,4 +1,3 @@
-import { cn } from "@acme/ui/utils";
 import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import { DraftSessionsProvider } from "~/components/editor/draft-sessions-provider";
@@ -20,6 +19,20 @@ export const metadata: Metadata = {
   applicationName: "Journl",
   description:
     "Organize useful knowledge, projects, recipes and references with Journl.",
+  icons: {
+    icon: [
+      {
+        media: "(prefers-color-scheme: light)",
+        type: "image/svg+xml",
+        url: "/brand/mark-light.svg",
+      },
+      {
+        media: "(prefers-color-scheme: dark)",
+        type: "image/svg+xml",
+        url: "/brand/mark-dark.svg",
+      },
+    ],
+  },
   metadataBase: new URL(publicWebUrl),
   openGraph: {
     description:
@@ -59,13 +72,8 @@ export default function RootLayout({
   authModal: React.ReactNode;
 }) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body
-        className={cn(
-          "min-h-svh bg-background font-sans text-foreground antialiased",
-          inter.variable,
-        )}
-      >
+    <html lang="en" className={inter.variable} suppressHydrationWarning>
+      <body className="min-h-svh bg-background font-sans text-foreground antialiased">
         <BetterAuthProvider
           passwordSignIn={
             env.VERCEL_ENV === "preview" || env.NODE_ENV === "development"

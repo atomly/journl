@@ -216,3 +216,17 @@
     backdrop-filter: none;
   }
 }
+
+@media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
+  :root, .dark { --glass: var(--sidebar); --glass-glint: transparent; }
+  [data-material="glass"], [data-slot$="content"] { backdrop-filter: none; }
+}
+@media (forced-colors: active) {
+  [data-material="glass"], [data-slot="popover-content"], [data-slot="dropdown-menu-content"] {
+    background: Canvas; color: CanvasText; border-color: CanvasText;
+    box-shadow: none; backdrop-filter: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}

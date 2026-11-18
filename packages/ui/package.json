@@ -4,6 +4,7 @@
   "private": false,
   "type": "module",
   "exports": {
+    "./surface": "./src/surface.tsx",
     "./popover": "./src/popover.tsx",
     "./use-mobile": "./src/use-mobile.ts",
     "./tooltip": "./src/tooltip.tsx",

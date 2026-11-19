@@ -23,7 +23,6 @@ import {
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { useAppEventEmitter } from "~/components/events/app-event-context";
-import { useSidebar } from "~/components/ui/sidebar";
 import { PageCreatedEvent } from "~/events/page-created-event";
 import { useTreeItemMoves } from "~/hooks/use-tree-item-moves";
 import {
@@ -36,6 +35,7 @@ import {
 } from "~/trpc/cache/tree-cache";
 import { getInfiniteSidebarTreeQueryOptions } from "~/trpc/options/sidebar-tree-query-options";
 import { useTRPC } from "~/trpc/react";
+import { useNavigationSidebar } from "./app-sidebar-provider";
 import { DeleteFolderDialog } from "./delete-folder-button";
 
 type AppSidebarTreeActionsProps = {
@@ -66,7 +66,7 @@ export function AppSidebarTreeActions({
   const queryClient = useQueryClient();
   const [isPending, startTransition] = useTransition();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const { isMobile, setOpenMobile } = useSidebar();
+  const { isMobile, openMobile, setOpenMobile } = useNavigationSidebar();
   const treeQueryFilter = trpc.tree.getChildrenPaginated.infiniteQueryFilter();
   const eventEmitter = useAppEventEmitter();
   const moves = useTreeItemMoves(
@@ -317,7 +317,7 @@ export function AppSidebarTreeActions({
               return;
             }
 
-            if (isMobile) {
+            if (isMobile || openMobile) {
               setOpenMobile(false);
             }
 
@@ -332,11 +332,8 @@ export function AppSidebarTreeActions({
     return (
       <Button
         type="button"
-        variant="ghost"
-        className={cn(
-          "h-8 w-full justify-start gap-2 rounded-md border border-sidebar-border/80 border-dashed px-3 text-sidebar-foreground/80 shadow-none hover:bg-transparent hover:text-sidebar-foreground active:bg-transparent active:text-sidebar-foreground",
-          className,
-        )}
+        variant="default"
+        className={cn("h-11 w-full justify-center gap-2", className)}
         onClick={handleCreatePage}
         disabled={showLoading}
       >

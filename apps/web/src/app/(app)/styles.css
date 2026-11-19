@@ -194,32 +194,8 @@ The rest of the components are set by the Tailwind CSS classes, or by our editor
   z-index: 4500 !important;
 }
 
-@container (max-width: 430px) {
-  [data-slot="header-actions"]:has([data-slot="header-subscription-button"])
-    [data-slot="header-search-trigger"] {
-    width: 2rem;
-    max-width: 2rem;
-    justify-content: center;
-  }
-
-  [data-slot="header-actions"]:has([data-slot="header-subscription-button"])
-    [data-slot="header-search-trigger"]
-    [data-slot="header-search-icon"] {
-    display: block;
-  }
-
-  [data-slot="header-actions"]:has([data-slot="header-subscription-button"])
-    [data-slot="header-search-trigger"]
-    [data-slot="header-search-label"],
-  [data-slot="header-actions"]:has([data-slot="header-subscription-button"])
-    [data-slot="header-search-trigger"]
-    [data-slot="header-search-shortcuts"] {
-    display: none;
-  }
-}
-
-/* On mobile... */
-@media (max-width: 768px) {
+/* Shell sheets use the same breakpoint as their providers. */
+@media (max-width: 700px) {
   [data-slot="sidebar"] {
     z-index: 4500;
   }
@@ -228,7 +204,9 @@ The rest of the components are set by the Tailwind CSS classes, or by our editor
   [data-slot="sidebar"][data-mobile="true"] {
     z-index: 4501;
   }
+}
 
+@media (max-width: 768px) {
   /* Hide the editor's AI suggestion menu key shortcut elements */
   div#bn-suggestion-menu > div[role="option"] > div[data-position="right"] {
     display: none;
@@ -246,20 +224,28 @@ The rest of the components are set by the Tailwind CSS classes, or by our editor
   border-radius: 1rem !important;
 }
 
+[data-app-container] {
+  --reading-column-max: 680px;
+  --reading-gutter: 2rem;
+  position: relative;
+  isolation: isolate;
+}
+[data-slot="sidebar-inner"] {
+  overflow: hidden;
+}
 /* Shell geometry is independent of the route's scroll owner and editor session. */
 [data-slot="sidebar-inset"] {
   background: transparent;
 }
-@media (min-width: 768px) {
+@media (min-width: 701px) {
   [data-slot="sidebar-inset"] {
     padding: 16px 16px 16px 0;
   }
 }
-[data-slot="sidebar-inset"] > [data-app-container] {
+[data-slot="sidebar-inset"] [data-app-container] {
   border: 1px solid var(--border);
   border-radius: 24px;
   background: var(--card);
-  padding-bottom: 112px;
 }
 
 [data-slot="sidebar-inner"],
@@ -290,6 +276,154 @@ The rest of the components are set by the Tailwind CSS classes, or by our editor
     color: CanvasText;
     border-color: CanvasText;
     box-shadow: none;
+    backdrop-filter: none;
+  }
+}
+
+[data-app-container]:not(:has([data-virtuoso-scroller]))::after {
+  content: "";
+  display: block;
+  height: 112px;
+  flex-shrink: 0;
+}
+@media (701px <= width <= 1100px) {
+  [data-slot="sidebar"][data-side="right"] > [data-slot="sidebar-gap"] {
+    width: 0;
+    margin: 0;
+  }
+  [data-slot="sidebar"][data-side="right"] > [data-slot="sidebar-container"] {
+    left: 96px;
+    top: 96px;
+    bottom: 16px;
+    width: calc(100vw - 112px);
+    max-width: none;
+    height: auto;
+  }
+  [data-slot="sidebar"][data-side="right"][data-state="collapsed"]
+    > [data-slot="sidebar-container"] {
+    display: none;
+  }
+}
+
+@media (701px <= width <= 1100px) {
+  [data-slot="sidebar"][data-side="left"] > [data-slot="sidebar-gap"] {
+    width: 64px;
+  }
+}
+@media (width <= 700px) {
+  [data-shell-menu] {
+    position: fixed;
+    top: auto;
+    bottom: 12px;
+    left: 12px;
+    right: 12px;
+    width: auto;
+    max-width: none;
+    transform: none;
+    translate: none;
+    max-height: 65dvh;
+    border-radius: 24px;
+  }
+}
+
+@media (1101px <= width <= 1279px) {
+  [data-slot="sidebar"][data-side="right"][data-expanded-width="true"]
+    > [data-slot="sidebar-gap"] {
+    width: 0;
+    margin: 0;
+  }
+}
+
+@media (width <= 700px) {
+  [data-slot="sidebar-inset"] {
+    padding: 92px 12px 12px;
+  }
+}
+
+@media (forced-colors: active) {
+  [data-sidebar="header"] .journl-brand.size-8 .brand-system {
+    mask-image: url("/brand/mark-mono-ink.svg");
+  }
+}
+
+@media (701px <= width <= 1100px) {
+  [data-slot="sidebar"][data-side="left"][data-state="expanded"]
+    > [data-slot="sidebar-container"] {
+    z-index: 3;
+  }
+}
+
+/* Route wrappers own this reading stage; editor internals retain their layout. */
+[data-reading-surface] {
+  max-width: calc(var(--reading-column-max) + 2 * var(--reading-gutter));
+}
+
+[data-slot="sidebar"][data-side="right"][data-state="collapsed"]
+  > [data-slot="sidebar-gap"] {
+  width: 0;
+  margin: 0;
+}
+
+@media (min-width: 701px) {
+  [data-slot="sidebar"][data-side="right"] > [data-slot="sidebar-container"] {
+    top: 96px;
+    height: calc(100dvh - 112px);
+  }
+}
+
+@media (pointer: coarse) {
+  [data-slot="header-actions"] button,
+  [data-sidebar="footer"] button,
+  [data-sidebar="menu-button"] {
+    min-width: 44px;
+    min-height: 44px;
+  }
+}
+
+[data-mobile="true"] [data-shell-navigation-body] [data-sidebar="group"] {
+  padding-inline: 12px;
+}
+
+/* The bounded mobile sheet scrolls as one body, including its account footer. */
+[data-mobile="true"] [data-shell-navigation-body] > [data-sidebar="content"],
+[data-mobile="true"]
+  [data-shell-navigation-body]
+  > [data-sidebar="content"]
+  > [data-sidebar="group"] {
+  display: block;
+  overflow: visible;
+}
+
+@media (forced-colors: active) {
+  [data-sidebar="menu-button"][data-active="true"] {
+    background: Highlight;
+    color: HighlightText !important;
+    forced-color-adjust: none;
+  }
+}
+
+[data-shell-menu] [data-slot="dialog-close"] {
+  width: 44px;
+  height: 44px;
+  top: 12px;
+  right: 12px;
+}
+
+/* The navigation dialog keeps its sidebar slot at every viewport. */
+[data-slot="sidebar"][data-mobile="true"] {
+  z-index: 4501;
+}
+
+[data-slot="sheet-overlay"]:has(~ [data-slot="sidebar"][data-mobile="true"]) {
+  backdrop-filter: blur(4px);
+}
+.opaque-mode
+  [data-slot="sheet-overlay"]:has(~ [data-slot="sidebar"][data-mobile="true"]) {
+  backdrop-filter: none;
+}
+@media (prefers-reduced-transparency: reduce), (prefers-contrast: more),
+  (forced-colors: active) {
+  [data-slot="sheet-overlay"]:has(~ [data-slot="sidebar"][data-mobile="true"]) {
     backdrop-filter: none;
   }
 }

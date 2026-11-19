@@ -23,6 +23,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useId,
   useState,
 } from "react";
 import { TreeEmptyDropTarget } from "~/components/tree-empty-drop-target";
@@ -101,7 +102,6 @@ function useSidebarTreeInteractions(): SidebarTreeInteractions {
   }
   return ctx;
 }
-const APP_SIDEBAR_PAGES_CONTENT_ID = "app-sidebar-pages-content";
 
 function SidebarTreeEmptyDropTarget({
   activeDragId,
@@ -545,6 +545,7 @@ export const AppSidebarPages = ({
   defaultOpen = true,
   owner,
 }: AppSidebarPagesProps) => {
+  const pagesContentId = useId();
   const pathname = usePathname();
   const params = useParams<{ id?: string }>();
   const trpc = useTRPC();
@@ -635,7 +636,7 @@ export const AppSidebarPages = ({
     >
       <div className="group/tree-row relative">
         <CollapsibleTrigger
-          aria-controls={APP_SIDEBAR_PAGES_CONTENT_ID}
+          aria-controls={pagesContentId}
           render={
             <SidebarMenuButton
               isActive={isPagesRoute}
@@ -673,25 +674,9 @@ export const AppSidebarPages = ({
       </div>
 
       <CollapsibleContent
-        id={APP_SIDEBAR_PAGES_CONTENT_ID}
+        id={pagesContentId}
         className="flex h-full min-h-0 flex-col"
       >
-        {state !== "collapsed" ? (
-          <div className="px-2 py-2">
-            <AppSidebarTreeActions
-              kind="root"
-              parentNodeId={null}
-              triggerMode="direct-page"
-              className="group-data-[collapsible=icon]:hidden"
-              onCreateStart={() => {
-                setIsOpen(true);
-              }}
-              onCreateSuccess={() => {
-                setIsOpen(true);
-              }}
-            />
-          </div>
-        ) : null}
         <DndContext {...dndContextProps}>
           <TreeMoveProvider>
             <SidebarTreeInteractionsContext.Provider

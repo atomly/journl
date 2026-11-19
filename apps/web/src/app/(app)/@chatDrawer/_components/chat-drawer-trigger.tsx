@@ -25,6 +25,8 @@ export function ChatDrawerTrigger({
   return (
     <DrawerTrigger asChild>
       <Button
+        aria-label="Toggle Chat Drawer"
+        variant="assistant"
         size="default"
         className={cn(
           "relative h-12 cursor-pointer rounded-full border px-5",

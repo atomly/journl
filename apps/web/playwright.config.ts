@@ -22,7 +22,8 @@ export default defineConfig({
     gracefulShutdown: { signal: "SIGTERM", timeout: 30_000 },
     reuseExistingServer: false,
     timeout: 240_000,
-    url: "http://127.0.0.1:3100/api/auth/get-session",
+    // This route returns 401 without a session and also compiles the shared API.
+    url: "http://127.0.0.1:3100/api/trpc/tree.getChildrenPaginated",
   },
   workers: 1,
 });

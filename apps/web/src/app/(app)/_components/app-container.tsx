@@ -1,8 +1,13 @@
 "use client";
 
-import { useIsMobile } from "@acme/ui/use-mobile";
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useSyncExternalStore } from "react";
+import { useAppPreferences } from "~/components/preferences/app-preferences-provider";
+import {
+  useIsMobile,
+  useShellViewport,
+} from "~/components/ui/use-shell-viewport";
 import { useAppLayout } from "../../_components/app-layout-provider";
+import { useAssistantPanelOpen } from "../@chatSidebar/_components/chat-sidebar-provider";
 
 type AppContainerProps = React.ComponentProps<"div">;
 
@@ -19,9 +24,28 @@ function clearVisualViewportOffsetTop() {
   document.documentElement.style.removeProperty(VISUAL_VIEWPORT_OFFSET_TOP_VAR);
 }
 
+function subscribeOverlayViewport(listener: () => void) {
+  const media = window.matchMedia("(max-width: 1279px)");
+  media.addEventListener("change", listener);
+  return () => media.removeEventListener("change", listener);
+}
+
 export function AppContainer({ children, ...props }: AppContainerProps) {
   const { setScrollElement } = useAppLayout();
   const isMobile = useIsMobile();
+  const assistantOpen = useAssistantPanelOpen();
+  const viewport = useShellViewport();
+  const { preferences } = useAppPreferences();
+  const compactOverlayViewport = useSyncExternalStore(
+    subscribeOverlayViewport,
+    () => window.matchMedia("(max-width: 1279px)").matches,
+    () => false,
+  );
+  const assistantCoversContent =
+    viewport !== "mobile" &&
+    assistantOpen &&
+    (viewport === "tablet" ||
+      (compactOverlayViewport && preferences.chatSidebarWidthRem > 30));
   const containerRef = useRef<HTMLDivElement | null>(null);
 
   const handleRef = useCallback(
@@ -115,7 +139,13 @@ export function AppContainer({ children, ...props }: AppContainerProps) {
   }, [isMobile]);
 
   return (
-    <div data-app-container ref={handleRef} {...props}>
+    <div
+      data-app-container
+      ref={handleRef}
+      inert={assistantCoversContent}
+      aria-hidden={assistantCoversContent ? true : undefined}
+      {...props}
+    >
       {children}
     </div>
   );

@@ -34,11 +34,14 @@ type AppSidebarNavigationProps = {
 
 export function AppSidebarNavigation({ items }: AppSidebarNavigationProps) {
   const pathname = usePathname();
-  const { isMobile, setOpenMobile } = useSidebar();
+  const { isMobile, openMobile, setOpenMobile } = useSidebar();
 
-  const isActive = (url: string) => pathname === url;
+  const isActive = (url: string) =>
+    pathname === url ||
+    (url === "/journal" && pathname.startsWith("/journal/")) ||
+    (url === "/explore" && pathname === "/graph");
   const handleNavigationClick = () => {
-    if (isMobile) {
+    if (isMobile || openMobile) {
       setOpenMobile(false);
     }
   };
@@ -55,7 +58,11 @@ export function AppSidebarNavigation({ items }: AppSidebarNavigationProps) {
               isActive(item.url) && "border-sidebar-primary/50",
             )}
             render={
-              <Link href={item.url} onClick={handleNavigationClick}>
+              <Link
+                href={item.url}
+                aria-current={isActive(item.url) ? "page" : undefined}
+                onClick={handleNavigationClick}
+              >
                 {item.icon && item.icon}
                 <span>{item.title}</span>
               </Link>

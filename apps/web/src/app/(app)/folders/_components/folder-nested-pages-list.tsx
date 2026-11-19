@@ -36,8 +36,8 @@ import {
   useRef,
   useState,
 } from "react";
+import { useNavigationSidebar } from "~/app/(app)/@appSidebar/_components/app-sidebar-provider";
 import { TreeInsertDropBands } from "~/components/tree-insert-drop-bands";
-import { useSidebar } from "~/components/ui/sidebar";
 import { useTreeChildren } from "~/hooks/use-tree-children";
 import { useTreeController } from "~/hooks/use-tree-controller";
 import {
@@ -513,7 +513,7 @@ function DraggableFolderRow({
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const pathname = usePathname();
-  const { isMobile, setOpenMobile } = useSidebar();
+  const { isMobile, openMobile, setOpenMobile } = useNavigationSidebar();
   const [isEditing, setIsEditing] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [draftName, setDraftName] = useState(folder.name);
@@ -805,7 +805,7 @@ function DraggableFolderRow({
                       }}
                       onClick={(event) => {
                         event.stopPropagation();
-                        if (isMobile) {
+                        if (isMobile || openMobile) {
                           setOpenMobile(false);
                         }
                       }}

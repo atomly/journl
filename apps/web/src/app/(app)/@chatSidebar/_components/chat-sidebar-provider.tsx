@@ -1,9 +1,14 @@
 "use client";
 
-import { useIsMobile } from "@acme/ui/use-mobile";
 import * as React from "react";
 import { useAppPreferences } from "~/components/preferences/app-preferences-provider";
 import { SidebarProvider } from "~/components/ui/sidebar";
+import { useIsMobile } from "~/components/ui/use-shell-viewport";
+
+const AssistantPanelOpen = React.createContext(false);
+export function useAssistantPanelOpen() {
+  return React.useContext(AssistantPanelOpen);
+}
 
 type ChatSidebarProviderProps = Omit<
   React.ComponentProps<typeof SidebarProvider>,
@@ -17,20 +22,23 @@ export function ChatSidebarProvider({
   const { preferences, updatePreferences } = useAppPreferences();
   const isMobile = useIsMobile();
   const [open, setOpen] = React.useState(() => preferences.chatSidebarOpen);
+  const openRef = React.useRef(open);
+  openRef.current = open;
 
   const handleOpenChange = React.useCallback(
     (nextOpen: boolean) => {
-      if (open === nextOpen) {
+      if (openRef.current === nextOpen) {
         return;
       }
 
+      openRef.current = nextOpen;
       if (!isMobile) {
         updatePreferences({ chatSidebarOpen: nextOpen });
       }
 
       setOpen(nextOpen);
     },
-    [isMobile, updatePreferences, open],
+    [isMobile, updatePreferences],
   );
 
   const handleResizeEnd = React.useCallback(
@@ -45,14 +53,16 @@ export function ChatSidebarProvider({
   );
 
   return (
-    <SidebarProvider
-      {...props}
-      open={open}
-      onOpenChange={handleOpenChange}
-      initialWidthRem={preferences.chatSidebarWidthRem}
-      onResizeEnd={handleResizeEnd}
-    >
-      {children}
-    </SidebarProvider>
+    <AssistantPanelOpen value={open}>
+      <SidebarProvider
+        {...props}
+        open={open}
+        onOpenChange={handleOpenChange}
+        initialWidthRem={preferences.chatSidebarWidthRem}
+        onResizeEnd={handleResizeEnd}
+      >
+        {children}
+      </SidebarProvider>
+    </AssistantPanelOpen>
   );
 }

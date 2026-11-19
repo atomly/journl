@@ -3,6 +3,7 @@
 import { Button } from "@acme/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@acme/ui/tooltip";
 import { cn } from "@acme/ui/utils";
+import { useEffect, useRef } from "react";
 import { RiSparkling2Fill } from "react-icons/ri";
 import {
   ChatUnreadA11yHint,
@@ -23,6 +24,13 @@ export default function ChatSidebarTrigger({
   const { toggleSidebar, open } = useSidebar();
   const { hasUnreadMessages } = useChatUnread(open);
 
+  const trigger = useRef<HTMLButtonElement>(null);
+  const wasOpen = useRef(open);
+  useEffect(() => {
+    if (wasOpen.current && !open)
+      trigger.current?.focus({ preventScroll: true });
+    wasOpen.current = open;
+  }, [open]);
   if (open) return null;
 
   return (
@@ -30,6 +38,9 @@ export default function ChatSidebarTrigger({
       <TooltipTrigger
         render={
           <Button
+            ref={trigger}
+            aria-label="Toggle Chat Sidebar"
+            variant="assistant"
             data-sidebar="trigger"
             data-slot="sidebar-trigger"
             onClick={toggleSidebar}

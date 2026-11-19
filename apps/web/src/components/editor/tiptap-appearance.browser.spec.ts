@@ -84,16 +84,18 @@ for (const theme of ["light", "dark"]) {
     await page.keyboard.press("Alt+F10");
     await expect(toolbar).toBeVisible();
     const toolbarSkin = await toolbar.evaluate((node) => {
-      const header = document.querySelector("header .border-sidebar-border");
+      const readingSurface = document.querySelector("[data-app-container]");
       const style = getComputedStyle(node);
       return {
         border: style.borderTopColor,
-        header: header ? getComputedStyle(header).borderTopColor : null,
         radius: Number.parseFloat(style.borderTopLeftRadius),
+        readingSurface: readingSurface
+          ? getComputedStyle(readingSurface).borderTopColor
+          : null,
       };
     });
     expect(toolbarSkin.radius).toBeGreaterThan(10);
-    expect(toolbarSkin.border).toBe(toolbarSkin.header);
+    expect(toolbarSkin.border).toBe(toolbarSkin.readingSurface);
     await page.keyboard.press("Escape");
     const paragraph = editor
       .locator('[data-better-editor-body="paragraph"]')

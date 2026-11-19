@@ -1,6 +1,7 @@
 import { Separator } from "@acme/ui/separator";
 import { Skeleton } from "@acme/ui/skeleton";
 import { Calendar, Compass } from "lucide-react";
+import Image from "next/image";
 import { type ComponentProps, Suspense } from "react";
 import { getUser } from "~/auth/server";
 import { Brand } from "~/components/brand";
@@ -23,6 +24,8 @@ import { DynamicAppSidebarDevtools } from "./_components/app-sidebar-devtools.dy
 import { AppSidebarNavigation } from "./_components/app-sidebar-main";
 import { AppSidebarPages } from "./_components/app-sidebar-pages";
 import { AppSidebarPagesSkeleton } from "./_components/app-sidebar-pages-skeleton";
+import { NavigationSidebarClose } from "./_components/app-sidebar-provider";
+import { AppSidebarTreeActions } from "./_components/app-sidebar-tree-actions";
 import { AppSidebarUser } from "./_components/app-sidebar-user";
 import { AppSidebarUserSkeleton } from "./_components/app-sidebar-user-skeleton";
 
@@ -58,13 +61,41 @@ export default async function AppSidebar() {
       maxWidth={`${APP_SIDEBAR_WIDTH_REM_MAX}rem`}
     >
       <SidebarHeader>
+        <NavigationSidebarClose />
+        <span className="journl-brand mx-auto hidden size-8 group-data-[collapsible=icon]:block">
+          <Image
+            unoptimized
+            width={32}
+            height={32}
+            className="brand-light"
+            src="/brand/mark-light.svg"
+            alt="Journl"
+          />
+          <Image
+            unoptimized
+            width={32}
+            height={32}
+            className="brand-dark hidden"
+            src="/brand/mark-dark.svg"
+            alt="Journl"
+          />
+          <span
+            className="brand-system hidden"
+            role="img"
+            aria-label="Journl"
+          />
+        </span>
         <div className="px-3 py-4 group-data-[collapsible=icon]:hidden">
           <Brand className="h-10" />
         </div>
-        <Suspense fallback={<AppSidebarUserSkeleton />}>
-          <AppSidebarUser />
-        </Suspense>
       </SidebarHeader>
+      <div className="px-3 pb-4 group-data-[collapsible=icon]:hidden">
+        <AppSidebarTreeActions
+          kind="root"
+          parentNodeId={null}
+          triggerMode="direct-page"
+        />
+      </div>
       <Separator />
       <SidebarContent className="flex flex-1 flex-col overflow-x-clip">
         <SidebarGroup className="flex min-h-0 flex-1 flex-col gap-y-1">
@@ -86,6 +117,11 @@ export default async function AppSidebar() {
           </SidebarFooter>
         </>
       )}
+      <SidebarFooter>
+        <Suspense fallback={<AppSidebarUserSkeleton />}>
+          <AppSidebarUser />
+        </Suspense>
+      </SidebarFooter>
     </Sidebar>
   );
 }

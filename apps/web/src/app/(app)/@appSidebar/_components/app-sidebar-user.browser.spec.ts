@@ -15,7 +15,7 @@ test("shipped account dropdown hosts the shipped theme control and signs out", a
         .first()
         .click();
     await page
-      .locator('[data-sidebar="header"] button[aria-haspopup="menu"]')
+      .locator('[data-sidebar="footer"] button[aria-haspopup="menu"]')
       .click();
     await expect(
       page.getByRole("menuitem", { exact: true, name: "Settings" }),
@@ -35,9 +35,15 @@ test("shipped account dropdown hosts the shipped theme control and signs out", a
     const sidebarDivider = document.querySelector(
       '[data-slot="sidebar"] [data-slot="separator"]',
     );
+    const probe = document.createElement("span");
+    probe.style.borderTop = "1px solid var(--glass-edge)";
+    document.body.append(probe);
+    const glassEdge = getComputedStyle(probe).borderTopColor;
+    probe.remove();
     return {
       border: getComputedStyle(element).borderTopColor,
       divider: divider ? getComputedStyle(divider).backgroundColor : null,
+      glassEdge,
       header: header ? getComputedStyle(header).borderTopColor : null,
       sidebarDivider: sidebarDivider
         ? getComputedStyle(sidebarDivider).backgroundColor
@@ -46,7 +52,8 @@ test("shipped account dropdown hosts the shipped theme control and signs out", a
     };
   });
   expect(colors.width).toBe("1px");
-  expect(colors.border).toBe(colors.header);
+  expect(colors.header).toBe(colors.glassEdge);
+  expect(colors.border).toBe(colors.sidebarDivider);
   expect(colors.divider).toBe(colors.sidebarDivider);
   await page.getByRole("tab", { exact: true, name: "Light" }).click();
   await expect(page.locator("html")).toHaveClass(/\blight\b/);
@@ -109,7 +116,7 @@ test("shipped Appearance card and account dropdown share the persisted theme", a
   if (info.project.name === "mobile-webkit")
     await page.getByRole("button", { name: "Toggle Sidebar" }).first().click();
   await page
-    .locator('[data-sidebar="header"] button[aria-haspopup="menu"]')
+    .locator('[data-sidebar="footer"] button[aria-haspopup="menu"]')
     .click();
   await expect(
     page.getByRole("tab", { exact: true, name: "Light" }),
@@ -144,7 +151,7 @@ test("shipped account dropdown works in the collapsed desktop sidebar", async ({
   await page.keyboard.press("Escape");
   await page.getByRole("button", { exact: true, name: "Search notes" }).click();
   const search = page.getByRole("dialog", {
-    name: "Search pages and journal entries",
+    name: "Search your notebook",
   });
   await expect(search).toBeVisible();
   await page.keyboard.press("Escape");

@@ -8,6 +8,9 @@ import { SidebarProvider } from "~/components/ui/sidebar";
 
 const fixture = vi.hoisted(() => ({ mobile: false, move: vi.fn() }));
 vi.mock("@acme/ui/use-mobile", () => ({ useIsMobile: () => fixture.mobile }));
+vi.mock("~/components/ui/use-shell-viewport", () => ({
+  useIsMobile: () => fixture.mobile,
+}));
 vi.mock("next/navigation", () => ({
   useParams: () => ({}),
   usePathname: () => "/journal",

@@ -1,4 +1,5 @@
 "use client";
+import { Alert, AlertDescription, AlertTitle } from "@acme/ui/alert";
 import { Badge } from "@acme/ui/badge";
 import { Button } from "@acme/ui/button";
 import {
@@ -11,17 +12,21 @@ import {
 } from "@acme/ui/command";
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
 } from "@acme/ui/dialog";
+import { Field, FieldGroup, FieldLabel } from "@acme/ui/field";
 import { ScrollArea } from "@acme/ui/scroll-area";
 import { Skeleton } from "@acme/ui/skeleton";
-import { useIsMobile } from "@acme/ui/use-mobile";
+import { Surface } from "@acme/ui/surface";
+
 import { useQuery } from "@tanstack/react-query";
-import { X } from "lucide-react";
+
+import { XIcon } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -50,7 +55,6 @@ export function HeaderSearchButton({
   debounceTime = DEFAULT_DEBOUNCE_TIME,
   ...rest
 }: HeaderSearchButtonProps) {
-  const isMobile = useIsMobile();
   const [isOpen, setIsOpen] = useState(false);
   const [query, setQuery] = useState("");
   const router = useRouter();
@@ -78,6 +82,7 @@ export function HeaderSearchButton({
     data: notes,
     isLoading,
     isError,
+    refetch,
   } = useQuery({
     ...trpc.notes.getSimilarNotes.queryOptions({
       limit,
@@ -95,39 +100,58 @@ export function HeaderSearchButton({
       />
       <DialogContent
         id={HEADER_SEARCH_DIALOG_CONTENT_ID}
-        className="gap-0 overflow-hidden rounded-2xl border-4 border-muted bg-sidebar p-0"
+        className="max-w-[calc(100%-24px)] gap-0 overflow-hidden rounded-3xl border bg-card p-0 sm:max-w-[560px]"
         data-state="open"
         showCloseButton={false}
       >
         <Command className="bg-transparent p-0" shouldFilter={false}>
-          <DialogHeader className="px-2 pt-2 [&_[data-slot=command-input-wrapper]]:p-0 [&_[data-slot=input-group]]:h-10! [&_[data-slot=input-group]]:border-2 [&_[data-slot=input-group]]:bg-muted">
-            <DialogTitle className="sr-only">
-              Search pages and journal entries
-            </DialogTitle>
-            <CommandInput
-              className="h-full min-w-0 flex-1 border-0 bg-transparent pr-2 text-md outline-none placeholder:text-accent-foreground/80 focus-visible:ring-0 disabled:cursor-not-allowed disabled:opacity-50"
-              placeholder="Search notes..."
-              autoComplete="off"
-              autoCorrect="off"
-              spellCheck={false}
-              autoFocus
-              onValueChange={(value) => setQuery(value)}
-            />
-          </DialogHeader>
+          <Surface
+            material="glass"
+            className="flex min-h-[70px] items-center rounded-none border-x-0 border-t-0 px-4 py-4 pr-16 min-[701px]:min-h-[78px] min-[701px]:px-6 min-[701px]:py-6 min-[701px]:pr-16"
+          >
+            <DialogHeader className="text-left">
+              <DialogTitle className="text-[22px] leading-[1.2] min-[701px]:text-2xl">
+                Search your notebook
+              </DialogTitle>
+            </DialogHeader>
+          </Surface>
+          <FieldGroup className="px-4 pt-6 min-[701px]:px-6 [&_[data-slot=command-input-wrapper]]:p-0 [&_[data-slot=input-group]]:h-12!">
+            <Field>
+              <FieldLabel htmlFor="notebook-search">Search notes</FieldLabel>
+              <CommandInput
+                value={query}
+                id="notebook-search"
+                className="h-12 min-w-0 flex-1"
+                placeholder="Search notes..."
+                autoComplete="off"
+                autoCorrect="off"
+                spellCheck={false}
+                autoFocus
+                onValueChange={(value) => setQuery(value)}
+              />
+            </Field>
+          </FieldGroup>
           <ScrollArea>
-            <CommandList className="p-4">
-              <CommandEmpty className="flex h-full min-h-36 flex-col items-center justify-center py-2 text-center">
+            <CommandList className="p-4 min-[701px]:p-6">
+              <CommandEmpty className="flex min-h-10 flex-col items-start justify-start py-2 text-left">
                 {isLoading ? (
-                  <div className="flex w-full flex-col gap-2">
-                    <Skeleton className="h-10 w-full" />
-                    <Skeleton className="h-10 w-full" />
-                    <Skeleton className="h-10 w-full" />
+                  <div className="flex w-full flex-col gap-4">
+                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-4 w-[88%]" />
+                    <Skeleton className="h-4 w-[64%]" />
                   </div>
+                ) : isError ? (
+                  <Alert variant="destructive">
+                    <AlertTitle>Search couldn’t load</AlertTitle>
+                    <AlertDescription>
+                      Your notes are unchanged. Try again when your connection
+                      is available.
+                    </AlertDescription>
+                    <Button onClick={() => void refetch()}>Try again</Button>
+                  </Alert>
                 ) : !notes ? (
-                  <span className="text-accent-foreground/80 text-sm">
-                    {isError
-                      ? "Something went wrong. Please try again later."
-                      : "Write something to search."}
+                  <span className="text-muted-foreground text-sm">
+                    Write something to search.
                   </span>
                 ) : (
                   <span className="text-accent-foreground/80 text-sm">
@@ -198,40 +222,28 @@ export function HeaderSearchButton({
             </CommandList>
           </ScrollArea>
         </Command>
-        <DialogFooter className="mx-0 mb-0 flex flex-row items-center rounded-none bg-muted p-1">
-          {isMobile ? (
+        <DialogClose
+          aria-label="Close search"
+          render={
             <Button
-              className="ms-auto bg-background py-1 text-background-foreground text-sm hover:bg-background/80 hover:text-background-foreground"
-              onClick={() => setIsOpen(false)}
-            >
-              Close <X className="size-3" />
-            </Button>
-          ) : (
-            <>
-              <div className="flex items-center justify-center gap-x-1.5 py-1">
-                <kbd className="flex h-5 select-none items-center rounded border bg-background px-1.5 font-medium font-mono text-accent-foreground/80 text-lg">
-                  ⏎
-                </kbd>
-                <span className="text-accent-foreground/80 text-sm">
-                  Go to your note
-                </span>
-              </div>
-              <div className="flex-1" />
-              <div className="flex items-center justify-center gap-x-1.5 py-1">
-                <span className="text-accent-foreground/80 text-sm">
-                  To navigate
-                </span>
-                <div className="flex items-center gap-x-0.5">
-                  <kbd className="flex h-5 select-none items-center rounded border bg-background px-1.5 font-medium font-mono text-accent-foreground/80 text-lg">
-                    ↑
-                  </kbd>
-                  <kbd className="flex h-5 select-none items-center rounded border bg-background px-1.5 font-medium font-mono text-accent-foreground/80 text-lg">
-                    ↓
-                  </kbd>
-                </div>
-              </div>
-            </>
-          )}
+              variant="outline"
+              size="icon"
+              className="absolute top-2 right-3 size-13 rounded-full min-[701px]:top-3 min-[701px]:right-5"
+            />
+          }
+        >
+          <XIcon />
+        </DialogClose>
+        <DialogFooter className="m-0 flex flex-row items-center justify-between border-t p-4">
+          <span className="hidden text-muted-foreground text-xs min-[701px]:inline">
+            ↑ ↓ navigate · Enter opens your note
+          </span>
+          <Button
+            className="w-full min-[701px]:ml-auto min-[701px]:w-auto"
+            onClick={() => setIsOpen(false)}
+          >
+            Close
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

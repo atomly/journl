@@ -1,9 +1,32 @@
 "use client";
 
-import { useIsMobile } from "@acme/ui/use-mobile";
 import * as React from "react";
 import { useAppPreferences } from "~/components/preferences/app-preferences-provider";
-import { SidebarProvider } from "~/components/ui/sidebar";
+import {
+  SidebarProvider,
+  SidebarTrigger,
+  useSidebar,
+} from "~/components/ui/sidebar";
+import {
+  useIsMobile,
+  useShellViewport,
+} from "~/components/ui/use-shell-viewport";
+
+const NavigationSidebar = React.createContext<ReturnType<
+  typeof useSidebar
+> | null>(null);
+function NavigationScope({ children }: { children: React.ReactNode }) {
+  const sidebar = useSidebar();
+  return <NavigationSidebar value={sidebar}>{children}</NavigationSidebar>;
+}
+export function useNavigationSidebar() {
+  const sidebar = React.useContext(NavigationSidebar);
+  if (!sidebar)
+    throw new Error(
+      "Navigation sidebar is unavailable outside AppSidebarProvider",
+    );
+  return sidebar;
+}
 
 type AppSidebarProviderProps = Omit<
   React.ComponentProps<typeof SidebarProvider>,
@@ -16,21 +39,30 @@ export function AppSidebarProvider({
 }: AppSidebarProviderProps) {
   const { preferences, updatePreferences } = useAppPreferences();
   const isMobile = useIsMobile();
+  const viewport = useShellViewport();
+  const [tabletOpen, setTabletOpen] = React.useState(false);
   const [open, setOpen] = React.useState(() => preferences.appSidebarOpen);
+  const openRef = React.useRef(open);
+  openRef.current = open;
 
   const handleOpenChange = React.useCallback(
     (nextOpen: boolean) => {
-      if (open === nextOpen) {
+      if (viewport === "tablet") {
+        setTabletOpen(nextOpen);
+        return;
+      }
+      if (openRef.current === nextOpen) {
         return;
       }
 
+      openRef.current = nextOpen;
       if (!isMobile) {
         updatePreferences({ appSidebarOpen: nextOpen });
       }
 
       setOpen(nextOpen);
     },
-    [open, isMobile, updatePreferences],
+    [isMobile, updatePreferences, viewport],
   );
 
   const handleResizeEnd = React.useCallback(
@@ -47,12 +79,26 @@ export function AppSidebarProvider({
   return (
     <SidebarProvider
       {...props}
-      open={open}
+      open={viewport === "tablet" ? tabletOpen : open}
       onOpenChange={handleOpenChange}
       initialWidthRem={preferences.appSidebarWidthRem}
       onResizeEnd={handleResizeEnd}
     >
-      {children}
+      <NavigationScope>{children}</NavigationScope>
     </SidebarProvider>
+  );
+}
+
+export function NavigationSidebarClose() {
+  return (
+    <SidebarTrigger
+      aria-label="Close navigation"
+      className="hidden group-data-[collapsible=icon]:hidden min-[701px]:max-[1101px]:inline-flex"
+      onClick={() =>
+        document
+          .querySelector<HTMLButtonElement>('header [data-sidebar="trigger"]')
+          ?.focus()
+      }
+    />
   );
 }

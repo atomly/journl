@@ -94,7 +94,7 @@ test("clicking the empty page canvas starts the first line without stealing titl
   });
   await search.click();
   const dialog = page.getByRole("dialog", {
-    name: "Search pages and journal entries",
+    name: "Search your notebook",
   });
   await expect(dialog).toBeVisible();
   await expect(dialog.getByRole("combobox")).toBeFocused();

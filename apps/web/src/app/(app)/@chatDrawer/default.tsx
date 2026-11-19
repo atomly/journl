@@ -18,7 +18,7 @@ export default function ChatDrawer() {
     <Drawer>
       <ChatDrawerTrigger
         aria-controls={CHAT_DRAWER_CONTENT_ID}
-        className="fixed right-[calc(1rem+env(safe-area-inset-right,0px))] bottom-[calc(1rem+env(safe-area-inset-bottom,0px))] z-3 flex min-[701px]:hidden"
+        className="absolute right-[calc(17px+env(safe-area-inset-right,0px))] bottom-[calc(17px+env(safe-area-inset-bottom,0px))] z-3 flex min-[701px]:hidden"
       />
       <DrawerContent
         id={CHAT_DRAWER_CONTENT_ID}
@@ -34,7 +34,7 @@ export default function ChatDrawer() {
             aria-label="Close assistant"
             className="flex size-11 items-center justify-center rounded-xl"
           >
-            <X />
+            <X className="size-5" />
           </DrawerClose>
         </Surface>
         <DrawerDivider />

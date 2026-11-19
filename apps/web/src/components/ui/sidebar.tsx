@@ -22,7 +22,7 @@ import { cn } from "@acme/ui/utils";
 import { mergeProps } from "@base-ui/react/merge-props";
 import { useRender } from "@base-ui/react/use-render";
 import { cva, type VariantProps } from "class-variance-authority";
-import { PanelLeftIcon, XIcon } from "lucide-react";
+import { MenuIcon, XIcon } from "lucide-react";
 import * as React from "react";
 import { createPortal } from "react-dom";
 import { useIsMobile, useShellReady } from "./use-shell-viewport";
@@ -764,14 +764,14 @@ function SidebarTrigger({
       disabled={!ready}
       variant="ghost"
       size="icon"
-      className={cn("size-11", className)}
+      className={cn("size-11 rounded-full", className)}
       onClick={(event) => {
         onClick?.(event);
         toggleSidebar();
       }}
       {...props}
     >
-      <PanelLeftIcon />
+      <MenuIcon className="size-5" />
       <span className="sr-only">Toggle Sidebar</span>
     </Button>
   );
@@ -988,7 +988,7 @@ function SidebarMenuItem({ className, ...props }: React.ComponentProps<"li">) {
 }
 
 const sidebarMenuButtonVariants = cva(
-  "peer/menu-button flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm outline-hidden ring-sidebar-ring transition-[width,height,padding] hover:bg-muted/60 hover:text-foreground focus-visible:ring-2 active:bg-muted/60 active:text-foreground disabled:pointer-events-none disabled:opacity-50 group-has-data-[sidebar=menu-action]/menu-item:pr-8 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[active=true]:bg-sidebar-accent data-[active=true]:font-medium data-[active=true]:text-sidebar-accent-foreground data-[popup-open]:hover:bg-muted/60 data-[popup-open]:hover:text-foreground group-data-[collapsible=icon]:size-8! group-data-[collapsible=icon]:p-2! [&>span:last-child]:truncate [&>svg]:size-3.5 [&>svg]:shrink-0",
+  "peer/menu-button flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm outline-hidden ring-sidebar-ring transition-[width,height,padding] hover:bg-muted/60 hover:text-foreground focus-visible:ring-2 active:bg-muted/60 active:text-foreground disabled:pointer-events-none disabled:opacity-50 group-has-data-[sidebar=menu-action]/menu-item:pr-8 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[active=true]:bg-sidebar-accent data-[active=true]:font-semibold data-[active=true]:text-sidebar-accent-foreground data-[active=true]:hover:bg-sidebar-accent data-[active=true]:hover:text-sidebar-accent-foreground data-[active=true]:focus-visible:bg-sidebar-accent data-[active=true]:focus-visible:text-sidebar-accent-foreground data-[popup-open]:hover:bg-muted/60 data-[popup-open]:hover:text-foreground group-data-[collapsible=icon]:size-8! group-data-[collapsible=icon]:p-2! [&>span:last-child]:truncate [&>svg]:size-3.5 [&>svg]:shrink-0",
   {
     defaultVariants: {
       size: "default",
@@ -1203,7 +1203,7 @@ function SidebarMenuSubButton({
       {
         className: cn(
           "flex h-7 min-w-0 -translate-x-px items-center gap-2 overflow-hidden rounded-md px-2 text-sidebar-foreground outline-hidden ring-sidebar-ring hover:bg-muted/60 hover:text-foreground focus-visible:ring-2 active:bg-muted/60 active:text-foreground disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 [&>span:last-child]:truncate [&>svg]:size-3.5 [&>svg]:shrink-0 [&>svg]:text-current",
-          "data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground",
+          "data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground data-[active=true]:hover:bg-sidebar-accent data-[active=true]:hover:text-sidebar-accent-foreground data-[active=true]:focus-visible:bg-sidebar-accent data-[active=true]:focus-visible:text-sidebar-accent-foreground",
           size === "sm" && "text-xs",
           size === "md" && "text-sm",
           "group-data-[collapsible=icon]:hidden",

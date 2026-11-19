@@ -31,8 +31,10 @@ export function AssistantIdentity() {
   );
   return (
     <div className="min-w-0 flex-1">
-      <h2 className="font-semibold text-2xl">Ask Journl</h2>
-      <p className="truncate text-muted-foreground text-xs">
+      <h2 className="font-semibold text-2xl leading-[1.2] min-[701px]:text-[28px]">
+        Ask Journl
+      </h2>
+      <p className="truncate text-muted-foreground text-xs leading-[1.6]">
         {context} · AI assistant
       </p>
     </div>
@@ -54,7 +56,11 @@ export function ChatPanelChrome() {
           updatePreferences({ chatSidebarWidthRem: expanded ? 30 : 44 })
         }
       >
-        {expanded ? <Minimize2 /> : <Maximize2 />}
+        {expanded ? (
+          <Minimize2 className="size-5" />
+        ) : (
+          <Maximize2 className="size-5" />
+        )}
       </Button>
       <Button
         variant="ghost"
@@ -62,7 +68,7 @@ export function ChatPanelChrome() {
         aria-label="Close assistant"
         onClick={() => setOpen(false)}
       >
-        <X />
+        <X className="size-5" />
       </Button>
     </div>
   );

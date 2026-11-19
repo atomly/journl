@@ -289,7 +289,7 @@ test("search recovery retains its query and restores trigger focus", async ({
   );
   await expect(
     page.getByRole("dialog").locator('[data-slot="input-group"]'),
-  ).toHaveCSS("height", "48px");
+  ).toHaveCSS("height", "50px");
   await page.getByPlaceholder("Search notes...").fill("browser note");
   const retry = page.getByRole("button", { exact: true, name: "Try again" });
   await expect(retry).toBeVisible();

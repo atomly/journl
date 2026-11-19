@@ -336,7 +336,7 @@ The rest of the components are set by the Tailwind CSS classes, or by our editor
 
 @media (width <= 700px) {
   [data-slot="sidebar-inset"] {
-    padding: 92px 12px 12px;
+    padding: 88px 12px 12px;
   }
 }
 
@@ -426,4 +426,173 @@ The rest of the components are set by the Tailwind CSS classes, or by our editor
   [data-slot="sheet-overlay"]:has(~ [data-slot="sidebar"][data-mobile="true"]) {
     backdrop-filter: none;
   }
+}
+
+/* A hidden mobile header releases its floating space. Matching inner padding
+   keeps the document's normal-flow position and scrollTop unchanged. Sticky
+   controls use the newly available top edge instead of an empty ambient band. */
+@media (width <= 700px) {
+  /* The shell compensates header geometry; native anchoring must not apply it twice. */
+  [data-app-container] {
+    overflow-anchor: none;
+  }
+  [data-slot="sidebar-inset"]:has(> header[data-hidden="true"]):not(
+    :has(> header :focus-visible)
+  ) {
+    padding-top: 12px;
+  }
+  [data-slot="sidebar-inset"]:has(> header[data-hidden="true"]):not(
+      :has(> header :focus-visible)
+    )
+    [data-app-container] {
+    padding-top: 76px;
+    --app-sticky-scroll-compensation: -76px;
+  }
+  [data-shell-menu] [data-slot="dialog-close"] {
+    width: 52px;
+    height: 52px;
+    top: 8px;
+    right: 12px;
+    border: 2px solid var(--ring);
+    border-radius: 999px;
+  }
+}
+
+/* Search is a paper reading surface: flat separator rows and canvas fields. */
+[data-shell-search] [data-slot="input-group"] {
+  height: 50px !important;
+  border: 1px solid var(--input);
+  border-radius: 12px !important;
+  background: var(--background);
+}
+[data-shell-search] [data-slot="command-input"] {
+  padding-inline: 16px;
+}
+[data-shell-search] [data-slot="input-group-addon"] {
+  display: none;
+}
+[data-shell-search] [data-slot="command-list"] {
+  padding-top: 20px;
+  padding-bottom: 40px;
+}
+[data-shell-search] [cmdk-item] {
+  margin: 0;
+  padding: 16px 0;
+  border-top: 1px solid var(--border);
+  border-radius: 0 !important;
+  background: transparent;
+}
+[data-shell-search] [cmdk-group-items] > a:last-child [cmdk-item] {
+  border-bottom: 1px solid var(--border);
+}
+[data-shell-search] [cmdk-item] > svg {
+  display: none;
+}
+[data-shell-search]
+  [data-keyboard-navigation="true"]
+  [cmdk-item][data-selected="true"] {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+[data-shell-search] [data-slot="dialog-close"] {
+  border: 2px solid var(--ring);
+}
+[data-slot="dialog-overlay"]:has(
+  ~ :is([data-shell-search], [data-shell-menu])
+) {
+  background: rgb(5 15 32 / 45%);
+  backdrop-filter: blur(3px);
+}
+[data-shell-route-popover] {
+  background:
+    linear-gradient(135deg, var(--glass-glint), transparent 52%), var(--sidebar);
+  color: var(--foreground);
+  border-color: var(--glass-edge);
+  box-shadow: var(--depth);
+  backdrop-filter: blur(24px);
+}
+@media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
+  [data-slot="dialog-overlay"]:has(
+    ~ :is([data-shell-search], [data-shell-menu])
+  ),
+  [data-shell-route-popover] {
+    backdrop-filter: none;
+  }
+  [data-shell-route-popover] {
+    background: var(--sidebar);
+  }
+}
+.opaque-mode [data-shell-route-popover] {
+  background: var(--sidebar);
+  backdrop-filter: none;
+}
+@media (forced-colors: active) {
+  [data-shell-route-popover],
+  [data-shell-search] [data-slot="input-group"] {
+    background: Canvas;
+    color: CanvasText;
+    border-color: CanvasText;
+    box-shadow: none;
+    backdrop-filter: none;
+  }
+  [data-shell-search]
+    [data-keyboard-navigation="true"]
+    [cmdk-item][data-selected="true"] {
+    outline-color: Highlight;
+  }
+  [data-sidebar="menu-button"][data-active="true"] {
+    background: Highlight !important;
+    color: HighlightText !important;
+    forced-color-adjust: none;
+  }
+}
+
+/* Tooltips also set data-popup-open on navigation links. Their hover rules
+   must not replace the selected pastel fill or its dark ink. */
+[data-sidebar="menu-button"][data-active="true"] {
+  background: var(--sidebar-accent);
+  color: var(--sidebar-accent-foreground);
+}
+.opaque-mode
+  [data-slot="dialog-overlay"]:has(
+    ~ :is([data-shell-search], [data-shell-menu])
+  ) {
+  backdrop-filter: none;
+}
+@media (forced-colors: active) {
+  [data-slot="dialog-overlay"]:has(
+    ~ :is([data-shell-search], [data-shell-menu])
+  ) {
+    backdrop-filter: none;
+  }
+}
+
+/* Shell account composition retains the native account menu and real identity. */
+.journl-navigation-account .text-sm {
+  font-size: 13px;
+}
+.journl-navigation-account .text-xs,
+.journl-navigation-account
+  :is([data-slot="avatar"], [data-slot="avatar-fallback"]) {
+  font-size: 11px;
+}
+.journl-navigation-account .font-medium {
+  font-weight: 400;
+}
+.journl-navigation-account [data-slot="avatar"]::after {
+  border: 0;
+}
+.journl-navigation-account:is(:hover, [data-popup-open])
+  :is(.text-foreground, .text-muted-foreground):not([data-slot]) {
+  color: var(--pastel-foreground);
+}
+[data-navigation-account-wrapper]:has(
+    > .journl-navigation-account:is(:hover, [data-popup-open])
+  )
+  > svg {
+  color: var(--pastel-foreground);
+}
+
+[data-slot="header-actions"] [data-slot="button"] {
+  border-radius: 999px;
 }

@@ -640,10 +640,7 @@ export const AppSidebarPages = ({
           render={
             <SidebarMenuButton
               isActive={isPagesRoute}
-              className={cn(
-                "min-h-8 border border-transparent pr-2 text-foreground!",
-                isPagesRoute && "border-sidebar-primary/50",
-              )}
+              className="h-11 min-h-11 gap-2 rounded-[12px] border-0 pr-2 pl-4 [&>svg]:size-5"
               tooltip="Library"
               onClick={handlePagesClick}
             >

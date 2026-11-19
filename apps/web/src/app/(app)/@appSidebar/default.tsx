@@ -85,21 +85,19 @@ export default async function AppSidebar() {
             aria-label="Journl"
           />
         </span>
-        <div className="px-3 py-4 group-data-[collapsible=icon]:hidden">
-          <Brand className="h-10" />
+        <div className="px-3 pt-6 pb-[21px] group-data-[collapsible=icon]:hidden">
+          <Brand className="relative -top-0.5 h-10" />
         </div>
       </SidebarHeader>
-      <div className="px-3 pb-4 group-data-[collapsible=icon]:hidden">
+      <div className="px-3 pb-4 group-data-[collapsible=icon]:hidden [&>button]:h-11 [&>button]:min-h-11">
         <AppSidebarTreeActions
           kind="root"
           parentNodeId={null}
           triggerMode="direct-page"
         />
       </div>
-      <Separator />
       <SidebarContent className="flex flex-1 flex-col overflow-x-clip">
-        <SidebarGroup className="flex min-h-0 flex-1 flex-col gap-y-1">
-          <SidebarGroupLabel>Navigation</SidebarGroupLabel>
+        <SidebarGroup className="flex min-h-0 flex-1 flex-col gap-y-2 px-3">
           <AppSidebarNavigation items={navigationItems} />
           <Suspense fallback={<AppSidebarPagesSkeleton />}>
             <AppSidebarPages key={owner.id} owner={owner.id} />
@@ -117,7 +115,7 @@ export default async function AppSidebar() {
           </SidebarFooter>
         </>
       )}
-      <SidebarFooter>
+      <SidebarFooter className="px-3 pb-5">
         <Suspense fallback={<AppSidebarUserSkeleton />}>
           <AppSidebarUser />
         </Suspense>

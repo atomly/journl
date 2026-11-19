@@ -45,6 +45,33 @@ for (const theme of ["light", "dark"])
           dialog.getByText("Controlled result: Browser note 25"),
         ).toBeVisible();
         await expect(dialog.locator('[data-slot="skeleton"]')).toHaveCount(0);
+        const field = dialog.locator('[data-slot="input-group"]');
+        await expect(field).toHaveCSS(
+          "background-color",
+          theme === "light" ? "rgb(233, 239, 251)" : "rgb(16, 27, 48)",
+        );
+        await expect(field).toHaveCSS("border-radius", "12px");
+        await expect(dialog).toHaveCSS(
+          "border-top-left-radius",
+          viewport.width <= 700 ? "24px" : "20px",
+        );
+        await expect(dialog.locator("[cmdk-item]").first()).toHaveCSS(
+          "border-radius",
+          "0px",
+        );
+        await expect(dialog.locator("[cmdk-item]").first()).toHaveCSS(
+          "background-color",
+          "rgba(0, 0, 0, 0)",
+        );
+        await expect(dialog.getByText("Results", { exact: true })).toHaveCount(
+          0,
+        );
+        await expect(
+          page
+            .locator('[data-slot="dialog-overlay"]')
+            .filter({ visible: true }),
+        ).toHaveCSS("background-color", "rgba(5, 15, 32, 0.45)");
+
         const contrast = await dialog
           .locator("[cmdk-item] .line-clamp-2")
           .first()

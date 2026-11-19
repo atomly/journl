@@ -17,7 +17,7 @@ import {
 } from "@acme/ui/popover";
 import { Surface } from "@acme/ui/surface";
 import { useQuery } from "@tanstack/react-query";
-import { ChevronDown, MoreHorizontal } from "lucide-react";
+import { ChevronDown, MoreHorizontal, XIcon } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState, useSyncExternalStore } from "react";
@@ -77,10 +77,29 @@ function RouteDisclosure({
       <PopoverTrigger render={trigger} aria-label={label} disabled={!ready} />
       <PopoverContent
         align={align}
-        className="max-h-[min(65dvh,var(--available-height,65dvh))] overflow-auto rounded-2xl p-4"
+        data-shell-route-popover
+        className="max-h-[min(65dvh,var(--available-height,65dvh))] gap-0 overflow-hidden rounded-[20px] p-0"
       >
-        <PopoverTitle>{title}</PopoverTitle>
-        {children}
+        <Surface
+          material="glass"
+          className="flex min-h-[70px] shrink-0 items-center justify-between gap-3 rounded-none border-x-0 border-t-0 px-4 py-3"
+        >
+          <PopoverTitle className="font-semibold text-base">
+            {title}
+          </PopoverTitle>
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label="Close route menu"
+            className="size-11 shrink-0 [&>svg]:size-5"
+            onClick={() => onOpenChange(false)}
+          >
+            <XIcon />
+          </Button>
+        </Surface>
+        <div className="flex min-h-0 flex-col gap-1 overflow-auto p-4 [&>button]:min-h-11">
+          {children}
+        </div>
       </PopoverContent>
     </Popover>
   );
@@ -201,7 +220,7 @@ export function HeaderRouteActions({
     </>
   );
   return (
-    <>
+    <div className="flex min-w-0 items-center gap-2">
       <RouteDisclosure
         open={open}
         onOpenChange={setOpen}
@@ -257,10 +276,10 @@ export function HeaderRouteActions({
           onOpenChange={setActionsOpen}
           label="Route actions"
           title="Route actions"
-          align="end"
+          align="start"
           trigger={
-            <Button variant="ghost" size="icon">
-              <MoreHorizontal />
+            <Button variant="ghost" size="icon" className="rounded-full">
+              <MoreHorizontal className="size-5" />
             </Button>
           }
         >
@@ -279,6 +298,6 @@ export function HeaderRouteActions({
           {children}
         </RouteDisclosure>
       </div>
-    </>
+    </div>
   );
 }

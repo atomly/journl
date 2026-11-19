@@ -3,8 +3,8 @@
 import { Button } from "@acme/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@acme/ui/tooltip";
 import { cn } from "@acme/ui/utils";
+import { MessageSquare } from "lucide-react";
 import { useEffect, useRef } from "react";
-import { RiSparkling2Fill } from "react-icons/ri";
 import {
   ChatUnreadA11yHint,
   ChatUnreadBadge,
@@ -46,14 +46,22 @@ export default function ChatSidebarTrigger({
             onClick={toggleSidebar}
             size="default"
             className={cn(
-              "relative h-12 cursor-pointer rounded-full border px-5",
+              "relative h-12 min-w-[156px] cursor-pointer rounded-full border border-white/40 px-5 shadow-[0_8px_24px_#1d164829]",
               hasUnreadMessages ? "animate-chat-trigger-wiggle" : undefined,
               className,
             )}
             {...props}
           >
-            <RiSparkling2Fill data-icon="inline-start" />
+            <MessageSquare
+              className="size-5"
+              strokeWidth={1.7}
+              data-icon="inline-start"
+            />
             <span>Ask Journl</span>
+            <span
+              aria-hidden
+              className="size-2 shrink-0 rounded-full bg-pastel-foreground"
+            />
             <ChatUnreadBadge
               hasUnreadMessages={hasUnreadMessages}
               className="bg-destructive"

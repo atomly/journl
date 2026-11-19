@@ -9,9 +9,9 @@ import { HeaderSubscriptionButton } from "./_components/header-subscription-butt
 export default function JournalHeader() {
   return (
     <AppHeader className="flex shrink-0 items-center gap-2">
-      <div className="flex h-full min-w-0 flex-1 items-center gap-1 rounded-3xl border border-sidebar-border bg-sidebar p-1 min-[701px]:gap-2 min-[701px]:p-3">
+      <div className="flex h-full min-w-0 flex-1 items-center gap-1 rounded-[20px] border border-sidebar-border bg-sidebar p-1 min-[701px]:gap-2 min-[701px]:p-3">
         <SidebarTrigger />
-        <div className="grid min-w-0 flex-1 grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-x-0 min-[701px]:gap-x-2">
+        <div className="grid min-w-0 flex-1 grid-cols-[minmax(0,1fr)_auto] items-center gap-x-0 min-[701px]:gap-x-2">
           <HeaderRouteActions>
             <Suspense>
               <HeaderSubscriptionButton />

@@ -46,10 +46,17 @@ export async function shellGeometry(page: Page) {
         conversation: '[data-slot="message-scroller-viewport"]',
         dialog: '[role="dialog"]',
         header: "header[data-hidden]",
+        launcher:
+          '[aria-label="Toggle Chat Sidebar"], [aria-label="Toggle Chat Drawer"]',
         main: "[data-app-container]",
         navigation: '[data-side="left"] [data-slot="sidebar-container"]',
       }).map(([name, selector]) => {
-        const element = document.querySelector<HTMLElement>(selector);
+        const element =
+          name === "launcher"
+            ? Array.from(document.querySelectorAll<HTMLElement>(selector)).find(
+                (node) => node.getClientRects().length > 0,
+              )
+            : document.querySelector<HTMLElement>(selector);
         return [
           name,
           element

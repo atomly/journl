@@ -1,6 +1,5 @@
 "use client";
 import { Alert, AlertDescription, AlertTitle } from "@acme/ui/alert";
-import { Badge } from "@acme/ui/badge";
 import { Button } from "@acme/ui/button";
 import {
   Command,
@@ -57,6 +56,7 @@ export function HeaderSearchButton({
 }: HeaderSearchButtonProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [query, setQuery] = useState("");
+  const [keyboardNavigation, setKeyboardNavigation] = useState(false);
   const router = useRouter();
   const [debouncedQuery] = useDebounce(query, debounceTime);
 
@@ -100,11 +100,20 @@ export function HeaderSearchButton({
       />
       <DialogContent
         id={HEADER_SEARCH_DIALOG_CONTENT_ID}
-        className="max-w-[calc(100%-24px)] gap-0 overflow-hidden rounded-3xl border bg-card p-0 sm:max-w-[560px]"
+        className="max-w-[calc(100%-24px)] gap-0 overflow-hidden rounded-3xl border bg-card p-0 sm:max-w-[560px] min-[701px]:rounded-[20px]"
         data-state="open"
+        data-shell-search
         showCloseButton={false}
       >
-        <Command className="bg-transparent p-0" shouldFilter={false}>
+        <Command
+          className="bg-transparent p-0"
+          shouldFilter={false}
+          data-keyboard-navigation={keyboardNavigation}
+          onKeyDownCapture={(event) => {
+            if (event.key === "ArrowDown" || event.key === "ArrowUp")
+              setKeyboardNavigation(true);
+          }}
+        >
           <Surface
             material="glass"
             className="flex min-h-[70px] items-center rounded-none border-x-0 border-t-0 px-4 py-4 pr-16 min-[701px]:min-h-[78px] min-[701px]:px-6 min-[701px]:py-6 min-[701px]:pr-16"
@@ -115,19 +124,22 @@ export function HeaderSearchButton({
               </DialogTitle>
             </DialogHeader>
           </Surface>
-          <FieldGroup className="px-4 pt-6 min-[701px]:px-6 [&_[data-slot=command-input-wrapper]]:p-0 [&_[data-slot=input-group]]:h-12!">
+          <FieldGroup className="px-4 pt-5 min-[701px]:px-6 min-[701px]:pt-6 [&_[data-slot=command-input-wrapper]]:p-0 [&_[data-slot=input-group]]:h-[50px]! [&_[data-slot=input-group]]:rounded-[12px]!">
             <Field>
               <FieldLabel htmlFor="notebook-search">Search notes</FieldLabel>
               <CommandInput
                 value={query}
                 id="notebook-search"
-                className="h-12 min-w-0 flex-1"
+                className="h-12 min-w-0 flex-1 px-4 text-base"
                 placeholder="Search notes..."
                 autoComplete="off"
                 autoCorrect="off"
                 spellCheck={false}
                 autoFocus
-                onValueChange={(value) => setQuery(value)}
+                onValueChange={(value) => {
+                  setQuery(value);
+                  setKeyboardNavigation(false);
+                }}
               />
             </Field>
           </FieldGroup>
@@ -159,10 +171,7 @@ export function HeaderSearchButton({
                   </span>
                 )}
               </CommandEmpty>
-              <CommandGroup
-                className="p-0"
-                heading={notes?.length ? "Results" : undefined}
-              >
+              <CommandGroup className="p-0">
                 {notes?.map((note) => {
                   const href =
                     note.type === "journal"
@@ -171,49 +180,41 @@ export function HeaderSearchButton({
                   return (
                     <Link key={note.id} href={href}>
                       <CommandItem
-                        className="my-1 grid cursor-pointer grid-cols-[1fr_auto] gap-2"
+                        className="grid cursor-pointer grid-cols-1 gap-0 in-data-[slot=dialog-content]:rounded-none!"
                         onSelect={() => {
                           setIsOpen(false);
                           router.push(href);
                         }}
                       >
-                        <div className="grid gap-1">
-                          {note.type === "page" ? (
-                            <>
-                              <div className="font-medium text-sm">
-                                <HighlightedText query={query}>
-                                  {note.header}
-                                </HighlightedText>
-                              </div>
-                              <div className="line-clamp-2 text-muted-foreground text-sm">
-                                <HighlightedText query={query} maxLength={120}>
-                                  {note.content}
-                                </HighlightedText>
-                              </div>
-                              <div className="text-muted-foreground text-xs">
+                        <div className="grid min-w-0 gap-1">
+                          <div className="font-normal text-base leading-6">
+                            {note.type === "page" ? (
+                              <HighlightedText query={query}>
+                                {note.header}
+                              </HighlightedText>
+                            ) : (
+                              new Date(note.date).toLocaleDateString()
+                            )}
+                            {" · "}
+                            {note.type === "journal" ? "Journal" : "Page"}
+                          </div>
+                          <div className="flex min-w-0 items-start justify-between gap-3 text-muted-foreground">
+                            <div className="line-clamp-2 min-w-0 flex-1 text-[13px] leading-[1.6]">
+                              <HighlightedText query={query} maxLength={120}>
+                                {note.content}
+                              </HighlightedText>
+                            </div>
+                            {note.type === "page" && (
+                              <time
+                                dateTime={note.updated_at}
+                                className="shrink-0 whitespace-nowrap text-[11px] leading-[1.9]"
+                              >
                                 Last updated{" "}
                                 {new Date(note.updated_at).toLocaleDateString()}
-                              </div>
-                            </>
-                          ) : (
-                            <>
-                              <div className="font-medium text-sm">
-                                {new Date(note.date).toLocaleDateString()}
-                              </div>
-                              <div className="line-clamp-2 text-muted-foreground text-sm">
-                                <HighlightedText query={query} maxLength={120}>
-                                  {note.content}
-                                </HighlightedText>
-                              </div>
-                            </>
-                          )}
+                              </time>
+                            )}
+                          </div>
                         </div>
-                        <Badge
-                          variant="secondary"
-                          className="self-start text-xs"
-                        >
-                          {note.type === "journal" ? "Journal" : "Page"}
-                        </Badge>
                       </CommandItem>
                     </Link>
                   );
@@ -232,7 +233,7 @@ export function HeaderSearchButton({
             />
           }
         >
-          <XIcon />
+          <XIcon className="size-6" />
         </DialogClose>
         <DialogFooter className="m-0 flex flex-row items-center justify-between rounded-none border-t p-4">
           <span className="hidden text-muted-foreground text-xs min-[701px]:inline">
@@ -295,7 +296,7 @@ function HighlightedText({ children, query, maxLength }: HighlightedTextProps) {
           <mark
             // biome-ignore lint/suspicious/noArrayIndexKey: <Using the `index` is fine here.>
             key={`${part}-${index}`}
-            className="rounded-sm bg-accent font-semibold text-accent-foreground"
+            className="bg-transparent font-normal text-inherit"
           >
             {part}
           </mark>

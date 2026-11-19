@@ -121,9 +121,10 @@ for (const group of groups)
               .fill("synthetic search");
             if (group.stateId === "search-results") {
               await expect(
-                page.getByText("Controlled result: Browser note 25", {
-                  exact: true,
-                }),
+                page
+                  .getByRole("dialog")
+                  .locator("[cmdk-item]")
+                  .filter({ hasText: "Controlled result: Browser note 25" }),
               ).toBeVisible();
               await expect(
                 page.getByRole("dialog").locator("[cmdk-item]"),
@@ -507,7 +508,12 @@ for (const group of groups)
         );
         expect(bounds.header?.box.height).toBe(64);
         expect(bounds.main?.box.x).toBe(bounds.header?.box.x);
-        expect(bounds.main?.box.y).toBe(mobile ? 92 : 96);
+        const hiddenHeader = await header.evaluate(
+          (node) =>
+            node.getAttribute("data-hidden") === "true" &&
+            !node.querySelector(":focus-visible"),
+        );
+        expect(bounds.main?.box.y).toBe(mobile ? (hiddenHeader ? 12 : 88) : 96);
         expect(bounds.main?.box.bottom).toBe(
           mapping.viewport.height - (mobile ? 12 : 16),
         );

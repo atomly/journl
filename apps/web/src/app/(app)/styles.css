@@ -261,12 +261,14 @@ The rest of the components are set by the Tailwind CSS classes, or by our editor
   [data-slot="sidebar-inner"],
   [data-slot="sidebar-inset"] > header > div {
     background: var(--sidebar);
+    -webkit-backdrop-filter: none;
     backdrop-filter: none;
   }
 }
 .opaque-mode [data-slot="sidebar-inner"],
 .opaque-mode [data-slot="sidebar-inset"] > header > div {
   background: var(--sidebar);
+  -webkit-backdrop-filter: none;
   backdrop-filter: none;
 }
 @media (forced-colors: active) {
@@ -276,6 +278,7 @@ The rest of the components are set by the Tailwind CSS classes, or by our editor
     color: CanvasText;
     border-color: CanvasText;
     box-shadow: none;
+    -webkit-backdrop-filter: none;
     backdrop-filter: none;
   }
 }
@@ -414,16 +417,22 @@ The rest of the components are set by the Tailwind CSS classes, or by our editor
   z-index: 4501;
 }
 
+/* Backdrop blur is progressive enhancement. Keep the scrim when the renderer
+   cannot paint it; never emulate the effect by filtering application content. */
 [data-slot="sheet-overlay"]:has(~ [data-slot="sidebar"][data-mobile="true"]) {
-  backdrop-filter: blur(4px);
+  background: rgb(5 15 32 / 45%);
+  -webkit-backdrop-filter: blur(3px);
+  backdrop-filter: blur(3px);
 }
 .opaque-mode
   [data-slot="sheet-overlay"]:has(~ [data-slot="sidebar"][data-mobile="true"]) {
+  -webkit-backdrop-filter: none;
   backdrop-filter: none;
 }
 @media (prefers-reduced-transparency: reduce), (prefers-contrast: more),
   (forced-colors: active) {
   [data-slot="sheet-overlay"]:has(~ [data-slot="sidebar"][data-mobile="true"]) {
+    -webkit-backdrop-filter: none;
     backdrop-filter: none;
   }
 }
@@ -501,6 +510,7 @@ The rest of the components are set by the Tailwind CSS classes, or by our editor
   ~ :is([data-shell-search], [data-shell-menu])
 ) {
   background: rgb(5 15 32 / 45%);
+  -webkit-backdrop-filter: blur(3px);
   backdrop-filter: blur(3px);
 }
 [data-shell-route-popover] {
@@ -516,6 +526,7 @@ The rest of the components are set by the Tailwind CSS classes, or by our editor
     ~ :is([data-shell-search], [data-shell-menu])
   ),
   [data-shell-route-popover] {
+    -webkit-backdrop-filter: none;
     backdrop-filter: none;
   }
   [data-shell-route-popover] {
@@ -524,6 +535,7 @@ The rest of the components are set by the Tailwind CSS classes, or by our editor
 }
 .opaque-mode [data-shell-route-popover] {
   background: var(--sidebar);
+  -webkit-backdrop-filter: none;
   backdrop-filter: none;
 }
 @media (forced-colors: active) {
@@ -533,6 +545,7 @@ The rest of the components are set by the Tailwind CSS classes, or by our editor
     color: CanvasText;
     border-color: CanvasText;
     box-shadow: none;
+    -webkit-backdrop-filter: none;
     backdrop-filter: none;
   }
   [data-shell-search]
@@ -557,12 +570,14 @@ The rest of the components are set by the Tailwind CSS classes, or by our editor
   [data-slot="dialog-overlay"]:has(
     ~ :is([data-shell-search], [data-shell-menu])
   ) {
+  -webkit-backdrop-filter: none;
   backdrop-filter: none;
 }
 @media (forced-colors: active) {
   [data-slot="dialog-overlay"]:has(
     ~ :is([data-shell-search], [data-shell-menu])
   ) {
+    -webkit-backdrop-filter: none;
     backdrop-filter: none;
   }
 }

@@ -229,7 +229,7 @@ export function HeaderRouteActions({
         trigger={
           <Button
             variant="ghost"
-            className="h-auto min-h-11 min-w-0 max-w-full justify-start justify-self-start px-0 text-left"
+            className="h-auto min-h-11 min-w-0 max-w-full shrink justify-start justify-self-start px-0 text-left"
           >
             <span className="min-w-0">
               <span className="block font-semibold">{label}</span>

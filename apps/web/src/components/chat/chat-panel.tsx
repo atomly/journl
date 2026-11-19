@@ -8,11 +8,17 @@ import {
   MessageScrollerItem,
   MessageScrollerProvider,
   MessageScrollerViewport,
+  useMessageScroller,
+  useMessageScrollerVisibility,
 } from "@acme/ui/message-scroller";
 import type { UIMessage } from "ai";
-import { type ReactNode, useState } from "react";
+import { type ReactNode, useEffect, useRef, useState } from "react";
 import { getHumanReadableChatError } from "~/usage/quota-error";
-import { useChatPresentation } from "./chat-presentation";
+import {
+  type ConversationPosition,
+  useChatPresentation,
+  useConversationPosition,
+} from "./chat-presentation";
 import { ChatSurfaceContext } from "./chat-surface";
 import { ChatComposer } from "./composer";
 import { ChatMessage } from "./message";
@@ -26,7 +32,141 @@ const pendingMessage: UIMessage = {
   role: "assistant",
 };
 
+function ConversationViewport({
+  children,
+  onRestored,
+  restorePosition,
+}: {
+  children: ReactNode;
+  onRestored: (value: boolean) => void;
+  restorePosition: ConversationPosition | null;
+}) {
+  const { position, threadId } = useConversationPosition();
+  const { scrollToMessage } = useMessageScroller();
+  const visibility = useMessageScrollerVisibility();
+  const visible = useRef(visibility);
+  visible.current = visibility;
+  const [node, setNode] = useState<HTMLDivElement | null>(null);
+  const restoring = useRef(restorePosition !== null);
+  const desired = useRef(restorePosition);
+  useEffect(() => {
+    if (!node) return;
+    let firstFrame = 0;
+    let secondFrame = 0;
+    const unavailable = () =>
+      !node.clientWidth || Boolean(node.closest("[inert]"));
+    const restore = () => {
+      if (unavailable() || node.hasAttribute("data-pending-scroll")) return;
+      const saved = desired.current;
+      if (saved?.threadId === threadId) {
+        const item = saved.messageId
+          ? node.querySelector<HTMLElement>(
+              `[data-message-id="${CSS.escape(saved.messageId)}"]`,
+            )
+          : null;
+        if (item && saved.messageId && saved.offset !== undefined) {
+          scrollToMessage(saved.messageId, {
+            align: "start",
+            behavior: "auto",
+          });
+          node.scrollTop +=
+            item.getBoundingClientRect().top -
+            node.getBoundingClientRect().top -
+            saved.offset;
+        } else node.scrollTop = saved.top;
+        position.current = { ...saved, top: node.scrollTop };
+      }
+      restoring.current = false;
+      onRestored(true);
+    };
+    const schedule = () => {
+      if (unavailable()) {
+        restoring.current = true;
+        desired.current =
+          position.current?.threadId === threadId
+            ? { ...position.current }
+            : null;
+        return;
+      }
+      if (!restoring.current) return;
+      cancelAnimationFrame(firstFrame);
+      cancelAnimationFrame(secondFrame);
+      firstFrame = requestAnimationFrame(() => {
+        secondFrame = requestAnimationFrame(restore);
+      });
+    };
+    const attributes = new MutationObserver(schedule);
+    attributes.observe(node, {
+      attributeFilter: ["data-pending-scroll"],
+      attributes: true,
+    });
+    const panel = node.closest('[data-slot="sidebar-container"]');
+    if (panel)
+      attributes.observe(panel, {
+        attributeFilter: ["inert"],
+        attributes: true,
+      });
+    const resize = new ResizeObserver(schedule);
+    resize.observe(node);
+    schedule();
+    return () => {
+      attributes.disconnect();
+      resize.disconnect();
+      cancelAnimationFrame(firstFrame);
+      cancelAnimationFrame(secondFrame);
+    };
+  }, [node, onRestored, position, scrollToMessage, threadId]);
+  return (
+    <MessageScrollerViewport
+      ref={setNode}
+      aria-label="Conversation"
+      className="px-4"
+      onScroll={(event) => {
+        const viewport = event.currentTarget;
+        if (
+          restoring.current ||
+          !viewport.clientWidth ||
+          viewport.closest("[inert]")
+        )
+          return;
+        const box = viewport.getBoundingClientRect();
+        const hit = document
+          .elementFromPoint(box.left + box.width / 2, box.top + 1)
+          ?.closest<HTMLElement>("[data-message-id]");
+        const candidates =
+          hit && viewport.contains(hit)
+            ? [hit]
+            : visible.current.visibleMessageIds
+                .map((id) =>
+                  viewport.querySelector<HTMLElement>(
+                    `[data-message-id="${CSS.escape(id)}"]`,
+                  ),
+                )
+                .filter((item): item is HTMLElement => Boolean(item));
+        const anchor = candidates.find(
+          (item) => item.getBoundingClientRect().bottom > box.top + 1,
+        );
+        position.current = {
+          messageId: anchor?.dataset.messageId,
+          offset: anchor
+            ? anchor.getBoundingClientRect().top - box.top
+            : undefined,
+          threadId,
+          top: viewport.scrollTop,
+        };
+      }}
+    >
+      {children}
+    </MessageScrollerViewport>
+  );
+}
+
 export function ChatPanel({ welcome }: { welcome: ReactNode }) {
+  const { position, threadId } = useConversationPosition();
+  const restorePosition = useRef(
+    position.current?.threadId === threadId ? { ...position.current } : null,
+  ).current;
+  const [restored, setRestored] = useState(restorePosition === null);
   const [surface, setSurface] = useState<HTMLElement | null>(null);
   const { messages, status, error, clearError, regenerate } =
     useChatPresentation();
@@ -41,9 +181,15 @@ export function ChatPanel({ welcome }: { welcome: ReactNode }) {
         className="flex h-full min-h-0 min-w-0 flex-col"
       >
         <ChatSessionStatus />
-        <MessageScrollerProvider autoScroll>
+        <MessageScrollerProvider
+          autoScroll={restored}
+          defaultScrollPosition={restorePosition === null ? "end" : "start"}
+        >
           <MessageScroller>
-            <MessageScrollerViewport aria-label="Conversation" className="px-4">
+            <ConversationViewport
+              restorePosition={restorePosition}
+              onRestored={setRestored}
+            >
               <MessageScrollerContent className="py-4">
                 <EarlierChatMessages />
                 {!messages.length && (
@@ -98,7 +244,7 @@ export function ChatPanel({ welcome }: { welcome: ReactNode }) {
                   </MessageScrollerItem>
                 )}
               </MessageScrollerContent>
-            </MessageScrollerViewport>
+            </ConversationViewport>
             <MessageScrollerButton />
           </MessageScroller>
         </MessageScrollerProvider>

@@ -154,7 +154,7 @@ export function HeaderSearchButton({
                     Write something to search.
                   </span>
                 ) : (
-                  <span className="text-accent-foreground/80 text-sm">
+                  <span className="text-muted-foreground text-sm">
                     No results found.
                   </span>
                 )}
@@ -185,12 +185,12 @@ export function HeaderSearchButton({
                                   {note.header}
                                 </HighlightedText>
                               </div>
-                              <div className="line-clamp-2 text-accent-foreground/80 text-sm">
+                              <div className="line-clamp-2 text-muted-foreground text-sm">
                                 <HighlightedText query={query} maxLength={120}>
                                   {note.content}
                                 </HighlightedText>
                               </div>
-                              <div className="text-accent-foreground/80 text-xs">
+                              <div className="text-muted-foreground text-xs">
                                 Last updated{" "}
                                 {new Date(note.updated_at).toLocaleDateString()}
                               </div>
@@ -200,7 +200,7 @@ export function HeaderSearchButton({
                               <div className="font-medium text-sm">
                                 {new Date(note.date).toLocaleDateString()}
                               </div>
-                              <div className="line-clamp-2 text-accent-foreground/80 text-sm">
+                              <div className="line-clamp-2 text-muted-foreground text-sm">
                                 <HighlightedText query={query} maxLength={120}>
                                   {note.content}
                                 </HighlightedText>

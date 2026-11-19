@@ -234,7 +234,7 @@ export function HeaderSearchButton({
         >
           <XIcon />
         </DialogClose>
-        <DialogFooter className="m-0 flex flex-row items-center justify-between border-t p-4">
+        <DialogFooter className="m-0 flex flex-row items-center justify-between rounded-none border-t p-4">
           <span className="hidden text-muted-foreground text-xs min-[701px]:inline">
             ↑ ↓ navigate · Enter opens your note
           </span>

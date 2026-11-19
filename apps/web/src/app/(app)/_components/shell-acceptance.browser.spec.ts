@@ -421,10 +421,15 @@ for (const group of groups)
             `actual ${group.stateId} branch asserted; input enabled`,
           );
         }
-        if (group.stateId === "context-page")
+        if (group.stateId === "context-page") {
+          // Save-safety acceptance can rename this shared synthetic page.
+          // The breadcrumb must reflect its current title, not its seed title.
+          const title = page.getByPlaceholder("New page");
+          await expect(title).not.toHaveValue("");
           await expect(header).toContainText(
-            "Browser folder / Browser note 25",
+            `Browser folder / ${await title.inputValue()}`,
           );
+        }
         if (group.stateId === "context-explore")
           await expect(header).toContainText("Explore");
         if (group.stateId === "context-journal")

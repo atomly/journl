@@ -31,12 +31,8 @@ export function AssistantIdentity() {
   );
   return (
     <div className="min-w-0 flex-1">
-      <h2 className="font-semibold text-2xl leading-[1.2] min-[701px]:text-[28px]">
-        Ask Journl
-      </h2>
-      <p className="truncate text-muted-foreground text-xs leading-[1.6]">
-        {context} · AI assistant
-      </p>
+      <h2 className="font-semibold text-[15px] leading-[1.2]">Ask Journl</h2>
+      <p className="sr-only">{context} · AI assistant</p>
     </div>
   );
 }
@@ -46,10 +42,10 @@ export function ChatPanelChrome() {
   const { preferences, updatePreferences } = useAppPreferences();
   const expanded = preferences.chatSidebarWidthRem === 44;
   return (
-    <div className="flex h-[94px] shrink-0 items-center gap-2 border-b px-6">
+    <div className="flex h-[62px] shrink-0 items-center gap-2 border-b px-4">
       <AssistantIdentity />
       <Button
-        variant="assistant"
+        variant="ghost"
         size="icon"
         aria-label={expanded ? "Default assistant width" : "Expand assistant"}
         onClick={() =>
@@ -57,9 +53,9 @@ export function ChatPanelChrome() {
         }
       >
         {expanded ? (
-          <Minimize2 className="size-5" />
+          <Minimize2 className="size-4" />
         ) : (
-          <Maximize2 className="size-5" />
+          <Maximize2 className="size-4" />
         )}
       </Button>
       <Button
@@ -68,7 +64,7 @@ export function ChatPanelChrome() {
         aria-label="Close assistant"
         onClick={() => setOpen(false)}
       >
-        <X className="size-5" />
+        <X className="size-4" />
       </Button>
     </div>
   );

@@ -75,18 +75,32 @@ test("assistant controls update live width, restore focus and retain independent
     .getByRole("button", { exact: true, name: "Expand assistant" })
     .click();
   await expect(assistant).toHaveAttribute("aria-valuenow", "704");
-  await expect(page.locator("header[data-hidden]")).toHaveCSS(
-    "width",
-    "1176px",
-  );
+  await expect(page.locator("header[data-hidden]")).toHaveCSS("width", "456px");
   const expanded = await page
     .locator('[data-side="right"] [data-slot="sidebar-container"]')
     .boundingBox();
-  expect(expanded?.y).toBe(96);
-  expect(expanded?.height).toBe(888);
+  expect(expanded?.y).toBe(16);
+  expect(expanded?.height).toBe(968);
+  const navigationBox = await page
+    .locator('[data-side="left"] [data-slot="sidebar-container"]')
+    .boundingBox();
+  expect(expanded?.y).toBe(navigationBox?.y);
+  expect((expanded?.y ?? 0) + (expanded?.height ?? 0)).toBe(
+    (navigationBox?.y ?? 0) + (navigationBox?.height ?? 0),
+  );
   await expect(
     page.locator('[data-side="right"] [data-slot="sidebar-container"]'),
   ).toHaveCSS("width", "704px");
+  for (const theme of ["light", "dark"]) {
+    await page.evaluate((value) => {
+      document.documentElement.classList.toggle("dark", value === "dark");
+    }, theme);
+    await page.screenshot({
+      animations: "disabled",
+      path: info.outputPath(`assistant-full-height--${theme}--1440.png`),
+      scale: "css",
+    });
+  }
   await page
     .getByRole("button", { exact: true, name: "Default assistant width" })
     .click();
@@ -106,7 +120,7 @@ test("assistant controls update live width, restore focus and retain independent
   );
   const main = await page.locator("[data-app-container]").boundingBox();
   expect(main?.x).toBe(248);
-  expect(main?.y).toBe(96);
+  expect(main?.y).toBe(78);
   expect((main?.y ?? 0) + (main?.height ?? 0)).toBe(984);
   await expect(
     page.getByRole("separator", { name: "Resize navigation" }),

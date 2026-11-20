@@ -43,12 +43,20 @@ async function AppLayout({
         <SidebarInset className="flex max-h-dvh min-w-0 flex-col gap-y-4">
           <AppLayoutProvider>
             {header}
-            <ChatSidebarProvider className="relative min-h-0 flex-1">
-              <AppContainer className="min-h-0 min-w-54 flex-1 overflow-auto [--app-header-offset:0px]">
-                {children}
-              </AppContainer>
+            <ChatSidebarProvider
+              data-shell-panels
+              className="relative min-h-0 flex-1"
+            >
+              <div
+                data-shell-content-stage
+                className="relative flex min-h-0 min-w-0 flex-1"
+              >
+                <AppContainer className="min-h-0 min-w-54 flex-1 overflow-auto [--app-header-offset:0px]">
+                  {children}
+                </AppContainer>
+                <ChatSidebarTrigger className="absolute right-[calc(25px+env(safe-area-inset-right,0px))] bottom-[calc(25px+env(safe-area-inset-bottom,0px))] z-3 hidden min-[701px]:flex" />
+              </div>
               {chatSidebar}
-              <ChatSidebarTrigger className="absolute right-[calc(25px+env(safe-area-inset-right,0px))] bottom-[calc(25px+env(safe-area-inset-bottom,0px))] z-3 hidden min-[701px]:flex" />
               {chatDrawer}
             </ChatSidebarProvider>
           </AppLayoutProvider>

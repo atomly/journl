@@ -23,7 +23,7 @@ export default function ChatSidebar() {
       maxWidth={CHAT_SIDEBAR_WIDTH_MAX}
     >
       <ChatPanelChrome />
-      <SidebarContent className="overflow-hidden bg-card">
+      <SidebarContent className="overflow-hidden bg-transparent">
         <ChatPanel welcome={<ChatWelcome />} />
       </SidebarContent>
     </Sidebar>

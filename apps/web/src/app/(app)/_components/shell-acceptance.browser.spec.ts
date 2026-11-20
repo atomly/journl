@@ -504,16 +504,18 @@ for (const group of groups)
         expect(bounds.header?.box.width).toBe(
           mobile
             ? mapping.viewport.width - 24
-            : mapping.viewport.width - navWidth - 48,
+            : mapping.viewport.width > 1100
+              ? bounds.main?.box.width
+              : mapping.viewport.width - navWidth - 48,
         );
-        expect(bounds.header?.box.height).toBe(64);
+        expect(bounds.header?.box.height).toBe(mobile ? 64 : 62);
         expect(bounds.main?.box.x).toBe(bounds.header?.box.x);
         const hiddenHeader = await header.evaluate(
           (node) =>
             node.getAttribute("data-hidden") === "true" &&
             !node.querySelector(":focus-visible"),
         );
-        expect(bounds.main?.box.y).toBe(mobile ? (hiddenHeader ? 12 : 88) : 96);
+        expect(bounds.main?.box.y).toBe(mobile ? (hiddenHeader ? 12 : 88) : 78);
         expect(bounds.main?.box.bottom).toBe(
           mapping.viewport.height - (mobile ? 12 : 16),
         );
@@ -532,7 +534,9 @@ for (const group of groups)
           }
         }
         if (chatState && !mobile) {
-          expect(bounds.assistant?.box.y).toBe(96);
+          expect(bounds.assistant?.box.y).toBe(
+            mapping.viewport.width > 1100 ? 16 : 96,
+          );
           expect(bounds.assistant?.box.width).toBe(
             mapping.viewport.width <= 1100
               ? mapping.viewport.width - 112

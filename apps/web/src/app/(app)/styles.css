@@ -257,6 +257,21 @@ The rest of the components are set by the Tailwind CSS classes, or by our editor
   box-shadow: var(--depth);
   backdrop-filter: blur(24px) saturate(1.15);
 }
+/* Workspace chrome is composed here, outside reusable UI/editor materials. */
+[data-slot="sidebar-inner"],
+[data-slot="sidebar-inset"] > header > div {
+  background: rgb(237 245 255 / 80%);
+  border-color: #d5e0ed;
+  color: #17283d;
+  box-shadow: 0 12px 30px #163a6b1a;
+}
+:where(.dark) [data-slot="sidebar-inner"],
+:where(.dark) [data-slot="sidebar-inset"] > header > div {
+  background: rgb(21 38 59 / 86%);
+  border-color: #344865;
+  color: #eef3ff;
+  box-shadow: 0 12px 30px #050b1780;
+}
 @media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
   [data-slot="sidebar-inner"],
   [data-slot="sidebar-inset"] > header > div {
@@ -367,10 +382,37 @@ The rest of the components are set by the Tailwind CSS classes, or by our editor
   margin: 0;
 }
 
-@media (min-width: 701px) {
+@media (701px <= width <= 1100px) {
   [data-slot="sidebar"][data-side="right"] > [data-slot="sidebar-container"] {
     top: 96px;
     height: calc(100dvh - 112px);
+  }
+}
+
+/* Desktop panels share the viewport insets. The route header spans only its
+   content column; providers retain their independent navigation/chat contexts. */
+@media (min-width: 1101px) {
+  [data-slot="sidebar-inset"] {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-rows: 64px minmax(0, 1fr);
+  }
+  [data-slot="sidebar-inset"] > header {
+    grid-area: 1 / 1;
+  }
+  [data-shell-panels] {
+    display: contents;
+  }
+  [data-shell-content-stage] {
+    grid-area: 2 / 1;
+  }
+  [data-shell-panels] > [data-slot="sidebar"][data-side="right"] {
+    grid-area: 1 / 2 / 3 / 3;
+  }
+  /* Expanded chat can cover the document on narrower desktops. Its underlying
+     header must not leave keyboard targets hidden behind the panel. */
+  [data-slot="sidebar-inset"]:has([data-app-container][inert]) > header {
+    visibility: hidden;
   }
 }
 
@@ -610,4 +652,104 @@ The rest of the components are set by the Tailwind CSS classes, or by our editor
 
 [data-slot="header-actions"] [data-slot="button"] {
   border-radius: 999px;
+}
+
+/* Approved workspace v2: joined reading panel with app-owned chrome. */
+@media (min-width: 701px) {
+  [data-slot="sidebar-inset"] {
+    row-gap: 0;
+    grid-template-rows: 62px minmax(0, 1fr);
+  }
+  [data-slot="sidebar-inset"] > header {
+    height: 62px;
+  }
+  [data-slot="sidebar-inset"] > header > div {
+    border-radius: 16px 16px 0 0;
+    padding: 8px 16px;
+    box-shadow: none;
+    font-size: 13px;
+  }
+  [data-slot="sidebar-inset"] [data-app-container] {
+    border-top: 0;
+    border-radius: 0 0 16px 16px;
+  }
+  [data-slot="sidebar-inner"] {
+    border-radius: 16px;
+  }
+  [data-side="left"] [data-sidebar="menu-button"],
+  [data-side="left"] [data-sidebar="menu-sub-button"] {
+    height: 36px;
+    min-height: 36px;
+    border-radius: 7px;
+    padding-inline: 8px;
+    font-size: 13px;
+    gap: 8px;
+  }
+  [data-side="left"] [data-sidebar="menu-button"] > svg {
+    width: 16px;
+    height: 16px;
+  }
+  [data-side="left"] [data-sidebar="menu"] {
+    gap: 4px;
+  }
+  [data-side="left"] [data-sidebar="group"] {
+    padding-inline: 8px;
+  }
+}
+[data-sidebar="menu-button"][data-active="true"]:hover {
+  background: color-mix(in srgb, var(--sidebar-accent) 85%, var(--ring));
+  color: var(--sidebar-accent-foreground);
+}
+[data-slot="header-actions"] [data-slot="button"] {
+  border-radius: 8px;
+}
+
+[data-side="left"] [data-sidebar="menu-button"]:hover,
+[data-side="left"] [data-sidebar="menu-sub-button"]:hover {
+  background: #abcbf04d;
+}
+[data-side="left"] [data-active="true"] {
+  background: #d9dfff;
+  color: #273f9d;
+}
+[data-side="left"] [data-active="true"]:hover {
+  background: #cbd4ff;
+  color: #273f9d;
+}
+.dark [data-side="left"] [data-active="true"] {
+  background: #303f72;
+  color: #c4ceff;
+}
+.dark [data-side="left"] [data-active="true"]:hover {
+  background: #3a4d89;
+  color: #c4ceff;
+}
+[data-side="left"]
+  :is(
+    [data-sidebar="menu-button"],
+    [data-sidebar="menu-sub-button"]
+  ):focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: -2px;
+}
+
+body:has([data-slot="sidebar-inset"]) {
+  background:
+    radial-gradient(ellipse at 26% -12%, #edf6ff, transparent 58%),
+    radial-gradient(ellipse at 95% 105%, #98b7db, transparent 66%), #c7dbf2;
+}
+.dark body:has([data-slot="sidebar-inset"]) {
+  background:
+    radial-gradient(ellipse at 26% -12%, #2c4f78, transparent 58%),
+    radial-gradient(ellipse at 95% 105%, #101a2e, transparent 66%), #172d4a;
+}
+[data-side="left"] [data-sidebar="header"] .journl-brand {
+  width: 102px;
+  height: auto;
+}
+[data-side="left"][data-state="collapsed"]
+  [data-sidebar="header"]
+  .journl-brand {
+  width: 32px;
+  height: 32px;
 }

@@ -1,6 +1,6 @@
 import { Separator } from "@acme/ui/separator";
 import { Skeleton } from "@acme/ui/skeleton";
-import { Calendar, Compass } from "lucide-react";
+import { Calendar, Compass, Search } from "lucide-react";
 import Image from "next/image";
 import { type ComponentProps, Suspense } from "react";
 import { getUser } from "~/auth/server";
@@ -12,6 +12,7 @@ import {
   SidebarGroup,
   SidebarGroupLabel,
   SidebarHeader,
+  SidebarMenuButton,
 } from "~/components/ui/sidebar";
 import { env } from "~/env";
 import {
@@ -20,6 +21,7 @@ import {
 } from "~/preferences/app-preferences";
 import { infiniteSidebarTreeQueryOptions } from "~/trpc/options/sidebar-tree-query-options";
 import { prefetch, trpc } from "~/trpc/server";
+import { HeaderSearchButton } from "../@header/_components/header-search-modal";
 import { DynamicAppSidebarDevtools } from "./_components/app-sidebar-devtools.dynamic";
 import { AppSidebarNavigation } from "./_components/app-sidebar-main";
 import { AppSidebarPages } from "./_components/app-sidebar-pages";
@@ -85,11 +87,25 @@ export default async function AppSidebar() {
             aria-label="Journl"
           />
         </span>
-        <div className="px-3 pt-6 pb-[21px] group-data-[collapsible=icon]:hidden">
-          <Brand className="relative -top-0.5 h-10" />
+        <div className="px-3 pt-3 pb-4 group-data-[collapsible=icon]:hidden">
+          <Brand className="h-7" />
         </div>
       </SidebarHeader>
-      <div className="px-3 pb-4 group-data-[collapsible=icon]:hidden [&>button]:h-11 [&>button]:min-h-11">
+      <div className="px-2 pb-3">
+        <HeaderSearchButton
+          keyboardShortcut={false}
+          trigger={
+            <SidebarMenuButton
+              aria-label="Search workspace"
+              className="mb-1 h-9 text-[13px]"
+            >
+              <Search />
+              <span>Search</span>
+            </SidebarMenuButton>
+          }
+        />
+      </div>
+      <div className="px-2 pb-3 group-data-[collapsible=icon]:hidden [&>button]:h-9 [&>button]:min-h-9">
         <AppSidebarTreeActions
           kind="root"
           parentNodeId={null}

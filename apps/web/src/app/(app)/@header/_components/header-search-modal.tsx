@@ -28,7 +28,7 @@ import { useQuery } from "@tanstack/react-query";
 import { XIcon } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import { useDebounce } from "use-debounce";
 import { useTRPC } from "~/trpc/react";
 import { HeaderSearchTrigger } from "./header-search-trigger";
@@ -37,23 +37,27 @@ const MIN_QUERY_LENGTH = 2;
 const DEFAULT_THRESHOLD = 0.25;
 const DEFAULT_LIMIT = 10;
 const DEFAULT_DEBOUNCE_TIME = 150;
-const HEADER_SEARCH_DIALOG_CONTENT_ID = "header-search-dialog-content";
 
 type HeaderSearchButtonProps = Omit<
   React.ComponentProps<typeof Dialog>,
   "children"
 > & {
+  trigger?: React.ReactElement;
+  keyboardShortcut?: boolean;
   limit?: number;
   threshold?: number;
   debounceTime?: number;
 };
 
 export function HeaderSearchButton({
+  trigger,
+  keyboardShortcut = true,
   limit = DEFAULT_LIMIT,
   threshold = DEFAULT_THRESHOLD,
   debounceTime = DEFAULT_DEBOUNCE_TIME,
   ...rest
 }: HeaderSearchButtonProps) {
+  const dialogId = useId();
   const [isOpen, setIsOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [keyboardNavigation, setKeyboardNavigation] = useState(false);
@@ -63,7 +67,11 @@ export function HeaderSearchButton({
   // Keyboard shortcut handlers
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
-      if ((event.metaKey || event.ctrlKey) && event.key === "k") {
+      if (
+        keyboardShortcut &&
+        (event.metaKey || event.ctrlKey) &&
+        event.key === "k"
+      ) {
         event.preventDefault();
         setIsOpen((prev) => !prev);
       }
@@ -75,7 +83,7 @@ export function HeaderSearchButton({
 
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen]);
+  }, [isOpen, keyboardShortcut]);
 
   const trpc = useTRPC();
   const {
@@ -95,11 +103,11 @@ export function HeaderSearchButton({
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen} {...rest}>
       <DialogTrigger
-        render={<HeaderSearchTrigger />}
-        aria-controls={HEADER_SEARCH_DIALOG_CONTENT_ID}
+        render={trigger ?? <HeaderSearchTrigger />}
+        aria-controls={dialogId}
       />
       <DialogContent
-        id={HEADER_SEARCH_DIALOG_CONTENT_ID}
+        id={dialogId}
         className="max-w-[calc(100%-24px)] gap-0 overflow-hidden rounded-3xl border bg-card p-0 sm:max-w-[560px] min-[701px]:rounded-[20px]"
         data-state="open"
         data-shell-search

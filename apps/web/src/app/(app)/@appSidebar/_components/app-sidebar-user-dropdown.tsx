@@ -23,6 +23,7 @@ export function AppSidebarUserDropdown({
             : "justify-start px-0 [&>svg:last-child]:invisible",
         )}
         side={isMobile ? "top" : "right"}
+        sticky={isMobile}
         align="start"
         sideOffset={4}
         links={

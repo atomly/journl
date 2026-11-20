@@ -9,11 +9,28 @@ test("shipped account dropdown hosts the shipped theme control and signs out", a
     0,
   );
   const openAccountMenu = async () => {
-    if (info.project.name === "mobile-webkit")
+    if (info.project.name === "mobile-webkit") {
       await page
         .getByRole("button", { name: "Toggle Sidebar" })
         .first()
         .click();
+      const expand = page.getByRole("button", {
+        exact: true,
+        name: "Expand Browser folder",
+      });
+      await expect(
+        expand.or(
+          page.getByRole("button", {
+            exact: true,
+            name: "Collapse Browser folder",
+          }),
+        ),
+      ).toBeVisible();
+      if (await expand.isVisible()) await expand.click();
+      await expect(
+        page.getByRole("link", { exact: true, name: "Browser note 01" }),
+      ).toBeVisible();
+    }
     await page
       .locator('[data-sidebar="footer"] button[aria-haspopup="menu"]')
       .click();
@@ -24,6 +41,12 @@ test("shipped account dropdown hosts the shipped theme control and signs out", a
       page.getByRole("tab", { exact: true, name: "System" }),
     ).toBeVisible();
     await expect(page.getByRole("menu")).toBeInViewport({ ratio: 1 });
+    if (info.project.name === "mobile-webkit") {
+      await page.locator("[data-shell-navigation-body]").evaluate((body) => {
+        body.scrollTop = 0;
+      });
+      await expect(page.getByRole("menu")).toBeInViewport({ ratio: 1 });
+    }
     expect(errors).toEqual([]);
   };
   await openAccountMenu();

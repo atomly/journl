@@ -425,18 +425,26 @@ test.describe("Journal scroll clearance", () => {
       });
       await expect(retry).toBeInViewport({ timeout: 1000 });
     }).toPass({ timeout: 30_000 });
-    await scroller.evaluate((element) => {
-      element.scrollTop = element.scrollHeight;
-    });
-    const main = await scroller.boundingBox();
-    const button = await retry.boundingBox();
-    const trailingClearance =
-      (main?.y ?? 0) +
-      (main?.height ?? 0) -
-      (button?.y ?? 0) -
-      (button?.height ?? 0);
-    expect(trailingClearance).toBeGreaterThanOrEqual(112);
-    expect(trailingClearance).toBeLessThanOrEqual(116);
+    let main = await scroller.boundingBox();
+    let button = await retry.boundingBox();
+    let trailingClearance = 0;
+    // Virtuoso can resize the footer after it first enters the viewport.
+    await expect(async () => {
+      await scroller.evaluate((element) => {
+        element.scrollTop = element.scrollHeight;
+      });
+      main = await scroller.boundingBox();
+      button = await retry.boundingBox();
+      expect(main).not.toBeNull();
+      expect(button).not.toBeNull();
+      trailingClearance =
+        (main?.y ?? 0) +
+        (main?.height ?? 0) -
+        (button?.y ?? 0) -
+        (button?.height ?? 0);
+      expect(trailingClearance).toBeGreaterThanOrEqual(112);
+      expect(trailingClearance).toBeLessThanOrEqual(116);
+    }).toPass({ timeout: 30_000 });
     await info.attach("scroll-clearance", {
       body: JSON.stringify({
         main,

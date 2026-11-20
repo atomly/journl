@@ -23,6 +23,7 @@ test("shipped account dropdown hosts the shipped theme control and signs out", a
     await expect(
       page.getByRole("tab", { exact: true, name: "System" }),
     ).toBeVisible();
+    await expect(page.getByRole("menu")).toBeInViewport({ ratio: 1 });
     expect(errors).toEqual([]);
   };
   await openAccountMenu();

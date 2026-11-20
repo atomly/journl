@@ -63,9 +63,10 @@ async function menuAction(page: Page, name: string) {
   await expect(item).toBeEnabled();
   await expect
     .poll(() =>
-      page.evaluate(() =>
-        Boolean(document.activeElement?.closest('[role="menu"]')),
-      ),
+      item.evaluate((element) => {
+        const menu = element.closest('[role="menu"]');
+        return Boolean(menu?.contains(document.activeElement));
+      }),
     )
     .toBe(true);
   for (let i = 0; i < 40; i++) {

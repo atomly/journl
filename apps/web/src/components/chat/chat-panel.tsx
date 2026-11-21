@@ -9,7 +9,6 @@ import {
   MessageScrollerProvider,
   MessageScrollerViewport,
   useMessageScroller,
-  useMessageScrollerVisibility,
 } from "@acme/ui/message-scroller";
 import type { UIMessage } from "ai";
 import { type ReactNode, useEffect, useRef, useState } from "react";
@@ -56,9 +55,6 @@ function ConversationViewport({
 }) {
   const { position, threadId } = useConversationPosition();
   const { scrollToMessage } = useMessageScroller();
-  const visibility = useMessageScrollerVisibility();
-  const visible = useRef(visibility);
-  visible.current = visibility;
   const [node, setNode] = useState<HTMLDivElement | null>(null);
   const restoring = useRef(restorePosition !== null);
   const desired = useRef(restorePosition);
@@ -203,27 +199,14 @@ function ConversationViewport({
         const viewport = event.currentTarget;
         if (restoring.current || unavailableConversation(viewport)) return;
         const box = viewport.getBoundingClientRect();
-        const hit = document
-          .elementFromPoint(box.left + box.width / 2, box.top + 1)
-          ?.closest<HTMLElement>("[data-message-id]");
-        // The point probe can land on chrome of a message that no longer
-        // crosses the top edge; fall back to the visible scan so the saved
-        // position always keeps an anchor when one intersects.
-        const anchor =
-          hit &&
-          viewport.contains(hit) &&
-          hit.getBoundingClientRect().bottom > box.top + 1
-            ? hit
-            : visible.current.visibleMessageIds
-                .map((id) =>
-                  viewport.querySelector<HTMLElement>(
-                    `[data-message-id="${CSS.escape(id)}"]`,
-                  ),
-                )
-                .filter((item): item is HTMLElement => Boolean(item))
-                .find(
-                  (item) => item.getBoundingClientRect().bottom > box.top + 1,
-                );
+        // The reading anchor is the first message crossing the top edge in
+        // document order — the same definition the restore and the acceptance
+        // checks use. Point probes and the scroller's peek-adjusted
+        // visibility set both disagree with it at boundary pixels and under
+        // host font metrics, which drifts the saved position.
+        const anchor = Array.from(
+          viewport.querySelectorAll<HTMLElement>("[data-message-id]"),
+        ).find((item) => item.getBoundingClientRect().bottom > box.top + 1);
         position.current = {
           messageId: anchor?.dataset.messageId,
           offset: anchor

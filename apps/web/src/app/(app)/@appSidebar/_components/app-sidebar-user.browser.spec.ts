@@ -59,15 +59,10 @@ test("shipped account dropdown hosts the shipped theme control and signs out", a
     const sidebarDivider = document.querySelector(
       '[data-slot="sidebar"] [data-slot="separator"]',
     );
-    const probe = document.createElement("span");
-    probe.style.borderTop = "1px solid var(--glass-edge)";
-    document.body.append(probe);
-    const glassEdge = getComputedStyle(probe).borderTopColor;
-    probe.remove();
     return {
       border: getComputedStyle(element).borderTopColor,
+      dark: document.documentElement.classList.contains("dark"),
       divider: divider ? getComputedStyle(divider).backgroundColor : null,
-      glassEdge,
       header: header ? getComputedStyle(header).borderTopColor : null,
       sidebarDivider: sidebarDivider
         ? getComputedStyle(sidebarDivider).backgroundColor
@@ -76,7 +71,12 @@ test("shipped account dropdown hosts the shipped theme control and signs out", a
     };
   });
   expect(colors.width).toBe("1px");
-  expect(colors.header).toBe(colors.glassEdge);
+  // The composed workspace chrome pins the header edge to the approved v2
+  // recipe's --line constant per theme, not to the glass sheet's --glass-edge
+  // (docs/design-handoff/approved-workspace-v2/review/workspace.css).
+  expect(colors.header).toBe(
+    colors.dark ? "rgb(52, 72, 101)" : "rgb(213, 224, 237)",
+  );
   expect(colors.border).toBe(colors.sidebarDivider);
   expect(colors.divider).toBe(colors.sidebarDivider);
   await page.getByRole("tab", { exact: true, name: "Light" }).click();

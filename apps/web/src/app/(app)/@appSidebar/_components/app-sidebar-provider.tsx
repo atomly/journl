@@ -18,6 +18,14 @@ const NavigationSidebar = React.createContext<ReturnType<
 > | null>(null);
 function NavigationScope({ children }: { children: React.ReactNode }) {
   const sidebar = useSidebar();
+  const { open, openMobile, setOpenMobile } = sidebar;
+  const wasOpen = React.useRef(open);
+  // Collapsing the desktop navigation also dismisses the floating
+  // navigation dialog so the route trigger regains focus.
+  React.useEffect(() => {
+    if (wasOpen.current && !open && openMobile) setOpenMobile(false);
+    wasOpen.current = open;
+  }, [open, openMobile, setOpenMobile]);
   return <NavigationSidebar value={sidebar}>{children}</NavigationSidebar>;
 }
 export function useNavigationSidebar() {

@@ -168,6 +168,10 @@ jobs:
             run: pnpm --filter @acme/web test:browser 'src/components/' 'src/app/\(app\)/@appSidebar/' 'src/app/\(app\)/explore/' 'src/app/\(app\)/journal/' 'src/testing/' --shard=3/4
           - leg: app-4
             run: pnpm --filter @acme/web test:browser 'src/components/' 'src/app/\(app\)/@appSidebar/' 'src/app/\(app\)/explore/' 'src/app/\(app\)/journal/' 'src/testing/' --shard=4/4
+          # This layer adds the component review workspace; kept on turbo so
+          # its test:stories dependency still runs.
+          - leg: component-review
+            run: pnpm exec turbo run test:browser --filter=@acme/component-review
     steps:
       - uses: actions/checkout@v7
       - name: Setup

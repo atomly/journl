@@ -206,19 +206,24 @@ function ConversationViewport({
         const hit = document
           .elementFromPoint(box.left + box.width / 2, box.top + 1)
           ?.closest<HTMLElement>("[data-message-id]");
-        const candidates =
-          hit && viewport.contains(hit)
-            ? [hit]
+        // The point probe can land on chrome of a message that no longer
+        // crosses the top edge; fall back to the visible scan so the saved
+        // position always keeps an anchor when one intersects.
+        const anchor =
+          hit &&
+          viewport.contains(hit) &&
+          hit.getBoundingClientRect().bottom > box.top + 1
+            ? hit
             : visible.current.visibleMessageIds
                 .map((id) =>
                   viewport.querySelector<HTMLElement>(
                     `[data-message-id="${CSS.escape(id)}"]`,
                   ),
                 )
-                .filter((item): item is HTMLElement => Boolean(item));
-        const anchor = candidates.find(
-          (item) => item.getBoundingClientRect().bottom > box.top + 1,
-        );
+                .filter((item): item is HTMLElement => Boolean(item))
+                .find(
+                  (item) => item.getBoundingClientRect().bottom > box.top + 1,
+                );
         position.current = {
           messageId: anchor?.dataset.messageId,
           offset: anchor

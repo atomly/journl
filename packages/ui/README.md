@@ -33,3 +33,9 @@ through `message-scroller`, `message`, `bubble`, `trace`, `code-block`, and
 `input-group` leaf exports. The app owns its AI SDK connection and chat composition.
 Message Scroller owns streaming follow and turn anchoring. Code grammars load on
 demand. Registry copies retain native Base UI composition and existing app themes.
+
+`Surface` from `@acme/ui/surface` supplies opt-in `paper`, `solid` and `glass`
+materials. Import `@acme/ui/materials.css` once in the consumer stylesheet and
+provide the semantic material variables there. The component supplies no layout,
+scrolling, interactive role or application behavior. `opaque-mode` on an ancestor
+uses the solid fallback; system transparency and contrast preferences do the same.

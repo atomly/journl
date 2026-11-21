@@ -240,6 +240,12 @@ test("crossing the toolbar gap keeps the handle on its block and leaving release
   await editor.click();
   await editor.pressSequentially("Previous block");
   await editor.press("Enter");
+  // Keep a target row visibly above the floating toolbar even when controls
+  // become taller or wider. The toolbar may legitimately cover nearer rows.
+  await editor.pressSequentially("Intermediate block one");
+  await editor.press("Enter");
+  await editor.pressSequentially("Intermediate block two");
+  await editor.press("Enter");
   await editor.pressSequentially("Selected block");
   const rows = editor.locator('[data-better-editor-body="paragraph"]');
   await rows.last().evaluate(async (element) => {
@@ -271,7 +277,18 @@ test("crossing the toolbar gap keeps the handle on its block and leaving release
   expect((await handle.boundingBox())?.y).toBeCloseTo(before.y, 0);
   const other = await rows.first().boundingBox();
   if (!other) throw new Error("Missing neighboring block");
-  await page.mouse.move(other.x + other.width - 4, other.y + other.height / 2);
+  const point = {
+    x: other.x + other.width - 4,
+    y: other.y + other.height / 2,
+  };
+  // Prove this is a visible document hit, not a toolbar control covering it.
+  expect(
+    await rows.first().evaluate((element, point) => {
+      const hit = document.elementFromPoint(point.x, point.y);
+      return Boolean(hit && (hit === element || element.contains(hit)));
+    }, point),
+  ).toBe(true);
+  await page.mouse.move(point.x, point.y);
   await expect
     .poll(async () => (await handle.boundingBox())?.y)
     .toBeLessThan(before.y - 4);

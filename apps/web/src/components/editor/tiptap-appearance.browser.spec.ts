@@ -16,8 +16,9 @@ for (const theme of ["light", "dark"]) {
     await expect(editor).toContainText("Heading 6");
     await page.evaluate(() => document.fonts.ready);
     const font = await editor.evaluate((root) => {
+      // CSS font-family matching ignores case; Next registers local Inter as inter.
       const clean = (family: string) =>
-        family.trim().replaceAll('"', "").replaceAll("'", "");
+        family.trim().replaceAll('"', "").replaceAll("'", "").toLowerCase();
       const family = clean(
         getComputedStyle(root).fontFamily.split(",")[0] ?? "",
       );
@@ -70,7 +71,13 @@ for (const theme of ["light", "dark"]) {
         "sticky",
       );
       await expect(toolbar).toHaveCSS("flex-wrap", "nowrap");
-      expect((await toolbar.boundingBox())?.height).toBeLessThan(50);
+      // One row of 44px touch controls plus the toolbar's padding and borders.
+      expect((await toolbar.boundingBox())?.height).toBeLessThanOrEqual(56);
+      const boldTarget = await toolbar
+        .getByRole("button", { exact: true, name: "Bold" })
+        .boundingBox();
+      expect(boldTarget?.width).toBeGreaterThanOrEqual(44);
+      expect(boldTarget?.height).toBeGreaterThanOrEqual(44);
     }
     await page.keyboard.press("Escape");
     await editor.focus();

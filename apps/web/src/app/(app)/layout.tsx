@@ -54,7 +54,7 @@ async function AppLayout({
                 <AppContainer className="min-h-0 min-w-54 flex-1 overflow-auto [--app-header-offset:0px]">
                   {children}
                 </AppContainer>
-                <ChatSidebarTrigger className="absolute right-[calc(25px+env(safe-area-inset-right,0px))] bottom-[calc(25px+env(safe-area-inset-bottom,0px))] z-3 hidden min-[701px]:flex" />
+                <ChatSidebarTrigger className="absolute right-[calc(16px+env(safe-area-inset-right,0px))] bottom-[calc(16px+env(safe-area-inset-bottom,0px))] z-3 hidden min-[701px]:flex" />
               </div>
               {chatSidebar}
               {chatDrawer}

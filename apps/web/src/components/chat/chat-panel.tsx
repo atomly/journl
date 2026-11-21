@@ -26,6 +26,19 @@ import { isMessageActivelyStreaming, messageSegments } from "./message-parts";
 import { ChatSessionStatus, EarlierChatMessages } from "./session-status";
 import "./chat.css";
 
+function unavailableConversation(node: HTMLElement) {
+  return (
+    !node.isConnected ||
+    !node.clientWidth ||
+    !node.clientHeight ||
+    Boolean(
+      node.closest(
+        '[inert], [data-slot="drawer-content"][data-state="closed"]',
+      ),
+    )
+  );
+}
+
 const pendingMessage: UIMessage = {
   id: "pending",
   parts: [],
@@ -53,8 +66,7 @@ function ConversationViewport({
     if (!node) return;
     let firstFrame = 0;
     let secondFrame = 0;
-    const unavailable = () =>
-      !node.clientWidth || Boolean(node.closest("[inert]"));
+    const unavailable = () => unavailableConversation(node);
     const restore = () => {
       if (unavailable() || node.hasAttribute("data-pending-scroll")) return;
       const saved = desired.current;
@@ -106,6 +118,12 @@ function ConversationViewport({
         attributeFilter: ["inert"],
         attributes: true,
       });
+    const drawer = node.closest('[data-slot="drawer-content"]');
+    if (drawer)
+      attributes.observe(drawer, {
+        attributeFilter: ["data-state"],
+        attributes: true,
+      });
     const resize = new ResizeObserver(schedule);
     resize.observe(node);
     schedule();
@@ -123,12 +141,7 @@ function ConversationViewport({
       className="px-4"
       onScroll={(event) => {
         const viewport = event.currentTarget;
-        if (
-          restoring.current ||
-          !viewport.clientWidth ||
-          viewport.closest("[inert]")
-        )
-          return;
+        if (restoring.current || unavailableConversation(viewport)) return;
         const box = viewport.getBoundingClientRect();
         const hit = document
           .elementFromPoint(box.left + box.width / 2, box.top + 1)

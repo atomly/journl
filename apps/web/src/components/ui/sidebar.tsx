@@ -60,6 +60,8 @@ type SidebarContextProps = {
   isDraggingRail: boolean;
   setIsDraggingRail: (isDraggingRail: boolean) => void;
   initialWidthRem?: number;
+  widthRem: number;
+  setWidthRem: React.Dispatch<React.SetStateAction<number>>;
   handleResizeEnd: (widthRem: number) => void;
 };
 
@@ -95,6 +97,9 @@ function SidebarProvider({
 }: SidebarProviderProps) {
   const isMobile = useIsMobile();
   const [openMobile, setOpenMobile] = React.useState(false);
+  const [widthRem, setWidthRem] = React.useState(
+    initialWidthRem ?? parseRem(SIDEBAR_WIDTH),
+  );
   const [isDraggingRail, setIsDraggingRail] = React.useState(false);
 
   // This is the internal state of the sidebar.
@@ -184,12 +189,15 @@ function SidebarProvider({
       setIsDraggingRail,
       setOpen,
       setOpenMobile,
+      setWidthRem,
       state,
       toggleSidebar,
+      widthRem,
     }),
     [
       isMobile,
       initialWidthRem,
+      widthRem,
       handleResizeEnd,
       open,
       openMobile,
@@ -255,26 +263,20 @@ function Sidebar({
     open,
     setOpen,
     initialWidthRem,
+    widthRem,
+    setWidthRem,
     handleResizeEnd,
   } = useSidebar();
 
-  // Local state for this sidebar instance
-  const [widthRem, setWidthRem] = React.useState(() => {
-    const defaultWidthRem = defaultWidth
-      ? parseRem(defaultWidth)
-      : parseRem(SIDEBAR_WIDTH);
-
-    return typeof initialWidthRem === "number"
-      ? initialWidthRem
-      : defaultWidthRem;
-  });
-
   React.useEffect(() => {
-    if (typeof initialWidthRem === "number")
-      setWidthRem(
-        clampNumber(initialWidthRem, parseRem(minWidth), parseRem(maxWidth)),
-      );
-  }, [initialWidthRem, minWidth, maxWidth]);
+    setWidthRem(
+      clampNumber(
+        initialWidthRem ?? parseRem(defaultWidth),
+        parseRem(minWidth),
+        parseRem(maxWidth),
+      ),
+    );
+  }, [initialWidthRem, defaultWidth, minWidth, maxWidth, setWidthRem]);
 
   const toggleSidebar = React.useCallback(() => {
     return isMobile ? setOpenMobile((open) => !open) : setOpen((open) => !open);
@@ -379,6 +381,7 @@ function Sidebar({
       side,
       collapsible,
       toggleSidebar,
+      setWidthRem,
       setOpen,
       setIsDraggingRail,
       handleResizeEnd,
@@ -445,7 +448,7 @@ function Sidebar({
         data-slot="sidebar"
         data-mobile="true"
         showCloseButton={false}
-        className="max-h-[65dvh] w-auto gap-0 overflow-hidden rounded-3xl bg-card p-0 text-sidebar-foreground data-[side=bottom]:inset-x-3 data-[side=bottom]:bottom-3 data-[side=bottom]:h-[65dvh] min-[701px]:inset-x-auto! min-[701px]:top-1/2! min-[701px]:bottom-auto! min-[701px]:left-1/2! min-[701px]:h-[min(754px,calc(100dvh-48px))]! min-[701px]:max-h-[calc(100dvh-48px)] min-[701px]:w-[560px] min-[701px]:max-w-[calc(100vw-48px)] min-[701px]:-translate-x-1/2 min-[701px]:-translate-y-1/2"
+        className="max-h-[calc(100dvh-72px)] w-auto gap-0 overflow-hidden rounded-t-[18px] rounded-b-none bg-[#edf4fd] p-0 text-sidebar-foreground data-[side=bottom]:inset-x-0 data-[side=bottom]:bottom-0 data-[side=bottom]:h-[calc(100dvh-72px)] min-[701px]:inset-x-auto! min-[701px]:top-1/2! min-[701px]:bottom-auto! min-[701px]:left-1/2! min-[701px]:h-[min(754px,calc(100dvh-48px))]! min-[701px]:max-h-[calc(100dvh-48px)] min-[701px]:w-[560px] min-[701px]:max-w-[calc(100vw-48px)] min-[701px]:-translate-x-1/2 min-[701px]:-translate-y-1/2 dark:bg-[#182a42]"
         finalFocus={() =>
           document.querySelector<HTMLButtonElement>(
             isMobile
@@ -464,15 +467,19 @@ function Sidebar({
           material="glass"
           className="shrink-0 rounded-none border-x-0 border-t-0"
         >
-          <SheetHeader className="min-h-[70px] justify-center pr-16 min-[701px]:min-h-[78px]">
+          <SheetHeader className="sr-only min-[701px]:not-sr-only min-[701px]:min-h-[78px] min-[701px]:justify-center min-[701px]:pr-16">
             <SheetTitle className="font-semibold text-lg min-[701px]:text-2xl">
               Notebook navigation
             </SheetTitle>
           </SheetHeader>
         </Surface>
         <div
+          aria-hidden="true"
+          className="mx-auto mt-3 h-1 w-8 shrink-0 rounded bg-slate-400 min-[701px]:hidden"
+        />
+        <div
           data-shell-navigation-body
-          className="min-h-0 w-full flex-1 overflow-auto px-5 min-[701px]:px-3"
+          className="min-h-0 w-full flex-1 overflow-auto px-0 min-[701px]:px-3"
         >
           {children}
         </div>
@@ -480,9 +487,9 @@ function Sidebar({
           aria-label="Close navigation"
           render={
             <Button
-              variant="outline"
+              variant="ghost"
               size="icon"
-              className="absolute top-3 right-3 size-11 rounded-full"
+              className="absolute top-5 right-3 size-11 rounded-full min-[701px]:top-3"
             />
           }
         >
@@ -701,9 +708,9 @@ function SidebarDragHandle({
               : event.key === "End"
                 ? max
                 : event.key === "ArrowRight"
-                  ? width + direction
+                  ? width + direction * 0.5
                   : event.key === "ArrowLeft"
-                    ? width - direction
+                    ? width - direction * 0.5
                     : null;
           if (next === null) return;
           event.preventDefault();
@@ -750,6 +757,7 @@ function SidebarDragHandle({
 }
 
 function SidebarTrigger({
+  children,
   className,
   onClick,
   ...props
@@ -771,7 +779,7 @@ function SidebarTrigger({
       }}
       {...props}
     >
-      <MenuIcon className="size-5" />
+      {children ?? <MenuIcon className="size-5" />}
       <span className="sr-only">Toggle Sidebar</span>
     </Button>
   );
@@ -988,7 +996,7 @@ function SidebarMenuItem({ className, ...props }: React.ComponentProps<"li">) {
 }
 
 const sidebarMenuButtonVariants = cva(
-  "peer/menu-button flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm outline-hidden ring-sidebar-ring transition-[width,height,padding] hover:bg-muted/60 hover:text-foreground focus-visible:ring-2 active:bg-muted/60 active:text-foreground disabled:pointer-events-none disabled:opacity-50 group-has-data-[sidebar=menu-action]/menu-item:pr-8 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[active=true]:bg-sidebar-accent data-[active=true]:font-semibold data-[active=true]:text-sidebar-accent-foreground data-[active=true]:hover:bg-sidebar-accent data-[active=true]:hover:text-sidebar-accent-foreground data-[active=true]:focus-visible:bg-sidebar-accent data-[active=true]:focus-visible:text-sidebar-accent-foreground data-[popup-open]:hover:bg-muted/60 data-[popup-open]:hover:text-foreground group-data-[collapsible=icon]:size-8! group-data-[collapsible=icon]:p-2! [&>span:last-child]:truncate [&>svg]:size-3.5 [&>svg]:shrink-0",
+  "peer/menu-button flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm outline-hidden ring-sidebar-ring transition-[width,height,padding] hover:bg-muted/60 hover:text-foreground focus-visible:ring-2 active:bg-muted/60 active:text-foreground disabled:pointer-events-none disabled:opacity-50 group-has-data-[sidebar=menu-action]/menu-item:pr-8 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[active=true]:bg-sidebar-accent data-[active=true]:font-semibold data-[active=true]:text-sidebar-accent-foreground data-[active=true]:hover:bg-sidebar-accent data-[active=true]:hover:text-sidebar-accent-foreground data-[active=true]:focus-visible:bg-sidebar-accent data-[active=true]:focus-visible:text-sidebar-accent-foreground data-[popup-open]:hover:bg-muted/60 data-[popup-open]:hover:text-foreground group-data-[collapsible=icon]:size-10 group-data-[collapsible=icon]:p-0 [&>span:last-child]:truncate [&>svg]:size-3.5 [&>svg]:shrink-0",
   {
     defaultVariants: {
       size: "default",

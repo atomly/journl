@@ -1,12 +1,16 @@
 "use client";
 
 import { Button } from "@acme/ui/button";
-import { Maximize2, Minimize2, X } from "lucide-react";
+import { Maximize2, Minimize2, PanelRight, Sparkles } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useSyncExternalStore } from "react";
 import { useAppPreferences } from "~/components/preferences/app-preferences-provider";
 import { useSidebar } from "~/components/ui/sidebar";
 import { useJournlAgent } from "~/hooks/use-journl-agent";
+import {
+  CHAT_SIDEBAR_WIDTH_REM_DEFAULT,
+  CHAT_SIDEBAR_WIDTH_REM_MAX,
+} from "~/preferences/app-preferences";
 
 export function AssistantIdentity() {
   const agent = useJournlAgent();
@@ -31,7 +35,13 @@ export function AssistantIdentity() {
   );
   return (
     <div className="min-w-0 flex-1">
-      <h2 className="font-semibold text-[15px] leading-[1.2]">Ask Journl</h2>
+      <h2 className="flex items-center gap-2 font-[720] text-[15px] leading-[1.55]">
+        <Sparkles
+          aria-hidden="true"
+          className="size-4 text-sidebar-accent-foreground"
+        />
+        Ask Journl
+      </h2>
       <p className="sr-only">{context} · AI assistant</p>
     </div>
   );
@@ -40,7 +50,7 @@ export function AssistantIdentity() {
 export function ChatPanelChrome() {
   const { setOpen } = useSidebar();
   const { preferences, updatePreferences } = useAppPreferences();
-  const expanded = preferences.chatSidebarWidthRem === 44;
+  const expanded = preferences.chatSidebarWidthRem > CHAT_SIDEBAR_WIDTH_REM_MAX;
   return (
     <div className="flex h-[62px] shrink-0 items-center gap-2 border-b px-4">
       <AssistantIdentity />
@@ -49,7 +59,9 @@ export function ChatPanelChrome() {
         size="icon"
         aria-label={expanded ? "Default assistant width" : "Expand assistant"}
         onClick={() =>
-          updatePreferences({ chatSidebarWidthRem: expanded ? 30 : 44 })
+          updatePreferences({
+            chatSidebarWidthRem: expanded ? CHAT_SIDEBAR_WIDTH_REM_DEFAULT : 44,
+          })
         }
       >
         {expanded ? (
@@ -64,7 +76,7 @@ export function ChatPanelChrome() {
         aria-label="Close assistant"
         onClick={() => setOpen(false)}
       >
-        <X className="size-4" />
+        <PanelRight className="size-4" />
       </Button>
     </div>
   );

@@ -1,5 +1,6 @@
 "use client";
 
+import { PanelLeft } from "lucide-react";
 import * as React from "react";
 import { useAppPreferences } from "~/components/preferences/app-preferences-provider";
 import {
@@ -90,15 +91,15 @@ export function AppSidebarProvider({
 }
 
 export function NavigationSidebarClose() {
+  const { state } = useSidebar();
   return (
     <SidebarTrigger
-      aria-label="Close navigation"
-      className="hidden group-data-[collapsible=icon]:hidden min-[701px]:max-[1101px]:inline-flex"
-      onClick={() =>
-        document
-          .querySelector<HTMLButtonElement>('header [data-sidebar="trigger"]')
-          ?.focus()
-      }
-    />
+      aria-label="Toggle Sidebar"
+      aria-expanded={state === "expanded"}
+      title={state === "collapsed" ? "Expand navigation" : "Close navigation"}
+      className="journl-navigation-toggle hidden min-[701px]:inline-flex"
+    >
+      <PanelLeft className="size-4" />
+    </SidebarTrigger>
   );
 }

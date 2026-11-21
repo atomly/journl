@@ -331,6 +331,8 @@ export function AppSidebarTreeActions({
   if (triggerMode === "direct-page") {
     return (
       <Button
+        aria-label="New page"
+        title="New page"
         type="button"
         variant="default"
         className={cn("h-11 w-full justify-center gap-2", className)}

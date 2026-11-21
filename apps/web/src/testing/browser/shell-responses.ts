@@ -114,7 +114,10 @@ export async function controlShellSearch(page: Page) {
   };
 }
 
-export async function populateShellConversation(page: Page) {
+export async function populateShellConversation(
+  page: Page,
+  messages: UIMessage[] = shellMessages,
+) {
   await page.route("**/api/trpc/chat.create**", async (route) => {
     const response = await route.fetch({
       headers: {
@@ -137,7 +140,7 @@ export async function populateShellConversation(page: Page) {
           create: t.procedure.mutation(() => ({
             ...history,
             hasMore: false,
-            messages: shellMessages,
+            messages,
           })),
         }),
       }),

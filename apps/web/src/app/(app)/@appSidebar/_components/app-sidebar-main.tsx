@@ -60,7 +60,9 @@ export function AppSidebarNavigation({ items }: AppSidebarNavigationProps) {
                 onClick={handleNavigationClick}
               >
                 {item.icon && item.icon}
-                <span>{item.title}</span>
+                <span className="group-data-[collapsible=icon]:sr-only">
+                  {item.title}
+                </span>
               </Link>
             }
           />

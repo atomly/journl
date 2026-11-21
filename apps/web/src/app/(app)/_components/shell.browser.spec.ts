@@ -17,18 +17,18 @@ test("panel keyboard resizing is bounded and independent of route identity", asy
   await expect(navigation).toHaveAttribute("aria-valuenow", "216");
   await navigation.focus();
   await page.keyboard.press("End");
-  await expect(navigation).toHaveAttribute("aria-valuenow", "280");
+  await expect(navigation).toHaveAttribute("aria-valuenow", "320");
   await page.keyboard.press("ArrowLeft");
-  await expect(navigation).toHaveAttribute("aria-valuenow", "264");
+  await expect(navigation).toHaveAttribute("aria-valuenow", "312");
   await page.keyboard.press("Home");
-  await expect(navigation).toHaveAttribute("aria-valuenow", "192");
-  await expect(assistant).toHaveAttribute("aria-valuenow", "480");
+  await expect(navigation).toHaveAttribute("aria-valuenow", "200");
+  await expect(assistant).toHaveAttribute("aria-valuenow", "400");
   await assistant.focus();
   await page.keyboard.press("End");
-  await expect(assistant).toHaveAttribute("aria-valuenow", "704");
+  await expect(assistant).toHaveAttribute("aria-valuenow", "520");
   await page.keyboard.press("Home");
-  await expect(assistant).toHaveAttribute("aria-valuenow", "400");
-  await expect(navigation).toHaveAttribute("aria-valuenow", "192");
+  await expect(assistant).toHaveAttribute("aria-valuenow", "360");
+  await expect(navigation).toHaveAttribute("aria-valuenow", "200");
   for (const theme of ["light", "dark"]) {
     await page.evaluate((value) => {
       document.documentElement.classList.toggle("dark", value === "dark");
@@ -75,7 +75,10 @@ test("assistant controls update live width, restore focus and retain independent
     .getByRole("button", { exact: true, name: "Expand assistant" })
     .click();
   await expect(assistant).toHaveAttribute("aria-valuenow", "704");
-  await expect(page.locator("header[data-hidden]")).toHaveCSS("width", "456px");
+  await expect(page.locator("header[data-hidden]")).toHaveCSS(
+    "width",
+    "1176px",
+  );
   const expanded = await page
     .locator('[data-side="right"] [data-slot="sidebar-container"]')
     .boundingBox();
@@ -104,7 +107,7 @@ test("assistant controls update live width, restore focus and retain independent
   await page
     .getByRole("button", { exact: true, name: "Default assistant width" })
     .click();
-  await expect(assistant).toHaveAttribute("aria-valuenow", "480");
+  await expect(assistant).toHaveAttribute("aria-valuenow", "400");
   await page
     .getByRole("button", { exact: true, name: "Close assistant" })
     .click();
@@ -128,7 +131,7 @@ test("assistant controls update live width, restore focus and retain independent
   await page
     .getByRole("button", { exact: true, name: "Toggle Chat Sidebar" })
     .click();
-  await expect(assistant).toHaveAttribute("aria-valuenow", "480");
+  await expect(assistant).toHaveAttribute("aria-valuenow", "400");
   for (const width of [700, 701, 767, 768, 834, 1100, 1101, 1440]) {
     await page.setViewportSize({ height: 1112, width });
     if (width <= 700) {
@@ -153,21 +156,19 @@ test("assistant controls update live width, restore focus and retain independent
       const box = await page
         .locator('[data-side="right"] [data-slot="sidebar-container"]')
         .boundingBox();
-      expect(box?.x).toBe(96);
-      expect(box?.y).toBe(96);
+      expect(box?.x).toBe(88);
+      expect(box?.y).toBe(86);
       await expect(
         page.locator('[data-side="right"] [data-slot="sidebar-container"]'),
-      ).toHaveCSS("width", `${width - 112}px`);
+      ).toHaveCSS("width", `${width - 100}px`);
       await page
         .getByRole("button", { exact: true, name: "Toggle Sidebar" })
         .click();
       await expect(navigation).toHaveAttribute("data-state", "expanded");
       await page
-        .getByRole("button", { exact: true, name: "Close navigation" })
+        .getByRole("button", { exact: true, name: "Toggle Sidebar" })
         .click();
-      await expect(
-        page.locator('header [data-sidebar="trigger"]'),
-      ).toBeFocused();
+      await expect(page.locator(".journl-navigation-toggle")).toBeFocused();
     }
   }
   await expect(
@@ -512,12 +513,16 @@ test("shell controls remain reachable with solid materials and system colors", a
   await expect(chrome).toHaveCSS("backdrop-filter", "none");
   await page.emulateMedia({ forcedColors: "active", reducedMotion: "reduce" });
   await expect(chrome).toHaveCSS("box-shadow", "none");
-  await expect(
-    page.getByRole("button", { exact: true, name: "Search notes" }),
-  ).toBeInViewport();
+  await expect(page.locator("[data-app-container]")).toHaveAttribute(
+    "inert",
+    "",
+  );
   await page
     .getByRole("button", { exact: true, name: "Close assistant" })
     .click();
+  await expect(
+    page.getByRole("button", { exact: true, name: "Search notes" }),
+  ).toBeInViewport();
   await expect(
     page.getByRole("button", { exact: true, name: "Toggle Chat Sidebar" }),
   ).toBeInViewport();
@@ -553,8 +558,110 @@ test("desktop navigation dialog retains the floating navigation and returns focu
     page.locator('[data-side="left"][data-slot="sidebar"]'),
   ).toHaveAttribute("data-state", "expanded");
   await dialog
-    .getByRole("button", { exact: true, name: "Close navigation" })
+    .getByRole("button", { exact: true, name: "Toggle Sidebar" })
     .click();
   await expect(dialog).not.toBeVisible();
   await expect(trigger).toBeFocused();
+});
+
+test("compact rail keeps normal assistant space when the center fits", async ({
+  page,
+  context,
+}, info) => {
+  test.skip(info.project.name !== "desktop-chromium", "Desktop fit boundary");
+  await page.setViewportSize({ height: 1000, width: 1250 });
+  await context.addCookies([
+    {
+      name: "journl:preferences",
+      url: "http://127.0.0.1:3100",
+      value: encodeURIComponent(
+        JSON.stringify({
+          appSidebarOpen: false,
+          appSidebarWidthRem: 19,
+          chatSidebarOpen: true,
+          chatSidebarWidthRem: 32.5,
+          journalTimelineView: "entries",
+        }),
+      ),
+    },
+  ]);
+  await page.goto("/pages/00000000-0000-4000-8000-000000000025");
+  await expect(page.locator("header[data-hidden]")).toHaveCSS("width", "602px");
+  await expect(page.locator("[data-app-container]")).not.toHaveAttribute(
+    "inert",
+    "",
+  );
+  await page.setViewportSize({ height: 1000, width: 1200 });
+  await expect(page.locator("[data-app-container]")).toHaveAttribute(
+    "inert",
+    "",
+  );
+  await expect(
+    page.getByRole("separator", { name: "Resize assistant" }),
+  ).toHaveAttribute("aria-valuenow", "520");
+  await page
+    .getByRole("button", { exact: true, name: "Close assistant" })
+    .click();
+  await expect(page.locator("[data-app-container]")).not.toHaveAttribute(
+    "inert",
+    "",
+  );
+  await page
+    .getByRole("button", { exact: true, name: "Toggle Chat Sidebar" })
+    .click();
+  await expect(
+    page.getByRole("separator", { name: "Resize assistant" }),
+  ).toHaveAttribute("aria-valuenow", "520");
+});
+
+test("live pointer resize overlays before the center minimum and cancellation restores widths", async ({
+  page,
+  context,
+}, info) => {
+  test.skip(info.project.name !== "desktop-chromium", "Desktop live resize");
+  await page.setViewportSize({ height: 1000, width: 1440 });
+  await context.addCookies([
+    {
+      name: "journl:preferences",
+      url: "http://127.0.0.1:3100",
+      value: encodeURIComponent(
+        JSON.stringify({
+          appSidebarOpen: true,
+          appSidebarWidthRem: 13.5,
+          chatSidebarOpen: true,
+          chatSidebarWidthRem: 32.5,
+          journalTimelineView: "entries",
+        }),
+      ),
+    },
+  ]);
+  await page.goto("/pages/00000000-0000-4000-8000-000000000025");
+  const navigation = page.getByRole("separator", { name: "Resize navigation" });
+  await expect(navigation).toHaveAttribute("aria-valuenow", "216");
+  const handle = await navigation.boundingBox();
+  if (!handle) throw new Error("Navigation resize handle unavailable");
+  await page.mouse.move(
+    handle.x + handle.width / 2,
+    handle.y + handle.height / 2,
+  );
+  await page.mouse.down();
+  await page.mouse.move(
+    handle.x + handle.width / 2 + 100,
+    handle.y + handle.height / 2,
+    { steps: 5 },
+  );
+  await expect(page.locator("[data-app-container]")).toHaveAttribute(
+    "inert",
+    "",
+  );
+  await page.keyboard.press("Escape");
+  await page.mouse.up();
+  await expect(navigation).toHaveAttribute("aria-valuenow", "216");
+  await expect(
+    page.getByRole("separator", { name: "Resize assistant" }),
+  ).toHaveAttribute("aria-valuenow", "520");
+  await expect(page.locator("[data-app-container]")).not.toHaveAttribute(
+    "inert",
+    "",
+  );
 });

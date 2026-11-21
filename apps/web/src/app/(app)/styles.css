@@ -1,3 +1,21 @@
+.journl-navigation-create > button > svg {
+  width: 16px;
+  height: 16px;
+}
+/* Quiet icon ink stays separate from selected labels and action fills. */
+:is([data-side="left"], [data-mobile="true"])
+  [data-sidebar="menu-button"]
+  > svg,
+.journl-navigation-toggle,
+[data-side="right"]
+  :is(
+    [aria-label="Expand assistant"],
+    [aria-label="Default assistant width"],
+    [aria-label="Close assistant"]
+  ) {
+  color: var(--muted-foreground);
+}
+
 /* Let tree handles own long presses instead of Safari's link preview or selection. */
 [data-tree-drag-handle] {
   -webkit-touch-callout: none;
@@ -233,6 +251,9 @@ The rest of the components are set by the Tailwind CSS classes, or by our editor
 [data-slot="sidebar-inner"] {
   overflow: hidden;
 }
+:is([data-side="left"], [data-mobile="true"]) [data-active="true"] {
+  font-weight: 650;
+}
 /* Shell geometry is independent of the route's scroll owner and editor session. */
 [data-slot="sidebar-inset"] {
   background: transparent;
@@ -255,7 +276,7 @@ The rest of the components are set by the Tailwind CSS classes, or by our editor
   border-color: var(--glass-edge);
   border-bottom-color: var(--glass-lower);
   box-shadow: var(--depth);
-  backdrop-filter: blur(24px) saturate(1.15);
+  backdrop-filter: blur(20px);
 }
 /* Workspace chrome is composed here, outside reusable UI/editor materials. */
 [data-slot="sidebar-inner"],
@@ -267,7 +288,7 @@ The rest of the components are set by the Tailwind CSS classes, or by our editor
 }
 :where(.dark) [data-slot="sidebar-inner"],
 :where(.dark) [data-slot="sidebar-inset"] > header > div {
-  background: rgb(21 38 59 / 86%);
+  background: #15263bdc;
   border-color: #344865;
   color: #eef3ff;
   box-shadow: 0 12px 30px #050b1780;
@@ -344,14 +365,6 @@ The rest of the components are set by the Tailwind CSS classes, or by our editor
   }
 }
 
-@media (1101px <= width <= 1279px) {
-  [data-slot="sidebar"][data-side="right"][data-expanded-width="true"]
-    > [data-slot="sidebar-gap"] {
-    width: 0;
-    margin: 0;
-  }
-}
-
 @media (width <= 700px) {
   [data-slot="sidebar-inset"] {
     padding: 88px 12px 12px;
@@ -406,7 +419,7 @@ The rest of the components are set by the Tailwind CSS classes, or by our editor
   [data-shell-content-stage] {
     grid-area: 2 / 1;
   }
-  [data-shell-panels] > [data-slot="sidebar"][data-side="right"] {
+  [data-shell-panels] [data-slot="sidebar"][data-side="right"] {
     grid-area: 1 / 2 / 3 / 3;
   }
   /* Expanded chat can cover the document on narrower desktops. Its underlying
@@ -636,6 +649,15 @@ The rest of the components are set by the Tailwind CSS classes, or by our editor
 .journl-navigation-account .font-medium {
   font-weight: 400;
 }
+.journl-navigation-account [data-slot="avatar"] {
+  width: 24px;
+  height: 24px;
+}
+.journl-navigation-account [data-slot="avatar-fallback"] {
+  background: var(--sidebar-accent);
+  color: var(--sidebar-accent-foreground);
+  font-size: 10px;
+}
 .journl-navigation-account [data-slot="avatar"]::after {
   border: 0;
 }
@@ -752,4 +774,647 @@ body:has([data-slot="sidebar-inset"]) {
   .journl-brand {
   width: 32px;
   height: 32px;
+}
+
+/* Navigation uses the approved row insets without changing tree actions. */
+[data-side="left"] {
+  --navigation-create-background: #daf3e9;
+  --navigation-create-foreground: #24594c;
+}
+.dark [data-side="left"] {
+  --navigation-create-background: #213e39;
+  --navigation-create-foreground: #ace8d3;
+}
+.journl-navigation-header {
+  padding: 12px 14px 0;
+  margin-bottom: 14px;
+}
+.journl-navigation-shortcuts {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 4px 8px 0;
+}
+.journl-navigation-shortcuts [data-sidebar="menu-button"] {
+  margin: 0;
+}
+.journl-navigation-primary {
+  gap: 0;
+  padding-block: 0;
+}
+.journl-navigation-primary .journl-navigation-label {
+  height: auto;
+  min-height: 17px;
+  margin: 20px 0 4px;
+  padding: 0 8px;
+  font-size: 11px;
+  font-weight: 750;
+  letter-spacing: 0.09em;
+  line-height: 17px;
+  text-transform: uppercase;
+}
+.journl-navigation-create > [data-slot="button"] {
+  height: 36px;
+  min-height: 36px;
+  justify-content: flex-start;
+  padding-inline: 8px;
+  gap: 8px;
+  border-radius: 7px;
+  font-size: 13px;
+  font-weight: 400;
+  background: var(--navigation-create-background);
+  color: var(--navigation-create-foreground);
+}
+.journl-navigation-create > [data-slot="button"]:hover {
+  background: color-mix(
+    in srgb,
+    var(--navigation-create-background),
+    var(--navigation-create-foreground) 8%
+  );
+  box-shadow: none;
+}
+.journl-navigation-create > [data-slot="button"]:disabled {
+  background: var(--disabled);
+  color: var(--disabled-foreground);
+}
+@media (width <= 700px) {
+  .journl-navigation-create > [data-slot="button"] {
+    height: 44px;
+    min-height: 44px;
+  }
+}
+@media (forced-colors: active) {
+  .journl-navigation-create > [data-slot="button"] {
+    background: ButtonFace;
+    color: ButtonText;
+    border-color: ButtonText;
+  }
+  .journl-navigation-create > [data-slot="button"]:hover {
+    background: Highlight;
+    color: HighlightText;
+  }
+  .journl-navigation-create > [data-slot="button"]:disabled {
+    color: GrayText;
+  }
+}
+
+/* Workspace-v2 responsive panel geometry. */
+@media (701px <= width <= 1100px) {
+  [data-slot="sidebar-inset"] {
+    padding: 12px 12px 12px 0;
+  }
+  [data-side="left"] > [data-slot="sidebar-gap"] {
+    margin-right: 24px;
+  }
+  [data-side="left"] > [data-slot="sidebar-container"] {
+    left: 12px;
+    top: 12px;
+    bottom: 12px;
+    height: calc(100dvh - 24px);
+  }
+}
+[data-slot="sidebar-inset"]:has([data-assistant-overlay="true"])
+  [data-side="right"]
+  > [data-slot="sidebar-gap"] {
+  width: 0;
+  margin: 0;
+}
+[data-slot="sidebar-inset"]:has([data-assistant-overlay="true"])
+  [data-side="right"]
+  > [data-slot="sidebar-container"] {
+  top: 16px;
+  bottom: 16px;
+  left: auto;
+  right: 16px;
+  height: calc(100dvh - 32px);
+  max-width: calc(100vw - 112px);
+}
+@media (width <= 700px) {
+  [data-slot="sidebar-inset"] {
+    padding: 60px 0 0;
+  }
+  [data-slot="sidebar-inset"] > header {
+    top: 0;
+    right: 0;
+    left: 0;
+    margin: 0;
+    height: 60px;
+  }
+  [data-slot="sidebar-inset"] > header > div {
+    border-radius: 0;
+    border-width: 0 0 1px;
+    box-shadow: none;
+  }
+  [data-slot="sidebar-inset"] [data-app-container] {
+    border: 0;
+    border-radius: 0;
+  }
+  [data-slot="sidebar-inset"]:has(> header[data-hidden="true"]):not(
+    :has(> header :focus-visible)
+  ) {
+    padding-top: 0;
+  }
+  [data-slot="sidebar-inset"]:has(> header[data-hidden="true"]):not(
+      :has(> header :focus-visible)
+    )
+    [data-app-container] {
+    padding-top: 60px;
+    --app-sticky-scroll-compensation: -60px;
+  }
+  [data-mobile="true"]
+    [data-shell-navigation-body]
+    [data-sidebar="menu-button"],
+  [data-mobile="true"]
+    [data-shell-navigation-body]
+    [data-sidebar="menu-sub-button"] {
+    min-height: 44px;
+  }
+}
+[data-side="left"]
+  :is(
+    [data-sidebar="menu-button"],
+    [data-sidebar="menu-sub-button"]
+  ):focus-visible {
+  outline-offset: 1px;
+}
+[data-side="left"] [data-sidebar="menu-sub"] {
+  padding-inline: 3px;
+}
+[data-mobile="true"] {
+  --navigation-create-background: #daf3e9;
+  --navigation-create-foreground: #24594c;
+}
+.dark [data-mobile="true"] {
+  --navigation-create-background: #213e39;
+  --navigation-create-foreground: #ace8d3;
+}
+[data-side="left"] [data-sidebar="menu-sub-button"]:has(:focus-visible) {
+  outline: 2px solid var(--ring);
+  outline-offset: 1px;
+}
+@media (701px <= width <= 1100px) {
+  [data-slot="sidebar-inset"]:has([data-assistant-overlay="true"])
+    [data-side="right"]
+    > [data-slot="sidebar-container"] {
+    top: 86px;
+    bottom: 12px;
+    left: 88px;
+    right: 12px;
+    width: calc(100vw - 100px);
+    max-width: none;
+    height: calc(100dvh - 98px);
+  }
+}
+[data-state="expanded"] .journl-navigation-toggle {
+  position: absolute;
+  top: 18px;
+  right: 12px;
+  width: 32px;
+  height: 32px;
+}
+[data-state="collapsed"] .journl-navigation-header {
+  align-items: center;
+  padding-inline: 8px;
+}
+[data-side="left"][data-state="collapsed"]
+  .journl-navigation-header
+  > .journl-brand {
+  order: -1;
+}
+[data-state="collapsed"] .journl-navigation-toggle {
+  width: 40px;
+  height: 40px;
+}
+[data-state="collapsed"] .journl-navigation-create {
+  display: block;
+}
+[data-state="collapsed"] .journl-navigation-create > button {
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  min-height: 40px;
+  padding: 0;
+  background: transparent;
+  color: inherit;
+}
+[data-state="collapsed"] .journl-navigation-create > button > span {
+  display: none;
+}
+/* App launcher keeps unread status accessible without an always-present dot. */
+.journl-agent-launcher {
+  font:
+    700 14px / 1.55 system-ui,
+    -apple-system,
+    sans-serif;
+  gap: 6px;
+  padding: 10px 15px;
+  background: #273f9d;
+  color: #fcfdff;
+}
+.dark .journl-agent-launcher {
+  background: #c4ceff;
+  color: #141f31;
+}
+.journl-agent-launcher:hover {
+  background: #304eb4;
+  color: #fcfdff;
+}
+.dark .journl-agent-launcher:hover {
+  background: #d9dfff;
+  color: #141f31;
+}
+[data-side="left"][data-state="collapsed"]
+  [data-sidebar="header"]
+  .journl-brand {
+  width: 24px;
+  height: 24px;
+}
+[data-state="collapsed"] .journl-navigation-primary .journl-navigation-label {
+  min-height: 1px;
+  height: 1px;
+  margin: 12px 0;
+}
+@media (forced-colors: active) {
+  .journl-agent-launcher {
+    background: ButtonFace;
+    color: ButtonText;
+    border: 1px solid ButtonText;
+  }
+}
+/* Sheets keep navigation scroll independent from the account control. */
+@media (width <= 700px) {
+  [data-mobile="true"] [data-shell-navigation-body] {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  [data-mobile="true"] [data-shell-navigation-body] > [data-sidebar="content"] {
+    display: flex;
+    min-height: 0;
+    overflow: auto;
+  }
+  [data-mobile="true"]
+    [data-shell-navigation-body]
+    > [data-sidebar="content"]
+    > [data-sidebar="group"] {
+    display: flex;
+    overflow: visible;
+    flex: 1 0 auto;
+  }
+  [data-mobile="true"]
+    :is([data-sidebar="menu-button"], [data-sidebar="menu-sub-button"]) {
+    font-size: 13px;
+    border-radius: 7px;
+  }
+  [data-mobile="true"]
+    :is([data-sidebar="menu-button"], [data-sidebar="menu-sub-button"])
+    > svg {
+    width: 16px;
+    height: 16px;
+  }
+  [data-mobile="true"] [data-active="true"] {
+    background: #d9dfff;
+    color: #273f9d;
+  }
+  .dark [data-mobile="true"] [data-active="true"] {
+    background: #303f72;
+    color: #c4ceff;
+  }
+}
+.dark [data-slot="sidebar-inset"] [data-app-container] {
+  background: #141f31;
+}
+[data-mobile="true"] [data-development-tools] {
+  padding-block: 2px;
+}
+/* Compact controls retain the same 44px rhythm as the approved icon rail. */
+[data-state="collapsed"] .journl-navigation-header {
+  gap: 18px;
+  margin-bottom: 0;
+}
+[data-side="left"][data-state="collapsed"]
+  [data-sidebar="header"]
+  .journl-brand {
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+[data-side="left"][data-state="collapsed"]
+  [data-sidebar="header"]
+  .journl-brand
+  img {
+  width: 24px;
+  height: 24px;
+}
+[data-state="collapsed"]
+  .journl-navigation-shortcuts
+  [data-sidebar="menu-button"],
+[data-state="collapsed"]
+  .journl-navigation-primary
+  [data-sidebar="menu-button"] {
+  width: 40px !important;
+  height: 40px !important;
+  padding: 0 !important;
+  justify-content: center;
+}
+[data-state="collapsed"] .journl-navigation-primary {
+  padding-top: 4px;
+}
+[data-state="collapsed"] .journl-navigation-primary .journl-navigation-label {
+  display: none;
+}
+/* Tree indentation belongs to the label, so row fills share the panel inset. */
+:is([data-side="left"], [data-mobile="true"]) [data-sidebar="menu-sub"] {
+  margin-inline: 0;
+  padding: 0 3px;
+  border: 0;
+  transform: none;
+  translate: none;
+}
+:is([data-side="left"], [data-mobile="true"]) .journl-tree-item {
+  margin-inline: 0;
+  padding-inline: 0;
+  border: 0;
+}
+:is([data-side="left"], [data-mobile="true"]) [data-sidebar="menu-sub-button"] {
+  padding-left: calc(8px + var(--tree-indent, 0px));
+  transform: none;
+}
+/* Nested lists keep fills aligned while inheriting their semantic depth. */
+:is([data-side="left"], [data-mobile="true"])
+  [data-sidebar="menu-sub"]
+  [data-sidebar="menu-sub"] {
+  padding-inline: 0;
+}
+/* Exact v2 chrome recipe, scoped away from editor internals. */
+:is(
+  [data-slot="sidebar-inner"],
+  [data-slot="sidebar"][data-mobile="true"],
+  [data-slot="sidebar-inset"] > header > div
+) {
+  --foreground: #17283d;
+  --sidebar-foreground: #17283d;
+  --muted-foreground: #485d75;
+  --sidebar-accent: #d9dfff;
+  --sidebar-accent-foreground: #273f9d;
+  --sidebar-ring: #304eb4;
+  --ring: #304eb4;
+  font-family: system-ui, -apple-system, sans-serif;
+}
+.dark
+  :is(
+    [data-slot="sidebar-inner"],
+    [data-slot="sidebar"][data-mobile="true"],
+    [data-slot="sidebar-inset"] > header > div
+  ) {
+  --foreground: #eef3ff;
+  --sidebar-foreground: #eef3ff;
+  --muted-foreground: #adbed5;
+  --sidebar-accent: #303f72;
+  --sidebar-accent-foreground: #c4ceff;
+  --sidebar-ring: #aec0ff;
+  --ring: #aec0ff;
+}
+:is([data-side="left"], [data-mobile="true"]) [data-shell-tree-root] {
+  margin-left: -2px;
+  margin-right: -4px;
+  width: calc(100% + 6px);
+}
+:is([data-side="left"], [data-mobile="true"])
+  :is([data-sidebar="menu-button"], [data-sidebar="menu-sub-button"]) {
+  line-height: 1.55;
+}
+[data-side="left"][data-state="collapsed"] [data-sidebar="menu-button"] > svg {
+  width: 18px;
+  height: 18px;
+}
+
+:is([data-side="left"], [data-mobile="true"])
+  .group\/folder-navigation
+  [data-sidebar="menu-sub-button"] {
+  gap: 8px;
+}
+:is([data-side="left"], [data-mobile="true"])
+  .group\/folder-navigation
+  [data-sidebar="menu-sub-button"]
+  > span:first-child,
+:is([data-side="left"], [data-mobile="true"])
+  .group\/folder-navigation
+  [data-sidebar="menu-sub-button"]
+  > span:first-child
+  svg {
+  color: var(--muted-foreground);
+  width: 16px;
+  height: 16px;
+}
+.dark
+  [data-side="left"]
+  :is([data-sidebar="menu-button"], [data-sidebar="menu-sub-button"]):hover:not(
+    [data-active="true"]
+  ) {
+  background: #91b8ef30;
+}
+@media (min-width: 701px) {
+  [data-side="left"][data-state="expanded"]
+    .journl-navigation-primary
+    .journl-navigation-label {
+    margin: 22px 0 6px;
+  }
+  [data-slot="header-actions"] button {
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+  }
+  [data-slot="header-actions"] svg {
+    width: 16px;
+    height: 16px;
+  }
+}
+@media (width <= 700px) {
+  .journl-navigation-header {
+    padding-top: 4px;
+    margin-bottom: 4px;
+  }
+  .journl-navigation-shortcuts {
+    padding-top: 2px;
+  }
+  .journl-navigation-primary .journl-navigation-label {
+    margin-top: 8px;
+  }
+}
+:is(
+  [data-slot="sidebar-inner"],
+  [data-slot="sidebar"][data-mobile="true"],
+  [data-slot="sidebar-inset"] > header > div
+) {
+  --sidebar: #edf4fd;
+}
+.dark
+  :is(
+    [data-slot="sidebar-inner"],
+    [data-slot="sidebar"][data-mobile="true"],
+    [data-slot="sidebar-inset"] > header > div
+  ) {
+  --sidebar: #182a42;
+}
+/* The visual viewport, rather than the layout viewport, owns keyboard clearance. */
+.journl-agent-sheet {
+  height: max(0px, calc(var(--sheet-visible-height, 100dvh) - 68px)) !important;
+  max-height: max(
+    0px,
+    calc(var(--sheet-visible-height, 100dvh) - 68px)
+  ) !important;
+  bottom: var(--sheet-bottom, 0px) !important;
+  --foreground: #17283d;
+  --muted-foreground: #485d75;
+  --sidebar: #edf4fd;
+  font-family: system-ui, -apple-system, sans-serif;
+}
+.dark .journl-agent-sheet {
+  --foreground: #eef3ff;
+  --muted-foreground: #adbed5;
+  --sidebar: #182a42;
+}
+@media (width <= 700px) {
+  [data-mobile="true"]
+    [data-shell-navigation-body]
+    > [data-sidebar="footer"]:last-child {
+    padding-bottom: max(20px, env(safe-area-inset-bottom, 0px));
+  }
+}
+/* Reserve real action space without clipping the approved garden label. */
+@media (min-width: 701px) and (pointer: fine) {
+  [data-side="left"] .journl-page-row-control {
+    gap: 4px;
+    padding-right: 4px;
+  }
+  .journl-page-row-control > [aria-haspopup="menu"] {
+    width: 24px;
+    height: 28px;
+  }
+}
+[data-state="collapsed"] [data-development-tools] summary {
+  display: flex;
+  width: 40px;
+  height: 40px;
+  align-items: center;
+  justify-content: center;
+  margin-inline: auto;
+  padding: 0;
+}
+.journl-navigation-toggle:not(:hover):not(:focus-visible) {
+  background: transparent;
+}
+@media (width <= 700px) {
+  [data-mobile="true"] .group\/page-row [aria-haspopup="menu"] {
+    min-width: 44px;
+    min-height: 44px;
+  }
+}
+/* The row owns focus; the inner link must not draw a second rectangle. */
+.journl-page-row-control a:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
+[aria-label="Chat composer"] {
+  border-top: 1px solid #d5e0ed;
+  min-height: 119px;
+}
+.dark [aria-label="Chat composer"] {
+  border-top-color: #344865;
+}
+.journl-chat-input {
+  background: #fcfdff;
+  border-color: #7387a1;
+  border-radius: 12px;
+}
+.dark .journl-chat-input {
+  background: #141f31;
+  border-color: #8198b9;
+}
+.journl-chat-input > [data-align="block-start"]:empty {
+  display: none;
+}
+.journl-chat-input:has(textarea:enabled) {
+  opacity: 1;
+}
+.journl-chat-input textarea {
+  min-height: 44px;
+  font-size: 14px;
+  line-height: 1.55;
+}
+.journl-chat-input [aria-label="Reasoning mode"] {
+  height: 32px;
+  width: auto;
+  min-width: 72px;
+}
+.journl-chat-input :is([aria-label="Send message"], [aria-label="Cancel"]) {
+  width: 34px;
+  height: 34px;
+  padding: 0;
+}
+.journl-chat-input .journl-chat-send {
+  background: #273f9d;
+  color: #fcfdff;
+  border-radius: 8px;
+}
+.dark .journl-chat-input .journl-chat-send {
+  background: #c4ceff;
+  color: #141f31;
+}
+.journl-chat-input .journl-chat-send:disabled {
+  background: #dce4f0;
+  color: #485d75;
+}
+.dark .journl-chat-input .journl-chat-send:disabled {
+  background: #2d3b50;
+  color: #adbed5;
+}
+.journl-chat-input [aria-label="Reasoning mode"] {
+  background: #fcfdff;
+  border: 1px solid #7387a1;
+  border-radius: 7px;
+  color: #485d75;
+}
+.dark .journl-chat-input [aria-label="Reasoning mode"] {
+  background: #141f31;
+  border-color: #8198b9;
+  color: #adbed5;
+}
+@media (min-width: 701px) {
+  .journl-header-route-actions button {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+  }
+  .journl-header-route-actions svg {
+    width: 16px;
+    height: 16px;
+  }
+}
+@media (width <= 700px) {
+  [data-slot="sidebar-inset"] > header > div {
+    padding: 6px 10px;
+    gap: 6px;
+  }
+  [aria-label="Chat composer"] {
+    padding: 8px 12px 10px;
+    min-height: 123px;
+  }
+  .journl-agent-sheet {
+    padding-bottom: max(8px, env(safe-area-inset-bottom, 0px));
+  }
+  .journl-chat-input
+    :is(
+      [aria-label="Send message"],
+      [aria-label="Cancel"],
+      [aria-label="Reasoning mode"]
+    ) {
+    min-width: 44px;
+    min-height: 44px;
+  }
+}
+.journl-agent-sheet [data-slot="message-scroller-viewport"] {
+  padding-inline: 12px;
 }

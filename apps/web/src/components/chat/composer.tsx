@@ -65,7 +65,7 @@ export function ChatComposer() {
           <FieldLabel htmlFor={id} className="sr-only">
             Message
           </FieldLabel>
-          <InputGroup>
+          <InputGroup className="journl-chat-input">
             <InputGroupAddon align="block-start">
               <ComposerSources />
             </InputGroupAddon>
@@ -91,7 +91,7 @@ export function ChatComposer() {
                 event.preventDefault();
                 submit();
               }}
-              className="max-h-40 min-h-20"
+              className="max-h-40 min-h-11"
             />
             <InputGroupAddon align="block-end">
               <ComposerReasoning>
@@ -109,7 +109,7 @@ export function ChatComposer() {
                 </InputGroupButton>
               ) : (
                 <InputGroupButton
-                  className="ml-auto"
+                  className="journl-chat-send ml-auto"
                   type="submit"
                   aria-label="Send message"
                   disabled={unavailable || Boolean(exceeded) || !draft.trim()}

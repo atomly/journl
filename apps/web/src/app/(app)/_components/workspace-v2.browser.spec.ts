@@ -1,8 +1,18 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import { fixtureId } from "~/testing/browser/data";
 import { expect, test } from "~/testing/browser/fixtures";
-import { captureSettledShell } from "~/testing/browser/shell-capture";
+import {
+  captureSettledShell,
+  settleShell,
+} from "~/testing/browser/shell-capture";
+import {
+  measureConversationAnchor,
+  measureShellControls,
+} from "~/testing/browser/shell-metrics";
 import { populateShellConversation } from "~/testing/browser/shell-responses";
+import { workspaceMessages } from "~/testing/browser/workspace-v2-data";
+
+test.use({ workspaceReview: true });
 
 // Synthetic panel preferences reproduce the approved sizes without changing
 // saved defaults or resetting a real user's independent panel preferences.
@@ -33,8 +43,8 @@ for (const theme of ["light", "dark"]) {
           ),
         },
       ]);
-      await populateShellConversation(page);
-      await page.goto(`/pages/${fixtureId(25)}`);
+      await populateShellConversation(page, workspaceMessages);
+      await page.goto(`/pages/${fixtureId(1610)}`);
       await expect(
         page.locator('.better-editor-tiptap[contenteditable="true"]').first(),
       ).toBeVisible();
@@ -43,10 +53,10 @@ for (const theme of ["light", "dark"]) {
       ).toBeVisible();
       await expect(
         page.getByRole("button", {
-          name: /^(Expand|Collapse) Browser folder$/,
+          name: /^(Expand|Collapse) Projects$/,
         }),
       ).toBeVisible();
-      await expect(page.locator("[data-chat-role]")).toHaveCount(16);
+      await expect(page.locator("[data-chat-role]")).toHaveCount(4);
       await expect(page.locator('[data-slot="skeleton"]:visible')).toHaveCount(
         0,
       );
@@ -55,9 +65,27 @@ for (const theme of ["light", "dark"]) {
         .filter({ visible: true });
       await expect(composer).toBeEnabled();
       await composer.fill("Can you make a short shopping list?");
+      await composer.blur();
+      const panel = page
+        .getByRole("region", { exact: true, name: "Chat" })
+        .filter({ visible: true });
+      const conversation = panel.locator(
+        '[data-slot="message-scroller-viewport"]',
+      );
+      await conversation.dispatchEvent("wheel", { deltaY: -1 });
+      await conversation.evaluate((node) => {
+        node.scrollTop = 0;
+      });
+      await expect(
+        panel.getByText("What should I plant this week?", { exact: true }),
+      ).toBeInViewport();
       const directory = info.outputPath("workspace-v2");
       await mkdir(directory, { recursive: true });
+      await settleShell(page);
+      const controls = await measureShellControls(page);
       const frame = await captureSettledShell(page, `${directory}/current.png`);
+      const conversationAnchor = await measureConversationAnchor(page);
+      expect(conversationAnchor?.atStart).toBe(true);
       const search = page.getByRole("button", {
         exact: true,
         name: "Search workspace",
@@ -85,10 +113,12 @@ for (const theme of ["light", "dark"]) {
         JSON.stringify(
           {
             content:
-              "Existing disposable Browser note 25; route and chat interiors deferred. Content differs from approved garden fixture.",
+              "Existing disposable Small balcony garden; route and chat interiors deferred. Content differs from approved garden fixture.",
+            controls,
+            conversationAnchor,
             frame,
             reference: `docs/design-handoff/approved-workspace-v2/review/screens/garden-${width}-${theme}.png`,
-            route: `/pages/${fixtureId(25)}`,
+            route: `/pages/${fixtureId(1610)}`,
             theme,
             viewport: { height, width },
           },

@@ -111,8 +111,10 @@ function localDate(value: Date) {
 
 export function HeaderRouteActions({
   children,
+  actions,
 }: {
   children: React.ReactNode;
+  actions?: React.ReactNode;
 }) {
   const pathname = usePathname();
   const { setOpenMobile } = useNavigationSidebar();
@@ -220,7 +222,7 @@ export function HeaderRouteActions({
     </>
   );
   return (
-    <div className="flex min-w-0 items-center gap-2">
+    <div className="flex min-w-0 flex-1 items-center gap-2">
       <RouteDisclosure
         open={open}
         onOpenChange={setOpen}
@@ -232,8 +234,31 @@ export function HeaderRouteActions({
             className="h-auto min-h-11 min-w-0 max-w-full shrink justify-start justify-self-start px-0 text-left"
           >
             <span className="min-w-0">
-              <span className="block font-semibold">{label}</span>
-              <span className="block max-w-80 truncate font-normal text-muted-foreground text-xs">
+              <span
+                className={
+                  pageId
+                    ? "block truncate font-normal text-[13px]"
+                    : "block font-semibold"
+                }
+              >
+                {pageId ? (
+                  <>
+                    <span className="hidden min-[701px]:inline">{detail}</span>
+                    <span className="min-[701px]:hidden">
+                      {currentTitle || path?.at(-1)?.name || "Page"}
+                    </span>
+                  </>
+                ) : (
+                  label
+                )}
+              </span>
+              <span
+                className={
+                  pageId
+                    ? "sr-only"
+                    : "block max-w-80 truncate font-normal text-muted-foreground text-xs"
+                }
+              >
                 {detail}
               </span>
             </span>
@@ -270,7 +295,13 @@ export function HeaderRouteActions({
           ))
         )}
       </RouteDisclosure>
-      <div className="shrink-0">
+      <div
+        data-slot="header-actions"
+        className="ml-auto flex shrink-0 items-center gap-0 min-[701px]:gap-2"
+      >
+        {actions}
+      </div>
+      <div className="journl-header-route-actions shrink-0">
         <RouteDisclosure
           open={actionsOpen}
           onOpenChange={setActionsOpen}

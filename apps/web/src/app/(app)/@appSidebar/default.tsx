@@ -1,6 +1,6 @@
 import { Separator } from "@acme/ui/separator";
 import { Skeleton } from "@acme/ui/skeleton";
-import { Calendar, Compass, Search } from "lucide-react";
+import { Calendar, Compass, Search, Wrench } from "lucide-react";
 import Image from "next/image";
 import { type ComponentProps, Suspense } from "react";
 import { getUser } from "~/auth/server";
@@ -62,7 +62,7 @@ export default async function AppSidebar() {
       minWidth={`${APP_SIDEBAR_WIDTH_REM_MIN}rem`}
       maxWidth={`${APP_SIDEBAR_WIDTH_REM_MAX}rem`}
     >
-      <SidebarHeader>
+      <SidebarHeader className="journl-navigation-header">
         <NavigationSidebarClose />
         <span className="journl-brand mx-auto hidden size-8 group-data-[collapsible=icon]:block">
           <Image
@@ -87,33 +87,39 @@ export default async function AppSidebar() {
             aria-label="Journl"
           />
         </span>
-        <div className="px-3 pt-3 pb-4 group-data-[collapsible=icon]:hidden">
+        <div className="flex min-h-11 items-center group-data-[collapsible=icon]:hidden">
           <Brand className="h-7" />
         </div>
       </SidebarHeader>
-      <div className="px-2 pb-3">
+      <div className="journl-navigation-shortcuts">
         <HeaderSearchButton
           keyboardShortcut={false}
           trigger={
             <SidebarMenuButton
               aria-label="Search workspace"
+              tooltip="Search"
               className="mb-1 h-9 text-[13px]"
             >
               <Search />
-              <span>Search</span>
+              <span className="group-data-[collapsible=icon]:sr-only">
+                Search
+              </span>
             </SidebarMenuButton>
           }
         />
-      </div>
-      <div className="px-2 pb-3 group-data-[collapsible=icon]:hidden [&>button]:h-9 [&>button]:min-h-9">
-        <AppSidebarTreeActions
-          kind="root"
-          parentNodeId={null}
-          triggerMode="direct-page"
-        />
+        <div className="journl-navigation-create group-data-[collapsible=icon]:hidden">
+          <AppSidebarTreeActions
+            kind="root"
+            parentNodeId={null}
+            triggerMode="direct-page"
+          />
+        </div>
       </div>
       <SidebarContent className="flex flex-1 flex-col overflow-x-clip">
-        <SidebarGroup className="flex min-h-0 flex-1 flex-col gap-y-2 px-3">
+        <SidebarGroup className="journl-navigation-primary flex min-h-0 flex-1 flex-col px-3">
+          <SidebarGroupLabel className="journl-navigation-label">
+            Workspace
+          </SidebarGroupLabel>
           <AppSidebarNavigation items={navigationItems} />
           <Suspense fallback={<AppSidebarPagesSkeleton />}>
             <AppSidebarPages key={owner.id} owner={owner.id} />
@@ -123,11 +129,24 @@ export default async function AppSidebar() {
       {env.NODE_ENV === "development" && (
         <>
           <Separator />
-          <SidebarFooter>
-            <SidebarGroupLabel>Developer Tools</SidebarGroupLabel>
-            <Suspense fallback={<Skeleton />}>
-              <DynamicAppSidebarDevtools />
-            </Suspense>
+          <SidebarFooter data-development-tools>
+            <details>
+              <summary
+                title="Developer Tools"
+                className="cursor-pointer list-none px-2 py-1 text-muted-foreground text-xs"
+              >
+                <span className="group-data-[collapsible=icon]:sr-only">
+                  Developer Tools
+                </span>
+                <Wrench
+                  aria-hidden="true"
+                  className="hidden size-4 group-data-[collapsible=icon]:inline"
+                />
+              </summary>
+              <Suspense fallback={<Skeleton />}>
+                <DynamicAppSidebarDevtools />
+              </Suspense>
+            </details>
           </SidebarFooter>
         </>
       )}

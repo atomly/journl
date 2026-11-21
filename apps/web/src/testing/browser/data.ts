@@ -8,6 +8,8 @@ export const browserFixture = {
   paginationEmail: "journal-pagination@example.invalid",
   paginationOwner: "journal-pagination",
   password: "disposable-browser-password-354",
+  workspaceEmail: "workspace-review@example.invalid",
+  workspaceOwner: "workspace-review",
 };
 export const fixtureId = (n: number) =>
   `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`;

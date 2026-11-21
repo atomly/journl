@@ -3,7 +3,7 @@
 import { Button } from "@acme/ui/button";
 import { DrawerTrigger, useDrawer } from "@acme/ui/drawer";
 import { cn } from "@acme/ui/utils";
-import { Sparkles } from "lucide-react";
+import { Sparkle } from "lucide-react";
 import {
   ChatUnreadA11yHint,
   ChatUnreadBadge,
@@ -35,7 +35,7 @@ export function ChatDrawerTrigger({
         )}
         {...props}
       >
-        <Sparkles
+        <Sparkle
           className="size-4"
           strokeWidth={1.7}
           data-icon="inline-start"

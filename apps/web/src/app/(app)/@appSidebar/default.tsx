@@ -97,6 +97,7 @@ export default async function AppSidebar() {
           trigger={
             <SidebarMenuButton
               aria-label="Search workspace"
+              aria-keyshortcuts="Control+k Meta+k"
               tooltip="Search"
               className="mb-1 h-9 text-[13px]"
             >
@@ -104,6 +105,9 @@ export default async function AppSidebar() {
               <span className="group-data-[collapsible=icon]:sr-only">
                 Search
               </span>
+              <kbd className="ml-auto hidden font-mono text-[11px] text-muted-foreground group-data-[collapsible=icon]:hidden min-[701px]:inline-flex">
+                ⌘ K
+              </kbd>
             </SidebarMenuButton>
           }
         />

@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@acme/ui/button";
-import { Maximize2, Minimize2, PanelRight, Sparkles } from "lucide-react";
+import { Maximize2, Minimize2, PanelRight, Sparkle } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useSyncExternalStore } from "react";
 import { useAppPreferences } from "~/components/preferences/app-preferences-provider";
@@ -36,7 +36,7 @@ export function AssistantIdentity() {
   return (
     <div className="min-w-0 flex-1">
       <h2 className="flex items-center gap-2 font-[720] text-[15px] leading-[1.55]">
-        <Sparkles
+        <Sparkle
           aria-hidden="true"
           className="size-4 text-sidebar-accent-foreground"
         />

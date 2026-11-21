@@ -1,5 +1,6 @@
 import { fixtureId } from "~/testing/browser/data";
 import { expect, test } from "~/testing/browser/fixtures";
+import { settleShell } from "~/testing/browser/shell-capture";
 import { populateShellConversation } from "~/testing/browser/shell-responses";
 
 test.use({ workspaceReview: true });
@@ -25,6 +26,7 @@ test("phone sheet follows a simulated visual viewport and retains the draft", as
   const draft = sheet.getByRole("textbox", { exact: true, name: "Message" });
   await expect(draft).toBeEnabled();
   await draft.fill("Keep this draft while the keyboard opens.");
+  await settleShell(page);
   const conversation = sheet.locator('[data-slot="message-scroller-viewport"]');
   await conversation.focus();
   await conversation.press("Home");
@@ -100,6 +102,7 @@ test("phone sheet follows a simulated visual viewport and retains the draft", as
       return Math.round((box?.y ?? 0) + (box?.height ?? 0));
     })
     .toBe(844);
+  await settleShell(page);
   await sheet
     .getByRole("button", { exact: true, name: "Close assistant" })
     .click();
@@ -125,6 +128,7 @@ test("phone sheet follows a simulated visual viewport and retains the draft", as
     .getByRole("button", { exact: true, name: "Toggle Chat Drawer" })
     .click();
   await expect(draft).toHaveValue("Keep this draft while the keyboard opens.");
+  await settleShell(page);
   await expect
     .poll(async () => Math.abs((await readAnchor()).top - originalAnchor.top))
     .toBeLessThanOrEqual(1);

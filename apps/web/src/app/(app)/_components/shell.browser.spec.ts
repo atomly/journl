@@ -1,4 +1,5 @@
 import { expect, test } from "~/testing/browser/fixtures";
+import { renderedTextContrast } from "~/testing/browser/rendered-contrast";
 
 test("panel keyboard resizing is bounded and independent of route identity", async ({
   page,
@@ -526,6 +527,15 @@ test("shell controls remain reachable with solid materials and system colors", a
   await expect(
     page.getByRole("button", { exact: true, name: "Toggle Chat Sidebar" }),
   ).toBeInViewport();
+  const selected = page.getByRole("button", { exact: true, name: "Library" });
+  const labelContrast = await renderedTextContrast(selected);
+  const iconContrast = await renderedTextContrast(selected, "icons");
+  expect(labelContrast.ratio).toBeGreaterThanOrEqual(4.5);
+  expect(iconContrast.ratio).toBeGreaterThanOrEqual(3);
+  await info.attach("system-color-selected-contrast", {
+    body: JSON.stringify({ iconContrast, labelContrast }),
+    contentType: "application/json",
+  });
   expect(
     await page.evaluate(
       () => document.documentElement.scrollWidth <= innerWidth,

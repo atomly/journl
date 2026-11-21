@@ -3,7 +3,7 @@
 import { Button } from "@acme/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@acme/ui/tooltip";
 import { cn } from "@acme/ui/utils";
-import { Sparkles } from "lucide-react";
+import { Sparkle } from "lucide-react";
 import { useEffect, useRef } from "react";
 import {
   ChatUnreadA11yHint,
@@ -52,7 +52,7 @@ export default function ChatSidebarTrigger({
             )}
             {...props}
           >
-            <Sparkles
+            <Sparkle
               className="size-4"
               strokeWidth={1.7}
               data-icon="inline-start"

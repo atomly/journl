@@ -2,6 +2,23 @@
   width: 16px;
   height: 16px;
 }
+/* The approved shell uses a consistent light icon stroke. */
+[data-slot="sidebar-inset"] > header svg {
+  stroke-width: 1.65;
+}
+:is(
+    [data-slot="sidebar-inner"],
+    [data-slot="sidebar"][data-mobile="true"],
+    .journl-agent-sheet,
+    .journl-agent-launcher
+  )
+  svg {
+  stroke-width: 1.65;
+}
+.journl-chat-input [aria-label="Reasoning mode"] svg {
+  width: 13px;
+  height: 13px;
+}
 /* Quiet icon ink stays separate from selected labels and action fills. */
 :is([data-side="left"], [data-mobile="true"])
   [data-sidebar="menu-button"]
@@ -608,10 +625,14 @@ The rest of the components are set by the Tailwind CSS classes, or by our editor
     [cmdk-item][data-selected="true"] {
     outline-color: Highlight;
   }
-  [data-sidebar="menu-button"][data-active="true"] {
+  [data-sidebar="menu-button"][data-active="true"],
+  [data-sidebar="menu-sub-button"][data-active="true"] {
     background: Highlight !important;
     color: HighlightText !important;
     forced-color-adjust: none;
+  }
+  :is([data-side="left"], [data-mobile="true"]) [data-active="true"] svg {
+    color: HighlightText;
   }
 }
 
@@ -1127,10 +1148,10 @@ body:has([data-slot="sidebar-inset"]) {
 /* Tree indentation belongs to the label, so row fills share the panel inset. */
 :is([data-side="left"], [data-mobile="true"]) [data-sidebar="menu-sub"] {
   margin-inline: 0;
-  padding: 0 3px;
+  padding: 2px 3px;
   border: 0;
   transform: none;
-  translate: none;
+  translate: none !important;
 }
 :is([data-side="left"], [data-mobile="true"]) .journl-tree-item {
   margin-inline: 0;
@@ -1140,6 +1161,7 @@ body:has([data-slot="sidebar-inset"]) {
 :is([data-side="left"], [data-mobile="true"]) [data-sidebar="menu-sub-button"] {
   padding-left: calc(8px + var(--tree-indent, 0px));
   transform: none;
+  translate: none !important;
 }
 /* Nested lists keep fills aligned while inheriting their semantic depth. */
 :is([data-side="left"], [data-mobile="true"])
@@ -1177,8 +1199,8 @@ body:has([data-slot="sidebar-inset"]) {
   --ring: #aec0ff;
 }
 :is([data-side="left"], [data-mobile="true"]) [data-shell-tree-root] {
-  margin-left: -2px;
-  margin-right: -4px;
+  margin-left: -3px;
+  margin-right: -3px;
   width: calc(100% + 6px);
 }
 :is([data-side="left"], [data-mobile="true"])
@@ -1345,6 +1367,7 @@ body:has([data-slot="sidebar-inset"]) {
   line-height: 1.55;
 }
 .journl-chat-input [aria-label="Reasoning mode"] {
+  gap: 6px;
   height: 32px;
   width: auto;
   min-width: 72px;
@@ -1417,4 +1440,12 @@ body:has([data-slot="sidebar-inset"]) {
 }
 .journl-agent-sheet [data-slot="message-scroller-viewport"] {
   padding-inline: 12px;
+}
+
+/* Reserve the outline outside animated nested panels without moving their rows. */
+:is([data-side="left"], [data-mobile="true"])
+  .group\/folder-collapsible
+  [data-slot="collapsible-content"] {
+  margin: -1px -3px;
+  padding: 1px 3px;
 }

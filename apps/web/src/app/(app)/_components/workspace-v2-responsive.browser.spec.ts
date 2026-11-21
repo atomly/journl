@@ -310,6 +310,8 @@ for (const theme of ["light", "dark"]) {
               width: style.outlineWidth,
             };
           });
+          expect(outline.box.x).toBe(25);
+          expect(outline.box.width).toBe(198);
           expect(outline.width).toBe("2px");
           expect(outline.offset).toBe("1px");
           measurements.push({ label, outline, state: "focus" });

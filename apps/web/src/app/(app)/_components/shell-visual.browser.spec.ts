@@ -1,6 +1,7 @@
 import { writeFile } from "node:fs/promises";
 import { fixtureId } from "~/testing/browser/data";
 import { expect, test } from "~/testing/browser/fixtures";
+import { renderedTextContrast } from "~/testing/browser/rendered-contrast";
 import { settleShell } from "~/testing/browser/shell-capture";
 
 test.use({ journalPagination: true });
@@ -19,25 +20,30 @@ for (const theme of ["light", "dark"]) {
       theme,
     );
     await page.goto("/explore");
+    // Values come from the frozen workspace-v2 palette and geometry.
+    const ink = theme === "dark" ? "rgb(196, 206, 255)" : "rgb(39, 63, 157)";
+    const fill = theme === "dark" ? "rgb(48, 63, 114)" : "rgb(217, 223, 255)";
+    const hoverFill =
+      theme === "dark" ? "rgb(58, 77, 137)" : "rgb(203, 212, 255)";
     const selected = page
       .locator('[data-sidebar="menu-button"][data-active="true"]')
       .filter({ hasText: "Explore" });
-    await expect(selected).toHaveCSS("background-color", "rgb(196, 203, 255)");
-    await expect(selected).toHaveCSS("color", "rgb(33, 48, 74)");
-    await expect(selected).toHaveCSS("height", "44px");
-    await expect(selected).toHaveCSS("border-radius", "12px");
+    await expect(selected).toHaveCSS("background-color", fill);
+    await expect(selected).toHaveCSS("color", ink);
+    await expect(selected).toHaveCSS("height", "36px");
+    await expect(selected).toHaveCSS("border-radius", "7px");
     await expect(page.locator("header[data-hidden] > div")).toHaveCSS(
       "border-radius",
-      "20px",
+      "16px 16px 0px 0px",
     );
-    await expect(selected).toHaveCSS("font-weight", "600");
+    await expect(selected).toHaveCSS("font-weight", "650");
     await expect(selected).toHaveCSS("border-width", "0px");
-    await expect(selected.locator("svg").first()).toHaveCSS("width", "20px");
+    await expect(selected.locator("svg").first()).toHaveCSS("width", "16px");
     await selected.hover();
-    await expect(selected).toHaveCSS("background-color", "rgb(196, 203, 255)");
-    await expect(selected).toHaveCSS("color", "rgb(33, 48, 74)");
+    await expect(selected).toHaveCSS("background-color", hoverFill);
+    await expect(selected).toHaveCSS("color", ink);
     await selected.focus();
-    await expect(selected).toHaveCSS("color", "rgb(33, 48, 74)");
+    await expect(selected).toHaveCSS("color", ink);
     const measurement = await selected.evaluate((node) => {
       const rgb = (value: string) =>
         (value.match(/[\d.]+/g) ?? []).slice(0, 3).map(Number);
@@ -61,8 +67,8 @@ for (const theme of ["light", "dark"]) {
       };
     });
     expect(measurement.contrast).toBeGreaterThanOrEqual(4.5);
-    expect(measurement.box.x).toBe(29);
-    expect(measurement.box.width).toBe(190);
+    expect(measurement.box.x).toBe(25);
+    expect(measurement.box.width).toBe(198);
     await writeFile(
       info.outputPath("selected-navigation-contrast.json"),
       JSON.stringify(measurement, null, 2),
@@ -76,11 +82,34 @@ for (const theme of ["light", "dark"]) {
     const avatar = await account.locator('[data-slot="avatar"]').boundingBox();
     if (!avatar) throw new Error("Missing navigation account avatar");
     expect(avatar.x).toBeCloseTo(29, 0);
-    expect(avatar.y).toBeCloseTo(921, 0);
+    const accountBox = await account.boundingBox();
+    if (!accountBox) throw new Error("Missing navigation account bounds");
+    expect(avatar.width).toBe(24);
+    expect(avatar.height).toBe(24);
+    expect(avatar.y + avatar.height / 2).toBeCloseTo(
+      accountBox.y + accountBox.height / 2,
+      1,
+    );
+    expect(accountBox.y + accountBox.height).toBeCloseTo(963, 0);
     await account.hover();
     await expect(
       account.locator("span.text-foreground:not([data-slot])"),
-    ).toHaveCSS("color", "rgb(33, 48, 74)");
+    ).toHaveCSS(
+      "color",
+      theme === "dark" ? "rgb(238, 243, 255)" : "rgb(23, 40, 61)",
+    );
+    const accountContrast = await renderedTextContrast(
+      account.locator("span.text-foreground:not([data-slot])"),
+    );
+    expect(accountContrast.ratio).toBeGreaterThanOrEqual(4.5);
+    await writeFile(
+      info.outputPath("account-hover-contrast.json"),
+      JSON.stringify(accountContrast, null, 2),
+    );
+    await page.screenshot({
+      path: info.outputPath("account-hover.png"),
+      scale: "css",
+    });
     await writeFile(
       info.outputPath("navigation-account-placement.json"),
       JSON.stringify(avatar, null, 2),
@@ -91,11 +120,11 @@ for (const theme of ["light", "dark"]) {
     await expect(
       page.locator('[data-side="left"][data-state="collapsed"]'),
     ).toBeVisible();
-    await expect(selected).toHaveCSS("color", "rgb(33, 48, 74)");
-    await expect(selected.locator("svg").first()).toHaveCSS("width", "20px");
+    await expect(selected).toHaveCSS("color", ink);
+    await expect(selected.locator("svg").first()).toHaveCSS("width", "18px");
     await page.emulateMedia({ forcedColors: "active" });
     await expect(selected).toHaveCSS("forced-color-adjust", "none");
-    await expect(selected).not.toHaveCSS("color", "rgb(33, 48, 74)");
+    await expect(selected).not.toHaveCSS("color", ink);
   });
 
   test(`${theme} hidden mobile header releases its inset without moving document content`, async ({
@@ -127,7 +156,7 @@ for (const theme of ["light", "dark"]) {
     });
     await expect(header).toHaveAttribute("data-hidden", "true");
     await settleShell(page);
-    await expect.poll(async () => (await scroller.boundingBox())?.y).toBe(12);
+    await expect.poll(async () => (await scroller.boundingBox())?.y).toBe(0);
     const hidden = await scroller.evaluate((node) => ({
       anchor: getComputedStyle(node).overflowAnchor,
       editorTop: node
@@ -147,14 +176,14 @@ for (const theme of ["light", "dark"]) {
     const toolbar = page.locator('[data-better-editor-toolbar-mode="sticky"]');
     await expect
       .poll(async () => (await toolbar.boundingBox())?.y)
-      .toBeCloseTo(13, 0);
+      .toBeCloseTo(0, 0);
     await page.keyboard.press("Tab");
     await header
       .getByRole("button", { exact: true, name: "Search notes" })
       .focus();
     await settleShell(page);
-    await expect.poll(async () => (await header.boundingBox())?.y).toBe(12);
-    await expect.poll(async () => (await scroller.boundingBox())?.y).toBe(88);
+    await expect.poll(async () => (await header.boundingBox())?.y).toBe(0);
+    await expect.poll(async () => (await scroller.boundingBox())?.y).toBe(60);
     expect(await scroller.evaluate((node) => node.scrollTop)).toBe(
       before.scrollTop,
     );
@@ -187,18 +216,18 @@ for (const theme of ["light", "dark"]) {
       page.getByText("Pagination entry 1", { exact: true }),
     ).toBeVisible();
     await expect(page.locator(".better-editor-tiptap").first()).toBeVisible();
-    await expect(launcher).toHaveCSS("height", "48px");
-    await expect(launcher.locator("svg")).toHaveCSS("width", "20px");
+    await expect(launcher).toHaveCSS("height", "44px");
+    await expect(launcher.locator("svg")).toHaveCSS("width", "16px");
     await settleShell(page);
     const before = await launcher.boundingBox();
     const stage = await surface.boundingBox();
     if (!before || !stage)
       throw new Error("Missing surface or launcher bounds");
-    expect(before.width).toBe(156);
+    expect(before.width).toBeCloseTo(114.359375, 1);
     const rightInset = stage.x + stage.width - before.x - before.width;
     const bottomInset = stage.y + stage.height - before.y - before.height;
-    expect(rightInset).toBeCloseTo(mobile ? 17 : 25, 0);
-    expect(bottomInset).toBeCloseTo(mobile ? 17 : 25, 0);
+    expect(rightInset).toBeCloseTo(mobile ? 12 : 16, 0);
+    expect(bottomInset).toBeCloseTo(mobile ? 22 : 16, 0);
     // Journal's Virtuoso uses this shell element as its customScrollParent.
     const scroller = surface;
     await expect

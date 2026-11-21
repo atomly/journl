@@ -123,6 +123,20 @@ for (const theme of ["light", "dark"]) {
           ),
         ).toBeInViewport();
       }
+      if (mode === "tree-states") {
+        const title = page
+          .getByRole("link", { exact: true, name: "Small balcony garden" })
+          .filter({ visible: true })
+          .locator("span.truncate");
+        const width = await title.evaluate((node) => ({
+          available: node.clientWidth,
+          content: node.scrollWidth,
+        }));
+        expect(
+          width.content,
+          "The approved fixture title fits without truncation",
+        ).toBeLessThanOrEqual(width.available);
+      }
       await expect(page.locator('[data-slot="skeleton"]:visible')).toHaveCount(
         0,
       );

@@ -684,13 +684,13 @@ The rest of the components are set by the Tailwind CSS classes, or by our editor
 }
 .journl-navigation-account:is(:hover, [data-popup-open])
   :is(.text-foreground, .text-muted-foreground):not([data-slot]) {
-  color: var(--pastel-foreground);
+  color: var(--foreground);
 }
 [data-navigation-account-wrapper]:has(
     > .journl-navigation-account:is(:hover, [data-popup-open])
   )
   > svg {
-  color: var(--pastel-foreground);
+  color: var(--foreground);
 }
 
 [data-slot="header-actions"] [data-slot="button"] {
@@ -1456,4 +1456,13 @@ body:has([data-slot="sidebar-inset"]) {
   [data-mobile="true"] .journl-navigation-shortcuts {
     padding-inline: 9px;
   }
+}
+
+/* Selected navigation matches the approved variable-font emphasis. */
+:is([data-side="left"], [data-mobile="true"])
+:is(
+  [data-sidebar="menu-button"],
+  [data-sidebar="menu-sub-button"]
+)[data-active="true"] {
+  font-weight: 650;
 }

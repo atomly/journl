@@ -14,7 +14,8 @@ import groups from "~/testing/browser/shell-state-mappings.json" with {
   type: "json",
 };
 
-// Exact shell ownership mappings from approved handoff 8093f79c.
+// State ownership comes from handoff 8093f79c; geometry follows approved workspace v2.
+// Old canonical plates preserve state inventory, not superseded layout bounds.
 // Controlled responses are browser-test data, never a claim of live-provider integration.
 for (const group of groups)
   for (const [index, mapping] of group.images.entries()) {
@@ -248,7 +249,7 @@ for (const group of groups)
               .focus();
             await expect
               .poll(async () => (await header.boundingBox())?.y)
-              .toBe(12);
+              .toBe(0);
           }
           if (group.stateId === "mobile-header-revealed") {
             await scroller.evaluate((node) => {
@@ -389,7 +390,7 @@ for (const group of groups)
                   (await page.getByRole("dialog").boundingBox())?.y ?? -1,
                 ),
               )
-              .toBe(12);
+              .toBe(68);
           status.terminalAssertions.push(
             "16 populated native messages; synthetic composer draft and enabled Send; intended conversation scroll endpoint visible",
           );
@@ -457,7 +458,7 @@ for (const group of groups)
         if (group.stateId === "resize-boundaries" && !mobile)
           await expect(
             page.getByRole("separator", { name: "Resize navigation" }),
-          ).toHaveAttribute("aria-valuenow", "280");
+          ).toHaveAttribute("aria-valuenow", "320");
         if (
           ["narrow-route-actions", "journal-route-menu"].includes(group.stateId)
         )
@@ -498,28 +499,40 @@ for (const group of groups)
           group.stateId === "navigation-compact"
             ? 64
             : group.stateId === "resize-boundaries"
-              ? 280
+              ? 320
               : 216;
-        expect(bounds.header?.box.x).toBe(mobile ? 12 : navWidth + 32);
+        const inset = mapping.viewport.width <= 1100 ? 12 : 16;
+        expect(bounds.header?.box.x).toBe(mobile ? 0 : navWidth + inset * 2);
         expect(bounds.header?.box.width).toBe(
           mobile
-            ? mapping.viewport.width - 24
+            ? mapping.viewport.width
             : mapping.viewport.width > 1100
               ? bounds.main?.box.width
-              : mapping.viewport.width - navWidth - 48,
+              : mapping.viewport.width - navWidth - inset * 3,
         );
-        expect(bounds.header?.box.height).toBe(mobile ? 64 : 62);
+        expect(bounds.header?.box.height).toBe(mobile ? 60 : 62);
         expect(bounds.main?.box.x).toBe(bounds.header?.box.x);
         const hiddenHeader = await header.evaluate(
           (node) =>
             node.getAttribute("data-hidden") === "true" &&
             !node.querySelector(":focus-visible"),
         );
-        expect(bounds.main?.box.y).toBe(mobile ? (hiddenHeader ? 12 : 88) : 78);
-        expect(bounds.main?.box.bottom).toBe(
-          mapping.viewport.height - (mobile ? 12 : 16),
+        expect(bounds.main?.box.y).toBe(
+          mobile ? (hiddenHeader ? 0 : 60) : inset + 62,
         );
-        if (bounds.dialog) {
+        expect(bounds.main?.box.bottom).toBe(
+          mapping.viewport.height - (mobile ? 0 : inset),
+        );
+        if (
+          bounds.dialog &&
+          mobile &&
+          (chatState || group.stateId === "navigation-mobile")
+        ) {
+          expect(bounds.dialog.box.x).toBe(0);
+          expect(bounds.dialog.box.y).toBe(chatState ? 68 : 72);
+          expect(bounds.dialog.box.width).toBe(mapping.viewport.width);
+          expect(bounds.dialog.box.bottom).toBe(mapping.viewport.height);
+        } else if (bounds.dialog) {
           expect(bounds.dialog.box.x).toBeGreaterThanOrEqual(12);
           expect(bounds.dialog.box.y).toBeGreaterThanOrEqual(12);
           expect(bounds.dialog.box.right).toBeLessThanOrEqual(
@@ -528,18 +541,14 @@ for (const group of groups)
           expect(bounds.dialog.box.bottom).toBeLessThanOrEqual(
             mapping.viewport.height - 12 + 0.1,
           );
-          if (chatState && mobile) {
-            expect(bounds.dialog.box.y).toBe(12);
-            expect(bounds.dialog.box.bottom).toBe(mapping.viewport.height - 12);
-          }
         }
         if (chatState && !mobile) {
           expect(bounds.assistant?.box.y).toBe(
-            mapping.viewport.width > 1100 ? 16 : 96,
+            mapping.viewport.width > 1100 ? 16 : 86,
           );
           expect(bounds.assistant?.box.width).toBe(
             mapping.viewport.width <= 1100
-              ? mapping.viewport.width - 112
+              ? mapping.viewport.width - 100
               : group.stateId === "chat-expanded"
                 ? 704
                 : 480,

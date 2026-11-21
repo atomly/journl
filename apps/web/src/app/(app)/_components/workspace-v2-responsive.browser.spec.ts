@@ -126,6 +126,14 @@ for (const theme of ["light", "dark"]) {
       await expect(page.locator('[data-slot="skeleton"]:visible')).toHaveCount(
         0,
       );
+      if (mode === "mobile-nav") {
+        const closedActions = page
+          .getByRole("dialog")
+          .locator('[data-slot="swipe-action-reveal"][data-state="closed"]');
+        expect(await closedActions.count()).toBeGreaterThan(0);
+        for (const reveal of await closedActions.all())
+          await expect(reveal).toBeHidden();
+      }
       await settleShell(page);
       const controls = await measureShellControls(page);
       const frame = await captureSettledShell(page, `${directory}/current.png`);

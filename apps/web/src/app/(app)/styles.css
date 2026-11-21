@@ -1449,3 +1449,11 @@ body:has([data-slot="sidebar-inset"]) {
   margin: -1px -3px;
   padding: 1px 3px;
 }
+
+/* Phone sheet insets include the reference panel's one-pixel frame. */
+@media (width <= 700px) {
+  [data-mobile="true"] .journl-navigation-primary,
+  [data-mobile="true"] .journl-navigation-shortcuts {
+    padding-inline: 9px;
+  }
+}

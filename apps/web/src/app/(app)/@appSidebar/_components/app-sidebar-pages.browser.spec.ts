@@ -216,3 +216,71 @@ test.describe("wide touchscreens", () => {
     ).toBeVisible();
   });
 });
+
+test("touch swipe reveals Delete and the next tap closes without navigation", async ({
+  page,
+  context,
+}, info) => {
+  test.skip(
+    info.project.name !== "desktop-chromium",
+    "Native touch drag uses Chromium's input protocol; WebKit exposes taps only",
+  );
+  await page.setViewportSize({ height: 844, width: 390 });
+  const input = await context.newCDPSession(page);
+  await input.send("Emulation.setTouchEmulationEnabled", {
+    enabled: true,
+    maxTouchPoints: 1,
+  });
+  await page.goto("/explore");
+  await page
+    .getByRole("button", { exact: true, name: "Toggle Sidebar" })
+    .click();
+  await page
+    .getByRole("button", { exact: true, name: "Expand Browser folder" })
+    .click();
+  const link = page.getByRole("link", { exact: true, name: "Browser note 01" });
+  const swipe = link
+    .locator("xpath=ancestor::li[1]")
+    .locator('[data-slot="swipe-action"]');
+  const reveal = swipe.locator('[data-slot="swipe-action-reveal"]');
+  await expect(reveal).toBeHidden();
+  const box = await swipe.boundingBox();
+  if (!box) throw new Error("Missing swipe bounds");
+  const x = box.x + box.width - 100;
+  const y = box.y + box.height / 2;
+  await input.send("Input.dispatchTouchEvent", {
+    touchPoints: [{ x, y }],
+    type: "touchStart",
+  });
+  for (let step = 1; step <= 6; step++) {
+    await input.send("Input.dispatchTouchEvent", {
+      touchPoints: [{ x: x - step * 10, y }],
+      type: "touchMove",
+    });
+    await page.evaluate(
+      () =>
+        new Promise<void>((resolve) => requestAnimationFrame(() => resolve())),
+    );
+  }
+  await input.send("Input.dispatchTouchEvent", {
+    touchPoints: [],
+    type: "touchEnd",
+  });
+  await expect(
+    reveal.getByRole("button", { exact: true, name: "Delete page" }),
+  ).toBeVisible();
+  const url = page.url();
+  await input.send("Input.dispatchTouchEvent", {
+    touchPoints: [{ x: box.x + 100, y }],
+    type: "touchStart",
+  });
+  await input.send("Input.dispatchTouchEvent", {
+    touchPoints: [],
+    type: "touchEnd",
+  });
+  await expect(reveal).toBeHidden();
+  await expect(page).toHaveURL(url);
+  await expect(page.getByRole("dialog", { name: "Delete Page" })).toHaveCount(
+    0,
+  );
+});

@@ -150,7 +150,7 @@ export function AppSidebarPageItem({
                 setIsDeleteDialogOpen(true);
               }}
             >
-              <SwipeActionReveal className="-ml-px">
+              <SwipeActionReveal className="invisible -ml-px data-[state=open]:visible">
                 <DeletePageDialogTrigger
                   onClick={() => setDeleteFromMenu(false)}
                   render={

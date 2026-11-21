@@ -223,7 +223,49 @@ for (const theme of ["light", "dark"]) {
     const stage = await surface.boundingBox();
     if (!before || !stage)
       throw new Error("Missing surface or launcher bounds");
-    expect(before.width).toBeCloseTo(114.359375, 1);
+    // The approved launcher is content-sized. System-font advances vary by
+    // platform; keep authored dimensions exact and measure the label itself.
+    const intrinsic = await launcher.evaluate((button) => {
+      const style = getComputedStyle(button);
+      const children = Array.from(button.children).filter((child) => {
+        const css = getComputedStyle(child);
+        return (
+          css.display !== "none" &&
+          css.position !== "absolute" &&
+          css.position !== "fixed"
+        );
+      });
+      const label = children.find((child) => child.tagName === "SPAN");
+      if (!label) throw new Error("Missing launcher label");
+      const range = document.createRange();
+      range.selectNodeContents(label);
+      return {
+        borderLeft: Number.parseFloat(style.borderLeftWidth),
+        borderRight: Number.parseFloat(style.borderRightWidth),
+        children: children.map((child) => child.tagName.toLowerCase()),
+        gap: Number.parseFloat(style.columnGap),
+        labelFontSize: getComputedStyle(label).fontSize,
+        labelFontWeight: getComputedStyle(label).fontWeight,
+        labelWidth: range.getBoundingClientRect().width,
+        paddingLeft: Number.parseFloat(style.paddingLeft),
+        paddingRight: Number.parseFloat(style.paddingRight),
+      };
+    });
+    expect(intrinsic.children).toEqual(["svg", "span"]);
+    expect(intrinsic.labelFontSize).toBe("14px");
+    expect(intrinsic.labelFontWeight).toBe("700");
+    expect(intrinsic.paddingLeft).toBe(15);
+    expect(intrinsic.paddingRight).toBe(15);
+    expect(intrinsic.gap).toBe(6);
+    expect(intrinsic.borderLeft + intrinsic.borderRight).toBe(0);
+    expect(before.width).toBeCloseTo(
+      15 + 16 + 6 + intrinsic.labelWidth + 15,
+      1,
+    );
+    await writeFile(
+      info.outputPath("launcher-intrinsic-size.json"),
+      JSON.stringify({ box: before, ...intrinsic }, null, 2),
+    );
     const rightInset = stage.x + stage.width - before.x - before.width;
     const bottomInset = stage.y + stage.height - before.y - before.height;
     expect(rightInset).toBeCloseTo(mobile ? 12 : 16, 0);

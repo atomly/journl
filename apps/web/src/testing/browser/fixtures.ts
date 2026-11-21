@@ -5,7 +5,7 @@ import {
   type Page,
 } from "@playwright/test";
 import type { Editor } from "@tiptap/core";
-import { browserFixture } from "./data";
+import { browserFixture, fixtureId } from "./data";
 
 let warmedWorkflowRoute: Promise<void> | undefined;
 /**
@@ -24,6 +24,27 @@ function warmWorkflowDeliveryRoute(page: Page) {
       () => undefined,
     );
   return warmedWorkflowRoute;
+}
+
+let warmedSoftRoutes: Promise<void> | undefined;
+/**
+ * Soft navigations race the dev server's on-demand route compilation: on
+ * a cold, slow runner the first router.push to an uncompiled route can
+ * outlive an assertion's timeout. Compile the routes tests navigate to
+ * once per worker, after the session is established; any response counts
+ * and a warm failure must not fail tests.
+ */
+function warmSoftNavigationRoutes(page: Page) {
+  warmedSoftRoutes ??= Promise.all([
+    page.request.get(`/pages/${fixtureId(25)}`),
+    page.request.get("/account/settings"),
+    page.request.get("/journal"),
+    page.request.get("/explore"),
+  ]).then(
+    () => undefined,
+    () => undefined,
+  );
+  return warmedSoftRoutes;
 }
 
 export const test = base.extend<{
@@ -46,6 +67,7 @@ export const test = base.extend<{
       headers: { Origin: "http://127.0.0.1:3100" },
     });
     expect(response.ok(), await response.text()).toBe(true);
+    await warmSoftNavigationRoutes(page);
     await use(page);
   },
 });

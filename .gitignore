@@ -60,3 +60,6 @@ apps/web/AGENTS.md
 
 # Persistent local Workflow state is separate from generated Next output.
 **/.workflow-data/
+
+*storybook.log
+storybook-static

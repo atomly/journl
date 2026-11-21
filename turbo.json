@@ -33,6 +33,22 @@
     "VERCEL_DEPLOYMENT_ID"
   ],
   "tasks": {
+    "@acme/component-review#build": {
+      "dependsOn": ["^build"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "../web/src/app/styles.css",
+        "../web/src/app/fonts/**",
+        "../web/src/components/brand.tsx",
+        "../web/public/brand/**"
+      ],
+      "outputs": ["dist/**"]
+    },
+    "@acme/component-review#test:browser": {
+      "cache": false,
+      "dependsOn": ["test:stories"],
+      "passThroughEnv": ["COMPONENT_REVIEW_URL", "PLAYWRIGHT_*"]
+    },
     "build": {
       "dependsOn": ["^build"],
       "outputs": [".cache/tsbuildinfo.json", "dist/**"]
@@ -67,6 +83,9 @@
     "test:integration": {
       "cache": false,
       "passThroughEnv": ["DOCKER_*", "TESTCONTAINERS_*"]
+    },
+    "test:stories": {
+      "cache": false
     },
     "test:unit": {
       "dependsOn": ["^topo"]

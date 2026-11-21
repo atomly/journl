@@ -39,8 +39,8 @@ export async function settleShell(page: Page) {
     .toBeGreaterThanOrEqual(3);
 }
 export async function shellGeometry(page: Page) {
-  return page.evaluate(() =>
-    Object.fromEntries(
+  return page.evaluate(() => {
+    const geometry: Record<string, unknown> = Object.fromEntries(
       Object.entries({
         assistant: '[data-side="right"] [data-slot="sidebar-container"]',
         conversation: '[data-slot="message-scroller-viewport"]',
@@ -69,8 +69,29 @@ export async function shellGeometry(page: Page) {
             : null,
         ];
       }),
-    ),
-  );
+    );
+    // Prove which typeface actually rendered: the loaded font faces plus the
+    // body font's measured advance for a probe string. The v2 chrome uses a
+    // host system font by design, so only this probe ties captures to the
+    // application's bundled Inter face.
+    const style = getComputedStyle(document.body);
+    const probe = document.createElement("span");
+    probe.style.cssText = `font-family:${style.fontFamily};font-size:14px;font-weight:650;position:absolute;visibility:hidden;white-space:nowrap;`;
+    probe.textContent = "Small balcony garden";
+    document.body.append(probe);
+    const range = document.createRange();
+    range.selectNodeContents(probe);
+    const probeWidth =
+      Math.round(range.getBoundingClientRect().width * 100) / 100;
+    probe.remove();
+    geometry.fonts = {
+      faces: [...document.fonts].map(
+        (face) => `${face.family}/${face.weight}/${face.status}`,
+      ),
+      probeWidth,
+    };
+    return geometry;
+  });
 }
 export async function captureSettledShell(page: Page, path: string) {
   await settleShell(page);

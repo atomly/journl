@@ -33,15 +33,19 @@ export function PageEditor(props: PageEditorProps) {
     updatedAt: props.page.updated_at,
   });
   const { setView } = useJournlAgent();
-  useEffect(() => {
-    setView({ id: props.page.id, name: "page", title: props.page.title });
-  }, [props.page.id, props.page.title, setView]);
   useEffect(() => () => setView({ name: "other" }), [setView]);
   const snapshot = useSyncExternalStore(
     draft.subscribe,
     draft.getSnapshot,
     draft.getSnapshot,
   );
+  useEffect(() => {
+    setView({
+      id: props.page.id,
+      name: "page",
+      title: snapshot.title ?? props.page.title,
+    });
+  }, [props.page.id, props.page.title, snapshot.title, setView]);
   useEffect(
     () => () => {
       void draft.flush();

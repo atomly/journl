@@ -69,7 +69,7 @@ export function ComposerReasoningTrigger({
       size={size}
       aria-label={ariaLabel}
       className={cn(
-        "h-8 w-22 border-primary/70 bg-background! px-2 text-foreground text-xs shadow-none hover:border-primary! focus-visible:ring-0 [&_svg]:text-foreground!",
+        "h-8 w-22 px-2 text-xs shadow-none focus-visible:ring-0",
         className,
       )}
       {...props}

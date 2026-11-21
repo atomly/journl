@@ -48,20 +48,26 @@ function warmSoftNavigationRoutes(page: Page) {
 }
 
 export const test = base.extend<{
+  workspaceReview: boolean;
   otherOwner: boolean;
   journalPagination: boolean;
 }>({
   journalPagination: [false, { option: true }],
   otherOwner: [false, { option: true }],
-  page: async ({ page, otherOwner, journalPagination }, use) => {
+  page: async (
+    { page, otherOwner, journalPagination, workspaceReview },
+    use,
+  ) => {
     await warmWorkflowDeliveryRoute(page);
     const response = await page.request.post("/api/auth/sign-in/email", {
       data: {
-        email: journalPagination
-          ? browserFixture.paginationEmail
-          : otherOwner
-            ? browserFixture.otherEmail
-            : browserFixture.email,
+        email: workspaceReview
+          ? browserFixture.workspaceEmail
+          : journalPagination
+            ? browserFixture.paginationEmail
+            : otherOwner
+              ? browserFixture.otherEmail
+              : browserFixture.email,
         password: browserFixture.password,
       },
       headers: { Origin: "http://127.0.0.1:3100" },
@@ -70,6 +76,7 @@ export const test = base.extend<{
     await warmSoftNavigationRoutes(page);
     await use(page);
   },
+  workspaceReview: [false, { option: true }],
 });
 export { expect };
 

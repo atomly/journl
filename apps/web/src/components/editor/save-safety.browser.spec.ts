@@ -24,7 +24,12 @@ test.describe("document editor", () => {
     );
     await expect(editor).toContainText("Page draft kept");
     await title.blur();
-    await page.locator('a[href="/journal"]').first().click({ force: true });
+    if (info.project.name === "mobile-webkit")
+      await page
+        .getByRole("button", { exact: true, name: "Toggle Sidebar" })
+        .first()
+        .click();
+    await page.locator('a[href="/journal"]').first().click();
     await expect(page).toHaveURL(/\/journal$/);
     await expect(page.locator("[data-save-status]")).toContainText(
       "Couldn’t save",
@@ -40,7 +45,7 @@ test.describe("document editor", () => {
     );
     if (
       await page
-        .getByRole("dialog", { exact: true, name: "Sidebar" })
+        .getByRole("dialog", { exact: true, name: "Notebook navigation" })
         .isVisible()
     )
       await page.keyboard.press("Escape");
@@ -74,7 +79,7 @@ test.describe("document editor", () => {
         .first()
         .click();
     await page
-      .locator('[data-sidebar="header"] button[aria-haspopup="menu"]')
+      .locator('[data-sidebar="footer"] button[aria-haspopup="menu"]')
       .click();
     await page.getByRole("menuitem", { exact: true, name: "Settings" }).click();
     await expect(page).toHaveURL(/\/account\/settings$/);
@@ -90,7 +95,7 @@ test.describe("document editor", () => {
         .first()
         .click();
     await page
-      .locator('[data-sidebar="header"] button[aria-haspopup="menu"]')
+      .locator('[data-sidebar="footer"] button[aria-haspopup="menu"]')
       .click();
     await page
       .getByRole("menuitem", { exact: true, name: "Subscription" })
@@ -103,7 +108,7 @@ test.describe("document editor", () => {
     await expect(editor).toContainText(writing);
     if (
       await page
-        .getByRole("dialog", { exact: true, name: "Sidebar" })
+        .getByRole("dialog", { exact: true, name: "Notebook navigation" })
         .isVisible()
     )
       await page.keyboard.press("Escape");
@@ -185,14 +190,16 @@ test.describe("document editor", () => {
     page,
   }, info) => {
     await page.goto("/journal");
-    await expect(
-      page.getByRole("button", { name: /^(Entries|Timeline)$/ }),
-    ).toBeVisible();
-    const entriesToggle = page.getByRole("button", {
+    await page
+      .getByRole("button", { exact: true, name: "Journal route menu" })
+      .click();
+    const timeline = page.getByRole("button", {
       exact: true,
-      name: "Entries",
+      name: "Timeline",
     });
-    if (await entriesToggle.isVisible()) await entriesToggle.click();
+    if ((await timeline.getAttribute("aria-pressed")) !== "true")
+      await timeline.click();
+    else await page.keyboard.press("Escape");
     await page.route("**/api/trpc/journal.saveTransactions**", (route) =>
       route.abort(),
     );
@@ -460,7 +467,12 @@ test.describe("document editor", () => {
     const title = `Title queued during a save ${info.project.name}-document`;
     await editor.fill(body);
     await page.getByPlaceholder("New page").fill(title);
-    await page.locator('a[href="/journal"]').first().click({ force: true });
+    if (info.project.name === "mobile-webkit")
+      await page
+        .getByRole("button", { exact: true, name: "Toggle Sidebar" })
+        .first()
+        .click();
+    await page.locator('a[href="/journal"]').first().click();
     await expect(page).toHaveURL(/\/journal$/);
     release();
     await expect(page.locator("[data-save-status]")).toContainText("Saved");

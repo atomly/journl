@@ -3,7 +3,7 @@
 import { Button } from "@acme/ui/button";
 import { DrawerTrigger, useDrawer } from "@acme/ui/drawer";
 import { cn } from "@acme/ui/utils";
-import { RiSparkling2Fill } from "react-icons/ri";
+import { Sparkle } from "lucide-react";
 import {
   ChatUnreadA11yHint,
   ChatUnreadBadge,
@@ -25,15 +25,23 @@ export function ChatDrawerTrigger({
   return (
     <DrawerTrigger asChild>
       <Button
-        size="icon"
+        aria-label="Toggle Chat Drawer"
+        variant="assistant"
+        size="default"
         className={cn(
-          "relative size-10 cursor-pointer rounded-full border",
+          "journl-agent-launcher relative h-11 cursor-pointer rounded-[22px] border-0 px-[15px] font-medium text-sm shadow-sm",
           hasUnreadMessages ? "animate-chat-trigger-wiggle" : undefined,
           className,
         )}
         {...props}
       >
-        <RiSparkling2Fill className="size-6" />
+        <Sparkle
+          className="size-4"
+          strokeWidth={1.7}
+          data-icon="inline-start"
+        />
+        <span>Ask Journl</span>
+
         <ChatUnreadBadge hasUnreadMessages={hasUnreadMessages} />
         <span className="sr-only">Toggle Chat Drawer</span>
         <ChatUnreadA11yHint hasUnreadMessages={hasUnreadMessages} />

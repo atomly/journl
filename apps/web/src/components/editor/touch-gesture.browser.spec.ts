@@ -38,6 +38,16 @@ for (const width of [390, 1024]) {
       "CDP provides trusted touch input; WebKit has separate touch acceptance",
     );
     await page.setViewportSize({ height: 720, width });
+    if (width === 1024) {
+      // Tablet chat occupies the content stage; dismiss it before editing.
+      await page
+        .getByRole("button", { exact: true, name: "Close assistant" })
+        .click();
+      await expect(page.locator("[data-app-container]")).not.toHaveAttribute(
+        "inert",
+        "",
+      );
+    }
     const editor = page.locator(".better-editor-tiptap");
     await editor.fill("Alpha");
     await page.keyboard.press("Enter");

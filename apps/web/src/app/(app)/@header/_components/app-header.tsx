@@ -1,8 +1,8 @@
 "use client";
 
-import { useIsMobile } from "@acme/ui/use-mobile";
 import { cn } from "@acme/ui/utils";
 import { useEffect, useState } from "react";
+import { useIsMobile } from "~/components/ui/use-shell-viewport";
 import { useAppLayout } from "../../../_components/app-layout-provider";
 
 type AppHeaderProps = React.ComponentProps<"header">;
@@ -96,9 +96,9 @@ export function AppHeader({ className, ...props }: AppHeaderProps) {
     <header
       data-hidden={isHidden}
       className={cn(
-        "peer/app-header fixed top-0 right-0 left-0 z-4500 mx-6 mt-2 h-12 transform-gpu transition-transform duration-300 ease-out will-change-transform has-[:focus-visible]:translate-y-0 motion-reduce:transition-none md:sticky md:top-0 md:right-auto md:left-auto md:m-2",
+        "peer/app-header fixed top-0 right-0 left-0 z-2 mx-3 mt-3 h-16 transform-gpu transition-transform duration-300 ease-out will-change-transform has-[:focus-visible]:translate-y-0 motion-reduce:transition-none min-[701px]:sticky min-[701px]:top-0 min-[701px]:right-auto min-[701px]:left-auto min-[701px]:m-0 min-[701px]:h-16",
         {
-          "-translate-y-[calc(100%+2rem)] md:translate-y-0": isHidden,
+          "-translate-y-[calc(100%+2rem)] min-[701px]:translate-y-0": isHidden,
         },
         className,
       )}

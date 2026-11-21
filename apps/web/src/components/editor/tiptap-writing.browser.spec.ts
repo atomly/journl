@@ -29,7 +29,9 @@ test("journal slash commands, checkboxes, and collapsible writing save with stab
     page.getByRole("listbox", { name: "Block commands" }),
   ).toBeHidden();
   await editor.focus();
+  await expect(editor).toBeFocused();
   await page.keyboard.press("Backspace");
+  await expect(editor).toHaveText("/he");
   await page.keyboard.type("ading 4");
   await expect(
     page.getByRole("listbox", { name: "Block commands" }),

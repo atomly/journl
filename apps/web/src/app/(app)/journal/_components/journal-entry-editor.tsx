@@ -97,6 +97,7 @@ export function JournalEntryWrapper({
 
   return (
     <div
+      data-reading-surface
       className={cn(isToday && "min-h-96 md:min-h-124", className)}
       {...rest}
     >

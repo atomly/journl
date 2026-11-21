@@ -139,23 +139,80 @@ jobs:
       - name: Database integration tests
         run: pnpm test:integration
 
-  browser:
+  browser-shards:
     needs: stack-policy
     if: needs.stack-policy.outputs.run == 'true'
     runs-on: ubuntu-latest
+    timeout-minutes: 40
+    strategy:
+      # Let every leg finish so one failure does not mask the others.
+      fail-fast: false
+      matrix:
+        include:
+          # The shell and acceptance specs arrive with the workspace v2 stack;
+          # those legs stay empty and pass here until the files exist.
+          # Positional args are path regexes; \(app\) escapes the route group.
+          - leg: acceptance-1
+            run: pnpm --filter @acme/web test:browser 'src/app/\(app\)/_components/shell-acceptance\.browser\.spec\.ts' --shard=1/2 --pass-with-no-tests
+          - leg: acceptance-2
+            run: pnpm --filter @acme/web test:browser 'src/app/\(app\)/_components/shell-acceptance\.browser\.spec\.ts' --shard=2/2 --pass-with-no-tests
+          - leg: shell-1
+            run: pnpm --filter @acme/web test:browser 'src/app/\(app\)/_components/' --grep-invert='[a-z]--[a-z]' --shard=1/2 --pass-with-no-tests
+          - leg: shell-2
+            run: pnpm --filter @acme/web test:browser 'src/app/\(app\)/_components/' --grep-invert='[a-z]--[a-z]' --shard=2/2 --pass-with-no-tests
+          - leg: app-1
+            run: pnpm --filter @acme/web test:browser 'src/components/' 'src/app/\(app\)/@appSidebar/' 'src/app/\(app\)/explore/' 'src/app/\(app\)/journal/' 'src/testing/' --shard=1/4
+          - leg: app-2
+            run: pnpm --filter @acme/web test:browser 'src/components/' 'src/app/\(app\)/@appSidebar/' 'src/app/\(app\)/explore/' 'src/app/\(app\)/journal/' 'src/testing/' --shard=2/4
+          - leg: app-3
+            run: pnpm --filter @acme/web test:browser 'src/components/' 'src/app/\(app\)/@appSidebar/' 'src/app/\(app\)/explore/' 'src/app/\(app\)/journal/' 'src/testing/' --shard=3/4
+          - leg: app-4
+            run: pnpm --filter @acme/web test:browser 'src/components/' 'src/app/\(app\)/@appSidebar/' 'src/app/\(app\)/explore/' 'src/app/\(app\)/journal/' 'src/testing/' --shard=4/4
     steps:
       - uses: actions/checkout@v7
       - name: Setup
         uses: ./tooling/github/setup
+      - name: Sharding covers every browser spec
+        run: |
+          cd apps/web
+          missing=$(find src -name '*.browser.spec.ts' | while read -r f; do
+            case "$f" in
+              'src/app/(app)/_components/'*|'src/app/(app)/@appSidebar/'*|'src/app/(app)/explore/'*|'src/app/(app)/journal/'*|src/components/*|src/testing/*) ;;
+              *) echo "$f" ;;
+            esac
+          done)
+          if [ -n "$missing" ]; then
+            echo "::error::Browser specs not covered by CI sharding: $missing"
+            exit 1
+          fi
+      - name: Cache Playwright browsers
+        uses: actions/cache@v5
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-${{ runner.arch }}-playwright-${{ hashFiles('pnpm-lock.yaml') }}
+          # An unrelated lockfile bump changes the exact key; restoring a
+          # stale prefix lets playwright install fetch only changed engines.
+          restore-keys: ${{ runner.os }}-${{ runner.arch }}-playwright-
       - name: Install Playwright browsers
         run: pnpm --filter @acme/web exec playwright install --with-deps chromium webkit
       - name: Browser acceptance
-        run: pnpm test:browser
+        run: ${{ matrix.run }}
       - uses: actions/upload-artifact@v7
         if: always()
         with:
-          name: playwright-results
+          name: playwright-results-${{ matrix.leg }}
+          if-no-files-found: ignore
           path: |
             apps/web/playwright-report/
             apps/web/test-results/
           retention-days: 7
+
+  browser:
+    needs: [stack-policy, browser-shards]
+    if: always() && needs.stack-policy.outputs.run == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Browser acceptance outcome
+        run: |
+          echo "Shard matrix result: ${{ needs.browser-shards.result }}"
+          test "${{ needs.browser-shards.result }}" = "success"

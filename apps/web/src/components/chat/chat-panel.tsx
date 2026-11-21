@@ -66,30 +66,73 @@ function ConversationViewport({
     if (!node) return;
     let firstFrame = 0;
     let secondFrame = 0;
+    let verifyFrame = 0;
     const unavailable = () => unavailableConversation(node);
+    const anchorItem = (saved: ConversationPosition) =>
+      saved.messageId
+        ? node.querySelector<HTMLElement>(
+            `[data-message-id="${CSS.escape(saved.messageId)}"]`,
+          )
+        : null;
+    const align = (saved: ConversationPosition) => {
+      const item = anchorItem(saved);
+      if (item && saved.messageId && saved.offset !== undefined) {
+        scrollToMessage(saved.messageId, {
+          align: "start",
+          behavior: "auto",
+        });
+        node.scrollTop +=
+          item.getBoundingClientRect().top -
+          node.getBoundingClientRect().top -
+          saved.offset;
+      } else node.scrollTop = saved.top;
+      position.current = { ...saved, top: node.scrollTop };
+    };
+    const finish = () => {
+      restoring.current = false;
+      onRestored(true);
+    };
     const restore = () => {
       if (unavailable() || node.hasAttribute("data-pending-scroll")) return;
       const saved = desired.current;
-      if (saved?.threadId === threadId) {
-        const item = saved.messageId
-          ? node.querySelector<HTMLElement>(
-              `[data-message-id="${CSS.escape(saved.messageId)}"]`,
-            )
-          : null;
-        if (item && saved.messageId && saved.offset !== undefined) {
-          scrollToMessage(saved.messageId, {
-            align: "start",
-            behavior: "auto",
-          });
-          node.scrollTop +=
-            item.getBoundingClientRect().top -
-            node.getBoundingClientRect().top -
-            saved.offset;
-        } else node.scrollTop = saved.top;
-        position.current = { ...saved, top: node.scrollTop };
+      if (saved?.threadId !== threadId) {
+        finish();
+        return;
       }
-      restoring.current = false;
-      onRestored(true);
+      // Re-expanding the panel lays messages out at transient widths, and
+      // content-visibility keeps the stale sizes for off-screen rows. Re-align
+      // each frame until the anchor holds the saved offset consecutively.
+      align(saved);
+      let stable = 0;
+      let frames = 0;
+      const verify = () => {
+        verifyFrame = 0;
+        if (!restoring.current) return;
+        if (unavailable()) {
+          desired.current =
+            position.current?.threadId === threadId
+              ? { ...position.current }
+              : null;
+          return;
+        }
+        frames += 1;
+        const item = anchorItem(saved);
+        const current =
+          item && saved.offset !== undefined
+            ? item.getBoundingClientRect().top -
+              node.getBoundingClientRect().top
+            : node.scrollTop;
+        if (Math.abs(current - (saved.offset ?? saved.top)) > 1) {
+          align(saved);
+          stable = 0;
+        } else stable += 1;
+        if (stable >= 2 || frames > 90) {
+          finish();
+          return;
+        }
+        verifyFrame = requestAnimationFrame(verify);
+      };
+      verifyFrame = requestAnimationFrame(verify);
     };
     const schedule = () => {
       if (unavailable()) {
@@ -98,11 +141,15 @@ function ConversationViewport({
           position.current?.threadId === threadId
             ? { ...position.current }
             : null;
+        // A restore is pending again: keep the scroller from auto-following
+        // while the panel reopens.
+        onRestored(false);
         return;
       }
       if (!restoring.current) return;
       cancelAnimationFrame(firstFrame);
       cancelAnimationFrame(secondFrame);
+      cancelAnimationFrame(verifyFrame);
       firstFrame = requestAnimationFrame(() => {
         secondFrame = requestAnimationFrame(restore);
       });
@@ -126,12 +173,25 @@ function ConversationViewport({
       });
     const resize = new ResizeObserver(schedule);
     resize.observe(node);
+    // Direct user input wins over the settling restore.
+    const abandon = () => {
+      if (!restoring.current) return;
+      cancelAnimationFrame(verifyFrame);
+      finish();
+    };
+    node.addEventListener("keydown", abandon);
+    node.addEventListener("touchmove", abandon, { passive: true });
+    node.addEventListener("wheel", abandon, { passive: true });
     schedule();
     return () => {
       attributes.disconnect();
       resize.disconnect();
+      node.removeEventListener("keydown", abandon);
+      node.removeEventListener("touchmove", abandon);
+      node.removeEventListener("wheel", abandon);
       cancelAnimationFrame(firstFrame);
       cancelAnimationFrame(secondFrame);
+      cancelAnimationFrame(verifyFrame);
     };
   }, [node, onRestored, position, scrollToMessage, threadId]);
   return (

@@ -7,6 +7,25 @@ import {
 import type { Editor } from "@tiptap/core";
 import { browserFixture } from "./data";
 
+let warmedWorkflowRoute: Promise<void> | undefined;
+/**
+ * The local workflow queue delivers by fetching the app's own workflow
+ * route, which a cold dev server compiles on demand. On slow runners the
+ * first delivery outlives its attempt and stalls the first
+ * workflow-starting mutation (the runner sees an in-flight create that
+ * never settles). Compile the route once per worker before the first
+ * test; any response counts, and a warm failure must not fail tests.
+ */
+function warmWorkflowDeliveryRoute(page: Page) {
+  warmedWorkflowRoute ??= page.request
+    .get("/.well-known/workflow/v1/flow")
+    .then(
+      () => undefined,
+      () => undefined,
+    );
+  return warmedWorkflowRoute;
+}
+
 export const test = base.extend<{
   otherOwner: boolean;
   journalPagination: boolean;
@@ -14,6 +33,7 @@ export const test = base.extend<{
   journalPagination: [false, { option: true }],
   otherOwner: [false, { option: true }],
   page: async ({ page, otherOwner, journalPagination }, use) => {
+    await warmWorkflowDeliveryRoute(page);
     const response = await page.request.post("/api/auth/sign-in/email", {
       data: {
         email: journalPagination

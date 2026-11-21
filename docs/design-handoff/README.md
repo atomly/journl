@@ -1,46 +1,33 @@
-# Approved Journl design handoff
+# Journl — approved UI/UX implementation handoff
 
-The user accepted the full application design and the **Shifted right** Gather logo. The complete handoff integrates that exact logo into every existing brand placement. This PR records the design reference; it does not implement the redesign or authorize production changes.
+Start with [the visual gallery](index.html). This handoff contains the final approved application design: **438 states and 1,830 canonical PNGs**. It is the implementation reference for the UI/UX refactor. All files are in the repository. No external archive, design service or network access is needed to retrieve the designs.
 
-## Complete source of truth
+## Read and inspect
 
-The exact package contains **438 states, 1,830 canonical PNGs**, both themes, mobile/desktop layouts, selected tablet layouts, secondary surfaces, feature-parity mappings, editable rendering sources, and verification records. Every original baseline state has a mapping.
+1. [Implementation guide](specs/implementation-guide.md): product context, approved decisions, refactoring rules and acceptance criteria.
+2. [Visual foundations](specs/foundations.md): typography, colors, materials, spacing, sizing and component states.
+3. [Behavior and menus](specs/behavior-and-menus.md): controls, interactions, validation, loading and errors.
+4. [Responsive and implementation details](specs/responsive-and-implementation.md): layout changes, panel behavior, keyboard, focus and accessibility.
+5. [Brand specification](specs/approved-brand.md) and [exact assets](assets/brand/): use the supplied artwork directly.
+6. [Screen/state index](screen-state-index.json), [CSV index](screen-state-index.csv) and [feature-parity mapping](feature-parity.csv): locate each route, surface, state, viewport, image and available action.
+7. [System/external boundaries](specs/boundaries.json): interfaces owned by the browser, operating system or external provider.
 
-The archive is attached to the **unpublished draft release** tagged `journl-design-handoff-v2` in `atomly/journl` ([artifact storage](https://github.com/atomly/journl/releases/tag/untagged-0ba611aeba6e3d7fc3a9)). Maintainer authentication is required. Historical captures remain in the authenticated archive; they are not copied into this public PR. Do not publish the release as part of implementation.
+## Use the views as the implementation reference
 
-From the repository root, retrieve and verify it with:
+[Browse by application family](index.html), or use the search and theme filters to find a state. The gallery embeds the actual full-resolution PNGs. Each state identifies its route, actions, conditions, viewports and related current-source paths. Open an image to inspect it at full resolution.
 
-```bash
-mkdir -p /tmp/journl-approved-design
-gh release download journl-design-handoff-v2 --repo atomly/journl --pattern journl-approved-handoff-v2.zip --dir /tmp/journl-approved-design
-handoff_checksum="$PWD/docs/design-handoff/archive.sha256"
-(cd /tmp/journl-approved-design && sha256sum --check "$handoff_checksum")
-unzip /tmp/journl-approved-design/journl-approved-handoff-v2.zip -d /tmp/journl-approved-design
-```
+For each implementation slice, inspect every relevant route, modal, drawer, menu, popover and meaningful state. Include both themes, responsive layouts, loading, errors, empty/populated states, selected/expanded states, search/filter results and validation. A representative screenshot is not sufficient to implement a whole route.
 
-If the draft release is inaccessible, ask a maintainer to provide the same checksum-verified archive. Do not substitute a new interpretation or incomplete screenshot subset.
+The index distinguishes contextual screens from supplemental component reference plates. Component plates explain component states; they are not extra application routes. Scroll variants show different portions of the same long surface. The index records viewport size separately from full-page image dimensions and includes regions for shared images.
 
-Start with `approved-handoff-v2/README.md` and `approval.json`. Open `application/index.html` through a static HTTP server to browse all views. `application/screen-state-index.json` and `.csv` map exact images to routes, surfaces, states, viewports, actions and hashes. `application/feature-parity.md` and `.csv` map existing capabilities. `manifest.json` lists packaged file hashes. The reviewed PNGs and approved logo files are the visual source of truth.
+The exact PNGs in [views/](views/) govern appearance. Written specifications govern behavior that a still image cannot show. [reference/visual-system.css](reference/visual-system.css) contains the final shared visual rules from the design compositions. It is a styling reference, not production architecture to copy. Reuse the current application's real state, data and actions. Do not ship synthetic fixture data or placeholder interactions from the design renderer.
 
-## In this PR
+## Package contents
 
-- [Foundations](foundations.md): typography, spacing, colors, materials and component sizing.
-- [Behavior and menus](behavior-and-menus.md): interactions, available actions, validation, loading and errors.
-- [Responsive and implementation guide](responsive-and-implementation.md).
-- [Brand placement](approved-brand.md) and [exact approved assets](brand/).
-- [Current application coverage gaps](current-access-gaps.md).
-- [Light Library](screenshots/library-light.png), [dark Library](screenshots/library-dark.png), [desktop marketing](screenshots/marketing-light.png), and [mobile marketing](screenshots/marketing-mobile.png): exact canonical files copied from the complete archive, not recreations.
-
-## Implementation agent brief
-
-Use the complete checksum-verified handoff. Read the repository's current AGENTS.md and README.md before implementation and inspect the current application source; the design audit is historical. Implement in reviewable slices, starting with shared foundations and the application shell. Preserve capabilities, stored content/identities, draft/history, selection, accessibility, read-only enforcement and gesture cancellation. Keep BetterEditor independent of Journl-specific styling, persistence and behavior. Keep reusable primitives in @acme/ui and app composition in Journl.
-
-Use the approved screenshots directly for visual comparisons with matching state/content and viewport. Preserve the floating, collapsible/resizable navigation and assistant surfaces, route-specific headers, pastel accents, blue glass surfaces, sans-serif typography and exact logo. Marketing describes organization and useful knowledge, not writing as the primary goal. Future connectors, public/invited pages, schedules and reminders describe product direction; they are not authorization to add features in this implementation.
-
-Resolve routine implementation choices independently. Escalate a decision that would remove a core capability or change data/privacy policy. Do not treat source inspection as browser acceptance. Run the repository's relevant checks and report actual failures/skips. Publishing or deploying requires separate authorization.
-
-## Verification and limits
-
-The design package passed integrity checks for all 1,830 images, 52 review pages at desktop and mobile widths, 3,918 embedded image instances, 3,203 local links and 27 design interaction checks. The brand integration preserves control geometry and identity. Verification records distinguish branding changes, minor raster rounding and text rasterization differences; they do not claim byte-identical non-brand pixels.
-
-These are authored design checks, not production-app acceptance. The historical current-app ledger remains 43 captured, 337 inspected, 38 inaccessible and four not applicable. Chromium/emulated-touch checks do not certify Safari/Firefox, physical keyboard/IME, screen readers or complete WCAG conformance. Known gaps must remain visible during implementation.
+- views/: all 1,830 current approved PNGs grouped by application family.
+- galleries/: screen/state galleries with explicit viewport, theme and variant labels.
+- specs/: final visual, behavioral, responsive and implementation specifications.
+- assets/: exact logo artwork, icon exports and licensed reference font.
+- reference/: CSS rules supporting the final visual system.
+- screen-state-index.json/.csv and feature-parity.csv: complete implementation mappings.
+- manifest.json: file hashes for integrity checks.

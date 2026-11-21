@@ -1,0 +1,37 @@
+[
+  {
+    "id": "native-beforeunload",
+    "family": "recovery",
+    "state": "Browser leave warning",
+    "status": "native external",
+    "reason": "Browser owns wording and controls. Trigger only for unsaved content; cancel keeps the draft."
+  },
+  {
+    "id": "oauth-hosted",
+    "family": "auth",
+    "state": "Provider-hosted account/consent pages",
+    "status": "external",
+    "reason": "Outside Journl; conditional provider redirect and return/error are illustrated."
+  },
+  {
+    "id": "billing-hosted",
+    "family": "billing",
+    "state": "Vendor checkout and billing portal",
+    "status": "external",
+    "reason": "Outside Journl; launch, pending, errors and return are illustrated."
+  },
+  {
+    "id": "native-file-picker",
+    "family": "account",
+    "state": "Avatar system file picker",
+    "status": "native external",
+    "reason": "Journl choose/validation/pending/error states are illustrated; operating system picker is external."
+  },
+  {
+    "id": "system-keyboard",
+    "family": "shared",
+    "state": "Native mobile keyboard",
+    "status": "native external",
+    "reason": "Sheet/composer layout drawn; keyboard/IME and safe-area contract specified, not an OS acceptance claim."
+  }
+]

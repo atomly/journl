@@ -23,13 +23,26 @@ test("page keyboard order follows search, title and document without changing to
     exact: true,
     name: "Search notes",
   });
+  // The approved workspace v2 header keeps the Route actions trigger between
+  // search and the document column, so the title follows it in keyboard order.
+  const routeActions = page.getByRole("button", {
+    exact: true,
+    name: "Route actions",
+  });
   await expect(editor).toBeVisible();
   await search.focus();
   await page.keyboard.press("Tab");
+  await expect(routeActions).toBeFocused();
+  await page.keyboard.press("Tab");
   await expect(title).toBeFocused();
+  await page.keyboard.press("Shift+Tab");
+  await expect(routeActions).toBeFocused();
   await page.keyboard.press("Shift+Tab");
   await expect(search).toBeFocused();
   await page.keyboard.press("Tab");
+  await expect(routeActions).toBeFocused();
+  await page.keyboard.press("Tab");
+  await expect(title).toBeFocused();
   await title.fill("Keyboard order");
   await page.keyboard.press("Tab");
   await expect(editor).toBeFocused();
@@ -50,6 +63,8 @@ test("page keyboard order follows search, title and document without changing to
     editor.locator('[data-better-editor-body="paragraph"]'),
   ).toHaveText("Body from the title");
   await search.focus();
+  await page.keyboard.press("Tab");
+  await expect(routeActions).toBeFocused();
   await page.keyboard.press("Tab");
   await expect(title).toBeFocused();
   await page.keyboard.press("Tab");

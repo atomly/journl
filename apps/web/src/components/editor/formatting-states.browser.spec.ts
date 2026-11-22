@@ -222,6 +222,13 @@ for (const theme of ["light", "dark"]) {
     await mkdir(directory, { recursive: true });
     const frame = await captureSettledShell(page, `${directory}/current.png`);
     const controls = await measureShellControls(page);
+    // The hover contrast measurement leaves the Duplicate item's tooltip open,
+    // and an open Base UI tooltip whose trigger is focused consumes the first
+    // Escape to dismiss itself, so that keydown never reaches the menu. End
+    // the hover the way a user does — leave the item — then the next Escape
+    // reaches the menu and closes it.
+    await page.mouse.move(0, 0);
+    await expect(page.getByRole("tooltip")).toHaveCount(0);
     // Escape closes the menu and restores editor focus with the toolbar.
     await page.keyboard.press("Escape");
     await expect(menu).toHaveCount(0);

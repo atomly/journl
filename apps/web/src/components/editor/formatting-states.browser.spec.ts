@@ -1,6 +1,5 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import type { Editor } from "@tiptap/core";
-import { TextSelection } from "@tiptap/pm/state";
 import { fixtureId } from "~/testing/browser/data";
 import { expect, test } from "~/testing/browser/fixtures";
 import { renderedTextContrast } from "~/testing/browser/rendered-contrast";
@@ -61,24 +60,33 @@ for (const theme of ["light", "dark"]) {
     });
     await expect(selected).toHaveCount(1);
     await editor.evaluate((root, text) => {
-      const instance = (root as HTMLElement & { editor: Editor }).editor;
-      const { doc } = instance.state;
-      let from = -1;
-      let to = -1;
-      doc.descendants((node, position) => {
-        if (from >= 0 || !node.isText || !node.text) return true;
-        const index = node.text.indexOf(text);
-        if (index >= 0) {
-          from = position + index;
-          to = from + text.length;
-        }
-        return true;
-      });
-      if (from < 0) throw new Error(`Phrase not found: ${text}`);
-      instance.view.focus();
-      instance.view.dispatch(
-        instance.state.tr.setSelection(TextSelection.create(doc, from, to)),
-      );
+      // Browser context: select the phrase with a DOM range so ProseMirror
+      // applies the selection from its selectionchange listener.
+      const target = [
+        ...root.querySelectorAll<HTMLElement>(
+          '[data-better-editor-body="paragraph"]',
+        ),
+      ].find((element) => element.textContent?.includes(text));
+      if (!target) throw new Error(`Paragraph not found: ${text}`);
+      const walker = document.createTreeWalker(target, NodeFilter.SHOW_TEXT);
+      for (
+        let node = walker.nextNode() as Text | null;
+        node;
+        node = walker.nextNode() as Text | null
+      ) {
+        const index = node.data.indexOf(text);
+        if (index < 0) continue;
+        const range = document.createRange();
+        range.setStart(node, index);
+        range.setEnd(node, index + text.length);
+        root.focus();
+        const selection = getSelection();
+        selection?.removeAllRanges();
+        selection?.addRange(range);
+        document.dispatchEvent(new Event("selectionchange"));
+        return;
+      }
+      throw new Error(`Phrase not found: ${text}`);
     }, phrase);
     const toolbar = page.getByRole("toolbar", {
       exact: true,
@@ -138,8 +146,12 @@ for (const theme of ["light", "dark"]) {
       `${theme} selected editor text`,
     ).toBeGreaterThanOrEqual(4.5);
     measurements.push({ label: "Selected editor text", ...selectedContrast });
-    // Alt+F10 keeps the keyboard path to the same toolbar.
-    await selected.click();
+    // Alt+F10 keeps the keyboard path to the same toolbar. Seat the caret on
+    // the plate's first line — the band where the plate draws the selection,
+    // the formatting toolbar and the block handle side by side. The
+    // paragraph centre lands on the line boundary, where the floating
+    // toolbar anchors above line two and covers the handle rail.
+    await selected.click({ position: { x: 60, y: 8 } });
     await page.keyboard.press("Alt+F10");
     await expect(toolbar).toBeVisible();
     await expect(

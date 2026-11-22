@@ -1,6 +1,24 @@
 import type { Locator } from "@playwright/test";
 import { expect } from "./fixtures";
 
+/** Build a selector from the target's position in the document tree. Editors
+ * reconcile class and attribute edits on their managed nodes, but the tree
+ * itself stays stable while a screenshot pair is captured.
+ */
+async function structuralPath(target: Locator) {
+  return target.evaluate((element) => {
+    const parts: string[] = [];
+    let node: Element | null = element;
+    while (node && node !== document.documentElement) {
+      const parent = node.parentElement;
+      const index = parent ? Array.from(parent.children).indexOf(node) + 1 : 1;
+      parts.unshift(`${node.tagName.toLowerCase()}:nth-child(${index})`);
+      node = parent;
+    }
+    return ["html", ...parts].join(" > ");
+  });
+}
+
 /** Isolate each text run or SVG. Compare its strongest glyph core with the same
  * composited background pixel, then report the lowest per-run contrast.
  * Antialias fringes are excluded; this does not measure every fringe pixel.
@@ -49,46 +67,53 @@ export async function renderedTextContrast(
     animations: "disabled",
     scale: "css",
   });
-  const previous = await target.evaluate((element, mode) => {
-    const nodes =
-      mode === "icons"
-        ? Array.from(element.querySelectorAll<SVGElement>("svg"))
-        : [element as HTMLElement];
-    return nodes.map((node) => {
-      const property = mode === "icons" ? "opacity" : "-webkit-text-fill-color";
-      const value = node.style.getPropertyValue(property);
-      const priority = node.style.getPropertyPriority(property);
-      node.style.setProperty(
-        property,
-        mode === "icons" ? "0" : "transparent",
-        "important",
-      );
-      return { priority, property, value };
-    });
-  }, paint);
   let background: Buffer;
-  try {
-    background = await target.screenshot({
-      animations: "disabled",
-      scale: "css",
-    });
-  } finally {
-    await target.evaluate(
-      (element, state) => {
-        const nodes =
-          state.paint === "icons"
-            ? Array.from(element.querySelectorAll<SVGElement>("svg"))
-            : [element as HTMLElement];
-        nodes.forEach((node, index) => {
-          const old = state.previous[index];
-          if (!old) return;
-          if (old.value)
-            node.style.setProperty(old.property, old.value, old.priority);
-          else node.style.removeProperty(old.property);
-        });
-      },
-      { paint, previous },
+  if (paint === "icons") {
+    const previous = await target.evaluate((element) =>
+      Array.from(element.querySelectorAll<SVGElement>("svg")).map((node) => {
+        const value = node.style.getPropertyValue("opacity");
+        const priority = node.style.getPropertyPriority("opacity");
+        node.style.setProperty("opacity", "0", "important");
+        return { priority, property: "opacity", value };
+      }),
     );
+    try {
+      background = await target.screenshot({
+        animations: "disabled",
+        scale: "css",
+      });
+    } finally {
+      await target.evaluate((element, previous) => {
+        Array.from(element.querySelectorAll<SVGElement>("svg")).forEach(
+          (node, index) => {
+            const old = previous[index];
+            if (!old) return;
+            if (old.value)
+              node.style.setProperty(old.property, old.value, old.priority);
+            else node.style.removeProperty(old.property);
+          },
+        );
+      }, previous);
+    }
+  } else {
+    // Editors reconcile the inline styles of their managed nodes back to
+    // document state (ProseMirror redraws a node whose style attribute
+    // drifts), which reverts an inline transparent fill before it can be
+    // captured. Hide the text through a stylesheet keyed to the target's
+    // structural path instead: it never mutates the element, so no
+    // reconciliation reverts it.
+    const style = await target.page().addStyleTag({
+      content: `${await structuralPath(target)}{-webkit-text-fill-color:transparent !important;}`,
+    });
+    try {
+      background = await target.screenshot({
+        animations: "disabled",
+        scale: "css",
+      });
+    } finally {
+      await style.evaluate((element) => element.remove());
+      await style.dispose();
+    }
   }
   return target.evaluate(
     async (element, input) => {

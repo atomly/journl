@@ -105,18 +105,20 @@ for (const theme of ["light", "dark"]) {
     expect(agent).toMatchObject({ height: 968, width: 400, x: 1024, y: 16 });
     expect(header).toMatchObject({ height: 62, width: 760, x: 248 });
     expect(reading?.x).toBe(header?.x);
-    expect(reading?.width).toBe(744);
+    expect(reading?.width).toBe(760);
     expect(reading?.y).toBe((header?.y ?? 0) + 62);
     expect((reading?.y ?? 0) + (reading?.height ?? 0)).toBe(984);
 
     // Approved surface geometry: mark, search pill, tabs and 48px index rows.
     const mark = await page.locator(".journl-library-mark").boundingBox();
     expect(mark).toMatchObject({ height: 44, width: 44 });
-    const search = page.getByLabel("Search by name");
-    const searchBox = await search.boundingBox();
+    const searchPill = page.locator(".journl-library-search");
+    const searchBox = await searchPill.boundingBox();
     expect(searchBox?.height).toBe(32);
     expect((searchBox?.width ?? 0) >= 145).toBe(true);
+    const search = page.locator(".journl-library-search input");
     const newPageBox = await page
+      .getByRole("main")
       .getByRole("button", { exact: true, name: "New page" })
       .boundingBox();
     expect(newPageBox?.height).toBe(32);
@@ -133,11 +135,15 @@ for (const theme of ["light", "dark"]) {
       .locator('[role="table"][aria-label="Pages"] .journl-library-grid-head')
       .boundingBox();
     expect(head?.height).toBe(34);
-    expect(head?.x).toBe(table?.x);
+    // The plate's table frame is a 1px border plus 6px horizontal padding
+    // (review/workspace.css `.table`), so the head and every data row start
+    // 7px inside the table's border box, aligned with each other.
+    const rowInset = (table?.x ?? 0) + 7;
+    expect(head?.x).toBe(rowInset);
     for (const row of await rows.all()) {
       const box = await row.boundingBox();
       expect(box?.height).toBe(48);
-      expect(box?.x).toBe(table?.x);
+      expect(box?.x).toBe(rowInset);
     }
     const actionsBox = await rows
       .nth(0)

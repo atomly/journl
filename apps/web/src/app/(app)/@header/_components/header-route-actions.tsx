@@ -149,11 +149,14 @@ export function HeaderRouteActions({
     enabled: Boolean(pageId || folderId),
   });
   const journal = pathname.startsWith("/journal");
+  const library = pathname === "/library";
   const label = journal
     ? "Journal"
-    : pathname.startsWith("/explore") || pathname.startsWith("/graph")
-      ? "Explore"
-      : "Library";
+    : library
+      ? "All pages"
+      : pathname.startsWith("/explore") || pathname.startsWith("/graph")
+        ? "Explore"
+        : "Library";
   const { preferences, updatePreferences } = useAppPreferences();
   const date = /^\/journal\/(\d{4}-\d{2}-\d{2})$/.exec(pathname)?.[1];
   const detail = journal
@@ -166,14 +169,16 @@ export function HeaderRouteActions({
       : preferences.journalTimelineView === "entries"
         ? "Entries"
         : "Timeline"
-    : path
-        ?.map((item) =>
-          item.id === pageId && currentTitle !== null
-            ? currentTitle || "Untitled"
-            : item.name || "Untitled",
-        )
-        .join(" / ") ||
-      (label === "Explore" ? "Threads and connections" : currentTitle || "");
+    : library
+      ? ""
+      : path
+          ?.map((item) =>
+            item.id === pageId && currentTitle !== null
+              ? currentTitle || "Untitled"
+              : item.name || "Untitled",
+          )
+          .join(" / ") ||
+        (label === "Explore" ? "Threads and connections" : currentTitle || "");
   const navigate = (url: string) => {
     router.push(url);
     closeMenus();
@@ -275,6 +280,15 @@ export function HeaderRouteActions({
             </Link>
             <Link href="/graph" onClick={closeMenus}>
               Graph
+            </Link>
+          </>
+        ) : label === "All pages" ? (
+          <>
+            <Link href="/library" onClick={closeMenus}>
+              All pages
+            </Link>
+            <Link href="/library?tab=folders" onClick={closeMenus}>
+              Folders
             </Link>
           </>
         ) : (

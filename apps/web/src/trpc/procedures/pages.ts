@@ -1,7 +1,21 @@
-import { and, cosineDistance, desc, eq, gt, gte, lte, sql } from "@acme/db";
 import {
+  and,
+  cosineDistance,
+  desc,
+  eq,
+  gt,
+  gte,
+  ilike,
+  inArray,
+  lte,
+  sql,
+} from "@acme/db";
+import {
+  BlockEdge,
+  BlockNode,
   Document,
   DocumentEmbedding,
+  Folder,
   Page,
   TreeEdge,
   TreeNode,
@@ -17,6 +31,7 @@ import { dispatchExploreRefresh } from "~/explore/dispatch";
 import { lockExploreOwner, markExploreDirty } from "~/explore/refresh";
 import { startDocumentEmbedding } from "~/workflows/document-embedding";
 import {
+  rebuildReferenceProjection,
   saveTransactions,
   zBlockTransactions,
 } from "../shared/block-transaction";
@@ -88,6 +103,287 @@ export const pagesRouter = {
       });
       await dispatchExploreRefresh(ctx.session.user.id);
       return result;
+    }),
+  duplicate: protectedProcedure
+    .input(z.object({ id: z.uuid() }))
+    .mutation(async ({ ctx, input }) => {
+      const result = await ctx.db.transaction(async (tx) => {
+        const userId = ctx.session.user.id;
+        await lockTreeOwner(tx, userId);
+        await lockExploreOwner(tx, userId);
+
+        const [source] = await tx
+          .select()
+          .from(Page)
+          .where(and(eq(Page.id, input.id), eq(Page.user_id, userId)));
+        if (!source)
+          throw new TRPCError({ code: "NOT_FOUND", message: "Page not found" });
+
+        const sourceNode = await tx.query.TreeNode.findFirst({
+          where: and(
+            eq(TreeNode.user_id, userId),
+            eq(TreeNode.node_type, "page"),
+            eq(TreeNode.page_id, source.id),
+          ),
+        });
+        const sourceEdge = sourceNode
+          ? await tx.query.TreeEdge.findFirst({
+              where: and(
+                eq(TreeEdge.user_id, userId),
+                eq(TreeEdge.node_id, sourceNode.id),
+              ),
+            })
+          : null;
+
+        const [document] = await tx
+          .insert(Document)
+          .values({ user_id: userId })
+          .returning();
+        if (!document)
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Failed to create document",
+          });
+
+        const [page] = await tx
+          .insert(Page)
+          .values({
+            document_id: document.id,
+            title: source.title,
+            user_id: userId,
+          })
+          .returning();
+        if (!page)
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Failed to create page",
+          });
+
+        const [node] = await tx
+          .insert(TreeNode)
+          .values({
+            node_type: "page",
+            page_id: page.id,
+            user_id: userId,
+          })
+          .returning();
+        if (!node)
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Failed to create page node",
+          });
+
+        // The copy keeps the original's folder and sits directly after it.
+        const edge = await insertEdgeAtPosition({
+          anchorEdgeId: sourceEdge?.id,
+          db: tx,
+          nodeId: node.id,
+          parentNodeId: sourceEdge?.parent_node_id ?? null,
+          position: "after",
+          userId,
+        });
+
+        // Blocks duplicate with fresh subtree IDs; references and search text
+        // are projected from the copy, never copied as stale rows.
+        const sourceBlocks = await tx
+          .select()
+          .from(BlockNode)
+          .where(
+            and(
+              eq(BlockNode.user_id, userId),
+              eq(BlockNode.document_id, source.document_id),
+            ),
+          );
+        const copyIdBySourceId = new Map(
+          sourceBlocks.map((block) => [block.id, crypto.randomUUID()]),
+        );
+        const copiedBlocks = sourceBlocks.map((block) => ({
+          ...block,
+          document_id: document.id,
+          id: copyIdBySourceId.get(block.id) as string,
+          parent_id: block.parent_id
+            ? (copyIdBySourceId.get(block.parent_id) as string)
+            : null,
+        }));
+        if (copiedBlocks.length > 0) {
+          await tx.insert(BlockNode).values(copiedBlocks);
+
+          const sourceEdges = await tx
+            .select()
+            .from(BlockEdge)
+            .where(
+              and(
+                eq(BlockEdge.user_id, userId),
+                eq(BlockEdge.document_id, source.document_id),
+              ),
+            );
+          if (sourceEdges.length > 0) {
+            await tx.insert(BlockEdge).values(
+              sourceEdges.map((blockEdge) => ({
+                ...blockEdge,
+                document_id: document.id,
+                from_id: copyIdBySourceId.get(blockEdge.from_id) as string,
+                to_id: copyIdBySourceId.get(blockEdge.to_id) as string,
+              })),
+            );
+          }
+        }
+        await rebuildReferenceProjection(tx, userId, document.id, copiedBlocks);
+
+        return {
+          document: { id: document.id, updated_at: document.updated_at },
+          edge_id: edge.id,
+          kind: "page" as const,
+          node_id: node.id,
+          page: {
+            ...page,
+            edge_id: edge.id,
+            node_id: node.id,
+            parent_node_id: edge.parent_node_id,
+          },
+          parent_node_id: edge.parent_node_id,
+        };
+      });
+      try {
+        await startDocumentEmbedding({
+          documentId: result.document.id,
+          documentUpdatedAt: result.document.updated_at,
+          userId: ctx.session.user.id,
+        });
+      } catch (error) {
+        console.error("Failed to start document embedding workflow", {
+          documentId: result.document.id,
+          error,
+        });
+      }
+      await dispatchExploreRefresh(ctx.session.user.id);
+      return result;
+    }),
+  getAll: protectedProcedure
+    .input(z.object({ query: z.string().trim().max(255).default("") }))
+    .query(async ({ ctx, input }) => {
+      const userId = ctx.session.user.id;
+      const pages = await ctx.db
+        .select()
+        .from(Page)
+        .where(
+          and(
+            eq(Page.user_id, userId),
+            input.query ? ilike(Page.title, `%${input.query}%`) : undefined,
+          ),
+        )
+        .orderBy(desc(Page.updated_at), desc(Page.id));
+      if (pages.length === 0) return { items: [] };
+
+      // Every page row reports its actual folder membership. Root pages keep
+      // a null folder; the Library surface renders them without a badge.
+      const pageNodes = await ctx.db
+        .select({ id: TreeNode.id, page_id: TreeNode.page_id })
+        .from(TreeNode)
+        .where(
+          and(
+            eq(TreeNode.user_id, userId),
+            eq(TreeNode.node_type, "page"),
+            inArray(
+              TreeNode.page_id,
+              pages.map((page) => page.id),
+            ),
+          ),
+        );
+      const edges =
+        pageNodes.length > 0
+          ? await ctx.db
+              .select({
+                id: TreeEdge.id,
+                node_id: TreeEdge.node_id,
+                parent_node_id: TreeEdge.parent_node_id,
+              })
+              .from(TreeEdge)
+              .where(
+                and(
+                  eq(TreeEdge.user_id, userId),
+                  inArray(
+                    TreeEdge.node_id,
+                    pageNodes.map((node) => node.id),
+                  ),
+                ),
+              )
+          : [];
+      const parentNodeIds = [
+        ...new Set(
+          edges
+            .map((edge) => edge.parent_node_id)
+            .filter((value): value is string => !!value),
+        ),
+      ];
+      const folderNodes =
+        parentNodeIds.length > 0
+          ? await ctx.db
+              .select({ folder_id: TreeNode.folder_id, id: TreeNode.id })
+              .from(TreeNode)
+              .where(
+                and(
+                  eq(TreeNode.user_id, userId),
+                  eq(TreeNode.node_type, "folder"),
+                  inArray(TreeNode.id, parentNodeIds),
+                ),
+              )
+          : [];
+      const folderIds = [
+        ...new Set(
+          folderNodes
+            .map((node) => node.folder_id)
+            .filter((value): value is string => !!value),
+        ),
+      ];
+      const folders =
+        folderIds.length > 0
+          ? await ctx.db
+              .select({ id: Folder.id, name: Folder.name })
+              .from(Folder)
+              .where(
+                and(eq(Folder.user_id, userId), inArray(Folder.id, folderIds)),
+              )
+          : [];
+
+      const nodeByPageId = new Map(
+        pageNodes
+          .filter(
+            (node): node is { id: string; page_id: string } => !!node.page_id,
+          )
+          .map((node) => [node.page_id, node]),
+      );
+      const edgeByNodeId = new Map(edges.map((edge) => [edge.node_id, edge]));
+      const folderIdByNodeId = new Map(
+        folderNodes
+          .filter(
+            (node): node is { id: string; folder_id: string } =>
+              !!node.folder_id,
+          )
+          .map((node) => [node.id, node.folder_id]),
+      );
+      const folderById = new Map(folders.map((folder) => [folder.id, folder]));
+
+      return {
+        items: pages.map((page) => {
+          const node = nodeByPageId.get(page.id);
+          const edge = node ? edgeByNodeId.get(node.id) : undefined;
+          const parentFolderId = edge?.parent_node_id
+            ? folderIdByNodeId.get(edge.parent_node_id)
+            : undefined;
+          const folder = parentFolderId
+            ? folderById.get(parentFolderId)
+            : undefined;
+          return {
+            ...page,
+            edge_id: edge?.id ?? null,
+            folder_id: folder?.id ?? null,
+            folder_name: folder?.name ?? null,
+            node_id: node?.id ?? null,
+            parent_node_id: edge?.parent_node_id ?? null,
+          };
+        }),
+      };
     }),
   getById: protectedProcedure
     .input(z.object({ id: z.uuid() }))

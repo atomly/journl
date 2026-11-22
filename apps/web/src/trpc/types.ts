@@ -35,6 +35,14 @@ export type PaginatedPagesInput = inferProcedureInput<
   ApiRouter["pages"]["getPaginated"]
 >;
 
+export type LibraryPagesInput = inferProcedureInput<
+  ApiRouter["pages"]["getAll"]
+>;
+
+export type LibraryPage = inferProcedureOutput<
+  ApiRouter["pages"]["getAll"]
+>["items"][number];
+
 export type PaginatedTreeChildrenInput = inferProcedureInput<
   ApiRouter["tree"]["getChildrenPaginated"]
 >;

@@ -284,6 +284,12 @@ The rest of the components are set by the Tailwind CSS classes, or by our editor
   border: 1px solid var(--border);
   border-radius: 24px;
   background: var(--card);
+  /* Panels cast the approved shadow into the gutters; light's 10% alpha
+     reads as clean, dark carries the visible falloff. */
+  box-shadow: 0 12px 30px #163a6b1a;
+}
+:where(.dark) [data-slot="sidebar-inset"] [data-app-container] {
+  box-shadow: 0 12px 30px #050b1780;
 }
 
 [data-slot="sidebar-inner"],
@@ -309,6 +315,15 @@ The rest of the components are set by the Tailwind CSS classes, or by our editor
   border-color: #344865;
   color: #eef3ff;
   box-shadow: 0 12px 30px #050b1780;
+}
+/* The header composes its glass over the approved opaque surface; the
+   floating nav keeps its translucent stack over the page gradient. */
+[data-slot="sidebar-inset"] > header > div {
+  background:
+    linear-gradient(rgb(237 245 255 / 80%), rgb(237 245 255 / 80%)), #fcfdff;
+}
+:where(.dark) [data-slot="sidebar-inset"] > header > div {
+  background: linear-gradient(#15263bdc, #15263bdc), #141f31;
 }
 @media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
   [data-slot="sidebar-inner"],

@@ -72,8 +72,10 @@ for (const group of groups)
                 appSidebarOpen: true,
                 appSidebarWidthRem: 13.5,
                 chatSidebarOpen: false,
-                chatSidebarWidthRem:
-                  group.stateId === "chat-expanded" ? 44 : 30,
+                // Approved assistant baseline is 400px (424 at 1920); the old
+                // 704/480 expanded widths survive only as the compatibility
+                // capability noted in workspace-v2-responsive's mapping.
+                chatSidebarWidthRem: 25,
                 journalTimelineView: "entries",
               }),
             ),
@@ -546,12 +548,11 @@ for (const group of groups)
           expect(bounds.assistant?.box.y).toBe(
             mapping.viewport.width > 1100 ? 16 : 86,
           );
+          // Desktop chat states assert the approved 400px baseline. The
+          // tablet branch measures the legacy overlay capability, not an
+          // approved plate (the tablet plate keeps the assistant closed).
           expect(bounds.assistant?.box.width).toBe(
-            mapping.viewport.width <= 1100
-              ? mapping.viewport.width - 100
-              : group.stateId === "chat-expanded"
-                ? 704
-                : 480,
+            mapping.viewport.width <= 1100 ? mapping.viewport.width - 100 : 400,
           );
         }
         status.terminalAssertions.push(

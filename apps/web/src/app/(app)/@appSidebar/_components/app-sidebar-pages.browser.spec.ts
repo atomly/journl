@@ -273,6 +273,12 @@ test.describe("native touch swipe", () => {
       reveal.getByRole("button", { exact: true, name: "Delete page" }),
     ).toBeVisible();
     const url = page.url();
+    // The plate state is the settled reveal; let its transition finish
+    // before the closing tap so the gesture pipeline never receives a tap
+    // mid-transition. The animated property is the content's translate.
+    await expect(
+      swipe.locator('[data-slot="swipe-action-content"]'),
+    ).toHaveCSS("transform", "matrix(1, 0, 0, 1, -80, 0)");
     // Playwright's own tap synthesis instead of a raw CDP pair: the input
     // pipeline occasionally drops an immediate touch pair after a drag on slow
     // runners, leaving the reveal open with no click reaching the page.

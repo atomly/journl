@@ -406,6 +406,15 @@ The rest of the components are set by the Tailwind CSS classes, or by our editor
   max-width: calc(var(--reading-column-max) + 2 * var(--reading-gutter));
 }
 
+/* Journal day rows close with the approved workspace hairline, matching the
+   reading panel's composed separators instead of the stronger form border. */
+[data-journal-entry] {
+  border-bottom-color: #d5e0ed;
+}
+:where(.dark) [data-journal-entry] {
+  border-bottom-color: #344865;
+}
+
 [data-slot="sidebar"][data-side="right"][data-state="collapsed"]
   > [data-slot="sidebar-gap"] {
   width: 0;

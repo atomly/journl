@@ -1,6 +1,6 @@
 import { Separator } from "@acme/ui/separator";
 import { Skeleton } from "@acme/ui/skeleton";
-import { Calendar, Compass, Search, Wrench } from "lucide-react";
+import { Calendar, Compass, Files, Search, Wrench } from "lucide-react";
 import Image from "next/image";
 import { type ComponentProps, Suspense } from "react";
 import { getUser } from "~/auth/server";
@@ -37,6 +37,11 @@ const navigationItems = [
     isActive: true,
     title: "Journal",
     url: "/journal",
+  },
+  {
+    icon: <Files />,
+    title: "All pages",
+    url: "/library",
   },
   {
     icon: <Compass />,

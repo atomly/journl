@@ -1490,3 +1490,316 @@ body:has([data-slot="sidebar-inset"]) {
 )[data-active="true"] {
   font-weight: 650;
 }
+
+/* Approved workspace v2: Library index surface (All pages plates). */
+.journl-library {
+  width: min(100%, 1000px);
+  margin: 0 auto;
+  padding: 36px clamp(24px, 4vw, 64px) 64px;
+}
+.journl-library-mark {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: #d9dfff;
+  color: #273f9d;
+}
+.dark .journl-library-mark {
+  background: #303f72;
+  color: #c4ceff;
+}
+.journl-library-mark svg {
+  width: 24px;
+  height: 24px;
+  stroke-width: 1.65;
+}
+.journl-library h1 {
+  margin: 10px 0 14px;
+  font-size: clamp(32px, 3.25vw, 52px);
+  line-height: 1.08;
+  letter-spacing: -0.055em;
+}
+.journl-library-lede {
+  max-width: 62ch;
+  font-size: 17px;
+  color: #485d75;
+}
+.dark .journl-library-lede {
+  color: #adbed5;
+}
+.journl-library-tools {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 22px;
+  flex-wrap: wrap;
+}
+.journl-library-search {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 145px;
+  min-height: 32px;
+  border: 1px solid #7387a1;
+  border-radius: 7px;
+  padding: 4px 8px;
+  font-size: 12px;
+  color: #485d75;
+}
+.dark .journl-library-search {
+  border-color: #8198b9;
+  color: #adbed5;
+}
+.journl-library-search:focus-within {
+  outline: 2px solid #304eb4;
+  outline-offset: 1px;
+}
+.dark .journl-library-search:focus-within {
+  outline-color: #aec0ff;
+}
+.journl-library-search svg {
+  width: 16px;
+  height: 16px;
+  stroke-width: 1.65;
+  flex: none;
+}
+.journl-library-search input {
+  min-width: 0;
+  flex: 1;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  outline: none;
+}
+.journl-library-new-page > [data-slot="button"] {
+  height: 32px;
+  min-height: 32px;
+  width: auto;
+  justify-content: center;
+  gap: 6px;
+  border-radius: 7px;
+  padding: 4px 12px;
+  font-size: 12px;
+  font-weight: 650;
+  background: #273f9d;
+  color: #fcfdff;
+}
+.journl-library-new-page > [data-slot="button"]:hover {
+  background: #304eb4;
+  box-shadow: none;
+}
+.dark .journl-library-new-page > [data-slot="button"] {
+  background: #c4ceff;
+  color: #141f31;
+}
+.dark .journl-library-new-page > [data-slot="button"]:hover {
+  background: #d9dfff;
+}
+.journl-library-new-page > [data-slot="button"]:disabled {
+  background: #dce4f0;
+  color: #485d75;
+}
+.dark .journl-library-new-page > [data-slot="button"]:disabled {
+  background: #2d3b50;
+  color: #adbed5;
+}
+.journl-library-tabs {
+  display: flex;
+  gap: 4px;
+  margin-top: 20px;
+  border-bottom: 1px solid #d5e0ed;
+}
+.dark .journl-library-tabs {
+  border-color: #344865;
+}
+.journl-library-tab {
+  padding: 7px 12px;
+  border-bottom: 2px solid transparent;
+  font-size: 14px;
+  color: #485d75;
+}
+.dark .journl-library-tab {
+  color: #adbed5;
+}
+.journl-library-tab:hover {
+  color: inherit;
+}
+.dark .journl-library-tab:hover {
+  color: inherit;
+}
+.journl-library-tab[aria-current="page"] {
+  border-color: #273f9d;
+  color: #273f9d;
+  font-weight: 700;
+}
+.dark .journl-library-tab[aria-current="page"] {
+  border-color: #c4ceff;
+  color: #c4ceff;
+}
+.journl-library-table {
+  margin-top: 14px;
+  border: 1px solid #d5e0ed;
+  border-radius: 10px;
+  padding: 4px 6px;
+}
+.dark .journl-library-table {
+  border-color: #344865;
+}
+.journl-library-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr) 32px;
+  align-items: center;
+  gap: 8px;
+  padding: 0 6px;
+  min-height: 48px;
+  font-size: 13px;
+  margin-block: 2px;
+  border-radius: 7px;
+}
+.journl-library-grid + .journl-library-grid {
+  box-shadow: 0 -1px 0 #d5e0ed;
+}
+.dark .journl-library-grid + .journl-library-grid {
+  box-shadow: 0 -1px 0 #344865;
+}
+.journl-library-grid-head {
+  min-height: 34px;
+  font-size: 11px;
+  font-weight: 750;
+  color: #485d75;
+}
+.dark .journl-library-grid-head {
+  color: #adbed5;
+}
+.journl-library-row:hover,
+.journl-library-row:focus-within {
+  background: #abcbf04d;
+}
+.dark .journl-library-row:hover,
+.dark .journl-library-row:focus-within {
+  background: #91b8ef30;
+}
+.journl-library-row[data-active="true"] {
+  background: #d9dfff;
+}
+.dark .journl-library-row[data-active="true"] {
+  background: #303f72;
+}
+.journl-library-name {
+  min-width: 0;
+}
+.journl-library-name a {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  color: inherit;
+}
+.journl-library-name svg {
+  width: 16px;
+  height: 16px;
+  stroke-width: 1.65;
+  flex: none;
+  color: #485d75;
+}
+.dark .journl-library-name svg {
+  color: #adbed5;
+}
+.journl-library-name strong {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 650;
+}
+.journl-library-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 7px;
+  padding: 4px 8px;
+  font-size: 12px;
+  line-height: 1.35;
+  white-space: nowrap;
+  background: #d9dfff;
+  color: #273f9d;
+}
+.dark .journl-library-badge {
+  background: #303f72;
+  color: #c4ceff;
+}
+.journl-library-badge.mint {
+  background: #daf3e9;
+  color: #24594c;
+}
+.dark .journl-library-badge.mint {
+  background: #213e39;
+  color: #ace8d3;
+}
+.journl-library-badge.peach {
+  background: #fae6dc;
+  color: #793e2e;
+}
+.dark .journl-library-badge.peach {
+  background: #4a342d;
+  color: #ffcbaf;
+}
+.journl-library-meta {
+  color: #485d75;
+  font-size: 12px;
+}
+.dark .journl-library-meta {
+  color: #adbed5;
+}
+.journl-library-rename-error {
+  color: #832b29;
+  font-size: 12px;
+}
+.dark .journl-library-rename-error {
+  color: #ffbcb6;
+}
+.journl-library-actions {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  min-height: 32px;
+  border-radius: 8px;
+}
+.journl-library-actions:hover {
+  background: #abcbf04d;
+}
+.dark .journl-library-actions:hover {
+  background: #91b8ef30;
+}
+@media (pointer: coarse) {
+  .journl-library-actions {
+    min-width: 44px;
+    min-height: 44px;
+  }
+}
+@media (width <= 700px) {
+  .journl-library {
+    padding: 24px 16px 80px;
+  }
+  .journl-library-search,
+  .journl-library-new-page > [data-slot="button"] {
+    min-height: 44px;
+    height: 44px;
+    font-size: 16px;
+  }
+  .journl-library-actions {
+    min-width: 44px;
+    min-height: 44px;
+  }
+}
+@media (forced-colors: active) {
+  .journl-library-mark,
+  .journl-library-badge {
+    background: Canvas;
+    color: CanvasText;
+    border: 1px solid CanvasText;
+  }
+}

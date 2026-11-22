@@ -519,17 +519,25 @@ try {
       }),
     );
   }
-  for (const [number, title, parent] of [
-    [1610, "Small balcony garden", 1601],
-    [1611, "Kitchen shelf build", 1601],
-    [1612, "Lemon & herb lentils", 1602],
-    [1613, "Useful growing notes", 1603],
+  // The All pages plate orders rows by recency: garden first, seed notes last.
+  for (const [number, title, parent, updated] of [
+    [1610, "Small balcony garden", 1601, "2026-11-21T10:00:00Z"],
+    [1612, "Lemon & herb lentils", 1602, "2026-11-21T08:00:00Z"],
+    [1613, "Useful growing notes", 1603, "2026-11-20T18:00:00Z"],
+    [1611, "Kitchen shelf build", 1601, "2026-11-20T12:00:00Z"],
+    [1614, "Weekend market list", 1604, "2026-11-19T09:00:00Z"],
+    [1615, "Pantry shortcuts", 1602, "2026-11-18T14:00:00Z"],
+    [1616, "Seed packet notes", 1603, "2026-11-17T11:00:00Z"],
   ] as const) {
     const id = fixtureId(number);
     await db.insert(schema.Document).values({ id, user_id: workspaceOwner });
-    await db
-      .insert(schema.Page)
-      .values({ document_id: id, id, title, user_id: workspaceOwner });
+    await db.insert(schema.Page).values({
+      document_id: id,
+      id,
+      title,
+      updated_at: updated,
+      user_id: workspaceOwner,
+    });
     await db
       .insert(schema.TreeNode)
       .values({ id, node_type: "page", page_id: id, user_id: workspaceOwner });

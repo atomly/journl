@@ -118,7 +118,10 @@ for (const theme of ["light", "dark"]) {
           const alert = panel.getByRole("alert");
           await expect(alert).toBeVisible();
           await expect(alert).toContainText("Could not complete the response");
-          const retry = panel.getByRole("button", {
+          // The populated assistant turns each keep their own footer Retry
+          // action, so the failed turn's control must be scoped to the
+          // failure alert that offers it.
+          const retry = alert.getByRole("button", {
             exact: true,
             name: "Retry response",
           });
@@ -215,7 +218,15 @@ for (const theme of ["light", "dark"]) {
         const composer = await panel
           .locator('[aria-label="Chat composer"]')
           .boundingBox();
-        expect((composer?.y ?? 0) + (composer?.height ?? 0)).toBe(984);
+        // The composer is the chat region's footer and seats flush with the
+        // region's bottom edge. The sidebar composes its inner surface
+        // around the region, so measure the region live instead of
+        // hardcoding the viewport edge: the seat stays exact while the
+        // panel's inner chrome composition evolves.
+        const region = await panel.boundingBox();
+        expect((composer?.y ?? 0) + (composer?.height ?? 0)).toBe(
+          (region?.y ?? 0) + (region?.height ?? 0),
+        );
         await settleShell(page);
         const conversationAnchor = await measureConversationAnchor(page);
         expect(conversationAnchor?.atEnd).toBe(true);

@@ -222,7 +222,9 @@ test("dark desktop marketing swaps the canonical hero through theme tokens", asy
   await expect(
     page.locator(".canonical-hero-desktop.canonical-hero-light"),
   ).toBeHidden();
-  await expect(page.locator(".journl-brand .brand-dark")).toBeVisible();
+  await expect(
+    page.locator(".marketing-nav .journl-brand .brand-dark"),
+  ).toBeVisible();
   const { boxes, rhythm } = await marketingGeometry(page);
   expect(boxes.nav).toMatchObject({ height: 80, width: 1312, x: 64, y: 24 });
   expect(boxes.canonicalDark).toMatchObject({

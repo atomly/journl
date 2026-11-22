@@ -10,7 +10,7 @@ async function structuralPath(target: Locator) {
     const parts: string[] = [];
     let node: Element | null = element;
     while (node && node !== document.documentElement) {
-      const parent = node.parentElement;
+      const parent: Element | null = node.parentElement;
       const index = parent ? Array.from(parent.children).indexOf(node) + 1 : 1;
       parts.unshift(`${node.tagName.toLowerCase()}:nth-child(${index})`);
       node = parent;
@@ -111,7 +111,9 @@ export async function renderedTextContrast(
         scale: "css",
       });
     } finally {
-      await style.evaluate((element) => element.remove());
+      await style.evaluate((element) => {
+        (element as ChildNode).remove();
+      });
       await style.dispose();
     }
   }

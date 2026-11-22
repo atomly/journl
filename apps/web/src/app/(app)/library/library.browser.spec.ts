@@ -12,10 +12,9 @@ import { populateShellConversation } from "~/testing/browser/shell-responses";
 import { workspaceMessages } from "~/testing/browser/workspace-v2-data";
 
 test.use({
-  // A cold dev server compiles the workspace routes during sign-in warming.
-  timeout: 300_000,
   workspaceReview: true,
 });
+test.setTimeout(300_000);
 
 /** The All pages plates keep Projects expanded beside the selected route row. */
 async function openLibraryWorkspace(page: Page, theme: string) {

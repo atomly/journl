@@ -486,6 +486,11 @@ body {
   .marketing .canonical-hero-mobile {
     display: block;
   }
+  /* Light shows only its own hero; the dark hero pairs with the dark
+     theme below. */
+  .marketing .canonical-hero-mobile.canonical-hero-dark {
+    display: none;
+  }
   :where(.dark) .marketing .canonical-hero-mobile.canonical-hero-light {
     display: none;
   }

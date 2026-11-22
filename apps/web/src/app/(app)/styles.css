@@ -284,12 +284,18 @@ The rest of the components are set by the Tailwind CSS classes, or by our editor
   border: 1px solid var(--border);
   border-radius: 24px;
   background: var(--card);
-  /* Panels cast the approved shadow into the gutters; light's 10% alpha
-     reads as clean, dark carries the visible falloff. */
-  box-shadow: 0 12px 30px #163a6b1a;
 }
-:where(.dark) [data-slot="sidebar-inset"] [data-app-container] {
-  box-shadow: 0 12px 30px #050b1780;
+/* Panels cast the approved shadow into the desktop gutters; the tablet
+   plate keeps its 12px gutters clean, so the shadow applies from the
+   desktop plates' width up. Light's 10% alpha reads as clean, dark
+   carries the visible falloff. */
+@media (min-width: 1440px) {
+  [data-slot="sidebar-inset"] [data-app-container] {
+    box-shadow: 0 12px 30px #163a6b1a;
+  }
+  :where(.dark) [data-slot="sidebar-inset"] [data-app-container] {
+    box-shadow: 0 12px 30px #050b1780;
+  }
 }
 
 [data-slot="sidebar-inner"],
@@ -316,6 +322,14 @@ The rest of the components are set by the Tailwind CSS classes, or by our editor
   color: #eef3ff;
   box-shadow: 0 12px 30px #050b1780;
 }
+/* A collapsed floating sidebar paints only border and shadow on a
+   zero-width box, drawing a stray hairline beside the reading panel. */
+[data-slot="sidebar"][data-collapsible="offcanvas"][data-state="collapsed"]
+  [data-slot="sidebar-inner"] {
+  border-width: 0;
+  box-shadow: none;
+}
+
 /* The header composes its glass over the approved opaque surface; the
    floating nav keeps its translucent stack over the page gradient. */
 [data-slot="sidebar-inset"] > header > div {
@@ -605,6 +619,14 @@ The rest of the components are set by the Tailwind CSS classes, or by our editor
 [data-slot="dialog-overlay"]:has(
   ~ :is([data-shell-search], [data-shell-menu])
 ) {
+  background: rgb(5 15 32 / 45%);
+  -webkit-backdrop-filter: blur(3px);
+  backdrop-filter: blur(3px);
+}
+/* The assistant sheet dims the page with the same composed scrim as the
+   navigation sheet; the primitive's flat black default repaints the
+   header strip a different tint than the approved plate. */
+[data-slot="drawer-overlay"]:has(~ #chat-drawer-content) {
   background: rgb(5 15 32 / 45%);
   -webkit-backdrop-filter: blur(3px);
   backdrop-filter: blur(3px);

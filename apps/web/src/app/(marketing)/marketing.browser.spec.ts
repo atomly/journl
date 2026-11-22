@@ -264,7 +264,11 @@ test("light mobile marketing stacks the approved single column", async ({
   // The lockup stays 32px tall on mobile; only the description collapses.
   expect(boxes.lockup?.height).toBe(32);
   expect(boxes.navDescription?.height ?? 0).toBe(0);
-  // Mobile hero: the 390x844 canonical capture inside 12px margins.
+  // Mobile hero: the 390x844 canonical capture inside 12px margins. Light
+  // shows exactly one hero; the dark hero pairs with the dark theme.
+  await expect(
+    page.locator(".canonical-hero").filter({ visible: true }),
+  ).toHaveCount(1);
   expect(boxes.canonicalMobile).toMatchObject({
     naturalHeight: 844,
     naturalWidth: 390,

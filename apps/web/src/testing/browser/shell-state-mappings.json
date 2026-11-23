@@ -1,0 +1,1238 @@
+[
+  {
+    "family": "chat",
+    "images": [
+      {
+        "componentOnly": false,
+        "image": "views/chat/chat-expanded--light--mobile.png",
+        "sha256": "e2d635fdd2e52aae2038de9c420e89e817e1c7b7ab23f59c52d29c88101413b6",
+        "surfaceKind": "route",
+        "theme": "light",
+        "variant": "initial",
+        "viewport": {
+          "height": 844,
+          "width": 390
+        }
+      },
+      {
+        "componentOnly": false,
+        "image": "views/chat/chat-expanded--light--tablet.png",
+        "sha256": "e111053392bc19caf7eb619eb1a514935a8b178730c8da26c56c60933ff18913",
+        "surfaceKind": "route",
+        "theme": "light",
+        "variant": "initial",
+        "viewport": {
+          "height": 1112,
+          "width": 834
+        }
+      },
+      {
+        "componentOnly": false,
+        "image": "views/chat/chat-expanded--light--desktop.png",
+        "sha256": "3cf0e44d6555f9c59486c8c5ed20cb125ac8714d6994f405519a3658b3f46142",
+        "surfaceKind": "route",
+        "theme": "light",
+        "variant": "initial",
+        "viewport": {
+          "height": 1000,
+          "width": 1440
+        }
+      },
+      {
+        "componentOnly": false,
+        "image": "views/chat/chat-expanded--light--mobile--content-end.png",
+        "sha256": "4632cb9e9ca164db4f8e432ec0fff461f6061eec79965998db95692640e1eeca",
+        "surfaceKind": "route",
+        "theme": "light",
+        "variant": "content-end",
+        "viewport": {
+          "height": 844,
+          "width": 390
+        }
+      },
+      {
+        "componentOnly": false,
+        "image": "views/chat/chat-expanded--dark--mobile.png",
+        "sha256": "f5555354acaf75d6a312c38b75ec6b3a99a8afbaf936ff663cb3eaf93bfead53",
+        "surfaceKind": "route",
+        "theme": "dark",
+        "variant": "initial",
+        "viewport": {
+          "height": 844,
+          "width": 390
+        }
+      },
+      {
+        "componentOnly": false,
+        "image": "views/chat/chat-expanded--dark--desktop.png",
+        "sha256": "cba1ceff88b7fc168bce28b8a42950af18999c5956ddf3da5db16346b55a4d2b",
+        "surfaceKind": "route",
+        "theme": "dark",
+        "variant": "initial",
+        "viewport": {
+          "height": 1000,
+          "width": 1440
+        }
+      },
+      {
+        "componentOnly": false,
+        "image": "views/chat/chat-expanded--dark--mobile--content-end.png",
+        "sha256": "5e71d8b51701a76113f9331dbf6dfcc1361420c55a0b488b0ea96ba61c85ef77",
+        "surfaceKind": "route",
+        "theme": "dark",
+        "variant": "content-end",
+        "viewport": {
+          "height": 844,
+          "width": 390
+        }
+      },
+      {
+        "componentOnly": false,
+        "image": "views/chat/chat-expanded--dark--tablet.png",
+        "sha256": "26c2dfb48b133e93048ea077728cef4e050fb71f2e793cf102cb216f96e83917",
+        "surfaceKind": "route",
+        "theme": "dark",
+        "variant": "initial",
+        "viewport": {
+          "height": 1112,
+          "width": 834
+        }
+      }
+    ],
+    "owner": "uiux/shell-panels",
+    "route": "/journal",
+    "stateId": "chat-expanded",
+    "surface": "Ask Journl"
+  },
+  {
+    "family": "chat",
+    "images": [
+      {
+        "componentOnly": false,
+        "image": "views/chat/chat-closed--light--desktop.png",
+        "sha256": "d8a14698a814e613e52053167d2634eab498878ef672f2b053182d2fd499b50a",
+        "surfaceKind": "route",
+        "theme": "light",
+        "variant": "initial",
+        "viewport": {
+          "height": 1000,
+          "width": 1440
+        }
+      },
+      {
+        "componentOnly": false,
+        "image": "views/chat/chat-closed--light--mobile.png",
+        "sha256": "49fb664977b50d175e9951f765256d12f8a022e7613c480ae76b9871fe7b9ee0",
+        "surfaceKind": "route",
+        "theme": "light",
+        "variant": "initial",
+        "viewport": {
+          "height": 844,
+          "width": 390
+        }
+      },
+      {
+        "componentOnly": false,
+        "image": "views/chat/chat-closed--dark--desktop.png",
+        "sha256": "ee0d5ac65806da66ad0e365dcf1802ad798585275dff0eec3c4a0e65cf332561",
+        "surfaceKind": "route",
+        "theme": "dark",
+        "variant": "initial",
+        "viewport": {
+          "height": 1000,
+          "width": 1440
+        }
+      },
+      {
+        "componentOnly": false,
+        "image": "views/chat/chat-closed--dark--mobile.png",
+        "sha256": "2a16f00753505a7967dc39ebbcf54c21d4e0437d0ffe440d8cd9a6c30432547a",
+        "surfaceKind": "route",
+        "theme": "dark",
+        "variant": "initial",
+        "viewport": {
+          "height": 844,
+          "width": 390
+        }
+      }
+    ],
+    "owner": "uiux/shell-panels",
+    "route": "/journal",
+    "stateId": "chat-closed",
+    "surface": "A slower start"
+  },
+  {
+    "family": "shared",
+    "images": [
+      {
+        "componentOnly": false,
+        "image": "views/shared/search-initial--light--desktop.png",
+        "sha256": "097623acc8a819d84c18f915c4b0cb6c02639c4d622c423eba77d35cb6aa06d7",
+        "surfaceKind": "modal",
+        "theme": "light",
+        "variant": "initial",
+        "viewport": {
+          "height": 1000,
+          "width": 1440
+        }
+      },
+      {
+        "componentOnly": false,
+        "image": "views/shared/search-initial--light--mobile.png",
+        "sha256": "773fa5bb754323888ed3c9645fd100a08d76ccfc0d7a2c4144fcfd4ebbc357ca",
+        "surfaceKind": "modal",
+        "theme": "light",
+        "variant": "initial",
+        "viewport": {
+          "height": 844,
+          "width": 390
+        }
+      },
+      {
+        "componentOnly": false,
+        "image": "views/shared/search-initial--dark--mobile.png",
+        "sha256": "94d534b78992375e5c5de25617aee675a2a69ea75532914d9ae9d94aa844f66e",
+        "surfaceKind": "modal",
+        "theme": "dark",
+        "variant": "initial",
+        "viewport": {
+          "height": 844,
+          "width": 390
+        }
+      },
+      {
+        "componentOnly": false,
+        "image": "views/shared/search-initial--dark--desktop.png",
+        "sha256": "532ccd5e601d221fb2a879ee3adcd1f473ada988bbfedb519c9f64a809ade99e",
+        "surfaceKind": "modal",
+        "theme": "dark",
+        "variant": "initial",
+        "viewport": {
+          "height": 1000,
+          "width": 1440
+        }
+      }
+    ],
+    "owner": "uiux/shell-panels",
+    "route": "/journal",
+    "stateId": "search-initial",
+    "surface": "Search your notebook"
+  },
+  {
+    "family": "shared",
+    "images": [
+      {
+        "componentOnly": false,
+        "image": "views/shared/search-loading--light--desktop.png",
+        "sha256": "2b9f6d5e532ae9d0a427db889d5c60098bdbb05f2061dfe942af2457c763fde6",
+        "surfaceKind": "modal",
+        "theme": "light",
+        "variant": "initial",
+        "viewport": {
+          "height": 1000,
+          "width": 1440
+        }
+      },
+      {
+        "componentOnly": false,
+        "image": "views/shared/search-loading--light--mobile.png",
+        "sha256": "39c0a85b6e1dc720ce3f36c7a3d74d3bf6039c3854b69238a9804e9b8236e653",
+        "surfaceKind": "modal",
+        "theme": "light",
+        "variant": "initial",
+        "viewport": {
+          "height": 844,
+          "width": 390
+        }
+      },
+      {
+        "componentOnly": false,
+        "image": "views/shared/search-loading--dark--mobile.png",
+        "sha256": "ca15a473cdf6240a7df97e6329f19508de2a2cfee15deeac1b3113c9562eea65",
+        "surfaceKind": "modal",
+        "theme": "dark",
+        "variant": "initial",
+        "viewport": {
+          "height": 844,
+          "width": 390
+        }
+      },
+      {
+        "componentOnly": false,
+        "image": "views/shared/search-loading--dark--desktop.png",
+        "sha256": "b326c3dfb29539526b8fd9080a52224ebfdc5bb300b827e9a997374a4871c7da",
+        "surfaceKind": "modal",
+        "theme": "dark",
+        "variant": "initial",
+        "viewport": {
+          "height": 1000,
+          "width": 1440
+        }
+      }
+    ],
+    "owner": "uiux/shell-panels",
+    "route": "/journal",
+    "stateId": "search-loading",
+    "surface": "Search your notebook"
+  },
+  {
+    "family": "shared",
+    "images": [
+      {
+        "componentOnly": false,
+        "image": "views/shared/search-results--light--desktop.png",
+        "sha256": "2508ff394ea5d7a6e790460389676be4a60315d5c9e45f5fa371cc4bad1739fd",
+        "surfaceKind": "modal",
+        "theme": "light",
+        "variant": "initial",
+        "viewport": {
+          "height": 1000,
+          "width": 1440
+        }
+      },
+      {
+        "componentOnly": false,
+        "image": "views/shared/search-results--light--mobile.png",
+        "sha256": "ecb127c51d1e507727b1b6dd361567f2d9c58c99ba2d6a8cccaae0d408b74195",
+        "surfaceKind": "modal",
+        "theme": "light",
+        "variant": "initial",
+        "viewport": {
+          "height": 844,
+          "width": 390
+        }
+      },
+      {
+        "componentOnly": false,
+        "image": "views/shared/search-results--dark--mobile.png",
+        "sha256": "f36e6dd9aeeb4446b324b493eabec7ff86d5d52e2e899639393afb752c499d87",
+        "surfaceKind": "modal",
+        "theme": "dark",
+        "variant": "initial",
+        "viewport": {
+          "height": 844,
+          "width": 390
+        }
+      },
+      {
+        "componentOnly": false,
+        "image": "views/shared/search-results--dark--desktop.png",
+        "sha256": "0f07bb4bad570dc9440f8b6fa7133d3dd395cb95dd179d5998ce2241ca1ec97d",
+        "surfaceKind": "modal",
+        "theme": "dark",
+        "variant": "initial",
+        "viewport": {
+          "height": 1000,
+          "width": 1440
+        }
+      }
+    ],
+    "owner": "uiux/shell-panels",
+    "route": "/journal",
+    "stateId": "search-results",
+    "surface": "Search your notebook"
+  },
+  {
+    "family": "shared",
+    "images": [
+      {
+        "componentOnly": false,
+        "image": "views/shared/search-empty--light--mobile.png",
+        "sha256": "45385f4647b11282d376e0001bdacb2f728e57e843372db0d98c5a4042896d48",
+        "surfaceKind": "modal",
+        "theme": "light",
+        "variant": "initial",
+        "viewport": {
+          "height": 844,
+          "width": 390
+        }
+      },
+      {
+        "componentOnly": false,
+        "image": "views/shared/search-empty--light--desktop.png",
+        "sha256": "a8747d4d829e31a771de6b628854f91f2b6e82a78d59b8decff8dea5fff379ac",
+        "surfaceKind": "modal",
+        "theme": "light",
+        "variant": "initial",
+        "viewport": {
+          "height": 1000,
+          "width": 1440
+        }
+      },
+      {
+        "componentOnly": false,
+        "image": "views/shared/search-empty--dark--mobile.png",
+        "sha256": "f5f835703c8e7d42375972ca36327821e984632b84c037812e830decb0533fbb",
+        "surfaceKind": "modal",
+        "theme": "dark",
+        "variant": "initial",
+        "viewport": {
+          "height": 844,
+          "width": 390
+        }
+      },
+      {
+        "componentOnly": false,
+        "image": "views/shared/search-empty--dark--desktop.png",
+        "sha256": "0c513325d9275cb9ed7ee83727b8e0138613602908929fd4a2bb13951d4f6163",
+        "surfaceKind": "modal",
+        "theme": "dark",
+        "variant": "initial",
+        "viewport": {
+          "height": 1000,
+          "width": 1440
+        }
+      }
+    ],
+    "owner": "uiux/shell-panels",
+    "route": "/journal",
+    "stateId": "search-empty",
+    "surface": "Search your notebook"
+  },
+  {
+    "family": "shared",
+    "images": [
+      {
+        "componentOnly": false,
+        "image": "views/shared/search-error--light--desktop.png",
+        "sha256": "bd4bf1af174f380b18c0397528ed47d2e38841a55e2cb10d512851f386b258c6",
+        "surfaceKind": "modal",
+        "theme": "light",
+        "variant": "initial",
+        "viewport": {
+          "height": 1000,
+          "width": 1440
+        }
+      },
+      {
+        "componentOnly": false,
+        "image": "views/shared/search-error--light--mobile.png",
+        "sha256": "2bd2d3dd0788221b6ebd299bfec9c5e1c2496ec67de031eef48ea690070e5197",
+        "surfaceKind": "modal",
+        "theme": "light",
+        "variant": "initial",
+        "viewport": {
+          "height": 844,
+          "width": 390
+        }
+      },
+      {
+        "componentOnly": false,
+        "image": "views/shared/search-error--dark--desktop.png",
+        "sha256": "17a9bf5d2d9e0713b3823a963096b2166501a1ca134a18f18ae32c816e30b945",
+        "surfaceKind": "modal",
+        "theme": "dark",
+        "variant": "initial",
+        "viewport": {
+          "height": 1000,
+          "width": 1440
+        }
+      },
+      {
+        "componentOnly": false,
+        "image": "views/shared/search-error--dark--mobile.png",
+        "sha256": "4a064a4ea041693441e21a4a76aa5155be5e0edd8b69eae879e67abce6fffc21",
+        "surfaceKind": "modal",
+        "theme": "dark",
+        "variant": "initial",
+        "viewport": {
+          "height": 844,
+          "width": 390
+        }
+      }
+    ],
+    "owner": "uiux/shell-panels",
+    "route": "/journal",
+    "stateId": "search-error",
+    "surface": "Search your notebook"
+  },
+  {
+    "family": "shared",
+    "images": [
+      {
+        "componentOnly": false,
+        "image": "views/shared/context-journal--light--desktop.png",
+        "sha256": "e494ecbcc7e6f5aa8719af994ffdc6c32eb03c9e58cdc9af00b9d2b391b8fa0c",
+        "surfaceKind": "route",
+        "theme": "light",
+        "variant": "initial",
+        "viewport": {
+          "height": 1000,
+          "width": 1440
+        }
+      },
+      {
+        "componentOnly": false,
+        "image": "views/shared/context-journal--light--mobile.png",
+        "sha256": "d6b171c9e55bcc2155454c933216df724a9e01a31a197ed10ed66ab7cdbb1bb6",
+        "surfaceKind": "route",
+        "theme": "light",
+        "variant": "initial",
+        "viewport": {
+          "height": 844,
+          "width": 390
+        }
+      },
+      {
+        "componentOnly": false,
+        "image": "views/shared/context-journal--dark--mobile.png",
+        "sha256": "d25ac20778ec08d0f5933c2abe737cdd0af8ea89b69964f61dd4fdd2bfb5bd0c",
+        "surfaceKind": "route",
+        "theme": "dark",
+        "variant": "initial",
+        "viewport": {
+          "height": 844,
+          "width": 390
+        }
+      },
+      {
+        "componentOnly": false,
+        "image": "views/shared/context-journal--dark--desktop.png",
+        "sha256": "3820bd0d84432336263ca3c70a01d114377f927b4a06e3cc804f4c9182ad959d",
+        "surfaceKind": "route",
+        "theme": "dark",
+        "variant": "initial",
+        "viewport": {
+          "height": 1000,
+          "width": 1440
+        }
+      }
+    ],
+    "owner": "uiux/shell-panels",
+    "route": "/journal",
+    "stateId": "context-journal",
+    "surface": "Journal context bar"
+  },
+  {
+    "family": "shared",
+    "images": [
+      {
+        "componentOnly": false,
+        "image": "views/shared/context-page--light--desktop.png",
+        "sha256": "096f020f5e078386332705df1150fd947e72a12ba5871562931da9b09555b444",
+        "surfaceKind": "route",
+        "theme": "light",
+        "variant": "initial",
+        "viewport": {
+          "height": 1000,
+          "width": 1440
+        }
+      },
+      {
+        "componentOnly": false,
+        "image": "views/shared/context-page--light--mobile.png",
+        "sha256": "d34df59adf633df9aaae428b907dd3855bfdb728a8fb1c8ff0ee9c252603a86b",
+        "surfaceKind": "route",
+        "theme": "light",
+        "variant": "initial",
+        "viewport": {
+          "height": 844,
+          "width": 390
+        }
+      },
+      {
+        "componentOnly": false,
+        "image": "views/shared/context-page--dark--desktop.png",
+        "sha256": "a03af6c24adc3328a271a5093712d503cb023459afe58090daecffed3cab3831",
+        "surfaceKind": "route",
+        "theme": "dark",
+        "variant": "initial",
+        "viewport": {
+          "height": 1000,
+          "width": 1440
+        }
+      },
+      {
+        "componentOnly": false,
+        "image": "views/shared/context-page--dark--mobile.png",
+        "sha256": "2da798bf7588005ec5a23342571e9c68a5b2cd14cdcc709c12481c876163f811",
+        "surfaceKind": "route",
+        "theme": "dark",
+        "variant": "initial",
+        "viewport": {
+          "height": 844,
+          "width": 390
+        }
+      }
+    ],
+    "owner": "uiux/shell-panels",
+    "route": "/journal",
+    "stateId": "context-page",
+    "surface": "Page context bar"
+  },
+  {
+    "family": "shared",
+    "images": [
+      {
+        "componentOnly": false,
+        "image": "views/shared/context-explore--light--mobile.png",
+        "sha256": "0e848a131f50801c114cdff3cfcc2e7932cc068b7d8f5b4718a8ea67bb52cab8",
+        "surfaceKind": "route",
+        "theme": "light",
+        "variant": "initial",
+        "viewport": {
+          "height": 844,
+          "width": 390
+        }
+      },
+      {
+        "componentOnly": false,
+        "image": "views/shared/context-explore--light--desktop.png",
+        "sha256": "b0b763c846bd4fe6101c8d0ef4f38f0f37ba87915aa3009dd219e00fa2cd01cb",
+        "surfaceKind": "route",
+        "theme": "light",
+        "variant": "initial",
+        "viewport": {
+          "height": 1000,
+          "width": 1440
+        }
+      },
+      {
+        "componentOnly": false,
+        "image": "views/shared/context-explore--dark--mobile.png",
+        "sha256": "fcb64135b571d8addedf4332491e44000b0909f55084efa57cd73f3a6aea019f",
+        "surfaceKind": "route",
+        "theme": "dark",
+        "variant": "initial",
+        "viewport": {
+          "height": 844,
+          "width": 390
+        }
+      },
+      {
+        "componentOnly": false,
+        "image": "views/shared/context-explore--dark--desktop.png",
+        "sha256": "762a8700b9551400882d5a0213f98a51bcfc05a8ebd0642b8dc1ddfbe60be0f9",
+        "surfaceKind": "route",
+        "theme": "dark",
+        "variant": "initial",
+        "viewport": {
+          "height": 1000,
+          "width": 1440
+        }
+      }
+    ],
+    "owner": "uiux/shell-panels",
+    "route": "/journal",
+    "stateId": "context-explore",
+    "surface": "Explore context bar"
+  },
+  {
+    "family": "shared",
+    "images": [
+      {
+        "componentOnly": false,
+        "image": "views/shared/mobile-header-hidden--light--desktop.png",
+        "sha256": "c3ef7c0f8abfdcea80814292b2b175787aa42c8ef70e75bb65b7d0d3ec600fdd",
+        "surfaceKind": "route",
+        "theme": "light",
+        "variant": "initial",
+        "viewport": {
+          "height": 1000,
+          "width": 1440
+        }
+      },
+      {
+        "componentOnly": false,
+        "image": "views/shared/mobile-header-hidden--light--mobile.png",
+        "sha256": "5bfe48a7fb2e7b664db35f61ebb4ca4e85cf100c272b830e40c010884f6dd108",
+        "surfaceKind": "route",
+        "theme": "light",
+        "variant": "initial",
+        "viewport": {
+          "height": 844,
+          "width": 390
+        }
+      },
+      {
+        "componentOnly": false,
+        "image": "views/shared/mobile-header-hidden--dark--desktop.png",
+        "sha256": "d9a18514320fb9ba651a1bfe7649c4b443ff81c2c69b07cefcb977722d60a1ef",
+        "surfaceKind": "route",
+        "theme": "dark",
+        "variant": "initial",
+        "viewport": {
+          "height": 1000,
+          "width": 1440
+        }
+      },
+      {
+        "componentOnly": false,
+        "image": "views/shared/mobile-header-hidden--dark--mobile.png",
+        "sha256": "35d56e78b57d67d09580f90c6410665ce9303e707ec04d19380df61525a1bc08",
+        "surfaceKind": "route",
+        "theme": "dark",
+        "variant": "initial",
+        "viewport": {
+          "height": 844,
+          "width": 390
+        }
+      }
+    ],
+    "owner": "uiux/shell-panels",
+    "route": "/journal",
+    "stateId": "mobile-header-hidden",
+    "surface": "Mobile header \u00b7 hidden"
+  },
+  {
+    "family": "shared",
+    "images": [
+      {
+        "componentOnly": false,
+        "image": "views/shared/mobile-header-revealed--light--desktop.png",
+        "sha256": "d653779c31f70e8a4c56037beb12298965fac7d58fd7cdbead2cfc90c6aa7230",
+        "surfaceKind": "route",
+        "theme": "light",
+        "variant": "initial",
+        "viewport": {
+          "height": 1000,
+          "width": 1440
+        }
+      },
+      {
+        "componentOnly": false,
+        "image": "views/shared/mobile-header-revealed--light--mobile.png",
+        "sha256": "3d242145076c7562fbcaa004c3a90103c1e8b80c9bcd86e2c7a3f050c5df63cd",
+        "surfaceKind": "route",
+        "theme": "light",
+        "variant": "initial",
+        "viewport": {
+          "height": 844,
+          "width": 390
+        }
+      },
+      {
+        "componentOnly": false,
+        "image": "views/shared/mobile-header-revealed--dark--mobile.png",
+        "sha256": "d1ab2e532a1f9f8a46a573384a1589a08de2da291475d8bb9c27806cb4b4139f",
+        "surfaceKind": "route",
+        "theme": "dark",
+        "variant": "initial",
+        "viewport": {
+          "height": 844,
+          "width": 390
+        }
+      },
+      {
+        "componentOnly": false,
+        "image": "views/shared/mobile-header-revealed--dark--desktop.png",
+        "sha256": "a8e1f70a8634fb63c4d7dbc453594c156893639add1f6d954e1c03dd3604f861",
+        "surfaceKind": "route",
+        "theme": "dark",
+        "variant": "initial",
+        "viewport": {
+          "height": 1000,
+          "width": 1440
+        }
+      }
+    ],
+    "owner": "uiux/shell-panels",
+    "route": "/journal",
+    "stateId": "mobile-header-revealed",
+    "surface": "Mobile header \u00b7 revealed"
+  },
+  {
+    "family": "shared",
+    "images": [
+      {
+        "componentOnly": false,
+        "image": "views/shared/mobile-header-focus--light--desktop.png",
+        "sha256": "f115a3f98c482a52da0f0b11f2131d81aa7ab693f29ec1d30f16f7c19af73998",
+        "surfaceKind": "route",
+        "theme": "light",
+        "variant": "initial",
+        "viewport": {
+          "height": 1000,
+          "width": 1440
+        }
+      },
+      {
+        "componentOnly": false,
+        "image": "views/shared/mobile-header-focus--light--mobile.png",
+        "sha256": "4a871b5a82b69be3199099b20a59adb4c814680409bd931f963179ec71976fb3",
+        "surfaceKind": "route",
+        "theme": "light",
+        "variant": "initial",
+        "viewport": {
+          "height": 844,
+          "width": 390
+        }
+      },
+      {
+        "componentOnly": false,
+        "image": "views/shared/mobile-header-focus--dark--desktop.png",
+        "sha256": "395c122840bb22730f5da3b5578616b68755b54f7977218e859fe7d2c0ab5c43",
+        "surfaceKind": "route",
+        "theme": "dark",
+        "variant": "initial",
+        "viewport": {
+          "height": 1000,
+          "width": 1440
+        }
+      },
+      {
+        "componentOnly": false,
+        "image": "views/shared/mobile-header-focus--dark--mobile.png",
+        "sha256": "4289d404c637d742bfc9181443b322ff54abca39497b3744d19929787345750a",
+        "surfaceKind": "route",
+        "theme": "dark",
+        "variant": "initial",
+        "viewport": {
+          "height": 844,
+          "width": 390
+        }
+      }
+    ],
+    "owner": "uiux/shell-panels",
+    "route": "/journal",
+    "stateId": "mobile-header-focus",
+    "surface": "Mobile header \u00b7 focus"
+  },
+  {
+    "family": "shared",
+    "images": [
+      {
+        "componentOnly": false,
+        "image": "views/shared/mobile-header-recovery--light--desktop.png",
+        "sha256": "8c66b2ce4dbdcfde536dc9ceae8d5d1b27740ed4b7920adec8fb3386d19b183e",
+        "surfaceKind": "route",
+        "theme": "light",
+        "variant": "initial",
+        "viewport": {
+          "height": 1000,
+          "width": 1440
+        }
+      },
+      {
+        "componentOnly": false,
+        "image": "views/shared/mobile-header-recovery--light--mobile.png",
+        "sha256": "468c0388d41b0f83b9e4656320c178475023ecb25c19ea81f8fc0a81e56f9e02",
+        "surfaceKind": "route",
+        "theme": "light",
+        "variant": "initial",
+        "viewport": {
+          "height": 844,
+          "width": 390
+        }
+      },
+      {
+        "componentOnly": false,
+        "image": "views/shared/mobile-header-recovery--dark--desktop.png",
+        "sha256": "ece0b18bcaf892e1e6d879742749046265d285b94fe51cc7ab901b9bfa5dc3ac",
+        "surfaceKind": "route",
+        "theme": "dark",
+        "variant": "initial",
+        "viewport": {
+          "height": 1000,
+          "width": 1440
+        }
+      },
+      {
+        "componentOnly": false,
+        "image": "views/shared/mobile-header-recovery--dark--mobile.png",
+        "sha256": "0ff4e81f0e399601dbd9f28e4cec56eaafcaeae2c10c55b06a2da285d1f865aa",
+        "surfaceKind": "route",
+        "theme": "dark",
+        "variant": "initial",
+        "viewport": {
+          "height": 844,
+          "width": 390
+        }
+      }
+    ],
+    "owner": "uiux/shell-panels",
+    "route": "/journal",
+    "stateId": "mobile-header-recovery",
+    "surface": "Mobile header \u00b7 recovery"
+  },
+  {
+    "family": "shared",
+    "images": [
+      {
+        "componentOnly": false,
+        "image": "views/shared/navigation-compact--light--mobile.png",
+        "sha256": "a663267d0d9d0d5bec5f71a0b1c87ddc1efd1f28462949e305bdc10027d5abe9",
+        "surfaceKind": "route",
+        "theme": "light",
+        "variant": "initial",
+        "viewport": {
+          "height": 844,
+          "width": 390
+        }
+      },
+      {
+        "componentOnly": false,
+        "image": "views/shared/navigation-compact--light--tablet.png",
+        "sha256": "84fdad4621d5e32aa8cc875da94f4c7207ba41dd424ea1b36d6ae105a1a32b6a",
+        "surfaceKind": "route",
+        "theme": "light",
+        "variant": "initial",
+        "viewport": {
+          "height": 1112,
+          "width": 834
+        }
+      },
+      {
+        "componentOnly": false,
+        "image": "views/shared/navigation-compact--light--desktop.png",
+        "sha256": "90084f9ccbf305f45a7d26c1aa5d73391545c2ba4ebe5b7e4fb1bf6b9e0441e3",
+        "surfaceKind": "route",
+        "theme": "light",
+        "variant": "initial",
+        "viewport": {
+          "height": 1000,
+          "width": 1440
+        }
+      },
+      {
+        "componentOnly": false,
+        "image": "views/shared/navigation-compact--dark--desktop.png",
+        "sha256": "e85555725873b88f63ce59492554b5c87cf853ae6f752c294873b6f66a38615b",
+        "surfaceKind": "route",
+        "theme": "dark",
+        "variant": "initial",
+        "viewport": {
+          "height": 1000,
+          "width": 1440
+        }
+      },
+      {
+        "componentOnly": false,
+        "image": "views/shared/navigation-compact--dark--mobile.png",
+        "sha256": "fefbee13e8071cd718f7852b65afc6b339fff9aa473dea7f69eb4b77cdf0ff21",
+        "surfaceKind": "route",
+        "theme": "dark",
+        "variant": "initial",
+        "viewport": {
+          "height": 844,
+          "width": 390
+        }
+      },
+      {
+        "componentOnly": false,
+        "image": "views/shared/navigation-compact--dark--tablet.png",
+        "sha256": "95edf86be0102cee3232d3a297050f9704e3156ac5bc30a7ea859e9438a45ff8",
+        "surfaceKind": "route",
+        "theme": "dark",
+        "variant": "initial",
+        "viewport": {
+          "height": 1112,
+          "width": 834
+        }
+      }
+    ],
+    "owner": "uiux/shell-panels",
+    "route": "/journal",
+    "stateId": "navigation-compact",
+    "surface": "Compact navigation"
+  },
+  {
+    "family": "shared",
+    "images": [
+      {
+        "componentOnly": false,
+        "image": "views/shared/navigation-mobile--light--mobile.png",
+        "sha256": "015d973d040975aeef2df76a0ef3f5d2fae96bcd608132e80469d002b43249b1",
+        "surfaceKind": "navigation-sheet",
+        "theme": "light",
+        "variant": "initial",
+        "viewport": {
+          "height": 844,
+          "width": 390
+        }
+      },
+      {
+        "componentOnly": false,
+        "image": "views/shared/navigation-mobile--light--desktop.png",
+        "sha256": "675eb53b7513bbfaddac45ee310be39a720387491b5bf2552f40e8fb2667c7f5",
+        "surfaceKind": "navigation-sheet",
+        "theme": "light",
+        "variant": "initial",
+        "viewport": {
+          "height": 1000,
+          "width": 1440
+        }
+      },
+      {
+        "componentOnly": false,
+        "image": "views/shared/navigation-mobile--dark--desktop.png",
+        "sha256": "f104378c65ae1cd2c39da378b3140846cdcea63f8921acc78629dd93cd27c180",
+        "surfaceKind": "navigation-sheet",
+        "theme": "dark",
+        "variant": "initial",
+        "viewport": {
+          "height": 1000,
+          "width": 1440
+        }
+      },
+      {
+        "componentOnly": false,
+        "image": "views/shared/navigation-mobile--dark--mobile.png",
+        "sha256": "98f8c1c63cb9daf5493a33c68dbc7c3fdbc0f8e7aade593f68196474aa7a34c4",
+        "surfaceKind": "navigation-sheet",
+        "theme": "dark",
+        "variant": "initial",
+        "viewport": {
+          "height": 844,
+          "width": 390
+        }
+      },
+      {
+        "componentOnly": false,
+        "image": "views/shared/navigation-mobile--light--mobile--scroll-end.png",
+        "sha256": "ba97c3eef044b7cdba643ca7a924616e4e15ba86d87c3cab67a61a381cfb5548",
+        "surfaceKind": "navigation-sheet",
+        "theme": "light",
+        "variant": "scroll-end",
+        "viewport": {
+          "height": 844,
+          "width": 390
+        }
+      },
+      {
+        "componentOnly": false,
+        "image": "views/shared/navigation-mobile--dark--mobile--scroll-end.png",
+        "sha256": "4cfa4e655277ef0ddd7f404023a03b9dc50316b808bfca53a9a83090975f5d44",
+        "surfaceKind": "navigation-sheet",
+        "theme": "dark",
+        "variant": "scroll-end",
+        "viewport": {
+          "height": 844,
+          "width": 390
+        }
+      }
+    ],
+    "owner": "uiux/shell-panels",
+    "route": "/journal",
+    "stateId": "navigation-mobile",
+    "surface": "Notebook navigation"
+  },
+  {
+    "family": "shared",
+    "images": [
+      {
+        "componentOnly": true,
+        "image": "views/shared/resize-boundaries--light--mobile.png",
+        "sha256": "6561f0aedf5e02c1cf4d13671f28857592c54624d0bf2a300d030742ba8d87fd",
+        "surfaceKind": "component-reference",
+        "theme": "light",
+        "variant": "initial",
+        "viewport": {
+          "height": 844,
+          "width": 390
+        }
+      },
+      {
+        "componentOnly": true,
+        "image": "views/shared/resize-boundaries--light--desktop.png",
+        "sha256": "edbfd2865da5d2785f99d0c65a956fb2bf22331cb3baa54129ea496de678720e",
+        "surfaceKind": "component-reference",
+        "theme": "light",
+        "variant": "initial",
+        "viewport": {
+          "height": 1000,
+          "width": 1440
+        }
+      },
+      {
+        "componentOnly": true,
+        "image": "views/shared/resize-boundaries--dark--desktop.png",
+        "sha256": "4caa18e3a4619f6cd206a13d2e3f8c878bc1abfe6b415cb552aa6bf45bd754bc",
+        "surfaceKind": "component-reference",
+        "theme": "dark",
+        "variant": "initial",
+        "viewport": {
+          "height": 1000,
+          "width": 1440
+        }
+      },
+      {
+        "componentOnly": true,
+        "image": "views/shared/resize-boundaries--dark--mobile.png",
+        "sha256": "1513368847f1e1ac2643f58f5ced818bdbb626fd1d003057fc39e0d9e09fb2cd",
+        "surfaceKind": "component-reference",
+        "theme": "dark",
+        "variant": "initial",
+        "viewport": {
+          "height": 844,
+          "width": 390
+        }
+      }
+    ],
+    "owner": "uiux/shell-panels",
+    "route": "/journal",
+    "stateId": "resize-boundaries",
+    "surface": "Resize either sidebar"
+  },
+  {
+    "family": "shared",
+    "images": [
+      {
+        "componentOnly": false,
+        "image": "views/shared/narrow-route-actions--light--desktop.png",
+        "sha256": "7eb3c6c699957671273348acfc0d0035bdced13c4804c5cd19f82bef3617ab3e",
+        "surfaceKind": "popover",
+        "theme": "light",
+        "variant": "initial",
+        "viewport": {
+          "height": 1000,
+          "width": 1440
+        }
+      },
+      {
+        "componentOnly": false,
+        "image": "views/shared/narrow-route-actions--dark--desktop.png",
+        "sha256": "8fe0b18bc0e1a02ff42a5fb863e962180118ef8ec9c34e79eb94a82c2734181a",
+        "surfaceKind": "popover",
+        "theme": "dark",
+        "variant": "initial",
+        "viewport": {
+          "height": 1000,
+          "width": 1440
+        }
+      },
+      {
+        "componentOnly": false,
+        "image": "views/shared/narrow-route-actions--light--mobile.png",
+        "sha256": "74998340408d189aeb1fc6583ed098191c9f966ab66212e779a54264d531d054",
+        "surfaceKind": "popover",
+        "theme": "light",
+        "variant": "initial",
+        "viewport": {
+          "height": 844,
+          "width": 390
+        }
+      },
+      {
+        "componentOnly": false,
+        "image": "views/shared/narrow-route-actions--dark--mobile.png",
+        "sha256": "7a002493d7831eb6e566f839e5c9b6b9538605eae72879b24ed169321b1af772",
+        "surfaceKind": "popover",
+        "theme": "dark",
+        "variant": "initial",
+        "viewport": {
+          "height": 844,
+          "width": 390
+        }
+      }
+    ],
+    "owner": "uiux/shell-panels",
+    "route": "/journal",
+    "stateId": "narrow-route-actions",
+    "surface": "Narrow context bar \u00b7 route actions"
+  },
+  {
+    "family": "shared",
+    "images": [
+      {
+        "componentOnly": false,
+        "image": "views/shared/journal-route-menu--light--mobile.png",
+        "sha256": "8b7094020d15af857accf93f674f9218bea25a5e5c97f1086cce4bc176d1ac93",
+        "surfaceKind": "popover",
+        "theme": "light",
+        "variant": "initial",
+        "viewport": {
+          "height": 844,
+          "width": 390
+        }
+      },
+      {
+        "componentOnly": false,
+        "image": "views/shared/journal-route-menu--light--desktop.png",
+        "sha256": "b0d103a5692623797ea0cd0e3671eded69e729e6f15101c0f47bd28ea3d72913",
+        "surfaceKind": "popover",
+        "theme": "light",
+        "variant": "initial",
+        "viewport": {
+          "height": 1000,
+          "width": 1440
+        }
+      },
+      {
+        "componentOnly": false,
+        "image": "views/shared/journal-route-menu--dark--desktop.png",
+        "sha256": "ae707fb893c8555d17065da6dded914bbccd2c2d38cfdf711030aab97e8d15de",
+        "surfaceKind": "popover",
+        "theme": "dark",
+        "variant": "initial",
+        "viewport": {
+          "height": 1000,
+          "width": 1440
+        }
+      },
+      {
+        "componentOnly": false,
+        "image": "views/shared/journal-route-menu--dark--mobile.png",
+        "sha256": "e1f0cbbc0f99aa963bd9c244f8f00062d646597ef57e8a61896bce3874795d71",
+        "surfaceKind": "popover",
+        "theme": "dark",
+        "variant": "initial",
+        "viewport": {
+          "height": 844,
+          "width": 390
+        }
+      }
+    ],
+    "owner": "uiux/shell-panels",
+    "route": "/journal",
+    "stateId": "journal-route-menu",
+    "surface": "Journal route menu \u00b7 Entries selected"
+  },
+  {
+    "family": "chat",
+    "images": [
+      {
+        "componentOnly": false,
+        "image": "views/chat/chat-mobile-sheet--light--desktop.png",
+        "sha256": "bfcb42777cebb9d2830f4b60f5e970b77cc403457c0c6c3151784724d402617a",
+        "surfaceKind": "route",
+        "theme": "light",
+        "variant": "initial",
+        "viewport": {
+          "height": 1000,
+          "width": 1440
+        }
+      },
+      {
+        "componentOnly": false,
+        "image": "views/chat/chat-mobile-sheet--light--mobile.png",
+        "sha256": "96383c1cd65a81892b4b94b498338da9021401f3cc1028599257225dbefdc514",
+        "surfaceKind": "route",
+        "theme": "light",
+        "variant": "initial",
+        "viewport": {
+          "height": 844,
+          "width": 390
+        }
+      },
+      {
+        "componentOnly": false,
+        "image": "views/chat/chat-mobile-sheet--dark--desktop.png",
+        "sha256": "d14957df1026d98ca72ac54762390579614ab9efd2b49809899cab1f415f8772",
+        "surfaceKind": "route",
+        "theme": "dark",
+        "variant": "initial",
+        "viewport": {
+          "height": 1000,
+          "width": 1440
+        }
+      },
+      {
+        "componentOnly": false,
+        "image": "views/chat/chat-mobile-sheet--dark--mobile.png",
+        "sha256": "d4080bc785faee23cc95167450cc78445326bf35540bf351715ad16be9cb5ae8",
+        "surfaceKind": "route",
+        "theme": "dark",
+        "variant": "initial",
+        "viewport": {
+          "height": 844,
+          "width": 390
+        }
+      }
+    ],
+    "owner": "uiux/shell-panels",
+    "route": "/journal",
+    "stateId": "chat-mobile-sheet",
+    "surface": "Ask Journl"
+  }
+]

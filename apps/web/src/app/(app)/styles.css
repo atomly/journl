@@ -284,18 +284,13 @@ The rest of the components are set by the Tailwind CSS classes, or by our editor
   border: 1px solid var(--border);
   border-radius: 24px;
   background: var(--card);
+  /* Panels cast the approved shadow into the gutters at every shell
+     width; light's 10% alpha reads as clean, dark carries the visible
+     falloff. */
+  box-shadow: 0 12px 30px #163a6b1a;
 }
-/* Panels cast the approved shadow into the desktop gutters; the tablet
-   plate keeps its 12px gutters clean, so the shadow applies from the
-   desktop plates' width up. Light's 10% alpha reads as clean, dark
-   carries the visible falloff. */
-@media (min-width: 1440px) {
-  [data-slot="sidebar-inset"] [data-app-container] {
-    box-shadow: 0 12px 30px #163a6b1a;
-  }
-  :where(.dark) [data-slot="sidebar-inset"] [data-app-container] {
-    box-shadow: 0 12px 30px #050b1780;
-  }
+:where(.dark) [data-slot="sidebar-inset"] [data-app-container] {
+  box-shadow: 0 12px 30px #050b1780;
 }
 
 [data-slot="sidebar-inner"],

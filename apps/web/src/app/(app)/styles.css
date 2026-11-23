@@ -452,6 +452,15 @@ The rest of the components are set by the Tailwind CSS classes, or by our editor
   }
 }
 
+/* Tablet plates cast the reading panel's shadow into the gutters. The
+   chat wrapper clips that falloff at these widths while the chat itself
+   is a fixed overlay that escapes the box, so the reveal is safe. */
+@media (701px <= width <= 1100px) {
+  [data-shell-panels][data-slot="sidebar-wrapper"] {
+    overflow: visible;
+  }
+}
+
 /* Desktop panels share the viewport insets. The route header spans only its
    content column; providers retain their independent navigation/chat contexts. */
 @media (min-width: 1101px) {

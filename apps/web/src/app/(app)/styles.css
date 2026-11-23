@@ -322,14 +322,6 @@ The rest of the components are set by the Tailwind CSS classes, or by our editor
   color: #eef3ff;
   box-shadow: 0 12px 30px #050b1780;
 }
-/* A collapsed floating sidebar paints only border and shadow on a
-   zero-width box, drawing a stray hairline beside the reading panel. */
-[data-slot="sidebar"][data-collapsible="offcanvas"][data-state="collapsed"]
-  [data-slot="sidebar-inner"] {
-  border-width: 0;
-  box-shadow: none;
-}
-
 /* The header composes its glass over the approved opaque surface; the
    floating nav keeps its translucent stack over the page gradient. */
 [data-slot="sidebar-inset"] > header > div {
@@ -363,6 +355,14 @@ The rest of the components are set by the Tailwind CSS classes, or by our editor
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
   }
+}
+/* A collapsed floating sidebar paints only border and shadow on a
+   zero-width box, drawing a stray hairline beside the reading panel.
+   Kept after the fallback blocks so selector specificity ascends. */
+[data-slot="sidebar"][data-collapsible="offcanvas"][data-state="collapsed"]
+[data-slot="sidebar-inner"] {
+  border-width: 0;
+  box-shadow: none;
 }
 
 [data-app-container]:not(:has([data-virtuoso-scroller]))::after {

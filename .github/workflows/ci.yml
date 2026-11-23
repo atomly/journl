@@ -161,13 +161,13 @@ jobs:
           - leg: shell-2
             run: pnpm --filter @acme/web test:browser 'src/app/\(app\)/_components/' --grep-invert='[a-z]--[a-z]' --shard=2/2 --pass-with-no-tests
           - leg: app-1
-            run: pnpm --filter @acme/web test:browser 'src/components/' 'src/app/\(app\)/@appSidebar/' 'src/app/\(app\)/explore/' 'src/app/\(app\)/journal/' 'src/testing/' --shard=1/4
+            run: pnpm --filter @acme/web test:browser 'src/components/' 'src/app/\(app\)/@appSidebar/' 'src/app/\(app\)/explore/' 'src/app/\(app\)/journal/' 'src/app/\(app\)/library/' 'src/app/\(app\)/pages/' 'src/app/\(app\)/folders/' 'src/app/\(app\)/graph/' 'src/app/\(marketing\)/' 'src/testing/' --shard=1/4
           - leg: app-2
-            run: pnpm --filter @acme/web test:browser 'src/components/' 'src/app/\(app\)/@appSidebar/' 'src/app/\(app\)/explore/' 'src/app/\(app\)/journal/' 'src/testing/' --shard=2/4
+            run: pnpm --filter @acme/web test:browser 'src/components/' 'src/app/\(app\)/@appSidebar/' 'src/app/\(app\)/explore/' 'src/app/\(app\)/journal/' 'src/app/\(app\)/library/' 'src/app/\(app\)/pages/' 'src/app/\(app\)/folders/' 'src/app/\(app\)/graph/' 'src/app/\(marketing\)/' 'src/testing/' --shard=2/4
           - leg: app-3
-            run: pnpm --filter @acme/web test:browser 'src/components/' 'src/app/\(app\)/@appSidebar/' 'src/app/\(app\)/explore/' 'src/app/\(app\)/journal/' 'src/testing/' --shard=3/4
+            run: pnpm --filter @acme/web test:browser 'src/components/' 'src/app/\(app\)/@appSidebar/' 'src/app/\(app\)/explore/' 'src/app/\(app\)/journal/' 'src/app/\(app\)/library/' 'src/app/\(app\)/pages/' 'src/app/\(app\)/folders/' 'src/app/\(app\)/graph/' 'src/app/\(marketing\)/' 'src/testing/' --shard=3/4
           - leg: app-4
-            run: pnpm --filter @acme/web test:browser 'src/components/' 'src/app/\(app\)/@appSidebar/' 'src/app/\(app\)/explore/' 'src/app/\(app\)/journal/' 'src/testing/' --shard=4/4
+            run: pnpm --filter @acme/web test:browser 'src/components/' 'src/app/\(app\)/@appSidebar/' 'src/app/\(app\)/explore/' 'src/app/\(app\)/journal/' 'src/app/\(app\)/library/' 'src/app/\(app\)/pages/' 'src/app/\(app\)/folders/' 'src/app/\(app\)/graph/' 'src/app/\(marketing\)/' 'src/testing/' --shard=4/4
           # This layer adds the component review workspace; kept on turbo so
           # its test:stories dependency still runs.
           - leg: component-review
@@ -181,7 +181,7 @@ jobs:
           cd apps/web
           missing=$(find src -name '*.browser.spec.ts' | while read -r f; do
             case "$f" in
-              'src/app/(app)/_components/'*|'src/app/(app)/@appSidebar/'*|'src/app/(app)/explore/'*|'src/app/(app)/journal/'*|src/components/*|src/testing/*) ;;
+              'src/app/(app)/_components/'*|'src/app/(app)/@appSidebar/'*|'src/app/(app)/explore/'*|'src/app/(app)/journal/'*|'src/app/(app)/library/'*|'src/app/(app)/pages/'*|'src/app/(app)/folders/'*|'src/app/(app)/graph/'*|'src/app/(marketing)/'*|src/components/*|src/testing/*) ;;
               *) echo "$f" ;;
             esac
           done)

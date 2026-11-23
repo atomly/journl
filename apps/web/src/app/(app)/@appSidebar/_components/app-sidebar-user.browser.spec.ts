@@ -9,13 +9,30 @@ test("shipped account dropdown hosts the shipped theme control and signs out", a
     0,
   );
   const openAccountMenu = async () => {
-    if (info.project.name === "mobile-webkit")
+    if (info.project.name === "mobile-webkit") {
       await page
         .getByRole("button", { name: "Toggle Sidebar" })
         .first()
         .click();
+      const expand = page.getByRole("button", {
+        exact: true,
+        name: "Expand Browser folder",
+      });
+      await expect(
+        expand.or(
+          page.getByRole("button", {
+            exact: true,
+            name: "Collapse Browser folder",
+          }),
+        ),
+      ).toBeVisible();
+      if (await expand.isVisible()) await expand.click();
+      await expect(
+        page.getByRole("link", { exact: true, name: "Browser note 01" }),
+      ).toBeVisible();
+    }
     await page
-      .locator('[data-sidebar="header"] button[aria-haspopup="menu"]')
+      .locator('[data-sidebar="footer"] button[aria-haspopup="menu"]')
       .click();
     await expect(
       page.getByRole("menuitem", { exact: true, name: "Settings" }),
@@ -23,6 +40,13 @@ test("shipped account dropdown hosts the shipped theme control and signs out", a
     await expect(
       page.getByRole("tab", { exact: true, name: "System" }),
     ).toBeVisible();
+    await expect(page.getByRole("menu")).toBeInViewport({ ratio: 1 });
+    if (info.project.name === "mobile-webkit") {
+      await page.locator("[data-shell-navigation-body]").evaluate((body) => {
+        body.scrollTop = 0;
+      });
+      await expect(page.getByRole("menu")).toBeInViewport({ ratio: 1 });
+    }
     expect(errors).toEqual([]);
   };
   await openAccountMenu();
@@ -37,6 +61,7 @@ test("shipped account dropdown hosts the shipped theme control and signs out", a
     );
     return {
       border: getComputedStyle(element).borderTopColor,
+      dark: document.documentElement.classList.contains("dark"),
       divider: divider ? getComputedStyle(divider).backgroundColor : null,
       header: header ? getComputedStyle(header).borderTopColor : null,
       sidebarDivider: sidebarDivider
@@ -46,7 +71,13 @@ test("shipped account dropdown hosts the shipped theme control and signs out", a
     };
   });
   expect(colors.width).toBe("1px");
-  expect(colors.border).toBe(colors.header);
+  // The composed workspace chrome pins the header edge to the approved v2
+  // recipe's --line constant per theme, not to the glass sheet's --glass-edge
+  // (docs/design-handoff/approved-workspace-v2/review/workspace.css).
+  expect(colors.header).toBe(
+    colors.dark ? "rgb(52, 72, 101)" : "rgb(213, 224, 237)",
+  );
+  expect(colors.border).toBe(colors.sidebarDivider);
   expect(colors.divider).toBe(colors.sidebarDivider);
   await page.getByRole("tab", { exact: true, name: "Light" }).click();
   await expect(page.locator("html")).toHaveClass(/\blight\b/);
@@ -109,7 +140,7 @@ test("shipped Appearance card and account dropdown share the persisted theme", a
   if (info.project.name === "mobile-webkit")
     await page.getByRole("button", { name: "Toggle Sidebar" }).first().click();
   await page
-    .locator('[data-sidebar="header"] button[aria-haspopup="menu"]')
+    .locator('[data-sidebar="footer"] button[aria-haspopup="menu"]')
     .click();
   await expect(
     page.getByRole("tab", { exact: true, name: "Light" }),
@@ -144,7 +175,7 @@ test("shipped account dropdown works in the collapsed desktop sidebar", async ({
   await page.keyboard.press("Escape");
   await page.getByRole("button", { exact: true, name: "Search notes" }).click();
   const search = page.getByRole("dialog", {
-    name: "Search pages and journal entries",
+    name: "Search your notebook",
   });
   await expect(search).toBeVisible();
   await page.keyboard.press("Escape");

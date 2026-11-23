@@ -6,8 +6,8 @@ import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import { FolderNestedPagesList } from "~/app/(app)/folders/_components/folder-nested-pages-list";
 
 vi.mock("next/navigation", () => ({ usePathname: () => "/pages" }));
-vi.mock("~/components/ui/sidebar", () => ({
-  useSidebar: () => ({ isMobile: false, setOpenMobile: vi.fn() }),
+vi.mock("~/app/(app)/@appSidebar/_components/app-sidebar-provider", () => ({
+  useNavigationSidebar: () => ({ isMobile: false, setOpenMobile: vi.fn() }),
 }));
 vi.mock("~/app/(app)/@appSidebar/_components/app-sidebar-tree-actions", () => ({
   AppSidebarTreeActions: () => null,

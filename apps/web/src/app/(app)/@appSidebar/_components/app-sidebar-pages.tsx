@@ -19,10 +19,12 @@ import {
 import Link from "next/link";
 import { useParams, usePathname } from "next/navigation";
 import {
+  type CSSProperties,
   createContext,
   useCallback,
   useContext,
   useEffect,
+  useId,
   useState,
 } from "react";
 import { TreeEmptyDropTarget } from "~/components/tree-empty-drop-target";
@@ -83,7 +85,8 @@ type SidebarTreeData = {
   shouldShowInitialSkeleton: boolean;
 };
 
-const DEFAULT_TREE_ITEM_CLASSNAME = "ml-2 border-sidebar-border border-l ps-1";
+const DEFAULT_TREE_ITEM_CLASSNAME = "journl-tree-item";
+const TreeDepth = createContext(0);
 
 type SidebarTreeInteractions = {
   shouldSuppressClick: () => boolean;
@@ -101,7 +104,6 @@ function useSidebarTreeInteractions(): SidebarTreeInteractions {
   }
   return ctx;
 }
-const APP_SIDEBAR_PAGES_CONTENT_ID = "app-sidebar-pages-content";
 
 function SidebarTreeEmptyDropTarget({
   activeDragId,
@@ -225,6 +227,7 @@ function DraggableFolderRow({
 }) {
   const { shouldSuppressClick } = useSidebarTreeInteractions();
   const pathname = usePathname();
+  const depth = useContext(TreeDepth);
   const { isMobile, setOpenMobile } = useSidebar();
   const itemRef: TreeItemRef = {
     kind: "folder",
@@ -291,7 +294,7 @@ function DraggableFolderRow({
           DEFAULT_TREE_ITEM_CLASSNAME,
         )}
       >
-        <div className="relative py-1">
+        <div className="relative py-0.5">
           <TreeInsertDropBands
             activeDragId={activeDragId}
             afterSiblingDropId={afterSiblingDropId}
@@ -391,23 +394,29 @@ function DraggableFolderRow({
 
         {treeData.shouldRenderNestedContent ? (
           <>
-            <CollapsibleContent
-              animateHeight
-              className={cn(treeData.items.length > 0 && "pt-1")}
-            >
-              <SidebarMenuSub className="mx-0 mr-0 gap-0 border-none px-0">
-                <SidebarTreeRows
-                  activeDragId={activeDragId}
-                  isDnDEnabled={isDnDEnabled}
-                  openFolders={openFolders}
-                  parentNodeId={folder.node_id}
-                  setFolderOpen={setFolderOpen}
-                  showEmptyParentDropZone={false}
-                  treeData={treeData}
-                />
-              </SidebarMenuSub>
+            <CollapsibleContent animateHeight>
+              <TreeDepth value={depth + 1}>
+                <SidebarMenuSub
+                  className="mx-0 mr-0 gap-0 border-none px-0"
+                  style={
+                    {
+                      "--tree-indent": `${(depth + 1) * 12}px`,
+                    } as CSSProperties
+                  }
+                >
+                  <SidebarTreeRows
+                    activeDragId={activeDragId}
+                    isDnDEnabled={isDnDEnabled}
+                    openFolders={openFolders}
+                    parentNodeId={folder.node_id}
+                    setFolderOpen={setFolderOpen}
+                    showEmptyParentDropZone={false}
+                    treeData={treeData}
+                  />
+                </SidebarMenuSub>
+              </TreeDepth>
             </CollapsibleContent>
-            <div className="relative h-1">
+            <div className="relative h-0">
               <TreeInsertDropBands
                 activeDragId={activeDragId}
                 afterSiblingDropId={afterSiblingDropId}
@@ -545,6 +554,7 @@ export const AppSidebarPages = ({
   defaultOpen = true,
   owner,
 }: AppSidebarPagesProps) => {
+  const pagesContentId = useId();
   const pathname = usePathname();
   const params = useParams<{ id?: string }>();
   const trpc = useTRPC();
@@ -635,14 +645,11 @@ export const AppSidebarPages = ({
     >
       <div className="group/tree-row relative">
         <CollapsibleTrigger
-          aria-controls={APP_SIDEBAR_PAGES_CONTENT_ID}
+          aria-controls={pagesContentId}
           render={
             <SidebarMenuButton
               isActive={isPagesRoute}
-              className={cn(
-                "min-h-8 border border-transparent pr-2 text-foreground!",
-                isPagesRoute && "border-sidebar-primary/50",
-              )}
+              className="h-11 min-h-11 gap-2 rounded-[12px] border-0 pr-2 pl-4 [&>svg]:size-5"
               tooltip="Library"
               onClick={handlePagesClick}
             >
@@ -651,8 +658,10 @@ export const AppSidebarPages = ({
               ) : (
                 <BookOpen />
               )}
-              <span>Library</span>
-              <ChevronRight className="ml-auto transition-transform duration-200 group-data-[open]/collapsible:rotate-90" />
+              <span className="group-data-[collapsible=icon]:sr-only">
+                Library
+              </span>
+              <ChevronRight className="ml-auto transition-transform duration-200 group-data-[collapsible=icon]:hidden group-data-[open]/collapsible:rotate-90" />
             </SidebarMenuButton>
           }
         />
@@ -673,31 +682,18 @@ export const AppSidebarPages = ({
       </div>
 
       <CollapsibleContent
-        id={APP_SIDEBAR_PAGES_CONTENT_ID}
+        id={pagesContentId}
         className="flex h-full min-h-0 flex-col"
       >
-        {state !== "collapsed" ? (
-          <div className="px-2 py-2">
-            <AppSidebarTreeActions
-              kind="root"
-              parentNodeId={null}
-              triggerMode="direct-page"
-              className="group-data-[collapsible=icon]:hidden"
-              onCreateStart={() => {
-                setIsOpen(true);
-              }}
-              onCreateSuccess={() => {
-                setIsOpen(true);
-              }}
-            />
-          </div>
-        ) : null}
         <DndContext {...dndContextProps}>
           <TreeMoveProvider>
             <SidebarTreeInteractionsContext.Provider
               value={{ shouldSuppressClick }}
             >
-              <SidebarMenuSub className="mx-0 mr-0 flex-1 gap-0 overflow-x-clip overflow-y-scroll border-none px-0">
+              <SidebarMenuSub
+                data-shell-tree-root
+                className="mx-0 mr-0 flex-1 gap-0 overflow-x-clip overflow-y-scroll border-none px-0"
+              >
                 <SidebarTree
                   activeDragId={activeDragId}
                   isDnDEnabled={isDnDEnabled}

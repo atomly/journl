@@ -275,12 +275,21 @@ test("crossing the toolbar gap keeps the handle on its block and leaving release
   }
   await page.getByRole("button", { exact: true, name: "More actions" }).hover();
   expect((await handle.boundingBox())?.y).toBeCloseTo(before.y, 0);
-  const other = await rows.first().boundingBox();
-  if (!other) throw new Error("Missing neighboring block");
-  const point = {
-    x: other.x + other.width - 4,
-    y: other.y + other.height / 2,
-  };
+  const point = await rows.first().evaluate((element) => {
+    const rect = element.getBoundingClientRect();
+    const y = rect.top + rect.height / 2;
+    // The More actions tooltip can cover the far edge of this row. Leave the
+    // corridor through an exposed point on the same neighboring block.
+    for (const x of [
+      rect.left + 8,
+      rect.left + rect.width / 2,
+      rect.right - 4,
+    ]) {
+      const hit = document.elementFromPoint(x, y);
+      if (hit && (hit === element || element.contains(hit))) return { x, y };
+    }
+    throw new Error("No exposed pointer target on the neighboring block");
+  });
   // Prove this is a visible document hit, not a toolbar control covering it.
   expect(
     await rows.first().evaluate((element, point) => {

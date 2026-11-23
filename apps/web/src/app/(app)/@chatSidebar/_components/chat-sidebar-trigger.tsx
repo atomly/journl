@@ -3,7 +3,8 @@
 import { Button } from "@acme/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@acme/ui/tooltip";
 import { cn } from "@acme/ui/utils";
-import { RiSparkling2Fill } from "react-icons/ri";
+import { Sparkle } from "lucide-react";
+import { useEffect, useRef } from "react";
 import {
   ChatUnreadA11yHint,
   ChatUnreadBadge,
@@ -23,6 +24,13 @@ export default function ChatSidebarTrigger({
   const { toggleSidebar, open } = useSidebar();
   const { hasUnreadMessages } = useChatUnread(open);
 
+  const trigger = useRef<HTMLButtonElement>(null);
+  const wasOpen = useRef(open);
+  useEffect(() => {
+    if (wasOpen.current && !open)
+      trigger.current?.focus({ preventScroll: true });
+    wasOpen.current = open;
+  }, [open]);
   if (open) return null;
 
   return (
@@ -30,18 +38,27 @@ export default function ChatSidebarTrigger({
       <TooltipTrigger
         render={
           <Button
+            ref={trigger}
+            aria-label="Toggle Chat Sidebar"
+            variant="assistant"
             data-sidebar="trigger"
             data-slot="sidebar-trigger"
             onClick={toggleSidebar}
-            size="icon"
+            size="default"
             className={cn(
-              "relative size-10 cursor-pointer rounded-full border",
+              "journl-agent-launcher relative h-11 cursor-pointer rounded-[22px] border-0 px-[15px] font-medium text-sm shadow-sm",
               hasUnreadMessages ? "animate-chat-trigger-wiggle" : undefined,
               className,
             )}
             {...props}
           >
-            <RiSparkling2Fill className="size-6" />
+            <Sparkle
+              className="size-4"
+              strokeWidth={1.7}
+              data-icon="inline-start"
+            />
+            <span>Ask Journl</span>
+
             <ChatUnreadBadge
               hasUnreadMessages={hasUnreadMessages}
               className="bg-destructive"

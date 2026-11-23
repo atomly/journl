@@ -125,6 +125,8 @@ function SwipeAction({
         return;
       }
 
+      // A new gesture must not inherit the previous drag's click suppression.
+      suppressClickRef.current = false;
       dragStateRef.current = {
         hasLockedDirection: false,
         hasPointerCapture: false,

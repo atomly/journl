@@ -1,6 +1,5 @@
 "use client";
 
-import { cn } from "@acme/ui/utils";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
@@ -34,30 +33,36 @@ type AppSidebarNavigationProps = {
 
 export function AppSidebarNavigation({ items }: AppSidebarNavigationProps) {
   const pathname = usePathname();
-  const { isMobile, setOpenMobile } = useSidebar();
+  const { isMobile, openMobile, setOpenMobile } = useSidebar();
 
-  const isActive = (url: string) => pathname === url;
+  const isActive = (url: string) =>
+    pathname === url ||
+    (url === "/journal" && pathname.startsWith("/journal/")) ||
+    (url === "/explore" && pathname === "/graph");
   const handleNavigationClick = () => {
-    if (isMobile) {
+    if (isMobile || openMobile) {
       setOpenMobile(false);
     }
   };
 
   return (
-    <SidebarMenu>
+    <SidebarMenu className="gap-2">
       {items.map((item) => (
         <SidebarMenuItem key={item.title}>
           <SidebarMenuButton
             tooltip={item.title}
             isActive={isActive(item.url)}
-            className={cn(
-              "border border-transparent text-foreground!",
-              isActive(item.url) && "border-sidebar-primary/50",
-            )}
+            className="h-11 gap-2 rounded-[12px] border-0 px-4 text-sm [&>svg]:size-5"
             render={
-              <Link href={item.url} onClick={handleNavigationClick}>
+              <Link
+                href={item.url}
+                aria-current={isActive(item.url) ? "page" : undefined}
+                onClick={handleNavigationClick}
+              >
                 {item.icon && item.icon}
-                <span>{item.title}</span>
+                <span className="group-data-[collapsible=icon]:sr-only">
+                  {item.title}
+                </span>
               </Link>
             }
           />

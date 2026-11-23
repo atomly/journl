@@ -1,7 +1,7 @@
 "use client";
 import { type UseChatHelpers, useChat } from "@ai-sdk/react";
 import type { UIMessage } from "ai";
-import { createContext, useContext, useMemo, useState } from "react";
+import { createContext, useContext, useMemo, useRef, useState } from "react";
 import { useJournlChat } from "~/hooks/use-journl-chat";
 import {
   parseUsageQuotaExceededPayload,
@@ -24,6 +24,16 @@ type Draft = { draft: string; setDraft: (value: string) => void };
 const StateContext = createContext<State | null>(null);
 const ActionsContext = createContext<Actions | null>(null);
 const DraftContext = createContext<Draft | null>(null);
+export type ConversationPosition = {
+  threadId: string;
+  top: number;
+  messageId?: string;
+  offset?: number;
+};
+const ScrollContext = createContext<{
+  position: React.RefObject<ConversationPosition | null>;
+  threadId: string;
+} | null>(null);
 
 /** Separate streamed messages, shared draft, and actions so typing does not invalidate message rows. */
 export function ChatPresentationProvider({
@@ -39,6 +49,11 @@ export function ChatPresentationProvider({
   const editMessage = conversations.editMessage;
   const unavailable = conversations.loading || !conversations.ready;
   const [draft, setDraft] = useState("");
+  const position = useRef<ConversationPosition | null>(null);
+  const scroll = useMemo(
+    () => ({ position, threadId: conversations.threadId }),
+    [conversations.threadId],
+  );
   const state = useMemo(
     () => ({ clearError, error, messages, regenerate, status }),
     [messages, status, error, clearError, regenerate],
@@ -63,7 +78,11 @@ export function ChatPresentationProvider({
   return (
     <StateContext.Provider value={state}>
       <ActionsContext.Provider value={actions}>
-        <DraftContext.Provider value={input}>{children}</DraftContext.Provider>
+        <ScrollContext.Provider value={scroll}>
+          <DraftContext.Provider value={input}>
+            {children}
+          </DraftContext.Provider>
+        </ScrollContext.Provider>
       </ActionsContext.Provider>
     </StateContext.Provider>
   );
@@ -80,6 +99,12 @@ export function useChatActions() {
 }
 export function useComposerDraft() {
   const value = useContext(DraftContext);
+  if (!value) throw new Error("ChatPresentationProvider not found");
+  return value;
+}
+
+export function useConversationPosition() {
+  const value = useContext(ScrollContext);
   if (!value) throw new Error("ChatPresentationProvider not found");
   return value;
 }

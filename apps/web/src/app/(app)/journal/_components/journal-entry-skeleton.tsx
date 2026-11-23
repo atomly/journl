@@ -23,7 +23,7 @@ export function JournalEntrySkeleton({
       </div>
 
       {/* Date header */}
-      {hasHeader && <Skeleton className="mx-8 h-9 w-40" />}
+      {hasHeader && <Skeleton className="mx-13.5 h-9 w-40" />}
 
       {/* Content */}
       <div className="space-y-2 px-13.5">

@@ -303,7 +303,9 @@ export default withoutAuth(function RootPage() {
           <a href="#connect">Connect</a>
           <a href="#rediscover">Rediscover</a>
           <Link href="/auth/sign-in">Sign in</Link>
-          <Link href="/invite">Get started</Link>
+          <Link className="btn primary" href="/invite">
+            Get started <LandingIcon d={arrowPath} />
+          </Link>
         </nav>
         <span className="copyright">© 2026 Journl. All rights reserved.</span>
       </footer>

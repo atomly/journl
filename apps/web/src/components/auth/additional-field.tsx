@@ -14,7 +14,6 @@ import {
 import { Field, FieldContent, FieldError, FieldLabel } from "@acme/ui/field";
 import { Input } from "@acme/ui/input";
 import {
-  InputGroup,
   InputGroupAddon,
   InputGroupButton,
   InputGroupInput,
@@ -43,6 +42,7 @@ import { format } from "date-fns";
 import { CalendarIcon, Check, ChevronDownIcon, Copy } from "lucide-react";
 import { type ComponentType, useRef, useState } from "react";
 import { toast } from "sonner";
+import { AuthInputGroup } from "./auth-input-group";
 
 export type AdditionalFieldProps = {
   name: string;
@@ -435,7 +435,7 @@ function InputField({
       <Field data-invalid={isInvalid}>
         <FieldLabel htmlFor={name}>{field.label}</FieldLabel>
 
-        <InputGroup>
+        <AuthInputGroup>
           {hasPrefix && (
             <InputGroupAddon align="inline-start">
               {field.prefix}
@@ -473,7 +473,7 @@ function InputField({
               </InputGroupAddon>
             )
           )}
-        </InputGroup>
+        </AuthInputGroup>
 
         <FieldError errors={fieldErrors} />
       </Field>

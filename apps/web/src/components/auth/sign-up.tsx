@@ -11,7 +11,6 @@ import {
 } from "@acme/ui/field";
 import { Input } from "@acme/ui/input";
 import {
-  InputGroup,
   InputGroupAddon,
   InputGroupButton,
   InputGroupInput,
@@ -42,6 +41,7 @@ import {
   isAuthFormFieldInvalid,
   useAuthForm,
 } from "./auth-form";
+import { AuthInputGroup } from "./auth-input-group";
 import { PasswordStrengthMeter } from "./password-strength-meter";
 import { ProviderButtons, type SocialLayout } from "./provider-buttons";
 
@@ -344,7 +344,7 @@ export function SignUp({
                             {localization.auth.password}
                           </FieldLabel>
 
-                          <InputGroup>
+                          <AuthInputGroup>
                             <InputGroupInput
                               id="password"
                               name={field.name}
@@ -386,7 +386,7 @@ export function SignUp({
                                 {isPasswordVisible ? <EyeOff /> : <Eye />}
                               </InputGroupButton>
                             </InputGroupAddon>
-                          </InputGroup>
+                          </AuthInputGroup>
 
                           {isCompromised ? (
                             <FieldError>
@@ -440,7 +440,7 @@ export function SignUp({
                               {localization.auth.confirmPassword}
                             </FieldLabel>
 
-                            <InputGroup>
+                            <AuthInputGroup>
                               <InputGroupInput
                                 id="confirmPassword"
                                 name={field.name}
@@ -489,7 +489,7 @@ export function SignUp({
                                   )}
                                 </InputGroupButton>
                               </InputGroupAddon>
-                            </InputGroup>
+                            </AuthInputGroup>
 
                             <field.AuthFormFieldError />
                           </Field>

@@ -9,7 +9,6 @@ import {
   FieldLabel,
 } from "@acme/ui/field";
 import {
-  InputGroup,
   InputGroupAddon,
   InputGroupButton,
   InputGroupInput,
@@ -26,6 +25,7 @@ import { Eye, EyeOff } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { isAuthFormFieldInvalid, useAuthForm } from "./auth-form";
+import { AuthInputGroup } from "./auth-input-group";
 import { PasswordStrengthMeter } from "./password-strength-meter";
 
 export type ResetPasswordProps = {
@@ -148,7 +148,7 @@ export function ResetPassword({ className }: ResetPasswordProps) {
                         {localization.auth.password}
                       </FieldLabel>
 
-                      <InputGroup>
+                      <AuthInputGroup>
                         <InputGroupInput
                           id="password"
                           type={isPasswordVisible ? "text" : "password"}
@@ -188,7 +188,7 @@ export function ResetPassword({ className }: ResetPasswordProps) {
                             {isPasswordVisible ? <EyeOff /> : <Eye />}
                           </InputGroupButton>
                         </InputGroupAddon>
-                      </InputGroup>
+                      </AuthInputGroup>
 
                       {isCompromised ? (
                         <FieldError>
@@ -239,7 +239,7 @@ export function ResetPassword({ className }: ResetPasswordProps) {
                           {localization.auth.confirmPassword}
                         </FieldLabel>
 
-                        <InputGroup>
+                        <AuthInputGroup>
                           <InputGroupInput
                             id="confirmPassword"
                             name={field.name}
@@ -284,7 +284,7 @@ export function ResetPassword({ className }: ResetPasswordProps) {
                               {isConfirmPasswordVisible ? <EyeOff /> : <Eye />}
                             </InputGroupButton>
                           </InputGroupAddon>
-                        </InputGroup>
+                        </AuthInputGroup>
 
                         <field.AuthFormFieldError />
                       </Field>

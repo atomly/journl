@@ -60,6 +60,11 @@ export const test = base.extend<{
     testInfo,
   ) => {
     await warmWorkflowDeliveryRoute(page);
+    // The origin must match the running server's trusted origins. Derive it
+    // from the configured base URL so worktree runners on other ports work.
+    const origin = new URL(
+      testInfo.project.use.baseURL ?? "http://127.0.0.1:3100",
+    ).origin;
     const response = await page.request.post("/api/auth/sign-in/email", {
       data: {
         email: workspaceReview
@@ -71,11 +76,7 @@ export const test = base.extend<{
               : browserFixture.email,
         password: browserFixture.password,
       },
-      headers: {
-        // The sign-in origin must match the server's trusted origins, which
-        // follow the configured baseURL instead of one fixed port.
-        Origin: testInfo.project.use.baseURL ?? "http://127.0.0.1:3100",
-      },
+      headers: { Origin: origin },
     });
     expect(response.ok(), await response.text()).toBe(true);
     await warmSoftNavigationRoutes(page);

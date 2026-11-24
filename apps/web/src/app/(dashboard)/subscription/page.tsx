@@ -52,7 +52,7 @@ async function SubscriptionPage() {
 
         {/* Additional Info Cards */}
         <div className="grid gap-6 md:grid-cols-2">
-          <Card className="border-2">
+          <Card>
             <CardContent>
               <div className="mb-4 flex items-center gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
@@ -71,7 +71,7 @@ async function SubscriptionPage() {
             </CardContent>
           </Card>
 
-          <Card className="border-2">
+          <Card>
             <CardContent>
               <div className="mb-4 flex items-center gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">

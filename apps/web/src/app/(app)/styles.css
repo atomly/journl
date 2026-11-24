@@ -1396,9 +1396,6 @@ body:has([data-slot="sidebar-inset"]) {
   background: #141f31;
   border-color: #8198b9;
 }
-.journl-chat-input > [data-align="block-start"]:empty {
-  display: none;
-}
 .journl-chat-input:has(textarea:enabled) {
   opacity: 1;
 }
@@ -1445,6 +1442,119 @@ body:has([data-slot="sidebar-inset"]) {
   background: #141f31;
   border-color: #8198b9;
   color: #adbed5;
+}
+/* Floating selection quote affordance (design review: the composer citation
+   chip made the composer taller and shifted the chat layout; the quote now
+   floats near the selection). Glass surface, pastel accent, v2 radius scale. */
+.journl-selection-quote-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: none;
+  border-radius: 999px;
+  background: #273f9d;
+  color: #fcfdff;
+  box-shadow: var(--depth);
+  z-index: 40;
+  cursor: pointer;
+}
+.journl-selection-quote-trigger svg {
+  width: 18px;
+  height: 18px;
+}
+.dark .journl-selection-quote-trigger {
+  background: #c4ceff;
+  color: #141f31;
+}
+.journl-selection-quote-trigger:hover {
+  filter: brightness(1.08);
+}
+.journl-selection-quote-trigger:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+.journl-selection-quote {
+  display: flex;
+  width: 264px;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+  border: 1px solid var(--glass-edge);
+  border-bottom-color: var(--glass-lower);
+  border-radius: 12px;
+  background:
+    linear-gradient(135deg, var(--glass-glint), transparent 52%), var(--glass);
+  box-shadow: var(--depth);
+  z-index: 40;
+}
+.journl-selection-quote-text {
+  margin: 0;
+  max-height: 76px;
+  overflow: hidden;
+  border-left: 2px solid var(--accent);
+  padding-left: 8px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--foreground);
+}
+.journl-selection-quote-comment {
+  height: 34px;
+  padding: 0 8px;
+  border: 1px solid #7387a1;
+  border-radius: 7px;
+  background: #fcfdff;
+  color: #485d75;
+  font-size: 13px;
+}
+.dark .journl-selection-quote-comment {
+  border-color: #8198b9;
+  background: #141f31;
+  color: #adbed5;
+}
+.journl-selection-quote-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.journl-selection-quote-cancel {
+  height: 30px;
+  padding: 0 10px;
+  border: none;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--muted-foreground);
+  font-size: 13px;
+}
+.journl-selection-quote-cancel:hover {
+  background: var(--hover);
+}
+.journl-selection-quote-cancel:focus-visible,
+.journl-selection-quote-comment:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 1px;
+}
+.journl-selection-quote-save {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: none;
+  border-radius: 999px;
+  background: #273f9d;
+  color: #fcfdff;
+}
+.dark .journl-selection-quote-save {
+  background: #c4ceff;
+  color: #141f31;
+}
+.journl-selection-quote-save:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
 }
 @media (min-width: 701px) {
   .journl-header-route-actions button {

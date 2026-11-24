@@ -1,0 +1,134 @@
+{
+  "status": "approved",
+  "approvedAtUTC": "2026-11-20T21:18:28.540212+00:00",
+  "approval": "User message: Approved.",
+  "scope": "Iteration 02 representative design direction and exact 30 reviewed PNGs",
+  "screenshotCount": 30,
+  "artworkUnchanged": true,
+  "watermarkNote": "PNG pixels retain the NOT APPROVED watermark present during review. This manifest records the subsequent approval; do not regenerate or edit the PNGs. Only the gallery approval badge and archive link changed in this frozen wrapper.",
+  "behaviorSource": "Original full feature inventory remains authoritative for capabilities and safety; this set governs the new visual direction.",
+  "fullApplicationParityApproved": false,
+  "implementationVisualAcceptance": false,
+  "images": [
+    {
+      "image": "review/screens/garden-1440-light.png",
+      "sha256": "892328c0c254fcc0a28ae448731fea6ad3fbf69522b0621b52cfeb1e3059f592"
+    },
+    {
+      "image": "review/screens/garden-1440-dark.png",
+      "sha256": "21b5118096534ef12a81cfedb7fa0b064787e6c56907ce72d78d6db90ae34986"
+    },
+    {
+      "image": "review/screens/garden-1920-light.png",
+      "sha256": "418d67859acc69a08710ee47717756c1343549c64b24ed2439acf0f3665dee2c"
+    },
+    {
+      "image": "review/screens/garden-1920-dark.png",
+      "sha256": "4eee5baa3424f7b7a9fb9331864315a04a77dd92600f19590be212fb51a7ecdc"
+    },
+    {
+      "image": "review/screens/agent-closed-light.png",
+      "sha256": "a19cb49ddc6b4d7e55bca467790a27db9552a51b16fc83b20c844d90a8081a5c"
+    },
+    {
+      "image": "review/screens/agent-closed-dark.png",
+      "sha256": "44bd79b7b8eba44e260a3f140c9c2491859b9117191a8a2766d4ec3e83964c7c"
+    },
+    {
+      "image": "review/screens/nav-compact-light.png",
+      "sha256": "e4f9460640ae69d778cd6d83d990edebe05e178aace2dbd637f6e353fa1df440"
+    },
+    {
+      "image": "review/screens/nav-compact-dark.png",
+      "sha256": "98e9e301a2afac0d46192376ca7bf996c5ca1964a454c8009c040e16a0726679"
+    },
+    {
+      "image": "review/screens/all-pages-light.png",
+      "sha256": "27ba38bb05e34dd689cd04e2d2c4c9e3c93f1096f3f058643dd663fd9543ff21"
+    },
+    {
+      "image": "review/screens/all-pages-dark.png",
+      "sha256": "36fdc03b32638c3093a796cbe3f12887b5a23da8015df6c8aac4c09a64da4986"
+    },
+    {
+      "image": "review/screens/journal-light.png",
+      "sha256": "82a31a06f0c037654b0e78b2641e7bbe4d8db96af14e1a3db9501d0a9abe4054"
+    },
+    {
+      "image": "review/screens/journal-dark.png",
+      "sha256": "09a278262dbac49b456157ed6e3104782b49a0a23e1d94463b8bee06e9e78d6c"
+    },
+    {
+      "image": "review/screens/tree-states-light.png",
+      "sha256": "a745ae2432fa7d8689342283f4c153fe894d79af43508c979d8190771a513530"
+    },
+    {
+      "image": "review/screens/tree-states-dark.png",
+      "sha256": "083aa2090f062af7e3e4e5ccb844a090c264870de3b22916f3dfdd2cd46a723e"
+    },
+    {
+      "image": "review/screens/table-states-light.png",
+      "sha256": "d2c0835fb2f1fab935dc964911a5e176f2308fb6f6d21594db1db6813f5b5416"
+    },
+    {
+      "image": "review/screens/table-states-dark.png",
+      "sha256": "9233b5dac41b6608b56dbf3a16b93a5de1685c328b11ce1c1367a3f29f81ebcd"
+    },
+    {
+      "image": "review/screens/composer-error-light.png",
+      "sha256": "d8408508ddc70300f8ee6c0e6a8c8f1b884e0ec873bcb8c1f806c1756e300c28"
+    },
+    {
+      "image": "review/screens/composer-error-dark.png",
+      "sha256": "4afd34e0eb7d6379d170ed36552ee70326498d654e1159d260a1b4e43599bc49"
+    },
+    {
+      "image": "review/screens/composer-loading-light.png",
+      "sha256": "b1f8a4df1be6d771eb574fee7b07d499993c6d9515d1a8e47b186aee71e1956f"
+    },
+    {
+      "image": "review/screens/composer-loading-dark.png",
+      "sha256": "bbda45d8c5f35b45253e8425d2687c3143b34008450cb2541754c1497c0eec0c"
+    },
+    {
+      "image": "review/screens/formatting-states-light.png",
+      "sha256": "8abe226eb79553d7562d5a65846b25c8de76eccc26a27b94c4ab811971c8cdc1"
+    },
+    {
+      "image": "review/screens/formatting-states-dark.png",
+      "sha256": "99e7377db4c40c7f5d227cc6fc3a7b2a1b6dbed57c89955b40a2dfd3f816ae71"
+    },
+    {
+      "image": "review/screens/composer-streaming-light.png",
+      "sha256": "ed73b5e9b51a0a180d629a97b57caa027332eb5b3c0c2dab91071a0056c7bc6a"
+    },
+    {
+      "image": "review/screens/composer-streaming-dark.png",
+      "sha256": "c7d4549d6bcfc1ef5a30a621e48459a13306b0a3493923b5dde2eec9e27cdb2f"
+    },
+    {
+      "image": "review/screens/mobile-nav-light.png",
+      "sha256": "a579ab8796f56141bb4bb94a4a57a4be86d9d8d80cf4a3c5ec7da6b9479c63b6"
+    },
+    {
+      "image": "review/screens/mobile-nav-dark.png",
+      "sha256": "8f2c2608d55e939af7ec8af23c5710507eadd66ea89be58619a4a8dff87477c3"
+    },
+    {
+      "image": "review/screens/mobile-agent-light.png",
+      "sha256": "db8db32beb0f1505deac9449ba9972d20e8e04c9a1b0f770713a697bf20bcdbf"
+    },
+    {
+      "image": "review/screens/mobile-agent-dark.png",
+      "sha256": "c9a1e2cf4ed07a43ce0139a5a33535ed74254fdbe2c1e5504bf83aca2aee65e5"
+    },
+    {
+      "image": "review/screens/tablet-light.png",
+      "sha256": "15bf13c324c821560b47294ee6f42529e887251ee5a561060570dcd8328c7ae7"
+    },
+    {
+      "image": "review/screens/tablet-dark.png",
+      "sha256": "def610b97fa8a625910ae021263d95a2ed237504db88d15a9b7859593836f443"
+    }
+  ]
+}

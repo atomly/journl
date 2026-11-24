@@ -1,0 +1,34 @@
+<section class="spec" id="behavior">
+<h2>Workspace behavior</h2>
+<h3>Sample source passages</h3>
+<p>The garden page records direct sun from 8 to 11 a.m. and calls for two rail planters and one floor pot. The sample <em>Useful growing notes</em> page in References says to wait until nights stay above 13 °C before setting out basil. The Friday Journal entry records light reaching the rail at 8 a.m. and a wall that stays warm afterward. These passages are the basis for the agent’s answers.</p>
+<h3>Desktop panels and scroll</h3>
+<p>Use 16 px outer insets and gutters. Start with 216 px navigation and 400 px chat at 1440 px. At 1920 px use 240 px and 424 px. The document canvas grows, with the reading layout capped at 900 px including padding. Long prose wraps within 68 characters where the available width permits.</p>
+<p>Proposed resize bounds are 200–320 px for expanded navigation and 360–520 px for the agent. Keep at least 560 px for the center. At the minimum, constrain further drag. If the available width cannot fit the current navigation width, minimum center, and minimum agent together, open the agent as an overlay. Keep the navigation preference and width when opening or closing the agent. At phone widths, use a sheet. Expose a separator to the keyboard with 8 px arrow steps. Home and End go to the available bounds. Save widths separately from each panel’s open state.</p>
+<p>The tree, document, and thread scroll independently. Keep the document header and composer anchored. Closing one panel preserves both panels’ widths, the active route and selected row, tree expansion, document selection and scroll, conversation and scroll, and unsent draft. Reopen the same conversation with the same draft. Focus the launcher after closing chat. On reopen, restore the previous chat focus if it still exists, otherwise focus the composer. Navigation restores its focused item or falls back to the selected route. Keep enough scroll space to reach content behind the floating launcher.</p>
+<h3>Tablet and phone</h3>
+<p>Tablet shows the 64 px icon rail and floating Ask Journl button. Use an overlay for the agent when opened. At phone widths the top-left control opens navigation, and Ask Journl opens the conversation sheet. Only one sheet opens at a time. Move focus into the sheet, trap it there, and restore it to the trigger on close. Keep the base page scroll position. Use 44 px targets for sheet controls and respect the system safe areas and keyboard. Scroll the thread above the composer as the keyboard opens.</p>
+<h3>Control correspondence</h3>
+<p>Journal, All pages, and Explore sit together in primary navigation. The library offers All pages and Folders, with name search, folder membership, and row actions. The account footer identifies Maya Lee and opens plan and settings. The agent panel shows a single conversation for the current load.</p>
+<h3>Interaction states</h3>
+<ul>
+<li><strong>Default and hover.</strong> Navigation rows are 36 px high with 8 px horizontal container insets and 2 px block margins. The enclosing scroll region has an additional 2 px block pad. Nested text is indented another 12 px. Index row hits are at least 48 px high with 6 px horizontal table insets and 2 px block margins. Hover applies a fill with 7 px corners and preserves text color.</li>
+<li><strong>Selected and selected + hover.</strong> Use a periwinkle fill and stronger label weight, with the current route exposed as active. Hover deepens that fill. Keep selection visible when a separate item has keyboard focus. Reserve space for tree actions so their appearance preserves the row label’s position. Expose the same actions on keyboard focus and in touch menus.</li>
+<li><strong>Focus and menus.</strong> Use a 2 px focus outline with a 1 px offset. Enter or Space opens the menu. Arrow keys move between actions. Escape closes the menu and returns focus to its trigger. If the row disappears, move focus to the nearest surviving row or the list search.</li>
+<li><strong>Citations.</strong> A source chip shows the page title and opens the referenced passage. Keep the conversation available while the document changes. A missing page shows its status and preserves the thread.</li>
+<li><strong>Editor formatting.</strong> Tab to Format in the page header and press Enter or Space to open the toolbar. Move between actions with the arrow keys. The selected text stays visible and remains the formatting target while focus is in the toolbar. Block actions appear beside the active block and are also reachable from the toolbar’s block actions. Escape restores editor focus and the selection. Keep the current draft through these focus changes.</li>
+<li><strong>Composer.</strong> Instant is the visible mode or model selector. The plus control opens source selection. The × on the chip removes that source and preserves the draft. Default send uses a solid accent with an arrow. The empty, pending, and recoverable failure examples use a muted disabled send. Pending shows a text status. Once a partial response appears, Stop replaces send and lets the user end the stream. Failure retains the draft and offers Retry.</li>
+<li><strong>Preferences.</strong> Use an opaque blue-neutral surface when transparency is reduced or blur is unavailable. Keep text and state colors readable in that mode. Use short opacity transitions for sheets and menus and remove them when reduced motion is requested. Avoid movement for focus, selection, and validation feedback.</li>
+</ul>
+</section>
+<section class="spec" id="gate">
+<h2>Visual validation after approval</h2>
+<ol>
+<li>Freeze the exact approved PNGs. Map each to this index’s route, fixture, state, theme, viewport, and scroll position. Record unavoidable capture differences.</li>
+<li>Capture the running implementation at the same settings. Keep functional tests as a separate gate.</li>
+<li>Generate side-by-side, alpha-overlay, and difference images. Measure panel bounds, gutters, padding, hit areas, type, radii, and launcher placement. Inspect the regions the implementation owns without broad masks.</li>
+<li>Measure contrast on rendered surfaces in both themes. Exercise combined states, independent panel changes, keyboard focus, and the phone keyboard and safe areas.</li>
+<li>Manually inspect every representative image. Record unresolved differences and unavailable device checks. Update a golden only when the user approves a changed design.</li>
+<li>Resume route-by-route implementation after the user approves this direction. A PR notification does not authorize resuming work.</li>
+</ol>
+</section>

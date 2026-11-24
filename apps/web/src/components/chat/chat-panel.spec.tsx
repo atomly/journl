@@ -5,11 +5,15 @@ import { createRoot } from "react-dom/client";
 import { expect, test, vi } from "vitest";
 
 const fixture = vi.hoisted(() => ({
+  conversation: { position: { current: null }, threadId: "thinking-test" },
   messages: [] as UIMessage[],
+  scrollToMessage: vi.fn(),
   status: "submitted",
+  visibility: { visibleMessageIds: [] as string[] },
 }));
 vi.mock("./chat-presentation", () => ({
   useChatPresentation: () => fixture,
+  useConversationPosition: () => fixture.conversation,
 }));
 vi.mock("./session-status", () => ({
   ChatSessionStatus: () => null,
@@ -35,6 +39,8 @@ vi.mock("@acme/ui/message-scroller", () => {
     }) => <div data-message-id={messageId}>{children}</div>,
     MessageScrollerProvider: Container,
     MessageScrollerViewport: Container,
+    useMessageScroller: () => ({ scrollToMessage: fixture.scrollToMessage }),
+    useMessageScrollerVisibility: () => fixture.visibility,
   };
 });
 

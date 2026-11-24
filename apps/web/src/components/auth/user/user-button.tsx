@@ -55,6 +55,7 @@ export type UserButtonProps = {
   align?: "center" | "end" | "start" | undefined;
   side?: "top" | "right" | "bottom" | "left";
   sideOffset?: number;
+  sticky?: boolean;
   size?: "default" | "icon";
   variant?:
     | "default"
@@ -110,6 +111,7 @@ export function UserButton({
   align,
   side,
   sideOffset,
+  sticky,
   size = "default",
   variant = "ghost",
   links,
@@ -183,6 +185,7 @@ export function UserButton({
         className="min-w-64 max-w-[calc(100svw-2rem)]"
         side={side}
         sideOffset={sideOffset}
+        sticky={sticky}
         align={align}
       >
         <DropdownMenuGroup>

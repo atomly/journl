@@ -11,8 +11,8 @@ const fixture = vi.hoisted(() => ({
 }));
 
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn() }) }));
-vi.mock("~/components/ui/sidebar", () => ({
-  useSidebar: () => ({ isMobile: false, setOpenMobile: vi.fn() }),
+vi.mock("~/app/(app)/@appSidebar/_components/app-sidebar-provider", () => ({
+  useNavigationSidebar: () => ({ isMobile: false, setOpenMobile: vi.fn() }),
 }));
 vi.mock("~/components/events/app-event-context", () => ({
   useAppEventEmitter: () => ({ buffer: vi.fn() }),

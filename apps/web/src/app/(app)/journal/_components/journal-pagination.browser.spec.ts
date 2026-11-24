@@ -5,10 +5,13 @@ test.use({ journalPagination: true });
 
 async function entriesView(page: Page) {
   await page.goto("/journal");
-  const toggle = page.getByRole("button", { name: /^(Entries|Timeline)$/ });
-  await expect(toggle).toBeVisible();
-  if ((await toggle.getAttribute("aria-pressed")) !== "true")
-    await toggle.click();
+  await page
+    .getByRole("button", { exact: true, name: "Journal route menu" })
+    .click();
+  const entries = page.getByRole("button", { exact: true, name: "Entries" });
+  if ((await entries.getAttribute("aria-pressed")) !== "true")
+    await entries.click();
+  else await page.keyboard.press("Escape");
   await expect(
     page.getByText("Pagination entry 1", { exact: true }),
   ).toBeVisible();

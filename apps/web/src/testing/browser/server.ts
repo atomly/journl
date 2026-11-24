@@ -71,6 +71,12 @@ try {
   const password = await hashPassword(data.password);
   await db.insert(schema.user).values([
     {
+      email: data.workspaceEmail,
+      emailVerified: true,
+      id: data.workspaceOwner,
+      name: "Maya Lee",
+    },
+    {
       email: data.email,
       emailVerified: true,
       id: data.owner,
@@ -112,7 +118,12 @@ try {
     status: "active",
   });
   await db.insert(schema.account).values(
-    [data.owner, data.otherOwner, data.paginationOwner].map((id) => ({
+    [
+      data.owner,
+      data.otherOwner,
+      data.paginationOwner,
+      data.workspaceOwner,
+    ].map((id) => ({
       accountId: id,
       createdAt: new Date(),
       id,
@@ -470,6 +481,114 @@ try {
         userId: data.owner,
       }),
     );
+
+  // Dedicated native-schema workspace for approved shell captures. Other suites
+  // retain their original owner, tree ordering, titles and persistence fixtures.
+  const workspaceOwner = data.workspaceOwner;
+  await db.insert(schema.Subscription).values({
+    id: "workspace-review-subscription",
+    periodEnd: new Date("2099-01-01"),
+    periodStart: new Date("2026-01-01"),
+    planName: "browser-pro",
+    referenceId: workspaceOwner,
+    status: "active",
+  });
+  for (const [number, name] of [
+    [1601, "Projects"],
+    [1602, "Recipes"],
+    [1603, "References"],
+    [1604, "Random notes"],
+  ] as const) {
+    const id = fixtureId(number);
+    await db
+      .insert(schema.Folder)
+      .values({ id, name, user_id: workspaceOwner });
+    await db.insert(schema.TreeNode).values({
+      folder_id: id,
+      id,
+      node_type: "folder",
+      user_id: workspaceOwner,
+    });
+    await db.transaction((tx) =>
+      insertEdgeAtPosition({
+        db: tx,
+        nodeId: id,
+        parentNodeId: null,
+        position: "after",
+        userId: workspaceOwner,
+      }),
+    );
+  }
+  // The All pages plate orders rows by recency: garden first, seed notes last.
+  for (const [number, title, parent, updated] of [
+    [1610, "Small balcony garden", 1601, "2026-11-21T10:00:00Z"],
+    [1612, "Lemon & herb lentils", 1602, "2026-11-21T08:00:00Z"],
+    [1613, "Useful growing notes", 1603, "2026-11-20T18:00:00Z"],
+    [1611, "Kitchen shelf build", 1601, "2026-11-20T12:00:00Z"],
+    [1614, "Weekend market list", 1604, "2026-11-19T09:00:00Z"],
+    [1615, "Pantry shortcuts", 1602, "2026-11-18T14:00:00Z"],
+    [1616, "Seed packet notes", 1603, "2026-11-17T11:00:00Z"],
+  ] as const) {
+    const id = fixtureId(number);
+    await db.insert(schema.Document).values({ id, user_id: workspaceOwner });
+    await db.insert(schema.Page).values({
+      document_id: id,
+      id,
+      title,
+      updated_at: updated,
+      user_id: workspaceOwner,
+    });
+    await db
+      .insert(schema.TreeNode)
+      .values({ id, node_type: "page", page_id: id, user_id: workspaceOwner });
+    await db.transaction((tx) =>
+      insertEdgeAtPosition({
+        db: tx,
+        nodeId: id,
+        parentNodeId: fixtureId(parent),
+        position: "after",
+        userId: workspaceOwner,
+      }),
+    );
+    const texts =
+      number === 1610
+        ? [
+            "A working plan for a narrow east-facing balcony, with room for herbs, salads, and a chair by the rail.",
+            "What fits",
+            "The balcony gets direct sun from about 8 to 11 a.m. Keep the walkway clear and use two rail planters plus one floor pot near the warm wall.",
+            "This week",
+            "Measure rail depth and check bracket clearance",
+            "Pick up two shallow rail planters and saucers",
+            "Start parsley and cut-and-come-again lettuce",
+          ]
+        : [
+            number === 1613
+              ? "Wait until nights stay above 13 °C before setting out basil."
+              : "Synthetic workspace reference.",
+          ];
+    const rows = documentRows(
+      texts.map((content, index) => ({
+        content,
+        id: fixtureId(number * 10 + index),
+        type: "paragraph" as const,
+      })),
+    );
+    await db.insert(schema.BlockNode).values(
+      rows.blocks.map((row) => ({
+        ...row,
+        document_id: id,
+        user_id: workspaceOwner,
+      })),
+    );
+    if (rows.edges.length)
+      await db.insert(schema.BlockEdge).values(
+        rows.edges.map((row) => ({
+          ...row,
+          document_id: id,
+          user_id: workspaceOwner,
+        })),
+      );
+  }
   // Historical provider errors reproduce restored-history validation failures.
   // Seed only this disposable database, never an application database.
   const chatStore = new PostgresStore({

@@ -1,13 +1,15 @@
 export const APP_PREFERENCES_COOKIE_NAME = "journl:preferences";
 export const APP_PREFERENCES_COOKIE_MAX_AGE = 60 * 60 * 24 * 365;
 
-export const APP_SIDEBAR_WIDTH_REM_DEFAULT = 14;
-export const APP_SIDEBAR_WIDTH_REM_MIN = 14;
-export const APP_SIDEBAR_WIDTH_REM_MAX = 50;
+export const APP_SIDEBAR_WIDTH_REM_DEFAULT = 13.5;
+export const APP_SIDEBAR_WIDTH_REM_MIN = 12.5;
+export const APP_SIDEBAR_WIDTH_REM_MAX = 20;
 
-export const CHAT_SIDEBAR_WIDTH_REM_DEFAULT = 20;
-export const CHAT_SIDEBAR_WIDTH_REM_MIN = 20;
-export const CHAT_SIDEBAR_WIDTH_REM_MAX = 50;
+export const CHAT_SIDEBAR_WIDTH_REM_DEFAULT = 25;
+export const CHAT_SIDEBAR_WIDTH_REM_MIN = 22.5;
+export const CHAT_SIDEBAR_WIDTH_REM_MAX = 32.5;
+// Existing expanded assistant mode remains available independently of normal resize bounds.
+export const CHAT_SIDEBAR_EXPANDED_WIDTH_REM = 44;
 
 export type JournalTimelineView = "timeline" | "entries";
 
@@ -77,7 +79,7 @@ export function normalizeAppPreferences(
     chatSidebarWidthRem: normalizeSidebarWidth(
       input?.chatSidebarWidthRem,
       CHAT_SIDEBAR_WIDTH_REM_MIN,
-      CHAT_SIDEBAR_WIDTH_REM_MAX,
+      CHAT_SIDEBAR_EXPANDED_WIDTH_REM,
       DEFAULT_APP_PREFERENCES.chatSidebarWidthRem,
     ),
     journalTimelineView:

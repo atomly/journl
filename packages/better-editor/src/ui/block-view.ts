@@ -58,7 +58,8 @@ export function blockView({
       collapsed ? "Expand content" : "Collapse content",
     );
     toggle.setAttribute("aria-expanded", String(!collapsed));
-    toggle.textContent = collapsed ? "▸" : "▾";
+    // Hidden controls must not contribute to the editor's text content.
+    toggle.textContent = toggle.hidden ? "" : collapsed ? "▸" : "▾";
     controls.hidden = check.hidden && toggle.hidden;
     dom.dataset.collapsed = String(!toggle.hidden && collapsed);
   };

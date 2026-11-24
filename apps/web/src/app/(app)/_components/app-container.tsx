@@ -1,8 +1,12 @@
 "use client";
 
-import { useIsMobile } from "@acme/ui/use-mobile";
 import { useCallback, useEffect, useRef } from "react";
+import { useIsMobile } from "~/components/ui/use-shell-viewport";
 import { useAppLayout } from "../../_components/app-layout-provider";
+import {
+  useAssistantOverlay,
+  useAssistantPanelOpen,
+} from "../@chatSidebar/_components/chat-sidebar-provider";
 
 type AppContainerProps = React.ComponentProps<"div">;
 
@@ -22,6 +26,9 @@ function clearVisualViewportOffsetTop() {
 export function AppContainer({ children, ...props }: AppContainerProps) {
   const { setScrollElement } = useAppLayout();
   const isMobile = useIsMobile();
+  const assistantOpen = useAssistantPanelOpen();
+  const overlay = useAssistantOverlay();
+  const assistantCoversContent = assistantOpen && overlay;
   const containerRef = useRef<HTMLDivElement | null>(null);
 
   const handleRef = useCallback(
@@ -115,7 +122,13 @@ export function AppContainer({ children, ...props }: AppContainerProps) {
   }, [isMobile]);
 
   return (
-    <div ref={handleRef} {...props}>
+    <div
+      data-app-container
+      ref={handleRef}
+      inert={assistantCoversContent}
+      aria-hidden={assistantCoversContent ? true : undefined}
+      {...props}
+    >
       {children}
     </div>
   );

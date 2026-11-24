@@ -1,3 +1,38 @@
+.journl-navigation-create > button > svg {
+  width: 16px;
+  height: 16px;
+}
+/* The approved shell uses a consistent light icon stroke. */
+[data-slot="sidebar-inset"] > header svg {
+  stroke-width: 1.65;
+}
+:is(
+    [data-slot="sidebar-inner"],
+    [data-slot="sidebar"][data-mobile="true"],
+    .journl-agent-sheet,
+    .journl-agent-launcher
+  )
+  svg {
+  stroke-width: 1.65;
+}
+.journl-chat-input [aria-label="Reasoning mode"] svg {
+  width: 13px;
+  height: 13px;
+}
+/* Quiet icon ink stays separate from selected labels and action fills. */
+:is([data-side="left"], [data-mobile="true"])
+  [data-sidebar="menu-button"]
+  > svg,
+.journl-navigation-toggle,
+[data-side="right"]
+  :is(
+    [aria-label="Expand assistant"],
+    [aria-label="Default assistant width"],
+    [aria-label="Close assistant"]
+  ) {
+  color: var(--muted-foreground);
+}
+
 /* Let tree handles own long presses instead of Safari's link preview or selection. */
 [data-tree-drag-handle] {
   -webkit-touch-callout: none;
@@ -194,32 +229,8 @@ The rest of the components are set by the Tailwind CSS classes, or by our editor
   z-index: 4500 !important;
 }
 
-@container (max-width: 430px) {
-  [data-slot="header-actions"]:has([data-slot="header-subscription-button"])
-    [data-slot="header-search-trigger"] {
-    width: 2rem;
-    max-width: 2rem;
-    justify-content: center;
-  }
-
-  [data-slot="header-actions"]:has([data-slot="header-subscription-button"])
-    [data-slot="header-search-trigger"]
-    [data-slot="header-search-icon"] {
-    display: block;
-  }
-
-  [data-slot="header-actions"]:has([data-slot="header-subscription-button"])
-    [data-slot="header-search-trigger"]
-    [data-slot="header-search-label"],
-  [data-slot="header-actions"]:has([data-slot="header-subscription-button"])
-    [data-slot="header-search-trigger"]
-    [data-slot="header-search-shortcuts"] {
-    display: none;
-  }
-}
-
-/* On mobile... */
-@media (max-width: 768px) {
+/* Shell sheets use the same breakpoint as their providers. */
+@media (max-width: 700px) {
   [data-slot="sidebar"] {
     z-index: 4500;
   }
@@ -228,7 +239,9 @@ The rest of the components are set by the Tailwind CSS classes, or by our editor
   [data-slot="sidebar"][data-mobile="true"] {
     z-index: 4501;
   }
+}
 
+@media (max-width: 768px) {
   /* Hide the editor's AI suggestion menu key shortcut elements */
   div#bn-suggestion-menu > div[role="option"] > div[data-position="right"] {
     display: none;
@@ -244,4 +257,1575 @@ The rest of the components are set by the Tailwind CSS classes, or by our editor
 }
 .tsqd-queries-container {
   border-radius: 1rem !important;
+}
+
+[data-app-container] {
+  --reading-column-max: 680px;
+  --reading-gutter: 2rem;
+  position: relative;
+  isolation: isolate;
+}
+[data-slot="sidebar-inner"] {
+  overflow: hidden;
+}
+:is([data-side="left"], [data-mobile="true"]) [data-active="true"] {
+  font-weight: 650;
+}
+/* Shell geometry is independent of the route's scroll owner and editor session. */
+[data-slot="sidebar-inset"] {
+  background: transparent;
+}
+@media (min-width: 701px) {
+  [data-slot="sidebar-inset"] {
+    padding: 16px 16px 16px 0;
+  }
+}
+[data-slot="sidebar-inset"] [data-app-container] {
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  background: var(--card);
+  /* Panels cast the approved shadow into the gutters at every shell
+     width; light's 10% alpha reads as clean, dark carries the visible
+     falloff. */
+  box-shadow: 0 12px 30px #163a6b1a;
+}
+:where(.dark) [data-slot="sidebar-inset"] [data-app-container] {
+  box-shadow: 0 12px 30px #050b1780;
+}
+
+[data-slot="sidebar-inner"],
+[data-slot="sidebar-inset"] > header > div {
+  background:
+    linear-gradient(135deg, var(--glass-glint), transparent 52%), var(--glass);
+  border-color: var(--glass-edge);
+  border-bottom-color: var(--glass-lower);
+  box-shadow: var(--depth);
+  backdrop-filter: blur(20px);
+}
+/* Workspace chrome is composed here, outside reusable UI/editor materials. */
+[data-slot="sidebar-inner"],
+[data-slot="sidebar-inset"] > header > div {
+  background: rgb(237 245 255 / 80%);
+  border-color: #d5e0ed;
+  color: #17283d;
+  box-shadow: 0 12px 30px #163a6b1a;
+}
+:where(.dark) [data-slot="sidebar-inner"],
+:where(.dark) [data-slot="sidebar-inset"] > header > div {
+  background: #15263bdc;
+  border-color: #344865;
+  color: #eef3ff;
+  box-shadow: 0 12px 30px #050b1780;
+}
+/* The header composes its glass over the approved opaque surface; the
+   floating nav keeps its translucent stack over the page gradient. */
+[data-slot="sidebar-inset"] > header > div {
+  background:
+    linear-gradient(rgb(237 245 255 / 80%), rgb(237 245 255 / 80%)), #fcfdff;
+}
+:where(.dark) [data-slot="sidebar-inset"] > header > div {
+  background: linear-gradient(#15263bdc, #15263bdc), #141f31;
+}
+@media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
+  [data-slot="sidebar-inner"],
+  [data-slot="sidebar-inset"] > header > div {
+    background: var(--sidebar);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+.opaque-mode [data-slot="sidebar-inner"],
+.opaque-mode [data-slot="sidebar-inset"] > header > div {
+  background: var(--sidebar);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+@media (forced-colors: active) {
+  [data-slot="sidebar-inner"],
+  [data-slot="sidebar-inset"] > header > div {
+    background: Canvas;
+    color: CanvasText;
+    border-color: CanvasText;
+    box-shadow: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+/* A collapsed floating sidebar paints only border and shadow on a
+   zero-width box, drawing a stray hairline beside the reading panel.
+   Kept after the fallback blocks so selector specificity ascends. */
+[data-slot="sidebar"][data-collapsible="offcanvas"][data-state="collapsed"]
+[data-slot="sidebar-inner"] {
+  border-width: 0;
+  box-shadow: none;
+}
+
+[data-app-container]:not(:has([data-virtuoso-scroller]))::after {
+  content: "";
+  display: block;
+  height: 112px;
+  flex-shrink: 0;
+}
+@media (701px <= width <= 1100px) {
+  [data-slot="sidebar"][data-side="right"] > [data-slot="sidebar-gap"] {
+    width: 0;
+    margin: 0;
+  }
+  [data-slot="sidebar"][data-side="right"] > [data-slot="sidebar-container"] {
+    left: 96px;
+    top: 96px;
+    bottom: 16px;
+    width: calc(100vw - 112px);
+    max-width: none;
+    height: auto;
+  }
+  [data-slot="sidebar"][data-side="right"][data-state="collapsed"]
+    > [data-slot="sidebar-container"] {
+    display: none;
+  }
+}
+
+@media (701px <= width <= 1100px) {
+  [data-slot="sidebar"][data-side="left"] > [data-slot="sidebar-gap"] {
+    width: 64px;
+  }
+}
+@media (width <= 700px) {
+  [data-shell-menu] {
+    position: fixed;
+    top: auto;
+    bottom: 12px;
+    left: 12px;
+    right: 12px;
+    width: auto;
+    max-width: none;
+    transform: none;
+    translate: none;
+    max-height: 65dvh;
+    border-radius: 24px;
+  }
+}
+
+@media (width <= 700px) {
+  [data-slot="sidebar-inset"] {
+    padding: 88px 12px 12px;
+  }
+}
+
+@media (forced-colors: active) {
+  [data-sidebar="header"] .journl-brand.size-8 .brand-system {
+    mask-image: url("/brand/mark-mono-ink.svg");
+  }
+}
+
+@media (701px <= width <= 1100px) {
+  [data-slot="sidebar"][data-side="left"][data-state="expanded"]
+    > [data-slot="sidebar-container"] {
+    z-index: 3;
+  }
+}
+
+/* Route wrappers own this reading stage; editor internals retain their layout. */
+[data-reading-surface] {
+  max-width: calc(var(--reading-column-max) + 2 * var(--reading-gutter));
+}
+
+/* Journal day rows close with the approved workspace hairline, matching the
+   reading panel's composed separators instead of the stronger form border. */
+[data-journal-entry] {
+  border-bottom-color: #d5e0ed;
+}
+:where(.dark) [data-journal-entry] {
+  border-bottom-color: #344865;
+}
+
+[data-slot="sidebar"][data-side="right"][data-state="collapsed"]
+  > [data-slot="sidebar-gap"] {
+  width: 0;
+  margin: 0;
+}
+
+@media (701px <= width <= 1100px) {
+  [data-slot="sidebar"][data-side="right"] > [data-slot="sidebar-container"] {
+    top: 96px;
+    height: calc(100dvh - 112px);
+  }
+}
+
+/* Tablet plates cast the reading panel's shadow into the gutters. The
+   chat wrapper clips that falloff at these widths while the chat itself
+   is a fixed overlay that escapes the box, so the reveal is safe. */
+@media (701px <= width <= 1100px) {
+  [data-shell-panels][data-slot="sidebar-wrapper"] {
+    overflow: visible;
+  }
+}
+
+/* Desktop panels share the viewport insets. The route header spans only its
+   content column; providers retain their independent navigation/chat contexts. */
+@media (min-width: 1101px) {
+  [data-slot="sidebar-inset"] {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-rows: 64px minmax(0, 1fr);
+  }
+  [data-slot="sidebar-inset"] > header {
+    grid-area: 1 / 1;
+  }
+  [data-shell-panels] {
+    display: contents;
+  }
+  [data-shell-content-stage] {
+    grid-area: 2 / 1;
+  }
+  [data-shell-panels] [data-slot="sidebar"][data-side="right"] {
+    grid-area: 1 / 2 / 3 / 3;
+  }
+  /* Expanded chat can cover the document on narrower desktops. Its underlying
+     header must not leave keyboard targets hidden behind the panel. */
+  [data-slot="sidebar-inset"]:has([data-app-container][inert]) > header {
+    visibility: hidden;
+  }
+}
+
+@media (pointer: coarse) {
+  [data-slot="header-actions"] button,
+  [data-sidebar="footer"] button,
+  [data-sidebar="menu-button"] {
+    min-width: 44px;
+    min-height: 44px;
+  }
+}
+
+[data-mobile="true"] [data-shell-navigation-body] [data-sidebar="group"] {
+  padding-inline: 12px;
+}
+
+/* The bounded mobile sheet scrolls as one body, including its account footer. */
+[data-mobile="true"] [data-shell-navigation-body] > [data-sidebar="content"],
+[data-mobile="true"]
+  [data-shell-navigation-body]
+  > [data-sidebar="content"]
+  > [data-sidebar="group"] {
+  display: block;
+  overflow: visible;
+}
+
+@media (forced-colors: active) {
+  [data-sidebar="menu-button"][data-active="true"] {
+    background: Highlight;
+    color: HighlightText !important;
+    forced-color-adjust: none;
+  }
+}
+
+[data-shell-menu] [data-slot="dialog-close"] {
+  width: 44px;
+  height: 44px;
+  top: 12px;
+  right: 12px;
+}
+
+/* The navigation dialog keeps its sidebar slot at every viewport. */
+[data-slot="sidebar"][data-mobile="true"] {
+  z-index: 4501;
+}
+
+/* Backdrop blur is progressive enhancement. Keep the scrim when the renderer
+   cannot paint it; never emulate the effect by filtering application content. */
+[data-slot="sheet-overlay"]:has(~ [data-slot="sidebar"][data-mobile="true"]) {
+  background: rgb(5 15 32 / 45%);
+  -webkit-backdrop-filter: blur(3px);
+  backdrop-filter: blur(3px);
+}
+.opaque-mode
+  [data-slot="sheet-overlay"]:has(~ [data-slot="sidebar"][data-mobile="true"]) {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+@media (prefers-reduced-transparency: reduce), (prefers-contrast: more),
+  (forced-colors: active) {
+  [data-slot="sheet-overlay"]:has(~ [data-slot="sidebar"][data-mobile="true"]) {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+
+/* A hidden mobile header releases its floating space. Matching inner padding
+   keeps the document's normal-flow position and scrollTop unchanged. Sticky
+   controls use the newly available top edge instead of an empty ambient band. */
+@media (width <= 700px) {
+  /* The shell compensates header geometry; native anchoring must not apply it twice. */
+  [data-app-container] {
+    overflow-anchor: none;
+  }
+  [data-slot="sidebar-inset"]:has(> header[data-hidden="true"]):not(
+    :has(> header :focus-visible)
+  ) {
+    padding-top: 12px;
+  }
+  [data-slot="sidebar-inset"]:has(> header[data-hidden="true"]):not(
+      :has(> header :focus-visible)
+    )
+    [data-app-container] {
+    padding-top: 76px;
+    --app-sticky-scroll-compensation: -76px;
+  }
+  [data-shell-menu] [data-slot="dialog-close"] {
+    width: 52px;
+    height: 52px;
+    top: 8px;
+    right: 12px;
+    border: 2px solid var(--ring);
+    border-radius: 999px;
+  }
+}
+
+/* Search is a paper reading surface: flat separator rows and canvas fields. */
+[data-shell-search] [data-slot="input-group"] {
+  height: 50px !important;
+  border: 1px solid var(--input);
+  border-radius: 12px !important;
+  background: var(--background);
+}
+[data-shell-search] [data-slot="command-input"] {
+  padding-inline: 16px;
+}
+[data-shell-search] [data-slot="input-group-addon"] {
+  display: none;
+}
+[data-shell-search] [data-slot="command-list"] {
+  padding-top: 20px;
+  padding-bottom: 40px;
+}
+[data-shell-search] [cmdk-item] {
+  margin: 0;
+  padding: 16px 0;
+  border-top: 1px solid var(--border);
+  border-radius: 0 !important;
+  background: transparent;
+}
+[data-shell-search] [cmdk-group-items] > a:last-child [cmdk-item] {
+  border-bottom: 1px solid var(--border);
+}
+[data-shell-search] [cmdk-item] > svg {
+  display: none;
+}
+[data-shell-search]
+  [data-keyboard-navigation="true"]
+  [cmdk-item][data-selected="true"] {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+[data-shell-search] [data-slot="dialog-close"] {
+  border: 2px solid var(--ring);
+}
+[data-slot="dialog-overlay"]:has(
+  ~ :is([data-shell-search], [data-shell-menu])
+) {
+  background: rgb(5 15 32 / 45%);
+  -webkit-backdrop-filter: blur(3px);
+  backdrop-filter: blur(3px);
+}
+/* The assistant sheet dims the page with the same composed scrim as the
+   navigation sheet; the primitive's flat black default repaints the
+   header strip a different tint than the approved plate. */
+[data-slot="drawer-overlay"]:has(~ #chat-drawer-content) {
+  background: rgb(5 15 32 / 45%);
+  -webkit-backdrop-filter: blur(3px);
+  backdrop-filter: blur(3px);
+}
+[data-shell-route-popover] {
+  background:
+    linear-gradient(135deg, var(--glass-glint), transparent 52%), var(--sidebar);
+  color: var(--foreground);
+  border-color: var(--glass-edge);
+  box-shadow: var(--depth);
+  backdrop-filter: blur(24px);
+}
+@media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
+  [data-slot="dialog-overlay"]:has(
+    ~ :is([data-shell-search], [data-shell-menu])
+  ),
+  [data-shell-route-popover] {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+  [data-shell-route-popover] {
+    background: var(--sidebar);
+  }
+}
+.opaque-mode [data-shell-route-popover] {
+  background: var(--sidebar);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+@media (forced-colors: active) {
+  [data-shell-route-popover],
+  [data-shell-search] [data-slot="input-group"] {
+    background: Canvas;
+    color: CanvasText;
+    border-color: CanvasText;
+    box-shadow: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+  [data-shell-search]
+    [data-keyboard-navigation="true"]
+    [cmdk-item][data-selected="true"] {
+    outline-color: Highlight;
+  }
+  [data-sidebar="menu-button"][data-active="true"],
+  [data-sidebar="menu-sub-button"][data-active="true"] {
+    background: Highlight !important;
+    color: HighlightText !important;
+    forced-color-adjust: none;
+  }
+  :is([data-side="left"], [data-mobile="true"]) [data-active="true"] svg {
+    color: HighlightText;
+  }
+}
+
+/* Tooltips also set data-popup-open on navigation links. Their hover rules
+   must not replace the selected pastel fill or its dark ink. */
+[data-sidebar="menu-button"][data-active="true"] {
+  background: var(--sidebar-accent);
+  color: var(--sidebar-accent-foreground);
+}
+.opaque-mode
+  [data-slot="dialog-overlay"]:has(
+    ~ :is([data-shell-search], [data-shell-menu])
+  ) {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+@media (forced-colors: active) {
+  [data-slot="dialog-overlay"]:has(
+    ~ :is([data-shell-search], [data-shell-menu])
+  ) {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+
+/* Shell account composition retains the native account menu and real identity. */
+.journl-navigation-account .text-sm {
+  font-size: 13px;
+}
+.journl-navigation-account .text-xs,
+.journl-navigation-account
+  :is([data-slot="avatar"], [data-slot="avatar-fallback"]) {
+  font-size: 11px;
+}
+.journl-navigation-account .font-medium {
+  font-weight: 400;
+}
+.journl-navigation-account [data-slot="avatar"] {
+  width: 24px;
+  height: 24px;
+}
+.journl-navigation-account [data-slot="avatar-fallback"] {
+  background: var(--sidebar-accent);
+  color: var(--sidebar-accent-foreground);
+  font-size: 10px;
+}
+.journl-navigation-account [data-slot="avatar"]::after {
+  border: 0;
+}
+.journl-navigation-account:is(:hover, [data-popup-open])
+  :is(.text-foreground, .text-muted-foreground):not([data-slot]) {
+  color: var(--foreground);
+}
+[data-navigation-account-wrapper]:has(
+    > .journl-navigation-account:is(:hover, [data-popup-open])
+  )
+  > svg {
+  color: var(--foreground);
+}
+
+[data-slot="header-actions"] [data-slot="button"] {
+  border-radius: 999px;
+}
+
+/* Approved workspace v2: joined reading panel with app-owned chrome. */
+@media (min-width: 701px) {
+  [data-slot="sidebar-inset"] {
+    row-gap: 0;
+    grid-template-rows: 62px minmax(0, 1fr);
+  }
+  [data-slot="sidebar-inset"] > header {
+    height: 62px;
+  }
+  [data-slot="sidebar-inset"] > header > div {
+    border-radius: 16px 16px 0 0;
+    padding: 8px 16px;
+    box-shadow: none;
+    font-size: 13px;
+  }
+  [data-slot="sidebar-inset"] [data-app-container] {
+    border-top: 0;
+    border-radius: 0 0 16px 16px;
+  }
+  [data-slot="sidebar-inner"] {
+    border-radius: 16px;
+  }
+  [data-side="left"] [data-sidebar="menu-button"],
+  [data-side="left"] [data-sidebar="menu-sub-button"] {
+    height: 36px;
+    min-height: 36px;
+    border-radius: 7px;
+    padding-inline: 8px;
+    font-size: 13px;
+    gap: 8px;
+  }
+  [data-side="left"] [data-sidebar="menu-button"] > svg {
+    width: 16px;
+    height: 16px;
+  }
+  [data-side="left"] [data-sidebar="menu"] {
+    gap: 4px;
+  }
+  [data-side="left"] [data-sidebar="group"] {
+    padding-inline: 8px;
+  }
+}
+[data-sidebar="menu-button"][data-active="true"]:hover {
+  background: color-mix(in srgb, var(--sidebar-accent) 85%, var(--ring));
+  color: var(--sidebar-accent-foreground);
+}
+[data-slot="header-actions"] [data-slot="button"] {
+  border-radius: 8px;
+}
+
+[data-side="left"] [data-sidebar="menu-button"]:hover,
+[data-side="left"] [data-sidebar="menu-sub-button"]:hover {
+  background: #abcbf04d;
+}
+[data-side="left"] [data-active="true"] {
+  background: #d9dfff;
+  color: #273f9d;
+}
+[data-side="left"] [data-active="true"]:hover {
+  background: #cbd4ff;
+  color: #273f9d;
+}
+.dark [data-side="left"] [data-active="true"] {
+  background: #303f72;
+  color: #c4ceff;
+}
+.dark [data-side="left"] [data-active="true"]:hover {
+  background: #3a4d89;
+  color: #c4ceff;
+}
+[data-side="left"]
+  :is(
+    [data-sidebar="menu-button"],
+    [data-sidebar="menu-sub-button"]
+  ):focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: -2px;
+}
+
+body:has([data-slot="sidebar-inset"]) {
+  background:
+    radial-gradient(ellipse at 26% -12%, #edf6ff, transparent 58%),
+    radial-gradient(ellipse at 95% 105%, #98b7db, transparent 66%), #c7dbf2;
+}
+.dark body:has([data-slot="sidebar-inset"]) {
+  background:
+    radial-gradient(ellipse at 26% -12%, #2c4f78, transparent 58%),
+    radial-gradient(ellipse at 95% 105%, #101a2e, transparent 66%), #172d4a;
+}
+[data-side="left"] [data-sidebar="header"] .journl-brand {
+  width: 102px;
+  height: auto;
+}
+[data-side="left"][data-state="collapsed"]
+  [data-sidebar="header"]
+  .journl-brand {
+  width: 32px;
+  height: 32px;
+}
+
+/* Navigation uses the approved row insets without changing tree actions. */
+[data-side="left"] {
+  --navigation-create-background: #daf3e9;
+  --navigation-create-foreground: #24594c;
+}
+.dark [data-side="left"] {
+  --navigation-create-background: #213e39;
+  --navigation-create-foreground: #ace8d3;
+}
+.journl-navigation-header {
+  padding: 12px 14px 0;
+  margin-bottom: 14px;
+}
+.journl-navigation-shortcuts {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 4px 8px 0;
+}
+.journl-navigation-shortcuts [data-sidebar="menu-button"] {
+  margin: 0;
+}
+.journl-navigation-primary {
+  gap: 0;
+  padding-block: 0;
+}
+.journl-navigation-primary .journl-navigation-label {
+  height: auto;
+  min-height: 17px;
+  margin: 20px 0 4px;
+  padding: 0 8px;
+  font-size: 11px;
+  font-weight: 750;
+  letter-spacing: 0.09em;
+  line-height: 17px;
+  text-transform: uppercase;
+}
+.journl-navigation-create > [data-slot="button"] {
+  height: 36px;
+  min-height: 36px;
+  justify-content: flex-start;
+  padding-inline: 8px;
+  gap: 8px;
+  border-radius: 7px;
+  font-size: 13px;
+  font-weight: 400;
+  background: var(--navigation-create-background);
+  color: var(--navigation-create-foreground);
+}
+.journl-navigation-create > [data-slot="button"]:hover {
+  background: color-mix(
+    in srgb,
+    var(--navigation-create-background),
+    var(--navigation-create-foreground) 8%
+  );
+  box-shadow: none;
+}
+.journl-navigation-create > [data-slot="button"]:disabled {
+  background: var(--disabled);
+  color: var(--disabled-foreground);
+}
+@media (width <= 700px) {
+  .journl-navigation-create > [data-slot="button"] {
+    height: 44px;
+    min-height: 44px;
+  }
+}
+@media (forced-colors: active) {
+  .journl-navigation-create > [data-slot="button"] {
+    background: ButtonFace;
+    color: ButtonText;
+    border-color: ButtonText;
+  }
+  .journl-navigation-create > [data-slot="button"]:hover {
+    background: Highlight;
+    color: HighlightText;
+  }
+  .journl-navigation-create > [data-slot="button"]:disabled {
+    color: GrayText;
+  }
+}
+
+/* Workspace-v2 responsive panel geometry. */
+@media (701px <= width <= 1100px) {
+  [data-slot="sidebar-inset"] {
+    padding: 12px 12px 12px 0;
+  }
+  [data-side="left"] > [data-slot="sidebar-gap"] {
+    margin-right: 24px;
+  }
+  [data-side="left"] > [data-slot="sidebar-container"] {
+    left: 12px;
+    top: 12px;
+    bottom: 12px;
+    height: calc(100dvh - 24px);
+  }
+}
+[data-slot="sidebar-inset"]:has([data-assistant-overlay="true"])
+  [data-side="right"]
+  > [data-slot="sidebar-gap"] {
+  width: 0;
+  margin: 0;
+}
+[data-slot="sidebar-inset"]:has([data-assistant-overlay="true"])
+  [data-side="right"]
+  > [data-slot="sidebar-container"] {
+  top: 16px;
+  bottom: 16px;
+  left: auto;
+  right: 16px;
+  height: calc(100dvh - 32px);
+  max-width: calc(100vw - 112px);
+}
+@media (width <= 700px) {
+  [data-slot="sidebar-inset"] {
+    padding: 60px 0 0;
+  }
+  [data-slot="sidebar-inset"] > header {
+    top: 0;
+    right: 0;
+    left: 0;
+    margin: 0;
+    height: 60px;
+  }
+  [data-slot="sidebar-inset"] > header > div {
+    border-radius: 0;
+    border-width: 0 0 1px;
+    box-shadow: none;
+  }
+  [data-slot="sidebar-inset"] [data-app-container] {
+    border: 0;
+    border-radius: 0;
+  }
+  [data-slot="sidebar-inset"]:has(> header[data-hidden="true"]):not(
+    :has(> header :focus-visible)
+  ) {
+    padding-top: 0;
+  }
+  [data-slot="sidebar-inset"]:has(> header[data-hidden="true"]):not(
+      :has(> header :focus-visible)
+    )
+    [data-app-container] {
+    padding-top: 60px;
+    --app-sticky-scroll-compensation: -60px;
+  }
+  [data-mobile="true"]
+    [data-shell-navigation-body]
+    [data-sidebar="menu-button"],
+  [data-mobile="true"]
+    [data-shell-navigation-body]
+    [data-sidebar="menu-sub-button"] {
+    min-height: 44px;
+  }
+}
+[data-side="left"]
+  :is(
+    [data-sidebar="menu-button"],
+    [data-sidebar="menu-sub-button"]
+  ):focus-visible {
+  outline-offset: 1px;
+}
+[data-side="left"] [data-sidebar="menu-sub"] {
+  padding-inline: 3px;
+}
+[data-mobile="true"] {
+  --navigation-create-background: #daf3e9;
+  --navigation-create-foreground: #24594c;
+}
+.dark [data-mobile="true"] {
+  --navigation-create-background: #213e39;
+  --navigation-create-foreground: #ace8d3;
+}
+[data-side="left"] [data-sidebar="menu-sub-button"]:has(:focus-visible) {
+  outline: 2px solid var(--ring);
+  outline-offset: 1px;
+}
+@media (701px <= width <= 1100px) {
+  [data-slot="sidebar-inset"]:has([data-assistant-overlay="true"])
+    [data-side="right"]
+    > [data-slot="sidebar-container"] {
+    top: 86px;
+    bottom: 12px;
+    left: 88px;
+    right: 12px;
+    width: calc(100vw - 100px);
+    max-width: none;
+    height: calc(100dvh - 98px);
+  }
+}
+[data-state="expanded"] .journl-navigation-toggle {
+  position: absolute;
+  top: 18px;
+  right: 12px;
+  width: 32px;
+  height: 32px;
+}
+[data-state="collapsed"] .journl-navigation-header {
+  align-items: center;
+  padding-inline: 8px;
+}
+[data-side="left"][data-state="collapsed"]
+  .journl-navigation-header
+  > .journl-brand {
+  order: -1;
+}
+[data-state="collapsed"] .journl-navigation-toggle {
+  width: 40px;
+  height: 40px;
+}
+[data-state="collapsed"] .journl-navigation-create {
+  display: block;
+}
+[data-state="collapsed"] .journl-navigation-create > button {
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  min-height: 40px;
+  padding: 0;
+  background: transparent;
+  color: inherit;
+}
+[data-state="collapsed"] .journl-navigation-create > button > span {
+  display: none;
+}
+/* App launcher keeps unread status accessible without an always-present dot. */
+.journl-agent-launcher {
+  font:
+    700 14px / 1.55 system-ui,
+    -apple-system,
+    sans-serif;
+  gap: 6px;
+  padding: 10px 15px;
+  background: #273f9d;
+  color: #fcfdff;
+}
+.dark .journl-agent-launcher {
+  background: #c4ceff;
+  color: #141f31;
+}
+.journl-agent-launcher:hover {
+  background: #304eb4;
+  color: #fcfdff;
+}
+.dark .journl-agent-launcher:hover {
+  background: #d9dfff;
+  color: #141f31;
+}
+[data-side="left"][data-state="collapsed"]
+  [data-sidebar="header"]
+  .journl-brand {
+  width: 24px;
+  height: 24px;
+}
+[data-state="collapsed"] .journl-navigation-primary .journl-navigation-label {
+  min-height: 1px;
+  height: 1px;
+  margin: 12px 0;
+}
+@media (forced-colors: active) {
+  .journl-agent-launcher {
+    background: ButtonFace;
+    color: ButtonText;
+    border: 1px solid ButtonText;
+  }
+}
+/* Sheets keep navigation scroll independent from the account control. */
+@media (width <= 700px) {
+  [data-mobile="true"] [data-shell-navigation-body] {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  [data-mobile="true"] [data-shell-navigation-body] > [data-sidebar="content"] {
+    display: flex;
+    min-height: 0;
+    overflow: auto;
+  }
+  [data-mobile="true"]
+    [data-shell-navigation-body]
+    > [data-sidebar="content"]
+    > [data-sidebar="group"] {
+    display: flex;
+    overflow: visible;
+    flex: 1 0 auto;
+  }
+  [data-mobile="true"]
+    :is([data-sidebar="menu-button"], [data-sidebar="menu-sub-button"]) {
+    font-size: 13px;
+    border-radius: 7px;
+  }
+  [data-mobile="true"]
+    :is([data-sidebar="menu-button"], [data-sidebar="menu-sub-button"])
+    > svg {
+    width: 16px;
+    height: 16px;
+  }
+  [data-mobile="true"] [data-active="true"] {
+    background: #d9dfff;
+    color: #273f9d;
+  }
+  .dark [data-mobile="true"] [data-active="true"] {
+    background: #303f72;
+    color: #c4ceff;
+  }
+}
+.dark [data-slot="sidebar-inset"] [data-app-container] {
+  background: #141f31;
+}
+[data-mobile="true"] [data-development-tools] {
+  padding-block: 2px;
+}
+/* Compact controls retain the same 44px rhythm as the approved icon rail. */
+[data-state="collapsed"] .journl-navigation-header {
+  gap: 18px;
+  margin-bottom: 0;
+}
+[data-side="left"][data-state="collapsed"]
+  [data-sidebar="header"]
+  .journl-brand {
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+[data-side="left"][data-state="collapsed"]
+  [data-sidebar="header"]
+  .journl-brand
+  img {
+  width: 24px;
+  height: 24px;
+}
+[data-state="collapsed"]
+  .journl-navigation-shortcuts
+  [data-sidebar="menu-button"],
+[data-state="collapsed"]
+  .journl-navigation-primary
+  [data-sidebar="menu-button"] {
+  width: 40px !important;
+  height: 40px !important;
+  padding: 0 !important;
+  justify-content: center;
+}
+[data-state="collapsed"] .journl-navigation-primary {
+  padding-top: 4px;
+}
+[data-state="collapsed"] .journl-navigation-primary .journl-navigation-label {
+  display: none;
+}
+/* Tree indentation belongs to the label, so row fills share the panel inset. */
+:is([data-side="left"], [data-mobile="true"]) [data-sidebar="menu-sub"] {
+  margin-inline: 0;
+  padding: 2px 3px;
+  border: 0;
+  transform: none;
+  translate: none !important;
+}
+:is([data-side="left"], [data-mobile="true"]) .journl-tree-item {
+  margin-inline: 0;
+  padding-inline: 0;
+  border: 0;
+}
+:is([data-side="left"], [data-mobile="true"]) [data-sidebar="menu-sub-button"] {
+  padding-left: calc(8px + var(--tree-indent, 0px));
+  transform: none;
+  translate: none !important;
+}
+/* Nested lists keep fills aligned while inheriting their semantic depth. */
+:is([data-side="left"], [data-mobile="true"])
+  [data-sidebar="menu-sub"]
+  [data-sidebar="menu-sub"] {
+  padding-inline: 0;
+}
+/* Exact v2 chrome recipe, scoped away from editor internals. */
+:is(
+  [data-slot="sidebar-inner"],
+  [data-slot="sidebar"][data-mobile="true"],
+  [data-slot="sidebar-inset"] > header > div
+) {
+  --foreground: #17283d;
+  --sidebar-foreground: #17283d;
+  --muted-foreground: #485d75;
+  --sidebar-accent: #d9dfff;
+  --sidebar-accent-foreground: #273f9d;
+  --sidebar-ring: #304eb4;
+  --ring: #304eb4;
+  font-family: system-ui, -apple-system, sans-serif;
+}
+.dark
+  :is(
+    [data-slot="sidebar-inner"],
+    [data-slot="sidebar"][data-mobile="true"],
+    [data-slot="sidebar-inset"] > header > div
+  ) {
+  --foreground: #eef3ff;
+  --sidebar-foreground: #eef3ff;
+  --muted-foreground: #adbed5;
+  --sidebar-accent: #303f72;
+  --sidebar-accent-foreground: #c4ceff;
+  --sidebar-ring: #aec0ff;
+  --ring: #aec0ff;
+}
+:is([data-side="left"], [data-mobile="true"]) [data-shell-tree-root] {
+  margin-left: -3px;
+  margin-right: -3px;
+  width: calc(100% + 6px);
+}
+:is([data-side="left"], [data-mobile="true"])
+  :is([data-sidebar="menu-button"], [data-sidebar="menu-sub-button"]) {
+  line-height: 1.55;
+}
+[data-side="left"][data-state="collapsed"] [data-sidebar="menu-button"] > svg {
+  width: 18px;
+  height: 18px;
+}
+
+:is([data-side="left"], [data-mobile="true"])
+  .group\/folder-navigation
+  [data-sidebar="menu-sub-button"] {
+  gap: 8px;
+}
+:is([data-side="left"], [data-mobile="true"])
+  .group\/folder-navigation
+  [data-sidebar="menu-sub-button"]
+  > span:first-child,
+:is([data-side="left"], [data-mobile="true"])
+  .group\/folder-navigation
+  [data-sidebar="menu-sub-button"]
+  > span:first-child
+  svg {
+  color: var(--muted-foreground);
+  width: 16px;
+  height: 16px;
+}
+.dark
+  [data-side="left"]
+  :is([data-sidebar="menu-button"], [data-sidebar="menu-sub-button"]):hover:not(
+    [data-active="true"]
+  ) {
+  background: #91b8ef30;
+}
+@media (min-width: 701px) {
+  [data-side="left"][data-state="expanded"]
+    .journl-navigation-primary
+    .journl-navigation-label {
+    margin: 22px 0 6px;
+  }
+  [data-slot="header-actions"] button {
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+  }
+  [data-slot="header-actions"] svg {
+    width: 16px;
+    height: 16px;
+  }
+}
+@media (width <= 700px) {
+  .journl-navigation-header {
+    padding-top: 4px;
+    margin-bottom: 4px;
+  }
+  .journl-navigation-shortcuts {
+    padding-top: 2px;
+  }
+  .journl-navigation-primary .journl-navigation-label {
+    margin-top: 8px;
+  }
+}
+:is(
+  [data-slot="sidebar-inner"],
+  [data-slot="sidebar"][data-mobile="true"],
+  [data-slot="sidebar-inset"] > header > div
+) {
+  --sidebar: #edf4fd;
+}
+.dark
+  :is(
+    [data-slot="sidebar-inner"],
+    [data-slot="sidebar"][data-mobile="true"],
+    [data-slot="sidebar-inset"] > header > div
+  ) {
+  --sidebar: #182a42;
+}
+/* The visual viewport, rather than the layout viewport, owns keyboard clearance. */
+.journl-agent-sheet {
+  height: max(0px, calc(var(--sheet-visible-height, 100dvh) - 68px)) !important;
+  max-height: max(
+    0px,
+    calc(var(--sheet-visible-height, 100dvh) - 68px)
+  ) !important;
+  bottom: var(--sheet-bottom, 0px) !important;
+  --foreground: #17283d;
+  --muted-foreground: #485d75;
+  --sidebar: #edf4fd;
+  font-family: system-ui, -apple-system, sans-serif;
+}
+.dark .journl-agent-sheet {
+  --foreground: #eef3ff;
+  --muted-foreground: #adbed5;
+  --sidebar: #182a42;
+}
+@media (width <= 700px) {
+  [data-mobile="true"]
+    [data-shell-navigation-body]
+    > [data-sidebar="footer"]:last-child {
+    padding-bottom: max(20px, env(safe-area-inset-bottom, 0px));
+  }
+}
+/* Reserve real action space without clipping the approved garden label. */
+@media (min-width: 701px) and (pointer: fine) {
+  [data-side="left"] .journl-page-row-control {
+    gap: 4px;
+    padding-right: 4px;
+  }
+  .journl-page-row-control > [aria-haspopup="menu"] {
+    width: 24px;
+    height: 28px;
+  }
+}
+[data-state="collapsed"] [data-development-tools] summary {
+  display: flex;
+  width: 40px;
+  height: 40px;
+  align-items: center;
+  justify-content: center;
+  margin-inline: auto;
+  padding: 0;
+}
+.journl-navigation-toggle:not(:hover):not(:focus-visible) {
+  background: transparent;
+}
+@media (width <= 700px) {
+  [data-mobile="true"] .group\/page-row [aria-haspopup="menu"] {
+    min-width: 44px;
+    min-height: 44px;
+  }
+}
+/* The row owns focus; the inner link must not draw a second rectangle. */
+.journl-page-row-control a:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
+[aria-label="Chat composer"] {
+  border-top: 1px solid #d5e0ed;
+  min-height: 119px;
+}
+.dark [aria-label="Chat composer"] {
+  border-top-color: #344865;
+}
+.journl-chat-input {
+  background: #fcfdff;
+  border-color: #7387a1;
+  border-radius: 12px;
+}
+.dark .journl-chat-input {
+  background: #141f31;
+  border-color: #8198b9;
+}
+.journl-chat-input > [data-align="block-start"]:empty {
+  display: none;
+}
+.journl-chat-input:has(textarea:enabled) {
+  opacity: 1;
+}
+.journl-chat-input textarea {
+  min-height: 44px;
+  font-size: 14px;
+  line-height: 1.55;
+}
+.journl-chat-input [aria-label="Reasoning mode"] {
+  gap: 6px;
+  height: 32px;
+  width: auto;
+  min-width: 72px;
+}
+.journl-chat-input :is([aria-label="Send message"], [aria-label="Cancel"]) {
+  width: 34px;
+  height: 34px;
+  padding: 0;
+}
+.journl-chat-input .journl-chat-send {
+  background: #273f9d;
+  color: #fcfdff;
+  border-radius: 8px;
+}
+.dark .journl-chat-input .journl-chat-send {
+  background: #c4ceff;
+  color: #141f31;
+}
+.journl-chat-input .journl-chat-send:disabled {
+  background: #dce4f0;
+  color: #485d75;
+}
+.dark .journl-chat-input .journl-chat-send:disabled {
+  background: #2d3b50;
+  color: #adbed5;
+}
+.journl-chat-input [aria-label="Reasoning mode"] {
+  background: #fcfdff;
+  border: 1px solid #7387a1;
+  border-radius: 7px;
+  color: #485d75;
+}
+.dark .journl-chat-input [aria-label="Reasoning mode"] {
+  background: #141f31;
+  border-color: #8198b9;
+  color: #adbed5;
+}
+@media (min-width: 701px) {
+  .journl-header-route-actions button {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+  }
+  .journl-header-route-actions svg {
+    width: 16px;
+    height: 16px;
+  }
+}
+@media (width <= 700px) {
+  [data-slot="sidebar-inset"] > header > div {
+    padding: 6px 10px;
+    gap: 6px;
+  }
+  [aria-label="Chat composer"] {
+    padding: 8px 12px 10px;
+    min-height: 123px;
+  }
+  .journl-agent-sheet {
+    padding-bottom: max(8px, env(safe-area-inset-bottom, 0px));
+  }
+  .journl-chat-input
+    :is(
+      [aria-label="Send message"],
+      [aria-label="Cancel"],
+      [aria-label="Reasoning mode"]
+    ) {
+    min-width: 44px;
+    min-height: 44px;
+  }
+}
+.journl-agent-sheet [data-slot="message-scroller-viewport"] {
+  padding-inline: 12px;
+}
+
+/* Reserve the outline outside animated nested panels without moving their rows. */
+:is([data-side="left"], [data-mobile="true"])
+  .group\/folder-collapsible
+  [data-slot="collapsible-content"] {
+  margin: -1px -3px;
+  padding: 1px 3px;
+}
+
+/* Phone sheet insets include the reference panel's one-pixel frame. */
+@media (width <= 700px) {
+  [data-mobile="true"] .journl-navigation-primary,
+  [data-mobile="true"] .journl-navigation-shortcuts {
+    padding-inline: 9px;
+  }
+}
+
+/* Selected navigation matches the approved variable-font emphasis. */
+:is([data-side="left"], [data-mobile="true"])
+:is(
+  [data-sidebar="menu-button"],
+  [data-sidebar="menu-sub-button"]
+)[data-active="true"] {
+  font-weight: 650;
+}
+
+/* Approved workspace v2: Library index surface (All pages plates). */
+.journl-library {
+  width: min(100%, 1000px);
+  margin: 0 auto;
+  padding: 36px clamp(24px, 4vw, 64px) 64px;
+}
+.journl-library-mark {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: #d9dfff;
+  color: #273f9d;
+}
+.dark .journl-library-mark {
+  background: #303f72;
+  color: #c4ceff;
+}
+.journl-library-mark svg {
+  width: 24px;
+  height: 24px;
+  stroke-width: 1.65;
+}
+.journl-library h1 {
+  margin: 10px 0 14px;
+  font-size: clamp(32px, 3.25vw, 52px);
+  line-height: 1.08;
+  letter-spacing: -0.055em;
+}
+.journl-library-lede {
+  max-width: 62ch;
+  font-size: 17px;
+  color: #485d75;
+}
+.dark .journl-library-lede {
+  color: #adbed5;
+}
+.journl-library-tools {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 22px;
+  flex-wrap: wrap;
+}
+.journl-library-search {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 145px;
+  min-height: 32px;
+  border: 1px solid #7387a1;
+  border-radius: 7px;
+  padding: 4px 8px;
+  font-size: 12px;
+  color: #485d75;
+}
+.dark .journl-library-search {
+  border-color: #8198b9;
+  color: #adbed5;
+}
+.journl-library-search:focus-within {
+  outline: 2px solid #304eb4;
+  outline-offset: 1px;
+}
+.dark .journl-library-search:focus-within {
+  outline-color: #aec0ff;
+}
+.journl-library-search svg {
+  width: 16px;
+  height: 16px;
+  stroke-width: 1.65;
+  flex: none;
+}
+.journl-library-search input {
+  min-width: 0;
+  flex: 1;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  outline: none;
+}
+.journl-library-new-page > [data-slot="button"] {
+  height: 32px;
+  min-height: 32px;
+  width: auto;
+  justify-content: center;
+  gap: 6px;
+  border-radius: 7px;
+  padding: 4px 12px;
+  font-size: 12px;
+  font-weight: 650;
+  background: #273f9d;
+  color: #fcfdff;
+}
+.journl-library-new-page > [data-slot="button"]:hover {
+  background: #304eb4;
+  box-shadow: none;
+}
+.dark .journl-library-new-page > [data-slot="button"] {
+  background: #c4ceff;
+  color: #141f31;
+}
+.dark .journl-library-new-page > [data-slot="button"]:hover {
+  background: #d9dfff;
+}
+.journl-library-new-page > [data-slot="button"]:disabled {
+  background: #dce4f0;
+  color: #485d75;
+}
+.dark .journl-library-new-page > [data-slot="button"]:disabled {
+  background: #2d3b50;
+  color: #adbed5;
+}
+.journl-library-tabs {
+  display: flex;
+  gap: 4px;
+  margin-top: 20px;
+  border-bottom: 1px solid #d5e0ed;
+}
+.dark .journl-library-tabs {
+  border-color: #344865;
+}
+.journl-library-tab {
+  padding: 7px 12px;
+  border-bottom: 2px solid transparent;
+  font-size: 14px;
+  color: #485d75;
+}
+.dark .journl-library-tab {
+  color: #adbed5;
+}
+.journl-library-tab:hover {
+  color: inherit;
+}
+.dark .journl-library-tab:hover {
+  color: inherit;
+}
+.journl-library-tab[aria-current="page"] {
+  border-color: #273f9d;
+  color: #273f9d;
+  font-weight: 700;
+}
+.dark .journl-library-tab[aria-current="page"] {
+  border-color: #c4ceff;
+  color: #c4ceff;
+}
+.journl-library-table {
+  margin-top: 14px;
+  border: 1px solid #d5e0ed;
+  border-radius: 10px;
+  padding: 4px 6px;
+}
+.dark .journl-library-table {
+  border-color: #344865;
+}
+.journl-library-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr) 32px;
+  align-items: center;
+  gap: 8px;
+  padding: 0 6px;
+  min-height: 48px;
+  font-size: 13px;
+  margin-block: 2px;
+  border-radius: 7px;
+}
+.journl-library-grid + .journl-library-grid {
+  box-shadow: 0 -1px 0 #d5e0ed;
+}
+.dark .journl-library-grid + .journl-library-grid {
+  box-shadow: 0 -1px 0 #344865;
+}
+.journl-library-grid-head {
+  min-height: 34px;
+  font-size: 11px;
+  font-weight: 750;
+  color: #485d75;
+}
+.dark .journl-library-grid-head {
+  color: #adbed5;
+}
+.journl-library-row:hover,
+.journl-library-row:focus-within {
+  background: #abcbf04d;
+}
+.dark .journl-library-row:hover,
+.dark .journl-library-row:focus-within {
+  background: #91b8ef30;
+}
+.journl-library-row[data-active="true"] {
+  background: #d9dfff;
+}
+.dark .journl-library-row[data-active="true"] {
+  background: #303f72;
+}
+.journl-library-name {
+  min-width: 0;
+}
+.journl-library-name a {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  color: inherit;
+}
+.journl-library-name svg {
+  width: 16px;
+  height: 16px;
+  stroke-width: 1.65;
+  flex: none;
+  color: #485d75;
+}
+.dark .journl-library-name svg {
+  color: #adbed5;
+}
+.journl-library-name strong {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 650;
+}
+.journl-library-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 7px;
+  padding: 4px 8px;
+  font-size: 12px;
+  line-height: 1.35;
+  white-space: nowrap;
+  background: #d9dfff;
+  color: #273f9d;
+}
+.dark .journl-library-badge {
+  background: #303f72;
+  color: #c4ceff;
+}
+.journl-library-badge.mint {
+  background: #daf3e9;
+  color: #24594c;
+}
+.dark .journl-library-badge.mint {
+  background: #213e39;
+  color: #ace8d3;
+}
+.journl-library-badge.peach {
+  background: #fae6dc;
+  color: #793e2e;
+}
+.dark .journl-library-badge.peach {
+  background: #4a342d;
+  color: #ffcbaf;
+}
+.journl-library-meta {
+  color: #485d75;
+  font-size: 12px;
+}
+.dark .journl-library-meta {
+  color: #adbed5;
+}
+.journl-library-rename-error {
+  color: #832b29;
+  font-size: 12px;
+}
+.dark .journl-library-rename-error {
+  color: #ffbcb6;
+}
+.journl-library-actions {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  min-height: 32px;
+  border-radius: 8px;
+}
+.journl-library-actions:hover {
+  background: #abcbf04d;
+}
+.dark .journl-library-actions:hover {
+  background: #91b8ef30;
+}
+@media (pointer: coarse) {
+  .journl-library-actions {
+    min-width: 44px;
+    min-height: 44px;
+  }
+}
+@media (width <= 700px) {
+  .journl-library {
+    padding: 24px 16px 80px;
+  }
+  .journl-library-search,
+  .journl-library-new-page > [data-slot="button"] {
+    min-height: 44px;
+    height: 44px;
+    font-size: 16px;
+  }
+  .journl-library-actions {
+    min-width: 44px;
+    min-height: 44px;
+  }
+}
+@media (forced-colors: active) {
+  .journl-library-mark,
+  .journl-library-badge {
+    background: Canvas;
+    color: CanvasText;
+    border: 1px solid CanvasText;
+  }
 }

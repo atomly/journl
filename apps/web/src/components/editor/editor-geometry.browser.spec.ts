@@ -154,13 +154,34 @@ test("native code drag preserves block count when ProseMirror loses transient dr
   const target = editor.locator(`[data-block-id="${ids.targetId}"]`);
   for (let pass = 0; pass < 4; pass++) {
     await code.locator("pre").hover();
-    const grip = await page
-      .getByRole("button", { exact: true, name: "Block actions" })
-      .boundingBox();
+    const handle = page.getByRole("button", {
+      exact: true,
+      name: "Block actions",
+    });
+    // Hover changes the owned row before Floating UI finishes positioning its
+    // shared handle. Wait for the code header, not the previous row's geometry.
+    await expect
+      .poll(async () => {
+        const grip = await handle.boundingBox();
+        const header = await code.getByRole("combobox").boundingBox();
+        return grip && header
+          ? Math.abs(grip.y + grip.height / 2 - header.y - header.height / 2)
+          : Number.POSITIVE_INFINITY;
+      })
+      .toBeLessThan(2);
+    const grip = await handle.boundingBox();
     const destination = await target.boundingBox();
     if (!grip || !destination) throw new Error("Missing drag geometry");
     await page.mouse.move(grip.x + grip.width / 2, grip.y + grip.height / 2);
     await page.mouse.down();
+    // Prove every alternating gesture starts from the original code identity.
+    expect(
+      await editor.evaluate((root) => {
+        const instance = (root as HTMLElement & { editor: Editor }).editor;
+        return instance.state.doc.nodeAt(instance.state.selection.from)?.attrs
+          .id;
+      }),
+    ).toBe(ids.codeId);
     await page.mouse.move(
       grip.x + grip.width / 2 + 12,
       grip.y + grip.height / 2,

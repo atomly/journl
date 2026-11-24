@@ -84,16 +84,23 @@ for (const theme of ["light", "dark"]) {
     await page.keyboard.press("Alt+F10");
     await expect(toolbar).toBeVisible();
     const toolbarSkin = await toolbar.evaluate((node) => {
-      const header = document.querySelector("header .border-sidebar-border");
+      const probe = document.createElement("span");
+      probe.style.borderTop = "1px solid var(--sidebar-border)";
+      document.body.append(probe);
+      const skin = getComputedStyle(probe).borderTopColor;
+      probe.remove();
       const style = getComputedStyle(node);
       return {
         border: style.borderTopColor,
-        header: header ? getComputedStyle(header).borderTopColor : null,
         radius: Number.parseFloat(style.borderTopLeftRadius),
+        skin,
       };
     });
     expect(toolbarSkin.radius).toBeGreaterThan(10);
-    expect(toolbarSkin.border).toBe(toolbarSkin.header);
+    // The approved workspace v2 joins the reading panel to the header and
+    // drops the surface's top border, so the floating toolbar carries the
+    // app's sidebar border color instead of matching a removed top edge.
+    expect(toolbarSkin.border).toBe(toolbarSkin.skin);
     await page.keyboard.press("Escape");
     const paragraph = editor
       .locator('[data-better-editor-body="paragraph"]')

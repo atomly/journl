@@ -10,7 +10,7 @@ const fixture = vi.hoisted(() => ({
   scrollElement: null as HTMLDivElement | null,
 }));
 
-vi.mock("@acme/ui/use-mobile", () => ({
+vi.mock("~/components/ui/use-shell-viewport", () => ({
   useIsMobile: () => fixture.isMobile,
 }));
 vi.mock("~/app/_components/app-layout-provider", () => ({

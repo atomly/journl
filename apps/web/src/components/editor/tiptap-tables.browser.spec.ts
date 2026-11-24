@@ -1,8 +1,16 @@
-import { expect, test } from "~/testing/browser/fixtures";
+import type { Page } from "@playwright/test";
+import { expect, test, typeParagraphs } from "~/testing/browser/fixtures";
 
 test.use({ journalPagination: true });
-test.beforeEach(async ({ page }) => {
+async function createTable(page: Page, projectName: string) {
   await page.goto("/journal");
+  if (projectName === "desktop-chromium") {
+    // Resize/reorder in the expanded writing stage. The overflow/gutter case
+    // below deliberately grows its own wide table and retains that coverage.
+    await page
+      .getByRole("button", { exact: true, name: "Close assistant" })
+      .click();
+  }
   const create = page.getByRole("button", { exact: true, name: "New page" });
   if (!(await create.isVisible()))
     await page
@@ -13,13 +21,14 @@ test.beforeEach(async ({ page }) => {
   await expect(page).not.toHaveURL(previous);
   await page.keyboard.press("Escape");
   const editor = page.locator(".better-editor-tiptap");
-  await editor.fill("/table");
+  await typeParagraphs(editor, ["/table"]);
   await page.getByRole("option", { exact: true, name: "Table" }).click();
-});
+}
 
 test("table controls first appear at their table edge without a geometry transition", async ({
   page,
-}) => {
+}, info) => {
+  await createTable(page, info.project.name);
   const table = page.locator(".better-editor-tiptap table");
   await table.locator("tr").last().locator("td").last().hover();
   const controls = [
@@ -47,7 +56,8 @@ test("table controls first appear at their table edge without a geometry transit
 
 test("table edge rails and border menus add, select, delete and undo the intended axes", async ({
   page,
-}) => {
+}, info) => {
+  await createTable(page, info.project.name);
   const table = page.locator(".better-editor-tiptap table");
   const rows = table.locator("tr");
   const id = await table
@@ -105,6 +115,7 @@ test("row dragging preserves cell contents and an extension drag undoes as one a
     info.project.name !== "desktop-chromium",
     "Native mouse dragging is a desktop interaction",
   );
+  await createTable(page, info.project.name);
   const table = page.locator(".better-editor-tiptap table");
   const rows = table.locator("tr");
   for (let i = 0; i < 3; i++) {
@@ -192,6 +203,7 @@ test("scrolled table gutters resolve drops and extension gestures cancel cleanly
     info.project.name !== "desktop-chromium",
     "Native mouse dragging is a desktop interaction",
   );
+  await createTable(page, info.project.name);
   const editor = page.locator(".better-editor-tiptap");
   const table = editor.locator("table");
   const rows = table.locator("tr");
@@ -302,6 +314,7 @@ test("merged cells and outer gutters keep the table extension rails reachable", 
     info.project.name !== "desktop-chromium",
     "Cell range selection uses Shift-click",
   );
+  await createTable(page, info.project.name);
   const table = page.locator(".better-editor-tiptap table");
   const rows = table.locator("tr");
   await rows.first().locator("td").first().click();
@@ -349,6 +362,7 @@ test("table extension belongs to one pointer and trailing touch clicks never add
     info.project.name !== "desktop-chromium",
     "CDP trusted multi-touch input",
   );
+  await createTable(page, info.project.name);
   const editor = page.locator(".better-editor-tiptap");
   const cells = editor.locator("tr").first().locator("td");
   const add = page.getByRole("button", { exact: true, name: "Add column" });

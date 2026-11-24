@@ -175,8 +175,34 @@ test("table controls stop a pending gesture when the editor becomes read-only", 
   await page.goto(`/pages/${fixtureId(980)}`);
   const editor = page.locator(".better-editor-tiptap").first();
   const cell = editor.locator("table").first().locator("td,th").last();
-  if (info.project.name === "mobile-webkit") await cell.tap();
-  else await cell.hover();
+  const activateLastColumn = async () => {
+    if (info.project.name === "mobile-webkit") {
+      await cell.tap();
+      // WebKit reveals the caret, which can leave the last column's trailing
+      // edge clipped. Reveal that edge after focus before using its add rail.
+      const wrapper = cell.locator(
+        "xpath=ancestor::div[contains(@class,'better-editor-table-wrapper')]",
+      );
+      await wrapper.evaluate((element) => {
+        element.scrollLeft = element.scrollWidth;
+      });
+      await expect
+        .poll(() =>
+          cell.evaluate((element) => {
+            const table = element.closest("table");
+            const viewport = table?.parentElement;
+            return (
+              !!table &&
+              !!viewport &&
+              table.getBoundingClientRect().right <=
+                viewport.getBoundingClientRect().right + 1
+            );
+          }),
+        )
+        .toBe(true);
+    } else await cell.hover();
+  };
+  await activateLastColumn();
   const add = page.getByRole("button", { exact: true, name: "Add column" });
   await expect(add).toBeVisible();
   const before = await editor.evaluate((root) =>
@@ -207,7 +233,6 @@ test("table controls stop a pending gesture when the editor becomes read-only", 
   await editor.evaluate((root) =>
     (root as HTMLElement & { editor: Editor }).editor.setEditable(true),
   );
-  if (info.project.name === "mobile-webkit") await cell.tap();
-  else await cell.hover();
+  await activateLastColumn();
   await expect(add).toBeVisible();
 });

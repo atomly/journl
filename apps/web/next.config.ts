@@ -12,6 +12,8 @@ prepareLocalWorkflowStorage(process.cwd(), loadWorkflowEnvironmentVariables());
 
 const config: NextConfig = {
   allowedDevOrigins: parseNextDevOrigins(env.AUTH_DEV_ORIGINS),
+  // Floating shell controls occupy the indicator corners. Errors still surface.
+  devIndicators: false,
   experimental: {
     turbopackFileSystemCacheForDev: !env.CI,
   },

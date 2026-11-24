@@ -44,7 +44,7 @@ for (const theme of ["light", "dark"]) {
       await context.addCookies([
         {
           name: "journl:preferences",
-          url: "http://127.0.0.1:3100",
+          url: "http://127.0.0.1:3101",
           value: encodeURIComponent(
             JSON.stringify({
               appSidebarOpen: mode !== "nav-compact",

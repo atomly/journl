@@ -583,7 +583,7 @@ test("compact rail keeps normal assistant space when the center fits", async ({
   await context.addCookies([
     {
       name: "journl:preferences",
-      url: "http://127.0.0.1:3100",
+      url: "http://127.0.0.1:3101",
       value: encodeURIComponent(
         JSON.stringify({
           appSidebarOpen: false,
@@ -633,7 +633,7 @@ test("live pointer resize overlays before the center minimum and cancellation re
   await context.addCookies([
     {
       name: "journl:preferences",
-      url: "http://127.0.0.1:3100",
+      url: "http://127.0.0.1:3101",
       value: encodeURIComponent(
         JSON.stringify({
           appSidebarOpen: true,

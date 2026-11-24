@@ -992,14 +992,6 @@ body:has([data-slot="sidebar-inset"]) {
     padding-top: 60px;
     --app-sticky-scroll-compensation: -60px;
   }
-  [data-mobile="true"]
-    [data-shell-navigation-body]
-    [data-sidebar="menu-button"],
-  [data-mobile="true"]
-    [data-shell-navigation-body]
-    [data-sidebar="menu-sub-button"] {
-    min-height: 44px;
-  }
 }
 [data-side="left"]
   :is(
@@ -1044,8 +1036,10 @@ body:has([data-slot="sidebar-inset"]) {
   height: 32px;
 }
 [data-state="collapsed"] .journl-navigation-header {
-  align-items: center;
-  padding-inline: 8px;
+  /* Anchor the brand and toggle at the settled rail inset so the width
+     transition never slides them; the 40px brand box centers its mark. */
+  align-items: flex-start;
+  padding-inline: 12px;
 }
 [data-side="left"][data-state="collapsed"]
   .journl-navigation-header
@@ -1066,7 +1060,8 @@ body:has([data-slot="sidebar-inset"]) {
   min-height: 40px;
   padding: 0;
   background: transparent;
-  color: inherit;
+  /* Match the rail's muted icon ink; the inherited foreground read near-black. */
+  color: var(--muted-foreground);
 }
 [data-state="collapsed"] .journl-navigation-create > button > span {
   display: none;
@@ -1097,7 +1092,9 @@ body:has([data-slot="sidebar-inset"]) {
 [data-side="left"][data-state="collapsed"]
   [data-sidebar="header"]
   .journl-brand {
-  width: 24px;
+  /* The brand box adopts the rail's 40px control width so its centered
+     mark sits on the same centerline as every other collapsed control. */
+  width: 40px;
   height: 24px;
 }
 [data-state="collapsed"] .journl-navigation-primary .journl-navigation-label {
@@ -1131,17 +1128,6 @@ body:has([data-slot="sidebar-inset"]) {
     display: flex;
     overflow: visible;
     flex: 1 0 auto;
-  }
-  [data-mobile="true"]
-    :is([data-sidebar="menu-button"], [data-sidebar="menu-sub-button"]) {
-    font-size: 13px;
-    border-radius: 7px;
-  }
-  [data-mobile="true"]
-    :is([data-sidebar="menu-button"], [data-sidebar="menu-sub-button"])
-    > svg {
-    width: 16px;
-    height: 16px;
   }
   [data-mobile="true"] [data-active="true"] {
     background: #d9dfff;
@@ -1188,6 +1174,9 @@ body:has([data-slot="sidebar-inset"]) {
   height: 40px !important;
   padding: 0 !important;
   justify-content: center;
+  /* Snap to the settled geometry instead of riding the width transition:
+     centered content in an animating button reflows the icon. */
+  transition: none;
 }
 [data-state="collapsed"] .journl-navigation-primary {
   padding-top: 4px;
@@ -1372,7 +1361,9 @@ body:has([data-slot="sidebar-inset"]) {
   height: 40px;
   align-items: center;
   justify-content: center;
-  margin-inline: auto;
+  /* Anchor at the footer inset so the summary never slides while the
+     rail width animates; auto on both sides would recenter it. */
+  margin-inline: 0 auto;
   padding: 0;
 }
 .journl-navigation-toggle:not(:hover):not(:focus-visible) {
@@ -1828,4 +1819,69 @@ body:has([data-slot="sidebar-inset"]) {
     color: CanvasText;
     border: 1px solid CanvasText;
   }
+}
+
+/* Approved workspace review: route menu rows and the compact rail. */
+
+/* Route menu rows share the header's left inset instead of centering their
+   content against a left-aligned title. */
+.journl-route-menu > button {
+  justify-content: flex-start;
+  padding-inline: 0 16px;
+}
+/* The approved hover band stays clearly distinct from the glass surface;
+   the selected (pressed) row keeps its stronger fill on hover. */
+.journl-route-menu > :is(button, a):hover:not([aria-pressed="true"]) {
+  background-color: #abcbf04d;
+}
+.dark .journl-route-menu > :is(button, a):hover:not([aria-pressed="true"]) {
+  background-color: #91b8ef30;
+}
+
+/* The shadcn calendar centers in the route popover and carries the approved
+   selected-day tokens instead of the default primary fill. */
+.journl-route-menu [data-slot="calendar"] {
+  margin-inline: auto;
+}
+.journl-route-menu [data-slot="calendar"] [data-selected-single="true"] {
+  background: #d9dfff;
+  color: #273f9d;
+}
+.dark .journl-route-menu [data-slot="calendar"] [data-selected-single="true"] {
+  background: #303f72;
+  color: #c4ceff;
+}
+
+/* The compact rail centers every control on the settled 64px centerline.
+   Fixed left insets mean nothing reflows while the panel width animates. */
+[data-state="collapsed"] .journl-navigation-shortcuts,
+[data-state="collapsed"] .journl-navigation-primary {
+  padding-inline: 12px;
+}
+[data-state="collapsed"] .journl-navigation-account {
+  width: 40px;
+}
+
+/* The navigation sheet keeps one row rhythm at every viewport, not only at
+   phone width: the desktop dialog previously mixed 44px primary rows with
+   28px tree rows and 14px icons. */
+[data-mobile="true"]
+  [data-shell-navigation-body]
+  :is([data-sidebar="menu-button"], [data-sidebar="menu-sub-button"]) {
+  min-height: 44px;
+}
+[data-mobile="true"]
+  :is([data-sidebar="menu-button"], [data-sidebar="menu-sub-button"]) {
+  font-size: 13px;
+  border-radius: 7px;
+}
+[data-mobile="true"]
+  :is([data-sidebar="menu-button"], [data-sidebar="menu-sub-button"])
+  > svg {
+  width: 16px;
+  height: 16px;
+}
+[data-mobile="true"] .journl-navigation-create > [data-slot="button"] {
+  height: 44px;
+  min-height: 44px;
 }

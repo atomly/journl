@@ -20,7 +20,9 @@ export function AppSidebarUserDropdown({
           "journl-navigation-account w-full min-w-0 rounded-[12px] border-0 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground data-[popup-open]:bg-sidebar-accent data-[popup-open]:text-sidebar-accent-foreground",
           compact
             ? "h-8 p-0"
-            : "justify-start px-0 [&>svg:last-child]:invisible",
+            : // Symmetric horizontal padding keeps the avatar and the
+              // trailing actions equidistant from the hovered card's edges.
+              "justify-start px-2 [&>svg:last-child]:invisible",
         )}
         side={isMobile ? "top" : "right"}
         sticky={isMobile}
@@ -42,7 +44,7 @@ export function AppSidebarUserDropdown({
       {!compact && (
         <MoreHorizontal
           aria-hidden
-          className="pointer-events-none absolute top-1/2 right-1 size-5 -translate-y-1/2"
+          className="pointer-events-none absolute top-1/2 right-2 size-5 -translate-y-1/2"
         />
       )}
     </div>

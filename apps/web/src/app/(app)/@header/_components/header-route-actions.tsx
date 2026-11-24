@@ -39,6 +39,7 @@ function RouteDisclosure({
   trigger,
   children,
   align = "start",
+  suppressed = false,
 }: {
   open: boolean;
   onOpenChange: (value: boolean) => void;
@@ -47,12 +48,18 @@ function RouteDisclosure({
   trigger: React.ReactElement;
   children: React.ReactNode;
   align?: "start" | "end";
+  /** A menu with nothing to choose from never opens; the trigger stays an identity control. */
+  suppressed?: boolean;
 }) {
   const mobile = useIsMobile();
   const ready = useShellReady();
+  const handleOpenChange = (value: boolean) => {
+    if (suppressed) return;
+    onOpenChange(value);
+  };
   if (mobile)
     return (
-      <Dialog open={open} onOpenChange={onOpenChange}>
+      <Dialog open={suppressed ? false : open} onOpenChange={handleOpenChange}>
         <DialogTrigger render={trigger} aria-label={label} disabled={!ready} />
         <DialogContent
           data-shell-menu
@@ -66,14 +73,14 @@ function RouteDisclosure({
               <DialogTitle>{title}</DialogTitle>
             </DialogHeader>
           </Surface>
-          <div className="flex min-h-0 flex-col gap-1 overflow-auto p-4">
+          <div className="journl-route-menu flex min-h-0 flex-col gap-1 overflow-auto p-4">
             {children}
           </div>
         </DialogContent>
       </Dialog>
     );
   return (
-    <Popover open={open} onOpenChange={onOpenChange}>
+    <Popover open={suppressed ? false : open} onOpenChange={handleOpenChange}>
       <PopoverTrigger render={trigger} aria-label={label} disabled={!ready} />
       <PopoverContent
         align={align}
@@ -97,7 +104,7 @@ function RouteDisclosure({
             <XIcon />
           </Button>
         </Surface>
-        <div className="flex min-h-0 flex-col gap-1 overflow-auto p-4 [&>button]:min-h-11">
+        <div className="journl-route-menu flex min-h-0 flex-col gap-1 overflow-auto p-4 [&>button]:min-h-11">
           {children}
         </div>
       </PopoverContent>
@@ -183,6 +190,11 @@ export function HeaderRouteActions({
     router.push(url);
     closeMenus();
   };
+  // Notebook identity routes repeat the breadcrumb across the trigger and
+  // the menu; the header shows the section instead, and a path with only the
+  // current node has nothing to choose from, so its menu never opens.
+  const identityRoute = Boolean(pageId || folderId);
+  const identityMenuSuppressed = identityRoute && (path?.length ?? 2) <= 1;
   const journalActions = (
     <>
       {(["entries", "timeline"] as const).map((mode) => (
@@ -231,8 +243,9 @@ export function HeaderRouteActions({
       <RouteDisclosure
         open={open}
         onOpenChange={setOpen}
-        label={`${label} route menu`}
-        title={detail || label}
+        label={identityMenuSuppressed ? label : `${label} route menu`}
+        title={identityRoute ? label : detail || label}
+        suppressed={identityMenuSuppressed}
         trigger={
           <Button
             variant="ghost"
@@ -267,7 +280,7 @@ export function HeaderRouteActions({
                 {detail}
               </span>
             </span>
-            <ChevronDown />
+            {!identityMenuSuppressed && <ChevronDown />}
           </Button>
         }
       >

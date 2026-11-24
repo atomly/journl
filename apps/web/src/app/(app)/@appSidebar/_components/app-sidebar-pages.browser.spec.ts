@@ -92,7 +92,7 @@ test("explicit expansion survives navigation/reload and stays scoped to its owne
   ).toBeVisible();
   const signedOut = await page.request.post("/api/auth/sign-out", {
     data: {},
-    headers: { Origin: "http://127.0.0.1:3100" },
+    headers: { Origin: "http://127.0.0.1:3101" },
   });
   expect(signedOut.ok()).toBe(true);
   const signedIn = await page.request.post("/api/auth/sign-in/email", {
@@ -100,7 +100,7 @@ test("explicit expansion survives navigation/reload and stays scoped to its owne
       email: browserFixture.otherEmail,
       password: browserFixture.password,
     },
-    headers: { Origin: "http://127.0.0.1:3100" },
+    headers: { Origin: "http://127.0.0.1:3101" },
   });
   expect(signedIn.ok()).toBe(true);
   await page.goto("/explore");

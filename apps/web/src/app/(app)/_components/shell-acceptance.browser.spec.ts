@@ -66,7 +66,7 @@ for (const group of groups)
         await context.addCookies([
           {
             name: "journl:preferences",
-            url: "http://127.0.0.1:3100",
+            url: "http://127.0.0.1:3101",
             value: encodeURIComponent(
               JSON.stringify({
                 appSidebarOpen: true,

@@ -42,7 +42,7 @@ export async function settleShell(page: Page) {
 }
 export async function shellGeometry(page: Page) {
   return page.evaluate(() => {
-    const bounds = Object.fromEntries(
+    const bounds: Record<string, unknown> = Object.fromEntries(
       Object.entries({
         assistant: '[data-side="right"] [data-slot="sidebar-container"]',
         conversation: '[data-slot="message-scroller-viewport"]',
@@ -92,7 +92,7 @@ export async function shellGeometry(page: Page) {
       ),
       probeWidth,
     };
-    return { ...bounds, fonts };
+    return Object.assign(bounds, { fonts });
   });
 }
 function captureGeometry({

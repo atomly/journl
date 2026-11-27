@@ -243,28 +243,42 @@ test("native handle drag moves nested blocks and copies receive fresh identities
     ? "Alt"
     : "Control";
   const drag = async (copy: boolean) => {
-    const source = copy ? roots.last() : roots.first();
-    const target = copy ? roots.first() : roots.last();
-    await source.locator("[data-better-editor-body]").first().hover();
-    const handle = await page
-      .getByRole("button", { exact: true, name: "Block actions" })
-      .boundingBox();
-    const end = await target.boundingBox();
-    if (!handle || !end) throw new Error("Drag surface unavailable");
+    const source = (copy ? roots.last() : roots.first())
+      .locator("[data-better-editor-body]")
+      .first();
+    const target = (copy ? roots.first() : roots.last())
+      .locator("[data-better-editor-body]")
+      .first();
+    await source.hover();
+    const handle = page.getByRole("button", {
+      exact: true,
+      name: "Block actions",
+    });
+    // A hover changes the live handle's anchor. Wait for the source handle
+    // before starting the native drag, rather than grabbing the previous row.
+    await expect
+      .poll(async () => {
+        const origin = await source.boundingBox();
+        const grip = await handle.boundingBox();
+        if (!origin || !grip) return false;
+        const center = grip.y + grip.height / 2;
+        return center >= origin.y && center <= origin.y + origin.height;
+      })
+      .toBe(true);
+
+    const destination = await target.boundingBox();
+    if (!destination) throw new Error("Missing drop target");
     if (copy) await page.keyboard.down(copyModifier);
-    await page.mouse.move(
-      handle.x + handle.width / 2,
-      handle.y + handle.height / 2,
-    );
-    await page.mouse.down();
-    await page.mouse.move(
-      handle.x + handle.width / 2 + 10,
-      handle.y + handle.height / 2 + 10,
-      { steps: 4 },
-    );
-    await page.mouse.move(end.x + 100, end.y + end.height - 2, { steps: 15 });
-    await page.mouse.up();
-    if (copy) await page.keyboard.up(copyModifier);
+    try {
+      await handle.dragTo(target, {
+        targetPosition: {
+          x: Math.min(100, destination.width / 2),
+          y: destination.height * 0.75,
+        },
+      });
+    } finally {
+      if (copy) await page.keyboard.up(copyModifier);
+    }
   };
   await drag(false);
   await expect(roots.first()).toHaveAttribute("data-block-id", lastId ?? "");

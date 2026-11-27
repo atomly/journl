@@ -57,6 +57,7 @@ export const test = base.extend<{
   page: async (
     { page, otherOwner, journalPagination, workspaceReview },
     use,
+    testInfo,
   ) => {
     await warmWorkflowDeliveryRoute(page);
     const response = await page.request.post("/api/auth/sign-in/email", {
@@ -70,7 +71,11 @@ export const test = base.extend<{
               : browserFixture.email,
         password: browserFixture.password,
       },
-      headers: { Origin: "http://127.0.0.1:3100" },
+      headers: {
+        // The sign-in origin must match the server's trusted origins, which
+        // follow the configured baseURL instead of one fixed port.
+        Origin: testInfo.project.use.baseURL ?? "http://127.0.0.1:3100",
+      },
     });
     expect(response.ok(), await response.text()).toBe(true);
     await warmSoftNavigationRoutes(page);

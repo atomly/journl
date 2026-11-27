@@ -465,7 +465,7 @@ function Sidebar({
       >
         <Surface
           material="glass"
-          className="shrink-0 rounded-none border-x-0 border-t-0"
+          className="shrink-0 rounded-none border-x-0 border-t-0 px-4"
         >
           <SheetHeader className="sr-only min-[701px]:not-sr-only min-[701px]:min-h-[78px] min-[701px]:justify-center min-[701px]:pr-16">
             <SheetTitle className="font-semibold text-lg min-[701px]:text-2xl">

@@ -69,7 +69,7 @@ export default function ChatSidebarTrigger({
         }
       />
       <TooltipContent className="font-bold" side="top" align="center">
-        Ask Journl...
+        Open the assistant conversation
       </TooltipContent>
     </Tooltip>
   );

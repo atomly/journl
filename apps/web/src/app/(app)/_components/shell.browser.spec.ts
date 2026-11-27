@@ -575,6 +575,7 @@ test("desktop navigation dialog retains the floating navigation and returns focu
 });
 
 test("compact rail keeps normal assistant space when the center fits", async ({
+  baseURL,
   page,
   context,
 }, info) => {
@@ -583,7 +584,7 @@ test("compact rail keeps normal assistant space when the center fits", async ({
   await context.addCookies([
     {
       name: "journl:preferences",
-      url: "http://127.0.0.1:3100",
+      url: baseURL,
       value: encodeURIComponent(
         JSON.stringify({
           appSidebarOpen: false,
@@ -625,6 +626,7 @@ test("compact rail keeps normal assistant space when the center fits", async ({
 });
 
 test("live pointer resize overlays before the center minimum and cancellation restores widths", async ({
+  baseURL,
   page,
   context,
 }, info) => {
@@ -633,7 +635,7 @@ test("live pointer resize overlays before the center minimum and cancellation re
   await context.addCookies([
     {
       name: "journl:preferences",
-      url: "http://127.0.0.1:3100",
+      url: baseURL,
       value: encodeURIComponent(
         JSON.stringify({
           appSidebarOpen: true,

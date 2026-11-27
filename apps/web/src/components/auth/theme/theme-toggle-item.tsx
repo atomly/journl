@@ -2,7 +2,10 @@
 
 // Source: https://better-auth-ui.com/r/base-nova/theme.json
 
-import { DropdownMenuItem } from "@acme/ui/dropdown-menu";
+import {
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+} from "@acme/ui/dropdown-menu";
 import { Tabs, TabsList, TabsTrigger } from "@acme/ui/tabs";
 import { useAuthPlugin } from "@better-auth-ui/react";
 import { Monitor, Moon, PaletteIcon, Sun } from "lucide-react";
@@ -60,54 +63,61 @@ export function ThemeToggleItem() {
   };
 
   return (
-    <DropdownMenuItem
-      closeOnClick={false}
-      onFocus={(e) => {
-        // onFocus bubbles in React, so guard against re-entry from focus
-        // events fired by the inner TabsTrigger.
-        if (e.target === e.currentTarget) focusActiveTab();
-      }}
-    >
-      <PaletteIcon className="text-muted-foreground" />
-
-      <span>{localization.theme}</span>
-
-      <Tabs
-        className="ml-auto"
-        value={theme}
-        onValueChange={setTheme}
-        onKeyDown={handleTabsKeyDown}
+    // The segmented control gets its own menu section so it never inflates
+    // the inline action rows; py-0 plus 6px triggers keep the row at the
+    // same height as neighboring menu items in both pointer modes.
+    <>
+      <DropdownMenuSeparator />
+      <DropdownMenuItem
+        closeOnClick={false}
+        className="py-0"
+        onFocus={(e) => {
+          // onFocus bubbles in React, so guard against re-entry from focus
+          // events fired by the inner TabsTrigger.
+          if (e.target === e.currentTarget) focusActiveTab();
+        }}
       >
-        <TabsList ref={tabsListRef} className="h-auto!">
-          {themes.includes("system") && (
-            <TabsTrigger
-              value="system"
-              className="size-8 p-0 [@media(pointer:coarse)]:size-11"
-              aria-label={localization.system}
-            >
-              <Monitor className="size-3" />
-            </TabsTrigger>
-          )}
-          {themes.includes("light") && (
-            <TabsTrigger
-              value="light"
-              className="size-8 p-0 [@media(pointer:coarse)]:size-11"
-              aria-label={localization.light}
-            >
-              <Sun className="size-3" />
-            </TabsTrigger>
-          )}
-          {themes.includes("dark") && (
-            <TabsTrigger
-              value="dark"
-              className="size-8 p-0 [@media(pointer:coarse)]:size-11"
-              aria-label={localization.dark}
-            >
-              <Moon className="size-3" />
-            </TabsTrigger>
-          )}
-        </TabsList>
-      </Tabs>
-    </DropdownMenuItem>
+        <PaletteIcon className="text-muted-foreground" />
+
+        <span>{localization.theme}</span>
+
+        <Tabs
+          className="ml-auto"
+          value={theme}
+          onValueChange={setTheme}
+          onKeyDown={handleTabsKeyDown}
+        >
+          <TabsList ref={tabsListRef} className="h-auto!">
+            {themes.includes("system") && (
+              <TabsTrigger
+                value="system"
+                className="size-6 p-0 [@media(pointer:coarse)]:size-8"
+                aria-label={localization.system}
+              >
+                <Monitor className="size-3" />
+              </TabsTrigger>
+            )}
+            {themes.includes("light") && (
+              <TabsTrigger
+                value="light"
+                className="size-6 p-0 [@media(pointer:coarse)]:size-8"
+                aria-label={localization.light}
+              >
+                <Sun className="size-3" />
+              </TabsTrigger>
+            )}
+            {themes.includes("dark") && (
+              <TabsTrigger
+                value="dark"
+                className="size-6 p-0 [@media(pointer:coarse)]:size-8"
+                aria-label={localization.dark}
+              >
+                <Moon className="size-3" />
+              </TabsTrigger>
+            )}
+          </TabsList>
+        </Tabs>
+      </DropdownMenuItem>
+    </>
   );
 }

@@ -81,7 +81,9 @@ for (const theme of ["light", "dark"]) {
     await expect(account.locator('[data-slot="avatar"]')).toBeVisible();
     const avatar = await account.locator('[data-slot="avatar"]').boundingBox();
     if (!avatar) throw new Error("Missing navigation account avatar");
-    expect(avatar.x).toBeCloseTo(29, 0);
+    // The design review requires symmetric insets on the hovered account
+    // card; the avatar now sits 8px inside the card instead of flush at 0.
+    expect(avatar.x).toBeCloseTo(37, 0);
     const accountBox = await account.boundingBox();
     if (!accountBox) throw new Error("Missing navigation account bounds");
     expect(avatar.width).toBe(24);

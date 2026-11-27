@@ -19,7 +19,7 @@ export function InviteSignUp({ className }: { className?: string }) {
         <p className="w-full text-center text-muted-foreground text-sm">
           {localization.auth.alreadyHaveAnAccount}{" "}
           <Link
-            className="text-foreground underline"
+            className="text-foreground underline underline-offset-4"
             href={`${basePaths.auth}/${viewPaths.auth.signIn}`}
           >
             {localization.auth.signIn}

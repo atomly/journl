@@ -52,9 +52,7 @@ export async function SubscriptionView({
   const billingInterval = subscription.plan.price.recurring.interval;
 
   return (
-    <Card
-      className={cn("relative overflow-hidden border-2 shadow-xl", className)}
-    >
+    <Card className={cn("relative overflow-hidden shadow-xl", className)}>
       {/* Premium Badge */}
       <div className="absolute top-4 right-4">
         <Badge
@@ -95,7 +93,7 @@ export async function SubscriptionView({
 
       <CardContent className="space-y-6">
         {/* Billing Period */}
-        <div className="flex items-center gap-3 rounded-lg border bg-muted/50 p-4">
+        <div className="flex items-center gap-3 rounded-[12px] border bg-muted/50 p-4">
           <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
             <Calendar className="h-5 w-5 text-primary" />
           </div>
@@ -104,9 +102,19 @@ export async function SubscriptionView({
               Current Billing Period
             </p>
             <p className="text-muted-foreground text-sm">
-              {periodStart && periodEnd
-                ? `${periodStart} - ${periodEnd}`
-                : "September 20, 2025 - October 20, 2025"}
+              {periodStart && periodEnd ? (
+                <>
+                  <span className="whitespace-nowrap">{periodStart}</span>
+                  {" – "}
+                  <span className="whitespace-nowrap">{periodEnd}</span>
+                </>
+              ) : (
+                <>
+                  <span className="whitespace-nowrap">September 20, 2025</span>
+                  {" – "}
+                  <span className="whitespace-nowrap">October 20, 2025</span>
+                </>
+              )}
             </p>
           </div>
           <Info className="h-4 w-4 text-muted-foreground" />
@@ -114,7 +122,7 @@ export async function SubscriptionView({
 
         {/* Cancellation Notice */}
         {cancelDate && (
-          <div className="flex items-center gap-3 rounded-lg border border-destructive/20 bg-destructive/10 p-4">
+          <div className="flex items-center gap-3 rounded-[12px] border border-destructive/20 bg-destructive/10 p-4">
             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-destructive/10">
               <Info className="h-5 w-5 text-destructive" />
             </div>
@@ -138,15 +146,15 @@ export async function SubscriptionView({
             </h3>
             <ul className="space-y-2 text-sm">
               <li className="flex items-center gap-2">
-                <CheckCircle className="h-4 w-4 text-primary" />
+                <CheckCircle className="h-4 w-4 shrink-0 text-primary" />
                 <span>Personalized assistant</span>
               </li>
               <li className="flex items-center gap-2">
-                <CheckCircle className="h-4 w-4 text-primary" />
+                <CheckCircle className="h-4 w-4 shrink-0 text-primary" />
                 <span>Unlimited journal and pages</span>
               </li>
               <li className="flex items-center gap-2">
-                <CheckCircle className="h-4 w-4 text-primary" />
+                <CheckCircle className="h-4 w-4 shrink-0 text-primary" />
                 <span>Based solely on your information</span>
               </li>
             </ul>
@@ -159,11 +167,11 @@ export async function SubscriptionView({
             </h3>
             <ul className="space-y-2 text-sm">
               <li className="flex items-center gap-2">
-                <CheckCircle className="h-4 w-4 text-primary" />
+                <CheckCircle className="h-4 w-4 shrink-0 text-primary" />
                 <span>Secure payments</span>
               </li>
               <li className="flex items-center gap-2">
-                <CheckCircle className="h-4 w-4 text-primary" />
+                <CheckCircle className="h-4 w-4 shrink-0 text-primary" />
                 <span>Cancel anytime</span>
               </li>
             </ul>
@@ -175,7 +183,7 @@ export async function SubscriptionView({
           <SubscriptionManageButton
             activeSubscription={subscription}
             size="lg"
-            className="w-full rounded-lg border px-8 py-3 font-semibold shadow-lg md:w-auto"
+            className="w-full rounded-[12px] border px-8 font-semibold shadow-lg"
           >
             <SquareArrowUpRight />
             {cancelDate ? "Don't cancel subscription" : "Manage Subscription"}

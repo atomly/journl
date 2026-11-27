@@ -8,13 +8,13 @@ import { RadioGroup, RadioGroupItem } from "@acme/ui/radio-group";
 import {
   ThemePreviewDark,
   ThemePreviewLight,
-  ThemePreviewSystem,
   useAuthPlugin,
 } from "@better-auth-ui/react";
 import { cn } from "cn";
 import { Monitor, Moon, Sun } from "lucide-react";
 import { useEffect, useState } from "react";
 import { themePlugin } from "~/lib/auth/theme-plugin";
+import { SystemThemePreview } from "./system-theme-preview";
 
 export type AppearanceProps = {
   className?: string;
@@ -65,7 +65,7 @@ export function Appearance({ className }: AppearanceProps) {
                         <RadioGroupItem value="system" id="system" />
                       </div>
 
-                      <ThemePreviewSystem className="w-full" />
+                      <SystemThemePreview className="w-full" />
                     </FieldContent>
                   </Field>
                 </FieldLabel>

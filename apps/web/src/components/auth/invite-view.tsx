@@ -41,7 +41,10 @@ export function InviteView({
         />
         <p className="mt-4 text-center text-muted-foreground text-sm">
           Already have an account?{" "}
-          <Link className="text-foreground underline" href="/auth/sign-in">
+          <Link
+            className="text-foreground underline underline-offset-4"
+            href="/auth/sign-in"
+          >
             Sign in
           </Link>
         </p>

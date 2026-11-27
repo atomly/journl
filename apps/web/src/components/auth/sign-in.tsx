@@ -11,7 +11,6 @@ import {
 } from "@acme/ui/field";
 import { Input } from "@acme/ui/input";
 import {
-  InputGroup,
   InputGroupAddon,
   InputGroupButton,
   InputGroupInput,
@@ -37,6 +36,7 @@ import { Eye, EyeOff } from "lucide-react";
 import { useState } from "react";
 import { useSignInContinuation } from "~/lib/auth/use-sign-in-continuation";
 import { isAuthFormFieldInvalid, useAuthForm } from "./auth-form";
+import { AuthInputGroup } from "./auth-input-group";
 import { LastUsedBadge } from "./last-login-method/last-used-badge";
 import { ProviderButtons, type SocialLayout } from "./provider-buttons";
 import { ReauthenticationNotice } from "./reauthentication";
@@ -224,7 +224,7 @@ export function SignIn({
                             {localization.auth.password}
                           </FieldLabel>
 
-                          <InputGroup>
+                          <AuthInputGroup>
                             <InputGroupInput
                               id="password"
                               name={field.name}
@@ -268,7 +268,7 @@ export function SignIn({
                                 {isPasswordVisible ? <EyeOff /> : <Eye />}
                               </InputGroupButton>
                             </InputGroupAddon>
-                          </InputGroup>
+                          </AuthInputGroup>
 
                           <field.AuthFormFieldError />
                         </Field>
@@ -353,7 +353,7 @@ export function SignIn({
           {emailAndPassword?.enabled && emailAndPassword?.forgotPassword && (
             <Link
               href={`${basePaths.auth}/${viewPaths.auth.forgotPassword}`}
-              className="self-center text-sm underline-offset-4 hover:underline"
+              className="self-center text-sm underline underline-offset-4 hover:underline"
             >
               {localization.auth.forgotPasswordLink}
             </Link>

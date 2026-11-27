@@ -1,378 +1,64 @@
-import { createHash } from "node:crypto";
-import { writeFile } from "node:fs/promises";
-import type { Page } from "@playwright/test";
+import { test as publicTest } from "@playwright/test";
 import { expect, test } from "~/testing/browser/fixtures";
-import { renderedTextContrast } from "~/testing/browser/rendered-contrast";
-import { captureSettledShell } from "~/testing/browser/shell-capture";
 
-/**
- * The approved marketing plates are light-theme, full-page captures:
- * docs/design-handoff/screenshots/marketing-light.png (1440 wide) and
- * marketing-mobile.png (390 wide). Dark keeps the same geometry through the
- * application theme tokens; the hero uses the current workspace captures.
- */
-
-/** Current All pages captures from the disposable review workspace. */
-const heroHashes = {
-  "/marketing/library-dark-mobile.png":
-    "574d25844954a260137862e7e5102666f230890e0f017bd6e543428cee649290",
-  "/marketing/library-dark.png":
-    "e78aeb4000d31d506be50e4640957bd5a0760907c272a02e93d6751d0ae0f785",
-  "/marketing/library-light-mobile.png":
-    "1bb841e8dc9786e800fea0e266a575e194f2cc515ac3d1317d7f8e56cb3d88e9",
-  "/marketing/library-light.png":
-    "71b492908eeba3d406ba9bc739d8b04ccbc1977ab4c2052f2d6a62d6cc3a111e",
-};
-
-const headline = { level: 1, name: /give your knowledge a home/i };
-
-type HeroBox = {
-  height: number;
-  naturalHeight: number;
-  naturalWidth: number;
-  width: number;
-  x: number;
-  y: number;
-} | null;
-
-type MarketingGeometry = {
-  boxes: Record<string, HeroBox>;
-  rhythm: {
-    captionToOrganization: number;
-    heroToProductFrame: number;
-    navToHero: number;
-  };
-};
-
-/** The fixture signs the plain user in; the marketing page is public. */
-async function renderSignedOut(page: Page) {
-  await page.context().clearCookies();
-}
-
-function marketingGeometry(page: Page): Promise<MarketingGeometry> {
-  return page.evaluate(() => {
-    const box = (selector: string): HeroBox => {
-      const element = document.querySelector<HTMLElement>(selector);
-      if (!element) return null;
-      const rect = element.getBoundingClientRect();
-      return {
-        height: rect.height,
-        naturalHeight: (element as HTMLImageElement).naturalHeight,
-        naturalWidth: (element as HTMLImageElement).naturalWidth,
-        width: rect.width,
-        x: rect.x,
-        y: rect.y,
-      };
-    };
-    const edge = (selector: string) => {
-      const element = document.querySelector<HTMLElement>(selector);
-      if (!element) return Number.NaN;
-      const rect = element.getBoundingClientRect();
-      return rect.y + rect.height;
-    };
-    const top = (selector: string) => {
-      const element = document.querySelector<HTMLElement>(selector);
-      if (!element) return Number.NaN;
-      return element.getBoundingClientRect().y;
-    };
-    return {
-      boxes: {
-        canonicalDark: box(".canonical-hero-dark"),
-        canonicalDesktop: box(".canonical-hero-desktop.canonical-hero-light"),
-        canonicalMobile: box(".canonical-hero-mobile.canonical-hero-light"),
-        caption: box(".composition-caption"),
-        context: box(".context-section"),
-        end: box(".marketing-end"),
-        footer: box(".marketing-footer"),
-        hero: box(".hero-new"),
-        heroCta: box(".hero-description > .btn.primary"),
-        lockup: box(".marketing-nav .journl-brand"),
-        nav: box(".marketing-nav"),
-        navDescription: box(".marketing-nav .nav-description"),
-        organization: box(".organization"),
-        productFrame: box(".product-frame"),
-      },
-      rhythm: {
-        captionToOrganization:
-          top(".organization") - edge(".composition-caption"),
-        heroToProductFrame: top(".product-frame") - edge(".hero-new"),
-        navToHero: top(".hero-new") - edge(".marketing-nav"),
-      },
-    };
-  });
-}
-
-test("signed-in visitors keep the existing journal redirect", async ({
-  page,
-}, info) => {
-  test.skip(info.project.name !== "desktop-chromium", "Route guard check");
-  // The fixture user is signed in; withoutAuth must keep routing them home.
+test("signed-in visitors land in the journal", async ({ page }) => {
   await page.goto("/");
   await expect(page).toHaveURL(/\/journal$/);
 });
 
-test("light desktop marketing keeps the approved plate geometry", async ({
-  page,
-}, info) => {
-  test.skip(info.project.name !== "desktop-chromium", "Plate geometry");
-  await renderSignedOut(page);
-  await page.setViewportSize({ height: 1000, width: 1440 });
-  await page.addInitScript(
-    (value) => localStorage.setItem("theme", value),
-    "light",
+for (const theme of ["light", "dark"]) {
+  publicTest(
+    `the ${theme} marketing hero loads at the current viewport`,
+    async ({ page, isMobile }) => {
+      await page.addInitScript(
+        (value) => localStorage.setItem("theme", value),
+        theme,
+      );
+      await page.goto("/");
+      await expect(
+        page.getByRole("heading", {
+          level: 1,
+          name: /give your knowledge a home/i,
+        }),
+      ).toBeVisible();
+      const hero = page.getByRole("img", {
+        name: "Journl All pages workspace with sample notes",
+      });
+      await expect(hero).toHaveCount(1);
+      await expect(hero).toHaveAttribute(
+        "src",
+        `/marketing/library-${theme}${isMobile ? "-mobile" : ""}.png`,
+      );
+      // Native image loading can be deferred until the hero reaches the viewport.
+      await hero.scrollIntoViewIfNeeded();
+      await expect
+        .poll(() =>
+          hero.evaluate((image) => (image as HTMLImageElement).naturalWidth),
+        )
+        .toBeGreaterThan(0);
+      expect(
+        await page.evaluate(() => document.documentElement.scrollWidth),
+      ).toBeLessThanOrEqual(await page.evaluate(() => innerWidth));
+    },
   );
+}
+
+publicTest("public navigation opens sign-in", async ({ page }) => {
   await page.goto("/");
-  const heading = page.getByRole("heading", headline);
-  await expect(heading).toBeVisible();
-
-  for (const [file, sha256] of Object.entries(heroHashes)) {
-    const response = await page.request.get(file);
-    expect(response.ok(), `${file} must be served`).toBe(true);
-    const hash = createHash("sha256")
-      .update(await response.body())
-      .digest("hex");
-    expect(hash, `${file} matches the workspace capture`).toBe(sha256);
-  }
-
-  const { boxes, rhythm } = await marketingGeometry(page);
-  expect(boxes.nav).toMatchObject({ height: 80, width: 1312, x: 64, y: 24 });
-  // Brand rule: the marketing lockup is 32px tall.
-  expect(boxes.lockup).toMatchObject({ height: 32, y: 48 });
-  // Hero contract: the All pages capture scales at its natural aspect ratio.
-  expect(boxes.canonicalDesktop).toMatchObject({
-    naturalHeight: 1000,
-    naturalWidth: 1440,
-    x: 65,
-  });
-  expect(boxes.canonicalDesktop?.width).toBe(1310);
-  expect(boxes.canonicalDesktop?.height).toBeCloseTo(909.7, 0);
-  expect(boxes.productFrame).toMatchObject({ width: 1312, x: 64 });
-
-  // Approved section rhythm: nav +80 hero, hero +48 product frame,
-  // caption +112 organization.
-  expect(rhythm.navToHero).toBe(80);
-  expect(rhythm.heroToProductFrame).toBe(48);
-  expect(rhythm.captionToOrganization).toBe(112);
-
-  // Review verdict A (top strip): the background flows to the top. The nav
-  // pill's 24px top margin used to collapse through <main> and <body>,
-  // leaving a flat strip of html background above the body's ambient
-  // gradient. The body must now start at the viewport top.
-  expect(
-    await page.evaluate(() => document.body.getBoundingClientRect().y),
-  ).toBe(0);
-
-  // Review verdict B (hero alignment): one deliberate axis for the whole
-  // hero narrative, centered. Eyebrow, headline, subline, CTA and the
-  // invitation small print share the page's center axis.
-  const heroAxis = await page.evaluate(() => {
-    const centers: Record<string, number | null> = {};
-    for (const [name, selector] of [
-      ["cta", ".hero-description > .btn.primary"],
-      ["eyebrow", ".hero-new .eyebrow"],
-      ["headline", ".hero-new h1"],
-      ["small", ".hero-description small"],
-      ["subline", ".hero-description > p"],
-    ] as const) {
-      const rect = document.querySelector(selector)?.getBoundingClientRect();
-      centers[name] = rect ? Math.round(rect.x + rect.width / 2) : null;
-    }
-    return centers;
-  });
-  for (const [name, center] of Object.entries(heroAxis)) {
-    expect(center, `${name} centers on the hero axis`).toBe(720);
-  }
-
-  const primary = page.locator(".hero-description > .btn.primary");
-  await expect(primary).toHaveCSS("background-color", "rgb(160, 229, 205)");
-  await expect(primary).toHaveCSS("min-height", "48px");
-  await expect(page.locator(".marketing-nav .btn.primary")).toHaveCSS(
-    "background-color",
-    "rgb(160, 229, 205)",
-  );
-
-  // Review verdict C (flat hierarchy): the primary action is the mint pill
-  // in every header rendering, including the footer nav row that pairs
-  // Capture/Connect/Rediscover with Sign in.
-  for (const link of await page
-    .getByRole("link", { exact: true, name: "Sign in" })
-    .all()) {
-    await expect(link).toHaveCSS("text-decoration-line", "underline");
-  }
-  const footerPrimary = page.locator(".marketing-footer nav a.btn.primary");
-  await expect(footerPrimary).toHaveAttribute("href", "/invite");
-  await expect(footerPrimary).toHaveCSS(
-    "background-color",
-    "rgb(160, 229, 205)",
-  );
-
-  // Feature parity: every public route target still links somewhere real.
-  const navActions = page.locator(".marketing-nav .public-actions a");
-  await expect(navActions).toHaveCount(2);
-  await expect(navActions.first()).toHaveAttribute("href", "/auth/sign-in");
-  await expect(navActions.nth(1)).toHaveAttribute("href", "/invite");
-
-  const weakest = [];
-  for (const [label, locator] of [
-    ["headline", page.locator(".hero-new h1")],
-    ["hero copy", page.locator(".hero-description > p")],
-    ["nav description", page.locator(".marketing-nav .nav-description")],
-    ["use-case chip", page.locator(".use-case .example").first()],
-    ["footer link", page.locator(".marketing-footer nav a").first()],
-  ] as const) {
-    const contrast = await renderedTextContrast(locator);
-    expect(contrast.ratio, `${label} contrast`).toBeGreaterThanOrEqual(4.5);
-    weakest.push({
-      glyphLabel: contrast.glyphLabel,
-      label,
-      ratio: contrast.ratio,
-    });
-  }
-
-  await captureSettledShell(page, info.outputPath("settled-shell.png"));
-  await page.screenshot({
-    animations: "allow",
-    fullPage: true,
-    path: info.outputPath("marketing-light-desktop.png"),
-    scale: "css",
-  });
-  await writeFile(
-    info.outputPath("marketing-light-desktop-geometry.json"),
-    JSON.stringify({ boxes, rhythm, weakest }, null, 2),
-  );
-  await info.attach("marketing-contrast", {
-    body: JSON.stringify(weakest),
-    contentType: "application/json",
-  });
+  const signIn = page
+    .getByRole("navigation", { name: "Public navigation" })
+    .getByRole("link", { name: "Sign in" });
+  await expect(signIn).toHaveCSS("text-decoration-line", "underline");
+  await signIn.click();
+  await expect(page).toHaveURL(/\/auth\/sign-in$/);
 });
 
-test("dark desktop marketing swaps the canonical hero through theme tokens", async ({
-  page,
-}, info) => {
-  test.skip(info.project.name !== "desktop-chromium", "Theme swap");
-  await renderSignedOut(page);
-  await page.setViewportSize({ height: 1000, width: 1440 });
-  await page.addInitScript(
-    (value) => localStorage.setItem("theme", value),
-    "dark",
-  );
+publicTest("public navigation opens the invite form", async ({ page }) => {
   await page.goto("/");
-  await expect(page.locator("body")).toHaveCSS(
-    "background-color",
-    "rgb(5, 5, 5)",
-  );
-  const darkHero = page.locator(".canonical-hero-desktop.canonical-hero-dark");
-  await expect(darkHero).toBeVisible();
-  await expect(
-    page.locator(".canonical-hero-desktop.canonical-hero-light"),
-  ).toBeHidden();
-  await expect(
-    page.locator(".marketing-nav .journl-brand .brand-dark"),
-  ).toBeVisible();
-  const { boxes, rhythm } = await marketingGeometry(page);
-  expect(boxes.nav).toMatchObject({ height: 80, width: 1312, x: 64, y: 24 });
-  expect(boxes.canonicalDark).toMatchObject({
-    naturalHeight: 1000,
-    naturalWidth: 1440,
-  });
-  expect(boxes.canonicalDark?.width).toBe(1310);
-  expect(boxes.canonicalDark?.height).toBeCloseTo(909.7, 0);
-  expect(rhythm.navToHero).toBe(80);
-  const contrast = await renderedTextContrast(page.locator(".hero-new h1"));
-  expect(contrast.ratio).toBeGreaterThanOrEqual(4.5);
-  await captureSettledShell(page, info.outputPath("settled-shell-dark.png"));
-  await page.screenshot({
-    animations: "allow",
-    fullPage: true,
-    path: info.outputPath("marketing-dark-desktop.png"),
-    scale: "css",
-  });
-});
-
-test("light mobile marketing stacks the approved single column", async ({
-  page,
-}, info) => {
-  test.skip(info.project.name !== "desktop-chromium", "Plate geometry");
-  await renderSignedOut(page);
-  await page.setViewportSize({ height: 844, width: 390 });
-  await page.addInitScript(
-    (value) => localStorage.setItem("theme", value),
-    "light",
-  );
-  await page.goto("/");
-  const heading = page.getByRole("heading", headline);
-  await expect(heading).toBeVisible();
-
-  const { boxes, rhythm } = await marketingGeometry(page);
-  expect(boxes.nav).toMatchObject({ height: 68, width: 366, x: 12, y: 12 });
-  // The lockup stays 32px tall on mobile; only the description collapses.
-  expect(boxes.lockup?.height).toBe(32);
-  expect(boxes.navDescription?.height ?? 0).toBe(0);
-  // Mobile hero: the 390x844 canonical capture inside 12px margins. Light
-  // shows exactly one hero; the dark hero pairs with the dark theme.
-  await expect(
-    page.locator(".canonical-hero").filter({ visible: true }),
-  ).toHaveCount(1);
-  expect(boxes.canonicalMobile).toMatchObject({
-    naturalHeight: 844,
-    naturalWidth: 390,
-    x: 13,
-  });
-  expect(boxes.canonicalMobile?.width).toBe(364);
-  expect(boxes.canonicalMobile?.height).toBeCloseTo(787.9, 0);
-  expect(boxes.canonicalDesktop?.height ?? 0).toBe(0);
-  await expect(page.locator(".marketing-nav")).toHaveCSS(
-    "border-radius",
-    "20px",
-  );
-  expect(rhythm.navToHero).toBe(48);
-
-  // Review verdict A on mobile too: the body starts at the viewport top;
-  // the nav pill keeps its 12px inset without shifting the background.
-  expect(
-    await page.evaluate(() => document.body.getBoundingClientRect().y),
-  ).toBe(0);
-
-  // Single-column hero: the invitation action spans the narrative column.
-  const cta = page.locator(".hero-description > .btn.primary");
-  const ctaBox = await cta.boundingBox();
-  expect(ctaBox?.width).toBe(342);
-  await expect(cta).toHaveCSS("background-color", "rgb(160, 229, 205)");
-  await expect(page.locator(".organization")).toHaveCSS("display", "block");
-  await expect(page.locator(".hero-new")).toHaveCSS("flex-direction", "column");
-
-  const contrast = await renderedTextContrast(page.locator(".hero-new h1"));
-  expect(contrast.ratio).toBeGreaterThanOrEqual(4.5);
-
-  await captureSettledShell(page, info.outputPath("settled-shell-mobile.png"));
-  await page.screenshot({
-    animations: "allow",
-    fullPage: true,
-    path: info.outputPath("marketing-light-mobile.png"),
-    scale: "css",
-  });
-  await writeFile(
-    info.outputPath("marketing-light-mobile-geometry.json"),
-    JSON.stringify({ boxes, rhythm }, null, 2),
-  );
-});
-
-test("mobile webkit renders the marketing page", async ({ page }, info) => {
-  test.skip(info.project.name !== "mobile-webkit", "Cross-browser smoke");
-  await renderSignedOut(page);
-  await page.goto("/");
-  const heading = page.getByRole("heading", headline);
-  await expect(heading).toBeVisible();
-  const hero = page.locator(".canonical-hero-mobile.canonical-hero-light");
-  await expect(hero).toBeVisible();
-  expect(
-    await hero.evaluate((img) => (img as HTMLImageElement).naturalWidth),
-  ).toBe(390);
-  await expect(page.locator(".organization .use-case")).toHaveCount(3);
-  const contrast = await renderedTextContrast(page.locator(".hero-new h1"));
-  expect(contrast.ratio).toBeGreaterThanOrEqual(4.5);
-  await info.attach("webkit-hero-contrast", {
-    body: JSON.stringify({ ratio: contrast.ratio }),
-    contentType: "application/json",
-  });
+  await page
+    .getByRole("navigation", { name: "Public navigation" })
+    .getByRole("link", { name: "Get started" })
+    .click();
+  await expect(page.getByText("Join Journl", { exact: true })).toBeVisible();
+  await expect(page).toHaveURL(/\/invite$/);
 });

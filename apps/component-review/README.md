@@ -24,22 +24,21 @@ From this directory, run official interaction and blocking accessibility tests:
 mise exec -- pnpm exec storybook tools test run
 ```
 
-This tests every story in Chromium and WebKit. `test:stories` exposes that command.
-Install browsers with `mise exec -- pnpm exec playwright install --with-deps
-chromium webkit` when needed; OS dependencies can need administrator access.
+This tests every story in Chromium. `test:stories` exposes that command.
+Install Chromium with `mise exec -- pnpm exec playwright install --with-deps chromium`
+when needed. Installing OS dependencies can require administrator access.
 Run additional browser checks directly; Playwright starts and stops its own isolated Storybook server on an available port:
 
 ```sh
 mise exec -- pnpm test:browser
 ```
 
-Set COMPONENT_REVIEW_URL to reuse an already running review server without taking ownership of it. The root Turbo browser task runs official story tests first, then these self-hosted viewport checks. Playwright versions match the web application so CI installs one compatible browser set. Failure traces are included in the CI artifact.
-
-These cover 1440×1000, 834×1112 and 390×844 in light/dark, plus Chromium
-forced-colors and reduced-motion emulation. They verify system selection colors,
-field geometry, opaque fallback and Brand's mask. Screenshots and traces remain
-in ignored `test-results/`. Route parity, real-device behavior and screen-reader
-acceptance remain separate work.
+Set `COMPONENT_REVIEW_URL` to use an already running review server. The root Turbo
+browser task runs story tests first, followed by Playwright checks for system
+selection colors, the high-contrast brand mark, and opaque fallback. Failure
+screenshots and traces stay in `test-results/` and are uploaded by CI.
+Application workflows run in desktop Chromium and mobile WebKit in the app's
+functional suite.
 
 Toolbar globals select theme, transparency and motion. Explicit dark/opaque
 stories allow automated checks. Viewport presets match approved capture sizes.

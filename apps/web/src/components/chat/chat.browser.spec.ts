@@ -190,3 +190,44 @@ test("chat cancellation stops the native request and leaves the composer usable"
     release();
   }
 });
+
+test("a failed assistant response can be retried without losing the prompt", async ({
+  page,
+  isMobile,
+}) => {
+  let requests = 0;
+  await page.route("**/api/ai/journl-agent", async (route) => {
+    requests++;
+    if (requests === 1) {
+      await route.abort("failed");
+      return;
+    }
+    await route.fulfill({
+      body: await responseBody(),
+      contentType: "text/event-stream",
+      headers: { "x-vercel-ai-ui-message-stream": "v1" },
+    });
+  });
+  await page.goto("/journal/1987-03-07");
+  const toggle = page.getByRole("button", {
+    exact: true,
+    name: isMobile ? "Toggle Chat Drawer" : "Toggle Chat Sidebar",
+  });
+  if (await toggle.isVisible()) await toggle.click();
+  const panel = page
+    .getByRole("region", { exact: true, name: "Chat" })
+    .filter({ visible: true });
+  const draft = panel.getByRole("textbox", { name: "Message" });
+  await draft.fill("Find a useful note");
+  await panel.getByRole("button", { name: "Send message" }).click();
+  const failure = panel.getByRole("alert");
+  await expect(failure).toContainText("Could not complete the response");
+  await failure.getByRole("button", { name: "Retry response" }).click();
+  await expect(
+    panel.getByRole("heading", { name: "Useful answer" }),
+  ).toBeVisible();
+  await expect(failure).toHaveCount(0);
+  await expect(
+    panel.getByText("Find a useful note", { exact: true }),
+  ).toHaveCount(1);
+});

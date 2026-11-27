@@ -183,8 +183,10 @@ Tests are colocated with their source modules as `.spec.ts` or `.spec.tsx`;
 database suites use `.integration.spec.ts`.
 
 - `pnpm test`: run all unit, UI, database integration, and browser tests.
-- `pnpm test:unit`: run unit and UI tests without Docker.
-- `pnpm test:integration`: run database integration tests only.
+- `pnpm test:unit` runs Vitest unit and UI tests without Docker. Use these for logic, state transitions, and component contracts.
+- `pnpm test:stories` runs the Vite-based Storybook component interactions and accessibility checks in Chromium without Docker.
+- `pnpm test:integration` exercises real database queries and transactions against disposable PostgreSQL.
+- `pnpm --filter @acme/web test:browser` runs functional Playwright tests for user workflows across the running app.
 
 The full suite and integration shortcut require a running Docker-compatible
 container runtime, such as Docker Desktop or Colima. They fail if it is unavailable
@@ -207,14 +209,22 @@ then run `pnpm test:browser`. It requires Docker, provisions its own disposable
 PostgreSQL database from Drizzle definitions, seeds fixture accounts, and signs in
 through Better Auth's normal API. It never reads the root `.env` or uses an
 application database URL. The runner owns the local server on port 3100 and
-refuses to reuse an existing server. Reports and failure traces are ignored artifacts.
+refuses to reuse an existing server. CI runs Playwright's native file-level
+shards over the full functional suite, with one worker per shard because tests
+within a server share fixture records. Each shard uploads a JSON result summary
+and failure artifacts. The Storybook component job runs separately.
+
+Design review captures can run on demand with
+`PLAYWRIGHT_DESIGN_REVIEW=1 pnpm --filter @acme/web test:browser`.
+These capture the app at design handoff viewports and are excluded from the
+functional suite.
 
 For real-provider writing acceptance, set `BROWSER_TEST_OPENAI_API_KEY` and run
 `pnpm --filter @acme/web test:browser ai-writing.live.browser.spec.ts --project=desktop-chromium`.
 This opts into paid OpenAI calls through the real chat and writer routes, using
 the same disposable database and fixture accounts. It checks page creation,
 unfocused edits, selected text, navigation, structured content, and reload
-persistence. The ordinary browser suite skips this test and uses a fake key.
+persistence. The ordinary browser suite excludes live-provider specs and uses a fake key.
 
 `pnpm test` includes browser acceptance as well as unit and database tests; install
 its browser dependencies before running it. Unit tests remain Docker-free.

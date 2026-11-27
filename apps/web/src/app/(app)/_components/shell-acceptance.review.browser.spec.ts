@@ -274,28 +274,26 @@ for (const group of groups)
           const sheet = page.getByRole("dialog", {
             name: "Notebook navigation",
           });
-          for (let attempt = 0; attempt < 8; attempt++) {
-            await sheet.evaluate((node) => {
-              for (const element of [
-                node,
-                ...Array.from(node.querySelectorAll("*")),
-              ])
-                if (
-                  element.scrollHeight > element.clientHeight &&
-                  /auto|scroll/.test(getComputedStyle(element).overflowY)
-                )
-                  element.scrollTop = element.scrollHeight;
-            });
-            if (
-              await sheet
+          await expect
+            .poll(async () => {
+              await sheet.evaluate((node) => {
+                for (const element of [
+                  node,
+                  ...Array.from(node.querySelectorAll("*")),
+                ])
+                  if (
+                    element.scrollHeight > element.clientHeight &&
+                    /auto|scroll/.test(getComputedStyle(element).overflowY)
+                  )
+                    element.scrollTop = element.scrollHeight;
+              });
+              return sheet
                 .locator(
                   `a[data-sidebar="menu-sub-button"][href="/pages/${fixtureId(28)}"]`,
                 )
-                .count()
-            )
-              break;
-            await page.waitForTimeout(150);
-          }
+                .count();
+            })
+            .toBe(1);
           await sheet
             .locator(
               `a[data-sidebar="menu-sub-button"][href="/pages/${fixtureId(28)}"]`,
@@ -551,10 +549,11 @@ for (const group of groups)
           );
         }
         status.terminalAssertions.push(
-          "approved viewport-specific shell bounds; before/after screenshot geometry identical",
+          "approved viewport-specific shell bounds",
         );
         status.geometry = geometry;
-        status.geometryScreenshotConsistent = true;
+        status.geometryScreenshotConsistent =
+          JSON.stringify(frame.before) === JSON.stringify(frame.after);
         status.capture = `${root}/${id}.png`;
         status.status = "terminal-state-and-geometry-asserted";
         status.gap =

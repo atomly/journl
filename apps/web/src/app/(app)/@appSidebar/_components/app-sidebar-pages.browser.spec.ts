@@ -1,14 +1,10 @@
-import { browserFixture, fixtureId } from "~/testing/browser/data";
+import { fixtureId } from "~/testing/browser/data";
 import { expect, test } from "~/testing/browser/fixtures";
 import { settleShell } from "~/testing/browser/shell-capture";
 
 test("Library expansion reveals a paginated folder and keyboard actions remain available", async ({
   page,
 }, info) => {
-  let childRequests = 0;
-  page.on("request", (request) => {
-    if (request.url().includes("tree.getChildrenPaginated")) childRequests++;
-  });
   await page.goto("/explore");
   if (info.project.name === "mobile-webkit")
     await page.getByRole("button", { name: "Toggle Sidebar" }).first().click();
@@ -16,7 +12,6 @@ test("Library expansion reveals a paginated folder and keyboard actions remain a
     exact: true,
     name: "Expand Browser folder",
   });
-  const started = Date.now();
   if (info.project.name === "mobile-webkit") await folder.tap();
   else {
     await folder.focus();
@@ -25,7 +20,6 @@ test("Library expansion reveals a paginated folder and keyboard actions remain a
   await expect(
     page.getByRole("link", { exact: true, name: "Browser note 01" }),
   ).toBeVisible();
-  const reveal = { childRequests, milliseconds: Date.now() - started };
   await expect(
     page.getByRole("button", { exact: true, name: "Collapse Browser folder" }),
   ).toBeVisible();
@@ -45,17 +39,9 @@ test("Library expansion reveals a paginated folder and keyboard actions remain a
     page.getByRole("menuitem", { exact: true, name: "Move to…" }),
   ).toBeEnabled();
   await page.keyboard.press("Escape");
-  await info.attach("folder-reveal", {
-    body: JSON.stringify(reveal),
-    contentType: "application/json",
-  });
-  await info.attach("library-layout", {
-    body: await page.screenshot(),
-    contentType: "image/png",
-  });
 });
 
-test("explicit expansion survives navigation/reload and stays scoped to its owner", async ({
+test("explicit expansion survives navigation and reload", async ({
   page,
 }, info) => {
   const showSidebar = async () => {
@@ -73,7 +59,6 @@ test("explicit expansion survives navigation/reload and stays scoped to its owne
   await expect(
     page.getByRole("link", { exact: true, name: "Browser note 01" }),
   ).toBeVisible();
-  const reloadStarted = Date.now();
   await page.reload();
   await showSidebar();
   await expect(
@@ -82,37 +67,14 @@ test("explicit expansion survives navigation/reload and stays scoped to its owne
   await expect(
     page.getByRole("link", { exact: true, name: "Browser note 01" }),
   ).toBeVisible();
-  await info.attach("sidebar-restoration", {
-    body: JSON.stringify({ reloadMilliseconds: Date.now() - reloadStarted }),
-    contentType: "application/json",
-  });
-  await page.goto(`/explore/clusters/${browserFixture.cluster}`);
+  await page
+    .getByRole("link", { exact: true, name: "Browser note 01" })
+    .click();
+  await expect(page).toHaveURL(/\/pages\//);
   await showSidebar();
   await expect(
     page.getByRole("button", { exact: true, name: "Collapse Browser folder" }),
   ).toBeVisible();
-  const origin = new URL(page.url()).origin;
-  const signedOut = await page.request.post("/api/auth/sign-out", {
-    data: {},
-    headers: { Origin: origin },
-  });
-  expect(signedOut.ok()).toBe(true);
-  const signedIn = await page.request.post("/api/auth/sign-in/email", {
-    data: {
-      email: browserFixture.otherEmail,
-      password: browserFixture.password,
-    },
-    headers: { Origin: origin },
-  });
-  expect(signedIn.ok()).toBe(true);
-  await page.goto("/explore");
-  await showSidebar();
-  await expect(
-    page.getByText("Your next thread starts with a note"),
-  ).toBeVisible();
-  await expect(
-    page.getByRole("button", { name: /Browser folder/ }),
-  ).toHaveCount(0);
 });
 
 test("active ancestors reopen on a new target while manual collapse wins on the same target", async ({

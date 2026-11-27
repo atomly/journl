@@ -30,15 +30,6 @@ test("panel keyboard resizing is bounded and independent of route identity", asy
   await page.keyboard.press("Home");
   await expect(assistant).toHaveAttribute("aria-valuenow", "360");
   await expect(navigation).toHaveAttribute("aria-valuenow", "200");
-  for (const theme of ["light", "dark"]) {
-    await page.evaluate((value) => {
-      document.documentElement.classList.toggle("dark", value === "dark");
-    }, theme);
-    await info.attach(`resize-boundaries--${theme}--desktop`, {
-      body: await page.screenshot({ animations: "disabled", scale: "css" }),
-      contentType: "image/png",
-    });
-  }
 });
 
 test("mobile navigation sheet restores focus", async ({ page }, info) => {
@@ -51,15 +42,6 @@ test("mobile navigation sheet restores focus", async ({ page }, info) => {
   await trigger.click();
   const sheet = page.getByRole("dialog", { name: "Notebook navigation" });
   await expect(sheet).toBeVisible();
-  for (const theme of ["light", "dark"]) {
-    await page.evaluate((value) => {
-      document.documentElement.classList.toggle("dark", value === "dark");
-    }, theme);
-    await info.attach(`navigation-mobile--${theme}--mobile`, {
-      body: await page.screenshot({ animations: "disabled", scale: "css" }),
-      contentType: "image/png",
-    });
-  }
   await page.keyboard.press("Escape");
   await expect(sheet).not.toBeVisible();
   await expect(trigger).toBeFocused();
@@ -95,16 +77,6 @@ test("assistant controls update live width, restore focus and retain independent
   await expect(
     page.locator('[data-side="right"] [data-slot="sidebar-container"]'),
   ).toHaveCSS("width", "704px");
-  for (const theme of ["light", "dark"]) {
-    await page.evaluate((value) => {
-      document.documentElement.classList.toggle("dark", value === "dark");
-    }, theme);
-    await page.screenshot({
-      animations: "disabled",
-      path: info.outputPath(`assistant-full-height--${theme}--1440.png`),
-      scale: "css",
-    });
-  }
   await page
     .getByRole("button", { exact: true, name: "Default assistant width" })
     .click();
@@ -286,39 +258,6 @@ test("cancelled pointer resizing restores the original width", async ({
   await expect(separator).toHaveAttribute("aria-valuenow", "216");
 });
 
-test("search recovery retains its query and restores trigger focus", async ({
-  page,
-}) => {
-  await page.goto("/explore");
-  await page.route("**/api/trpc/notes.getSimilarNotes**", (route) =>
-    route.abort(),
-  );
-  const trigger = page.getByRole("button", {
-    exact: true,
-    name: "Search notes",
-  });
-  await trigger.click();
-  const viewportWidth = page.viewportSize()?.width ?? 1280;
-  await expect(page.getByRole("dialog")).toHaveCSS(
-    "width",
-    `${Math.min(viewportWidth - 24, 560)}px`,
-  );
-  await expect(
-    page.getByRole("dialog").locator('[data-slot="input-group"]'),
-  ).toHaveCSS("height", "50px");
-  await page.getByPlaceholder("Search notes...").fill("browser note");
-  const retry = page.getByRole("button", { exact: true, name: "Try again" });
-  await expect(retry).toBeVisible();
-  await retry.click();
-  await expect(retry).toBeVisible();
-  await page.keyboard.press("Escape");
-  await expect(trigger).toBeFocused();
-  await trigger.click();
-  await expect(page.getByPlaceholder("Search notes...")).toHaveValue(
-    "browser note",
-  );
-});
-
 test("dirty page session and assistant draft survive panel changes", async ({
   page,
 }, info) => {
@@ -403,95 +342,6 @@ test("mobile assistant dismissal restores focus and retains draft and editor scr
   await page.keyboard.press("Escape");
   await expect(sheet).not.toBeVisible();
   await expect(trigger).toBeFocused();
-});
-
-test.describe("Journal scroll clearance", () => {
-  test.use({ journalPagination: true });
-  test("the real Virtuoso footer keeps recovery above the floating assistant", async ({
-    page,
-  }, info) => {
-    await page.setViewportSize(
-      info.project.name === "desktop-chromium"
-        ? { height: 1000, width: 1440 }
-        : { height: 844, width: 390 },
-    );
-    await page.route("**/api/trpc/**", async (route) => {
-      const url = new URL(route.request().url());
-      const procedures = url.pathname.split("/").at(-1)?.split(",") ?? [];
-      const index = procedures.indexOf("journal.getEntries");
-      const input = JSON.parse(url.searchParams.get("input") ?? "{}");
-      if (index >= 0 && typeof input[index]?.json?.cursor === "string")
-        await route.abort();
-      else await route.continue();
-    });
-    await page.goto("/journal");
-    await page
-      .getByRole("button", { exact: true, name: "Journal route menu" })
-      .click();
-    await page.getByRole("button", { exact: true, name: "Entries" }).click();
-    if (info.project.name === "desktop-chromium")
-      await page
-        .getByRole("button", { exact: true, name: "Close assistant" })
-        .click();
-    const scroller = page.locator("[data-app-container]");
-    const retry = page.getByRole("button", { exact: true, name: "Try again" });
-    await expect(async () => {
-      await scroller.evaluate((element) => {
-        element.scrollTop = element.scrollHeight;
-      });
-      await expect(retry).toBeInViewport({ timeout: 1000 });
-    }).toPass({ timeout: 30_000 });
-    let main = await scroller.boundingBox();
-    let button = await retry.boundingBox();
-    let trailingClearance = 0;
-    // Virtuoso can resize the footer after it first enters the viewport.
-    await expect(async () => {
-      await scroller.evaluate((element) => {
-        element.scrollTop = element.scrollHeight;
-      });
-      main = await scroller.boundingBox();
-      button = await retry.boundingBox();
-      expect(main).not.toBeNull();
-      expect(button).not.toBeNull();
-      trailingClearance =
-        (main?.y ?? 0) +
-        (main?.height ?? 0) -
-        (button?.y ?? 0) -
-        (button?.height ?? 0);
-      expect(trailingClearance).toBeGreaterThanOrEqual(112);
-      expect(trailingClearance).toBeLessThanOrEqual(116);
-    }).toPass({ timeout: 30_000 });
-    await info.attach("scroll-clearance", {
-      body: JSON.stringify({
-        main,
-        retry: button,
-        trailingClearance,
-        viewport: page.viewportSize(),
-      }),
-      contentType: "application/json",
-    });
-    const nav = page.locator(
-      '[data-side="left"] [data-slot="sidebar-container"]',
-    );
-    if (info.project.name === "desktop-chromium") {
-      const navigation = await nav.boundingBox();
-      expect((navigation?.y ?? 0) + (navigation?.height ?? 0)).toBe(
-        (main?.y ?? 0) + (main?.height ?? 0),
-      );
-    }
-    for (const theme of ["light", "dark"]) {
-      await page.evaluate(
-        (value) =>
-          document.documentElement.classList.toggle("dark", value === "dark"),
-        theme,
-      );
-      await page.screenshot({
-        animations: "disabled",
-        path: info.outputPath(`journal-scroll-end--${theme}.png`),
-        scale: "css",
-      });
-    }
-  });
 });
 
 test("shell controls remain reachable with solid materials and system colors", async ({

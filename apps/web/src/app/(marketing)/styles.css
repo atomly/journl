@@ -182,8 +182,10 @@ body {
 :where(.dark) .marketing .canonical-hero-light {
   display: none;
 }
-:where(.dark) .marketing .canonical-hero-desktop.canonical-hero-dark {
-  display: block;
+@media (min-width: 701px) {
+  :where(.dark) .marketing .canonical-hero-desktop.canonical-hero-dark {
+    display: block;
+  }
 }
 .marketing .composition-caption {
   color: var(--muted-foreground);

@@ -255,7 +255,10 @@ function VirtualizedJournalList({
         <JournalEntryProvider entry={entry}>
           <JournalEntryWrapper className="mx-auto max-w-4xl border-b pt-8 pb-20">
             {"contentReadError" in entry && entry.contentReadError ? (
-              <div className="space-y-4 px-8" data-journal-content-unavailable>
+              <div
+                className="space-y-4 px-13.5"
+                data-journal-content-unavailable
+              >
                 <JournalEntryHeader />
                 <p role="status" className="text-muted-foreground text-sm">
                   This entry could not be opened safely. Its saved content is
@@ -264,7 +267,7 @@ function VirtualizedJournalList({
               </div>
             ) : (
               <DynamicJournalEntryEditor onCreateAction={onCreateAction}>
-                <JournalEntryHeader className="px-8" linkDate />
+                <JournalEntryHeader className="px-13.5" linkDate />
               </DynamicJournalEntryEditor>
             )}
           </JournalEntryWrapper>

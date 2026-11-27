@@ -43,7 +43,7 @@ async function SuspendedJournalEntry({ date }: { date: string }) {
       <JournalEntryWrapper className="mx-auto max-w-5xl pt-8 pb-20">
         <Suspense fallback={<JournalEntrySkeleton hasContent />}>
           <DynamicJournalEntryEditor>
-            <JournalEntryHeader className="px-8" linkDate />
+            <JournalEntryHeader className="px-13.5" linkDate />
           </DynamicJournalEntryEditor>
         </Suspense>
       </JournalEntryWrapper>

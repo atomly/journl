@@ -5,12 +5,601 @@ body {
   scroll-behavior: smooth;
 }
 
-@keyframes glow {
-  0%,
-  100% {
-    opacity: 0.45;
+/*
+ * Approved marketing plates (docs/design-handoff/screenshots/marketing-light.png,
+ * marketing-mobile.png), translated from the handoff rendering sources onto the
+ * application tokens: control boundaries use --input, surface boundaries --border,
+ * pastel roles --primary/--accent/--reference/--assistant with --pastel-foreground ink.
+ */
+.marketing {
+  --display: 88px;
+  --measure: 1184px;
+  --section: 56px;
+  --section-gap: 112px;
+}
+.marketing :focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 3px;
+}
+.marketing .eyebrow {
+  color: var(--muted-foreground);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 1.6px;
+  margin-bottom: 16px;
+}
+.marketing .hero-new .eyebrow {
+  color: var(--foreground);
+}
+.marketing small {
+  color: var(--muted-foreground);
+  display: block;
+  font-size: 13px;
+}
+.marketing .icon {
+  display: block;
+  flex-shrink: 0;
+  height: 20px;
+  width: 20px;
+}
+.marketing .btn {
+  align-items: center;
+  background: var(--card);
+  border: 1px solid var(--input);
+  border-radius: 8px;
+  color: var(--foreground);
+  display: inline-flex;
+  font-size: 14px;
+  gap: 8px;
+  justify-content: center;
+  line-height: 20px;
+  min-height: 44px;
+  padding: 8px 16px;
+  white-space: nowrap;
+}
+.marketing .btn:hover {
+  background: var(--hover);
+}
+.marketing .btn.primary {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: var(--pastel-foreground);
+  font-weight: 600;
+}
+.marketing .btn.primary:hover {
+  background: var(--primary);
+  box-shadow: inset 0 0 0 2px var(--pastel-foreground);
+}
+.marketing a.btn {
+  min-height: 48px;
+  text-decoration: none;
+}
+.marketing .btn.sign-in {
+  background: transparent;
+  border-color: transparent;
+}
+.marketing .btn.sign-in:hover {
+  background: var(--hover);
+}
+.marketing .public-actions {
+  display: flex;
+  gap: 12px;
+}
+
+/* Glass navigation bar: 32px marketing lockup, 1312px material column. */
+.marketing .marketing-nav {
+  align-items: center;
+  backdrop-filter: blur(24px);
+  background:
+    linear-gradient(120deg, var(--glass-glint), transparent 58%), var(--glass);
+  border-radius: 24px;
+  box-shadow:
+    inset 0 1px var(--glass-edge),
+    var(--depth);
+  display: flex;
+  gap: 24px;
+  justify-content: space-between;
+  margin: 24px auto 0;
+  max-width: 1312px;
+  padding: 16px 24px;
+}
+.marketing .marketing-nav > .nav-description {
+  border-left: 1px solid var(--glass-lower);
+  color: var(--muted-foreground);
+  font-size: 13px;
+  margin-right: auto;
+  padding-left: 24px;
+}
+
+.marketing .hero-new {
+  align-items: end;
+  display: grid;
+  gap: 80px;
+  grid-template-columns: 1.3fr 1fr;
+  margin: 80px auto 48px;
+  max-width: var(--measure);
+}
+.marketing .hero-new h1 {
+  font-size: var(--display);
+  font-weight: 600;
+  letter-spacing: -5px;
+  line-height: 1.02;
+}
+.marketing .hero-description p {
+  color: var(--muted-foreground);
+  font-size: 20px;
+  line-height: 1.65;
+  margin-bottom: 24px;
+  max-width: 36ch;
+}
+.marketing .hero-description small {
+  font-size: 12px;
+  margin-top: 16px;
+}
+.marketing .hero-description small a {
+  color: var(--link);
+  min-width: 44px;
+}
+.marketing .hero-description small a:focus-visible {
+  min-height: 44px;
+}
+
+/* The exact canonical v5 all-pages PNG at natural ratio, uncropped. */
+.marketing .product-frame {
+  background:
+    linear-gradient(125deg, var(--glass-glint), transparent 58%), var(--glass);
+  border: 1px solid var(--glass-edge);
+  border-bottom-color: var(--glass-lower);
+  border-radius: 32px;
+  box-shadow: var(--depth);
+  backdrop-filter: blur(24px);
+  margin: 0 auto;
+  max-width: 1312px;
+  overflow: hidden;
+  padding: 0;
+}
+.marketing .canonical-hero {
+  border-radius: 20px;
+  display: block;
+  height: auto;
+  width: 100%;
+}
+.marketing .canonical-hero-dark,
+.marketing .canonical-hero-mobile {
+  display: none;
+}
+:where(.dark) .marketing .canonical-hero-light {
+  display: none;
+}
+:where(.dark) .marketing .canonical-hero-desktop.canonical-hero-dark {
+  display: block;
+}
+.marketing .composition-caption {
+  color: var(--muted-foreground);
+  display: flex;
+  font-size: 12px;
+  justify-content: space-between;
+  margin: 16px auto 0;
+  max-width: var(--measure);
+}
+.marketing .composition-caption span {
+  max-width: 50%;
+}
+.marketing .composition-caption span:last-child {
+  text-align: right;
+}
+
+.marketing .organization {
+  align-items: start;
+  display: grid;
+  gap: 112px;
+  grid-template-columns: 1fr 1.2fr;
+  margin: var(--section-gap) auto;
+  max-width: var(--measure);
+}
+.marketing .organization h2,
+.marketing .context-section h2 {
+  font-size: var(--section);
+  font-weight: 500;
+  letter-spacing: -2px;
+  line-height: 1.08;
+}
+.marketing .organization .body-copy {
+  color: var(--muted-foreground);
+  font-size: 18px;
+  line-height: 1.7;
+  margin-top: 24px;
+  max-width: 38ch;
+}
+.marketing .use-cases {
+  display: grid;
+  gap: 0;
+}
+.marketing .use-case {
+  border-bottom: 1px solid var(--border);
+  display: grid;
+  gap: 24px;
+  grid-template-columns: 48px 1fr;
+  padding: 24px 0;
+}
+.marketing .use-case:first-child {
+  padding-top: 0;
+}
+.marketing .use-case .case-no {
+  color: var(--muted-foreground);
+  font-size: 16px;
+  padding-top: 4px;
+}
+.marketing .use-case h3 {
+  font-size: 24px;
+  font-weight: 600;
+  letter-spacing: -0.6px;
+}
+.marketing .use-case p {
+  color: var(--muted-foreground);
+  font-size: 16px;
+  line-height: 1.7;
+  margin: 8px 0 12px;
+}
+.marketing .use-case .example {
+  align-items: center;
+  background: var(--reference);
+  border-radius: 8px;
+  color: var(--pastel-foreground);
+  display: inline-flex;
+  font-size: 13px;
+  gap: 8px;
+  padding: 8px 12px;
+}
+.marketing .use-case:nth-child(2) .example {
+  background: var(--primary);
+}
+.marketing .use-case:nth-child(3) .example {
+  background: var(--accent);
+}
+
+.marketing .context-section {
+  align-items: center;
+  background: var(--secondary);
+  border: 1px solid var(--border);
+  border-radius: 32px;
+  display: grid;
+  gap: 80px;
+  grid-template-columns: 1fr 1.1fr;
+  margin: 0 auto;
+  max-width: 1312px;
+  padding: 64px;
+}
+.marketing .context-copy > p:not(.eyebrow) {
+  color: var(--muted-foreground);
+  font-size: 18px;
+  line-height: 1.7;
+  margin-top: 24px;
+  max-width: 36ch;
+}
+.marketing .context-card {
+  background:
+    linear-gradient(130deg, var(--glass-glint), transparent 50%), var(--glass);
+  border: 1px solid var(--glass-edge);
+  border-bottom-color: var(--glass-lower);
+  border-radius: 24px;
+  box-shadow: var(--depth);
+  padding: 16px;
+}
+.marketing .context-card > header {
+  align-items: center;
+  display: flex;
+  font-size: 18px;
+  font-weight: 600;
+  gap: 12px;
+  padding: 8px 8px 24px;
+}
+.marketing .context-card > header .icon {
+  background: var(--assistant);
+  border-radius: 12px;
+  box-sizing: content-box;
+  color: var(--pastel-foreground);
+  padding: 8px;
+}
+.marketing .context-answer {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 24px;
+}
+.marketing .context-answer .context-question {
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 1.5;
+  margin-bottom: 16px;
+}
+.marketing .context-answer p:not(.context-question) {
+  color: var(--muted-foreground);
+  font-size: 16px;
+  line-height: 1.7;
+}
+.marketing .context-answer .context-keep {
+  color: var(--foreground);
+  font-weight: 600;
+  margin-top: 16px;
+}
+.marketing .context-answer .source-example {
+  background: var(--reference);
+  border-radius: 8px;
+  color: var(--pastel-foreground);
+  display: inline-flex;
+  font-size: 12px;
+  margin-top: 20px;
+  padding: 8px 12px;
+}
+.marketing .context-card > small {
+  font-size: 11px;
+  padding: 16px 8px 0;
+}
+
+.marketing .marketing-end {
+  padding: 112px 24px;
+}
+.marketing .marketing-end h2 {
+  font-size: 64px;
+  font-weight: 500;
+  letter-spacing: -3px;
+  line-height: 1.1;
+  margin: auto;
+  max-width: 800px;
+}
+.marketing .marketing-end p:not(.eyebrow) {
+  font-size: 18px;
+  margin: 24px 0;
+}
+.marketing .marketing-end .public-actions {
+  justify-content: center;
+}
+
+.marketing .marketing-footer {
+  background: transparent;
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 32px;
+  padding: 40px max(32px, calc((100vw - 1184px) / 2));
+}
+.marketing .marketing-footer .brand {
+  color: var(--foreground);
+  display: inline-flex;
+  min-height: 44px;
+  text-decoration: none;
+}
+.marketing .marketing-footer nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+}
+.marketing .marketing-footer nav a {
+  align-items: center;
+  color: var(--muted-foreground);
+  display: inline-flex;
+  min-height: 44px;
+  min-width: 44px;
+  text-decoration: none;
+}
+.marketing .marketing-footer nav a:hover {
+  color: var(--foreground);
+  text-decoration: underline;
+}
+.marketing .copyright {
+  font-size: 12px;
+  width: 100%;
+}
+
+/* 701–1359px: keep 32px material and 64px narrative margins until the stack. */
+@media (min-width: 701px) and (max-width: 1359px) {
+  .marketing .marketing-nav,
+  .marketing .product-frame,
+  .marketing .context-section {
+    margin-left: 32px;
+    margin-right: 32px;
   }
-  50% {
-    opacity: 0.9;
+  .marketing .hero-new,
+  .marketing .organization,
+  .marketing .composition-caption {
+    margin-left: 64px;
+    margin-right: 64px;
+  }
+  .marketing .hero-new {
+    gap: 48px;
+  }
+  .marketing .hero-new h1 {
+    font-size: 76px;
+  }
+}
+
+/* Mobile stack at 700px and below. */
+@media (max-width: 700px) {
+  .marketing {
+    --display: 52px;
+    --section: 38px;
+    --section-gap: 64px;
+  }
+  .marketing .marketing-nav {
+    border-radius: 20px;
+    gap: 8px;
+    margin: 12px;
+    padding: 12px;
+  }
+  .marketing .marketing-nav .nav-description {
+    display: none;
+  }
+  .marketing .public-actions {
+    gap: 4px;
+  }
+  .marketing .marketing-nav .btn {
+    font-size: 13px;
+    min-height: 44px;
+    padding: 8px 12px;
+  }
+  .marketing .hero-new {
+    align-items: stretch;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    margin: 48px 24px 32px;
+  }
+  .marketing .hero-new h1 {
+    font-size: 52px;
+    letter-spacing: -2.6px;
+    line-height: 1.04;
+  }
+  .marketing .hero-new .eyebrow {
+    font-size: 10px;
+    letter-spacing: 1.2px;
+    margin-bottom: 20px;
+  }
+  .marketing .hero-description p {
+    font-size: 17px;
+    line-height: 1.7;
+    margin-bottom: 24px;
+  }
+  .marketing .hero-description > .btn {
+    min-height: 48px;
+    width: 100%;
+  }
+  .marketing .hero-description small {
+    font-size: 12px;
+    line-height: 1.7;
+  }
+  .marketing .hero-description small a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+  }
+  .marketing .product-frame {
+    border-radius: 24px;
+    margin: 0 12px;
+  }
+  .marketing .canonical-hero {
+    border-radius: 20px;
+  }
+  .marketing .canonical-hero-desktop {
+    display: none;
+  }
+  .marketing .canonical-hero-mobile {
+    display: block;
+  }
+  /* Light shows only its own hero; the dark hero pairs with the dark
+     theme below. */
+  .marketing .canonical-hero-mobile.canonical-hero-dark {
+    display: none;
+  }
+  :where(.dark) .marketing .canonical-hero-mobile.canonical-hero-light {
+    display: none;
+  }
+  :where(.dark) .marketing .canonical-hero-mobile.canonical-hero-dark {
+    display: block;
+  }
+  .marketing .composition-caption {
+    display: block;
+    font-size: 11px;
+    line-height: 1.6;
+    margin: 16px 24px;
+  }
+  .marketing .composition-caption span {
+    display: block;
+    max-width: none;
+  }
+  .marketing .composition-caption span:last-child {
+    text-align: left;
+  }
+  .marketing .organization {
+    display: block;
+    margin: 64px 24px;
+  }
+  .marketing .organization h2,
+  .marketing .context-section h2 {
+    font-size: 38px;
+    letter-spacing: -1.4px;
+    line-height: 1.13;
+  }
+  .marketing .organization .body-copy {
+    font-size: 16px;
+    margin-top: 20px;
+  }
+  .marketing .use-cases {
+    margin-top: 32px;
+  }
+  .marketing .use-case {
+    gap: 12px;
+    grid-template-columns: 32px 1fr;
+    padding: 24px 0;
+  }
+  .marketing .use-case h3 {
+    font-size: 22px;
+  }
+  .marketing .use-case p {
+    font-size: 15px;
+  }
+  .marketing .use-case .example {
+    font-size: 12px;
+    padding: 8px;
+  }
+  .marketing .context-section {
+    border-radius: 24px;
+    display: block;
+    margin: 0 12px;
+    padding: 32px 20px;
+  }
+  .marketing .context-copy > p:not(.eyebrow) {
+    font-size: 16px;
+    margin-top: 20px;
+  }
+  .marketing .context-card {
+    border-radius: 20px;
+    margin-top: 32px;
+    padding: 12px;
+  }
+  .marketing .context-card > header {
+    font-size: 17px;
+    padding: 4px 4px 16px;
+  }
+  .marketing .context-answer {
+    padding: 20px 16px;
+  }
+  .marketing .context-answer .context-question {
+    font-size: 16px;
+  }
+  .marketing .context-answer p:not(.context-question) {
+    font-size: 15px;
+  }
+  .marketing .context-card > small {
+    font-size: 10px;
+    line-height: 1.6;
+  }
+  .marketing .marketing-end {
+    padding: 64px 24px;
+  }
+  .marketing .marketing-end h2 {
+    font-size: 40px;
+    letter-spacing: -1.8px;
+  }
+  .marketing .marketing-end p:not(.eyebrow) {
+    font-size: 16px;
+  }
+  .marketing .marketing-end .public-actions {
+    flex-direction: column;
+    gap: 12px;
+  }
+  .marketing .marketing-footer {
+    align-items: flex-start;
+    display: flex;
+    gap: 20px;
+    padding: 32px 24px;
+  }
+  .marketing .marketing-footer nav {
+    gap: 4px 24px;
+  }
+  .marketing .copyright {
+    font-size: 11px;
+    max-width: none;
+    text-align: left;
   }
 }

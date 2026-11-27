@@ -187,7 +187,10 @@ export default withoutAuth(function RootPage() {
           <small>
             Access is currently by invitation.
             <br />
-            Already have a notebook? <Link href="/auth/sign-in">Sign in</Link>
+            Already have a notebook?{" "}
+            <Link className="sign-in" href="/auth/sign-in">
+              Sign in
+            </Link>
           </small>
         </div>
       </section>
@@ -302,7 +305,9 @@ export default withoutAuth(function RootPage() {
           <a href="#capture">Capture</a>
           <a href="#connect">Connect</a>
           <a href="#rediscover">Rediscover</a>
-          <Link href="/auth/sign-in">Sign in</Link>
+          <Link className="sign-in" href="/auth/sign-in">
+            Sign in
+          </Link>
           <Link className="btn primary" href="/invite">
             Get started <LandingIcon d={arrowPath} />
           </Link>

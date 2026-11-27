@@ -78,6 +78,11 @@ body {
   min-height: 48px;
   text-decoration: none;
 }
+.marketing a.sign-in,
+.marketing .marketing-footer nav a.sign-in {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
 .marketing .btn.sign-in {
   background: transparent;
   border-color: transparent;

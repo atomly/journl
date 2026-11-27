@@ -194,6 +194,11 @@ test("light desktop marketing keeps the approved plate geometry", async ({
   // Review verdict C (flat hierarchy): the primary action is the mint pill
   // in every header rendering, including the footer nav row that pairs
   // Capture/Connect/Rediscover with Sign in.
+  for (const link of await page
+    .getByRole("link", { exact: true, name: "Sign in" })
+    .all()) {
+    await expect(link).toHaveCSS("text-decoration-line", "underline");
+  }
   const footerPrimary = page.locator(".marketing-footer nav a.btn.primary");
   await expect(footerPrimary).toHaveAttribute("href", "/invite");
   await expect(footerPrimary).toHaveCSS(

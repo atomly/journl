@@ -15,7 +15,6 @@ import {
   ComposerReasoningContent,
   ComposerReasoningTrigger,
 } from "./composer-context";
-import { ComposerSources } from "./composer-selection";
 
 export function ChatQuotaNotice() {
   const { exceeded } = useChatActions();
@@ -66,9 +65,6 @@ export function ChatComposer() {
             Message
           </FieldLabel>
           <InputGroup className="journl-chat-input">
-            <InputGroupAddon align="block-start">
-              <ComposerSources />
-            </InputGroupAddon>
             <InputGroupTextarea
               id={id}
               placeholder={

@@ -12,6 +12,7 @@ import type { JournlAgentContext } from "~/ai/mastra/agents/journl-agent-context
 import { useReferenceClient } from "~/components/references/use-reference-client";
 import { useJournlAgent } from "~/hooks/use-journl-agent";
 import { DocumentWritingStatus } from "./document-writing-status";
+import { SelectionQuoteAction } from "./selection-quote";
 
 export function ConnectedDocumentEditor(
   props: Omit<ComponentProps<typeof DocumentEditor>, "references"> & {
@@ -47,32 +48,36 @@ export function ConnectedDocumentEditor(
     [props.services],
   );
   return (
-    <DocumentEditor
-      {...props}
-      className={cn("journl-document-editor", props.className)}
-      references={references ?? undefined}
-      afterContent={
-        session ? <DocumentWritingStatus session={session} /> : undefined
-      }
-      services={services}
-      toolbarMode={props.toolbarMode ?? (mobile ? "sticky" : "floating")}
-      toolbarVisibility={
-        props.toolbarVisibility ?? (mobile ? "always" : "selection")
-      }
-      onReady={(editor) => {
-        setInstance(editor);
-        const targetId = new URLSearchParams(window.location.hash.slice(1)).get(
-          "block",
-        );
-        if (targetId) {
-          const target = Array.from(
-            editor.view.dom.querySelectorAll<HTMLElement>("[data-block-id]"),
-          ).find((item) => item.dataset.blockId === targetId);
-          target?.scrollIntoView({ block: "center" });
-          target?.classList.add("reference-target-highlight");
+    <>
+      <DocumentEditor
+        {...props}
+        className={cn("journl-document-editor", props.className)}
+        references={references ?? undefined}
+        afterContent={
+          session ? <DocumentWritingStatus session={session} /> : undefined
         }
-        props.onReady?.(editor);
-      }}
-    />
+        services={services}
+        toolbarMode={props.toolbarMode ?? (mobile ? "sticky" : "floating")}
+        toolbarVisibility={
+          props.toolbarVisibility ?? (mobile ? "always" : "selection")
+        }
+        onReady={(editor) => {
+          setInstance(editor);
+          const targetId = new URLSearchParams(
+            window.location.hash.slice(1),
+          ).get("block");
+          if (targetId) {
+            const target = Array.from(
+              editor.view.dom.querySelectorAll<HTMLElement>("[data-block-id]"),
+            ).find((item) => item.dataset.blockId === targetId);
+            target?.scrollIntoView({ block: "center" });
+            target?.classList.add("reference-target-highlight");
+          }
+          props.onReady?.(editor);
+        }}
+      />
+      {/* App-owned affordance driven by the editor's exposed selection state. */}
+      {instance ? <SelectionQuoteAction editor={instance} /> : null}
+    </>
   );
 }

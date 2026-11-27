@@ -40,7 +40,6 @@ vi.mock("./composer-context", () => ({
   ComposerReasoningContent: () => null,
   ComposerReasoningTrigger: () => <button type="button">Reasoning mode</button>,
 }));
-vi.mock("./composer-selection", () => ({ ComposerSources: () => null }));
 vi.mock("@acme/ui/drawer", () => ({
   useDrawer: () => ({ closeDrawer: vi.fn() }),
 }));

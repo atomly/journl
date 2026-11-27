@@ -38,7 +38,6 @@ export function normalizePastedHTML(html: string, createId: IdFactory): string {
   ].reverse()) {
     const result = document.createDocumentFragment();
     const start = Number.parseInt(list.getAttribute("start") ?? "1", 10);
-    let number = Number.isNaN(start) ? 1 : start;
     for (const item of [...list.children]) {
       if (item.tagName !== "LI") continue;
       const wrapper = document.createElement("div");
@@ -49,10 +48,17 @@ export function normalizePastedHTML(html: string, createId: IdFactory): string {
         list.tagName === "OL" ? "numberedListItem" : "bulletListItem";
       if (list.tagName === "OL") {
         const explicit = Number.parseInt(item.getAttribute("value") ?? "", 10);
-        if (!Number.isNaN(explicit)) number = explicit;
+        const props = Number.isNaN(explicit)
+          ? {
+              start:
+                result.childNodes.length === 0 && !Number.isNaN(start)
+                  ? start
+                  : undefined,
+            }
+          : { restart: true, start: explicit };
         body.setAttribute(
           "data-better-editor-attrs",
-          JSON.stringify({ props: { start: number++ } }),
+          JSON.stringify({ props }),
         );
       }
       const children = document.createElement("div");

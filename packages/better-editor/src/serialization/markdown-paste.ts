@@ -115,8 +115,8 @@ export function markdownClipboard(
             const [first, ...rest] = item.children;
             return block({
               type: node.ordered ? "numberedListItem" : "bulletListItem",
-              ...(node.ordered
-                ? { props: { start: (node.start ?? 1) + index } }
+              ...(node.ordered && index === 0
+                ? { props: { start: node.start ?? 1 } }
                 : {}),
               children: blocks(
                 first?.type === "paragraph" ? rest : item.children,

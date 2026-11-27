@@ -155,7 +155,7 @@ body {
   min-height: 44px;
 }
 
-/* The exact canonical v5 all-pages PNG at natural ratio, uncropped. */
+/* Display the workspace screenshot at its natural ratio. */
 .marketing .product-frame {
   background:
     linear-gradient(125deg, var(--glass-glint), transparent 58%), var(--glass);

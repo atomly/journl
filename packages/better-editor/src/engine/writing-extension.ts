@@ -137,7 +137,8 @@ export function writingExtension(createId: IdFactory) {
           ]),
         ),
         Backspace: () => {
-          if (this.editor.view.composing) return false;
+          if (this.editor.view.composing || !this.editor.isEditable)
+            return false;
           if (this.editor.commands.undoInputRule()) return true;
           const { state } = this.editor;
           const target = selectedBlock(state);
@@ -149,6 +150,18 @@ export function writingExtension(createId: IdFactory) {
             state.selection.$from.parentOffset
           )
             return false;
+          if (body.type.name === "numberedListItem") {
+            const previous =
+              target.index > 0 ? target.siblings.child(target.index - 1) : null;
+            // Let the normal block join remove an empty item. For text-bearing
+            // items, remove the marker in place without moving their subtree.
+            if (
+              body.content.size === 0 &&
+              previous?.firstChild?.type === body.type
+            )
+              return false;
+            return run(() => changeBlockType(state, "paragraph"));
+          }
           if (lists.has(body.type.name))
             return run(() =>
               target.parentId
@@ -203,7 +216,10 @@ export function writingExtension(createId: IdFactory) {
           ) {
             const props = { ...right.node.firstChild.attrs.props };
             if (body.type.name === "checkListItem") props.checked = false;
-            else delete props.start;
+            else {
+              delete props.start;
+              delete props.restart;
+            }
             const current = blockAt(tr.doc, right.id);
             tr.setNodeMarkup(current.pos + 1, undefined, { props });
           }

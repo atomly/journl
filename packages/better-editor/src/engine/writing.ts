@@ -168,7 +168,7 @@ export function changeBlockType(
         target.id,
         type,
         type === "numberedListItem" && index > 0
-          ? { ...properties, start: undefined }
+          ? { ...properties, restart: undefined, start: undefined }
           : properties,
       )
     )

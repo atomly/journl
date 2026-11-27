@@ -149,13 +149,15 @@ function blockText(block: DocumentBlock, html: boolean): string {
   }
 }
 export function documentMarkdown(blocks: readonly DocumentBlock[]): string {
-  let ordinal = 0;
+  let ordinal: number | null = null;
   return blocks
     .map((block) => {
       ordinal =
         block.type === "numberedListItem"
-          ? (block.props?.start ?? ordinal + 1)
-          : 0;
+          ? ordinal === null || block.props?.restart
+            ? (block.props?.start ?? 1)
+            : ordinal + 1
+          : null;
       let text = blockText(block, false);
       if (block.type === "heading")
         text = `${"#".repeat(block.props?.level ?? 1)} ${text}`;
@@ -221,7 +223,11 @@ export function documentHtml(blocks: readonly DocumentBlock[]): string {
         block.type === "checkListItem"
           ? `<input type="checkbox" disabled${block.props?.checked ? " checked" : ""}> `
           : "";
-      result.push(`<li>${checkbox}${text}${children}</li>`);
+      const value =
+        block.type === "numberedListItem" && block.props?.restart
+          ? ` value="${block.props.start ?? 1}"`
+          : "";
+      result.push(`<li${value}>${checkbox}${text}${children}</li>`);
     } else {
       closeList();
       const tag =

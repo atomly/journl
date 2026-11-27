@@ -281,7 +281,7 @@ The rest of the components are set by the Tailwind CSS classes, or by our editor
   }
 }
 [data-slot="sidebar-inset"] [data-app-container] {
-  border: 1px solid var(--border);
+  border: 1px solid var(--glass-edge);
   border-radius: 24px;
   background: var(--card);
   /* Panels cast the approved shadow into the gutters at every shell
@@ -326,14 +326,9 @@ The rest of the components are set by the Tailwind CSS classes, or by our editor
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
   }
-}
-/* A collapsed floating sidebar paints only border and shadow on a
-   zero-width box, drawing a stray hairline beside the reading panel.
-   Kept after the fallback blocks so selector specificity ascends. */
-[data-slot="sidebar"][data-collapsible="offcanvas"][data-state="collapsed"]
-[data-slot="sidebar-inner"] {
-  border-width: 0;
-  box-shadow: none;
+  [data-slot="sidebar-inset"] [data-app-container] {
+    border-color: CanvasText;
+  }
 }
 
 [data-app-container]:not(:has([data-virtuoso-scroller]))::after {
@@ -354,10 +349,6 @@ The rest of the components are set by the Tailwind CSS classes, or by our editor
     width: calc(100vw - 112px);
     max-width: none;
     height: auto;
-  }
-  [data-slot="sidebar"][data-side="right"][data-state="collapsed"]
-    > [data-slot="sidebar-container"] {
-    display: none;
   }
 }
 
@@ -1020,11 +1011,11 @@ The rest of the components are set by the Tailwind CSS classes, or by our editor
   display: block;
 }
 [data-state="collapsed"] .journl-navigation-create > button {
-  justify-content: center;
+  justify-content: flex-start;
   width: 40px;
   height: 40px;
   min-height: 40px;
-  padding: 0;
+  padding: 0 12px;
   background: transparent;
   /* Match the rail's muted icon ink; the inherited foreground read near-black. */
   color: var(--muted-foreground);
@@ -1065,11 +1056,6 @@ The rest of the components are set by the Tailwind CSS classes, or by our editor
      mark sits on the same centerline as every other collapsed control. */
   width: 40px;
   height: 24px;
-}
-[data-state="collapsed"] .journl-navigation-primary .journl-navigation-label {
-  min-height: 1px;
-  height: 1px;
-  margin: 12px 0;
 }
 @media (forced-colors: active) {
   .journl-agent-launcher {
@@ -1141,17 +1127,16 @@ The rest of the components are set by the Tailwind CSS classes, or by our editor
   [data-sidebar="menu-button"] {
   width: 40px !important;
   height: 40px !important;
-  padding: 0 !important;
-  justify-content: center;
-  /* Snap to the settled geometry instead of riding the width transition:
-     centered content in an animating button reflows the icon. */
-  transition: none;
+  padding: 0 11px !important;
 }
 [data-state="collapsed"] .journl-navigation-primary {
   padding-top: 4px;
 }
 [data-state="collapsed"] .journl-navigation-primary .journl-navigation-label {
-  display: none;
+  height: 0;
+  min-height: 0;
+  margin: 0;
+  visibility: hidden;
 }
 /* Tree indentation belongs to the label, so row fills share the panel inset. */
 :is([data-side="left"], [data-mobile="true"]) [data-sidebar="menu-sub"] {
@@ -1349,14 +1334,40 @@ The rest of the components are set by the Tailwind CSS classes, or by our editor
   outline: none;
   box-shadow: none;
 }
+/* Keep labels to one line while the navigation rail changes width. */
 [data-side="left"]
-  :is([data-slot="sidebar-gap"], [data-slot="sidebar-container"]) {
-  /* One atomic layout update for the reading column and compact navigation. */
-  transition: none;
+:is([data-sidebar="menu-button"], [data-sidebar="group-label"]) {
+  white-space: nowrap;
 }
-[data-side="left"]
-  :is([data-sidebar="menu-button"], [data-sidebar="group-label"]) {
-  transition-property: background-color, color, border-color;
+@media (width >= 701px) {
+  [data-side="left"] .journl-navigation-header {
+    height: 56px;
+    flex-shrink: 0;
+  }
+  [data-side="left"][data-state="collapsed"] .journl-navigation-header {
+    height: 94px;
+  }
+  [data-side="left"][data-state="expanded"]
+    .journl-navigation-primary
+    .journl-navigation-label {
+    height: 17px;
+  }
+}
+@media (width >= 701px) and (prefers-reduced-motion: no-preference) {
+  [data-side="left"]
+    :is(
+      .journl-navigation-header,
+      .journl-navigation-primary,
+      .journl-navigation-label,
+      [data-sidebar="menu-button"],
+      .journl-navigation-create > button
+    ) {
+    transition:
+      height 200ms linear,
+      min-height 200ms linear,
+      margin 200ms linear,
+      padding 200ms linear;
+  }
 }
 
 [aria-label="Chat composer"] {

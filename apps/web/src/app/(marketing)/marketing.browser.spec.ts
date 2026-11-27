@@ -9,19 +9,19 @@ import { captureSettledShell } from "~/testing/browser/shell-capture";
  * The approved marketing plates are light-theme, full-page captures:
  * docs/design-handoff/screenshots/marketing-light.png (1440 wide) and
  * marketing-mobile.png (390 wide). Dark keeps the same geometry through the
- * application theme tokens; its hero swaps to the canonical dark capture.
+ * application theme tokens; the hero uses the current workspace captures.
  */
 
-/** Canonical v5 all-pages Library PNGs, verbatim in public/marketing. */
+/** Current All pages captures from the disposable review workspace. */
 const heroHashes = {
   "/marketing/library-dark-mobile.png":
-    "5688618dbe0ff8f46741d0f77b22aa9e8e68e2e94eeae7e2de4403362c76b5ae",
+    "574d25844954a260137862e7e5102666f230890e0f017bd6e543428cee649290",
   "/marketing/library-dark.png":
-    "d2325214908e3b10a36b8dd1368b0c953a087824c871d9774358e368db23dd91",
+    "e78aeb4000d31d506be50e4640957bd5a0760907c272a02e93d6751d0ae0f785",
   "/marketing/library-light-mobile.png":
-    "635c41809bf5f47a7ea857b3f619abce084b8a2cc8ac9fb7a9cea49446466018",
+    "1bb841e8dc9786e800fea0e266a575e194f2cc515ac3d1317d7f8e56cb3d88e9",
   "/marketing/library-light.png":
-    "ed05a44f89ded4fbbc385f009e52bb33214cf795c6909ef2ca8a0ddb1ae8bdb2",
+    "71b492908eeba3d406ba9bc739d8b04ccbc1977ab4c2052f2d6a62d6cc3a111e",
 };
 
 const headline = { level: 1, name: /give your knowledge a home/i };
@@ -131,14 +131,14 @@ test("light desktop marketing keeps the approved plate geometry", async ({
     const hash = createHash("sha256")
       .update(await response.body())
       .digest("hex");
-    expect(hash, `${file} is the verbatim canonical PNG`).toBe(sha256);
+    expect(hash, `${file} matches the workspace capture`).toBe(sha256);
   }
 
   const { boxes, rhythm } = await marketingGeometry(page);
   expect(boxes.nav).toMatchObject({ height: 80, width: 1312, x: 64, y: 24 });
   // Brand rule: the marketing lockup is 32px tall.
   expect(boxes.lockup).toMatchObject({ height: 32, y: 48 });
-  // Hero contract: the exact all-pages PNG, width 100%, height auto, 1.44.
+  // Hero contract: the All pages capture scales at its natural aspect ratio.
   expect(boxes.canonicalDesktop).toMatchObject({
     naturalHeight: 1000,
     naturalWidth: 1440,

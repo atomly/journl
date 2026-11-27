@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+import { documentHtml, documentMarkdown } from "@acme/document";
 import { Editor } from "@tiptap/core";
 import { TextSelection } from "@tiptap/pm/state";
 import { expect, test } from "vitest";
@@ -90,7 +91,7 @@ test("rich HTML lists use the same owned nesting and preserve marks and numberin
     });
     expect(JSON.stringify(blocks[0]?.content)).toContain('"bold":true');
     expect(blocks[2]).toMatchObject({ props: { start: 3 } });
-    expect(blocks[3]).toMatchObject({ props: { start: 4 } });
+    expect(blocks[3]?.props).not.toHaveProperty("start");
     editor.state.doc.check();
   } finally {
     editor.destroy();
@@ -264,11 +265,15 @@ test("HTML ordered list starts and explicit item values preserve zero", () => {
       '<ol start="0"><li>Zero</li><li>One</li><li value="0">Zero again</li></ol>',
       new Event("paste") as ClipboardEvent,
     );
-    expect(fromTiptapDocument(editor.state.doc)).toMatchObject([
+    const blocks = fromTiptapDocument(editor.state.doc);
+    expect(blocks).toMatchObject([
       { props: { start: 0 }, type: "numberedListItem" },
-      { props: { start: 1 }, type: "numberedListItem" },
-      { props: { start: 0 }, type: "numberedListItem" },
+      { type: "numberedListItem" },
+      { props: { restart: true, start: 0 }, type: "numberedListItem" },
     ]);
+    expect(blocks[1]?.props).not.toHaveProperty("start");
+    expect(documentMarkdown(blocks)).toBe("0. Zero\n\n1. One\n\n0. Zero again");
+    expect(documentHtml(blocks)).toContain('<li value="0">Zero again</li>');
   } finally {
     editor.destroy();
   }

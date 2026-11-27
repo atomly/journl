@@ -334,3 +334,95 @@ for (const theme of ["light", "dark"]) {
     });
   });
 }
+
+test("desktop sidebars animate without reflowing text", async ({
+  page,
+}, info) => {
+  test.skip(info.project.name !== "desktop-chromium", "Desktop sidebar motion");
+  await page.setViewportSize({ height: 1000, width: 1440 });
+  await page.goto("/library");
+  const close = page.getByRole("button", { name: "Close assistant" });
+  await expect(close).toBeVisible();
+  const assistant = await close.evaluate(async (button) => {
+    const panel = button.closest('[data-slot="sidebar-container"]');
+    const heading = panel?.querySelector("h2");
+    if (!panel || !heading || !(button instanceof HTMLElement))
+      throw new Error("Missing assistant controls");
+    const initial = panel.getBoundingClientRect();
+    const initialHeading = heading.getBoundingClientRect();
+    button.click();
+    await new Promise(requestAnimationFrame);
+    const animation = panel
+      .getAnimations()
+      .find(
+        (candidate) =>
+          candidate instanceof CSSTransition &&
+          candidate.transitionProperty === "translate",
+      );
+    if (!animation) throw new Error("Assistant did not slide out");
+    animation.pause();
+    animation.currentTime = 100;
+    const middle = panel.getBoundingClientRect();
+    const middleHeading = heading.getBoundingClientRect();
+    animation.finish();
+    return {
+      end: panel.getBoundingClientRect().left,
+      headingHeight: [initialHeading.height, middleHeading.height],
+      middle: middle.left,
+      start: initial.left,
+      widths: [initial.width, middle.width],
+    };
+  });
+  expect(assistant.middle).toBeGreaterThan(assistant.start);
+  expect(assistant.end).toBeGreaterThanOrEqual(1440);
+  expect(assistant.middle).toBeLessThan(assistant.end);
+  expect(assistant.widths[1]).toBe(assistant.widths[0]);
+  expect(assistant.headingHeight[1]).toBe(assistant.headingHeight[0]);
+
+  const nav = await page
+    .getByRole("button", { name: "Toggle Sidebar" })
+    .evaluate(async (button) => {
+      const panel = button.closest('[data-slot="sidebar-container"]');
+      const icon = panel?.querySelector(
+        '.journl-navigation-primary [data-sidebar="menu-button"] > svg',
+      );
+      if (!panel || !icon || !(button instanceof HTMLElement))
+        throw new Error("Missing navigation controls");
+      const start = panel.getBoundingClientRect().width;
+      const startIcon = icon.getBoundingClientRect();
+      button.click();
+      await new Promise(requestAnimationFrame);
+      const animation = panel
+        .getAnimations()
+        .find(
+          (candidate) =>
+            candidate instanceof CSSTransition &&
+            candidate.transitionProperty === "width",
+        );
+      if (!animation) throw new Error("Navigation width did not animate");
+      const transitions = panel
+        .getAnimations({ subtree: true })
+        .filter((candidate) => candidate instanceof CSSTransition);
+      for (const transition of transitions) {
+        transition.pause();
+        transition.currentTime = 100;
+      }
+      const middle = panel.getBoundingClientRect().width;
+      const midIcon = icon.getBoundingClientRect();
+      for (const transition of transitions) transition.finish();
+      const end = panel.getBoundingClientRect().width;
+      const endIcon = icon.getBoundingClientRect();
+      return {
+        end,
+        endIconY: endIcon.y,
+        middle,
+        midIconY: midIcon.y,
+        start,
+        startIconY: startIcon.y,
+      };
+    });
+  expect(nav.middle).toBeLessThan(nav.start);
+  expect(nav.middle).toBeGreaterThan(nav.end);
+  expect(nav.midIconY).toBeGreaterThan(Math.min(nav.startIconY, nav.endIconY));
+  expect(nav.midIconY).toBeLessThan(Math.max(nav.startIconY, nav.endIconY));
+});

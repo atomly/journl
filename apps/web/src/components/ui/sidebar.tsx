@@ -513,7 +513,7 @@ function Sidebar({
         ref={ref}
         style={
           {
-            "--sidebar-width": state === "collapsed" ? 0 : `${widthRem}rem`,
+            "--sidebar-width": `${widthRem}rem`,
           } as React.CSSProperties
         }
       >
@@ -521,7 +521,7 @@ function Sidebar({
         <div
           data-slot="sidebar-gap"
           className={cn(
-            "relative w-(--sidebar-width) max-w-[70vw] bg-transparent transition-[width] duration-200 ease-linear group-data-[collapsible=offcanvas]:mr-0 group-data-[side=left]:mr-8 group-data-[side=right]:mr-4",
+            "relative w-(--sidebar-width) max-w-[70vw] bg-transparent transition-[width,margin-right] duration-200 ease-linear group-data-[collapsible=offcanvas]:mr-0 group-data-[side=left]:mr-8 group-data-[side=right]:mr-4 motion-reduce:transition-none",
             "group-data-[collapsible=offcanvas]:w-0",
             "group-data-[side=right]:rotate-180",
             variant === "floating" || variant === "inset"
@@ -539,10 +539,10 @@ function Sidebar({
               : undefined
           }
           className={cn(
-            "fixed inset-y-4 z-2 hidden h-[calc(100dvh-32px)] w-(--sidebar-width) max-w-[70vw] transition-[left,right,width] duration-200 ease-linear min-[701px]:flex",
+            "fixed inset-y-4 z-2 hidden h-[calc(100dvh-32px)] w-(--sidebar-width) max-w-[70vw] transition-[left,translate,width] duration-200 ease-linear motion-reduce:transition-none min-[701px]:flex",
             side === "left"
               ? "left-4 group-data-[collapsible=offcanvas]:left-[calc(var(--sidebar-width)*-1)]"
-              : "right-4 group-data-[collapsible=offcanvas]:right-[calc(var(--sidebar-width)*-1)]",
+              : "right-4 group-data-[collapsible=offcanvas]:translate-x-[calc(100%+--spacing(6))]",
             // Adjust the padding for floating and inset variants.
             variant === "floating" || variant === "inset"
               ? [

@@ -104,12 +104,16 @@ export const zBlockData = z.discriminatedUnion("type", [
   inlineBlock("quote", colors),
   inlineBlock("numberedListItem", {
     ...textProps,
+    restart: z
+      .boolean()
+      .optional()
+      .describe(
+        "Apply start here even when the preceding sibling is numbered.",
+      ),
     start: z
       .number()
       .optional()
-      .describe(
-        "Explicit list ordinal. Omit to continue the preceding numbered sibling, or start at 1 after a non-numbered block.",
-      ),
+      .describe("Starting ordinal of a numbered run, defaulting to 1."),
   }),
   inlineBlock("checkListItem", {
     ...textProps,

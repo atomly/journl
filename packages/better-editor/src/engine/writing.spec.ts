@@ -608,3 +608,43 @@ test("two Enters in the middle of a nested numbered list exit locally", () => {
     editor.destroy();
   }
 });
+
+test.each(["", "Second"])(
+  "Backspace at the start of a nested numbered item stays local (%j)",
+  (content) => {
+    const { editor, key, blocks } = setup([
+      parseBlock({
+        children: [
+          { content: "First", id: "first", type: "numberedListItem" },
+          { content, id: "second", type: "numberedListItem" },
+          { content: "Following", id: "following", type: "numberedListItem" },
+        ],
+        id: "parent",
+        type: "paragraph",
+      }),
+      parseBlock({ content: "Tail", id: "tail", type: "paragraph" }),
+    ]);
+    try {
+      const second = blockAt(editor.state.doc, "second");
+      editor.view.dispatch(
+        editor.state.tr.setSelection(
+          TextSelection.create(editor.state.doc, second.pos + 2),
+        ),
+      );
+      key("Backspace");
+      expect(blocks().map((block) => block.id)).toEqual(["parent", "tail"]);
+      expect(
+        blocks()[0]?.children?.map(({ id, type }) => ({ id, type })),
+      ).toEqual([
+        { id: "first", type: "numberedListItem" },
+        ...(content ? [{ id: "second", type: "paragraph" }] : []),
+        { id: "following", type: "numberedListItem" },
+      ]);
+      expect(selectedBlock(editor.state)?.id).toBe(
+        content ? "second" : "first",
+      );
+    } finally {
+      editor.destroy();
+    }
+  },
+);

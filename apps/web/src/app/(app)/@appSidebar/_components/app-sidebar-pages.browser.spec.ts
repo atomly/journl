@@ -1,5 +1,6 @@
 import { browserFixture, fixtureId } from "~/testing/browser/data";
 import { expect, test } from "~/testing/browser/fixtures";
+import { settleShell } from "~/testing/browser/shell-capture";
 
 test("Library expansion reveals a paginated folder and keyboard actions remain available", async ({
   page,
@@ -245,7 +246,10 @@ test.describe("native touch swipe", () => {
       .locator("xpath=ancestor::li[1]")
       .locator('[data-slot="swipe-action"]');
     const reveal = swipe.locator('[data-slot="swipe-action-reveal"]');
+    await expect(link).toBeVisible();
     await expect(reveal).toBeHidden();
+    await settleShell(page);
+    const content = swipe.locator('[data-slot="swipe-action-content"]');
     const box = await swipe.boundingBox();
     if (!box) throw new Error("Missing swipe bounds");
     const x = box.x + box.width - 100;
@@ -266,6 +270,7 @@ test.describe("native touch swipe", () => {
           ),
       );
     }
+    await expect(content).toHaveCSS("transform", "matrix(1, 0, 0, 1, -60, 0)");
     await input.send("Input.dispatchTouchEvent", {
       touchPoints: [],
       type: "touchEnd",
@@ -277,10 +282,7 @@ test.describe("native touch swipe", () => {
     // The plate state is the settled reveal; let its transition finish
     // before the closing tap so the gesture pipeline never receives a tap
     // mid-transition. The animated property is the content's translate.
-    await expect(swipe.locator('[data-slot="swipe-action-content"]')).toHaveCSS(
-      "transform",
-      "matrix(1, 0, 0, 1, -80, 0)",
-    );
+    await expect(content).toHaveCSS("transform", "matrix(1, 0, 0, 1, -80, 0)");
     // Playwright's own tap synthesis instead of a raw CDP pair: the input
     // pipeline occasionally drops an immediate touch pair after a drag on slow
     // runners, leaving the reveal open with no click reaching the page.

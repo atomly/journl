@@ -154,10 +154,54 @@ test("light desktop marketing keeps the approved plate geometry", async ({
   expect(rhythm.heroToProductFrame).toBe(48);
   expect(rhythm.captionToOrganization).toBe(112);
 
+  // Review verdict A (top strip): the background flows to the top. The nav
+  // pill's 24px top margin used to collapse through <main> and <body>,
+  // leaving a flat strip of html background above the body's ambient
+  // gradient. The body must now start at the viewport top.
+  expect(
+    await page.evaluate(() => document.body.getBoundingClientRect().y),
+  ).toBe(0);
+
+  // Review verdict B (hero alignment): one deliberate axis for the whole
+  // hero narrative, centered. Eyebrow, headline, subline, CTA and the
+  // invitation small print share the page's center axis.
+  const heroAxis = await page.evaluate(() => {
+    const centers: Record<string, number | null> = {};
+    for (const [name, selector] of [
+      ["cta", ".hero-description > .btn.primary"],
+      ["eyebrow", ".hero-new .eyebrow"],
+      ["headline", ".hero-new h1"],
+      ["small", ".hero-description small"],
+      ["subline", ".hero-description > p"],
+    ] as const) {
+      const rect = document.querySelector(selector)?.getBoundingClientRect();
+      centers[name] = rect ? Math.round(rect.x + rect.width / 2) : null;
+    }
+    return centers;
+  });
+  for (const [name, center] of Object.entries(heroAxis)) {
+    expect(center, `${name} centers on the hero axis`).toBe(720);
+  }
+
   const primary = page.locator(".hero-description > .btn.primary");
   await expect(primary).toHaveCSS("background-color", "rgb(160, 229, 205)");
   await expect(primary).toHaveCSS("min-height", "48px");
   await expect(page.locator(".marketing-nav .btn.primary")).toHaveCSS(
+    "background-color",
+    "rgb(160, 229, 205)",
+  );
+
+  // Review verdict C (flat hierarchy): the primary action is the mint pill
+  // in every header rendering, including the footer nav row that pairs
+  // Capture/Connect/Rediscover with Sign in.
+  for (const link of await page
+    .getByRole("link", { exact: true, name: "Sign in" })
+    .all()) {
+    await expect(link).toHaveCSS("text-decoration-line", "underline");
+  }
+  const footerPrimary = page.locator(".marketing-footer nav a.btn.primary");
+  await expect(footerPrimary).toHaveAttribute("href", "/invite");
+  await expect(footerPrimary).toHaveCSS(
     "background-color",
     "rgb(160, 229, 205)",
   );
@@ -282,6 +326,12 @@ test("light mobile marketing stacks the approved single column", async ({
     "20px",
   );
   expect(rhythm.navToHero).toBe(48);
+
+  // Review verdict A on mobile too: the body starts at the viewport top;
+  // the nav pill keeps its 12px inset without shifting the background.
+  expect(
+    await page.evaluate(() => document.body.getBoundingClientRect().y),
+  ).toBe(0);
 
   // Single-column hero: the invitation action spans the narrative column.
   const cta = page.locator(".hero-description > .btn.primary");

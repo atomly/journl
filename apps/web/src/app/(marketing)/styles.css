@@ -11,11 +11,15 @@ body {
  * application tokens: control boundaries use --input, surface boundaries --border,
  * pastel roles --primary/--accent/--reference/--assistant with --pastel-foreground ink.
  */
+/* flow-root contains the nav pill's top margin: without it the margin
+ * collapses through <main> and <body>, pushing the body (and its ambient
+ * gradient) below a flat strip of html background at the top of the page. */
 .marketing {
   --display: 88px;
   --measure: 1184px;
   --section: 56px;
   --section-gap: 112px;
+  display: flow-root;
 }
 .marketing :focus-visible {
   outline: 2px solid var(--ring);
@@ -74,6 +78,11 @@ body {
   min-height: 48px;
   text-decoration: none;
 }
+.marketing a.sign-in,
+.marketing .marketing-footer nav a.sign-in {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
 .marketing .btn.sign-in {
   background: transparent;
   border-color: transparent;
@@ -111,13 +120,15 @@ body {
   padding-left: 24px;
 }
 
+/* One deliberate alignment axis for the whole hero narrative: centered. */
 .marketing .hero-new {
-  align-items: end;
-  display: grid;
-  gap: 80px;
-  grid-template-columns: 1.3fr 1fr;
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
   margin: 80px auto 48px;
-  max-width: var(--measure);
+  max-width: 800px;
+  text-align: center;
 }
 .marketing .hero-new h1 {
   font-size: var(--display);
@@ -392,7 +403,9 @@ body {
   width: 100%;
 }
 
-/* 701–1359px: keep 32px material and 64px narrative margins until the stack. */
+/* 701–1359px: keep 32px material and 64px narrative margins until the stack.
+ * The hero column centers itself (max-width 800px), so it keeps its axis
+ * here instead of pinning to the narrative margin. */
 @media (min-width: 701px) and (max-width: 1359px) {
   .marketing .marketing-nav,
   .marketing .product-frame,
@@ -400,14 +413,10 @@ body {
     margin-left: 32px;
     margin-right: 32px;
   }
-  .marketing .hero-new,
   .marketing .organization,
   .marketing .composition-caption {
     margin-left: 64px;
     margin-right: 64px;
-  }
-  .marketing .hero-new {
-    gap: 48px;
   }
   .marketing .hero-new h1 {
     font-size: 76px;

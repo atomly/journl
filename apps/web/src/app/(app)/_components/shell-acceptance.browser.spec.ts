@@ -26,6 +26,10 @@ for (const group of groups)
           mapping.viewport.width <= 700,
         "Capture matrix uses explicit viewports; WebKit interaction checks run separately",
       );
+      test.skip(
+        group.stateId === "navigation-mobile" && mapping.viewport.width > 700,
+        "The navigation sheet is now a phone-only state",
+      );
       const root = path.join(info.project.outputDir, "shell-captures");
       await mkdir(root, { recursive: true });
       const search = await controlShellSearch(page);
@@ -189,18 +193,9 @@ for (const group of groups)
             .getByRole("button", { exact: true, name: "Toggle Sidebar" })
             .click();
         if (group.stateId === "navigation-mobile") {
-          if (mobile)
-            await page
-              .getByRole("button", { exact: true, name: "Toggle Sidebar" })
-              .click();
-          else {
-            await page
-              .getByRole("button", { exact: true, name: "Route actions" })
-              .click();
-            await page
-              .getByRole("button", { exact: true, name: "Notebook navigation" })
-              .click();
-          }
+          await page
+            .getByRole("button", { exact: true, name: "Toggle Sidebar" })
+            .click();
           await expect(
             page.getByRole("dialog", { name: "Notebook navigation" }),
           ).toBeVisible();
@@ -223,7 +218,7 @@ for (const group of groups)
         }
         if (group.stateId === "narrow-route-actions") {
           await page
-            .getByRole("button", { exact: true, name: "Route actions" })
+            .getByRole("button", { exact: true, name: "Journal route menu" })
             .click();
           await expect(page.getByRole("dialog")).toBeVisible();
         }

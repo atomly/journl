@@ -36,6 +36,21 @@ for (const theme of ["light", "dark"]) {
       "border-radius",
       "16px 16px 0px 0px",
     );
+    await expect(page.locator("body")).toHaveCSS(
+      "background-color",
+      theme === "dark" ? "rgb(5, 5, 5)" : "rgb(237, 237, 238)",
+    );
+    await expect(page.locator("header[data-hidden] > div")).toHaveCSS(
+      "backdrop-filter",
+      "blur(20px)",
+    );
+    await expect(page.locator("[data-app-container]")).toHaveCSS(
+      "background-color",
+      theme === "dark" ? "rgb(11, 11, 12)" : "rgb(255, 255, 255)",
+    );
+    await expect(
+      page.getByRole("button", { exact: true, name: "Route actions" }),
+    ).toHaveCount(0);
     await expect(selected).toHaveCSS("font-weight", "650");
     await expect(selected).toHaveCSS("border-width", "0px");
     await expect(selected.locator("svg").first()).toHaveCSS("width", "16px");
@@ -98,7 +113,7 @@ for (const theme of ["light", "dark"]) {
       account.locator("span.text-foreground:not([data-slot])"),
     ).toHaveCSS(
       "color",
-      theme === "dark" ? "rgb(238, 243, 255)" : "rgb(23, 40, 61)",
+      theme === "dark" ? "rgb(242, 242, 243)" : "rgb(32, 33, 36)",
     );
     const accountContrast = await renderedTextContrast(
       account.locator("span.text-foreground:not([data-slot])"),

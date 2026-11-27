@@ -71,11 +71,8 @@ test("shipped account dropdown hosts the shipped theme control and signs out", a
     };
   });
   expect(colors.width).toBe("1px");
-  // The composed workspace chrome pins the header edge to the approved v2
-  // recipe's --line constant per theme, not to the glass sheet's --glass-edge
-  // (docs/design-handoff/approved-workspace-v2/review/workspace.css).
   expect(colors.header).toBe(
-    colors.dark ? "rgb(52, 72, 101)" : "rgb(213, 224, 237)",
+    colors.dark ? "rgba(255, 255, 255, 0.23)" : "rgba(255, 255, 255, 0.93)",
   );
   expect(colors.border).toBe(colors.sidebarDivider);
   expect(colors.divider).toBe(colors.sidebarDivider);
@@ -131,6 +128,9 @@ test("shipped Appearance card and account dropdown share the persisted theme", a
 }, info) => {
   await page.goto("/auth/sign-in");
   await expect(page).toHaveURL("/account/settings");
+  await expect(page.locator("[data-app-container]")).toContainText(
+    "Appearance",
+  );
   await expect(
     page.getByRole("heading", { exact: true, name: "Appearance" }),
   ).toBeVisible();

@@ -17,19 +17,14 @@ import {
 } from "@acme/ui/popover";
 import { Surface } from "@acme/ui/surface";
 import { useQuery } from "@tanstack/react-query";
-import { ChevronDown, MoreHorizontal, XIcon } from "lucide-react";
+import { ChevronDown, XIcon } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState, useSyncExternalStore } from "react";
 import { useAppPreferences } from "~/components/preferences/app-preferences-provider";
-import {
-  useIsMobile,
-  useShellReady,
-  useShellViewport,
-} from "~/components/ui/use-shell-viewport";
+import { useIsMobile, useShellReady } from "~/components/ui/use-shell-viewport";
 import { useJournlAgent } from "~/hooks/use-journl-agent";
 import { useTRPC } from "~/trpc/react";
-import { useNavigationSidebar } from "../../@appSidebar/_components/app-sidebar-provider";
 
 function RouteDisclosure({
   open,
@@ -38,7 +33,6 @@ function RouteDisclosure({
   title,
   trigger,
   children,
-  align = "start",
   suppressed = false,
 }: {
   open: boolean;
@@ -47,7 +41,6 @@ function RouteDisclosure({
   title: string;
   trigger: React.ReactElement;
   children: React.ReactNode;
-  align?: "start" | "end";
   /** A menu with nothing to choose from never opens; the trigger stays an identity control. */
   suppressed?: boolean;
 }) {
@@ -83,7 +76,7 @@ function RouteDisclosure({
     <Popover open={suppressed ? false : open} onOpenChange={handleOpenChange}>
       <PopoverTrigger render={trigger} aria-label={label} disabled={!ready} />
       <PopoverContent
-        align={align}
+        align="start"
         data-shell-route-popover
         className="max-h-[min(65dvh,var(--available-height,65dvh))] gap-0 overflow-hidden rounded-[20px] p-0"
       >
@@ -116,16 +109,8 @@ function localDate(value: Date) {
   return `${value.getFullYear()}-${String(value.getMonth() + 1).padStart(2, "0")}-${String(value.getDate()).padStart(2, "0")}`;
 }
 
-export function HeaderRouteActions({
-  children,
-  actions,
-}: {
-  children: React.ReactNode;
-  actions?: React.ReactNode;
-}) {
+export function HeaderRouteActions({ actions }: { actions?: React.ReactNode }) {
   const pathname = usePathname();
-  const { setOpenMobile } = useNavigationSidebar();
-  const viewport = useShellViewport();
   const router = useRouter();
   const trpc = useTRPC();
   const agent = useJournlAgent();
@@ -141,11 +126,7 @@ export function HeaderRouteActions({
   );
   const [browseDates, setBrowseDates] = useState(false);
   const [open, setOpen] = useState(false);
-  const [actionsOpen, setActionsOpen] = useState(false);
-  const closeMenus = () => {
-    setOpen(false);
-    setActionsOpen(false);
-  };
+  const closeMenu = () => setOpen(false);
   const pageId = /^\/pages\/([^/]+)$/.exec(pathname)?.[1];
   const folderId = /^\/folders\/([^/]+)$/.exec(pathname)?.[1];
   const { data: path } = useQuery({
@@ -157,38 +138,51 @@ export function HeaderRouteActions({
   });
   const journal = pathname.startsWith("/journal");
   const library = pathname === "/library";
-  const label = journal
-    ? "Journal"
-    : library
-      ? "All pages"
-      : pathname.startsWith("/explore") || pathname.startsWith("/graph")
-        ? "Explore"
-        : "Library";
+  const account = pathname.startsWith("/account/");
+  const subscription = pathname === "/subscription";
+  const label =
+    account || subscription
+      ? "Account & plan"
+      : journal
+        ? "Journal"
+        : library
+          ? "All pages"
+          : pathname.startsWith("/explore") || pathname.startsWith("/graph")
+            ? "Explore"
+            : "Library";
   const { preferences, updatePreferences } = useAppPreferences();
   const date = /^\/journal\/(\d{4}-\d{2}-\d{2})$/.exec(pathname)?.[1];
-  const detail = journal
-    ? date
-      ? new Date(`${date}T12:00:00`).toLocaleDateString("en-US", {
-          day: "numeric",
-          month: "long",
-          year: "numeric",
-        })
-      : preferences.journalTimelineView === "entries"
-        ? "Entries"
-        : "Timeline"
-    : library
-      ? ""
-      : path
-          ?.map((item) =>
-            item.id === pageId && currentTitle !== null
-              ? currentTitle || "Untitled"
-              : item.name || "Untitled",
-          )
-          .join(" / ") ||
-        (label === "Explore" ? "Threads and connections" : currentTitle || "");
+  const detail = subscription
+    ? "Subscription"
+    : account
+      ? pathname === "/account/security"
+        ? "Security"
+        : "Settings"
+      : journal
+        ? date
+          ? new Date(`${date}T12:00:00`).toLocaleDateString("en-US", {
+              day: "numeric",
+              month: "long",
+              year: "numeric",
+            })
+          : preferences.journalTimelineView === "entries"
+            ? "Entries"
+            : "Timeline"
+        : library
+          ? ""
+          : path
+              ?.map((item) =>
+                item.id === pageId && currentTitle !== null
+                  ? currentTitle || "Untitled"
+                  : item.name || "Untitled",
+              )
+              .join(" / ") ||
+            (label === "Explore"
+              ? "Threads and connections"
+              : currentTitle || "");
   const navigate = (url: string) => {
     router.push(url);
-    closeMenus();
+    closeMenu();
   };
   // Notebook identity routes repeat the breadcrumb across the trigger and
   // the menu; the header shows the section instead, and a path with only the
@@ -240,121 +234,104 @@ export function HeaderRouteActions({
   );
   return (
     <div className="flex min-w-0 flex-1 items-center gap-2">
-      <RouteDisclosure
-        open={open}
-        onOpenChange={setOpen}
-        label={identityMenuSuppressed ? label : `${label} route menu`}
-        title={identityRoute ? label : detail || label}
-        suppressed={identityMenuSuppressed}
-        trigger={
-          <Button
-            variant="ghost"
-            className="h-auto min-h-11 min-w-0 max-w-full shrink justify-start justify-self-start px-0 text-left"
-          >
-            <span className="min-w-0">
-              <span
-                className={
-                  pageId
-                    ? "block truncate font-normal text-[13px]"
-                    : "block font-semibold"
-                }
-              >
-                {pageId ? (
-                  <>
-                    <span className="hidden min-[701px]:inline">{detail}</span>
-                    <span className="min-[701px]:hidden">
-                      {currentTitle || path?.at(-1)?.name || "Page"}
-                    </span>
-                  </>
-                ) : (
-                  label
-                )}
-              </span>
-              <span
-                className={
-                  pageId
-                    ? "sr-only"
-                    : "block max-w-80 truncate font-normal text-muted-foreground text-xs"
-                }
-              >
-                {detail}
-              </span>
-            </span>
-            {!identityMenuSuppressed && <ChevronDown />}
-          </Button>
-        }
-      >
-        {journal ? (
-          journalActions
-        ) : label === "Explore" ? (
-          <>
-            <Link href="/explore" onClick={closeMenus}>
-              Threads
-            </Link>
-            <Link href="/graph" onClick={closeMenus}>
-              Graph
-            </Link>
-          </>
-        ) : label === "All pages" ? (
-          <>
-            <Link href="/library" onClick={closeMenus}>
-              All pages
-            </Link>
-            <Link href="/library?tab=folders" onClick={closeMenus}>
-              Folders
-            </Link>
-          </>
-        ) : (
-          path?.map((item) => (
-            <Link
-              key={item.node_id}
-              onClick={closeMenus}
-              href={
-                item.node_type === "page"
-                  ? `/pages/${item.id}`
-                  : `/folders/${item.id}`
-              }
+      {account || subscription ? (
+        <div className="min-w-0">
+          <span className="block truncate font-semibold">{label}</span>
+          <span className="block truncate text-muted-foreground text-xs">
+            {detail}
+          </span>
+        </div>
+      ) : (
+        <RouteDisclosure
+          open={open}
+          onOpenChange={setOpen}
+          label={identityMenuSuppressed ? label : `${label} route menu`}
+          title={identityRoute ? label : detail || label}
+          suppressed={identityMenuSuppressed}
+          trigger={
+            <Button
+              variant="ghost"
+              className="h-auto min-h-11 min-w-0 max-w-full shrink justify-start justify-self-start px-0 text-left"
             >
-              {item.id === pageId && currentTitle !== null
-                ? currentTitle || "Untitled"
-                : item.name || "Untitled"}
-            </Link>
-          ))
-        )}
-      </RouteDisclosure>
+              <span className="min-w-0">
+                <span
+                  className={
+                    pageId
+                      ? "block truncate font-normal text-[13px]"
+                      : "block font-semibold"
+                  }
+                >
+                  {pageId ? (
+                    <>
+                      <span className="hidden min-[701px]:inline">
+                        {detail}
+                      </span>
+                      <span className="min-[701px]:hidden">
+                        {currentTitle || path?.at(-1)?.name || "Page"}
+                      </span>
+                    </>
+                  ) : (
+                    label
+                  )}
+                </span>
+                <span
+                  className={
+                    pageId
+                      ? "sr-only"
+                      : "block max-w-80 truncate font-normal text-muted-foreground text-xs"
+                  }
+                >
+                  {detail}
+                </span>
+              </span>
+              {!identityMenuSuppressed && <ChevronDown />}
+            </Button>
+          }
+        >
+          {journal ? (
+            journalActions
+          ) : label === "Explore" ? (
+            <>
+              <Link href="/explore" onClick={closeMenu}>
+                Threads
+              </Link>
+              <Link href="/graph" onClick={closeMenu}>
+                Graph
+              </Link>
+            </>
+          ) : label === "All pages" ? (
+            <>
+              <Link href="/library" onClick={closeMenu}>
+                All pages
+              </Link>
+              <Link href="/library?tab=folders" onClick={closeMenu}>
+                Folders
+              </Link>
+            </>
+          ) : (
+            path?.map((item) => (
+              <Link
+                key={item.node_id}
+                onClick={closeMenu}
+                href={
+                  item.node_type === "page"
+                    ? `/pages/${item.id}`
+                    : `/folders/${item.id}`
+                }
+              >
+                {item.id === pageId && currentTitle !== null
+                  ? currentTitle || "Untitled"
+                  : item.name || "Untitled"}
+              </Link>
+            ))
+          )}
+        </RouteDisclosure>
+      )}
       <div
         data-slot="header-actions"
         className="ml-auto flex shrink-0 items-center gap-0 min-[701px]:gap-2"
       >
         {actions}
-      </div>
-      <div className="journl-header-route-actions shrink-0">
-        <RouteDisclosure
-          open={actionsOpen}
-          onOpenChange={setActionsOpen}
-          label="Route actions"
-          title="Route actions"
-          align="start"
-          trigger={
-            <Button variant="ghost" size="icon" className="rounded-full">
-              <MoreHorizontal className="size-5" />
-            </Button>
-          }
-        >
-          {journal && journalActions}
-          {viewport === "desktop" && (
-            <Button
-              variant="ghost"
-              onClick={() => {
-                closeMenus();
-                setOpenMobile(true);
-              }}
-            >
-              Notebook navigation
-            </Button>
-          )}
-          {children}
-        </RouteDisclosure>
       </div>
     </div>
   );

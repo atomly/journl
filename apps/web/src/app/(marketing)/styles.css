@@ -1,6 +1,6 @@
 html,
 body {
-  background-color: var(--background);
+  background-color: var(--page-background);
   color: var(--foreground);
   scroll-behavior: smooth;
 }

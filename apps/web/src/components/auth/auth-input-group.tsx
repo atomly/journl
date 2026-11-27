@@ -18,7 +18,10 @@ export function AuthInputGroup({
 }: ComponentProps<typeof InputGroup>) {
   return (
     <InputGroup
-      className={cn("h-[50px] rounded-[12px]", className)}
+      className={cn(
+        "h-[50px] rounded-[12px] bg-field! has-disabled:bg-disabled!",
+        className,
+      )}
       {...props}
     />
   );

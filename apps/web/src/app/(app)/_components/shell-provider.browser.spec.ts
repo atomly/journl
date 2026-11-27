@@ -48,7 +48,7 @@ for (const theme of ["light", "dark"])
         const field = dialog.locator('[data-slot="input-group"]');
         await expect(field).toHaveCSS(
           "background-color",
-          theme === "light" ? "rgb(233, 239, 251)" : "rgb(16, 27, 48)",
+          theme === "light" ? "rgb(243, 243, 244)" : "rgb(11, 11, 12)",
         );
         await expect(field).toHaveCSS("border-radius", "12px");
         await expect(dialog).toHaveCSS(

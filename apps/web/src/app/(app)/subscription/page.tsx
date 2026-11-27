@@ -34,14 +34,14 @@ async function SubscriptionPage() {
   });
 
   return (
-    <div className="h-full w-full p-8">
+    <div className="mx-auto w-full max-w-[744px] px-5 pt-8 pb-24 text-card-foreground sm:px-8">
       <div className="space-y-8">
         {/* Header Section */}
-        <div className="space-y-4 text-center">
-          <h1 className="text-balance font-bold text-4xl md:text-5xl">
+        <div className="flex flex-col gap-3">
+          <h1 className="text-balance font-semibold text-3xl tracking-tight md:text-[40px]">
             Plan Summary
           </h1>
-          <p className="mx-auto max-w-2xl text-pretty text-lg text-muted-foreground">
+          <p className="max-w-2xl text-pretty text-muted-foreground">
             Your premium subscription is active and ready to power your
             productivity
           </p>
@@ -52,7 +52,7 @@ async function SubscriptionPage() {
 
         {/* Additional Info Cards */}
         <div className="grid gap-6 md:grid-cols-2">
-          <Card>
+          <Card className="rounded-xl bg-secondary/50 shadow-none">
             <CardContent>
               <div className="mb-4 flex items-center gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
@@ -71,7 +71,7 @@ async function SubscriptionPage() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="rounded-xl bg-secondary/50 shadow-none">
             <CardContent>
               <div className="mb-4 flex items-center gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
@@ -79,7 +79,7 @@ async function SubscriptionPage() {
                 </div>
                 <h3 className="font-semibold">Account Status</h3>
               </div>
-              <p className="mb-1 font-bold text-2xl text-primary">
+              <p className="mb-1 font-bold text-2xl text-foreground">
                 {cancelDate ? "Ending" : "Active"}
               </p>
               <p className="text-muted-foreground text-sm">

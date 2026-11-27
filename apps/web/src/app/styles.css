@@ -22,28 +22,29 @@
   --font-editor: var(--font-inter), sans-serif;
   --font-mono: ui-monospace, monospace;
   --font-serif: Georgia, serif;
-  --background: #e9effb;
-  --foreground: #213451;
-  --card: #fcfdff;
-  --secondary: #e8eef9;
-  --muted-foreground: #52627c;
-  --input: #98a8c2;
-  --field: #e8eef9;
-  --border: #bdcbe0;
+  --page-background: #ededee;
+  --background: #f3f3f4;
+  --foreground: #202124;
+  --card: #ffffff;
+  --secondary: #f3f3f4;
+  --muted-foreground: #575a60;
+  --input: #858990;
+  --field: #f3f3f4;
+  --border: #d9dade;
   --ring: #3156bd;
   --link: #304d8b;
   --destructive: #a52638;
   --disabled: #dce3ef;
   --disabled-foreground: #59677e;
-  --sidebar: #e5ecfb;
+  --sidebar: #f3f3f4;
   --hover: #dce5f6;
-  --glass: rgba(239, 245, 255, 0.58);
+  --glass: rgb(252 252 253 / 66%);
   --glass-edge: rgba(255, 255, 255, 0.93);
-  --glass-lower: rgba(112, 135, 177, 0.44);
+  --glass-lower: rgb(105 109 117 / 32%);
   --glass-glint: rgba(255, 255, 255, 0.55);
-  --ambient: #b7ccf4;
-  --ambient-secondary: #d8d4f3;
-  --depth: 0 12px 32px #2b467524, 0 2px 6px #233c6712;
+  --ambient: #f6f6f6;
+  --ambient-secondary: #cacacc;
+  --depth: 0 12px 32px #17191e24, 0 2px 6px #17191e12;
   --card-foreground: var(--foreground);
   --popover: var(--card);
   --popover-foreground: var(--foreground);
@@ -78,28 +79,29 @@
   --font-editor: var(--font-inter), sans-serif;
   --font-mono: ui-monospace, monospace;
   --font-serif: Georgia, serif;
-  --background: #101b30;
-  --foreground: #eef3ff;
-  --card: #19263b;
-  --secondary: #23334c;
-  --muted-foreground: #bac8e1;
-  --input: #7084a5;
-  --field: #101b30;
-  --border: #435675;
+  --page-background: #050505;
+  --background: #0b0b0c;
+  --foreground: #f2f2f3;
+  --card: #111112;
+  --secondary: #232325;
+  --muted-foreground: #aeb0b6;
+  --input: #757880;
+  --field: #101011;
+  --border: #2c2c30;
   --ring: #bacbff;
   --link: #bdccff;
   --destructive: #ffafbc;
   --disabled: #35445c;
   --disabled-foreground: #c2cde1;
-  --sidebar: #23324d;
+  --sidebar: #19191b;
   --hover: #304361;
-  --glass: rgba(42, 61, 94, 0.64);
-  --glass-edge: rgba(170, 197, 245, 0.35);
-  --glass-lower: rgba(8, 18, 37, 0.82);
-  --glass-glint: rgba(197, 215, 255, 0.1);
-  --ambient: #2a4779;
-  --ambient-secondary: #343454;
-  --depth: 0 12px 32px #02091860, 0 2px 6px #050d2030;
+  --glass: rgb(20 20 20 / 73%);
+  --glass-edge: rgb(255 255 255 / 23%);
+  --glass-lower: rgb(7 7 8 / 82%);
+  --glass-glint: rgb(255 255 255 / 9%);
+  --ambient: #3c3c3c;
+  --ambient-secondary: #555555;
+  --depth: 0 12px 32px #0006, 0 2px 6px #0003;
   --card-foreground: var(--foreground);
   --popover: var(--card);
   --popover-foreground: var(--foreground);
@@ -222,12 +224,58 @@
 }
 
 body {
-  background-image:
-    radial-gradient(ellipse at 4% 0%, var(--ambient), transparent 55%),
+  isolation: isolate;
+  background-color: var(--page-background);
+}
+
+/* One painted layer drifts behind the glass. Keep blur and color stops static. */
+body::before {
+  content: "";
+  position: fixed;
+  z-index: -1;
+  inset: -8%;
+  pointer-events: none;
+  background:
     radial-gradient(
-      ellipse at 98% 6%,
-      var(--ambient-secondary),
-      transparent 48%
+      ellipse 78% 61% at 16% 15%,
+      color-mix(in srgb, var(--ambient) 46%, transparent),
+      transparent 55%
+    ),
+    radial-gradient(
+      ellipse 84% 52% at 84% 57%,
+      color-mix(in srgb, var(--ambient-secondary) 32%, transparent),
+      transparent 54%
+    ),
+    radial-gradient(
+      ellipse 70% 44% at 43% 100%,
+      color-mix(in srgb, var(--ambient) 23%, transparent),
+      transparent 50%
     );
-  background-attachment: fixed;
+}
+
+@keyframes page-backdrop-drift {
+  from {
+    transform: translate3d(-4%, -2%, 0) rotate(-5deg);
+  }
+  to {
+    transform: translate3d(4%, 3%, 0) rotate(5deg);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) and (
+    prefers-reduced-transparency: no-preference
+  ) and (forced-colors: none) {
+  body:not(.opaque-mode, .opaque-mode *)::before {
+    animation: page-backdrop-drift 30s ease-in-out infinite alternate;
+  }
+}
+
+@media (prefers-reduced-transparency: reduce), (forced-colors: active) {
+  body::before {
+    display: none;
+  }
+}
+
+.opaque-mode body::before {
+  display: none;
 }

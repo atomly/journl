@@ -200,7 +200,7 @@ for (const theme of ["light", "dark"]) {
     });
     expect(rowStyles.borderBottomWidth).toBe("1px");
     expect(rowStyles.borderBottomColor).toBe(
-      theme === "dark" ? "rgb(52, 72, 101)" : "rgb(213, 224, 237)",
+      theme === "dark" ? "rgb(44, 44, 48)" : "rgb(217, 218, 222)",
     );
     expect(rowStyles.paddingTop).toBe("32px");
     expect(rowStyles.paddingBottom).toBe("80px");
@@ -225,7 +225,7 @@ for (const theme of ["light", "dark"]) {
     expect(headingStyles.fontSize).toBe("48px");
     expect(headingStyles.fontWeight).toBe("700");
     expect(headingStyles.color).toBe(
-      theme === "dark" ? "rgb(238, 243, 255)" : "rgb(33, 52, 81)",
+      theme === "dark" ? "rgb(242, 242, 243)" : "rgb(32, 33, 36)",
     );
     const headingContrast = await renderedTextContrast(heading);
     expect(
@@ -262,18 +262,22 @@ for (const theme of ["light", "dark"]) {
     });
     expect(dayHeadingStyles.fontWeight).toBe("700");
     expect(dayHeadingStyles.color).toBe(
-      theme === "dark" ? "rgb(238, 243, 255)" : "rgb(33, 52, 81)",
+      theme === "dark" ? "rgb(242, 242, 243)" : "rgb(32, 33, 36)",
     );
-    const dayHeadingContrast = await renderedTextContrast(dayHeading);
-    expect(
-      dayHeadingContrast.ratio,
-      `${theme} selected day heading`,
-    ).toBeGreaterThanOrEqual(4.5);
-    measurements.push({
-      label: SELECTED_HEADING,
-      state: "selected-day-heading",
-      ...dayHeadingContrast,
-    });
+    await expect(async () => {
+      const contrast = await renderedTextContrast(
+        dayHeading.getByRole("link", { name: SELECTED_HEADING }),
+      );
+      expect(
+        contrast.ratio,
+        `${theme} selected day heading`,
+      ).toBeGreaterThanOrEqual(4.5);
+      measurements.push({
+        label: SELECTED_HEADING,
+        state: "selected-day-heading",
+        ...contrast,
+      });
+    }).toPass({ timeout: 15_000 });
 
     await settleShell(page);
     const controls = await measureShellControls(page);

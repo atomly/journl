@@ -259,7 +259,7 @@ test("dark desktop marketing swaps the canonical hero through theme tokens", asy
   await page.goto("/");
   await expect(page.locator("body")).toHaveCSS(
     "background-color",
-    "rgb(16, 27, 48)",
+    "rgb(5, 5, 5)",
   );
   const darkHero = page.locator(".canonical-hero-desktop.canonical-hero-dark");
   await expect(darkHero).toBeVisible();

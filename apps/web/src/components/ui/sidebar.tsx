@@ -448,12 +448,10 @@ function Sidebar({
         data-slot="sidebar"
         data-mobile="true"
         showCloseButton={false}
-        className="max-h-[calc(100dvh-72px)] w-auto gap-0 overflow-hidden rounded-t-[18px] rounded-b-none bg-[#edf4fd] p-0 text-sidebar-foreground data-[side=bottom]:inset-x-0 data-[side=bottom]:bottom-0 data-[side=bottom]:h-[calc(100dvh-72px)] min-[701px]:inset-x-auto! min-[701px]:top-1/2! min-[701px]:bottom-auto! min-[701px]:left-1/2! min-[701px]:h-[min(754px,calc(100dvh-48px))]! min-[701px]:max-h-[calc(100dvh-48px)] min-[701px]:w-[560px] min-[701px]:max-w-[calc(100vw-48px)] min-[701px]:-translate-x-1/2 min-[701px]:-translate-y-1/2 dark:bg-[#182a42]"
+        className="max-h-[calc(100dvh-72px)] w-auto gap-0 overflow-hidden rounded-t-[18px] rounded-b-none bg-sidebar p-0 text-sidebar-foreground data-[side=bottom]:inset-x-0 data-[side=bottom]:bottom-0 data-[side=bottom]:h-[calc(100dvh-72px)] min-[701px]:inset-x-auto! min-[701px]:top-1/2! min-[701px]:bottom-auto! min-[701px]:left-1/2! min-[701px]:h-[min(754px,calc(100dvh-48px))]! min-[701px]:max-h-[calc(100dvh-48px)] min-[701px]:w-[560px] min-[701px]:max-w-[calc(100vw-48px)] min-[701px]:-translate-x-1/2 min-[701px]:-translate-y-1/2"
         finalFocus={() =>
           document.querySelector<HTMLButtonElement>(
-            isMobile
-              ? 'header [data-sidebar="trigger"]'
-              : 'header button[aria-label="Route actions"]',
+            'header [data-sidebar="trigger"]',
           )
         }
         style={

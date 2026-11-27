@@ -287,12 +287,13 @@ The rest of the components are set by the Tailwind CSS classes, or by our editor
   /* Panels cast the approved shadow into the gutters at every shell
      width; light's 10% alpha reads as clean, dark carries the visible
      falloff. */
-  box-shadow: 0 12px 30px #163a6b1a;
+  box-shadow: 0 12px 30px #17191e1a;
 }
 :where(.dark) [data-slot="sidebar-inset"] [data-app-container] {
-  box-shadow: 0 12px 30px #050b1780;
+  box-shadow: 0 12px 30px #0008;
 }
 
+/* Translucent chrome samples the original page gradient in both themes. */
 [data-slot="sidebar-inner"],
 [data-slot="sidebar-inset"] > header > div {
   background:
@@ -301,30 +302,6 @@ The rest of the components are set by the Tailwind CSS classes, or by our editor
   border-bottom-color: var(--glass-lower);
   box-shadow: var(--depth);
   backdrop-filter: blur(20px);
-}
-/* Workspace chrome is composed here, outside reusable UI/editor materials. */
-[data-slot="sidebar-inner"],
-[data-slot="sidebar-inset"] > header > div {
-  background: rgb(237 245 255 / 80%);
-  border-color: #d5e0ed;
-  color: #17283d;
-  box-shadow: 0 12px 30px #163a6b1a;
-}
-:where(.dark) [data-slot="sidebar-inner"],
-:where(.dark) [data-slot="sidebar-inset"] > header > div {
-  background: #15263bdc;
-  border-color: #344865;
-  color: #eef3ff;
-  box-shadow: 0 12px 30px #050b1780;
-}
-/* The header composes its glass over the approved opaque surface; the
-   floating nav keeps its translucent stack over the page gradient. */
-[data-slot="sidebar-inset"] > header > div {
-  background:
-    linear-gradient(rgb(237 245 255 / 80%), rgb(237 245 255 / 80%)), #fcfdff;
-}
-:where(.dark) [data-slot="sidebar-inset"] > header > div {
-  background: linear-gradient(#15263bdc, #15263bdc), #141f31;
 }
 @media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
   [data-slot="sidebar-inner"],
@@ -433,10 +410,10 @@ The rest of the components are set by the Tailwind CSS classes, or by our editor
 /* Journal day rows close with the approved workspace hairline, matching the
    reading panel's composed separators instead of the stronger form border. */
 [data-journal-entry] {
-  border-bottom-color: #d5e0ed;
+  border-bottom-color: #d9dade;
 }
 :where(.dark) [data-journal-entry] {
-  border-bottom-color: #344865;
+  border-bottom-color: #2c2c30;
 }
 
 [data-slot="sidebar"][data-side="right"][data-state="collapsed"]
@@ -826,16 +803,6 @@ The rest of the components are set by the Tailwind CSS classes, or by our editor
   outline-offset: -2px;
 }
 
-body:has([data-slot="sidebar-inset"]) {
-  background:
-    radial-gradient(ellipse at 26% -12%, #edf6ff, transparent 58%),
-    radial-gradient(ellipse at 95% 105%, #98b7db, transparent 66%), #c7dbf2;
-}
-.dark body:has([data-slot="sidebar-inset"]) {
-  background:
-    radial-gradient(ellipse at 26% -12%, #2c4f78, transparent 58%),
-    radial-gradient(ellipse at 95% 105%, #101a2e, transparent 66%), #172d4a;
-}
 [data-side="left"] [data-sidebar="header"] .journl-brand {
   width: 102px;
   height: auto;
@@ -1139,7 +1106,7 @@ body:has([data-slot="sidebar-inset"]) {
   }
 }
 .dark [data-slot="sidebar-inset"] [data-app-container] {
-  background: #141f31;
+  background: #0b0b0c;
 }
 [data-mobile="true"] [data-development-tools] {
   padding-block: 2px;
@@ -1214,9 +1181,9 @@ body:has([data-slot="sidebar-inset"]) {
   [data-slot="sidebar"][data-mobile="true"],
   [data-slot="sidebar-inset"] > header > div
 ) {
-  --foreground: #17283d;
-  --sidebar-foreground: #17283d;
-  --muted-foreground: #485d75;
+  --foreground: #202124;
+  --sidebar-foreground: #202124;
+  --muted-foreground: #575a60;
   --sidebar-accent: #d9dfff;
   --sidebar-accent-foreground: #273f9d;
   --sidebar-ring: #304eb4;
@@ -1229,9 +1196,9 @@ body:has([data-slot="sidebar-inset"]) {
     [data-slot="sidebar"][data-mobile="true"],
     [data-slot="sidebar-inset"] > header > div
   ) {
-  --foreground: #eef3ff;
-  --sidebar-foreground: #eef3ff;
-  --muted-foreground: #adbed5;
+  --foreground: #f2f2f3;
+  --sidebar-foreground: #f2f2f3;
+  --muted-foreground: #aeb0b6;
   --sidebar-accent: #303f72;
   --sidebar-accent-foreground: #c4ceff;
   --sidebar-ring: #aec0ff;
@@ -1282,7 +1249,8 @@ body:has([data-slot="sidebar-inset"]) {
     .journl-navigation-label {
     margin: 22px 0 6px;
   }
-  [data-slot="header-actions"] button {
+  [data-slot="header-actions"]
+    button:not([data-slot="header-subscription-button"]) {
     width: 32px;
     height: 32px;
     min-width: 32px;
@@ -1309,7 +1277,7 @@ body:has([data-slot="sidebar-inset"]) {
   [data-slot="sidebar"][data-mobile="true"],
   [data-slot="sidebar-inset"] > header > div
 ) {
-  --sidebar: #edf4fd;
+  --sidebar: #f3f3f4;
 }
 .dark
   :is(
@@ -1317,7 +1285,7 @@ body:has([data-slot="sidebar-inset"]) {
     [data-slot="sidebar"][data-mobile="true"],
     [data-slot="sidebar-inset"] > header > div
   ) {
-  --sidebar: #182a42;
+  --sidebar: #19191b;
 }
 /* The visual viewport, rather than the layout viewport, owns keyboard clearance. */
 .journl-agent-sheet {
@@ -1327,15 +1295,15 @@ body:has([data-slot="sidebar-inset"]) {
     calc(var(--sheet-visible-height, 100dvh) - 68px)
   ) !important;
   bottom: var(--sheet-bottom, 0px) !important;
-  --foreground: #17283d;
-  --muted-foreground: #485d75;
-  --sidebar: #edf4fd;
+  --foreground: #202124;
+  --muted-foreground: #575a60;
+  --sidebar: #f3f3f4;
   font-family: system-ui, -apple-system, sans-serif;
 }
 .dark .journl-agent-sheet {
-  --foreground: #eef3ff;
-  --muted-foreground: #adbed5;
-  --sidebar: #182a42;
+  --foreground: #f2f2f3;
+  --muted-foreground: #aeb0b6;
+  --sidebar: #19191b;
 }
 @media (width <= 700px) {
   [data-mobile="true"]
@@ -1381,20 +1349,20 @@ body:has([data-slot="sidebar-inset"]) {
   box-shadow: none;
 }
 [aria-label="Chat composer"] {
-  border-top: 1px solid #d5e0ed;
+  border-top: 1px solid #d9dade;
   min-height: 119px;
 }
 .dark [aria-label="Chat composer"] {
-  border-top-color: #344865;
+  border-top-color: #2c2c30;
 }
 .journl-chat-input {
-  background: #fcfdff;
-  border-color: #7387a1;
+  background: #ffffff;
+  border-color: #858990;
   border-radius: 12px;
 }
 .dark .journl-chat-input {
-  background: #141f31;
-  border-color: #8198b9;
+  background: #0b0b0c;
+  border-color: #757880;
 }
 .journl-chat-input:has(textarea:enabled) {
   opacity: 1;
@@ -1426,22 +1394,22 @@ body:has([data-slot="sidebar-inset"]) {
 }
 .journl-chat-input .journl-chat-send:disabled {
   background: #dce4f0;
-  color: #485d75;
+  color: #575a60;
 }
 .dark .journl-chat-input .journl-chat-send:disabled {
   background: #2d3b50;
-  color: #adbed5;
+  color: #aeb0b6;
 }
 .journl-chat-input [aria-label="Reasoning mode"] {
-  background: #fcfdff;
-  border: 1px solid #7387a1;
+  background: #ffffff;
+  border: 1px solid #858990;
   border-radius: 7px;
-  color: #485d75;
+  color: #575a60;
 }
 .dark .journl-chat-input [aria-label="Reasoning mode"] {
-  background: #141f31;
-  border-color: #8198b9;
-  color: #adbed5;
+  background: #0b0b0c;
+  border-color: #757880;
+  color: #aeb0b6;
 }
 /* Floating selection quote affordance (design review: the composer citation
    chip made the composer taller and shifted the chat layout; the quote now
@@ -1503,16 +1471,16 @@ body:has([data-slot="sidebar-inset"]) {
 .journl-selection-quote-comment {
   height: 34px;
   padding: 0 8px;
-  border: 1px solid #7387a1;
+  border: 1px solid #858990;
   border-radius: 7px;
-  background: #fcfdff;
-  color: #485d75;
+  background: #ffffff;
+  color: #575a60;
   font-size: 13px;
 }
 .dark .journl-selection-quote-comment {
-  border-color: #8198b9;
-  background: #141f31;
-  color: #adbed5;
+  border-color: #757880;
+  background: #0b0b0c;
+  color: #aeb0b6;
 }
 .journl-selection-quote-actions {
   display: flex;
@@ -1555,17 +1523,6 @@ body:has([data-slot="sidebar-inset"]) {
 .journl-selection-quote-save:focus-visible {
   outline: 2px solid var(--ring);
   outline-offset: 2px;
-}
-@media (min-width: 701px) {
-  .journl-header-route-actions button {
-    width: 32px;
-    height: 32px;
-    border-radius: 8px;
-  }
-  .journl-header-route-actions svg {
-    width: 16px;
-    height: 16px;
-  }
 }
 @media (width <= 700px) {
   [data-slot="sidebar-inset"] > header > div {
@@ -1651,10 +1608,10 @@ body:has([data-slot="sidebar-inset"]) {
 .journl-library-lede {
   max-width: 62ch;
   font-size: 17px;
-  color: #485d75;
+  color: #575a60;
 }
 .dark .journl-library-lede {
-  color: #adbed5;
+  color: #aeb0b6;
 }
 .journl-library-tools {
   display: flex;
@@ -1669,15 +1626,15 @@ body:has([data-slot="sidebar-inset"]) {
   gap: 6px;
   min-width: 145px;
   min-height: 32px;
-  border: 1px solid #7387a1;
+  border: 1px solid #858990;
   border-radius: 7px;
   padding: 4px 8px;
   font-size: 12px;
-  color: #485d75;
+  color: #575a60;
 }
 .dark .journl-library-search {
-  border-color: #8198b9;
-  color: #adbed5;
+  border-color: #757880;
+  color: #aeb0b6;
 }
 .journl-library-search:focus-within {
   outline: 2px solid #304eb4;
@@ -1727,29 +1684,29 @@ body:has([data-slot="sidebar-inset"]) {
 }
 .journl-library-new-page > [data-slot="button"]:disabled {
   background: #dce4f0;
-  color: #485d75;
+  color: #575a60;
 }
 .dark .journl-library-new-page > [data-slot="button"]:disabled {
   background: #2d3b50;
-  color: #adbed5;
+  color: #aeb0b6;
 }
 .journl-library-tabs {
   display: flex;
   gap: 4px;
   margin-top: 20px;
-  border-bottom: 1px solid #d5e0ed;
+  border-bottom: 1px solid #d9dade;
 }
 .dark .journl-library-tabs {
-  border-color: #344865;
+  border-color: #2c2c30;
 }
 .journl-library-tab {
   padding: 7px 12px;
   border-bottom: 2px solid transparent;
   font-size: 14px;
-  color: #485d75;
+  color: #575a60;
 }
 .dark .journl-library-tab {
-  color: #adbed5;
+  color: #aeb0b6;
 }
 .journl-library-tab:hover {
   color: inherit;
@@ -1768,12 +1725,12 @@ body:has([data-slot="sidebar-inset"]) {
 }
 .journl-library-table {
   margin-top: 14px;
-  border: 1px solid #d5e0ed;
+  border: 1px solid #d9dade;
   border-radius: 10px;
   padding: 4px 6px;
 }
 .dark .journl-library-table {
-  border-color: #344865;
+  border-color: #2c2c30;
 }
 .journl-library-grid {
   display: grid;
@@ -1787,19 +1744,19 @@ body:has([data-slot="sidebar-inset"]) {
   border-radius: 7px;
 }
 .journl-library-grid + .journl-library-grid {
-  box-shadow: 0 -1px 0 #d5e0ed;
+  box-shadow: 0 -1px 0 #d9dade;
 }
 .dark .journl-library-grid + .journl-library-grid {
-  box-shadow: 0 -1px 0 #344865;
+  box-shadow: 0 -1px 0 #2c2c30;
 }
 .journl-library-grid-head {
   min-height: 34px;
   font-size: 11px;
   font-weight: 750;
-  color: #485d75;
+  color: #575a60;
 }
 .dark .journl-library-grid-head {
-  color: #adbed5;
+  color: #aeb0b6;
 }
 .journl-library-row:hover,
 .journl-library-row:focus-within {
@@ -1830,10 +1787,10 @@ body:has([data-slot="sidebar-inset"]) {
   height: 16px;
   stroke-width: 1.65;
   flex: none;
-  color: #485d75;
+  color: #575a60;
 }
 .dark .journl-library-name svg {
-  color: #adbed5;
+  color: #aeb0b6;
 }
 .journl-library-name strong {
   min-width: 0;
@@ -1875,11 +1832,11 @@ body:has([data-slot="sidebar-inset"]) {
   color: #ffcbaf;
 }
 .journl-library-meta {
-  color: #485d75;
+  color: #575a60;
   font-size: 12px;
 }
 .dark .journl-library-meta {
-  color: #adbed5;
+  color: #aeb0b6;
 }
 .journl-library-rename-error {
   color: #832b29;

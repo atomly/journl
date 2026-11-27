@@ -208,7 +208,7 @@ test("context menus preserve Journal date navigation and keep page identity", as
   await expect(page.getByRole("grid")).toBeVisible();
   await page.keyboard.press("Escape");
   await page
-    .getByRole("button", { exact: true, name: "Route actions" })
+    .getByRole("button", { exact: true, name: "Journal route menu" })
     .click();
   await expect(
     page.getByRole("button", { exact: true, name: "Timeline" }),
@@ -541,37 +541,6 @@ test("shell controls remain reachable with solid materials and system colors", a
       () => document.documentElement.scrollWidth <= innerWidth,
     ),
   ).toBe(true);
-});
-
-test("desktop navigation dialog retains the floating navigation and returns focus", async ({
-  page,
-}, info) => {
-  test.skip(
-    info.project.name !== "desktop-chromium",
-    "Desktop navigation dialog",
-  );
-  await page.setViewportSize({ height: 1000, width: 1440 });
-  await page.goto("/explore");
-  const trigger = page.getByRole("button", {
-    exact: true,
-    name: "Route actions",
-  });
-  await trigger.click();
-  await page
-    .getByRole("button", { exact: true, name: "Notebook navigation" })
-    .click();
-  const dialog = page.getByRole("dialog", { name: "Notebook navigation" });
-  await expect(dialog).toBeVisible();
-  await expect.poll(async () => (await dialog.boundingBox())?.x).toBe(440);
-  await expect(dialog).toHaveCSS("width", "560px");
-  await expect(
-    page.locator('[data-side="left"][data-slot="sidebar"]'),
-  ).toHaveAttribute("data-state", "expanded");
-  await dialog
-    .getByRole("button", { exact: true, name: "Toggle Sidebar" })
-    .click();
-  await expect(dialog).not.toBeVisible();
-  await expect(trigger).toBeFocused();
 });
 
 test("compact rail keeps normal assistant space when the center fits", async ({

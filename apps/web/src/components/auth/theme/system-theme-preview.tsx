@@ -6,12 +6,12 @@ import type { SVGProps } from "react";
 // paints each half with the approved theme surfaces and boundaries from
 // docs/design-handoff/foundations.md, so the System tile reads as a composite
 // of the Light and Dark themes instead of a black wedge.
-const LIGHT_SURFACE = "#fcfdff";
-const LIGHT_SECONDARY = "#e8eef9";
-const LIGHT_BOUNDARY = "#bdcbe0";
-const DARK_SURFACE = "#19263b";
-const DARK_SECONDARY = "#23334c";
-const DARK_BOUNDARY = "#435675";
+const LIGHT_SURFACE = "#ffffff";
+const LIGHT_SECONDARY = "#f3f3f4";
+const LIGHT_BOUNDARY = "#d9dade";
+const DARK_SURFACE = "#111112";
+const DARK_SECONDARY = "#232325";
+const DARK_BOUNDARY = "#2c2c30";
 
 export function SystemThemePreview(props: SVGProps<SVGSVGElement>) {
   return (

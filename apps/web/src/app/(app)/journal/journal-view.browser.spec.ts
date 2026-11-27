@@ -252,6 +252,8 @@ for (const theme of ["light", "dark"]) {
     expect(dayBox?.width).toBe(744);
     const dayHeading = day.locator("h2");
     await expect(dayHeading).toHaveText(SELECTED_HEADING);
+    await dayHeading.scrollIntoViewIfNeeded();
+    await settleShell(page);
     const dayHeadingBox = await dayHeading.boundingBox();
     expect(dayHeadingBox?.x).toBe(310);
     const dayHeadingStyles = await dayHeading.evaluate((node) => {

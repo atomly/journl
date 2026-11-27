@@ -20,7 +20,7 @@ import groups from "~/testing/browser/shell-state-mappings.json" with {
 for (const group of groups)
   for (const [index, mapping] of group.images.entries()) {
     const id = `${group.stateId}--${mapping.theme}--${mapping.viewport.width}--${mapping.variant}--${index}`;
-    test(id, async ({ page, context }, info) => {
+    test(id, async ({ baseURL, page, context }, info) => {
       test.skip(
         (info.project.name === "mobile-webkit") !==
           mapping.viewport.width <= 700,
@@ -66,7 +66,7 @@ for (const group of groups)
         await context.addCookies([
           {
             name: "journl:preferences",
-            url: "http://127.0.0.1:3101",
+            url: baseURL,
             value: encodeURIComponent(
               JSON.stringify({
                 appSidebarOpen: true,

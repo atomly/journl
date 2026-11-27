@@ -90,9 +90,10 @@ test("explicit expansion survives navigation/reload and stays scoped to its owne
   await expect(
     page.getByRole("button", { exact: true, name: "Collapse Browser folder" }),
   ).toBeVisible();
+  const origin = new URL(page.url()).origin;
   const signedOut = await page.request.post("/api/auth/sign-out", {
     data: {},
-    headers: { Origin: "http://127.0.0.1:3101" },
+    headers: { Origin: origin },
   });
   expect(signedOut.ok()).toBe(true);
   const signedIn = await page.request.post("/api/auth/sign-in/email", {
@@ -100,7 +101,7 @@ test("explicit expansion survives navigation/reload and stays scoped to its owne
       email: browserFixture.otherEmail,
       password: browserFixture.password,
     },
-    headers: { Origin: "http://127.0.0.1:3101" },
+    headers: { Origin: origin },
   });
   expect(signedIn.ok()).toBe(true);
   await page.goto("/explore");

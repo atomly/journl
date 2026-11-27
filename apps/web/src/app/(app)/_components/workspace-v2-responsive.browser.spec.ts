@@ -25,7 +25,7 @@ for (const theme of ["light", "dark"]) {
     "mobile-agent",
     "tree-states",
   ]) {
-    test(`v2 ${mode} ${theme}`, async ({ page, context }, info) => {
+    test(`v2 ${mode} ${theme}`, async ({ baseURL, page, context }, info) => {
       const mobile = mode.startsWith("mobile");
       test.skip(
         (info.project.name === "mobile-webkit") !== mobile,
@@ -44,7 +44,7 @@ for (const theme of ["light", "dark"]) {
       await context.addCookies([
         {
           name: "journl:preferences",
-          url: "http://127.0.0.1:3101",
+          url: baseURL,
           value: encodeURIComponent(
             JSON.stringify({
               appSidebarOpen: mode !== "nav-compact",

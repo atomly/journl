@@ -115,6 +115,15 @@ test("keyboard users can reach controls, return to their selection, and leave ed
   await paragraphs.first().click();
   await page.keyboard.press("Home");
   await page.keyboard.press("Shift+End");
+  await expect
+    .poll(() =>
+      editor.evaluate((element) => {
+        const { doc, selection } = (element as HTMLElement & { editor: Editor })
+          .editor.state;
+        return doc.textBetween(selection.from, selection.to);
+      }),
+    )
+    .toBe("Alpha");
   const selection = await editor.evaluate((el) =>
     (el as HTMLElement & { editor: Editor }).editor.state.selection.toJSON(),
   );

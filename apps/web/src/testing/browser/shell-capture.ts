@@ -29,7 +29,9 @@ export async function settleShell(page: Page) {
   await expect
     .poll(
       async () => {
-        const current = JSON.stringify(await shellGeometry(page));
+        const current = JSON.stringify(
+          captureGeometry(await shellGeometry(page)),
+        );
         stable = current === previous ? stable + 1 : 0;
         previous = current;
         return stable;
@@ -40,7 +42,7 @@ export async function settleShell(page: Page) {
 }
 export async function shellGeometry(page: Page) {
   return page.evaluate(() => {
-    const geometry: Record<string, unknown> = Object.fromEntries(
+    const bounds: Record<string, unknown> = Object.fromEntries(
       Object.entries({
         assistant: '[data-side="right"] [data-slot="sidebar-container"]',
         conversation: '[data-slot="message-scroller-viewport"]',
@@ -84,15 +86,23 @@ export async function shellGeometry(page: Page) {
     const probeWidth =
       Math.round(range.getBoundingClientRect().width * 100) / 100;
     probe.remove();
-    geometry.fonts = {
+    const fonts = {
       faces: [...document.fonts].map(
         (face) => `${face.family}/${face.weight}/${face.status}`,
       ),
       probeWidth,
     };
-    return geometry;
+    return Object.assign(bounds, { fonts });
   });
 }
+function captureGeometry({
+  fonts,
+  ...bounds
+}: Awaited<ReturnType<typeof shellGeometry>>) {
+  // WebKit can release unused fallback fonts during a screenshot.
+  return { ...bounds, fontProbeWidth: fonts.probeWidth };
+}
+
 export async function captureSettledShell(page: Page, path: string) {
   await settleShell(page);
   await page.evaluate(() => {
@@ -102,8 +112,8 @@ export async function captureSettledShell(page: Page, path: string) {
   await page.screenshot({ animations: "allow", path, scale: "css" });
   const after = await shellGeometry(page);
   expect(
-    after,
-    "Screenshot must not finish a transition after geometry was sampled",
-  ).toEqual(before);
+    captureGeometry(after),
+    "Screenshot must preserve shell bounds and measured text width",
+  ).toEqual(captureGeometry(before));
   return { after, before };
 }

@@ -9,14 +9,6 @@ function nextOrdinal(body: Node | null, previous: number): number {
     : 0;
 }
 
-/** Explicit starts reset a run; omitted starts continue the preceding sibling. */
-export function numberedListOrdinal(siblings: Node, index: number): number {
-  let ordinal = 0;
-  for (let i = 0; i <= index; i++)
-    ordinal = nextOrdinal(siblings.child(i).firstChild, ordinal);
-  return ordinal;
-}
-
 export const listNumberingKey = new PluginKey<DecorationSet>(
   "better-editor-list-numbering",
 );

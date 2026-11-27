@@ -67,6 +67,14 @@ export function parseUsageQuotaExceededPayload(
   };
 }
 
+export function isChatQuotaError(input: unknown): boolean {
+  const payload = parsePayloadCandidate(input);
+  return (
+    payload?.code === USAGE_QUOTA_EXCEEDED_CODE ||
+    getHumanReadableChatError(input) === USAGE_QUOTA_EXCEEDED_MESSAGE
+  );
+}
+
 export function getHumanReadableChatError(input: unknown): string {
   const quotaError = parseUsageQuotaExceededPayload(input);
 

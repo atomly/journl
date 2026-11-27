@@ -103,9 +103,7 @@ export async function SubscriptionView({
             <Calendar className="h-5 w-5 text-primary" />
           </div>
           <div className="flex-1">
-            <p className="font-medium text-foreground">
-              Current Billing Period
-            </p>
+            <p className="font-medium text-foreground">Billing Period</p>
             <p className="text-muted-foreground text-sm">
               {periodStart && periodEnd ? (
                 <>
@@ -114,11 +112,7 @@ export async function SubscriptionView({
                   <span className="whitespace-nowrap">{periodEnd}</span>
                 </>
               ) : (
-                <>
-                  <span className="whitespace-nowrap">September 20, 2025</span>
-                  {" – "}
-                  <span className="whitespace-nowrap">October 20, 2025</span>
-                </>
+                "Billing period unavailable"
               )}
             </p>
           </div>

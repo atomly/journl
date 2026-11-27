@@ -157,7 +157,7 @@ test("code tabs and table keys never split or nest their containing block", () =
         rows: [
           {
             cells: [
-              [{ styles: {}, text: "First", type: "text" }],
+              [{ styles: {}, text: "\nFirst", type: "text" }],
               [{ styles: {}, text: "edited ", type: "text" }],
             ],
           },
@@ -418,7 +418,7 @@ test("turning a selected list range into numbered items preserves every identity
     blocks().map((block) =>
       block.type === "numberedListItem" ? block.props?.start : undefined,
     ),
-  ).toEqual([1, 2]);
+  ).toEqual([undefined, undefined]);
   expect(editor.state.selection.empty).toBe(false);
   expect(clipboardText(editor.state.selection.content().content)).toMatch(
     /1\. One[\s\S]*2\. Tw/,
@@ -571,5 +571,40 @@ test.each([
     } finally {
       editor.destroy();
     }
+  }
+});
+
+test("two Enters in the middle of a nested numbered list exit locally", () => {
+  const { editor, key, blocks } = setup([
+    parseBlock({
+      children: [
+        { content: "First", id: "first", type: "numberedListItem" },
+        { content: "Following", id: "following", type: "numberedListItem" },
+      ],
+      id: "parent",
+      type: "paragraph",
+    }),
+    parseBlock({ content: "Tail", id: "tail", type: "paragraph" }),
+  ]);
+  try {
+    const first = blockAt(editor.state.doc, "first");
+    editor.view.dispatch(
+      editor.state.tr.setSelection(
+        TextSelection.create(editor.state.doc, first.pos + 2 + "First".length),
+      ),
+    );
+    key("Enter");
+    key("Enter");
+    expect(blocks().map((block) => block.id)).toEqual(["parent", "tail"]);
+    expect(
+      blocks()[0]?.children?.map(({ id, type }) => ({ id, type })),
+    ).toEqual([
+      { id: "first", type: "numberedListItem" },
+      { id: "fresh-1", type: "paragraph" },
+      { id: "following", type: "numberedListItem" },
+    ]);
+    expect(selectedBlock(editor.state)?.id).toBe("fresh-1");
+  } finally {
+    editor.destroy();
   }
 });

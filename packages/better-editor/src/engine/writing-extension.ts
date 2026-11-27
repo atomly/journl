@@ -2,7 +2,6 @@ import { Extension, InputRule, markInputRule } from "@tiptap/core";
 import { TextSelection } from "@tiptap/pm/state";
 import { indentBlock, selectedBlock, toggleTextMark } from "./commands";
 import { blockAt, type IdFactory, splitBlock } from "./identity";
-import { numberedListOrdinal } from "./list-numbering";
 import { changeBlockType, moveSelectedBlock, turnInto } from "./writing";
 
 const lists = new Set([
@@ -162,7 +161,7 @@ export function writingExtension(createId: IdFactory) {
         },
         Enter: () => {
           const { state, view } = this.editor;
-          if (view.composing) return false;
+          if (view.composing || !this.editor.isEditable) return false;
           const target = selectedBlock(state);
           const body = target?.node.firstChild;
           if (!target || !body) return false;
@@ -171,14 +170,17 @@ export function writingExtension(createId: IdFactory) {
             !state.selection.$from.sameParent(state.selection.$to)
           )
             return false;
-          if (lists.has(body.type.name) && !body.content.size)
+          const listItem = lists.has(body.type.name);
+          if (listItem && !body.content.size)
             return run(() =>
-              target.parentId
+              target.parentId &&
+              target.index === target.siblings.childCount - 1 &&
+              target.node.childCount === 1
                 ? indentBlock(state, true)
                 : changeBlockType(state, "paragraph"),
             );
           if (
-            !lists.has(body.type.name) &&
+            !listItem &&
             !(
               body.type.name === "heading" &&
               state.selection.$from.parentOffset === body.content.size
@@ -194,12 +196,14 @@ export function writingExtension(createId: IdFactory) {
           const right = selectedBlock(tr);
           if (right && body.type.name === "heading")
             turnInto(tr, right.id, "paragraph");
-          else if (right?.node.firstChild) {
+          else if (
+            right?.node.firstChild &&
+            (body.type.name === "checkListItem" ||
+              body.type.name === "numberedListItem")
+          ) {
             const props = { ...right.node.firstChild.attrs.props };
             if (body.type.name === "checkListItem") props.checked = false;
-            if (body.type.name === "numberedListItem")
-              props.start =
-                numberedListOrdinal(target.siblings, target.index) + 1;
+            else delete props.start;
             const current = blockAt(tr.doc, right.id);
             tr.setNodeMarkup(current.pos + 1, undefined, { props });
           }

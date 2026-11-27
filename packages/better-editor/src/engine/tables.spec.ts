@@ -125,3 +125,45 @@ test("table widths follow logical columns across row spans", () => {
   });
   expect(fromTiptapDocument(toTiptapDocument(saved))).toEqual(saved);
 });
+
+test("Enter adds a line in a table cell and Tab at the end adds a row", () => {
+  const editor = new Editor({
+    content: toTiptapDocument([
+      parseBlock({
+        content: { rows: [{ cells: ["A", "B"] }], type: "tableContent" },
+        id: "table",
+        type: "table",
+      }),
+    ]).toJSON(),
+    editorProps: { handleScrollToSelection: () => true },
+    element: document.createElement("div"),
+    extensions: testDocumentExtensions(),
+  });
+  try {
+    let last = 0;
+    editor.state.doc.descendants((node, pos) => {
+      if (node.type.name === "tableParagraph") last = pos + node.nodeSize - 1;
+    });
+    editor.view.dispatch(
+      editor.state.tr.setSelection(
+        TextSelection.create(editor.state.doc, last),
+      ),
+    );
+    editor.view.someProp("handleKeyDown", (handle) =>
+      handle(editor.view, new KeyboardEvent("keydown", { key: "Enter" })),
+    );
+    editor.view.dispatch(editor.state.tr.insertText("Second line"));
+    expect(editor.state.selection.$from.parent.textContent).toBe(
+      "B\nSecond line",
+    );
+    const blocks = fromTiptapDocument(editor.state.doc);
+    expect(fromTiptapDocument(toTiptapDocument(blocks))).toEqual(blocks);
+    editor.view.someProp("handleKeyDown", (handle) =>
+      handle(editor.view, new KeyboardEvent("keydown", { key: "Tab" })),
+    );
+    expect(editor.state.doc.firstChild?.firstChild?.childCount).toBe(2);
+    expect(editor.state.selection.$from.parent.textContent).toBe("");
+  } finally {
+    editor.destroy();
+  }
+});

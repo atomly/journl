@@ -299,7 +299,6 @@ The rest of the components are set by the Tailwind CSS classes, or by our editor
   background:
     linear-gradient(135deg, var(--glass-glint), transparent 52%), var(--glass);
   border-color: var(--glass-edge);
-  border-bottom-color: var(--glass-lower);
   box-shadow: var(--depth);
   backdrop-filter: blur(20px);
 }
@@ -1035,6 +1034,9 @@ The rest of the components are set by the Tailwind CSS classes, or by our editor
 }
 /* App launcher keeps unread status accessible without an always-present dot. */
 .journl-agent-launcher {
+  flex-wrap: nowrap;
+  white-space: nowrap;
+  width: max-content;
   font:
     700 14px / 1.55 system-ui,
     -apple-system,
@@ -1329,8 +1331,7 @@ The rest of the components are set by the Tailwind CSS classes, or by our editor
   height: 40px;
   align-items: center;
   justify-content: center;
-  /* Anchor at the footer inset so the summary never slides while the
-     rail width animates; auto on both sides would recenter it. */
+  /* Anchor the summary to the footer inset in the compact rail. */
   margin-inline: 0 auto;
   padding: 0;
 }
@@ -1348,6 +1349,16 @@ The rest of the components are set by the Tailwind CSS classes, or by our editor
   outline: none;
   box-shadow: none;
 }
+[data-side="left"]
+  :is([data-slot="sidebar-gap"], [data-slot="sidebar-container"]) {
+  /* One atomic layout update for the reading column and compact navigation. */
+  transition: none;
+}
+[data-side="left"]
+  :is([data-sidebar="menu-button"], [data-sidebar="group-label"]) {
+  transition-property: background-color, color, border-color;
+}
+
 [aria-label="Chat composer"] {
   border-top: 1px solid #d9dade;
   min-height: 119px;

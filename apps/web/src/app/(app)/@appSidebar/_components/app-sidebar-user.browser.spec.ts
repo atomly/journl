@@ -126,6 +126,37 @@ test("shipped account dropdown hosts the shipped theme control and signs out", a
 test("shipped Appearance card and account dropdown share the persisted theme", async ({
   page,
 }, info) => {
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.addInitScript(() => {
+    if (!document.startViewTransition) return;
+    const observeReveal = () => {
+      const root = document.documentElement;
+      new MutationObserver(() => {
+        if (root.hasAttribute("data-theme-reveal")) {
+          root.dataset.observedThemeOrigin = root.style.getPropertyValue(
+            "--theme-reveal-origin",
+          );
+        }
+      }).observe(root, {
+        attributeFilter: ["data-theme-reveal"],
+      });
+    };
+    if (document.documentElement) observeReveal();
+    else
+      document.addEventListener("DOMContentLoaded", observeReveal, {
+        once: true,
+      });
+  });
+  const root = page.locator("html");
+  const expectReveal = async () => {
+    if (await page.evaluate(() => Boolean(document.startViewTransition))) {
+      await expect(root).toHaveAttribute(
+        "data-observed-theme-origin",
+        /^-?[\d.]+px -?[\d.]+px$/,
+      );
+      await expect(root).not.toHaveAttribute("data-theme-reveal", "");
+    }
+  };
   await page.goto("/auth/sign-in");
   await expect(page).toHaveURL("/account/settings");
   await expect(page.locator("[data-app-container]")).toContainText(
@@ -135,7 +166,8 @@ test("shipped Appearance card and account dropdown share the persisted theme", a
     page.getByRole("heading", { exact: true, name: "Appearance" }),
   ).toBeVisible();
   await page.getByRole("radio", { name: /^Light\b/ }).click();
-  await expect(page.locator("html")).toHaveClass(/\blight\b/);
+  await expect(root).toHaveClass(/\blight\b/);
+  await expectReveal();
   await page.goto("/journal");
   if (info.project.name === "mobile-webkit")
     await page.getByRole("button", { name: "Toggle Sidebar" }).first().click();
@@ -146,9 +178,17 @@ test("shipped Appearance card and account dropdown share the persisted theme", a
     page.getByRole("tab", { exact: true, name: "Light" }),
   ).toHaveAttribute("aria-selected", "true");
   await page.getByRole("tab", { exact: true, name: "Dark" }).click();
+  await expect(root).toHaveClass(/\bdark\b/);
+  await expectReveal();
   await page.getByRole("menuitem", { exact: true, name: "Settings" }).click();
   await expect(page.getByRole("radio", { name: /^Dark\b/ })).toBeChecked();
-  await expect(page.locator("html")).toHaveClass(/\bdark\b/);
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await root.evaluate((element) =>
+    element.removeAttribute("data-observed-theme-origin"),
+  );
+  await page.getByRole("radio", { name: /^Light\b/ }).press("Space");
+  await expect(root).toHaveClass(/\blight\b/);
+  await expect(root).not.toHaveAttribute("data-observed-theme-origin");
 });
 
 test("shipped account dropdown works in the collapsed desktop sidebar", async ({

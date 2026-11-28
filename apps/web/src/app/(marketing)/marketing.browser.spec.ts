@@ -78,7 +78,7 @@ publicTest(
     await page.emulateMedia({ reducedMotion: "no-preference" });
     await toggle.click();
     await expect(root).toHaveClass(/\bdark\b/);
-    await expect(root).not.toHaveAttribute("data-marketing-theme-reveal", "");
+    await expect(root).not.toHaveAttribute("data-theme-reveal", "");
   },
 );
 

@@ -261,7 +261,9 @@ The rest of the components are set by the Tailwind CSS classes, or by our editor
 
 [data-app-container] {
   --workspace-content-max: 1440px;
-  --workspace-gutter: 54px;
+  /* Leave room for both desktop block controls. */
+  --workspace-gutter-start: 72px;
+  --workspace-gutter-end: 54px;
   position: relative;
   isolation: isolate;
 }
@@ -398,26 +400,22 @@ The rest of the components are set by the Tailwind CSS classes, or by our editor
   margin-inline: auto;
 }
 [data-workspace-section] {
-  padding-inline: var(--workspace-gutter);
+  padding-inline: var(--workspace-gutter-start) var(--workspace-gutter-end);
 }
-/* 2 × 28px buttons, 2px gap, 4px shell padding and 4px editor offset. */
 [data-reading-surface] {
-  --better-editor-gutter-start: 72px;
+  --better-editor-gutter-start: var(--workspace-gutter-start);
 }
 [data-editor-heading] {
-  padding-inline: var(--better-editor-gutter-start) 54px;
+  padding-inline: var(--better-editor-gutter-start) var(--workspace-gutter-end);
 }
 @media (width <= 767px), (pointer: coarse) {
+  [data-app-container] {
+    --workspace-gutter-start: 16px;
+    --workspace-gutter-end: 16px;
+  }
+  /* Keep room for the block handle without narrowing other views. */
   [data-reading-surface] {
     --better-editor-gutter-start: 54px;
-  }
-  [data-editor-heading] {
-    padding-inline-end: 16px;
-  }
-}
-@media (width <= 700px) {
-  [data-app-container] {
-    --workspace-gutter: 16px;
   }
 }
 

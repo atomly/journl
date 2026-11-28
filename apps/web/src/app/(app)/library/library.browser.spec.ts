@@ -4,7 +4,9 @@ test.use({ workspaceReview: true });
 
 test("Library filters pages and shows their folder counts", async ({
   page,
+  isMobile,
 }) => {
+  if (!isMobile) await page.setViewportSize({ height: 1080, width: 1920 });
   await page.goto("/library");
   const pages = page.getByRole("table", { name: "Pages" });
   const garden = pages.getByRole("link", { name: "Small balcony garden" });
@@ -17,11 +19,23 @@ test("Library filters pages and shows their folder counts", async ({
   await search.clear();
   await expect(lentils).toBeVisible();
   await page.getByRole("link", { exact: true, name: "Folders" }).click();
-  const projects = page
-    .getByRole("table", { name: "Folders" })
-    .getByRole("row")
-    .filter({ has: page.getByRole("link", { exact: true, name: "Projects" }) });
-  await expect(projects).toContainText("2 pages");
+  const folders = page.getByRole("table", { name: "Folders" });
+  const projects = folders.getByRole("link", {
+    exact: true,
+    name: "Projects",
+  });
+  await expect(
+    folders.getByRole("row").filter({
+      has: page.getByRole("link", { exact: true, name: "Projects" }),
+    }),
+  ).toContainText("2 pages");
+  const table = await folders.boundingBox();
+  await projects.click();
+  const title = page.getByPlaceholder("New folder");
+  await expect(title).toHaveValue("Projects");
+  const input = await title.boundingBox();
+  expect(input?.x).toBeCloseTo(table?.x ?? 0, 0);
+  expect(input?.width).toBeCloseTo(table?.width ?? 0, 0);
 });
 
 test("Library lets users cancel a rename and a deletion", async ({ page }) => {

@@ -25,7 +25,7 @@ export default async function Page({
 
 function JournalEntryFallback() {
   return (
-    <div className="pt-8 pb-20">
+    <div data-reading-surface className="pt-8 pb-20">
       <JournalEntrySkeleton hasContent />
     </div>
   );

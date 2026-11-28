@@ -23,10 +23,14 @@ export function JournalEntrySkeleton({
       </div>
 
       {/* Date header */}
-      {hasHeader && <Skeleton className="mx-13.5 h-9 w-40" />}
+      {hasHeader && (
+        <div data-editor-heading>
+          <Skeleton className="h-9 w-40 max-w-full" />
+        </div>
+      )}
 
       {/* Content */}
-      <div className="space-y-2 px-13.5">
+      <div data-editor-heading className="space-y-2">
         {hasContent ? (
           <div className="flex-1 space-y-2">
             <Skeleton className="h-6 w-full" />

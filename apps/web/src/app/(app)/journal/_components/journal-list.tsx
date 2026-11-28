@@ -273,7 +273,7 @@ function VirtualizedJournalList({
       components={{
         Footer: () => (
           <JournalListFooter
-            className="mx-auto mt-8 max-w-4xl pb-28"
+            className="mt-8 pb-28"
             hasNextPage={hasNextPage}
             isFetching={isFetching}
             error={error}
@@ -318,7 +318,7 @@ function JournalListFooter({
     );
   }
   if (isFetching && hasNextPage) {
-    return <JournalEntrySkeleton hasContent {...rest} />;
+    return <JournalEntrySkeleton data-reading-surface hasContent {...rest} />;
   }
 
   if (hasNextPage) return null;

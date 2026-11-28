@@ -252,7 +252,8 @@ function VirtualizedJournalList({
           <JournalEntryWrapper className="border-b pt-8 pb-20">
             {"contentReadError" in entry && entry.contentReadError ? (
               <div
-                className="space-y-4 px-13.5"
+                className="space-y-4"
+                data-editor-heading
                 data-journal-content-unavailable
               >
                 <JournalEntryHeader />

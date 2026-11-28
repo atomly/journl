@@ -66,18 +66,18 @@ publicTest("public navigation opens the invite form", async ({ page }) => {
 publicTest(
   "the color toggle preserves the selected theme",
   async ({ page }) => {
-    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.emulateMedia({ colorScheme: "dark", reducedMotion: "reduce" });
     await page.goto("/");
     const root = page.locator("html");
     const toggle = page.getByRole("button", { name: "Toggle color theme" });
-    await expect(root).toHaveClass(/\blight\b/);
+    await expect(root).toHaveClass(/\bdark\b/);
     await toggle.press("Enter");
-    await expect(root).toHaveClass(/\bdark\b/);
+    await expect(root).toHaveClass(/\blight\b/);
     await page.reload();
-    await expect(root).toHaveClass(/\bdark\b/);
+    await expect(root).toHaveClass(/\blight\b/);
     await page.emulateMedia({ reducedMotion: "no-preference" });
     await toggle.click();
-    await expect(root).toHaveClass(/\blight\b/);
+    await expect(root).toHaveClass(/\bdark\b/);
     await expect(root).not.toHaveAttribute("data-marketing-theme-reveal", "");
   },
 );

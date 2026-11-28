@@ -6,13 +6,9 @@ type AppLayoutProps = {
   children: React.ReactNode;
 };
 
-/**
- * Marketing renders the approved light plate by default. The class theme
- * system stays intact: an explicit stored preference still resolves dark.
- */
 function MarketingLayout({ children }: AppLayoutProps) {
   return (
-    <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
+    <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
       <TRPCReactProvider>{children}</TRPCReactProvider>
     </ThemeProvider>
   );

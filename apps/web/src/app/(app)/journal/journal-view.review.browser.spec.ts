@@ -213,7 +213,7 @@ for (const theme of ["light", "dark"]) {
       `/journal/${SELECTED_DATE}`,
     );
     const headingBox = await heading.boundingBox();
-    expect(headingBox?.x).toBe(302);
+    expect(headingBox?.x).toBe(320);
     const headingStyles = await heading.evaluate((node) => {
       const style = getComputedStyle(node);
       return {
@@ -255,7 +255,7 @@ for (const theme of ["light", "dark"]) {
     await dayHeading.scrollIntoViewIfNeeded();
     await settleShell(page);
     const dayHeadingBox = await dayHeading.boundingBox();
-    expect(dayHeadingBox?.x).toBe(302);
+    expect(dayHeadingBox?.x).toBe(320);
     const dayHeadingStyles = await dayHeading.evaluate((node) => {
       const style = getComputedStyle(node);
       return { color: style.color, fontWeight: style.fontWeight };

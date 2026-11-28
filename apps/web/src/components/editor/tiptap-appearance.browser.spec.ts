@@ -36,7 +36,6 @@ for (const theme of ["light", "dark"]) {
     await expect(card).toHaveCSS("border-top-width", "1px");
     await expect(editor).toHaveCSS("font-size", "16px");
     await expect(editor).toHaveCSS("line-height", "24px");
-    await expect(editor).toHaveCSS("padding-left", "54px");
     await expect(editor).toHaveCSS(
       "color",
       theme === "dark" ? "rgb(207, 207, 207)" : "rgb(63, 63, 63)",
@@ -159,5 +158,47 @@ test("editor styles do not adopt the host application's toolbar layout", async (
     order: "0",
     position: "static",
     top: "auto",
+  });
+});
+
+test.describe("desktop editor gutter", () => {
+  test.skip(
+    ({ isMobile }) => isMobile,
+    "Desktop has an Add block button and a drag handle",
+  );
+
+  test("aligns the Page title and contains both controls inside the workspace", async ({
+    page,
+  }) => {
+    await page.goto(`/pages/${fixtureId(980)}`);
+    const editor = page.getByRole("textbox", { name: "Document editor" });
+    const block = editor.locator("[data-better-editor-body]").first();
+    const title = page.getByPlaceholder("New page");
+    await expect(block).toBeVisible();
+    const titleStart = await title.evaluate((node) => {
+      const style = getComputedStyle(node);
+      return (
+        node.getBoundingClientRect().left +
+        Number.parseFloat(style.paddingLeft) +
+        Number.parseFloat(style.borderLeftWidth)
+      );
+    });
+    expect((await block.boundingBox())?.x).toBeCloseTo(titleStart, 0);
+    await block.hover();
+    const controls = page.locator("[data-tiptap-side-menu]");
+    const workspace = page.locator("[data-app-container]");
+    await expect(
+      controls.getByRole("button", { name: "Add block" }),
+    ).toBeVisible();
+    await expect(
+      controls.getByRole("button", { name: "Block actions" }),
+    ).toBeVisible();
+    await expect
+      .poll(async () => {
+        const bounds = await workspace.boundingBox();
+        const menu = await controls.boundingBox();
+        return bounds && menu ? menu.x - bounds.x : -1;
+      })
+      .toBeGreaterThan(0);
   });
 });

@@ -400,15 +400,24 @@ The rest of the components are set by the Tailwind CSS classes, or by our editor
 [data-workspace-section] {
   padding-inline: var(--workspace-gutter);
 }
+/* 2 × 28px buttons, 2px gap, 4px shell padding and 4px editor offset. */
+[data-reading-surface] {
+  --better-editor-gutter-start: 72px;
+}
 [data-editor-heading] {
-  padding-inline: 54px;
+  padding-inline: var(--better-editor-gutter-start) 54px;
+}
+@media (width <= 767px), (pointer: coarse) {
+  [data-reading-surface] {
+    --better-editor-gutter-start: 54px;
+  }
+  [data-editor-heading] {
+    padding-inline-end: 16px;
+  }
 }
 @media (width <= 700px) {
   [data-app-container] {
     --workspace-gutter: 16px;
-  }
-  [data-editor-heading] {
-    padding-inline-end: var(--workspace-gutter);
   }
 }
 
@@ -1386,11 +1395,8 @@ The rest of the components are set by the Tailwind CSS classes, or by our editor
 }
 
 [aria-label="Chat composer"] {
-  border-top: 1px solid #d9dade;
+  border-top: 1px solid var(--glass-edge);
   min-height: 119px;
-}
-.dark [aria-label="Chat composer"] {
-  border-top-color: #2c2c30;
 }
 .journl-chat-input {
   background: #ffffff;

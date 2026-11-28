@@ -823,6 +823,11 @@ The rest of the components are set by the Tailwind CSS classes, or by our editor
   gap: 0;
   padding-block: 0;
 }
+.journl-navigation-library {
+  margin-block-start: 8px;
+  padding-block: 8px 0;
+  border-block-start: 1px solid var(--sidebar-border);
+}
 .journl-navigation-primary .journl-navigation-label {
   height: auto;
   min-height: 17px;
@@ -1116,7 +1121,7 @@ The rest of the components are set by the Tailwind CSS classes, or by our editor
   .journl-navigation-shortcuts
   [data-sidebar="menu-button"],
 [data-state="collapsed"]
-  .journl-navigation-primary
+  :is(.journl-navigation-primary, .journl-navigation-library)
   [data-sidebar="menu-button"] {
   width: 40px !important;
   height: 40px !important;
@@ -1572,8 +1577,12 @@ The rest of the components are set by the Tailwind CSS classes, or by our editor
 
 /* Phone sheet insets include the reference panel's one-pixel frame. */
 @media (width <= 700px) {
-  [data-mobile="true"] .journl-navigation-primary,
-  [data-mobile="true"] .journl-navigation-shortcuts {
+  [data-mobile="true"]
+    :is(
+      .journl-navigation-primary,
+      .journl-navigation-library,
+      .journl-navigation-shortcuts
+    ) {
     padding-inline: 9px;
   }
 }
@@ -1898,7 +1907,8 @@ The rest of the components are set by the Tailwind CSS classes, or by our editor
 /* The compact rail centers every control on the settled 64px centerline.
    Fixed left insets mean nothing reflows while the panel width animates. */
 [data-state="collapsed"] .journl-navigation-shortcuts,
-[data-state="collapsed"] .journl-navigation-primary {
+[data-state="collapsed"]
+  :is(.journl-navigation-primary, .journl-navigation-library) {
   padding-inline: 12px;
 }
 [data-state="collapsed"] .journl-navigation-account {

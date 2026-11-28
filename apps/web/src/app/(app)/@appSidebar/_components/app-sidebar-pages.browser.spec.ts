@@ -72,6 +72,26 @@ test("explicit expansion survives navigation and reload", async ({
     .click();
   await expect(page).toHaveURL(/\/pages\//);
   await showSidebar();
+  const library = page.getByRole("group", { exact: true, name: "Library" });
+  const toggle = library.getByRole("button", { exact: true, name: "Library" });
+  const note = library.getByRole("link", {
+    exact: true,
+    name: "Browser note 01",
+  });
+  await expect(note).toHaveAttribute("aria-current", "page");
+  await expect(
+    library.locator(
+      '[data-sidebar="menu-sub-button"][data-active="true"]:visible',
+    ),
+  ).toContainText("Browser note 01");
+  await expect(toggle).toHaveAttribute("data-active", "false");
+  await toggle.click();
+  await expect(toggle).toHaveAttribute("aria-expanded", "false");
+  await expect(note).toBeHidden();
+  await expect(
+    page.getByRole("link", { exact: true, name: "Journal" }),
+  ).toBeVisible();
+  await toggle.click();
   await expect(
     page.getByRole("button", { exact: true, name: "Collapse Browser folder" }),
   ).toBeVisible();

@@ -175,6 +175,7 @@ export function AppSidebarPageItem({
                     <Link
                       draggable={false}
                       data-tree-drag-handle
+                      aria-current={isActive ? "page" : undefined}
                       href={`/pages/${page?.id}`}
                       onClick={handlePageNavigationClick}
                       className="flex min-w-0 flex-1 items-center gap-2 truncate"
@@ -204,6 +205,7 @@ export function AppSidebarPageItem({
                     <Link
                       draggable={false}
                       data-tree-drag-handle
+                      aria-current={isActive ? "page" : undefined}
                       href={`/pages/${page?.id}`}
                       onClick={handlePageNavigationClick}
                       className="flex w-full min-w-0 items-center gap-2 truncate"

@@ -124,12 +124,18 @@ export default async function AppSidebar() {
           />
         </div>
       </div>
-      <SidebarContent className="flex flex-1 flex-col overflow-x-clip">
-        <SidebarGroup className="journl-navigation-primary flex min-h-0 flex-1 flex-col px-3">
+      <SidebarContent className="flex flex-1 flex-col gap-0 overflow-x-clip">
+        <SidebarGroup className="journl-navigation-primary shrink-0 px-3">
           <SidebarGroupLabel className="journl-navigation-label">
             Workspace
           </SidebarGroupLabel>
           <AppSidebarNavigation items={navigationItems} />
+        </SidebarGroup>
+        <SidebarGroup
+          role="group"
+          aria-label="Library"
+          className="journl-navigation-library min-h-0 flex-1 px-3"
+        >
           <Suspense fallback={<AppSidebarPagesSkeleton />}>
             <AppSidebarPages key={owner.id} owner={owner.id} />
           </Suspense>

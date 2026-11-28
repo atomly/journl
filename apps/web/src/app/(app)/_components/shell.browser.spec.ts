@@ -166,7 +166,16 @@ test("context menus preserve Journal date navigation and keep page identity", as
   await page
     .getByRole("button", { exact: true, name: "Journal route menu" })
     .click();
-  await expect(page.getByRole("dialog")).toBeVisible();
+  const menu = page.getByRole("dialog", { name: "Journal" });
+  await expect(menu).toBeVisible();
+  const modes = menu.getByRole("group", { name: "Journal view" });
+  const [entries, timeline] = await modes
+    .getByRole("button")
+    .evaluateAll((buttons) =>
+      buttons.map((button) => button.getBoundingClientRect().toJSON()),
+    );
+  expect(entries.y).toBeCloseTo(timeline.y, 0);
+  expect(entries.x).toBeLessThan(timeline.x);
   if (page.viewportSize()?.width === 390) {
     await expect
       .poll(async () => (await page.getByRole("dialog").boundingBox())?.x)

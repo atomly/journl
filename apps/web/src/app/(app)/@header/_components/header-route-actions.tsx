@@ -17,7 +17,7 @@ import {
 } from "@acme/ui/popover";
 import { Surface } from "@acme/ui/surface";
 import { useQuery } from "@tanstack/react-query";
-import { ChevronDown, XIcon } from "lucide-react";
+import { CalendarDays, ChevronDown, XIcon } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState, useSyncExternalStore } from "react";
@@ -34,6 +34,7 @@ function RouteDisclosure({
   trigger,
   children,
   suppressed = false,
+  journal = false,
 }: {
   open: boolean;
   onOpenChange: (value: boolean) => void;
@@ -43,6 +44,7 @@ function RouteDisclosure({
   children: React.ReactNode;
   /** A menu with nothing to choose from never opens; the trigger stays an identity control. */
   suppressed?: boolean;
+  journal?: boolean;
 }) {
   const mobile = useIsMobile();
   const ready = useShellReady();
@@ -56,10 +58,12 @@ function RouteDisclosure({
         <DialogTrigger render={trigger} aria-label={label} disabled={!ready} />
         <DialogContent
           data-shell-menu
+          data-journal-route-menu={journal || undefined}
           className="flex max-h-[65dvh] translate-x-0 translate-y-0 flex-col gap-0 overflow-hidden p-0"
         >
           <Surface
             material="glass"
+            data-route-menu-heading
             className="flex min-h-[70px] shrink-0 items-center rounded-none border-x-0 border-t-0 p-4 pr-16"
           >
             <DialogHeader className="text-left">
@@ -78,10 +82,12 @@ function RouteDisclosure({
       <PopoverContent
         align="start"
         data-shell-route-popover
+        data-journal-route-menu={journal || undefined}
         className="max-h-[min(65dvh,var(--available-height,65dvh))] gap-0 overflow-hidden rounded-[20px] p-0"
       >
         <Surface
           material="glass"
+          data-route-menu-heading
           className="flex min-h-[70px] shrink-0 items-center justify-between gap-3 rounded-none border-x-0 border-t-0 px-4 py-3"
         >
           <PopoverTitle className="font-semibold text-base">
@@ -92,6 +98,7 @@ function RouteDisclosure({
             size="icon"
             aria-label="Close route menu"
             className="size-11 shrink-0 [&>svg]:size-5"
+            data-route-menu-close
             onClick={() => onOpenChange(false)}
           >
             <XIcon />
@@ -191,30 +198,46 @@ export function HeaderRouteActions({ actions }: { actions?: React.ReactNode }) {
   const identityMenuSuppressed = identityRoute && (path?.length ?? 2) <= 1;
   const journalActions = (
     <>
-      {(["entries", "timeline"] as const).map((mode) => (
+      <fieldset className="journal-route-modes">
+        <legend className="sr-only">Journal view</legend>
+        {(["entries", "timeline"] as const).map((mode) => (
+          <Button
+            key={mode}
+            size="sm"
+            variant="ghost"
+            aria-pressed={preferences.journalTimelineView === mode}
+            onClick={() => {
+              updatePreferences({ journalTimelineView: mode });
+              navigate("/journal");
+            }}
+          >
+            {mode === "entries" ? "Entries" : "Timeline"}
+          </Button>
+        ))}
+      </fieldset>
+      <div className="journal-route-dates">
         <Button
-          key={mode}
-          variant={
-            preferences.journalTimelineView === mode ? "selected" : "ghost"
-          }
-          aria-pressed={preferences.journalTimelineView === mode}
-          onClick={() => {
-            updatePreferences({ journalTimelineView: mode });
-            navigate("/journal");
-          }}
+          size="sm"
+          variant="ghost"
+          aria-expanded={browseDates}
+          onClick={() => setBrowseDates((value) => !value)}
         >
-          {mode === "entries" ? "Entries" : "Timeline"}
+          <CalendarDays aria-hidden="true" />
+          Browse dates / history
+          <ChevronDown aria-hidden="true" />
         </Button>
-      ))}
-      <Button
-        variant="ghost"
-        aria-expanded={browseDates}
-        onClick={() => setBrowseDates((value) => !value)}
-      >
-        Browse dates / history
-      </Button>
+        <Button
+          size="sm"
+          variant="ghost"
+          onClick={() => navigate(`/journal/${localDate(new Date())}`)}
+        >
+          Today
+        </Button>
+      </div>
       {browseDates && (
         <Calendar
+          className="bg-transparent"
+          classNames={{ month: "gap-2" }}
           mode="single"
           captionLayout="dropdown"
           defaultMonth={date ? new Date(`${date}T12:00:00`) : undefined}
@@ -224,12 +247,6 @@ export function HeaderRouteActions({ actions }: { actions?: React.ReactNode }) {
           }}
         />
       )}
-      <Button
-        variant="ghost"
-        onClick={() => navigate(`/journal/${localDate(new Date())}`)}
-      >
-        Today
-      </Button>
     </>
   );
   return (
@@ -246,7 +263,8 @@ export function HeaderRouteActions({ actions }: { actions?: React.ReactNode }) {
           open={open}
           onOpenChange={setOpen}
           label={identityMenuSuppressed ? label : `${label} route menu`}
-          title={identityRoute ? label : detail || label}
+          title={identityRoute || journal ? label : detail || label}
+          journal={journal}
           suppressed={identityMenuSuppressed}
           trigger={
             <Button

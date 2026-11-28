@@ -1890,6 +1890,92 @@ The rest of the components are set by the Tailwind CSS classes, or by our editor
   background-color: #91b8ef30;
 }
 
+[data-journal-route-menu] [data-route-menu-heading] {
+  min-height: 44px;
+  padding-block: 4px;
+  border-bottom-color: var(--border);
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+[data-journal-route-menu]
+  :is([data-slot="dialog-title"], [data-slot="popover-title"]) {
+  font-size: 14px;
+}
+[data-journal-route-menu] [data-route-menu-close] {
+  width: 32px;
+  height: 32px;
+}
+[data-journal-route-menu] [data-slot="dialog-close"] {
+  top: 0;
+  right: 6px;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 8px;
+}
+[data-journal-route-menu]
+  :is([data-slot="dialog-close"], [data-route-menu-close]):focus-visible {
+  box-shadow: none;
+  outline: 2px solid var(--ring);
+  outline-offset: -4px;
+}
+[data-journal-route-menu] .journl-route-menu {
+  padding: 10px;
+  gap: 8px;
+}
+.journal-route-modes {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 3px;
+  padding: 3px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--background);
+}
+.journal-route-modes > button,
+.journal-route-dates > button {
+  border-radius: 7px;
+}
+.journal-route-modes > button[aria-pressed="true"] {
+  background: color-mix(in srgb, var(--accent) 23%, var(--background));
+  border-color: color-mix(in srgb, var(--accent) 48%, var(--border));
+  color: var(--foreground);
+  font-weight: 650;
+}
+@media (forced-colors: active) {
+  .journal-route-modes > button[aria-pressed="true"] {
+    border-color: Highlight;
+  }
+}
+.journal-route-dates {
+  display: flex;
+  justify-content: space-between;
+  gap: 4px;
+}
+.journal-route-dates > button:first-child {
+  gap: 6px;
+}
+.journal-route-dates > button[aria-expanded] > svg:last-child {
+  color: var(--muted-foreground);
+}
+.journal-route-dates > button[aria-expanded="true"] > svg:last-child {
+  rotate: 180deg;
+}
+[data-journal-route-menu] [data-slot="calendar"] {
+  --cell-size: 32px;
+  padding: 4px 0 0;
+}
+@media (pointer: coarse) {
+  .journal-route-modes > button,
+  .journal-route-dates > button {
+    min-height: 44px;
+  }
+  [data-journal-route-menu] [data-slot="calendar"] {
+    --cell-size: clamp(28px, 9vw, 40px);
+  }
+}
+
 /* The shadcn calendar centers in the route popover and carries the approved
    selected-day tokens instead of the default primary fill. */
 .journl-route-menu [data-slot="calendar"] {

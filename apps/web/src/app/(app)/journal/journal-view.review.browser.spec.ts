@@ -148,11 +148,10 @@ for (const theme of ["light", "dark"]) {
     });
     await expect(entriesTab).toHaveAttribute("aria-pressed", "true");
     await expect(timelineTab).toHaveAttribute("aria-pressed", "false");
-    // The selected Button keeps the app's composed accent fill in both themes.
-    await expect(entriesTab).toHaveCSS(
-      "background-color",
-      "rgb(196, 203, 255)",
+    const inactiveFill = await timelineTab.evaluate(
+      (tab) => getComputedStyle(tab).backgroundColor,
     );
+    await expect(entriesTab).not.toHaveCSS("background-color", inactiveFill);
     const entriesContrast = await renderedTextContrast(entriesTab);
     expect(
       entriesContrast.ratio,

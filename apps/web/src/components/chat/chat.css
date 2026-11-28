@@ -56,3 +56,17 @@
   padding: 0.5rem;
   text-align: start;
 }
+
+.chat-markdown-authored :is(p, li) {
+  white-space: pre-wrap;
+}
+
+:is(.journl-chat-input, .journl-chat-edit):has(textarea:focus-visible) {
+  border-color: var(--ring);
+  box-shadow: none;
+}
+
+:is(.journl-chat-input, .journl-chat-edit) textarea:focus-visible {
+  outline: none;
+  box-shadow: none;
+}

@@ -1,6 +1,6 @@
 html,
 body {
-  background-color: var(--background);
+  background-color: var(--page-background);
   color: var(--foreground);
   scroll-behavior: smooth;
 }
@@ -155,7 +155,7 @@ body {
   min-height: 44px;
 }
 
-/* The exact canonical v5 all-pages PNG at natural ratio, uncropped. */
+/* Display the workspace screenshot at its natural ratio. */
 .marketing .product-frame {
   background:
     linear-gradient(125deg, var(--glass-glint), transparent 58%), var(--glass);
@@ -182,8 +182,10 @@ body {
 :where(.dark) .marketing .canonical-hero-light {
   display: none;
 }
-:where(.dark) .marketing .canonical-hero-desktop.canonical-hero-dark {
-  display: block;
+@media (min-width: 701px) {
+  :where(.dark) .marketing .canonical-hero-desktop.canonical-hero-dark {
+    display: block;
+  }
 }
 .marketing .composition-caption {
   color: var(--muted-foreground);
@@ -349,7 +351,8 @@ body {
 }
 
 .marketing .marketing-end {
-  padding: 112px 24px;
+  padding: var(--section-gap) 24px;
+  text-align: center;
 }
 .marketing .marketing-end h2 {
   font-size: 64px;
@@ -368,6 +371,8 @@ body {
 }
 
 .marketing .marketing-footer {
+  align-items: center;
+  justify-content: space-between;
   background: transparent;
   border-top: 1px solid var(--border);
   display: flex;
@@ -376,6 +381,7 @@ body {
   padding: 40px max(32px, calc((100vw - 1184px) / 2));
 }
 .marketing .marketing-footer .brand {
+  align-items: center;
   color: var(--foreground);
   display: inline-flex;
   min-height: 44px;
@@ -423,6 +429,16 @@ body {
   }
 }
 
+.marketing .btn.marketing-theme-toggle {
+  min-width: 44px;
+  padding: 0;
+  border-color: transparent;
+  background: transparent;
+}
+.marketing .btn.marketing-theme-toggle:hover {
+  background: var(--secondary);
+}
+
 /* Mobile stack at 700px and below. */
 @media (max-width: 700px) {
   .marketing {
@@ -431,6 +447,7 @@ body {
     --section-gap: 64px;
   }
   .marketing .marketing-nav {
+    flex-wrap: wrap;
     border-radius: 20px;
     gap: 8px;
     margin: 12px;
@@ -441,6 +458,9 @@ body {
   }
   .marketing .public-actions {
     gap: 4px;
+  }
+  .marketing .marketing-nav .public-actions {
+    margin-inline-start: auto;
   }
   .marketing .marketing-nav .btn {
     font-size: 13px;

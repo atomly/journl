@@ -34,7 +34,7 @@ export function SourceContexts({
       setView({ cursor: undefined, history: [] });
   }, [query.data?.restartRequired, setView]);
   return (
-    <main className="mx-auto w-full max-w-3xl space-y-5 px-4 py-6">
+    <main data-workspace-section className="space-y-5 py-6">
       <Link
         href={`/explore/clusters/${clusterId}`}
         className="inline-flex min-h-11 items-center gap-2 text-muted-foreground text-sm"

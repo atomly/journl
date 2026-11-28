@@ -19,15 +19,15 @@ const item = (id: string, start?: number): DocumentBlock =>
     ...(start === undefined ? {} : { props: { start } }),
   });
 
-test("implicit ordinals continue siblings, reset at breaks, and preserve explicit starts and nested runs", () => {
+test("contiguous lists ignore legacy item ordinals and preserve each run’s start", () => {
   const blocks = [
-    item("a"),
-    { ...item("b"), children: [item("nested-0", 0), item("nested-1")] },
-    item("c"),
-    item("explicit", 9),
+    item("a", 1),
+    { ...item("b", 2), children: [item("nested-0", 0), item("nested-1", 1)] },
+    item("c", 2),
+    item("legacy", 4),
     item("following"),
     parseBlock({ content: "Break", id: "break", type: "paragraph" }),
-    item("reset"),
+    item("reset", 9),
   ];
   const editor = new Editor({
     content: toTiptapDocument(blocks).toJSON(),
@@ -41,7 +41,7 @@ test("implicit ordinals continue siblings, reset at breaks, and preserve explici
           '[data-better-editor-body="numberedListItem"]',
         ),
       ].map((el) => el.getAttribute("data-start"));
-    expect(numbers()).toEqual(["1", "2", "0", "1", "3", "9", "10", "1"]);
+    expect(numbers()).toEqual(["1", "2", "0", "1", "3", "4", "5", "9"]);
     expect(fromTiptapDocument(editor.state.doc)).toEqual(
       fromTiptapDocument(toTiptapDocument(blocks)),
     );
@@ -54,12 +54,12 @@ test("implicit ordinals continue siblings, reset at breaks, and preserve explici
     editor.view.dispatch(
       editor.state.tr.delete(target.pos, target.pos + target.node.nodeSize),
     );
-    expect(numbers()).toEqual(["1", "2", "9", "10", "1"]);
+    expect(numbers()).toEqual(["1", "2", "3", "4", "9"]);
     expect(clipboardText(editor.state.doc.content)).toContain(
-      "1. a\n\n2. c\n\n9. explicit\n\n10. following",
+      "1. a\n\n2. c\n\n3. legacy\n\n4. following",
     );
     expect(clipboardText(editor.state.doc.content)).toContain(
-      "Break\n\n1. reset",
+      "Break\n\n9. reset",
     );
   } finally {
     editor.destroy();
@@ -69,8 +69,9 @@ test("implicit ordinals continue siblings, reset at breaks, and preserve explici
 test("Enter and type conversion continue an implicit numbered run", () => {
   const editor = new Editor({
     content: toTiptapDocument([
-      item("a"),
-      item("b"),
+      item("a", 1),
+      item("b", 2),
+      item("c", 3),
       parseBlock({ content: "Tail", id: "tail", type: "paragraph" }),
     ]).toJSON(),
     editorProps: { handleScrollToSelection: () => true },
@@ -93,7 +94,7 @@ test("Enter and type conversion continue an implicit numbered run", () => {
     editor.commands.keyboardShortcut("Enter");
     expect(
       fromTiptapDocument(editor.state.doc).map((block) => block.id),
-    ).toEqual(["a", "b", "new-item", "tail"]);
+    ).toEqual(["a", "b", "new-item", "c", "tail"]);
     const tail = blockAt(editor.state.doc, "tail");
     editor.view.dispatch(
       editor.state.tr.setSelection(
@@ -109,7 +110,7 @@ test("Enter and type conversion continue an implicit numbered run", () => {
           '[data-better-editor-body="numberedListItem"]',
         ),
       ].map((el) => el.getAttribute("data-start")),
-    ).toEqual(["1", "2", "3", "4"]);
+    ).toEqual(["1", "2", "3", "4", "5"]);
   } finally {
     editor.destroy();
   }

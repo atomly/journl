@@ -13,7 +13,11 @@ async function AccountPage({
   params: Promise<{ pathname: string }>;
 }) {
   const { pathname } = await params;
-  return <AuthView pathname={pathname} />;
+  return (
+    <section data-workspace-section className="flex flex-col gap-6 pt-8 pb-24">
+      <AuthView pathname={pathname} />
+    </section>
+  );
 }
 
 export default withAuth(AccountPage, {

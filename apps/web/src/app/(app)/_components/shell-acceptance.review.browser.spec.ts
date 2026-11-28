@@ -26,6 +26,10 @@ for (const group of groups)
           mapping.viewport.width <= 700,
         "Capture matrix uses explicit viewports; WebKit interaction checks run separately",
       );
+      test.skip(
+        group.stateId === "navigation-mobile" && mapping.viewport.width > 700,
+        "The navigation sheet is now a phone-only state",
+      );
       const root = path.join(info.project.outputDir, "shell-captures");
       await mkdir(root, { recursive: true });
       const search = await controlShellSearch(page);
@@ -189,18 +193,9 @@ for (const group of groups)
             .getByRole("button", { exact: true, name: "Toggle Sidebar" })
             .click();
         if (group.stateId === "navigation-mobile") {
-          if (mobile)
-            await page
-              .getByRole("button", { exact: true, name: "Toggle Sidebar" })
-              .click();
-          else {
-            await page
-              .getByRole("button", { exact: true, name: "Route actions" })
-              .click();
-            await page
-              .getByRole("button", { exact: true, name: "Notebook navigation" })
-              .click();
-          }
+          await page
+            .getByRole("button", { exact: true, name: "Toggle Sidebar" })
+            .click();
           await expect(
             page.getByRole("dialog", { name: "Notebook navigation" }),
           ).toBeVisible();
@@ -221,22 +216,16 @@ for (const group of groups)
             .focus();
           await page.keyboard.press("End");
         }
-        if (group.stateId === "narrow-route-actions") {
+        if (
+          ["narrow-route-actions", "journal-route-menu"].includes(group.stateId)
+        ) {
           await page
-            .getByRole("button", { exact: true, name: "Route actions" })
+            .getByRole("button", {
+              exact: true,
+              name: /^(Journal route menu|Browse journal dates)$/,
+            })
             .click();
           await expect(page.getByRole("dialog")).toBeVisible();
-        }
-        if (group.stateId === "journal-route-menu") {
-          await page
-            .getByRole("button", { exact: true, name: "Journal route menu" })
-            .click();
-          await expect(
-            page.getByRole("button", {
-              exact: true,
-              name: "Browse dates / history",
-            }),
-          ).toBeVisible();
         }
         if (group.stateId.startsWith("mobile-header-") && mobile) {
           const scroller = page.locator("[data-app-container]");
@@ -279,28 +268,26 @@ for (const group of groups)
           const sheet = page.getByRole("dialog", {
             name: "Notebook navigation",
           });
-          for (let attempt = 0; attempt < 8; attempt++) {
-            await sheet.evaluate((node) => {
-              for (const element of [
-                node,
-                ...Array.from(node.querySelectorAll("*")),
-              ])
-                if (
-                  element.scrollHeight > element.clientHeight &&
-                  /auto|scroll/.test(getComputedStyle(element).overflowY)
-                )
-                  element.scrollTop = element.scrollHeight;
-            });
-            if (
-              await sheet
+          await expect
+            .poll(async () => {
+              await sheet.evaluate((node) => {
+                for (const element of [
+                  node,
+                  ...Array.from(node.querySelectorAll("*")),
+                ])
+                  if (
+                    element.scrollHeight > element.clientHeight &&
+                    /auto|scroll/.test(getComputedStyle(element).overflowY)
+                  )
+                    element.scrollTop = element.scrollHeight;
+              });
+              return sheet
                 .locator(
                   `a[data-sidebar="menu-sub-button"][href="/pages/${fixtureId(28)}"]`,
                 )
-                .count()
-            )
-              break;
-            await page.waitForTimeout(150);
-          }
+                .count();
+            })
+            .toBe(1);
           await sheet
             .locator(
               `a[data-sidebar="menu-sub-button"][href="/pages/${fixtureId(28)}"]`,
@@ -556,10 +543,11 @@ for (const group of groups)
           );
         }
         status.terminalAssertions.push(
-          "approved viewport-specific shell bounds; before/after screenshot geometry identical",
+          "approved viewport-specific shell bounds",
         );
         status.geometry = geometry;
-        status.geometryScreenshotConsistent = true;
+        status.geometryScreenshotConsistent =
+          JSON.stringify(frame.before) === JSON.stringify(frame.after);
         status.capture = `${root}/${id}.png`;
         status.status = "terminal-state-and-geometry-asserted";
         status.gap =

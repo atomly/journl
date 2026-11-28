@@ -2,12 +2,11 @@ import { Extension } from "@tiptap/core";
 import type { Node } from "@tiptap/pm/model";
 import { Plugin, PluginKey, TextSelection } from "@tiptap/pm/state";
 import {
+  addRow,
   columnResizing,
   goToNextCell,
   isInTable,
-  moveCellForward,
-  nextCell,
-  selectionCell,
+  selectedRect,
   TableMap,
   tableEditing,
 } from "@tiptap/pm/tables";
@@ -55,7 +54,20 @@ export function tableExtension() {
       const tab = (direction: 1 | -1) => {
         const { state, view } = this.editor;
         if (view.composing || !isInTable(state)) return false;
-        goToNextCell(direction)(state, view.dispatch);
+        if (
+          !goToNextCell(direction)(state, view.dispatch) &&
+          direction === 1 &&
+          this.editor.isEditable
+        ) {
+          const bounds = selectedRect(state);
+          const rowStart = bounds.tableStart + bounds.table.content.size;
+          const tr = addRow(state.tr, bounds, bounds.map.height);
+          view.dispatch(
+            tr
+              .setSelection(TextSelection.near(tr.doc.resolve(rowStart + 1)))
+              .scrollIntoView(),
+          );
+        }
         return true;
       };
       return {
@@ -69,16 +81,14 @@ export function tableExtension() {
         },
         Enter: () => {
           const { state, view } = this.editor;
-          if (view.composing || !isInTable(state)) return false;
-          const next = nextCell(selectionCell(state), "vert", 1);
-          if (next)
-            view.dispatch(
-              state.tr
-                .setSelection(
-                  TextSelection.between(next, moveCellForward(next)),
-                )
-                .scrollIntoView(),
-            );
+          if (
+            view.composing ||
+            !this.editor.isEditable ||
+            state.selection.$from.parent.type.name !== "tableParagraph" ||
+            !state.selection.$from.sameParent(state.selection.$to)
+          )
+            return false;
+          view.dispatch(state.tr.insertText("\n").scrollIntoView());
           return true;
         },
         "Shift-Tab": () => tab(-1),

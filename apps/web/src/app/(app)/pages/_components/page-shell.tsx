@@ -26,10 +26,7 @@ export function PageShell({
   return (
     <div
       data-reading-surface
-      className={cn(
-        "mx-auto flex min-h-full max-w-5xl flex-col gap-4 pt-8",
-        className,
-      )}
+      className={cn("flex min-h-full flex-col gap-4 pt-8", className)}
       {...props}
     >
       {children}

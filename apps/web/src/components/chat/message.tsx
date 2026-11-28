@@ -20,6 +20,7 @@ import {
 import { type ComponentProps, memo, useEffect, useState } from "react";
 import { copyTextToClipboard } from "~/lib/clipboard";
 import { useChatActions } from "./chat-presentation";
+import { ChatMarkdown } from "./markdown";
 import { ChatMessageParts } from "./message-parts";
 
 function Action({
@@ -49,8 +50,13 @@ export const ChatMessage = memo(function ChatMessage({
   active?: boolean;
   thinking?: boolean;
 }) {
-  const { status, editMessage, regenerate, unavailable } = useChatActions();
-  const busy = unavailable || status === "submitted" || status === "streaming";
+  const { status, editMessage, regenerate, unavailable, exceeded } =
+    useChatActions();
+  const busy =
+    unavailable ||
+    Boolean(exceeded) ||
+    status === "submitted" ||
+    status === "streaming";
   const text = message.parts
     .filter((part) => part.type === "text")
     .map((part) => part.text)
@@ -88,7 +94,7 @@ export const ChatMessage = memo(function ChatMessage({
                 .catch(() => {});
             }}
           >
-            <InputGroup>
+            <InputGroup className="journl-chat-edit">
               <InputGroupTextarea
                 aria-label="Edit message"
                 value={draft}
@@ -111,8 +117,8 @@ export const ChatMessage = memo(function ChatMessage({
           </form>
         ) : user ? (
           <Bubble align="end" variant="muted">
-            <BubbleContent className="whitespace-pre-wrap">
-              {text}
+            <BubbleContent className="min-w-0">
+              <ChatMarkdown text={text} preserveLineBreaks />
             </BubbleContent>
           </Bubble>
         ) : (
@@ -147,15 +153,17 @@ export const ChatMessage = memo(function ChatMessage({
                 >
                   {copied ? <CheckIcon /> : <CopyIcon />}
                 </Action>
-                <Action
-                  label="Retry response"
-                  disabled={busy}
-                  onClick={() =>
-                    void regenerate({ messageId: message.id }).catch(() => {})
-                  }
-                >
-                  <RefreshCwIcon />
-                </Action>
+                {!exceeded && (
+                  <Action
+                    label="Retry response"
+                    disabled={busy}
+                    onClick={() =>
+                      void regenerate({ messageId: message.id }).catch(() => {})
+                    }
+                  >
+                    <RefreshCwIcon />
+                  </Action>
+                )}
               </>
             )}
             <span className="sr-only" role="status">

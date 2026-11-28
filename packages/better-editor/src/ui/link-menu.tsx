@@ -148,11 +148,15 @@ export function LinkMenu({
             }
           }}
         >
-          <label htmlFor={`link-${editor.instanceId}`}>
+          <label
+            className="flex flex-col gap-2"
+            htmlFor={`link-${editor.instanceId}`}
+          >
             {inputLabel}
             <Input
               id={`link-${editor.instanceId}`}
               aria-label={inputLabel}
+              className="focus-visible:ring-0 focus-visible:ring-offset-0"
               type="text"
               value={url}
               onChange={(event) => setUrl(event.target.value)}

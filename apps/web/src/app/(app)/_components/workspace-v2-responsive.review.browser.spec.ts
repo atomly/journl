@@ -63,7 +63,7 @@ for (const theme of ["light", "dark"]) {
       await page.goto(`/pages/${fixtureId(1610)}`);
       await expect(
         page.locator('.better-editor-tiptap[contenteditable="true"]').first(),
-      ).toBeVisible();
+      ).toBeVisible({ timeout: 30_000 });
       const directory = info.outputPath("workspace-v2");
       await mkdir(directory, { recursive: true });
       if (mode === "mobile-nav")

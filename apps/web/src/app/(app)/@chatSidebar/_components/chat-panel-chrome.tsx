@@ -52,7 +52,7 @@ export function ChatPanelChrome() {
   const { preferences, updatePreferences } = useAppPreferences();
   const expanded = preferences.chatSidebarWidthRem > CHAT_SIDEBAR_WIDTH_REM_MAX;
   return (
-    <div className="flex h-[62px] shrink-0 items-center gap-2 border-b px-4">
+    <div className="flex h-[62px] shrink-0 items-center gap-2 border-[color:var(--glass-edge)] border-b px-4">
       <AssistantIdentity />
       <Button
         variant="ghost"

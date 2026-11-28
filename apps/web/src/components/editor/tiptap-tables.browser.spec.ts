@@ -84,7 +84,7 @@ test("table edge rails and border menus add, select, delete and undo the intende
     .getByRole("menuitem", { exact: true, name: "Insert row below" })
     .click();
   await expect(rows).toHaveCount(5);
-  await rows.nth(1).locator("td").nth(1).hover();
+  await rows.nth(1).locator("td").nth(1).click();
   const columnHandle = page.getByRole("button", {
     exact: true,
     name: "Column actions",

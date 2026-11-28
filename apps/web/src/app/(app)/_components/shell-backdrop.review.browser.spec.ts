@@ -17,7 +17,9 @@ for (const theme of ["light", "dark"])
         theme,
       );
       const search = await controlShellSearch(page);
-      await page.goto(`/pages/${fixtureId(25)}`);
+      await page.goto(
+        kind === "menu" ? "/journal/2000-01-01" : `/pages/${fixtureId(25)}`,
+      );
       const editor = page.locator(".better-editor-tiptap").first();
       await expect(editor).toBeVisible();
       const before = await editor.evaluate((root) =>
@@ -33,7 +35,7 @@ for (const theme of ["light", "dark"])
           kind === "search"
             ? "Search notes"
             : kind === "menu"
-              ? "Route actions"
+              ? "Journal route menu"
               : "Toggle Sidebar",
       });
       await trigger.click();

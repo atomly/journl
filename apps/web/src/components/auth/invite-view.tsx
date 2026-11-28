@@ -13,13 +13,9 @@ import { InviteCodeForm } from "~/components/auth/invite-code-form";
 
 type InviteViewProps = {
   inviteCode?: string;
-  standalone?: boolean;
 };
 
-export function InviteView({
-  inviteCode,
-  standalone = false,
-}: InviteViewProps) {
+export function InviteView({ inviteCode }: InviteViewProps) {
   const { Link } = useAuth();
   return (
     <Card className="w-full max-w-sm gap-6 border-0 bg-transparent py-6 text-foreground shadow-none ring-0">
@@ -37,7 +33,6 @@ export function InviteView({
           buttonLabel="Continue"
           placeholder="ABCDE12345"
           initialValue={inviteCode}
-          standalone={standalone}
         />
         <p className="mt-4 text-center text-muted-foreground text-sm">
           Already have an account?{" "}

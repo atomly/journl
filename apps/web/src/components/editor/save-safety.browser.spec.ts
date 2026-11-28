@@ -1,6 +1,6 @@
 import { readFile } from "node:fs/promises";
 import { browserFixture, fixtureId } from "~/testing/browser/data";
-import { expect, test } from "~/testing/browser/fixtures";
+import { expect, selectJournalView, test } from "~/testing/browser/fixtures";
 
 test.describe("document editor", () => {
   const editorSelector = '.better-editor-tiptap[contenteditable="true"]';
@@ -190,16 +190,7 @@ test.describe("document editor", () => {
     page,
   }, info) => {
     await page.goto("/journal");
-    await page
-      .getByRole("button", { exact: true, name: "Journal route menu" })
-      .click();
-    const timeline = page.getByRole("button", {
-      exact: true,
-      name: "Timeline",
-    });
-    if ((await timeline.getAttribute("aria-pressed")) !== "true")
-      await timeline.click();
-    else await page.keyboard.press("Escape");
+    await selectJournalView(page, "Timeline");
     await page.route("**/api/trpc/journal.saveTransactions**", (route) =>
       route.abort(),
     );

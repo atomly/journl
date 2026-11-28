@@ -19,7 +19,6 @@ type AppLayoutProps = {
   chatDrawer: React.ReactNode;
   chatSidebar: React.ReactNode;
   header: React.ReactNode;
-  subscriptionModal: React.ReactNode;
 };
 
 async function AppLayout({
@@ -28,7 +27,6 @@ async function AppLayout({
   chatDrawer,
   chatSidebar,
   header,
-  subscriptionModal,
 }: AppLayoutProps) {
   const [preferences, owner] = await Promise.all([
     getAppPreferences(),
@@ -62,7 +60,6 @@ async function AppLayout({
           </AppLayoutProvider>
         </SidebarInset>
       </AppSidebarProvider>
-      {subscriptionModal}
       <Toaster />
     </AppProviders>
   );

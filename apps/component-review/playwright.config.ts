@@ -50,6 +50,7 @@ export default defineConfig({
   testDir: "./tests",
   use: {
     baseURL,
+    screenshot: "only-on-failure",
     trace: "retain-on-failure",
   },
   webServer: externalUrl

@@ -97,7 +97,7 @@ Separate paragraph blocks already provide spacing. Do not insert empty paragraph
 If the supplied document contains only one empty paragraph, reuse that block for the first paragraph instead of retaining a blank starter before the new writing.
 Use heading blocks with props.level for section titles, bulletListItem for each bullet, and numberedListItem for each numbered step.
 Quotation marks that delimit requested text are not part of that text. For a request such as a quote exactly "Example text.", use a quote block with content "Example text.", not content containing surrounding quotation marks.
-Omit numberedListItem props.start for normal sequential lists. The editor numbers siblings automatically. Supply start only for an explicitly requested ordinal or restart.
+Omit numberedListItem props.start for normal sequential lists. The editor numbers siblings automatically. Set start on the first item for a custom starting number. Set restart to true alongside start for an explicit restart between consecutive numbered items.
 List items at the same level are siblings. Put children under an item only for an actual nested list, never to represent the next item.
 Use inline text styles and link objects for bold, italic, code, and links. Do not put Markdown markers in text to simulate formatting.
 Do not combine an entire recipe, article, or several paragraphs into one block with newline characters. Preserve intentional line breaks within one paragraph and code block contents.

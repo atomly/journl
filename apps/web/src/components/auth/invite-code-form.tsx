@@ -5,7 +5,6 @@ import { Field, FieldError, FieldLabel } from "@acme/ui/field";
 import { Input } from "@acme/ui/input";
 import { cn } from "@acme/ui/utils";
 import { ArrowRight } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { type SubmitEvent, useId, useState } from "react";
 import { normalizeInviteCode } from "~/components/auth/invite-code";
 
@@ -16,7 +15,6 @@ type InviteCodeFormProps = {
   placeholder?: string;
   initialValue?: string;
   redirectPath?: string;
-  standalone?: boolean;
 };
 
 export function InviteCodeForm({
@@ -26,9 +24,7 @@ export function InviteCodeForm({
   initialValue,
   placeholder = "Enter invite code",
   redirectPath = "/auth/sign-up",
-  standalone = false,
 }: InviteCodeFormProps) {
-  const router = useRouter();
   const [code, setCode] = useState(initialValue ?? "");
   const [error, setError] = useState<string | null>(null);
   const [isChecking, setIsChecking] = useState(false);
@@ -66,12 +62,9 @@ export function InviteCodeForm({
     }
 
     setError(null);
-    const destination = `${redirectPath}?invite=${encodeURIComponent(normalizedCode)}`;
-    if (standalone) {
-      window.location.assign(destination);
-    } else {
-      router.replace(destination);
-    }
+    window.location.assign(
+      `${redirectPath}?invite=${encodeURIComponent(normalizedCode)}`,
+    );
   }
 
   return (

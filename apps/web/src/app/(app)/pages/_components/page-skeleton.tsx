@@ -12,10 +12,12 @@ export function PageSkeleton({ className, ...rest }: PageSkeletonProps) {
       </div>
 
       {/* Title skeleton */}
-      <Skeleton className="mx-8 h-9 w-60" />
+      <div data-editor-heading>
+        <Skeleton className="h-9 w-60 max-w-full" />
+      </div>
 
       {/* Content */}
-      <div className="space-y-2 px-13.5" {...rest}>
+      <div data-editor-heading className="space-y-2">
         <Skeleton className="h-6 w-full" />
         <Skeleton className="h-6 w-5/6" />
         <Skeleton className="h-6 w-4/5" />

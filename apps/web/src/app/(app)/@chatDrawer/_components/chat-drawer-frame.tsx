@@ -36,7 +36,7 @@ export function ChatDrawerFrame({ children }: { children: React.ReactNode }) {
   return (
     <DrawerContent
       id="chat-drawer-content"
-      className="journl-agent-sheet inset-x-0! overflow-hidden rounded-t-[18px] rounded-b-none border border-[#d5e0ed] bg-[#edf4fd] pb-[env(safe-area-inset-bottom,0px)] motion-reduce:transition-none dark:border-[#344865] dark:bg-[#182a42]"
+      className="journl-agent-sheet inset-x-0! overflow-hidden rounded-t-[18px] rounded-b-none border border-border bg-sidebar pb-[env(safe-area-inset-bottom,0px)] motion-reduce:transition-none"
       style={
         viewport
           ? ({

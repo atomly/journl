@@ -3,18 +3,17 @@ import type { Node } from "@tiptap/pm/model";
 import { Plugin, PluginKey } from "@tiptap/pm/state";
 import { Decoration, DecorationSet } from "@tiptap/pm/view";
 
-function nextOrdinal(body: Node | null, previous: number): number {
-  return body?.type.name === "numberedListItem"
-    ? (body.attrs.props?.start ?? previous + 1)
-    : 0;
-}
-
-/** Explicit starts reset a run; omitted starts continue the preceding sibling. */
-export function numberedListOrdinal(siblings: Node, index: number): number {
-  let ordinal = 0;
-  for (let i = 0; i <= index; i++)
-    ordinal = nextOrdinal(siblings.child(i).firstChild, ordinal);
-  return ordinal;
+function nextOrdinal(
+  body: Node | null,
+  previous: number | null,
+): number | null {
+  if (body?.type.name !== "numberedListItem") return null;
+  const props = body.attrs.props;
+  // Older builds stored a fixed ordinal on every item. Only the start of
+  // the run and an intentional restart should affect its displayed numbers.
+  return previous === null || props?.restart
+    ? (props?.start ?? 1)
+    : previous + 1;
 }
 
 export const listNumberingKey = new PluginKey<DecorationSet>(
@@ -24,7 +23,7 @@ export const listNumberingKey = new PluginKey<DecorationSet>(
 function numberLists(doc: Node): DecorationSet {
   const decorations: Decoration[] = [];
   const visit = (siblings: Node, start: number) => {
-    let ordinal = 0;
+    let ordinal: number | null = null;
     siblings.forEach((block, offset) => {
       const body = block.firstChild;
       ordinal = nextOrdinal(body, ordinal);

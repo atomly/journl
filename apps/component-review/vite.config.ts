@@ -14,6 +14,7 @@ export default defineConfig({
     },
   },
   test: {
+    maxWorkers: 2,
     projects: [
       {
         extends: true,
@@ -28,7 +29,8 @@ export default defineConfig({
           browser: {
             enabled: true,
             headless: true,
-            instances: [{ browser: "chromium" }, { browser: "webkit" }],
+            // WebKit coverage runs against the app in the functional suite.
+            instances: [{ browser: "chromium" }],
             provider: playwright({}),
           },
           name: "storybook",

@@ -143,8 +143,10 @@ test("table actions are grouped, hide empty conversion menus, and delete selecte
   page,
 }) => {
   const editor = page.locator(".better-editor-tiptap");
-  await editor.fill("/table");
-  await page.getByRole("option", { exact: true, name: "Table" }).click();
+  await typeParagraphs(editor, ["/table"]);
+  const insertTable = page.getByRole("option", { exact: true, name: "Table" });
+  await expect(insertTable).toBeVisible();
+  await insertTable.click();
   const table = editor.locator("table");
   await table.locator("td").first().click();
   await page.keyboard.press("Alt+F10");

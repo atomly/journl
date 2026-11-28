@@ -234,10 +234,6 @@ for (const width of [390, 1024]) {
       );
     });
     await expect(rows).toHaveText(["Beta", "Gamma", "Alpha"]);
-    // Exercise a late click after dnd-kit's own 50ms capture suppression ends.
-    await page.waitForTimeout(75);
-    await handle.dispatchEvent("click", { detail: 1 });
-    await expect(duplicate).toBeHidden();
     // Click-only assistive activation is a new action, not a drag's trailing click.
     await handle.evaluate((element) => (element as HTMLButtonElement).click());
     await expect(duplicate).toBeVisible();

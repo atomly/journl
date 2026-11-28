@@ -1,6 +1,7 @@
 "use client";
 
 import { PanelLeft } from "lucide-react";
+import { usePathname } from "next/navigation";
 import * as React from "react";
 import { useAppPreferences } from "~/components/preferences/app-preferences-provider";
 import {
@@ -18,14 +19,14 @@ const NavigationSidebar = React.createContext<ReturnType<
 > | null>(null);
 function NavigationScope({ children }: { children: React.ReactNode }) {
   const sidebar = useSidebar();
-  const { open, openMobile, setOpenMobile } = sidebar;
-  const wasOpen = React.useRef(open);
-  // Collapsing the desktop navigation also dismisses the floating
-  // navigation dialog so the route trigger regains focus.
+  const pathname = usePathname();
+  const { setOpenMobile } = sidebar;
+  // Account links used to unmount the workspace and its navigation sheet.
   React.useEffect(() => {
-    if (wasOpen.current && !open && openMobile) setOpenMobile(false);
-    wasOpen.current = open;
-  }, [open, openMobile, setOpenMobile]);
+    if (pathname === "/subscription" || pathname.startsWith("/account/")) {
+      setOpenMobile(false);
+    }
+  }, [pathname, setOpenMobile]);
   return <NavigationSidebar value={sidebar}>{children}</NavigationSidebar>;
 }
 export function useNavigationSidebar() {

@@ -109,7 +109,10 @@ export function ExploreOverview() {
   }
 
   return (
-    <main className="mx-auto flex min-h-full w-full max-w-6xl flex-col gap-6 px-4 py-6 md:px-8">
+    <main
+      data-workspace-section
+      className="flex min-h-full flex-col gap-6 py-6"
+    >
       <header>
         <h1 className="font-semibold text-2xl">Pick up a thread</h1>
         <p className="mt-2 max-w-xl text-muted-foreground text-sm leading-relaxed">

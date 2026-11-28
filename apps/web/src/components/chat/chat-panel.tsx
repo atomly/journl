@@ -12,7 +12,11 @@ import {
 } from "@acme/ui/message-scroller";
 import type { UIMessage } from "ai";
 import { type ReactNode, useEffect, useRef, useState } from "react";
-import { getHumanReadableChatError } from "~/usage/quota-error";
+import {
+  getHumanReadableChatError,
+  isChatQuotaError,
+  parseUsageQuotaExceededPayload,
+} from "~/usage/quota-error";
 import {
   type ConversationPosition,
   useChatPresentation,
@@ -232,6 +236,7 @@ export function ChatPanel({ welcome }: { welcome: ReactNode }) {
   const { messages, status, error, clearError, regenerate } =
     useChatPresentation();
   const busy = status === "submitted" || status === "streaming";
+  const quotaError = isChatQuotaError(error);
   const lastMessage = messages.at(-1);
   const waiting = busy && !isMessageActivelyStreaming(lastMessage);
   return (
@@ -246,7 +251,7 @@ export function ChatPanel({ welcome }: { welcome: ReactNode }) {
           autoScroll={restored}
           defaultScrollPosition={restorePosition === null ? "end" : "start"}
         >
-          <MessageScroller>
+          <MessageScroller className="h-auto flex-1">
             <ConversationViewport
               restorePosition={restorePosition}
               onRestored={setRestored}
@@ -284,14 +289,22 @@ export function ChatPanel({ welcome }: { welcome: ReactNode }) {
                     <ChatMessage message={pendingMessage} thinking active />
                   </MessageScrollerItem>
                 )}
-                {error && (
+                {error && !parseUsageQuotaExceededPayload(error) && (
                   <MessageScrollerItem messageId="chat-error">
                     <Alert variant="destructive">
-                      <AlertTitle>Could not complete the response</AlertTitle>
+                      <AlertTitle>
+                        {quotaError
+                          ? "AI usage limit reached"
+                          : "Could not complete the response"}
+                      </AlertTitle>
                       <AlertDescription>
                         {getHumanReadableChatError(error)}
+                      </AlertDescription>
+                      {!quotaError && (
                         <Button
                           variant="outline"
+                          size="sm"
+                          className="mt-2 justify-self-start"
                           disabled={busy}
                           onClick={() => {
                             clearError();
@@ -300,7 +313,7 @@ export function ChatPanel({ welcome }: { welcome: ReactNode }) {
                         >
                           Retry response
                         </Button>
-                      </AlertDescription>
+                      )}
                     </Alert>
                   </MessageScrollerItem>
                 )}

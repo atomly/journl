@@ -14,15 +14,14 @@ export default function JournalHeader() {
         <HeaderRouteActions
           actions={
             <>
+              <Suspense>
+                <HeaderSubscriptionButton />
+              </Suspense>
               <SaveStatus />
               <HeaderSearchButton />
             </>
           }
-        >
-          <Suspense>
-            <HeaderSubscriptionButton />
-          </Suspense>
-        </HeaderRouteActions>
+        />
       </div>
     </AppHeader>
   );

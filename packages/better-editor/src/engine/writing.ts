@@ -13,7 +13,6 @@ import {
   setTextMark,
 } from "./commands";
 import type { IdFactory } from "./identity";
-import { numberedListOrdinal } from "./list-numbering";
 import { restoreBlockSelection } from "./selection";
 
 const inlineTypes = new Set([
@@ -158,16 +157,6 @@ export function changeBlockType(
   if (!targets.length) return null;
   const bookmark = state.selection.getBookmark();
   const tr = state.tr;
-  const first = targets[0];
-  if (!first) return null;
-  const preceding =
-    first.index > 0 ? first.siblings.child(first.index - 1).firstChild : null;
-  const start = Number(
-    properties?.start ??
-      (preceding?.type.name === "numberedListItem"
-        ? numberedListOrdinal(first.siblings, first.index - 1) + 1
-        : 1),
-  );
   // Work backwards so each body is replaced at its original position. Do not
   // dispatch a partial conversion when any selected block is incompatible.
   for (let index = targets.length - 1; index >= 0; index--) {
@@ -178,8 +167,8 @@ export function changeBlockType(
         tr,
         target.id,
         type,
-        type === "numberedListItem"
-          ? { ...properties, start: start + index }
+        type === "numberedListItem" && index > 0
+          ? { ...properties, restart: undefined, start: undefined }
           : properties,
       )
     )

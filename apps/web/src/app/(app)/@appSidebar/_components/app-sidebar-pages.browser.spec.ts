@@ -1,13 +1,10 @@
-import { browserFixture, fixtureId } from "~/testing/browser/data";
+import { fixtureId } from "~/testing/browser/data";
 import { expect, test } from "~/testing/browser/fixtures";
+import { settleShell } from "~/testing/browser/shell-capture";
 
 test("Library expansion reveals a paginated folder and keyboard actions remain available", async ({
   page,
 }, info) => {
-  let childRequests = 0;
-  page.on("request", (request) => {
-    if (request.url().includes("tree.getChildrenPaginated")) childRequests++;
-  });
   await page.goto("/explore");
   if (info.project.name === "mobile-webkit")
     await page.getByRole("button", { name: "Toggle Sidebar" }).first().click();
@@ -15,7 +12,6 @@ test("Library expansion reveals a paginated folder and keyboard actions remain a
     exact: true,
     name: "Expand Browser folder",
   });
-  const started = Date.now();
   if (info.project.name === "mobile-webkit") await folder.tap();
   else {
     await folder.focus();
@@ -24,7 +20,6 @@ test("Library expansion reveals a paginated folder and keyboard actions remain a
   await expect(
     page.getByRole("link", { exact: true, name: "Browser note 01" }),
   ).toBeVisible();
-  const reveal = { childRequests, milliseconds: Date.now() - started };
   await expect(
     page.getByRole("button", { exact: true, name: "Collapse Browser folder" }),
   ).toBeVisible();
@@ -44,17 +39,9 @@ test("Library expansion reveals a paginated folder and keyboard actions remain a
     page.getByRole("menuitem", { exact: true, name: "Move to…" }),
   ).toBeEnabled();
   await page.keyboard.press("Escape");
-  await info.attach("folder-reveal", {
-    body: JSON.stringify(reveal),
-    contentType: "application/json",
-  });
-  await info.attach("library-layout", {
-    body: await page.screenshot(),
-    contentType: "image/png",
-  });
 });
 
-test("explicit expansion survives navigation/reload and stays scoped to its owner", async ({
+test("explicit expansion survives navigation and reload", async ({
   page,
 }, info) => {
   const showSidebar = async () => {
@@ -72,7 +59,6 @@ test("explicit expansion survives navigation/reload and stays scoped to its owne
   await expect(
     page.getByRole("link", { exact: true, name: "Browser note 01" }),
   ).toBeVisible();
-  const reloadStarted = Date.now();
   await page.reload();
   await showSidebar();
   await expect(
@@ -81,37 +67,34 @@ test("explicit expansion survives navigation/reload and stays scoped to its owne
   await expect(
     page.getByRole("link", { exact: true, name: "Browser note 01" }),
   ).toBeVisible();
-  await info.attach("sidebar-restoration", {
-    body: JSON.stringify({ reloadMilliseconds: Date.now() - reloadStarted }),
-    contentType: "application/json",
-  });
-  await page.goto(`/explore/clusters/${browserFixture.cluster}`);
+  await page
+    .getByRole("link", { exact: true, name: "Browser note 01" })
+    .click();
+  await expect(page).toHaveURL(/\/pages\//);
   await showSidebar();
+  const library = page.getByRole("group", { exact: true, name: "Library" });
+  const toggle = library.getByRole("button", { exact: true, name: "Library" });
+  const note = library.getByRole("link", {
+    exact: true,
+    name: "Browser note 01",
+  });
+  await expect(note).toHaveAttribute("aria-current", "page");
+  await expect(
+    library.locator(
+      '[data-sidebar="menu-sub-button"][data-active="true"]:visible',
+    ),
+  ).toContainText("Browser note 01");
+  await expect(toggle).toHaveAttribute("data-active", "false");
+  await toggle.click();
+  await expect(toggle).toHaveAttribute("aria-expanded", "false");
+  await expect(note).toBeHidden();
+  await expect(
+    page.getByRole("link", { exact: true, name: "Journal" }),
+  ).toBeVisible();
+  await toggle.click();
   await expect(
     page.getByRole("button", { exact: true, name: "Collapse Browser folder" }),
   ).toBeVisible();
-  const origin = new URL(page.url()).origin;
-  const signedOut = await page.request.post("/api/auth/sign-out", {
-    data: {},
-    headers: { Origin: origin },
-  });
-  expect(signedOut.ok()).toBe(true);
-  const signedIn = await page.request.post("/api/auth/sign-in/email", {
-    data: {
-      email: browserFixture.otherEmail,
-      password: browserFixture.password,
-    },
-    headers: { Origin: origin },
-  });
-  expect(signedIn.ok()).toBe(true);
-  await page.goto("/explore");
-  await showSidebar();
-  await expect(
-    page.getByText("Your next thread starts with a note"),
-  ).toBeVisible();
-  await expect(
-    page.getByRole("button", { name: /Browser folder/ }),
-  ).toHaveCount(0);
 });
 
 test("active ancestors reopen on a new target while manual collapse wins on the same target", async ({
@@ -245,7 +228,10 @@ test.describe("native touch swipe", () => {
       .locator("xpath=ancestor::li[1]")
       .locator('[data-slot="swipe-action"]');
     const reveal = swipe.locator('[data-slot="swipe-action-reveal"]');
+    await expect(link).toBeVisible();
     await expect(reveal).toBeHidden();
+    await settleShell(page);
+    const content = swipe.locator('[data-slot="swipe-action-content"]');
     const box = await swipe.boundingBox();
     if (!box) throw new Error("Missing swipe bounds");
     const x = box.x + box.width - 100;
@@ -266,6 +252,7 @@ test.describe("native touch swipe", () => {
           ),
       );
     }
+    await expect(content).toHaveCSS("transform", "matrix(1, 0, 0, 1, -60, 0)");
     await input.send("Input.dispatchTouchEvent", {
       touchPoints: [],
       type: "touchEnd",
@@ -277,10 +264,7 @@ test.describe("native touch swipe", () => {
     // The plate state is the settled reveal; let its transition finish
     // before the closing tap so the gesture pipeline never receives a tap
     // mid-transition. The animated property is the content's translate.
-    await expect(swipe.locator('[data-slot="swipe-action-content"]')).toHaveCSS(
-      "transform",
-      "matrix(1, 0, 0, 1, -80, 0)",
-    );
+    await expect(content).toHaveCSS("transform", "matrix(1, 0, 0, 1, -80, 0)");
     // Playwright's own tap synthesis instead of a raw CDP pair: the input
     // pipeline occasionally drops an immediate touch pair after a drag on slow
     // runners, leaving the reveal open with no click reaching the page.

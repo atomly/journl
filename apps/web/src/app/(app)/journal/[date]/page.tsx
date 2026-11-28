@@ -25,7 +25,7 @@ export default async function Page({
 
 function JournalEntryFallback() {
   return (
-    <div className="mx-auto max-w-5xl pt-8 pb-20">
+    <div data-reading-surface className="pt-8 pb-20">
       <JournalEntrySkeleton hasContent />
     </div>
   );
@@ -40,10 +40,10 @@ async function SuspendedJournalEntry({ date }: { date: string }) {
 
   return (
     <JournalEntryProvider entry={entry}>
-      <JournalEntryWrapper className="mx-auto max-w-5xl pt-8 pb-20">
+      <JournalEntryWrapper className="pt-8 pb-20">
         <Suspense fallback={<JournalEntrySkeleton hasContent />}>
           <DynamicJournalEntryEditor>
-            <JournalEntryHeader className="px-13.5" linkDate />
+            <JournalEntryHeader data-editor-heading linkDate />
           </DynamicJournalEntryEditor>
         </Suspense>
       </JournalEntryWrapper>

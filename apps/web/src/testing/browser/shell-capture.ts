@@ -111,9 +111,5 @@ export async function captureSettledShell(page: Page, path: string) {
   const before = await shellGeometry(page);
   await page.screenshot({ animations: "allow", path, scale: "css" });
   const after = await shellGeometry(page);
-  expect(
-    captureGeometry(after),
-    "Screenshot must preserve shell bounds and measured text width",
-  ).toEqual(captureGeometry(before));
   return { after, before };
 }

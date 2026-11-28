@@ -5,7 +5,7 @@ type JournalFeedSkeletonProps = Omit<React.ComponentProps<"div">, "children">;
 export function JournalListSkeleton({ ...rest }: JournalFeedSkeletonProps) {
   return (
     <div {...rest}>
-      <div className="mx-auto w-full max-w-4xl flex-1">
+      <div data-reading-surface className="flex-1">
         <div className="space-y-20">
           {/* Today entry */}
           <JournalEntrySkeleton hasContent={false} />

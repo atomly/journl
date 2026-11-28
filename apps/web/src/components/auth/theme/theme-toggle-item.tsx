@@ -10,6 +10,7 @@ import { Tabs, TabsList, TabsTrigger } from "@acme/ui/tabs";
 import { useAuthPlugin } from "@better-auth-ui/react";
 import { Monitor, Moon, PaletteIcon, Sun } from "lucide-react";
 import { useRef } from "react";
+import { revealTheme } from "~/components/theme/reveal-theme";
 import { themePlugin } from "~/lib/auth/theme-plugin";
 
 /**
@@ -84,7 +85,13 @@ export function ThemeToggleItem() {
         <Tabs
           className="ml-auto"
           value={theme}
-          onValueChange={setTheme}
+          onValueChange={(value, { event }) => {
+            const tab =
+              event.target instanceof Element
+                ? event.target.closest('[role="tab"]')
+                : null;
+            revealTheme(() => setTheme(value), tab ?? tabsListRef.current);
+          }}
           onKeyDown={handleTabsKeyDown}
         >
           <TabsList ref={tabsListRef} className="h-auto!">

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { withoutAuth } from "~/app/_guards/page-guards";
 import { Brand } from "~/components/brand";
 import { getPublicWebUrl } from "~/lib/public-web-url";
+import { MarketingThemeToggle } from "./marketing-theme-toggle";
 
 const publicWebUrl = getPublicWebUrl();
 
@@ -80,15 +81,14 @@ const pagePath = "M6 3h12v18H6zM9 8h6M9 12h6";
 const explorePath = "M5 5l14 5-9 9z";
 
 /**
- * The canonical v5 all-pages Library capture, verbatim per hero contract:
- * theme- and device-matched PNGs, width 100%, height auto, no cropping.
- * Hidden variants stay unfetched through loading="lazy".
+ * All pages in the current workspace, captured with demo data.
+ * Match the theme and viewport without cropping the application.
  */
-function CanonicalHero() {
+function LibraryHero() {
   return (
     <>
       <Image
-        alt="Journl Library dashboard with the complete desktop application shell"
+        alt="Journl All pages workspace with sample notes"
         className="canonical-hero canonical-hero-desktop canonical-hero-light"
         height={1000}
         src="/marketing/library-light.png"
@@ -96,7 +96,7 @@ function CanonicalHero() {
         width={1440}
       />
       <Image
-        alt=""
+        alt="Journl All pages workspace with sample notes"
         className="canonical-hero canonical-hero-desktop canonical-hero-dark"
         height={1000}
         loading="lazy"
@@ -105,7 +105,7 @@ function CanonicalHero() {
         width={1440}
       />
       <Image
-        alt=""
+        alt="Journl All pages workspace with sample notes"
         className="canonical-hero canonical-hero-mobile canonical-hero-light"
         height={844}
         loading="lazy"
@@ -114,7 +114,7 @@ function CanonicalHero() {
         width={390}
       />
       <Image
-        alt=""
+        alt="Journl All pages workspace with sample notes"
         className="canonical-hero canonical-hero-mobile canonical-hero-dark"
         height={844}
         loading="lazy"
@@ -163,6 +163,7 @@ export default withoutAuth(function RootPage() {
           <Link className="btn primary" href="/invite">
             Get started <LandingIcon d={arrowPath} />
           </Link>
+          <MarketingThemeToggle />
         </div>
       </nav>
 
@@ -200,7 +201,7 @@ export default withoutAuth(function RootPage() {
         className="product-frame"
         id="capture"
       >
-        <CanonicalHero />
+        <LibraryHero />
       </section>
 
       <div className="composition-caption">

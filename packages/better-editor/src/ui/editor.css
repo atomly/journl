@@ -54,7 +54,7 @@
   font-weight: 400;
   line-height: 1.5;
   color: #3f3f3f;
-  padding-inline: 54px;
+  padding-inline: var(--better-editor-gutter-start, 54px) 54px;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
   font-synthesis: style weight;
@@ -457,7 +457,7 @@
    space back to writing instead of reserving room for the desktop Add button. */
 @media (max-width: 767px), (pointer: coarse) {
   .better-editor-tiptap {
-    padding-inline: 54px 16px;
+    padding-inline: var(--better-editor-gutter-start, 54px) 16px;
   }
 }
 .better-editor-side-menu[data-touch="true"] button {

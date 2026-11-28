@@ -186,11 +186,11 @@ test("page code indentation and table navigation edit bodies without moving bloc
     )
     .toBe("tableParagraph");
   await page.keyboard.press("Enter");
-  // Table Enter moves down; Tab then moves to the next cell in that row.
+  // Enter keeps the caret in the original cell. Tab advances to its neighbor.
   await expect
     .poll(() =>
       cells
-        .nth(2)
+        .first()
         .evaluate((cell) =>
           cell.contains(window.getSelection()?.anchorNode ?? null),
         ),
@@ -199,7 +199,7 @@ test("page code indentation and table navigation edit bodies without moving bloc
   await page.keyboard.press("Tab");
   const cellText = ` table ${info.project.name}`;
   await page.keyboard.insertText(cellText);
-  await expect(cells.nth(3)).toContainText(cellText);
+  await expect(cells.nth(1)).toContainText(cellText);
   await expect(table.locator("tr")).toHaveCount(2);
   await expect(editor).toContainText("Stored reference");
   await expect(page.locator("[data-save-status]")).toContainText("Saved");
@@ -213,7 +213,7 @@ test("page code indentation and table navigation edit bodies without moving bloc
   await expect(language.locator('[data-slot="select-value"]')).toHaveText(
     "typescript",
   );
-  await expect(editor.locator("td").nth(3)).toContainText(cellText);
+  await expect(editor.locator("td").nth(1)).toContainText(cellText);
   expect(
     await editor
       .locator("[data-block-id]")

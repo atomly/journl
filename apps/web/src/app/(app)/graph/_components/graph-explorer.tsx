@@ -79,7 +79,10 @@ export function GraphExplorer({
     router.push(href);
   }
   return (
-    <main className="mx-auto flex min-h-full w-full max-w-7xl flex-col gap-5 px-4 py-6 md:px-8">
+    <main
+      data-workspace-section
+      className="flex min-h-full flex-col gap-5 py-6"
+    >
       <div className="flex items-center gap-2">
         {trail.length > 1 && (
           <Button

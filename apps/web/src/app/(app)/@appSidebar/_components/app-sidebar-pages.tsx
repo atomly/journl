@@ -559,8 +559,6 @@ export const AppSidebarPages = ({
   const params = useParams<{ id?: string }>();
   const trpc = useTRPC();
   const { state, setOpen } = useSidebar();
-  const isPagesRoute =
-    pathname.startsWith("/pages") || pathname.startsWith("/folders");
   const [isOpen, setIsOpen] = useState(defaultOpen);
   const rootTreeQueryKey = trpc.tree.getChildrenPaginated.infiniteQueryKey(
     getInfiniteSidebarTreeQueryOptions(null),
@@ -648,7 +646,6 @@ export const AppSidebarPages = ({
           aria-controls={pagesContentId}
           render={
             <SidebarMenuButton
-              isActive={isPagesRoute}
               className="h-11 min-h-11 gap-2 rounded-[12px] border-0 pr-2 pl-4 [&>svg]:size-5"
               tooltip="Library"
               onClick={handlePagesClick}

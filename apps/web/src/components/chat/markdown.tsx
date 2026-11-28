@@ -79,16 +79,24 @@ const markdownComponents: Components = { a: MarkdownLink, pre: MarkdownPre };
 const markdownPlugins = [remarkGfm];
 export const ChatMarkdown = memo(function ChatMarkdown({
   text,
+  preserveLineBreaks = false,
 }: {
   text: string;
+  preserveLineBreaks?: boolean;
 }) {
   return (
-    <div className="chat-markdown min-w-0">
+    <div
+      className={
+        preserveLineBreaks
+          ? "chat-markdown chat-markdown-authored min-w-0"
+          : "chat-markdown min-w-0"
+      }
+    >
       <ReactMarkdown
         remarkPlugins={markdownPlugins}
         components={markdownComponents}
       >
-        {stripOpenAICitationTokens(text)}
+        {preserveLineBreaks ? text : stripOpenAICitationTokens(text)}
       </ReactMarkdown>
     </div>
   );

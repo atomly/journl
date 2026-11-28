@@ -1,16 +1,33 @@
 import { defineConfig, devices } from "@playwright/test";
 
+const { BROWSER_TEST_OPENAI_API_KEY, CI, PLAYWRIGHT_DESIGN_REVIEW } =
+  // biome-ignore lint/style/noProcessEnv: Playwright runner flags are separate from app configuration.
+  process.env;
+const designReview = PLAYWRIGHT_DESIGN_REVIEW === "1";
+const liveAI = Boolean(BROWSER_TEST_OPENAI_API_KEY);
+
 export default defineConfig({
   expect: { timeout: 15_000 },
+  // Mutating specs share seeded records within a server. Shard at file scope.
   fullyParallel: false,
-  maxFailures: 1,
+  maxFailures: CI ? 0 : 1,
   projects: [
     { name: "desktop-chromium", use: { ...devices["Desktop Chrome"] } },
     { name: "mobile-webkit", use: { ...devices["iPhone 13"] } },
   ],
-  reporter: [["list"], ["html", { open: "never" }]],
+  reporter: CI
+    ? [["list"], ["json", { outputFile: "test-results/summary.json" }]]
+    : [["list"], ["html", { open: "never" }]],
   testDir: "./src",
-  testMatch: "**/*.browser.spec.ts",
+  testIgnore: designReview
+    ? []
+    : [
+        "**/*.review.browser.spec.ts",
+        ...(liveAI ? [] : ["**/*.live.browser.spec.ts"]),
+      ],
+  testMatch: designReview
+    ? "**/*.review.browser.spec.ts"
+    : "**/*.browser.spec.ts",
   timeout: 120_000,
   use: {
     baseURL: "http://127.0.0.1:3100",

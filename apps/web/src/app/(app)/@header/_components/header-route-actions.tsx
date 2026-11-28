@@ -1,6 +1,6 @@
 "use client";
 
-import { Button } from "@acme/ui/button";
+import { Button, buttonVariants } from "@acme/ui/button";
 import { Calendar } from "@acme/ui/calendar";
 import {
   Dialog,
@@ -17,19 +17,14 @@ import {
 } from "@acme/ui/popover";
 import { Surface } from "@acme/ui/surface";
 import { useQuery } from "@tanstack/react-query";
-import { ChevronDown, MoreHorizontal, XIcon } from "lucide-react";
+import { ArrowLeft, CalendarDays, ChevronDown, XIcon } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useState, useSyncExternalStore } from "react";
+import { useLayoutEffect, useRef, useState, useSyncExternalStore } from "react";
 import { useAppPreferences } from "~/components/preferences/app-preferences-provider";
-import {
-  useIsMobile,
-  useShellReady,
-  useShellViewport,
-} from "~/components/ui/use-shell-viewport";
+import { useIsMobile, useShellReady } from "~/components/ui/use-shell-viewport";
 import { useJournlAgent } from "~/hooks/use-journl-agent";
 import { useTRPC } from "~/trpc/react";
-import { useNavigationSidebar } from "../../@appSidebar/_components/app-sidebar-provider";
 
 function RouteDisclosure({
   open,
@@ -38,8 +33,8 @@ function RouteDisclosure({
   title,
   trigger,
   children,
-  align = "start",
   suppressed = false,
+  journal = false,
 }: {
   open: boolean;
   onOpenChange: (value: boolean) => void;
@@ -47,9 +42,9 @@ function RouteDisclosure({
   title: string;
   trigger: React.ReactElement;
   children: React.ReactNode;
-  align?: "start" | "end";
   /** A menu with nothing to choose from never opens; the trigger stays an identity control. */
   suppressed?: boolean;
+  journal?: boolean;
 }) {
   const mobile = useIsMobile();
   const ready = useShellReady();
@@ -63,10 +58,12 @@ function RouteDisclosure({
         <DialogTrigger render={trigger} aria-label={label} disabled={!ready} />
         <DialogContent
           data-shell-menu
+          data-journal-route-menu={journal || undefined}
           className="flex max-h-[65dvh] translate-x-0 translate-y-0 flex-col gap-0 overflow-hidden p-0"
         >
           <Surface
             material="glass"
+            data-route-menu-heading
             className="flex min-h-[70px] shrink-0 items-center rounded-none border-x-0 border-t-0 p-4 pr-16"
           >
             <DialogHeader className="text-left">
@@ -83,12 +80,14 @@ function RouteDisclosure({
     <Popover open={suppressed ? false : open} onOpenChange={handleOpenChange}>
       <PopoverTrigger render={trigger} aria-label={label} disabled={!ready} />
       <PopoverContent
-        align={align}
+        align="start"
         data-shell-route-popover
+        data-journal-route-menu={journal || undefined}
         className="max-h-[min(65dvh,var(--available-height,65dvh))] gap-0 overflow-hidden rounded-[20px] p-0"
       >
         <Surface
           material="glass"
+          data-route-menu-heading
           className="flex min-h-[70px] shrink-0 items-center justify-between gap-3 rounded-none border-x-0 border-t-0 px-4 py-3"
         >
           <PopoverTitle className="font-semibold text-base">
@@ -99,6 +98,7 @@ function RouteDisclosure({
             size="icon"
             aria-label="Close route menu"
             className="size-11 shrink-0 [&>svg]:size-5"
+            data-route-menu-close
             onClick={() => onOpenChange(false)}
           >
             <XIcon />
@@ -116,16 +116,8 @@ function localDate(value: Date) {
   return `${value.getFullYear()}-${String(value.getMonth() + 1).padStart(2, "0")}-${String(value.getDate()).padStart(2, "0")}`;
 }
 
-export function HeaderRouteActions({
-  children,
-  actions,
-}: {
-  children: React.ReactNode;
-  actions?: React.ReactNode;
-}) {
+export function HeaderRouteActions({ actions }: { actions?: React.ReactNode }) {
   const pathname = usePathname();
-  const { setOpenMobile } = useNavigationSidebar();
-  const viewport = useShellViewport();
   const router = useRouter();
   const trpc = useTRPC();
   const agent = useJournlAgent();
@@ -140,12 +132,12 @@ export function HeaderRouteActions({
     () => null,
   );
   const [browseDates, setBrowseDates] = useState(false);
+  const [dateOpen, setDateOpen] = useState(false);
+  const [wideJournal, setWideJournal] = useState(false);
+  const headerContent = useRef<HTMLDivElement>(null);
+  const mobile = useIsMobile();
   const [open, setOpen] = useState(false);
-  const [actionsOpen, setActionsOpen] = useState(false);
-  const closeMenus = () => {
-    setOpen(false);
-    setActionsOpen(false);
-  };
+  const closeMenu = () => setOpen(false);
   const pageId = /^\/pages\/([^/]+)$/.exec(pathname)?.[1];
   const folderId = /^\/folders\/([^/]+)$/.exec(pathname)?.[1];
   const { data: path } = useQuery({
@@ -156,53 +148,85 @@ export function HeaderRouteActions({
     enabled: Boolean(pageId || folderId),
   });
   const journal = pathname.startsWith("/journal");
+  useLayoutEffect(() => {
+    const content = headerContent.current;
+    if (!journal || !content) return;
+    const updateWidth = () => {
+      const wide = !mobile && content.clientWidth >= 580;
+      setWideJournal(wide);
+      if (wide) setOpen(false);
+      else setDateOpen(false);
+    };
+    updateWidth();
+    const observer = new ResizeObserver(updateWidth);
+    observer.observe(content);
+    return () => observer.disconnect();
+  }, [journal, mobile]);
+  const inlineJournal = journal && !mobile && wideJournal;
   const library = pathname === "/library";
-  const label = journal
-    ? "Journal"
-    : library
-      ? "All pages"
-      : pathname.startsWith("/explore") || pathname.startsWith("/graph")
-        ? "Explore"
-        : "Library";
+  const explore =
+    pathname.startsWith("/explore") || pathname.startsWith("/graph");
+  const account = pathname.startsWith("/account/");
+  const subscription = pathname === "/subscription";
+  const label =
+    account || subscription
+      ? "Account & plan"
+      : journal
+        ? "Journal"
+        : library
+          ? "All pages"
+          : explore
+            ? "Explore"
+            : "Library";
   const { preferences, updatePreferences } = useAppPreferences();
   const date = /^\/journal\/(\d{4}-\d{2}-\d{2})$/.exec(pathname)?.[1];
-  const detail = journal
-    ? date
-      ? new Date(`${date}T12:00:00`).toLocaleDateString("en-US", {
-          day: "numeric",
-          month: "long",
-          year: "numeric",
-        })
-      : preferences.journalTimelineView === "entries"
-        ? "Entries"
-        : "Timeline"
-    : library
-      ? ""
-      : path
-          ?.map((item) =>
-            item.id === pageId && currentTitle !== null
-              ? currentTitle || "Untitled"
-              : item.name || "Untitled",
-          )
-          .join(" / ") ||
-        (label === "Explore" ? "Threads and connections" : currentTitle || "");
+  const detail = subscription
+    ? "Subscription"
+    : account
+      ? pathname === "/account/security"
+        ? "Security"
+        : "Settings"
+      : journal
+        ? date
+          ? new Date(`${date}T12:00:00`).toLocaleDateString("en-US", {
+              day: "numeric",
+              month: "long",
+              year: "numeric",
+            })
+          : preferences.journalTimelineView === "entries"
+            ? "Entries"
+            : "Timeline"
+        : library
+          ? "Browse pages and folders"
+          : explore
+            ? "Threads and connections"
+            : path
+                ?.map((item) =>
+                  item.id === pageId && currentTitle !== null
+                    ? currentTitle || "Untitled"
+                    : item.name || "Untitled",
+                )
+                .join(" / ") ||
+              currentTitle ||
+              "";
   const navigate = (url: string) => {
     router.push(url);
-    closeMenus();
+    closeMenu();
+    setDateOpen(false);
   };
   // Notebook identity routes repeat the breadcrumb across the trigger and
   // the menu; the header shows the section instead, and a path with only the
   // current node has nothing to choose from, so its menu never opens.
   const identityRoute = Boolean(pageId || folderId);
   const identityMenuSuppressed = identityRoute && (path?.length ?? 2) <= 1;
-  const journalActions = (
-    <>
+  const journalModes = (
+    <fieldset className="journal-route-modes">
+      <legend className="sr-only">Journal view</legend>
       {(["entries", "timeline"] as const).map((mode) => (
         <Button
           key={mode}
-          variant={
-            preferences.journalTimelineView === mode ? "selected" : "ghost"
-          }
+          size="sm"
+          variant="ghost"
           aria-pressed={preferences.journalTimelineView === mode}
           onClick={() => {
             updatePreferences({ journalTimelineView: mode });
@@ -212,149 +236,180 @@ export function HeaderRouteActions({
           {mode === "entries" ? "Entries" : "Timeline"}
         </Button>
       ))}
-      <Button
-        variant="ghost"
-        aria-expanded={browseDates}
-        onClick={() => setBrowseDates((value) => !value)}
-      >
-        Browse dates / history
-      </Button>
-      {browseDates && (
-        <Calendar
-          mode="single"
-          captionLayout="dropdown"
-          defaultMonth={date ? new Date(`${date}T12:00:00`) : undefined}
-          selected={date ? new Date(`${date}T12:00:00`) : undefined}
-          onSelect={(value) => {
-            if (value) navigate(`/journal/${localDate(value)}`);
-          }}
-        />
-      )}
-      <Button
-        variant="ghost"
-        onClick={() => navigate(`/journal/${localDate(new Date())}`)}
-      >
-        Today
-      </Button>
+    </fieldset>
+  );
+  const selectedDate = date ? new Date(`${date}T12:00:00`) : undefined;
+  const journalCalendar = (
+    <Calendar
+      key={date}
+      className="bg-transparent"
+      classNames={{ month: "gap-2" }}
+      mode="single"
+      captionLayout="dropdown"
+      defaultMonth={selectedDate}
+      selected={selectedDate}
+      onSelect={(value) => {
+        if (value) navigate(`/journal/${localDate(value)}`);
+      }}
+    />
+  );
+  const todayAction = (
+    <Button
+      size="sm"
+      variant="ghost"
+      onClick={() => navigate(`/journal/${localDate(new Date())}`)}
+    >
+      Today
+    </Button>
+  );
+  const journalActions = (
+    <>
+      {journalModes}
+      <div className="journal-route-dates">
+        <Button
+          size="sm"
+          variant="ghost"
+          aria-expanded={browseDates}
+          onClick={() => setBrowseDates((value) => !value)}
+        >
+          <CalendarDays aria-hidden="true" />
+          Browse dates / history
+          <ChevronDown aria-hidden="true" />
+        </Button>
+        {todayAction}
+      </div>
+      {browseDates && journalCalendar}
     </>
   );
   return (
-    <div className="flex min-w-0 flex-1 items-center gap-2">
-      <RouteDisclosure
-        open={open}
-        onOpenChange={setOpen}
-        label={identityMenuSuppressed ? label : `${label} route menu`}
-        title={identityRoute ? label : detail || label}
-        suppressed={identityMenuSuppressed}
-        trigger={
-          <Button
-            variant="ghost"
-            className="h-auto min-h-11 min-w-0 max-w-full shrink justify-start justify-self-start px-0 text-left"
-          >
-            <span className="min-w-0">
-              <span
-                className={
-                  pageId
-                    ? "block truncate font-normal text-[13px]"
-                    : "block font-semibold"
-                }
-              >
-                {pageId ? (
-                  <>
-                    <span className="hidden min-[701px]:inline">{detail}</span>
-                    <span className="min-[701px]:hidden">
-                      {currentTitle || path?.at(-1)?.name || "Page"}
-                    </span>
-                  </>
-                ) : (
-                  label
-                )}
-              </span>
-              <span
-                className={
-                  pageId
-                    ? "sr-only"
-                    : "block max-w-80 truncate font-normal text-muted-foreground text-xs"
-                }
-              >
-                {detail}
-              </span>
-            </span>
-            {!identityMenuSuppressed && <ChevronDown />}
-          </Button>
-        }
-      >
-        {journal ? (
-          journalActions
-        ) : label === "Explore" ? (
-          <>
-            <Link href="/explore" onClick={closeMenus}>
-              Threads
-            </Link>
-            <Link href="/graph" onClick={closeMenus}>
-              Graph
-            </Link>
-          </>
-        ) : label === "All pages" ? (
-          <>
-            <Link href="/library" onClick={closeMenus}>
-              All pages
-            </Link>
-            <Link href="/library?tab=folders" onClick={closeMenus}>
-              Folders
-            </Link>
-          </>
-        ) : (
-          path?.map((item) => (
-            <Link
-              key={item.node_id}
-              onClick={closeMenus}
-              href={
-                item.node_type === "page"
-                  ? `/pages/${item.id}`
-                  : `/folders/${item.id}`
-              }
+    <div ref={headerContent} className="flex min-w-0 flex-1 items-center gap-2">
+      {inlineJournal || library || explore || account || subscription ? (
+        <div className="min-w-0">
+          <span className="block truncate font-semibold">{label}</span>
+          <span className="block truncate text-muted-foreground text-xs">
+            {detail}
+          </span>
+        </div>
+      ) : (
+        <RouteDisclosure
+          open={open}
+          onOpenChange={setOpen}
+          label={identityMenuSuppressed ? label : `${label} route menu`}
+          title={identityRoute || journal ? label : detail || label}
+          journal={journal}
+          suppressed={identityMenuSuppressed}
+          trigger={
+            <Button
+              variant="ghost"
+              className="h-auto min-h-11 min-w-0 max-w-full shrink justify-start justify-self-start px-0 text-left"
             >
-              {item.id === pageId && currentTitle !== null
-                ? currentTitle || "Untitled"
-                : item.name || "Untitled"}
-            </Link>
-          ))
-        )}
-      </RouteDisclosure>
+              <span className="min-w-0">
+                <span
+                  className={
+                    pageId
+                      ? "block truncate font-normal text-[13px]"
+                      : "block font-semibold"
+                  }
+                >
+                  {pageId ? (
+                    <>
+                      {path && path.length > 1 && (
+                        <span className="hidden text-muted-foreground min-[701px]:inline">
+                          {path
+                            .slice(0, -1)
+                            .map((item) => item.name || "Untitled")
+                            .join(" / ")}
+                          {" / "}
+                        </span>
+                      )}
+                      <span className="font-medium">
+                        {currentTitle === null
+                          ? path?.at(-1)?.name || "Page"
+                          : currentTitle || "Untitled"}
+                      </span>
+                    </>
+                  ) : (
+                    label
+                  )}
+                </span>
+                <span
+                  className={
+                    pageId
+                      ? "sr-only"
+                      : "block max-w-80 truncate font-normal text-muted-foreground text-xs"
+                  }
+                >
+                  {detail}
+                </span>
+              </span>
+              {!identityMenuSuppressed && <ChevronDown />}
+            </Button>
+          }
+        >
+          {journal
+            ? journalActions
+            : path?.map((item) => (
+                <Link
+                  key={item.node_id}
+                  onClick={closeMenu}
+                  href={
+                    item.node_type === "page"
+                      ? `/pages/${item.id}`
+                      : `/folders/${item.id}`
+                  }
+                >
+                  {item.id === pageId && currentTitle !== null
+                    ? currentTitle || "Untitled"
+                    : item.name || "Untitled"}
+                </Link>
+              ))}
+        </RouteDisclosure>
+      )}
       <div
         data-slot="header-actions"
         className="ml-auto flex shrink-0 items-center gap-0 min-[701px]:gap-2"
       >
-        {actions}
-      </div>
-      <div className="journl-header-route-actions shrink-0">
-        <RouteDisclosure
-          open={actionsOpen}
-          onOpenChange={setActionsOpen}
-          label="Route actions"
-          title="Route actions"
-          align="start"
-          trigger={
-            <Button variant="ghost" size="icon" className="rounded-full">
-              <MoreHorizontal className="size-5" />
-            </Button>
-          }
-        >
-          {journal && journalActions}
-          {viewport === "desktop" && (
-            <Button
-              variant="ghost"
-              onClick={() => {
-                closeMenus();
-                setOpenMobile(true);
-              }}
+        {date && (
+          <Link
+            href="/journal"
+            className={buttonVariants({ size: "icon", variant: "ghost" })}
+            data-journal-back
+            aria-label="Back to Journal"
+            title="Back to Journal"
+          >
+            <ArrowLeft aria-hidden="true" />
+          </Link>
+        )}
+        {inlineJournal && (
+          <div className="journal-header-controls flex items-center gap-2">
+            {journalModes}
+            <RouteDisclosure
+              open={dateOpen}
+              onOpenChange={setDateOpen}
+              label="Browse journal dates"
+              title="Journal dates"
+              journal
+              trigger={
+                <Button
+                  size="sm"
+                  variant="outline"
+                  title={selectedDate ? detail : undefined}
+                >
+                  <CalendarDays aria-hidden="true" />
+                  {selectedDate?.toLocaleDateString("en-US", {
+                    day: "numeric",
+                    month: "short",
+                  }) ?? "Browse dates"}
+                  <ChevronDown aria-hidden="true" />
+                </Button>
+              }
             >
-              Notebook navigation
-            </Button>
-          )}
-          {children}
-        </RouteDisclosure>
+              {journalCalendar}
+              <div className="journal-route-dates self-end">{todayAction}</div>
+            </RouteDisclosure>
+          </div>
+        )}
+        {actions}
       </div>
     </div>
   );

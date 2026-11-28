@@ -56,7 +56,7 @@ export function ChatComposer() {
         event.preventDefault();
         submit();
       }}
-      className="flex flex-col gap-2 p-3"
+      className="flex shrink-0 flex-col gap-2 p-3"
     >
       <ChatQuotaNotice />
       <FieldGroup>
@@ -87,7 +87,7 @@ export function ChatComposer() {
                 event.preventDefault();
                 submit();
               }}
-              className="max-h-40 min-h-11"
+              className="max-h-28 min-h-11 overflow-y-auto"
             />
             <InputGroupAddon align="block-end">
               <ComposerReasoning>

@@ -24,24 +24,25 @@ async function SubscriptionPage() {
         })
       : null;
 
-  const nextBillingDate = subscription?.periodEnd?.toLocaleDateString("en-US", {
-    day: "numeric",
-    month: "long",
-  });
+  const periodEnd = subscription.periodEnd;
+  const upcomingPeriodEnd = periodEnd && periodEnd.getTime() > Date.now();
+  const nextBillingDate = upcomingPeriodEnd
+    ? periodEnd.toLocaleDateString("en-US", { dateStyle: "long" })
+    : null;
 
   const planPrice = centsToDollars(subscription.plan.price.unitAmount, {
     decimals: 2,
   });
 
   return (
-    <div className="h-full w-full p-8">
+    <div data-workspace-section className="pt-8 pb-24 text-card-foreground">
       <div className="space-y-8">
         {/* Header Section */}
-        <div className="space-y-4 text-center">
-          <h1 className="text-balance font-bold text-4xl md:text-5xl">
+        <div className="flex flex-col gap-3">
+          <h1 className="text-balance font-semibold text-3xl tracking-tight md:text-[40px]">
             Plan Summary
           </h1>
-          <p className="mx-auto max-w-2xl text-pretty text-lg text-muted-foreground">
+          <p className="max-w-2xl text-pretty text-muted-foreground">
             Your premium subscription is active and ready to power your
             productivity
           </p>
@@ -52,7 +53,7 @@ async function SubscriptionPage() {
 
         {/* Additional Info Cards */}
         <div className="grid gap-6 md:grid-cols-2">
-          <Card>
+          <Card className="rounded-xl bg-secondary/50 shadow-none">
             <CardContent>
               <div className="mb-4 flex items-center gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
@@ -61,17 +62,19 @@ async function SubscriptionPage() {
                 <h3 className="font-semibold">Next Billing</h3>
               </div>
               <p className="mb-1 font-bold text-2xl text-foreground">
-                {nextBillingDate || "October 20"}
+                {nextBillingDate || "Unavailable"}
               </p>
               <p className="text-muted-foreground text-sm">
-                {cancelDate
+                {cancelDate && nextBillingDate
                   ? "Subscription will end at the current period"
-                  : `Your next charge of ${planPrice} will be processed automatically`}
+                  : nextBillingDate
+                    ? `Your next charge of ${planPrice} will be processed automatically`
+                    : "Check your billing portal for the next charge."}
               </p>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="rounded-xl bg-secondary/50 shadow-none">
             <CardContent>
               <div className="mb-4 flex items-center gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
@@ -79,7 +82,7 @@ async function SubscriptionPage() {
                 </div>
                 <h3 className="font-semibold">Account Status</h3>
               </div>
-              <p className="mb-1 font-bold text-2xl text-primary">
+              <p className="mb-1 font-bold text-2xl text-foreground">
                 {cancelDate ? "Ending" : "Active"}
               </p>
               <p className="text-muted-foreground text-sm">

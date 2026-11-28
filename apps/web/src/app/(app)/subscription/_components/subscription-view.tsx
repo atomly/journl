@@ -52,7 +52,12 @@ export async function SubscriptionView({
   const billingInterval = subscription.plan.price.recurring.interval;
 
   return (
-    <Card className={cn("relative overflow-hidden shadow-xl", className)}>
+    <Card
+      className={cn(
+        "relative overflow-hidden rounded-xl shadow-none",
+        className,
+      )}
+    >
       {/* Premium Badge */}
       <div className="absolute top-4 right-4">
         <Badge
@@ -76,11 +81,11 @@ export async function SubscriptionView({
       <CardHeader>
         <div className="flex items-start justify-between">
           <div className="space-y-2">
-            <h2 className="font-bold text-3xl text-foreground capitalize">
+            <h2 className="font-semibold text-3xl text-foreground capitalize">
               {planName}
             </h2>
             <div className="flex items-baseline gap-2">
-              <span className="font-bold text-4xl text-primary">
+              <span className="font-semibold text-2xl text-foreground">
                 {planPrice}
               </span>
               <span className="text-lg text-muted-foreground">
@@ -98,9 +103,7 @@ export async function SubscriptionView({
             <Calendar className="h-5 w-5 text-primary" />
           </div>
           <div className="flex-1">
-            <p className="font-medium text-foreground">
-              Current Billing Period
-            </p>
+            <p className="font-medium text-foreground">Billing Period</p>
             <p className="text-muted-foreground text-sm">
               {periodStart && periodEnd ? (
                 <>
@@ -109,11 +112,7 @@ export async function SubscriptionView({
                   <span className="whitespace-nowrap">{periodEnd}</span>
                 </>
               ) : (
-                <>
-                  <span className="whitespace-nowrap">September 20, 2025</span>
-                  {" – "}
-                  <span className="whitespace-nowrap">October 20, 2025</span>
-                </>
+                "Billing period unavailable"
               )}
             </p>
           </div>
@@ -183,6 +182,7 @@ export async function SubscriptionView({
           <SubscriptionManageButton
             activeSubscription={subscription}
             size="lg"
+            variant="default"
             className="w-full rounded-[12px] border px-8 font-semibold shadow-lg"
           >
             <SquareArrowUpRight />

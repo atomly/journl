@@ -2,7 +2,7 @@ import { Skeleton } from "@acme/ui/skeleton";
 
 export function FolderDetailsSkeleton() {
   return (
-    <div className="mx-auto flex max-w-5xl flex-col gap-8 px-8 pt-8 pb-20">
+    <div data-workspace-section className="flex flex-col gap-8 pt-8 pb-20">
       <section className="space-y-2">
         <Skeleton className="h-4 w-16" />
         <Skeleton className="h-11 w-full" />

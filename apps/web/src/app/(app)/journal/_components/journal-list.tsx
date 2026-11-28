@@ -216,11 +216,7 @@ function VirtualizedJournalList({
   }, [setView]);
 
   if (status === "pending") {
-    return (
-      <div className="mx-auto max-w-4xl pt-8">
-        <JournalListSkeleton className="mx-auto flex flex-1 flex-col" />
-      </div>
-    );
+    return <JournalListSkeleton className="flex flex-1 flex-col pt-8" />;
   }
 
   if (status === "error" && !data) {
@@ -253,10 +249,11 @@ function VirtualizedJournalList({
       increaseViewportBy={200}
       itemContent={(_, entry) => (
         <JournalEntryProvider entry={entry}>
-          <JournalEntryWrapper className="mx-auto max-w-4xl border-b pt-8 pb-20">
+          <JournalEntryWrapper className="border-b pt-8 pb-20">
             {"contentReadError" in entry && entry.contentReadError ? (
               <div
-                className="space-y-4 px-13.5"
+                className="space-y-4"
+                data-editor-heading
                 data-journal-content-unavailable
               >
                 <JournalEntryHeader />
@@ -267,7 +264,7 @@ function VirtualizedJournalList({
               </div>
             ) : (
               <DynamicJournalEntryEditor onCreateAction={onCreateAction}>
-                <JournalEntryHeader className="px-13.5" linkDate />
+                <JournalEntryHeader data-editor-heading linkDate />
               </DynamicJournalEntryEditor>
             )}
           </JournalEntryWrapper>
@@ -276,7 +273,7 @@ function VirtualizedJournalList({
       components={{
         Footer: () => (
           <JournalListFooter
-            className="mx-auto mt-8 max-w-4xl pb-28"
+            className="mt-8 pb-28"
             hasNextPage={hasNextPage}
             isFetching={isFetching}
             error={error}
@@ -321,7 +318,7 @@ function JournalListFooter({
     );
   }
   if (isFetching && hasNextPage) {
-    return <JournalEntrySkeleton hasContent {...rest} />;
+    return <JournalEntrySkeleton data-reading-surface hasContent {...rest} />;
   }
 
   if (hasNextPage) return null;

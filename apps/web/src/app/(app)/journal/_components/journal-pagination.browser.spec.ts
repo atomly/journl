@@ -1,17 +1,11 @@
 import type { Locator, Page } from "@playwright/test";
-import { expect, test } from "~/testing/browser/fixtures";
+import { expect, selectJournalView, test } from "~/testing/browser/fixtures";
 
 test.use({ journalPagination: true });
 
 async function entriesView(page: Page) {
   await page.goto("/journal");
-  await page
-    .getByRole("button", { exact: true, name: "Journal route menu" })
-    .click();
-  const entries = page.getByRole("button", { exact: true, name: "Entries" });
-  if ((await entries.getAttribute("aria-pressed")) !== "true")
-    await entries.click();
-  else await page.keyboard.press("Escape");
+  await selectJournalView(page, "Entries");
   await expect(
     page.getByText("Pagination entry 1", { exact: true }),
   ).toBeVisible();

@@ -13,6 +13,7 @@ import {
 import { cn } from "cn";
 import { Monitor, Moon, Sun } from "lucide-react";
 import { useEffect, useState } from "react";
+import { revealTheme } from "~/components/theme/reveal-theme";
 import { themePlugin } from "~/lib/auth/theme-plugin";
 import { SystemThemePreview } from "./system-theme-preview";
 
@@ -47,7 +48,13 @@ export function Appearance({ className }: AppearanceProps) {
 
             <RadioGroup
               value={isMounted ? theme : ""}
-              onValueChange={setTheme}
+              onValueChange={(value) => {
+                const radio = document.getElementById(value);
+                revealTheme(
+                  () => setTheme(value),
+                  radio?.closest("label") ?? radio,
+                );
+              }}
               className="grid grid-cols-2 gap-3 sm:grid-cols-3"
               disabled={!isMounted || !theme}
             >

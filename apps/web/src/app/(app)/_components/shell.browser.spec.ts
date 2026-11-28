@@ -423,7 +423,12 @@ test("shell controls remain reachable with solid materials and system colors", a
   await expect(
     page.getByRole("button", { exact: true, name: "Toggle Chat Sidebar" }),
   ).toBeInViewport();
-  const selected = page.getByRole("button", { exact: true, name: "Library" });
+  const selected = page
+    .locator('[data-side="left"]')
+    .getByRole("link", { exact: true, name: "All pages" });
+  await selected.click();
+  await expect(selected).toHaveAttribute("aria-current", "page");
+  await page.mouse.move(0, 0);
   const labelContrast = await renderedTextContrast(selected);
   const iconContrast = await renderedTextContrast(selected, "icons");
   expect(labelContrast.ratio).toBeGreaterThanOrEqual(4.5);

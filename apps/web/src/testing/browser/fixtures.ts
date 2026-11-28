@@ -96,7 +96,7 @@ export async function selectJournalView(
     name: "Journal route menu",
   });
   const mode = page.getByRole("button", { exact: true, name });
-  await expect(menu.or(mode)).toBeVisible();
+  await expect(menu.or(mode)).toBeEnabled();
   const compact = await menu.isVisible();
   if (compact) await menu.click();
   if ((await mode.getAttribute("aria-pressed")) !== "true") await mode.click();

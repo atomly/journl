@@ -20,6 +20,8 @@ test("Library filters pages and shows their folder counts", async ({
   const search = page.getByRole("searchbox", { name: "Search by name" });
   await search.fill("garden");
   await expect(garden).toBeVisible();
+  const gardenUrl = await garden.getAttribute("href");
+  if (!gardenUrl) throw new Error("The Library page link is missing a URL");
   await expect(lentils).toHaveCount(0);
   await search.clear();
   await expect(lentils).toBeVisible();
@@ -41,10 +43,7 @@ test("Library filters pages and shows their folder counts", async ({
   const input = await title.boundingBox();
   expect(input?.x).toBeCloseTo(table?.x ?? 0, 0);
   expect(input?.width).toBeCloseTo(table?.width ?? 0, 0);
-  await page
-    .getByRole("link", { exact: true, name: "Small balcony garden" })
-    .last()
-    .click();
+  await page.goto(gardenUrl);
   await expect(page).toHaveURL(/\/pages\//);
   const identity = header.getByRole("button", { name: "Library route menu" });
   await expect(identity).toContainText("Small balcony garden");

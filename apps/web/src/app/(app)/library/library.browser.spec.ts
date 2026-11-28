@@ -55,8 +55,10 @@ test("Library filters pages and shows their folder counts", async ({
     await expect(
       identity.getByText("Projects /", { exact: true }),
     ).toBeVisible();
-    await expect(header.locator("[data-editor-save-label]")).toBeVisible();
   }
+  const save = header.getByRole("button", { name: "Save details" });
+  await expect(save).toBeVisible();
+  await expect(save).toHaveText("");
   await expect(
     header.getByRole("button", { name: "Search notes" }),
   ).toBeVisible();

@@ -202,9 +202,6 @@ export function SaveStatus() {
               className="size-4 text-muted-foreground"
             />
           )}
-          <span data-editor-save-label aria-hidden="true" className="hidden">
-            {status}
-          </span>
         </DialogTrigger>
         <DialogContent className="max-h-[calc(100dvh-2rem)] min-w-0 overflow-y-auto sm:max-w-xl">
           <DialogHeader className="pr-8">

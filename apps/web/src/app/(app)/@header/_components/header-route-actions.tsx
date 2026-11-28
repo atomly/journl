@@ -1,6 +1,6 @@
 "use client";
 
-import { Button } from "@acme/ui/button";
+import { Button, buttonVariants } from "@acme/ui/button";
 import { Calendar } from "@acme/ui/calendar";
 import {
   Dialog,
@@ -17,7 +17,7 @@ import {
 } from "@acme/ui/popover";
 import { Surface } from "@acme/ui/surface";
 import { useQuery } from "@tanstack/react-query";
-import { CalendarDays, ChevronDown, XIcon } from "lucide-react";
+import { ArrowLeft, CalendarDays, ChevronDown, XIcon } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useLayoutEffect, useRef, useState, useSyncExternalStore } from "react";
@@ -164,6 +164,8 @@ export function HeaderRouteActions({ actions }: { actions?: React.ReactNode }) {
   }, [journal, mobile]);
   const inlineJournal = journal && !mobile && wideJournal;
   const library = pathname === "/library";
+  const explore =
+    pathname.startsWith("/explore") || pathname.startsWith("/graph");
   const account = pathname.startsWith("/account/");
   const subscription = pathname === "/subscription";
   const label =
@@ -173,7 +175,7 @@ export function HeaderRouteActions({ actions }: { actions?: React.ReactNode }) {
         ? "Journal"
         : library
           ? "All pages"
-          : pathname.startsWith("/explore") || pathname.startsWith("/graph")
+          : explore
             ? "Explore"
             : "Library";
   const { preferences, updatePreferences } = useAppPreferences();
@@ -195,17 +197,18 @@ export function HeaderRouteActions({ actions }: { actions?: React.ReactNode }) {
             ? "Entries"
             : "Timeline"
         : library
-          ? ""
-          : path
-              ?.map((item) =>
-                item.id === pageId && currentTitle !== null
-                  ? currentTitle || "Untitled"
-                  : item.name || "Untitled",
-              )
-              .join(" / ") ||
-            (label === "Explore"
-              ? "Threads and connections"
-              : currentTitle || "");
+          ? "Browse pages and folders"
+          : explore
+            ? "Threads and connections"
+            : path
+                ?.map((item) =>
+                  item.id === pageId && currentTitle !== null
+                    ? currentTitle || "Untitled"
+                    : item.name || "Untitled",
+                )
+                .join(" / ") ||
+              currentTitle ||
+              "";
   const navigate = (url: string) => {
     router.push(url);
     closeMenu();
@@ -279,46 +282,8 @@ export function HeaderRouteActions({ actions }: { actions?: React.ReactNode }) {
     </>
   );
   return (
-    <div
-      ref={headerContent}
-      data-header-route-content
-      data-editor-route={pageId ? "" : undefined}
-      className="flex min-w-0 flex-1 items-center gap-2"
-    >
-      {inlineJournal ? (
-        <>
-          <span className="font-semibold text-sm">Journal</span>
-          <div className="journal-header-controls ml-auto flex items-center gap-2">
-            {journalModes}
-            <RouteDisclosure
-              open={dateOpen}
-              onOpenChange={setDateOpen}
-              label="Browse journal dates"
-              title="Journal dates"
-              journal
-              trigger={
-                <Button
-                  size="sm"
-                  variant="outline"
-                  title={selectedDate ? detail : undefined}
-                >
-                  <CalendarDays aria-hidden="true" />
-                  {selectedDate?.toLocaleDateString("en-US", {
-                    day: "numeric",
-                    month: "short",
-                  }) ?? "Browse dates"}
-                  <ChevronDown aria-hidden="true" />
-                </Button>
-              }
-            >
-              {journalCalendar}
-              <div className="journal-route-dates self-end">{todayAction}</div>
-            </RouteDisclosure>
-          </div>
-        </>
-      ) : library ? (
-        <span className="truncate font-semibold text-sm">All pages</span>
-      ) : account || subscription ? (
+    <div ref={headerContent} className="flex min-w-0 flex-1 items-center gap-2">
+      {inlineJournal || library || explore || account || subscription ? (
         <div className="min-w-0">
           <span className="block truncate font-semibold">{label}</span>
           <span className="block truncate text-muted-foreground text-xs">
@@ -381,40 +346,69 @@ export function HeaderRouteActions({ actions }: { actions?: React.ReactNode }) {
             </Button>
           }
         >
-          {journal ? (
-            journalActions
-          ) : label === "Explore" ? (
-            <>
-              <Link href="/explore" onClick={closeMenu}>
-                Threads
-              </Link>
-              <Link href="/graph" onClick={closeMenu}>
-                Graph
-              </Link>
-            </>
-          ) : (
-            path?.map((item) => (
-              <Link
-                key={item.node_id}
-                onClick={closeMenu}
-                href={
-                  item.node_type === "page"
-                    ? `/pages/${item.id}`
-                    : `/folders/${item.id}`
-                }
-              >
-                {item.id === pageId && currentTitle !== null
-                  ? currentTitle || "Untitled"
-                  : item.name || "Untitled"}
-              </Link>
-            ))
-          )}
+          {journal
+            ? journalActions
+            : path?.map((item) => (
+                <Link
+                  key={item.node_id}
+                  onClick={closeMenu}
+                  href={
+                    item.node_type === "page"
+                      ? `/pages/${item.id}`
+                      : `/folders/${item.id}`
+                  }
+                >
+                  {item.id === pageId && currentTitle !== null
+                    ? currentTitle || "Untitled"
+                    : item.name || "Untitled"}
+                </Link>
+              ))}
         </RouteDisclosure>
       )}
       <div
         data-slot="header-actions"
         className="ml-auto flex shrink-0 items-center gap-0 min-[701px]:gap-2"
       >
+        {date && (
+          <Link
+            href="/journal"
+            className={buttonVariants({ size: "icon", variant: "ghost" })}
+            data-journal-back
+            aria-label="Back to Journal"
+            title="Back to Journal"
+          >
+            <ArrowLeft aria-hidden="true" />
+          </Link>
+        )}
+        {inlineJournal && (
+          <div className="journal-header-controls flex items-center gap-2">
+            {journalModes}
+            <RouteDisclosure
+              open={dateOpen}
+              onOpenChange={setDateOpen}
+              label="Browse journal dates"
+              title="Journal dates"
+              journal
+              trigger={
+                <Button
+                  size="sm"
+                  variant="outline"
+                  title={selectedDate ? detail : undefined}
+                >
+                  <CalendarDays aria-hidden="true" />
+                  {selectedDate?.toLocaleDateString("en-US", {
+                    day: "numeric",
+                    month: "short",
+                  }) ?? "Browse dates"}
+                  <ChevronDown aria-hidden="true" />
+                </Button>
+              }
+            >
+              {journalCalendar}
+              <div className="journal-route-dates self-end">{todayAction}</div>
+            </RouteDisclosure>
+          </div>
+        )}
         {actions}
       </div>
     </div>

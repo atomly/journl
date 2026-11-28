@@ -167,7 +167,9 @@ test("context menus preserve Journal date navigation and keep page identity", as
     ).toHaveAttribute("aria-current", "page");
   if (!isMobile) {
     const header = page.locator("header[data-hidden]");
-    const modes = header.getByRole("group", { name: "Journal view" });
+    const modes = header
+      .locator('[data-slot="header-actions"]')
+      .getByRole("group", { name: "Journal view" });
     await expect(modes.getByRole("button", { name: "Entries" })).toBeVisible();
     await expect(modes.getByRole("button", { name: "Timeline" })).toBeVisible();
     const date = header.getByRole("button", { name: "Browse journal dates" });
@@ -217,6 +219,23 @@ test("context menus preserve Journal date navigation and keep page identity", as
   ).toBeVisible();
   await page.getByRole("button", { exact: true, name: "Today" }).click();
   await expect(page).not.toHaveURL(/2000-01-01/);
+  const back = page.getByRole("link", { name: "Back to Journal" });
+  await expect(back).toBeVisible();
+  await back.click();
+  await expect(page).toHaveURL(/\/journal$/);
+  await expect(back).toHaveCount(0);
+
+  await page.goto("/explore");
+  const exploreHeader = page.locator("header[data-hidden]");
+  await expect(
+    exploreHeader.getByText("Explore", { exact: true }),
+  ).toBeVisible();
+  await expect(
+    exploreHeader.getByText("Threads and connections"),
+  ).toBeVisible();
+  await expect(
+    exploreHeader.getByRole("button", { name: "Explore route menu" }),
+  ).toHaveCount(0);
 });
 
 test("cancelled pointer resizing restores the original width", async ({

@@ -703,7 +703,7 @@ The rest of the components are set by the Tailwind CSS classes, or by our editor
   color: var(--foreground);
 }
 
-[data-slot="header-actions"] [data-slot="button"] {
+[data-slot="header-actions"] > [data-slot="button"] {
   border-radius: 999px;
 }
 
@@ -753,7 +753,7 @@ The rest of the components are set by the Tailwind CSS classes, or by our editor
   background: color-mix(in srgb, var(--sidebar-accent) 85%, var(--ring));
   color: var(--sidebar-accent-foreground);
 }
-[data-slot="header-actions"] [data-slot="button"] {
+[data-slot="header-actions"] > [data-slot="button"] {
   border-radius: 8px;
 }
 
@@ -1235,7 +1235,10 @@ The rest of the components are set by the Tailwind CSS classes, or by our editor
     margin: 22px 0 6px;
   }
   [data-slot="header-actions"]
-    button:not([data-slot="header-subscription-button"]) {
+    > :is(
+      button:not([data-slot="header-subscription-button"]),
+      [data-journal-back]
+    ) {
     width: 32px;
     height: 32px;
     min-width: 32px;
@@ -1890,22 +1893,6 @@ The rest of the components are set by the Tailwind CSS classes, or by our editor
   background-color: #91b8ef30;
 }
 
-[data-header-route-content] {
-  container-type: inline-size;
-}
-@container (min-width: 440px) {
-  [data-editor-route] [data-save-status] [data-slot="dialog-trigger"] {
-    width: auto;
-    padding-inline: 6px;
-  }
-  [data-editor-route] [data-editor-save-label] {
-    display: block;
-    max-width: 96px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    font-size: 12px;
-  }
-}
 .journal-header-controls .journal-route-modes {
   grid-template-columns: repeat(2, auto);
   padding: 2px;

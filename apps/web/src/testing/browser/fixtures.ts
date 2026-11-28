@@ -87,6 +87,22 @@ export const test = base.extend<{
 export { expect };
 
 /** Use real key events and wait for each split before typing into its new paragraph. */
+export async function selectJournalView(
+  page: Page,
+  name: "Entries" | "Timeline",
+) {
+  const menu = page.getByRole("button", {
+    exact: true,
+    name: "Journal route menu",
+  });
+  const mode = page.getByRole("button", { exact: true, name });
+  await expect(menu.or(mode)).toBeVisible();
+  const compact = await menu.isVisible();
+  if (compact) await menu.click();
+  if ((await mode.getAttribute("aria-pressed")) !== "true") await mode.click();
+  else if (compact) await page.keyboard.press("Escape");
+}
+
 export async function typeParagraphs(editor: Locator, paragraphs: string[]) {
   await editor.fill("");
   for (const [index, text] of paragraphs.entries()) {

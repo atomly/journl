@@ -150,7 +150,9 @@ for (const theme of ["light", "dark"]) {
 
     // The route header and navigation mark the current route.
     await expect(
-      page.getByRole("button", { exact: true, name: "All pages route menu" }),
+      page
+        .locator("header[data-hidden]")
+        .getByText("All pages", { exact: true }),
     ).toBeVisible();
     const navAllPages = page
       .locator('[data-side="left"]')

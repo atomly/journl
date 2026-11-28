@@ -151,7 +151,9 @@ test("assistant controls update live width, restore focus and retain independent
 
 test("context menus preserve Journal date navigation and keep page identity", async ({
   page,
+  isMobile,
 }) => {
+  if (!isMobile) await page.setViewportSize({ height: 1080, width: 1920 });
   await page.goto("/journal/2000-01-01");
   await expect(
     page.locator('.better-editor-tiptap[contenteditable="true"]').first(),
@@ -163,6 +165,22 @@ test("context menus preserve Journal date navigation and keep page identity", as
     await expect(
       page.getByRole("link", { exact: true, name: "Journal" }),
     ).toHaveAttribute("aria-current", "page");
+  if (!isMobile) {
+    const header = page.locator("header[data-hidden]");
+    const modes = header.getByRole("group", { name: "Journal view" });
+    await expect(modes.getByRole("button", { name: "Entries" })).toBeVisible();
+    await expect(modes.getByRole("button", { name: "Timeline" })).toBeVisible();
+    const date = header.getByRole("button", { name: "Browse journal dates" });
+    await expect(date).toHaveText("Jan 1");
+    await date.click();
+    await expect(page.getByRole("grid")).toBeVisible();
+    await expect(
+      page.getByRole("button", { exact: true, name: "Today" }),
+    ).toBeVisible();
+
+    await page.setViewportSize({ height: 900, width: 620 });
+    await expect(page.getByRole("grid")).toBeHidden();
+  }
   await page
     .getByRole("button", { exact: true, name: "Journal route menu" })
     .click();

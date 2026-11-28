@@ -1890,6 +1890,29 @@ The rest of the components are set by the Tailwind CSS classes, or by our editor
   background-color: #91b8ef30;
 }
 
+[data-header-route-content] {
+  container-type: inline-size;
+}
+@container (min-width: 440px) {
+  [data-editor-route] [data-save-status] [data-slot="dialog-trigger"] {
+    width: auto;
+    padding-inline: 6px;
+  }
+  [data-editor-route] [data-editor-save-label] {
+    display: block;
+    max-width: 96px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 12px;
+  }
+}
+.journal-header-controls .journal-route-modes {
+  grid-template-columns: repeat(2, auto);
+  padding: 2px;
+}
+.journal-header-controls .journal-route-modes > button {
+  height: 28px;
+}
 [data-journal-route-menu] [data-route-menu-heading] {
   min-height: 44px;
   padding-block: 4px;

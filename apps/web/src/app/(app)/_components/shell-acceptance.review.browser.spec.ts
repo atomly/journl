@@ -216,22 +216,16 @@ for (const group of groups)
             .focus();
           await page.keyboard.press("End");
         }
-        if (group.stateId === "narrow-route-actions") {
+        if (
+          ["narrow-route-actions", "journal-route-menu"].includes(group.stateId)
+        ) {
           await page
-            .getByRole("button", { exact: true, name: "Journal route menu" })
+            .getByRole("button", {
+              exact: true,
+              name: /^(Journal route menu|Browse journal dates)$/,
+            })
             .click();
           await expect(page.getByRole("dialog")).toBeVisible();
-        }
-        if (group.stateId === "journal-route-menu") {
-          await page
-            .getByRole("button", { exact: true, name: "Journal route menu" })
-            .click();
-          await expect(
-            page.getByRole("button", {
-              exact: true,
-              name: "Browse dates / history",
-            }),
-          ).toBeVisible();
         }
         if (group.stateId.startsWith("mobile-header-") && mobile) {
           const scroller = page.locator("[data-app-container]");

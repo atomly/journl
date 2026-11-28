@@ -107,42 +107,14 @@ for (const theme of ["light", "dark"]) {
     );
     await page.mouse.move(1400, 990);
 
-    // Route bar identity: the plate's Journal title with the Entries tab
-    // detail, rendered by the route-menu trigger.
-    const trigger = page.getByRole("button", {
-      exact: true,
-      name: "Journal route menu",
-    });
-    await expect(trigger).toBeVisible();
-    await expect(trigger).toContainText("Journal");
-    await expect(trigger).toContainText("Entries");
-    const triggerContrast = await renderedTextContrast(trigger);
-    expect(
-      triggerContrast.ratio,
-      `${theme} route identity text`,
-    ).toBeGreaterThanOrEqual(4.5);
-    measurements.push({ label: "Journal route identity", ...triggerContrast });
-
-    // The plate's Entries/Timeline pills, date chip and entry history live in
-    // the Journal route menu popover.
-    await trigger.click();
-    const popover = page.locator("[data-shell-route-popover]");
-    await expect(popover).toBeVisible();
-    await expect(trigger).toBeVisible();
-    const popoverBox = await popover.boundingBox();
-    expect(popoverBox?.x).toBeGreaterThanOrEqual(248);
-    expect((popoverBox?.x ?? 0) + (popoverBox?.width ?? 0)).toBeLessThanOrEqual(
-      1008,
-    );
-    expect(popoverBox?.y).toBeGreaterThanOrEqual(16);
-    expect(
-      (popoverBox?.y ?? 0) + (popoverBox?.height ?? 0),
-    ).toBeLessThanOrEqual(984);
-    const entriesTab = popover.getByRole("button", {
+    const headerModes = page
+      .locator("header[data-hidden]")
+      .getByRole("group", { name: "Journal view" });
+    const entriesTab = headerModes.getByRole("button", {
       exact: true,
       name: "Entries",
     });
-    const timelineTab = popover.getByRole("button", {
+    const timelineTab = headerModes.getByRole("button", {
       exact: true,
       name: "Timeline",
     });
@@ -173,9 +145,13 @@ for (const theme of ["light", "dark"]) {
       state: "hover",
       ...timelineHoverContrast,
     });
-    await expect(
-      popover.getByRole("button", { name: "Browse dates / history" }),
-    ).toBeVisible();
+    const dateTrigger = page.getByRole("button", {
+      exact: true,
+      name: "Browse journal dates",
+    });
+    await dateTrigger.click();
+    const popover = page.getByRole("dialog", { name: "Journal dates" });
+    await expect(popover.getByRole("grid")).toBeVisible();
     await expect(popover.getByRole("button", { name: "Today" })).toBeVisible();
     await page.keyboard.press("Escape");
     await expect(popover).toBeHidden();
@@ -244,7 +220,7 @@ for (const theme of ["light", "dark"]) {
     await expect(
       page.getByText("Pagination entry 1", { exact: true }),
     ).toBeVisible();
-    await expect(trigger).toContainText("January 31, 2020");
+    await expect(dateTrigger).toHaveText("Jan 31");
     const day = page.locator("[data-journal-entry]").first();
     const dayBox = await day.boundingBox();
     expect(dayBox?.x).toBe(248);
@@ -305,7 +281,7 @@ for (const theme of ["light", "dark"]) {
           exclusions: [
             "Editor interior uses BetterEditor's own type scale; plate paragraphs are scene text.",
             "The plate's 8:35 AM/12:10 PM intra-day time labels have no app equivalent: app rows are day documents, and the plate's per-entry titles map to the day headings.",
-            "The plate's New entry pill maps to inline writing in the day block (behavior), and its bar pills/date chip compose into the Journal route menu popover.",
+            "The plate's New entry pill maps to inline writing in the day block (behavior), and its bar pills and date picker stay visible in the wide Journal header.",
             "Assistant conversation text is the shared synthetic shell history, not the plate's journal Q&A.",
           ],
           frame,

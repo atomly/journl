@@ -8,6 +8,11 @@ test("Library filters pages and shows their folder counts", async ({
 }) => {
   if (!isMobile) await page.setViewportSize({ height: 1080, width: 1920 });
   await page.goto("/library");
+  const header = page.locator("header[data-hidden]");
+  await expect(header.getByText("All pages", { exact: true })).toBeVisible();
+  await expect(
+    header.getByRole("button", { name: "All pages route menu" }),
+  ).toHaveCount(0);
   const pages = page.getByRole("table", { name: "Pages" });
   const garden = pages.getByRole("link", { name: "Small balcony garden" });
   const lentils = pages.getByRole("link", { name: "Lemon & herb lentils" });
@@ -36,6 +41,26 @@ test("Library filters pages and shows their folder counts", async ({
   const input = await title.boundingBox();
   expect(input?.x).toBeCloseTo(table?.x ?? 0, 0);
   expect(input?.width).toBeCloseTo(table?.width ?? 0, 0);
+  await page
+    .getByRole("link", { exact: true, name: "Small balcony garden" })
+    .last()
+    .click();
+  await expect(page).toHaveURL(/\/pages\//);
+  const identity = header.getByRole("button", { name: "Library route menu" });
+  await expect(identity).toContainText("Small balcony garden");
+  if (isMobile) {
+    await expect(
+      identity.getByText("Projects /", { exact: true }),
+    ).toBeHidden();
+  } else {
+    await expect(
+      identity.getByText("Projects /", { exact: true }),
+    ).toBeVisible();
+    await expect(header.locator("[data-editor-save-label]")).toBeVisible();
+  }
+  await expect(
+    header.getByRole("button", { name: "Search notes" }),
+  ).toBeVisible();
 });
 
 test("Library lets users cancel a rename and a deletion", async ({ page }) => {

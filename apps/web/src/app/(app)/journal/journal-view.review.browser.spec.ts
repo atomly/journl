@@ -182,13 +182,13 @@ for (const theme of ["light", "dark"]) {
     await expect(popover).toBeHidden();
 
     // Entries rows: the plate's journal-entry rows map to day blocks in the
-    // 744px reading stage, separated by the approved workspace hairline.
+    // reading stage, separated by the approved workspace hairline.
     const rows = page.locator("[data-journal-entry]");
     await expect(rows.nth(1)).toContainText(SELECTED_HEADING);
     const row = rows.nth(1);
     const rowBox = await row.boundingBox();
-    expect(rowBox?.x).toBe(256);
-    expect(rowBox?.width).toBe(744);
+    expect(rowBox?.x).toBe(248);
+    expect(rowBox?.width).toBe(760);
     const rowStyles = await row.evaluate((node) => {
       const style = getComputedStyle(node);
       return {
@@ -213,7 +213,7 @@ for (const theme of ["light", "dark"]) {
       `/journal/${SELECTED_DATE}`,
     );
     const headingBox = await heading.boundingBox();
-    expect(headingBox?.x).toBe(310);
+    expect(headingBox?.x).toBe(302);
     const headingStyles = await heading.evaluate((node) => {
       const style = getComputedStyle(node);
       return {
@@ -248,14 +248,14 @@ for (const theme of ["light", "dark"]) {
     await expect(trigger).toContainText("January 31, 2020");
     const day = page.locator("[data-journal-entry]").first();
     const dayBox = await day.boundingBox();
-    expect(dayBox?.x).toBe(256);
-    expect(dayBox?.width).toBe(744);
+    expect(dayBox?.x).toBe(248);
+    expect(dayBox?.width).toBe(760);
     const dayHeading = day.locator("h2");
     await expect(dayHeading).toHaveText(SELECTED_HEADING);
     await dayHeading.scrollIntoViewIfNeeded();
     await settleShell(page);
     const dayHeadingBox = await dayHeading.boundingBox();
-    expect(dayHeadingBox?.x).toBe(310);
+    expect(dayHeadingBox?.x).toBe(302);
     const dayHeadingStyles = await dayHeading.evaluate((node) => {
       const style = getComputedStyle(node);
       return { color: style.color, fontWeight: style.fontWeight };

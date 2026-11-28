@@ -6,7 +6,7 @@ import {
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
-import { Files, FolderClosed, Search } from "lucide-react";
+import { FolderClosed, Search } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useDebouncedCallback } from "use-debounce";
@@ -111,14 +111,9 @@ export function LibraryView({ tab }: { tab: "all-pages" | "folders" }) {
       tabIndex={-1}
       aria-label="Library content"
       className="journl-library"
+      data-workspace-section
     >
-      <span className="journl-library-mark" aria-hidden="true">
-        <Files />
-      </span>
-      <h1>{tab === "folders" ? "Folders" : "All pages"}</h1>
-      <p className="journl-library-lede">
-        Find pages by name or browse their folders.
-      </p>
+      <h1 className="sr-only">{tab === "folders" ? "Folders" : "All pages"}</h1>
       <div className="journl-library-tools">
         {tab === "all-pages" ? (
           <label className="journl-library-search">

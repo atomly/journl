@@ -25,7 +25,10 @@ export default async function Page({
   return (
     <Suspense
       fallback={
-        <div className="mx-auto flex min-h-full max-w-5xl flex-col gap-4 pt-8">
+        <div
+          data-reading-surface
+          className="flex min-h-full flex-col gap-4 pt-8"
+        >
           <PageSkeleton />
         </div>
       }
@@ -34,10 +37,9 @@ export default async function Page({
         page={{
           id,
         }}
-        className="mx-auto flex min-h-full max-w-5xl flex-col gap-4 pt-8"
       >
         <DynamicPageEditor page={pageDetails} initialBlocks={blocks}>
-          <div className="flex items-start gap-3 px-8">
+          <div data-editor-heading className="flex items-start gap-3">
             <PageTitleTextarea
               page={{
                 id: page.id,

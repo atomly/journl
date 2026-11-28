@@ -260,8 +260,8 @@ The rest of the components are set by the Tailwind CSS classes, or by our editor
 }
 
 [data-app-container] {
-  --reading-column-max: 680px;
-  --reading-gutter: 2rem;
+  --workspace-content-max: 1440px;
+  --workspace-gutter: 54px;
   position: relative;
   isolation: isolate;
 }
@@ -392,9 +392,24 @@ The rest of the components are set by the Tailwind CSS classes, or by our editor
   }
 }
 
-/* Route wrappers own this reading stage; editor internals retain their layout. */
-[data-reading-surface] {
-  max-width: calc(var(--reading-column-max) + 2 * var(--reading-gutter));
+[data-reading-surface],
+[data-workspace-section] {
+  width: min(100%, var(--workspace-content-max));
+  margin-inline: auto;
+}
+[data-workspace-section] {
+  padding-inline: var(--workspace-gutter);
+}
+[data-editor-heading] {
+  padding-inline: 54px;
+}
+@media (width <= 700px) {
+  [data-app-container] {
+    --workspace-gutter: 16px;
+  }
+  [data-editor-heading] {
+    padding-inline-end: var(--workspace-gutter);
+  }
 }
 
 /* Journal day rows close with the approved workspace hairline, matching the
@@ -1094,7 +1109,7 @@ The rest of the components are set by the Tailwind CSS classes, or by our editor
   }
 }
 .dark [data-slot="sidebar-inset"] [data-app-container] {
-  background: #0b0b0c;
+  background: var(--background);
 }
 [data-mobile="true"] [data-development-tools] {
   padding-block: 2px;
@@ -1272,7 +1287,7 @@ The rest of the components are set by the Tailwind CSS classes, or by our editor
     [data-slot="sidebar"][data-mobile="true"],
     [data-slot="sidebar-inset"] > header > div
   ) {
-  --sidebar: #19191b;
+  --sidebar: #101011;
 }
 /* The visual viewport, rather than the layout viewport, owns keyboard clearance. */
 .journl-agent-sheet {
@@ -1290,7 +1305,7 @@ The rest of the components are set by the Tailwind CSS classes, or by our editor
 .dark .journl-agent-sheet {
   --foreground: #f2f2f3;
   --muted-foreground: #aeb0b6;
-  --sidebar: #19191b;
+  --sidebar: #101011;
 }
 @media (width <= 700px) {
   [data-mobile="true"]
@@ -1599,47 +1614,12 @@ The rest of the components are set by the Tailwind CSS classes, or by our editor
 
 /* Approved workspace v2: Library index surface (All pages plates). */
 .journl-library {
-  width: min(100%, 1000px);
-  margin: 0 auto;
-  padding: 36px clamp(24px, 4vw, 64px) 64px;
-}
-.journl-library-mark {
-  display: grid;
-  place-items: center;
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
-  background: #d9dfff;
-  color: #273f9d;
-}
-.dark .journl-library-mark {
-  background: #303f72;
-  color: #c4ceff;
-}
-.journl-library-mark svg {
-  width: 24px;
-  height: 24px;
-  stroke-width: 1.65;
-}
-.journl-library h1 {
-  margin: 10px 0 14px;
-  font-size: clamp(32px, 3.25vw, 52px);
-  line-height: 1.08;
-  letter-spacing: -0.055em;
-}
-.journl-library-lede {
-  max-width: 62ch;
-  font-size: 17px;
-  color: #575a60;
-}
-.dark .journl-library-lede {
-  color: #aeb0b6;
+  padding-block: 32px 64px;
 }
 .journl-library-tools {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-top: 22px;
   flex-wrap: wrap;
 }
 .journl-library-search {
@@ -1888,7 +1868,7 @@ The rest of the components are set by the Tailwind CSS classes, or by our editor
 }
 @media (width <= 700px) {
   .journl-library {
-    padding: 24px 16px 80px;
+    padding-block: 24px 80px;
   }
   .journl-library-search,
   .journl-library-new-page > [data-slot="button"] {
@@ -1902,7 +1882,6 @@ The rest of the components are set by the Tailwind CSS classes, or by our editor
   }
 }
 @media (forced-colors: active) {
-  .journl-library-mark,
   .journl-library-badge {
     background: Canvas;
     color: CanvasText;

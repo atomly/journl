@@ -351,7 +351,8 @@ body {
 }
 
 .marketing .marketing-end {
-  padding: 112px 24px;
+  padding: var(--section-gap) 24px;
+  text-align: center;
 }
 .marketing .marketing-end h2 {
   font-size: 64px;
@@ -370,6 +371,8 @@ body {
 }
 
 .marketing .marketing-footer {
+  align-items: center;
+  justify-content: space-between;
   background: transparent;
   border-top: 1px solid var(--border);
   display: flex;
@@ -378,6 +381,7 @@ body {
   padding: 40px max(32px, calc((100vw - 1184px) / 2));
 }
 .marketing .marketing-footer .brand {
+  align-items: center;
   color: var(--foreground);
   display: inline-flex;
   min-height: 44px;
@@ -425,6 +429,34 @@ body {
   }
 }
 
+/* The public theme switch animates only the root snapshots. */
+.marketing .btn.marketing-theme-toggle {
+  min-width: 44px;
+  padding: 0;
+  border-color: transparent;
+  background: transparent;
+}
+.marketing .btn.marketing-theme-toggle:hover {
+  background: var(--secondary);
+}
+
+:root[data-marketing-theme-reveal]::view-transition-group(root),
+:root[data-marketing-theme-reveal]::view-transition-old(root) {
+  animation: none;
+}
+:root[data-marketing-theme-reveal]::view-transition-new(root) {
+  animation: marketing-theme-reveal 620ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  mix-blend-mode: normal;
+}
+@keyframes marketing-theme-reveal {
+  from {
+    clip-path: circle(0 at var(--theme-reveal-origin));
+  }
+  to {
+    clip-path: circle(var(--theme-reveal-radius) at var(--theme-reveal-origin));
+  }
+}
+
 /* Mobile stack at 700px and below. */
 @media (max-width: 700px) {
   .marketing {
@@ -433,6 +465,7 @@ body {
     --section-gap: 64px;
   }
   .marketing .marketing-nav {
+    flex-wrap: wrap;
     border-radius: 20px;
     gap: 8px;
     margin: 12px;
@@ -443,6 +476,9 @@ body {
   }
   .marketing .public-actions {
     gap: 4px;
+  }
+  .marketing .marketing-nav .public-actions {
+    margin-inline-start: auto;
   }
   .marketing .marketing-nav .btn {
     font-size: 13px;

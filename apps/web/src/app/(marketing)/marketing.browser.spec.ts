@@ -62,3 +62,52 @@ publicTest("public navigation opens the invite form", async ({ page }) => {
   await expect(page.getByText("Join Journl", { exact: true })).toBeVisible();
   await expect(page).toHaveURL(/\/invite$/);
 });
+
+publicTest(
+  "the color toggle preserves the selected theme",
+  async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.goto("/");
+    const root = page.locator("html");
+    const toggle = page.getByRole("button", { name: "Toggle color theme" });
+    await expect(root).toHaveClass(/\blight\b/);
+    await toggle.press("Enter");
+    await expect(root).toHaveClass(/\bdark\b/);
+    await page.reload();
+    await expect(root).toHaveClass(/\bdark\b/);
+    await page.emulateMedia({ reducedMotion: "no-preference" });
+    await toggle.click();
+    await expect(root).toHaveClass(/\blight\b/);
+    await expect(root).not.toHaveAttribute("data-marketing-theme-reveal", "");
+  },
+);
+
+publicTest(
+  "the closing copy and actions share a center line",
+  async ({ page }) => {
+    await page.goto("/");
+    const section = page.locator(".marketing-end");
+    const heading = section.getByRole("heading");
+    await expect(heading).toBeVisible();
+    const offset = await section
+      .getByText("Have an invitation?", { exact: false })
+      .evaluate((copy) => {
+        const section = copy.closest("section");
+        const heading = section?.querySelector("h2");
+        const actions = section?.querySelector(".public-actions");
+        if (!heading || !actions)
+          throw new Error("Closing section is incomplete");
+        const center = (node: Element) => {
+          const range = document.createRange();
+          range.selectNodeContents(node);
+          const bounds = range.getBoundingClientRect();
+          return bounds.x + bounds.width / 2;
+        };
+        return Math.max(
+          Math.abs(center(copy) - center(heading)),
+          Math.abs(center(copy) - center(actions)),
+        );
+      });
+    expect(offset).toBeLessThan(3);
+  },
+);

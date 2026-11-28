@@ -35,7 +35,7 @@ async function SubscriptionPage() {
   });
 
   return (
-    <div className="mx-auto w-full max-w-[744px] px-5 pt-8 pb-24 text-card-foreground sm:px-8">
+    <div data-workspace-section className="pt-8 pb-24 text-card-foreground">
       <div className="space-y-8">
         {/* Header Section */}
         <div className="flex flex-col gap-3">

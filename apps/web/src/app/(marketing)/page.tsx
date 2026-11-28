@@ -4,6 +4,7 @@ import Link from "next/link";
 import { withoutAuth } from "~/app/_guards/page-guards";
 import { Brand } from "~/components/brand";
 import { getPublicWebUrl } from "~/lib/public-web-url";
+import { MarketingThemeToggle } from "./marketing-theme-toggle";
 
 const publicWebUrl = getPublicWebUrl();
 
@@ -162,6 +163,7 @@ export default withoutAuth(function RootPage() {
           <Link className="btn primary" href="/invite">
             Get started <LandingIcon d={arrowPath} />
           </Link>
+          <MarketingThemeToggle />
         </div>
       </nav>
 

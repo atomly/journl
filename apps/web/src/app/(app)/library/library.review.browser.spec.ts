@@ -108,9 +108,7 @@ for (const theme of ["light", "dark"]) {
     expect(reading?.y).toBe((header?.y ?? 0) + 62);
     expect((reading?.y ?? 0) + (reading?.height ?? 0)).toBe(984);
 
-    // Approved surface geometry: mark, search pill, tabs and 48px index rows.
-    const mark = await page.locator(".journl-library-mark").boundingBox();
-    expect(mark).toMatchObject({ height: 44, width: 44 });
+    // Search, tabs and index row geometry.
     const searchPill = page.locator(".journl-library-search");
     const searchBox = await searchPill.boundingBox();
     expect(searchBox?.height).toBe(32);
@@ -162,8 +160,6 @@ for (const theme of ["light", "dark"]) {
 
     const measurements: unknown[] = [];
     for (const [label, target, minimum] of [
-      ["heading", page.getByRole("heading", { name: "All pages" }), 3],
-      ["lede", page.locator(".journl-library-lede"), 4.5],
       ["active tab", activeTab, 4.5],
       ["inactive tab", tabs.filter({ hasText: "Folders" }), 4.5],
       [

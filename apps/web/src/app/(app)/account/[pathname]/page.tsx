@@ -14,7 +14,7 @@ async function AccountPage({
 }) {
   const { pathname } = await params;
   return (
-    <section className="mx-auto flex w-full max-w-[744px] flex-col gap-6 px-5 pt-8 pb-24 sm:px-8">
+    <section data-workspace-section className="flex flex-col gap-6 pt-8 pb-24">
       <AuthView pathname={pathname} />
     </section>
   );

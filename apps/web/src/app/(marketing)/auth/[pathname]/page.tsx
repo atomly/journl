@@ -1,5 +1,4 @@
 import { withoutAuth } from "~/app/_guards/page-guards";
-import { AuthPageProviders } from "~/components/auth/auth-page-providers";
 import { AuthPageShell } from "~/components/auth/auth-page-shell";
 import { AuthView } from "~/components/auth/auth-view";
 import { parseInviteCodeString } from "~/components/auth/invite-code";
@@ -20,11 +19,9 @@ async function AuthPage({
   );
 
   return (
-    <AuthPageProviders>
-      <AuthPageShell>
-        <AuthView pathname={pathname} inviteCode={inviteCode} />
-      </AuthPageShell>
-    </AuthPageProviders>
+    <AuthPageShell>
+      <AuthView pathname={pathname} inviteCode={inviteCode} />
+    </AuthPageShell>
   );
 }
 

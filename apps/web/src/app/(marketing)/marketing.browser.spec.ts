@@ -51,6 +51,15 @@ publicTest("public navigation opens sign-in", async ({ page }) => {
   await expect(signIn).toHaveCSS("text-decoration-line", "underline");
   await signIn.click();
   await expect(page).toHaveURL(/\/auth\/sign-in$/);
+  await expect(
+    page.getByRole("main").getByRole("link", { name: "Back to home" }),
+  ).toBeVisible();
+
+  await page.goto("/journal");
+  await expect(page).toHaveURL(/\/auth\/sign-in$/);
+  await expect(
+    page.getByRole("main").getByRole("link", { name: "Back to home" }),
+  ).toBeVisible();
 });
 
 publicTest("public navigation opens the invite form", async ({ page }) => {
@@ -61,6 +70,17 @@ publicTest("public navigation opens the invite form", async ({ page }) => {
     .click();
   await expect(page.getByText("Join Journl", { exact: true })).toBeVisible();
   await expect(page).toHaveURL(/\/invite$/);
+  const authPage = page.getByRole("main");
+  await expect(
+    authPage.getByRole("link", { name: "Back to home" }),
+  ).toBeVisible();
+
+  await authPage.getByRole("link", { exact: true, name: "Sign in" }).click();
+  await expect(page).toHaveURL(/\/auth\/sign-in$/);
+  await page.goBack();
+  await expect(
+    authPage.getByRole("textbox", { name: "Invite code" }),
+  ).toBeVisible();
 });
 
 publicTest(

@@ -53,10 +53,8 @@ const inter = localFont({
 
 export default function RootLayout({
   children,
-  authModal,
 }: {
   children: React.ReactNode;
-  authModal: React.ReactNode;
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
@@ -71,10 +69,7 @@ export default function RootLayout({
             env.VERCEL_ENV === "preview" || env.NODE_ENV === "development"
           }
         >
-          <DraftSessionsProvider>
-            {children}
-            {authModal}
-          </DraftSessionsProvider>
+          <DraftSessionsProvider>{children}</DraftSessionsProvider>
         </BetterAuthProvider>
       </body>
     </html>
